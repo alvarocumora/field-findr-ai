@@ -1,14 +1,20 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
+
+// Pages
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Tools from "./pages/Tools";
+import Profile from "./pages/Profile";
+import Explorar from "./pages/Explorar";
+import PropertyDetail from "./pages/PropertyDetail";
+
+// Legacy Components (to be migrated)
 import AIRecommendationEngine from "./components/AIRecommendationEngine";
 import UrbanizationManagement from "./components/ProjectManagement";
 import CRMSystem from "./components/CRMSystem";
@@ -28,7 +34,6 @@ import Alerts from "./components/Alerts";
 import LotManagement from "./components/LotManagement";
 import LeadManagement from "./components/LeadManagement";
 import ProjectsManagement from "./components/ProjectsManagement";
-import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -40,8 +45,14 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public Pages */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/explorar" element={<Explorar />} />
+            <Route path="/propiedad/:id" element={<PropertyDetail />} />
+            <Route path="/comparar" element={<ParcelComparator />} />
+            
+            {/* Legacy routes - to be migrated */}
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/search" element={<IntelligentSearch />} />
             <Route path="/compare" element={<ParcelComparator />} />
@@ -51,6 +62,7 @@ const App = () => (
             <Route path="/ai-recommendations" element={<AIRecommendationEngine />} />
             <Route path="/publish" element={<PublishProperty />} />
             <Route path="/favorites" element={<Favorites />} />
+            <Route path="/favoritos" element={<Favorites />} />
             <Route path="/alerts" element={<Alerts />} />
             {/* Land Development Administration Routes */}
             <Route path="/urbanization" element={<UrbanizationManagement />} />

@@ -14,6 +14,85 @@ export type Database = {
   }
   public: {
     Tables: {
+      documents: {
+        Row: {
+          created_at: string | null
+          file_url: string | null
+          id: string
+          listing_id: string
+          name: string
+          notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_url?: string | null
+          id?: string
+          listing_id: string
+          name: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_url?: string | null
+          id?: string
+          listing_id?: string
+          name?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      favorites: {
+        Row: {
+          created_at: string | null
+          id: string
+          listing_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          listing_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          listing_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           budget_max: number | null
@@ -92,6 +171,99 @@ export type Database = {
           },
         ]
       }
+      listings: {
+        Row: {
+          address: string | null
+          area_ha: number | null
+          area_m2: number | null
+          city: string | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          featured: boolean | null
+          id: string
+          images: string[] | null
+          is_demo: boolean | null
+          lat: number | null
+          legal_status: string | null
+          lng: number | null
+          location: string
+          price: number
+          region: string | null
+          rol: string | null
+          status: string | null
+          subdivision_eligible: boolean | null
+          tags: string[] | null
+          title: string
+          type: string
+          updated_at: string | null
+          user_id: string | null
+          utilities: Json | null
+          views_count: number | null
+          zoning: string | null
+        }
+        Insert: {
+          address?: string | null
+          area_ha?: number | null
+          area_m2?: number | null
+          city?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          images?: string[] | null
+          is_demo?: boolean | null
+          lat?: number | null
+          legal_status?: string | null
+          lng?: number | null
+          location: string
+          price: number
+          region?: string | null
+          rol?: string | null
+          status?: string | null
+          subdivision_eligible?: boolean | null
+          tags?: string[] | null
+          title: string
+          type: string
+          updated_at?: string | null
+          user_id?: string | null
+          utilities?: Json | null
+          views_count?: number | null
+          zoning?: string | null
+        }
+        Update: {
+          address?: string | null
+          area_ha?: number | null
+          area_m2?: number | null
+          city?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          images?: string[] | null
+          is_demo?: boolean | null
+          lat?: number | null
+          legal_status?: string | null
+          lng?: number | null
+          location?: string
+          price?: number
+          region?: string | null
+          rol?: string | null
+          status?: string | null
+          subdivision_eligible?: boolean | null
+          tags?: string[] | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string | null
+          utilities?: Json | null
+          views_count?: number | null
+          zoning?: string | null
+        }
+        Relationships: []
+      }
       lots: {
         Row: {
           area: number
@@ -168,6 +340,47 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          listing_id: string | null
+          read: boolean | null
+          recipient_id: string
+          sender_id: string
+          thread_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          listing_id?: string | null
+          read?: boolean | null
+          recipient_id: string
+          sender_id: string
+          thread_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          listing_id?: string | null
+          read?: boolean | null
+          recipient_id?: string
+          sender_id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
             referencedColumns: ["id"]
           },
         ]
@@ -274,15 +487,69 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_searches: {
+        Row: {
+          created_at: string | null
+          filters: Json
+          id: string
+          name: string
+          notifications_enabled: boolean | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          filters?: Json
+          id?: string
+          name: string
+          notifications_enabled?: boolean | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          filters?: Json
+          id?: string
+          name?: string
+          notifications_enabled?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "buyer" | "agent" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -409,6 +676,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["buyer", "agent", "admin"],
+    },
   },
 } as const
