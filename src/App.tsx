@@ -28,6 +28,7 @@ import Alerts from "./components/Alerts";
 import LotManagement from "./components/LotManagement";
 import LeadManagement from "./components/LeadManagement";
 import ProjectsManagement from "./components/ProjectsManagement";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/lots" element={<LotManagement />} />
             <Route path="/leads" element={<LeadManagement />} />
             <Route path="/projects" element={<ProjectsManagement />} />
+            <Route path="/profile" element={<Profile />} />
             {/* New Tools Page */}
             <Route path="/tools" element={<Tools />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
