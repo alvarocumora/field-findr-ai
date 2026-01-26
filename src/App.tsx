@@ -8,6 +8,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import Tools from "./pages/Tools";
 import AIRecommendationEngine from "./components/AIRecommendationEngine";
 import UrbanizationManagement from "./components/ProjectManagement";
 import CRMSystem from "./components/CRMSystem";
@@ -61,6 +62,8 @@ const App = () => (
             <Route path="/lots" element={<LotManagement />} />
             <Route path="/leads" element={<LeadManagement />} />
             <Route path="/projects" element={<ProjectsManagement />} />
+            {/* New Tools Page */}
+            <Route path="/tools" element={<Tools />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

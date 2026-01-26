@@ -10,7 +10,10 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Mountain
+  Mountain,
+  Sparkles,
+  Users,
+  BarChart3
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -24,12 +27,15 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
   const mainNavigation = [
     { name: 'Explorar Mapa', href: '/', icon: MapPin },
     { name: 'Búsqueda IA', href: '/search', icon: Search },
+    { name: 'Herramientas IA', href: '/tools', icon: Sparkles },
     { name: 'Mis Favoritos', href: '/favorites', icon: Heart },
   ];
 
   const managementNavigation = [
     { name: 'Mi Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Mis Propiedades', href: '/inventory', icon: Building2 },
+    { name: 'CRM Leads', href: '/leads', icon: Users },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   ];
 
   const bottomNavigation = [
