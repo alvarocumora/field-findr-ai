@@ -6,78 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
-  FolderOpen, Plus, Search, MapPin, Calendar, 
-  Users, TrendingUp, Building2, Eye, Edit, Settings
+  FolderOpen, Plus, Search, MapPin, 
+  TrendingUp, Building2, Eye, Edit, Settings, Loader2
 } from 'lucide-react';
 import Layout from './Layout';
-
-interface Project {
-  id: string;
-  name: string;
-  location: string;
-  status: 'planning' | 'active' | 'sold_out' | 'completed';
-  totalLots: number;
-  availableLots: number;
-  reservedLots: number;
-  soldLots: number;
-  startDate: string;
-  imageUrl?: string;
-  description: string;
-}
-
-const mockProjects: Project[] = [
-  {
-    id: '1',
-    name: 'Valle del Sol',
-    location: 'La Serena, Región de Coquimbo',
-    status: 'active',
-    totalLots: 50,
-    availableLots: 25,
-    reservedLots: 10,
-    soldLots: 15,
-    startDate: '2024-01-01',
-    description: 'Proyecto de parcelas con vista al mar y acceso a servicios básicos.',
-  },
-  {
-    id: '2',
-    name: 'Bosque Nativo',
-    location: 'Pucón, Región de la Araucanía',
-    status: 'active',
-    totalLots: 30,
-    availableLots: 8,
-    reservedLots: 7,
-    soldLots: 15,
-    startDate: '2023-06-15',
-    description: 'Parcelas rodeadas de bosque nativo con vista al volcán.',
-  },
-  {
-    id: '3',
-    name: 'Costa Pacífico',
-    location: 'Algarrobo, Región de Valparaíso',
-    status: 'sold_out',
-    totalLots: 20,
-    availableLots: 0,
-    reservedLots: 0,
-    soldLots: 20,
-    startDate: '2023-01-01',
-    description: 'Lotes premium frente al mar con todos los servicios.',
-  },
-  {
-    id: '4',
-    name: 'Montaña Verde',
-    location: 'Chillán, Región de Ñuble',
-    status: 'planning',
-    totalLots: 40,
-    availableLots: 40,
-    reservedLots: 0,
-    soldLots: 0,
-    startDate: '2024-06-01',
-    description: 'Nuevo proyecto en etapa de planificación con vista a la cordillera.',
-  },
-];
+import { useProjects, Project } from '@/hooks/useProjects';
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   planning: { label: 'En Planificación', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
@@ -87,29 +23,73 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 };
 
 const ProjectsManagement = () => {
-  const [projects] = useState<Project[]>(mockProjects);
+  const { projects, isLoading, stats, createProject } = useProjects();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newProject, setNewProject] = useState({
+    name: '',
+    location: '',
+    description: '',
+    total_lots: 0,
+  });
 
   const filteredProjects = projects.filter(project =>
     project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    project.location.toLowerCase().includes(searchQuery.toLowerCase())
+    (project.location || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const totalStats = {
-    projects: projects.length,
-    totalLots: projects.reduce((acc, p) => acc + p.totalLots, 0),
-    soldLots: projects.reduce((acc, p) => acc + p.soldLots, 0),
-    revenue: projects.reduce((acc, p) => acc + p.soldLots * 25000000, 0),
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
   };
 
   const getSoldPercentage = (project: Project) => {
-    return Math.round((project.soldLots / project.totalLots) * 100);
+    const total = project.total_lots || 0;
+    const sold = project.sold_lots || 0;
+    return total > 0 ? Math.round((sold / total) * 100) : 0;
   };
+
+  const handleCreateProject = async () => {
+    if (!newProject.name) return;
+    
+    await createProject.mutateAsync({
+      name: newProject.name,
+      location: newProject.location,
+      description: newProject.description,
+      total_lots: newProject.total_lots,
+      available_lots: newProject.total_lots,
+      reserved_lots: 0,
+      sold_lots: 0,
+      status: 'active',
+    });
+    
+    setShowAddDialog(false);
+    setNewProject({ name: '', location: '', description: '', total_lots: 0 });
+  };
+
+  const estimatedRevenue = stats.soldLots * 25000000;
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="p-6 space-y-6">
+          <div className="flex justify-between items-center">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-10 w-40" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-24" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-80" />
+            ))}
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -133,31 +113,48 @@ const ProjectsManagement = () => {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
-                  <Label>Nombre del Proyecto</Label>
-                  <Input placeholder="ej: Valle del Sol" />
+                  <Label>Nombre del Proyecto *</Label>
+                  <Input 
+                    placeholder="ej: Valle del Sol" 
+                    value={newProject.name}
+                    onChange={(e) => setNewProject(p => ({ ...p, name: e.target.value }))}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Ubicación</Label>
-                  <Input placeholder="ej: La Serena, Región de Coquimbo" />
+                  <Input 
+                    placeholder="ej: La Serena, Región de Coquimbo"
+                    value={newProject.location}
+                    onChange={(e) => setNewProject(p => ({ ...p, location: e.target.value }))}
+                  />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Total de Lotes</Label>
-                    <Input type="number" placeholder="50" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Fecha de Inicio</Label>
-                    <Input type="date" />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Total de Lotes</Label>
+                  <Input 
+                    type="number" 
+                    placeholder="50"
+                    value={newProject.total_lots || ''}
+                    onChange={(e) => setNewProject(p => ({ ...p, total_lots: parseInt(e.target.value) || 0 }))}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Descripción</Label>
-                  <Textarea placeholder="Descripción del proyecto..." />
+                  <Textarea 
+                    placeholder="Descripción del proyecto..."
+                    value={newProject.description}
+                    onChange={(e) => setNewProject(p => ({ ...p, description: e.target.value }))}
+                  />
                 </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancelar</Button>
-                <Button onClick={() => setShowAddDialog(false)}>Crear Proyecto</Button>
+                <Button 
+                  onClick={handleCreateProject}
+                  disabled={!newProject.name || createProject.isPending}
+                >
+                  {createProject.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Crear Proyecto
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -170,7 +167,7 @@ const ProjectsManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Proyectos</p>
-                  <p className="text-2xl font-bold">{totalStats.projects}</p>
+                  <p className="text-2xl font-bold">{stats.total}</p>
                 </div>
                 <FolderOpen className="h-8 w-8 text-primary/60" />
               </div>
@@ -181,7 +178,7 @@ const ProjectsManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Lotes</p>
-                  <p className="text-2xl font-bold">{totalStats.totalLots}</p>
+                  <p className="text-2xl font-bold">{stats.totalLots}</p>
                 </div>
                 <MapPin className="h-8 w-8 text-blue-500/60" />
               </div>
@@ -192,7 +189,7 @@ const ProjectsManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Lotes Vendidos</p>
-                  <p className="text-2xl font-bold text-green-600">{totalStats.soldLots}</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.soldLots}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-green-500/60" />
               </div>
@@ -203,7 +200,7 @@ const ProjectsManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Ingresos Est.</p>
-                  <p className="text-xl font-bold text-green-600">{formatCurrency(totalStats.revenue)}</p>
+                  <p className="text-xl font-bold text-green-600">{formatCurrency(estimatedRevenue)}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-green-500/60" />
               </div>
@@ -222,6 +219,23 @@ const ProjectsManagement = () => {
           />
         </div>
 
+        {/* Empty State */}
+        {filteredProjects.length === 0 && !isLoading && (
+          <Card className="p-12 text-center">
+            <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No hay proyectos</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchQuery ? 'No se encontraron proyectos con ese criterio' : 'Crea tu primer proyecto de loteo'}
+            </p>
+            {!searchQuery && (
+              <Button onClick={() => setShowAddDialog(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Crear Proyecto
+              </Button>
+            )}
+          </Card>
+        )}
+
         {/* Project Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredProjects.map((project) => (
@@ -230,8 +244,8 @@ const ProjectsManagement = () => {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Building2 className="h-16 w-16 text-primary/30" />
                 </div>
-                <Badge className={`absolute top-4 right-4 ${statusConfig[project.status].color}`}>
-                  {statusConfig[project.status].label}
+                <Badge className={`absolute top-4 right-4 ${statusConfig[project.status || 'active']?.color || statusConfig.active.color}`}>
+                  {statusConfig[project.status || 'active']?.label || 'Activo'}
                 </Badge>
               </div>
               
@@ -241,7 +255,7 @@ const ProjectsManagement = () => {
                     <CardTitle className="text-xl">{project.name}</CardTitle>
                     <CardDescription className="flex items-center gap-1 mt-1">
                       <MapPin className="h-3 w-3" />
-                      {project.location}
+                      {project.location || 'Sin ubicación'}
                     </CardDescription>
                   </div>
                 </div>
@@ -249,7 +263,7 @@ const ProjectsManagement = () => {
               
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground line-clamp-2">
-                  {project.description}
+                  {project.description || 'Sin descripción'}
                 </p>
 
                 {/* Progress */}
@@ -264,15 +278,15 @@ const ProjectsManagement = () => {
                 {/* Lot Stats */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="bg-green-500/10 rounded-lg p-2">
-                    <p className="text-lg font-bold text-green-600">{project.availableLots}</p>
+                    <p className="text-lg font-bold text-green-600">{project.available_lots || 0}</p>
                     <p className="text-xs text-muted-foreground">Disponibles</p>
                   </div>
                   <div className="bg-yellow-500/10 rounded-lg p-2">
-                    <p className="text-lg font-bold text-yellow-600">{project.reservedLots}</p>
+                    <p className="text-lg font-bold text-yellow-600">{project.reserved_lots || 0}</p>
                     <p className="text-xs text-muted-foreground">Reservados</p>
                   </div>
                   <div className="bg-blue-500/10 rounded-lg p-2">
-                    <p className="text-lg font-bold text-blue-600">{project.soldLots}</p>
+                    <p className="text-lg font-bold text-blue-600">{project.sold_lots || 0}</p>
                     <p className="text-xs text-muted-foreground">Vendidos</p>
                   </div>
                 </div>
