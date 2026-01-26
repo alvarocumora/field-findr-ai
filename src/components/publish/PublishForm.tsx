@@ -138,8 +138,16 @@ const PublishForm = () => {
     }));
   };
 
-  const handleLocationSelect = (lat: number, lng: number) => {
-    setFormData(prev => ({ ...prev, lat, lng }));
+  const handleLocationSelect = (lat: number, lng: number, address?: { address: string; city?: string; region?: string }) => {
+    setFormData(prev => ({
+      ...prev,
+      lat,
+      lng,
+      // Auto-fill location if address was geocoded
+      location: address?.address || prev.location,
+      // Auto-fill city if available and not already set
+      city: address?.city || prev.city,
+    }));
   };
 
   const validateStep = (step: number): boolean => {
