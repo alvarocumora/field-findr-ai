@@ -1,100 +1,126 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
-import HeroSection from '@/components/HeroSection';
-import FeaturesSection from '@/components/FeaturesSection';
-import TestimonialsSection from '@/components/TestimonialsSection';
-import CTASection from '@/components/CTASection';
 import ListingGrid from '@/components/listings/ListingGrid';
 import { useFeaturedListings } from '@/hooks/useListings';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, MapPin, Building2, TreePine, Factory, Mountain, Waves, Landmark } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { 
+  ArrowRight, 
+  Search, 
+  Sparkles, 
+  TreePine, 
+  Factory, 
+  Building2, 
+  Waves, 
+  Mountain, 
+  Landmark 
+} from 'lucide-react';
+import { useState } from 'react';
 
 const CATEGORIES = [
-  { name: 'Parcelas Rurales', icon: TreePine, href: '/explorar?type=parcela_rural', color: 'from-green-500/20 to-green-600/20' },
-  { name: 'Sitios Industriales', icon: Factory, href: '/explorar?type=sitio_industrial', color: 'from-orange-500/20 to-orange-600/20' },
-  { name: 'Campos Agrícolas', icon: Landmark, href: '/explorar?type=campo_agricola', color: 'from-yellow-500/20 to-yellow-600/20' },
-  { name: 'Terrenos Urbanos', icon: Building2, href: '/explorar?type=terreno_urbano', color: 'from-blue-500/20 to-blue-600/20' },
-  { name: 'Terrenos Costeros', icon: Waves, href: '/explorar?type=terreno_costero', color: 'from-cyan-500/20 to-cyan-600/20' },
-  { name: 'Terrenos de Montaña', icon: Mountain, href: '/explorar?type=terreno_montana', color: 'from-purple-500/20 to-purple-600/20' },
+  { name: 'Parcelas', icon: TreePine, type: 'parcela_rural' },
+  { name: 'Industrial', icon: Factory, type: 'sitio_industrial' },
+  { name: 'Agrícola', icon: Landmark, type: 'campo_agricola' },
+  { name: 'Urbano', icon: Building2, type: 'terreno_urbano' },
+  { name: 'Costero', icon: Waves, type: 'terreno_costero' },
+  { name: 'Montaña', icon: Mountain, type: 'terreno_montana' },
 ];
 
 const Index = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
   const { data: featuredListings = [], isLoading } = useFeaturedListings(8);
+
+  const handleSearch = () => {
+    navigate(`/explorar${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`);
+  };
 
   return (
     <PublicLayout showFooter={false}>
-      {/* Hero Section */}
-      <HeroSection />
-
-      {/* Categories Section */}
-      <section className="relative py-20 overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-20" />
+      {/* Compact Hero */}
+      <section className="relative py-16 md:py-24 overflow-hidden">
+        <div className="absolute inset-0 grid-pattern opacity-30" />
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+        
         <div className="container relative z-10 px-4">
-          <div className="text-center mb-12">
-            <Badge variant="outline" className="glass border-primary/30 text-primary mb-4">
-              Explora por categoría
-            </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Encuentra tu <span className="gradient-text">terreno ideal</span>
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Descubre oportunidades únicas en todo Chile, desde parcelas rurales hasta sitios industriales
-            </p>
-          </div>
+          <div className="max-w-3xl mx-auto text-center">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-sm mb-6">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              </span>
+              <span className="text-primary font-medium">IA integrada</span>
+            </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {CATEGORIES.map((category) => (
-              <Link
-                key={category.name}
-                to={category.href}
-                className="group"
-              >
-                <div className={`
-                  relative p-6 rounded-2xl glass border border-white/10 
-                  hover:border-primary/30 transition-all duration-300
-                  card-hover text-center
-                `}>
-                  <div className={`
-                    w-14 h-14 rounded-xl mx-auto mb-4 flex items-center justify-center
-                    bg-gradient-to-br ${category.color}
-                    group-hover:scale-110 transition-transform duration-300
-                  `}>
-                    <category.icon className="h-7 w-7 text-foreground" />
-                  </div>
-                  <h3 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
-                    {category.name}
-                  </h3>
+            <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+              Encuentra el <span className="gradient-text-hero">terreno ideal</span>
+            </h1>
+            
+            <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+              Más de 15,000 terrenos en Chile con análisis de valorización y verificación documental
+            </p>
+
+            {/* Search Bar */}
+            <div className="glass-strong rounded-2xl p-2 mb-6">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por ubicación, tipo..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="pl-12 h-12 bg-transparent border-0 focus-visible:ring-0"
+                  />
                 </div>
-              </Link>
-            ))}
+                <Button 
+                  onClick={handleSearch}
+                  className="h-12 px-6 btn-glow"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Buscar
+                </Button>
+              </div>
+            </div>
+
+            {/* Quick Category Filters */}
+            <div className="flex flex-wrap justify-center gap-2">
+              {CATEGORIES.map((cat) => (
+                <Button
+                  key={cat.type}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/explorar?type=${cat.type}`)}
+                  className="rounded-full glass border-white/10 hover:border-primary/50"
+                >
+                  <cat.icon className="h-4 w-4 mr-1.5" />
+                  {cat.name}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <FeaturesSection />
-
       {/* Featured Properties */}
-      <section className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-20" />
-        <div className="container relative z-10 px-4">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-12">
+      <section className="relative py-12 md:py-16">
+        <div className="container px-4">
+          <div className="flex items-center justify-between mb-8">
             <div>
-              <Badge variant="outline" className="glass border-primary/30 text-primary mb-4">
-                Propiedades destacadas
+              <Badge variant="outline" className="glass border-primary/30 text-primary mb-2">
+                Destacados
               </Badge>
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-                Seleccionadas por <span className="gradient-text">nuestra IA</span>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                Propiedades seleccionadas
               </h2>
-              <p className="text-muted-foreground">
-                Las mejores oportunidades según potencial de valorización y calidad
-              </p>
             </div>
-            <Button variant="outline" asChild className="glass border-white/10 hover:border-primary/50">
+            <Button variant="ghost" asChild>
               <Link to="/explorar">
                 Ver todas
-                <ArrowRight className="h-4 w-4 ml-2" />
+                <ArrowRight className="h-4 w-4 ml-1" />
               </Link>
             </Button>
           </div>
@@ -102,16 +128,10 @@ const Index = () => {
           <ListingGrid 
             listings={featuredListings} 
             isLoading={isLoading}
-            emptyMessage="Cargando propiedades destacadas..."
+            emptyMessage="Cargando propiedades..."
           />
         </div>
       </section>
-
-      {/* Testimonials */}
-      <TestimonialsSection />
-
-      {/* CTA Section */}
-      <CTASection />
     </PublicLayout>
   );
 };
