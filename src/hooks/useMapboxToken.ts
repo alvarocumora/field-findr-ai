@@ -9,22 +9,24 @@ export const useMapboxToken = () => {
   useEffect(() => {
     const fetchToken = async () => {
       try {
-        // Prefer build-time public token if present
-        const envToken = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
-        if (envToken?.startsWith('pk.')) {
-          setToken(envToken);
+        // Use cached token first (avoids extra requests)
+        const cached = localStorage.getItem('mapbox_public_token');
+        if (cached?.startsWith('pk.')) {
+          setToken(cached);
           setError(null);
           return;
         }
 
-        // Fallback to backend function (reads MAPBOX_PUBLIC_TOKEN secret)
-        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        if (error) throw error;
+        // Always prefer backend token to avoid stale/invalid build-time tokens
+        const { data, error: fnError } = await supabase.functions.invoke('get-mapbox-token');
+        if (fnError) throw fnError;
 
         const fetched = (data as { token?: string } | null)?.token;
-        if (!fetched) {
+        if (!fetched?.startsWith('pk.')) {
           throw new Error('Mapbox token not configured');
         }
+
+        localStorage.setItem('mapbox_public_token', fetched);
         setToken(fetched);
         setError(null);
       } catch (err) {
