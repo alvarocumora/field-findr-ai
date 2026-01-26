@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import { useListing, useListings, formatPrice, formatArea, getListingTypeLabel, getLegalStatusLabel } from '@/hooks/useListings';
@@ -8,6 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import ListingCard from '@/components/listings/ListingCard';
+import ImageGallery from '@/components/property/ImageGallery';
+import PropertyMap from '@/components/property/PropertyMap';
+import ContactForm from '@/components/property/ContactForm';
 import {
   Heart,
   Share2,
@@ -19,18 +23,13 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  Phone,
-  Mail,
   Download,
   Droplets,
   Zap,
   Car,
-  TreePine,
-  Mountain
+  Mountain,
+  ArrowLeft
 } from 'lucide-react';
-import { useState } from 'react';
 
 const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -125,48 +124,11 @@ const PropertyDetail = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Gallery */}
-            <div className="relative aspect-video rounded-2xl overflow-hidden glass">
-              <img
-                src={listing.images[currentImageIndex] || '/placeholder.svg'}
-                alt={listing.title}
-                className="w-full h-full object-cover"
-              />
+            <div className="relative">
+              <ImageGallery images={listing.images} title={listing.title} />
               
-              {listing.images.length > 1 && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute left-4 top-1/2 -translate-y-1/2 glass hover:bg-white/20"
-                    onClick={prevImage}
-                  >
-                    <ChevronLeft className="h-6 w-6 text-white" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-4 top-1/2 -translate-y-1/2 glass hover:bg-white/20"
-                    onClick={nextImage}
-                  >
-                    <ChevronRight className="h-6 w-6 text-white" />
-                  </Button>
-
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                    {listing.images.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setCurrentImageIndex(idx)}
-                        className={`w-2 h-2 rounded-full transition-colors ${
-                          idx === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {/* Actions Overlay */}
-              <div className="absolute top-4 right-4 flex gap-2">
+              {/* Actions Overlay - positioned over gallery */}
+              <div className="absolute top-4 right-4 flex gap-2 z-10">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -189,7 +151,7 @@ const PropertyDetail = () => {
               </div>
 
               {/* Badges */}
-              <div className="absolute top-4 left-4 flex gap-2">
+              <div className="absolute top-4 left-4 flex gap-2 z-10">
                 {listing.featured && (
                   <Badge className="bg-primary text-primary-foreground">Destacado</Badge>
                 )}
@@ -198,23 +160,6 @@ const PropertyDetail = () => {
                 </Badge>
               </div>
             </div>
-
-            {/* Thumbnails */}
-            {listing.images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {listing.images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentImageIndex(idx)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
-                      idx === currentImageIndex ? 'border-primary' : 'border-transparent'
-                    }`}
-                  >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
 
             {/* Title & Location */}
             <div>
@@ -387,7 +332,7 @@ const PropertyDetail = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Price Card */}
-            <Card className="glass border-white/10 sticky top-24">
+            <Card className="glass border-white/10">
               <CardContent className="p-6">
                 <div className="mb-6">
                   <p className="text-sm text-muted-foreground mb-1">Precio</p>
@@ -406,34 +351,33 @@ const PropertyDetail = () => {
                   {legalStatus.label}
                 </Badge>
 
-                <div className="space-y-3">
-                  <Button className="w-full btn-glow">
-                    <Phone className="h-4 w-4 mr-2" />
-                    Agendar visita
-                  </Button>
-                  <Button variant="outline" className="w-full glass border-white/10">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Solicitar carpeta
-                  </Button>
-                  <Button variant="ghost" className="w-full">
-                    <Download className="h-4 w-4 mr-2" />
-                    Generar reporte PDF
-                  </Button>
-                </div>
+                <Button variant="ghost" className="w-full glass border-white/10">
+                  <Download className="h-4 w-4 mr-2" />
+                  Descargar ficha PDF
+                </Button>
               </CardContent>
             </Card>
 
-            {/* Map Placeholder */}
+            {/* Contact Form */}
+            <ContactForm listingId={listing.id} listingTitle={listing.title} />
+
+            {/* Property Map */}
             <Card className="glass border-white/10">
-              <CardContent className="p-0">
-                <div className="aspect-video bg-muted/30 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Mapa en desarrollo
-                    </p>
-                  </div>
-                </div>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  Ubicación
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0 pb-4 px-4">
+                <PropertyMap 
+                  lat={listing.lat} 
+                  lng={listing.lng} 
+                  title={listing.title} 
+                />
+                <p className="text-sm text-muted-foreground mt-3 text-center">
+                  {listing.location}, {listing.region}
+                </p>
               </CardContent>
             </Card>
           </div>
