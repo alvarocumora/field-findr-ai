@@ -1,12 +1,14 @@
-import Layout from '@/components/Layout';
 import HeroSection from '@/components/HeroSection';
+import FeaturesSection from '@/components/FeaturesSection';
+import TestimonialsSection from '@/components/TestimonialsSection';
+import CTASection from '@/components/CTASection';
+import FooterSection from '@/components/FooterSection';
 import InteractiveMap from '@/components/InteractiveMap';
 import PropertyGrid from '@/components/PropertyGrid';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, MapPin } from 'lucide-react';
 
 const Index = () => {
-  // Featured properties data
   const featuredProperties = [
     {
       id: 1,
@@ -96,42 +98,72 @@ const Index = () => {
   ];
 
   return (
-    <Layout>
+    <div className="min-h-screen bg-background">
+      {/* Noise overlay for texture */}
+      <div className="noise-overlay" />
+      
       {/* Hero Section */}
       <HeroSection />
 
+      {/* Features Section */}
+      <FeaturesSection />
+
       {/* Interactive Map Section */}
-      <section className="py-8 md:py-12">
-        <div className="container px-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl md:text-2xl font-semibold text-foreground">
-              Explorar en el mapa
-            </h2>
-            <Button variant="ghost" size="sm">
+      <section className="relative py-24 overflow-hidden">
+        <div className="absolute inset-0 grid-pattern opacity-30" />
+        <div className="container relative z-10 px-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-sm text-muted-foreground mb-4">
+                <MapPin className="h-4 w-4 text-primary" />
+                Mapa interactivo
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                Explora en tiempo real
+              </h2>
+            </div>
+            <Button variant="outline" className="glass border-white/10 hover:border-primary/50">
               Ver mapa completo
-              <ArrowRight className="h-4 w-4 ml-1" />
+              <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
-          <InteractiveMap className="h-[400px] md:h-[500px]" />
+          <div className="glass rounded-2xl p-2 border-gradient">
+            <InteractiveMap className="h-[500px] md:h-[600px] rounded-xl overflow-hidden" />
+          </div>
         </div>
       </section>
 
       {/* Featured Properties */}
-      <section className="py-8 md:py-12 bg-muted/30">
-        <div className="container px-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl md:text-2xl font-semibold text-foreground">
-              Propiedades destacadas
-            </h2>
-            <Button variant="ghost" size="sm">
+      <section className="relative py-24 overflow-hidden bg-muted/5">
+        <div className="absolute inset-0 grid-pattern opacity-20" />
+        <div className="container relative z-10 px-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+                Propiedades <span className="gradient-text">destacadas</span>
+              </h2>
+              <p className="text-muted-foreground">
+                Seleccionadas por nuestra IA según potencial de valorización
+              </p>
+            </div>
+            <Button variant="outline" className="glass border-white/10 hover:border-primary/50">
               Ver todas
-              <ArrowRight className="h-4 w-4 ml-1" />
+              <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
           <PropertyGrid properties={featuredProperties} />
         </div>
       </section>
-    </Layout>
+
+      {/* Testimonials */}
+      <TestimonialsSection />
+
+      {/* CTA Section */}
+      <CTASection />
+
+      {/* Footer */}
+      <FooterSection />
+    </div>
   );
 };
 
