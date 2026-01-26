@@ -31,7 +31,7 @@ import {
   Grid3X3, 
   Map as MapIcon,
   X,
-  ChevronDown
+  LayoutGrid
 } from 'lucide-react';
 
 const PROPERTY_TYPES = [
@@ -62,7 +62,7 @@ const TAGS = [
 
 const Explorar = () => {
   const navigate = useNavigate();
-  const [view, setView] = useState<'grid' | 'map'>('grid');
+  const [view, setView] = useState<'grid' | 'map' | 'split'>('split');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('relevancia');
   const [hoveredListing, setHoveredListing] = useState<Listing | null>(null);
@@ -326,9 +326,18 @@ const Explorar = () => {
                 {/* View Toggle */}
                 <div className="hidden md:flex items-center border border-white/10 rounded-lg p-1 glass">
                   <Button
+                    variant={view === 'split' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setView('split')}
+                    title="Vista dividida"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                  <Button
                     variant={view === 'grid' ? 'secondary' : 'ghost'}
                     size="sm"
                     onClick={() => setView('grid')}
+                    title="Solo grilla"
                   >
                     <Grid3X3 className="h-4 w-4" />
                   </Button>
@@ -336,6 +345,7 @@ const Explorar = () => {
                     variant={view === 'map' ? 'secondary' : 'ghost'}
                     size="sm"
                     onClick={() => setView('map')}
+                    title="Solo mapa"
                   >
                     <MapIcon className="h-4 w-4" />
                   </Button>
@@ -392,61 +402,66 @@ const Explorar = () => {
           </aside>
 
           {/* Results */}
-          <div className="flex-1">
-            {view === 'grid' ? (
-              <div className="p-6">
-                {/* Results Count */}
-                <div className="flex items-center justify-between mb-6">
-                  <p className="text-muted-foreground">
-                    {isLoading ? (
-                      <Skeleton className="h-5 w-32" />
-                    ) : (
-                      <>{filteredListings.length} propiedades encontradas</>
-                    )}
-                  </p>
-                </div>
+          <div className="flex-1 flex">
+            {/* Grid Panel - shown in grid and split views */}
+            {(view === 'grid' || view === 'split') && (
+              <div className={`${view === 'split' ? 'w-1/2 border-r border-white/10' : 'w-full'} h-[calc(100vh-132px)] overflow-y-auto`}>
+                <div className="p-6">
+                  {/* Results Count */}
+                  <div className="flex items-center justify-between mb-6">
+                    <p className="text-muted-foreground">
+                      {isLoading ? (
+                        <Skeleton className="h-5 w-32" />
+                      ) : (
+                        <>{filteredListings.length} propiedades encontradas</>
+                      )}
+                    </p>
+                  </div>
 
-                {/* Grid */}
-                {isLoading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {[...Array(6)].map((_, i) => (
-                      <div key={i} className="space-y-3">
-                        <Skeleton className="aspect-[4/3] rounded-lg" />
-                        <Skeleton className="h-5 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                      </div>
-                    ))}
-                  </div>
-                ) : filteredListings.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="glass rounded-2xl p-8 max-w-md mx-auto">
-                      <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-foreground mb-2">
-                        No se encontraron propiedades
-                      </h3>
-                      <p className="text-muted-foreground text-sm mb-4">
-                        Intenta ajustar tus filtros o buscar en otra ubicación.
-                      </p>
-                      <Button onClick={clearFilters} variant="outline">
-                        Limpiar filtros
-                      </Button>
+                  {/* Grid */}
+                  {isLoading ? (
+                    <div className={`grid gap-4 ${view === 'split' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
+                      {[...Array(6)].map((_, i) => (
+                        <div key={i} className="space-y-3">
+                          <Skeleton className="aspect-[4/3] rounded-lg" />
+                          <Skeleton className="h-5 w-3/4" />
+                          <Skeleton className="h-4 w-1/2" />
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {filteredListings.map(listing => (
-                      <ListingCard 
-                        key={listing.id} 
-                        listing={listing}
-                        onHover={setHoveredListing}
-                      />
-                    ))}
-                  </div>
-                )}
+                  ) : filteredListings.length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="glass rounded-2xl p-8 max-w-md mx-auto">
+                        <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-foreground mb-2">
+                          No se encontraron propiedades
+                        </h3>
+                        <p className="text-muted-foreground text-sm mb-4">
+                          Intenta ajustar tus filtros o buscar en otra ubicación.
+                        </p>
+                        <Button onClick={clearFilters} variant="outline">
+                          Limpiar filtros
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={`grid gap-4 ${view === 'split' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
+                      {filteredListings.map(listing => (
+                        <ListingCard 
+                          key={listing.id} 
+                          listing={listing}
+                          onHover={setHoveredListing}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            ) : (
-              /* Map View */
-              <div className="h-[calc(100vh-132px)] relative">
+            )}
+
+            {/* Map Panel - shown in map and split views */}
+            {(view === 'map' || view === 'split') && (
+              <div className={`${view === 'split' ? 'w-1/2' : 'w-full'} h-[calc(100vh-132px)] relative`}>
                 <ExploreMap 
                   listings={filteredListings}
                   hoveredListing={hoveredListing}
