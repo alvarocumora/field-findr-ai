@@ -1,67 +1,95 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
+  PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
-import { TrendingUp, DollarSign, Users, MapPin, Calendar, ArrowUp, ArrowDown } from 'lucide-react';
+import { TrendingUp, DollarSign, Users, MapPin, ArrowUp, ArrowDown, BarChart3 } from 'lucide-react';
+import { useProjects } from '@/hooks/useProjects';
+import { useLots } from '@/hooks/useLots';
+import { useLeads, LEAD_STATUS_CONFIG, LeadStatus } from '@/hooks/useLeads';
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6'];
 
-// Demo data
-const salesData = [
-  { month: 'Ene', ventas: 3, ingresos: 255000000 },
-  { month: 'Feb', ventas: 5, ingresos: 425000000 },
-  { month: 'Mar', ventas: 4, ingresos: 340000000 },
-  { month: 'Abr', ventas: 7, ingresos: 595000000 },
-  { month: 'May', ventas: 6, ingresos: 510000000 },
-  { month: 'Jun', ventas: 8, ingresos: 680000000 },
-];
-
-const leadsBySource = [
-  { name: 'Portal Inmobiliario', value: 35 },
-  { name: 'Redes Sociales', value: 28 },
-  { name: 'Referidos', value: 22 },
-  { name: 'Página Web', value: 15 },
-];
-
-const projectPerformance = [
-  { name: 'Loteo Norte', total: 50, vendidos: 35, reservados: 8, disponibles: 7 },
-  { name: 'Parcelas Vista', total: 30, vendidos: 22, reservados: 5, disponibles: 3 },
-  { name: 'Campo Verde', total: 40, vendidos: 15, reservados: 10, disponibles: 15 },
-];
-
-const conversionFunnel = [
-  { stage: 'Leads', count: 150 },
-  { stage: 'Contactados', count: 98 },
-  { stage: 'Interesados', count: 45 },
-  { stage: 'Negociando', count: 22 },
-  { stage: 'Cerrados', count: 12 },
-];
-
 export const AnalyticsDashboard = () => {
   const [period, setPeriod] = useState('6m');
+  const { projects, isLoading: projectsLoading, stats: projectStats } = useProjects();
+  const { lots, isLoading: lotsLoading, stats: lotStats } = useLots();
+  const { leads, isLoading: leadsLoading, stats: leadStats } = useLeads();
 
-  const totalSales = salesData.reduce((acc, item) => acc + item.ventas, 0);
-  const totalRevenue = salesData.reduce((acc, item) => acc + item.ingresos, 0);
-  const avgTicket = totalRevenue / totalSales;
-  const conversionRate = (12 / 150 * 100).toFixed(1);
+  const isLoading = projectsLoading || lotsLoading || leadsLoading;
+
+  // Calculate real metrics
+  const totalRevenue = lots
+    .filter(l => l.status === 'sold')
+    .reduce((acc, l) => acc + Number(l.price || 0), 0);
+  
+  const avgTicket = lotStats.sold > 0 ? totalRevenue / lotStats.sold : 0;
+  
+  const conversionRate = leadStats.total > 0 
+    ? ((leadStats.statusCounts.converted || 0) / leadStats.total * 100).toFixed(1)
+    : '0';
+
+  // Lead sources breakdown
+  const leadsBySource = leads.reduce((acc, lead) => {
+    const source = lead.source || 'Desconocido';
+    acc[source] = (acc[source] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const leadsBySourceData = Object.entries(leadsBySource)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
+
+  // Project performance data
+  const projectPerformance = projects.map(p => ({
+    name: p.name.length > 15 ? p.name.slice(0, 15) + '...' : p.name,
+    vendidos: p.sold_lots || 0,
+    reservados: p.reserved_lots || 0,
+    disponibles: p.available_lots || 0,
+  }));
+
+  // Conversion funnel from leads
+  const conversionFunnel = [
+    { stage: 'Leads', count: leadStats.total },
+    { stage: 'Contactados', count: leadStats.statusCounts.contacted || 0 },
+    { stage: 'Interesados', count: leadStats.statusCounts.interested || 0 },
+    { stage: 'Negociando', count: leadStats.statusCounts.negotiating || 0 },
+    { stage: 'Cerrados', count: leadStats.statusCounts.converted || 0 },
+  ];
+
+  // Sales trend (grouped by month from lots with sale_date)
+  const salesByMonth = lots
+    .filter(l => l.sale_date)
+    .reduce((acc, lot) => {
+      const date = new Date(lot.sale_date!);
+      const monthKey = date.toLocaleDateString('es-CL', { month: 'short', year: '2-digit' });
+      if (!acc[monthKey]) {
+        acc[monthKey] = { month: monthKey, ventas: 0, ingresos: 0 };
+      }
+      acc[monthKey].ventas += 1;
+      acc[monthKey].ingresos += Number(lot.price || 0);
+      return acc;
+    }, {} as Record<string, { month: string; ventas: number; ingresos: number }>);
+
+  const salesData = Object.values(salesByMonth).slice(-6);
 
   const StatCard = ({ 
     title, 
     value, 
-    change, 
+    subtitle, 
     icon: Icon, 
     trend 
   }: { 
     title: string; 
     value: string; 
-    change: string;
-    icon: any;
-    trend: 'up' | 'down';
+    subtitle?: string;
+    icon: React.ElementType;
+    trend?: 'up' | 'down' | 'neutral';
   }) => (
     <Card>
       <CardContent className="pt-6">
@@ -69,10 +97,15 @@ export const AnalyticsDashboard = () => {
           <div>
             <p className="text-sm text-muted-foreground">{title}</p>
             <p className="text-2xl font-bold mt-1">{value}</p>
-            <div className={`flex items-center gap-1 mt-1 text-sm ${trend === 'up' ? 'text-green-600' : 'text-red-500'}`}>
-              {trend === 'up' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-              {change}
-            </div>
+            {subtitle && (
+              <div className={`flex items-center gap-1 mt-1 text-sm ${
+                trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-500' : 'text-muted-foreground'
+              }`}>
+                {trend === 'up' && <ArrowUp className="h-3 w-3" />}
+                {trend === 'down' && <ArrowDown className="h-3 w-3" />}
+                {subtitle}
+              </div>
+            )}
           </div>
           <div className="p-2 bg-primary/10 rounded-lg">
             <Icon className="h-5 w-5 text-primary" />
@@ -81,6 +114,45 @@ export const AnalyticsDashboard = () => {
       </CardContent>
     </Card>
   );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-72" />)}
+        </div>
+      </div>
+    );
+  }
+
+  const hasData = projects.length > 0 || lots.length > 0 || leads.length > 0;
+
+  if (!hasData) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Dashboard Analítico</h2>
+            <p className="text-muted-foreground">Métricas de rendimiento en tiempo real</p>
+          </div>
+        </div>
+        <Card className="p-12 text-center">
+          <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Sin datos para mostrar</h3>
+          <p className="text-muted-foreground">
+            Agrega proyectos, lotes y leads para ver las métricas del dashboard
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -107,31 +179,31 @@ export const AnalyticsDashboard = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Ventas Totales"
-          value={`${totalSales} lotes`}
-          change="+23% vs anterior"
+          value={`${lotStats.sold} lotes`}
+          subtitle={`de ${lotStats.total} totales`}
           icon={TrendingUp}
-          trend="up"
+          trend="neutral"
         />
         <StatCard
           title="Ingresos"
           value={`$${(totalRevenue / 1000000).toFixed(0)}M`}
-          change="+18% vs anterior"
+          subtitle={totalRevenue > 0 ? 'Ventas cerradas' : 'Sin ventas aún'}
           icon={DollarSign}
-          trend="up"
+          trend={totalRevenue > 0 ? 'up' : 'neutral'}
         />
         <StatCard
           title="Ticket Promedio"
-          value={`$${(avgTicket / 1000000).toFixed(0)}M`}
-          change="-5% vs anterior"
+          value={avgTicket > 0 ? `$${(avgTicket / 1000000).toFixed(0)}M` : '-'}
+          subtitle={lotStats.sold > 0 ? `${lotStats.sold} ventas` : 'Sin ventas'}
           icon={MapPin}
-          trend="down"
+          trend="neutral"
         />
         <StatCard
           title="Tasa Conversión"
           value={`${conversionRate}%`}
-          change="+2.1% vs anterior"
+          subtitle={`${leadStats.statusCounts.converted || 0} de ${leadStats.total} leads`}
           icon={Users}
-          trend="up"
+          trend={Number(conversionRate) > 5 ? 'up' : 'neutral'}
         />
       </div>
 
@@ -144,25 +216,31 @@ export const AnalyticsDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="month" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--background))', 
-                      border: '1px solid hsl(var(--border))' 
-                    }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="ventas" 
-                    stroke="hsl(var(--primary))" 
-                    fill="hsl(var(--primary) / 0.2)" 
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {salesData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={salesData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="month" className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))' 
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="ventas" 
+                      stroke="hsl(var(--primary))" 
+                      fill="hsl(var(--primary) / 0.2)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground">
+                  No hay ventas registradas con fecha
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -174,36 +252,44 @@ export const AnalyticsDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="h-72 flex items-center">
-              <ResponsiveContainer width="50%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={leadsBySource}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {leadsBySource.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              {leadsBySourceData.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="50%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={leadsBySourceData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {leadsBySourceData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="flex-1 space-y-2">
+                    {leadsBySourceData.map((item, i) => (
+                      <div key={item.name} className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: COLORS[i % COLORS.length] }} 
+                        />
+                        <span className="text-sm flex-1 truncate">{item.name}</span>
+                        <Badge variant="secondary">{item.value}</Badge>
+                      </div>
                     ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex-1 space-y-2">
-                {leadsBySource.map((item, i) => (
-                  <div key={item.name} className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: COLORS[i] }} 
-                    />
-                    <span className="text-sm flex-1">{item.name}</span>
-                    <Badge variant="secondary">{item.value}%</Badge>
                   </div>
-                ))}
-              </div>
+                </>
+              ) : (
+                <div className="w-full text-center text-muted-foreground">
+                  No hay leads con fuente registrada
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -215,22 +301,28 @@ export const AnalyticsDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={projectPerformance} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis type="number" className="text-xs" />
-                  <YAxis dataKey="name" type="category" className="text-xs" width={100} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--background))', 
-                      border: '1px solid hsl(var(--border))' 
-                    }}
-                  />
-                  <Bar dataKey="vendidos" stackId="a" fill="#10b981" name="Vendidos" />
-                  <Bar dataKey="reservados" stackId="a" fill="#f59e0b" name="Reservados" />
-                  <Bar dataKey="disponibles" stackId="a" fill="#3b82f6" name="Disponibles" />
-                </BarChart>
-              </ResponsiveContainer>
+              {projectPerformance.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={projectPerformance} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis type="number" className="text-xs" />
+                    <YAxis dataKey="name" type="category" className="text-xs" width={100} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))' 
+                      }}
+                    />
+                    <Bar dataKey="vendidos" stackId="a" fill="#10b981" name="Vendidos" />
+                    <Bar dataKey="reservados" stackId="a" fill="#f59e0b" name="Reservados" />
+                    <Bar dataKey="disponibles" stackId="a" fill="#3b82f6" name="Disponibles" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground">
+                  No hay proyectos creados
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -243,7 +335,8 @@ export const AnalyticsDashboard = () => {
           <CardContent>
             <div className="space-y-3">
               {conversionFunnel.map((item, i) => {
-                const width = (item.count / conversionFunnel[0].count) * 100;
+                const maxCount = conversionFunnel[0].count || 1;
+                const width = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
                 const color = COLORS[i % COLORS.length];
                 return (
                   <div key={item.stage}>
@@ -254,9 +347,9 @@ export const AnalyticsDashboard = () => {
                     <div className="h-8 bg-muted rounded-lg overflow-hidden">
                       <div 
                         className="h-full rounded-lg flex items-center justify-end pr-2 text-white text-xs font-medium transition-all"
-                        style={{ width: `${width}%`, backgroundColor: color }}
+                        style={{ width: `${Math.max(width, 5)}%`, backgroundColor: color }}
                       >
-                        {width.toFixed(0)}%
+                        {width > 10 ? `${width.toFixed(0)}%` : ''}
                       </div>
                     </div>
                   </div>
