@@ -7,13 +7,13 @@ import {
   Heart,
   LayoutDashboard,
   Building2,
-  Settings,
   ChevronLeft,
   ChevronRight,
   Mountain,
   Sparkles,
   Users,
-  BarChart3
+  BarChart3,
+  UserCircle
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -39,7 +39,7 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
   ];
 
   const bottomNavigation = [
-    { name: 'Configuración', href: '/settings', icon: Settings },
+    { name: 'Mi Perfil', href: '/profile', icon: UserCircle },
   ];
 
   const isActive = (path: string) => location.pathname === path;
