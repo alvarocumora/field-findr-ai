@@ -1,88 +1,84 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  MapPin, Plus, Search, Filter, Grid3X3, List, 
-  Eye, Edit, Trash2, DollarSign, Ruler, Trees, Droplets
-} from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { MapPin, Plus, Search, Filter, Grid3X3, List, Loader2 } from 'lucide-react';
 import Map from './Map';
 import Layout from './Layout';
-
-interface Lot {
-  id: string;
-  identifier: string;
-  status: 'available' | 'reserved' | 'sold';
-  area_m2: number;
-  price: number;
-  coordinates: [number, number];
-  features: string[];
-}
-
-const mockLots: Lot[] = [
-  { id: '1', identifier: 'A-001', status: 'available', area_m2: 500, price: 25000000, coordinates: [-70.65, -33.44], features: ['Vista al mar', 'Servicios básicos'] },
-  { id: '2', identifier: 'A-002', status: 'reserved', area_m2: 600, price: 30000000, coordinates: [-70.66, -33.45], features: ['Esquina', 'Plano'] },
-  { id: '3', identifier: 'A-003', status: 'sold', area_m2: 450, price: 22500000, coordinates: [-70.67, -33.43], features: ['Cercano a acceso'] },
-  { id: '4', identifier: 'B-001', status: 'available', area_m2: 800, price: 40000000, coordinates: [-70.68, -33.44], features: ['Doble frente', 'Vista panorámica'] },
-  { id: '5', identifier: 'B-002', status: 'available', area_m2: 550, price: 27500000, coordinates: [-70.64, -33.45], features: ['Arbolado', 'Tranquilo'] },
-];
+import { useLots, Lot, LotInsert } from '@/hooks/useLots';
+import { useProjects } from '@/hooks/useProjects';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { LotForm } from './lots/LotForm';
+import { LotCard } from './lots/LotCard';
+import { LotTable } from './lots/LotTable';
+import { LotStats } from './lots/LotStats';
 
 const LotManagement = () => {
-  const [lots] = useState<Lot[]>(mockLots);
+  const { lots, isLoading, stats, createLot, updateLot, deleteLot } = useLots();
+  const { projects, isLoading: projectsLoading } = useProjects();
+  const { token: mapboxToken } = useMapboxToken();
+
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [projectFilter, setProjectFilter] = useState<string>('all');
+  
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [mapboxToken] = useState(''); // User needs to add their token
+  const [editingLot, setEditingLot] = useState<Lot | null>(null);
+  const [deletingLot, setDeletingLot] = useState<Lot | null>(null);
 
   const filteredLots = lots.filter(lot => {
-    const matchesSearch = lot.identifier.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = 
+      lot.lot_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      lot.name?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || lot.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesProject = projectFilter === 'all' || lot.project_id === projectFilter;
+    return matchesSearch && matchesStatus && matchesProject;
   });
 
-  const stats = {
-    total: lots.length,
-    available: lots.filter(l => l.status === 'available').length,
-    reserved: lots.filter(l => l.status === 'reserved').length,
-    sold: lots.filter(l => l.status === 'sold').length,
+  const handleCreateLot = (data: Omit<LotInsert, 'user_id'>) => {
+    createLot.mutate(data, {
+      onSuccess: () => setShowAddDialog(false),
+    });
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(price);
+  const handleUpdateLot = (data: Omit<LotInsert, 'user_id'>) => {
+    if (!editingLot) return;
+    updateLot.mutate({ id: editingLot.id, ...data }, {
+      onSuccess: () => setEditingLot(null),
+    });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'available': return 'bg-green-500/10 text-green-600 border-green-500/20';
-      case 'reserved': return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
-      case 'sold': return 'bg-red-500/10 text-red-600 border-red-500/20';
-      default: return 'bg-muted text-muted-foreground';
-    }
+  const handleDeleteLot = () => {
+    if (!deletingLot) return;
+    deleteLot.mutate(deletingLot.id, {
+      onSuccess: () => setDeletingLot(null),
+    });
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'available': return 'Disponible';
-      case 'reserved': return 'Reservado';
-      case 'sold': return 'Vendido';
-      default: return status;
-    }
-  };
+  const mapMarkers = filteredLots
+    .filter(lot => lot.latitude && lot.longitude)
+    .map(lot => ({
+      id: lot.id,
+      coordinates: [Number(lot.longitude), Number(lot.latitude)] as [number, number],
+      title: lot.lot_number,
+      status: (lot.status as 'available' | 'reserved' | 'sold') || 'available',
+      price: lot.price ? Number(lot.price) : 0,
+    }));
 
-  const mapMarkers = filteredLots.map(lot => ({
-    id: lot.id,
-    coordinates: lot.coordinates,
-    title: lot.identifier,
-    status: lot.status,
-    price: lot.price,
-  }));
+  if (isLoading || projectsLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-96">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -95,105 +91,36 @@ const LotManagement = () => {
           </div>
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button className="gap-2" disabled={projects.length === 0}>
                 <Plus className="h-4 w-4" />
                 Nuevo Lote
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Agregar Nuevo Lote</DialogTitle>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Identificador</Label>
-                    <Input placeholder="ej: A-001" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Superficie (m²)</Label>
-                    <Input type="number" placeholder="500" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Precio (CLP)</Label>
-                    <Input type="number" placeholder="25000000" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Estado</Label>
-                    <Select defaultValue="available">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="available">Disponible</SelectItem>
-                        <SelectItem value="reserved">Reservado</SelectItem>
-                        <SelectItem value="sold">Vendido</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Características</Label>
-                  <Textarea placeholder="Vista al mar, servicios básicos, etc." />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancelar</Button>
-                <Button onClick={() => setShowAddDialog(false)}>Guardar Lote</Button>
-              </DialogFooter>
+              <LotForm
+                projects={projects}
+                onSubmit={handleCreateLot}
+                onCancel={() => setShowAddDialog(false)}
+                isLoading={createLot.isPending}
+              />
             </DialogContent>
           </Dialog>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Lotes</p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                </div>
-                <Grid3X3 className="h-8 w-8 text-primary/60" />
-              </div>
-            </CardContent>
+        <LotStats stats={stats} />
+
+        {/* No projects warning */}
+        {projects.length === 0 && (
+          <Card className="p-6 bg-yellow-500/5 border-yellow-500/20">
+            <p className="text-yellow-700">
+              No tienes proyectos creados. Crea un proyecto primero para poder agregar lotes.
+            </p>
           </Card>
-          <Card className="bg-gradient-to-br from-green-500/5 to-green-500/10 border-green-500/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Disponibles</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.available}</p>
-                </div>
-                <MapPin className="h-8 w-8 text-green-500/60" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-yellow-500/5 to-yellow-500/10 border-yellow-500/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Reservados</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.reserved}</p>
-                </div>
-                <DollarSign className="h-8 w-8 text-yellow-500/60" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-red-500/5 to-red-500/10 border-red-500/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Vendidos</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.sold}</p>
-                </div>
-                <DollarSign className="h-8 w-8 text-red-500/60" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        )}
 
         {/* Main Content */}
         <Tabs defaultValue="list" className="space-y-4">
@@ -209,18 +136,33 @@ const LotManagement = () => {
               </TabsTrigger>
             </TabsList>
             
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar lote..."
-                  className="pl-10 w-64"
+                  className="pl-10 w-48"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              
+              <Select value={projectFilter} onValueChange={setProjectFilter}>
                 <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Proyecto" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los proyectos</SelectItem>
+                  {projects.map(project => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-36">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
@@ -231,6 +173,7 @@ const LotManagement = () => {
                   <SelectItem value="sold">Vendidos</SelectItem>
                 </SelectContent>
               </Select>
+
               <div className="flex border rounded-lg">
                 <Button
                   variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
@@ -254,97 +197,27 @@ const LotManagement = () => {
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredLots.map((lot) => (
-                  <Card key={lot.id} className="group hover:shadow-lg transition-all duration-300 hover:border-primary/30">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{lot.identifier}</CardTitle>
-                        <Badge className={getStatusColor(lot.status)}>
-                          {getStatusLabel(lot.status)}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Ruler className="h-4 w-4" />
-                          <span>{lot.area_m2.toLocaleString()} m²</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-green-600 font-medium">
-                          <DollarSign className="h-4 w-4" />
-                          <span>{formatPrice(lot.price)}</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {lot.features.slice(0, 2).map((feature, i) => (
-                          <Badge key={i} variant="outline" className="text-xs">
-                            {feature}
-                          </Badge>
-                        ))}
-                        {lot.features.length > 2 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{lot.features.length - 2}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button size="sm" variant="outline" className="flex-1 gap-1">
-                          <Eye className="h-3 w-3" />
-                          Ver
-                        </Button>
-                        <Button size="sm" variant="outline" className="flex-1 gap-1">
-                          <Edit className="h-3 w-3" />
-                          Editar
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <LotCard 
+                    key={lot.id} 
+                    lot={lot}
+                    onEdit={setEditingLot}
+                    onDelete={setDeletingLot}
+                  />
                 ))}
+                {filteredLots.length === 0 && (
+                  <div className="col-span-full p-8 text-center text-muted-foreground">
+                    {lots.length === 0 
+                      ? 'No hay lotes registrados. Crea el primer lote.'
+                      : 'No se encontraron lotes con los filtros aplicados.'}
+                  </div>
+                )}
               </div>
             ) : (
-              <Card>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="border-b bg-muted/50">
-                      <tr>
-                        <th className="text-left p-4 font-medium">Lote</th>
-                        <th className="text-left p-4 font-medium">Estado</th>
-                        <th className="text-left p-4 font-medium">Superficie</th>
-                        <th className="text-left p-4 font-medium">Precio</th>
-                        <th className="text-left p-4 font-medium">Características</th>
-                        <th className="text-right p-4 font-medium">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {filteredLots.map((lot) => (
-                        <tr key={lot.id} className="hover:bg-muted/30 transition-colors">
-                          <td className="p-4 font-medium">{lot.identifier}</td>
-                          <td className="p-4">
-                            <Badge className={getStatusColor(lot.status)}>
-                              {getStatusLabel(lot.status)}
-                            </Badge>
-                          </td>
-                          <td className="p-4">{lot.area_m2.toLocaleString()} m²</td>
-                          <td className="p-4 text-green-600 font-medium">{formatPrice(lot.price)}</td>
-                          <td className="p-4">
-                            <div className="flex flex-wrap gap-1">
-                              {lot.features.slice(0, 2).map((f, i) => (
-                                <Badge key={i} variant="outline" className="text-xs">{f}</Badge>
-                              ))}
-                            </div>
-                          </td>
-                          <td className="p-4 text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button size="icon" variant="ghost"><Eye className="h-4 w-4" /></Button>
-                              <Button size="icon" variant="ghost"><Edit className="h-4 w-4" /></Button>
-                              <Button size="icon" variant="ghost" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
+              <LotTable 
+                lots={filteredLots}
+                onEdit={setEditingLot}
+                onDelete={setDeletingLot}
+              />
             )}
           </TabsContent>
 
@@ -355,7 +228,10 @@ const LotManagement = () => {
                   accessToken={mapboxToken}
                   markers={mapMarkers}
                   className="h-[600px]"
-                  onMarkerClick={(id) => console.log('Clicked lot:', id)}
+                  onMarkerClick={(id) => {
+                    const lot = lots.find(l => l.id === id);
+                    if (lot) setEditingLot(lot);
+                  }}
                 />
               ) : (
                 <div className="h-[600px] flex items-center justify-center bg-muted/30">
@@ -367,13 +243,51 @@ const LotManagement = () => {
                         Configura tu token de Mapbox para ver el mapa interactivo
                       </p>
                     </div>
-                    <Button variant="outline">Configurar Mapbox</Button>
                   </div>
                 </div>
               )}
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Edit Dialog */}
+        <Dialog open={!!editingLot} onOpenChange={(open) => !open && setEditingLot(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Editar Lote {editingLot?.lot_number}</DialogTitle>
+            </DialogHeader>
+            {editingLot && (
+              <LotForm
+                projects={projects}
+                initialData={editingLot}
+                onSubmit={handleUpdateLot}
+                onCancel={() => setEditingLot(null)}
+                isLoading={updateLot.isPending}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation */}
+        <AlertDialog open={!!deletingLot} onOpenChange={(open) => !open && setDeletingLot(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Eliminar lote {deletingLot?.lot_number}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer. El lote será eliminado permanentemente.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDeleteLot}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleteLot.isPending ? 'Eliminando...' : 'Eliminar'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );
