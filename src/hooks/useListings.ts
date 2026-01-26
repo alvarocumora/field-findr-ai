@@ -1,0 +1,297 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import type { Json } from '@/integrations/supabase/types';
+
+export interface Listing {
+  id: string;
+  user_id: string | null;
+  title: string;
+  description: string | null;
+  type: string;
+  price: number;
+  currency: string;
+  area_m2: number | null;
+  area_ha: number | null;
+  location: string;
+  region: string | null;
+  city: string | null;
+  address: string | null;
+  lat: number | null;
+  lng: number | null;
+  images: string[];
+  tags: string[];
+  utilities: Json;
+  zoning: string | null;
+  rol: string | null;
+  subdivision_eligible: boolean;
+  legal_status: string;
+  featured: boolean;
+  views_count: number;
+  status: string;
+  is_demo: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ListingFilters {
+  type?: string[];
+  region?: string[];
+  priceMin?: number;
+  priceMax?: number;
+  areaMin?: number;
+  areaMax?: number;
+  tags?: string[];
+  featured?: boolean;
+  status?: string;
+}
+
+export const useListings = (filters?: ListingFilters) => {
+  return useQuery({
+    queryKey: ['listings', filters],
+    queryFn: async () => {
+      let query = supabase
+        .from('listings')
+        .select('*')
+        .eq('status', 'active')
+        .order('featured', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (filters?.type && filters.type.length > 0) {
+        query = query.in('type', filters.type);
+      }
+
+      if (filters?.region && filters.region.length > 0) {
+        query = query.in('region', filters.region);
+      }
+
+      if (filters?.priceMin) {
+        query = query.gte('price', filters.priceMin);
+      }
+
+      if (filters?.priceMax) {
+        query = query.lte('price', filters.priceMax);
+      }
+
+      if (filters?.areaMin) {
+        query = query.gte('area_m2', filters.areaMin);
+      }
+
+      if (filters?.areaMax) {
+        query = query.lte('area_m2', filters.areaMax);
+      }
+
+      if (filters?.featured !== undefined) {
+        query = query.eq('featured', filters.featured);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      return data as Listing[];
+    },
+  });
+};
+
+export const useListing = (id: string) => {
+  return useQuery({
+    queryKey: ['listing', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as Listing | null;
+    },
+    enabled: !!id,
+  });
+};
+
+export const useFeaturedListings = (limit = 8) => {
+  return useQuery({
+    queryKey: ['listings', 'featured', limit],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('status', 'active')
+        .eq('featured', true)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      return data as Listing[];
+    },
+  });
+};
+
+export const useCreateListing = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (listing: {
+      title: string;
+      type: string;
+      price: number;
+      location: string;
+      user_id?: string;
+      description?: string;
+      currency?: string;
+      area_m2?: number;
+      area_ha?: number;
+      region?: string;
+      city?: string;
+      address?: string;
+      lat?: number;
+      lng?: number;
+      images?: string[];
+      tags?: string[];
+      utilities?: Json;
+      zoning?: string;
+      rol?: string;
+      subdivision_eligible?: boolean;
+      legal_status?: string;
+      featured?: boolean;
+      status?: string;
+      is_demo?: boolean;
+    }) => {
+      const { data, error } = await supabase
+        .from('listings')
+        .insert(listing)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['listings'] });
+      toast({
+        title: 'Propiedad publicada',
+        description: 'Tu propiedad ha sido publicada exitosamente.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'No se pudo publicar la propiedad. Intenta de nuevo.',
+        variant: 'destructive',
+      });
+      console.error('Error creating listing:', error);
+    },
+  });
+};
+
+export const useUpdateListing = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Record<string, unknown> }) => {
+      const { data, error } = await supabase
+        .from('listings')
+        .update(updates as Record<string, Json>)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['listings'] });
+      queryClient.invalidateQueries({ queryKey: ['listing', data.id] });
+      toast({
+        title: 'Propiedad actualizada',
+        description: 'Los cambios han sido guardados.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar la propiedad.',
+        variant: 'destructive',
+      });
+      console.error('Error updating listing:', error);
+    },
+  });
+};
+
+export const useDeleteListing = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('listings')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['listings'] });
+      toast({
+        title: 'Propiedad eliminada',
+        description: 'La propiedad ha sido eliminada.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'No se pudo eliminar la propiedad.',
+        variant: 'destructive',
+      });
+      console.error('Error deleting listing:', error);
+    },
+  });
+};
+
+// Helper functions
+export const formatPrice = (price: number, currency = 'CLP') => {
+  if (currency === 'CLP') {
+    return `$${price.toLocaleString('es-CL')}`;
+  }
+  if (currency === 'UF') {
+    return `UF ${price.toLocaleString('es-CL')}`;
+  }
+  return `$${price.toLocaleString('en-US')} ${currency}`;
+};
+
+export const formatArea = (areaM2: number | null, areaHa: number | null) => {
+  if (areaHa && areaHa >= 1) {
+    return `${areaHa.toLocaleString('es-CL')} há`;
+  }
+  if (areaM2) {
+    return `${areaM2.toLocaleString('es-CL')} m²`;
+  }
+  return 'N/A';
+};
+
+export const getListingTypeLabel = (type: string) => {
+  const types: Record<string, string> = {
+    parcela_rural: 'Parcela Rural',
+    sitio_industrial: 'Sitio Industrial',
+    campo_agricola: 'Campo Agrícola',
+    terreno_urbano: 'Terreno Urbano',
+    terreno_costero: 'Terreno Costero',
+    terreno_montana: 'Terreno de Montaña',
+    inversion: 'Inversión',
+  };
+  return types[type] || type;
+};
+
+export const getLegalStatusLabel = (status: string) => {
+  const statuses: Record<string, { label: string; color: string }> = {
+    pending: { label: 'Pendiente', color: 'bg-yellow-500/20 text-yellow-400' },
+    reviewing: { label: 'En Revisión', color: 'bg-blue-500/20 text-blue-400' },
+    verified: { label: 'Verificado', color: 'bg-green-500/20 text-green-400' },
+    rejected: { label: 'Rechazado', color: 'bg-red-500/20 text-red-400' },
+  };
+  return statuses[status] || { label: status, color: 'bg-muted text-muted-foreground' };
+};
