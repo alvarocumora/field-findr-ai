@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ZoomIn, ZoomOut, Layers, Locate } from 'lucide-react';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 
 interface LotPolygon {
   id: string;
@@ -123,8 +124,6 @@ const statusLabels = {
   sold: 'Vendido',
 };
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
-
 const InteractiveMap = ({ 
   lots = demoLots,
   onLotClick,
@@ -137,6 +136,7 @@ const InteractiveMap = ({
   const popup = useRef<mapboxgl.Popup | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [mapStyle, setMapStyle] = useState<'streets' | 'satellite'>('satellite');
+  const { token: mapboxToken, loading: tokenLoading, error: tokenError } = useMapboxToken();
 
   const addPolygonLayers = useCallback(() => {
     if (!map.current) return;
@@ -288,9 +288,9 @@ const InteractiveMap = ({
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || tokenLoading || !mapboxToken) return;
 
-    mapboxgl.accessToken = MAPBOX_TOKEN;
+    mapboxgl.accessToken = mapboxToken;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -317,7 +317,7 @@ const InteractiveMap = ({
       popup.current?.remove();
       map.current?.remove();
     };
-  }, [center, zoom, addPolygonLayers]);
+  }, [center, zoom, addPolygonLayers, mapboxToken, tokenLoading]);
 
   // Update style when changed
   useEffect(() => {
@@ -352,9 +352,20 @@ const InteractiveMap = ({
     setMapStyle(prev => prev === 'streets' ? 'satellite' : 'streets');
   };
 
+  if (tokenError) {
+    return (
+      <Card className={`relative overflow-hidden flex items-center justify-center ${className}`}>
+        <div className="text-center p-8">
+          <p className="text-muted-foreground">Error al cargar el mapa</p>
+          <p className="text-sm text-muted-foreground/70 mt-1">{tokenError}</p>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className={`relative overflow-hidden ${className}`}>
-      {isLoading && (
+      {(isLoading || tokenLoading) && (
         <div className="absolute inset-0 z-10">
           <Skeleton className="w-full h-full" />
         </div>
