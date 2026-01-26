@@ -14,7 +14,266 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      leads: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string | null
+          lot_id: string | null
+          next_follow_up: string | null
+          notes: string | null
+          phone: string | null
+          preferred_area_max: number | null
+          preferred_area_min: number | null
+          project_id: string | null
+          source: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name?: string | null
+          lot_id?: string | null
+          next_follow_up?: string | null
+          notes?: string | null
+          phone?: string | null
+          preferred_area_max?: number | null
+          preferred_area_min?: number | null
+          project_id?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string | null
+          lot_id?: string | null
+          next_follow_up?: string | null
+          notes?: string | null
+          phone?: string | null
+          preferred_area_max?: number | null
+          preferred_area_min?: number | null
+          project_id?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lots: {
+        Row: {
+          area: number
+          buyer_email: string | null
+          buyer_name: string | null
+          buyer_phone: string | null
+          created_at: string
+          description: string | null
+          features: Json | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          lot_number: string
+          name: string | null
+          polygon: Json | null
+          price: number | null
+          price_per_sqm: number | null
+          project_id: string
+          reservation_date: string | null
+          sale_date: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          area: number
+          buyer_email?: string | null
+          buyer_name?: string | null
+          buyer_phone?: string | null
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          lot_number: string
+          name?: string | null
+          polygon?: Json | null
+          price?: number | null
+          price_per_sqm?: number | null
+          project_id: string
+          reservation_date?: string | null
+          sale_date?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          area?: number
+          buyer_email?: string | null
+          buyer_name?: string | null
+          buyer_phone?: string | null
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          lot_number?: string
+          name?: string | null
+          polygon?: Json | null
+          price?: number | null
+          price_per_sqm?: number | null
+          project_id?: string
+          reservation_date?: string | null
+          sale_date?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lots_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          address: string | null
+          available_lots: number | null
+          city: string | null
+          country: string | null
+          created_at: string
+          description: string | null
+          id: string
+          latitude: number | null
+          location: string | null
+          longitude: number | null
+          name: string
+          region: string | null
+          reserved_lots: number | null
+          sold_lots: number | null
+          status: string | null
+          total_area: number | null
+          total_lots: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          available_lots?: number | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          name: string
+          region?: string | null
+          reserved_lots?: number | null
+          sold_lots?: number | null
+          status?: string | null
+          total_area?: number | null
+          total_lots?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          available_lots?: number | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          name?: string
+          region?: string | null
+          reserved_lots?: number | null
+          sold_lots?: number | null
+          status?: string | null
+          total_area?: number | null
+          total_lots?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
