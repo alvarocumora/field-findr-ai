@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 export const useMapboxToken = () => {
   const [token, setToken] = useState<string | null>(null);
@@ -7,22 +6,18 @@ export const useMapboxToken = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchToken = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        
-        if (error) throw error;
-        
-        setToken(data.token);
-      } catch (err) {
-        console.error('Error fetching Mapbox token:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch token');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchToken();
+    // Use the public Mapbox token directly from environment variables
+    // This is safe because Mapbox tokens starting with 'pk.' are publishable keys
+    const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
+    
+    if (mapboxToken) {
+      setToken(mapboxToken);
+      setError(null);
+    } else {
+      setError('Mapbox token not configured');
+    }
+    
+    setLoading(false);
   }, []);
 
   return { token, loading, error };
