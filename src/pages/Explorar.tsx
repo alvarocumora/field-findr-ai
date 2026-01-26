@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import ListingCard from '@/components/listings/ListingCard';
+import ExploreMap from '@/components/map/ExploreMap';
 import { useListings, Listing, getListingTypeLabel, formatPrice } from '@/hooks/useListings';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,6 +61,7 @@ const TAGS = [
 ];
 
 const Explorar = () => {
+  const navigate = useNavigate();
   const [view, setView] = useState<'grid' | 'map'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('relevancia');
@@ -445,21 +447,13 @@ const Explorar = () => {
             ) : (
               /* Map View */
               <div className="h-[calc(100vh-132px)] relative">
-                <div className="absolute inset-0 bg-muted/20 flex items-center justify-center">
-                  <div className="text-center glass p-8 rounded-2xl">
-                    <MapIcon className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">
-                      Vista de mapa en desarrollo
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      className="mt-4"
-                      onClick={() => setView('grid')}
-                    >
-                      Ver como grilla
-                    </Button>
-                  </div>
-                </div>
+                <ExploreMap 
+                  listings={filteredListings}
+                  hoveredListing={hoveredListing}
+                  onListingHover={setHoveredListing}
+                  onListingClick={(listing) => navigate(`/propiedad/${listing.id}`)}
+                  className="w-full h-full"
+                />
               </div>
             )}
           </div>
