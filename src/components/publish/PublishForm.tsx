@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
-  Upload, 
   MapPin, 
   FileText, 
   DollarSign, 
@@ -26,12 +25,13 @@ import {
   Zap,
   Car,
   Sparkles,
-  X
+  ImageIcon
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateListing } from "@/hooks/useListings";
 import { useAuth } from "@/hooks/useAuth";
 import LocationPicker from "./LocationPicker";
+import ImageUploader from "./ImageUploader";
 
 const PROPERTY_TYPES = [
   { value: 'parcela_rural', label: 'Parcela Rural' },
@@ -115,7 +115,7 @@ const PublishForm = () => {
     { number: 1, title: "Información", icon: FileText },
     { number: 2, title: "Ubicación", icon: MapPin },
     { number: 3, title: "Precio", icon: DollarSign },
-    { number: 4, title: "Fotos", icon: Upload },
+    { number: 4, title: "Fotos", icon: ImageIcon },
   ];
 
   const handleInputChange = (field: string, value: unknown) => {
@@ -575,41 +575,12 @@ const PublishForm = () => {
           {/* Step 4: Fotos */}
           {currentStep === 4 && (
             <div className="space-y-6 animate-fade-in">
-              <div className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center hover:border-primary/50 transition-colors">
-                <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="font-semibold mb-2 text-foreground">
-                  Arrastra fotos aquí
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  o haz clic para seleccionar archivos
-                </p>
-                <Button variant="outline" className="glass border-white/10">
-                  Seleccionar fotos
-                </Button>
-              </div>
-
-              {formData.images.length > 0 && (
-                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                  {formData.images.map((img, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden">
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                      <button
-                        onClick={() => setFormData(prev => ({
-                          ...prev,
-                          images: prev.images.filter((_, i) => i !== idx)
-                        }))}
-                        className="absolute top-2 right-2 p-1 rounded-full bg-black/50 hover:bg-black/70"
-                      >
-                        <X className="h-4 w-4 text-white" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <p className="text-sm text-muted-foreground">
-                Sube fotos de calidad. Las primeras 3 serán las destacadas.
-              </p>
+              <ImageUploader
+                images={formData.images}
+                onImagesChange={(images) => handleInputChange("images", images)}
+                userId={user?.id}
+                maxImages={10}
+              />
             </div>
           )}
 
