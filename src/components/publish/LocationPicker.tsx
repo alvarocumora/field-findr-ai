@@ -1,14 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin } from 'lucide-react';
+import { MapPin, Loader2 } from 'lucide-react';
+
+interface GeocodedAddress {
+  address: string;
+  city?: string;
+  region?: string;
+  country?: string;
+}
 
 interface LocationPickerProps {
   lat: number | null;
   lng: number | null;
-  onLocationSelect: (lat: number, lng: number) => void;
+  onLocationSelect: (lat: number, lng: number, address?: GeocodedAddress) => void;
 }
 
 const LocationPicker = ({ lat, lng, onLocationSelect }: LocationPickerProps) => {
@@ -16,7 +23,53 @@ const LocationPicker = ({ lat, lng, onLocationSelect }: LocationPickerProps) => 
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGeocoding, setIsGeocoding] = useState(false);
   const { token: mapboxToken, loading: tokenLoading, error: tokenError } = useMapboxToken();
+
+  // Reverse geocoding function
+  const reverseGeocode = useCallback(async (latitude: number, longitude: number): Promise<GeocodedAddress | undefined> => {
+    if (!mapboxToken) return undefined;
+    
+    setIsGeocoding(true);
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxToken}&language=es&types=address,place,region,country`
+      );
+      
+      if (!response.ok) throw new Error('Geocoding failed');
+      
+      const data = await response.json();
+      
+      if (data.features && data.features.length > 0) {
+        const feature = data.features[0];
+        const context = feature.context || [];
+        
+        // Extract address components from context
+        const getContextValue = (type: string) => {
+          const item = context.find((c: { id: string }) => c.id.startsWith(type));
+          return item?.text;
+        };
+        
+        return {
+          address: feature.place_name || feature.text,
+          city: getContextValue('place') || getContextValue('locality'),
+          region: getContextValue('region'),
+          country: getContextValue('country'),
+        };
+      }
+    } catch (error) {
+      console.error('Reverse geocoding error:', error);
+    } finally {
+      setIsGeocoding(false);
+    }
+    return undefined;
+  }, [mapboxToken]);
+
+  // Handle location selection with geocoding
+  const handleLocationChange = useCallback(async (latitude: number, longitude: number) => {
+    const address = await reverseGeocode(latitude, longitude);
+    onLocationSelect(latitude, longitude, address);
+  }, [reverseGeocode, onLocationSelect]);
 
   useEffect(() => {
     if (!mapContainer.current || tokenLoading || !mapboxToken) return;
@@ -49,7 +102,7 @@ const LocationPicker = ({ lat, lng, onLocationSelect }: LocationPickerProps) => 
     marker.current.on('dragend', () => {
       const lngLat = marker.current?.getLngLat();
       if (lngLat) {
-        onLocationSelect(lngLat.lat, lngLat.lng);
+        handleLocationChange(lngLat.lat, lngLat.lng);
       }
     });
 
@@ -57,7 +110,7 @@ const LocationPicker = ({ lat, lng, onLocationSelect }: LocationPickerProps) => 
     map.current.on('click', (e) => {
       const { lng, lat } = e.lngLat;
       marker.current?.setLngLat([lng, lat]).addTo(map.current!);
-      onLocationSelect(lat, lng);
+      handleLocationChange(lat, lng);
     });
 
     map.current.on('load', () => {
@@ -68,7 +121,7 @@ const LocationPicker = ({ lat, lng, onLocationSelect }: LocationPickerProps) => 
       marker.current?.remove();
       map.current?.remove();
     };
-  }, [mapboxToken, tokenLoading]);
+  }, [mapboxToken, tokenLoading, handleLocationChange]);
 
   // Update marker position when props change
   useEffect(() => {
@@ -99,6 +152,14 @@ const LocationPicker = ({ lat, lng, onLocationSelect }: LocationPickerProps) => 
         </div>
       )}
       <div ref={mapContainer} className="w-full h-full" />
+      
+      {/* Geocoding indicator */}
+      {isGeocoding && (
+        <div className="absolute top-4 right-16 z-10 glass px-3 py-1.5 rounded-full flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Obteniendo dirección...
+        </div>
+      )}
       
       {!lat && !lng && !isLoading && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
