@@ -123,7 +123,7 @@ const statusLabels = {
   sold: 'Vendido',
 };
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoibG92YWJsZS1tYXBzIiwiYSI6ImNtNWpocnd5ZzA3NTgyanBzamF4azZ0c3MifQ.HzRGJnPjqAB2FwjGl7rJog';
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const InteractiveMap = ({ 
   lots = demoLots,
