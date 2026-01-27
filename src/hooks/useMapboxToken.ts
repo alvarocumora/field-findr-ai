@@ -18,17 +18,31 @@ export const useMapboxToken = () => {
         }
 
         // Always prefer backend token to avoid stale/invalid build-time tokens
-        const { data, error: fnError } = await supabase.functions.invoke('get-mapbox-token');
-        if (fnError) throw fnError;
+        try {
+          const { data, error: fnError } = await supabase.functions.invoke('get-mapbox-token');
+          if (fnError) throw fnError;
 
-        const fetched = (data as { token?: string } | null)?.token;
-        if (!fetched?.startsWith('pk.')) {
-          throw new Error('Mapbox token not configured');
+          const fetched = (data as { token?: string } | null)?.token;
+          if (!fetched?.startsWith('pk.')) {
+            throw new Error('Mapbox token not configured');
+          }
+
+          localStorage.setItem('mapbox_public_token', fetched);
+          setToken(fetched);
+          setError(null);
+          return;
+        } catch (fnErr) {
+          // Fallback to VITE_* token (public) to keep maps working if the function is unreachable.
+          const fallback = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
+          if (typeof fallback === 'string' && fallback.startsWith('pk.')) {
+            localStorage.setItem('mapbox_public_token', fallback);
+            setToken(fallback);
+            setError(null);
+            return;
+          }
+
+          throw fnErr;
         }
-
-        localStorage.setItem('mapbox_public_token', fetched);
-        setToken(fetched);
-        setError(null);
       } catch (err) {
         console.error('Error fetching Mapbox token:', err);
         setToken(null);
