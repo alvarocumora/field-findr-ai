@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Layers, Navigation, MapPin } from 'lucide-react';
+import { Layers, Navigation, MapPin, ExternalLink } from 'lucide-react';
+import MapErrorState from '@/components/map/MapErrorState';
+import MapLoadingSkeleton from '@/components/map/MapLoadingSkeleton';
+import { cn } from '@/lib/utils';
 
 interface PropertyMapProps {
   lat: number | null;
@@ -17,60 +19,81 @@ const PropertyMap = ({ lat, lng, title, className = '' }: PropertyMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
-  const { token, loading } = useMapboxToken();
+  const { token, loading, error, retry } = useMapboxToken();
   const [mapStyle, setMapStyle] = useState<'streets' | 'satellite'>('satellite');
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const initializeMap = useCallback(() => {
     if (!mapContainer.current || !token || !lat || !lng) return;
 
-    mapboxgl.accessToken = token;
+    // Clean up existing map
+    if (map.current) {
+      map.current.remove();
+      map.current = null;
+    }
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: mapStyle === 'satellite' 
-        ? 'mapbox://styles/mapbox/satellite-streets-v12'
-        : 'mapbox://styles/mapbox/dark-v11',
-      center: [lng, lat],
-      zoom: 14,
-      pitch: 45,
-    });
+    try {
+      mapboxgl.accessToken = token;
 
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: mapStyle === 'satellite' 
+          ? 'mapbox://styles/mapbox/satellite-streets-v12'
+          : 'mapbox://styles/mapbox/dark-v11',
+        center: [lng, lat],
+        zoom: 14,
+        pitch: 45,
+      });
 
-    // Custom marker
-    const markerEl = document.createElement('div');
-    markerEl.innerHTML = `
-      <div class="relative">
-        <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg animate-pulse">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
+      map.current.on('load', () => {
+        setMapLoaded(true);
+        setMapError(null);
+      });
+
+      map.current.on('error', (e) => {
+        console.error('Mapbox error:', e);
+        setMapError('Error al cargar el estilo del mapa');
+      });
+
+      // Add navigation controls
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      // Custom marker
+      const markerEl = document.createElement('div');
+      markerEl.innerHTML = `
+        <div class="relative">
+          <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg animate-pulse">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rotate-45"></div>
         </div>
-        <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rotate-45"></div>
-      </div>
-    `;
+      `;
 
-    marker.current = new mapboxgl.Marker({ element: markerEl })
-      .setLngLat([lng, lat])
-      .addTo(map.current);
+      marker.current = new mapboxgl.Marker({ element: markerEl })
+        .setLngLat([lng, lat])
+        .addTo(map.current);
+
+    } catch (err) {
+      console.error('Failed to initialize map:', err);
+      setMapError('No se pudo inicializar el mapa');
+    }
 
     return () => {
       map.current?.remove();
+      map.current = null;
     };
-  }, [token, lat, lng]);
+  }, [token, lat, lng, mapStyle]);
 
-  // Update style when changed
   useEffect(() => {
-    if (!map.current) return;
-    
-    const style = mapStyle === 'satellite' 
-      ? 'mapbox://styles/mapbox/satellite-streets-v12'
-      : 'mapbox://styles/mapbox/dark-v11';
-    
-    map.current.setStyle(style);
-  }, [mapStyle]);
+    const cleanup = initializeMap();
+    return () => {
+      cleanup?.();
+    };
+  }, [initializeMap]);
 
   const handleRecenter = () => {
     if (map.current && lat && lng) {
@@ -82,40 +105,67 @@ const PropertyMap = ({ lat, lng, title, className = '' }: PropertyMapProps) => {
     }
   };
 
+  const toggleMapStyle = () => {
+    const newStyle = mapStyle === 'satellite' ? 'streets' : 'satellite';
+    setMapStyle(newStyle);
+    
+    if (map.current) {
+      const style = newStyle === 'satellite' 
+        ? 'mapbox://styles/mapbox/satellite-streets-v12'
+        : 'mapbox://styles/mapbox/dark-v11';
+      map.current.setStyle(style);
+    }
+  };
+
   const openInGoogleMaps = () => {
     if (lat && lng) {
       window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
     }
   };
 
+  // No coordinates available
   if (!lat || !lng) {
     return (
-      <div className={`aspect-video bg-muted/30 rounded-xl flex items-center justify-center ${className}`}>
-        <div className="text-center">
-          <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">
-            Ubicación no disponible
-          </p>
-        </div>
+      <div className={cn('aspect-video', className)}>
+        <MapErrorState 
+          className="w-full h-full"
+          variant="default"
+        />
       </div>
     );
   }
 
+  // Loading state
   if (loading) {
-    return <Skeleton className={`aspect-video rounded-xl ${className}`} />;
+    return (
+      <MapLoadingSkeleton className={cn('aspect-video', className)} />
+    );
+  }
+
+  // Error state
+  if (error || mapError) {
+    return (
+      <div className={cn('aspect-video', className)}>
+        <MapErrorState 
+          error={error || mapError}
+          onRetry={retry}
+          className="w-full h-full"
+        />
+      </div>
+    );
   }
 
   return (
-    <div className={`relative rounded-xl overflow-hidden ${className}`}>
+    <div className={cn('relative rounded-xl overflow-hidden', className)}>
       <div ref={mapContainer} className="w-full aspect-video" />
       
-      {/* Controls */}
+      {/* Map controls */}
       <div className="absolute bottom-3 left-3 flex gap-2">
         <Button
           size="sm"
           variant="secondary"
-          className="glass border-white/10 text-xs"
-          onClick={() => setMapStyle(s => s === 'satellite' ? 'streets' : 'satellite')}
+          className="glass border-white/10 text-xs shadow-lg"
+          onClick={toggleMapStyle}
         >
           <Layers className="h-3 w-3 mr-1" />
           {mapStyle === 'satellite' ? 'Mapa' : 'Satélite'}
@@ -123,7 +173,7 @@ const PropertyMap = ({ lat, lng, title, className = '' }: PropertyMapProps) => {
         <Button
           size="sm"
           variant="secondary"
-          className="glass border-white/10 text-xs"
+          className="glass border-white/10 text-xs shadow-lg"
           onClick={handleRecenter}
         >
           <Navigation className="h-3 w-3 mr-1" />
@@ -134,10 +184,11 @@ const PropertyMap = ({ lat, lng, title, className = '' }: PropertyMapProps) => {
       <Button
         size="sm"
         variant="secondary"
-        className="absolute bottom-3 right-3 glass border-white/10 text-xs"
+        className="absolute bottom-3 right-3 glass border-white/10 text-xs shadow-lg"
         onClick={openInGoogleMaps}
       >
-        Abrir en Google Maps
+        <ExternalLink className="h-3 w-3 mr-1" />
+        Google Maps
       </Button>
     </div>
   );
