@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import Logo from '@/components/brand/Logo';
+import LogoIcon from '@/components/brand/LogoIcon';
 import { 
   Menu, 
-  Mountain,
   Search,
   Heart,
   User,
@@ -51,13 +52,9 @@ const StickyHeader = () => {
       <div className="container px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center transition-transform group-hover:scale-105">
-              <Mountain className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold text-foreground hidden sm:block">
-              Ofertaterrenos
-            </span>
+          <Link to="/" className="group">
+            <Logo size="md" className="hidden sm:flex" />
+            <LogoIcon size="md" className="sm:hidden" />
           </Link>
 
           {/* Desktop Navigation */}

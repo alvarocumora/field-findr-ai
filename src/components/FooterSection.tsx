@@ -1,5 +1,6 @@
-import { Mountain, Mail, Phone, MapPin, Linkedin, Twitter, Instagram } from 'lucide-react';
+import { Mail, Phone, MapPin, Linkedin, Twitter, Instagram } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import Logo from '@/components/brand/Logo';
 
 const FooterSection = () => {
   const currentYear = new Date().getFullYear();
@@ -30,11 +31,8 @@ const FooterSection = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
-                <Mountain className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="text-lg font-bold text-foreground">Ofertaterrenos</span>
+            <Link to="/" className="inline-block mb-4">
+              <Logo size="md" />
             </Link>
             <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
               La plataforma más avanzada para invertir en terrenos con inteligencia artificial.

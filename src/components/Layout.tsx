@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import ModernSidebar from './ModernSidebar';
 import AIFloatingButton from './AIFloatingButton';
+import Logo from '@/components/brand/Logo';
 import { 
   Menu, 
-  LogIn,
-  Mountain
+  LogIn
 } from 'lucide-react';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -29,11 +29,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         {/* Mobile Header */}
         <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur md:hidden">
           <div className="flex h-14 items-center justify-between px-4">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <Mountain className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="text-base font-semibold">Ofertaterrenos</span>
+            <Link to="/">
+              <Logo size="sm" />
             </Link>
 
             <div className="flex items-center gap-2">

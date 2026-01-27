@@ -53,10 +53,10 @@ const HeroSection = () => {
 
           {/* Main Heading */}
           <h1 className="text-center mb-6 opacity-0 animate-fade-in-up stagger-1">
-            <span className="block text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground">
+            <span className="block text-4xl md:text-6xl lg:text-7xl font-heading font-bold tracking-tight text-foreground">
               El futuro de invertir
             </span>
-            <span className="block text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight gradient-text-hero mt-2">
+            <span className="block text-4xl md:text-6xl lg:text-7xl font-heading font-bold tracking-tight gradient-text-hero mt-2">
               en terrenos está aquí
             </span>
           </h1>

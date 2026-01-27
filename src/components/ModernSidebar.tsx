@@ -1,6 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import Logo from '@/components/brand/Logo';
+import LogoIcon from '@/components/brand/LogoIcon';
 import { 
   MapPin, 
   Search, 
@@ -9,7 +11,6 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
-  Mountain,
   Sparkles,
   Users,
   BarChart3,
@@ -70,19 +71,14 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
       <div className="flex flex-col h-full p-3">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 px-1">
-          {!collapsed && (
-            <Link to="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <Mountain className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="text-base font-semibold text-foreground">Ofertaterrenos</span>
+          {!collapsed ? (
+            <Link to="/">
+              <Logo size="sm" />
             </Link>
-          )}
-          
-          {collapsed && (
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center mx-auto">
-              <Mountain className="h-4 w-4 text-primary-foreground" />
-            </div>
+          ) : (
+            <Link to="/" className="mx-auto">
+              <LogoIcon size="sm" />
+            </Link>
           )}
         </div>
 
