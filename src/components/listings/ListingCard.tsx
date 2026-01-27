@@ -20,13 +20,16 @@ import {
 } from '@/hooks/useListings';
 import { useToggleFavorite, useFavoriteIds } from '@/hooks/useFavorites';
 import { useAuth } from '@/hooks/useAuth';
+import MatchScoreBadge from '@/components/matching/MatchScoreBadge';
+import { MatchResult } from '@/hooks/useMatchScore';
 
 interface ListingCardProps {
   listing: Listing;
   onHover?: (listing: Listing | null) => void;
+  matchResult?: MatchResult | null;
 }
 
-const ListingCard = ({ listing, onHover }: ListingCardProps) => {
+const ListingCard = ({ listing, onHover, matchResult }: ListingCardProps) => {
   const { user } = useAuth();
   const { toggle, isLoading } = useToggleFavorite();
   const { data: favoriteIds = [] } = useFavoriteIds();
@@ -81,6 +84,13 @@ const ListingCard = ({ listing, onHover }: ListingCardProps) => {
             <Badge variant="secondary" className="glass">
               {getListingTypeLabel(listing.type)}
             </Badge>
+            {matchResult && matchResult.score >= 50 && (
+              <MatchScoreBadge 
+                score={matchResult.score}
+                criteria={matchResult.criteria.map(c => ({ label: c.label, matched: c.matched }))}
+                size="sm"
+              />
+            )}
           </div>
 
           {/* Top Right Actions */}

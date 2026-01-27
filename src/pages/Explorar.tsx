@@ -3,7 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import ListingCard from '@/components/listings/ListingCard';
 import ExploreMap from '@/components/map/ExploreMap';
+import Map3DViewer from '@/components/map/Map3DViewer';
 import { useListings, Listing, getListingTypeLabel, formatPrice } from '@/hooks/useListings';
+import { useMatchScore } from '@/hooks/useMatchScore';
+import MatchScoreBadge from '@/components/matching/MatchScoreBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -62,7 +65,8 @@ const TAGS = [
 
 const Explorar = () => {
   const navigate = useNavigate();
-  const [view, setView] = useState<'grid' | 'map' | 'split'>('split');
+  const [view, setView] = useState<'grid' | 'map' | 'split' | '3d'>('split');
+  const [use3DMap, setUse3DMap] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('relevancia');
   const [hoveredListing, setHoveredListing] = useState<Listing | null>(null);
@@ -83,6 +87,9 @@ const Explorar = () => {
     areaMin: areaRange[0] > 0 ? areaRange[0] : undefined,
     areaMax: areaRange[1] < 1000000 ? areaRange[1] : undefined,
   });
+
+  // Match scoring
+  const { getMatchForListing, sortedByMatch } = useMatchScore(listings);
 
   // Filter by search query and tags locally
   const filteredListings = useMemo(() => {
@@ -120,13 +127,21 @@ const Explorar = () => {
       case 'recientes':
         result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         break;
+      case 'match':
+        // Sort by match score
+        result.sort((a, b) => {
+          const matchA = getMatchForListing(a.id);
+          const matchB = getMatchForListing(b.id);
+          return (matchB?.score || 0) - (matchA?.score || 0);
+        });
+        break;
       default:
         // relevancia - featured first
         result.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
     }
 
     return result;
-  }, [listings, searchQuery, selectedTags, sortBy]);
+  }, [listings, searchQuery, selectedTags, sortBy, getMatchForListing]);
 
   const activeFiltersCount = selectedTypes.length + selectedRegions.length + selectedTags.length +
     (priceRange[0] > 0 || priceRange[1] < 5000000000 ? 1 : 0) +
@@ -316,6 +331,7 @@ const Explorar = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="relevancia">Relevancia</SelectItem>
+                    <SelectItem value="match">Mejor Match</SelectItem>
                     <SelectItem value="precio_asc">Menor precio</SelectItem>
                     <SelectItem value="precio_desc">Mayor precio</SelectItem>
                     <SelectItem value="area_desc">Mayor superficie</SelectItem>
@@ -451,6 +467,7 @@ const Explorar = () => {
                           key={listing.id} 
                           listing={listing}
                           onHover={setHoveredListing}
+                          matchResult={getMatchForListing(listing.id)}
                         />
                       ))}
                     </div>
@@ -462,13 +479,23 @@ const Explorar = () => {
             {/* Map Panel - shown in map and split views */}
             {(view === 'map' || view === 'split') && (
               <div className={`${view === 'split' ? 'w-1/2' : 'w-full'} h-[calc(100vh-132px)] relative`}>
-                <ExploreMap 
-                  listings={filteredListings}
-                  hoveredListing={hoveredListing}
-                  onListingHover={setHoveredListing}
-                  onListingClick={(listing) => navigate(`/propiedad/${listing.id}`)}
-                  className="w-full h-full"
-                />
+                {use3DMap ? (
+                  <Map3DViewer 
+                    listings={filteredListings}
+                    hoveredListing={hoveredListing}
+                    onListingHover={setHoveredListing}
+                    onListingClick={(listing) => navigate(`/propiedad/${listing.id}`)}
+                    className="w-full h-full"
+                  />
+                ) : (
+                  <ExploreMap 
+                    listings={filteredListings}
+                    hoveredListing={hoveredListing}
+                    onListingHover={setHoveredListing}
+                    onListingClick={(listing) => navigate(`/propiedad/${listing.id}`)}
+                    className="w-full h-full"
+                  />
+                )}
               </div>
             )}
           </div>
