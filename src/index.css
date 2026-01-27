@@ -5,16 +5,76 @@
 @tailwind utilities;
 
 @layer base {
+  /* ===== LIGHT MODE ===== */
   :root {
+    /* Clean, professional light palette */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 99%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    
+    /* Emerald Green Primary */
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Slate secondary */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    
+    /* Muted tones */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    
+    /* Sky Blue Accent */
+    --accent: 199 89% 48%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+    --info: 217 91% 60%;
+    
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 142 76% 36%;
+    
+    --radius: 0.875rem;
+
+    /* Sidebar - Light */
+    --sidebar-background: 210 40% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 142 76% 36%;
+
+    /* Premium effects - Light */
+    --glow-primary: 0 0 30px hsla(142, 76%, 36%, 0.15);
+    --glow-accent: 0 0 30px hsla(199, 89%, 48%, 0.12);
+    --gradient-hero: linear-gradient(135deg, hsla(210, 40%, 98%, 0.9), hsla(0, 0%, 100%, 1));
+    --gradient-card: linear-gradient(145deg, hsla(0, 0%, 100%, 1), hsla(210, 40%, 98%, 1));
+    --gradient-brand: linear-gradient(135deg, hsl(142, 76%, 36%), hsl(160, 84%, 39%), hsl(199, 89%, 48%));
+    --glass-bg: hsla(0, 0%, 100%, 0.8);
+    --glass-border: hsla(222, 47%, 11%, 0.08);
+  }
+
+  /* ===== DARK MODE ===== */
+  .dark {
     /* Premium Proptech Palette - Emerald & Sky */
     --background: 240 6% 4%;
     --foreground: 0 0% 98%;
     --card: 240 6% 6%;
     --card-foreground: 0 0% 98%;
-    --popover: 240 6% 6%;
+    --popover: 240 6% 8%;
     --popover-foreground: 0 0% 98%;
     
-    /* Emerald Green Primary - Elegant & Professional */
+    /* Emerald Green Primary */
     --primary: 142 76% 36%;
     --primary-foreground: 0 0% 100%;
     
@@ -26,7 +86,7 @@
     --muted: 240 6% 10%;
     --muted-foreground: 240 5% 64%;
     
-    /* Sky Blue Accent - Tech & Trust */
+    /* Sky Blue Accent */
     --accent: 199 89% 48%;
     --accent-foreground: 0 0% 100%;
     
@@ -40,10 +100,8 @@
     --border: 240 6% 14%;
     --input: 240 6% 14%;
     --ring: 142 76% 36%;
-    
-    --radius: 0.875rem;
 
-    /* Sidebar */
+    /* Sidebar - Dark */
     --sidebar-background: 240 6% 5%;
     --sidebar-foreground: 0 0% 90%;
     --sidebar-primary: 142 76% 36%;
@@ -53,7 +111,7 @@
     --sidebar-border: 240 6% 12%;
     --sidebar-ring: 142 76% 36%;
 
-    /* Premium effects */
+    /* Premium effects - Dark */
     --glow-primary: 0 0 40px hsla(142, 76%, 36%, 0.35);
     --glow-accent: 0 0 40px hsla(199, 89%, 48%, 0.25);
     --gradient-hero: linear-gradient(135deg, hsla(215, 28%, 12%, 0.8), hsla(240, 6%, 4%, 1));
@@ -61,10 +119,6 @@
     --gradient-brand: linear-gradient(135deg, hsl(142, 76%, 36%), hsl(160, 84%, 39%), hsl(199, 89%, 48%));
     --glass-bg: hsla(240, 6%, 8%, 0.7);
     --glass-border: hsla(0, 0%, 100%, 0.06);
-  }
-
-  .dark {
-    /* Same as root - dark-first design */
   }
 }
 

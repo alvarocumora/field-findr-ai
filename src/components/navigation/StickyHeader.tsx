@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Logo from '@/components/brand/Logo';
 import LogoIcon from '@/components/brand/LogoIcon';
+import { ThemeToggle, ThemeToggleCompact } from '@/components/theme/ThemeToggle';
 import { 
   Menu, 
   Search,
@@ -77,7 +78,7 @@ const StickyHeader = () => {
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2">
             <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-foreground">
               <Link to="/explorar">
                 <Search className="h-5 w-5" />
@@ -91,6 +92,8 @@ const StickyHeader = () => {
                 </Link>
               </Button>
             )}
+
+            <ThemeToggle />
 
             <Button asChild className="btn-glow">
               <Link to="/publish">
@@ -106,7 +109,7 @@ const StickyHeader = () => {
                 </Link>
               </Button>
             ) : (
-              <Button variant="outline" asChild className="glass border-white/10">
+              <Button variant="outline" asChild className="border-border">
                 <Link to="/auth">
                   <LogIn className="h-4 w-4 mr-2" />
                   Ingresar
@@ -116,7 +119,9 @@ const StickyHeader = () => {
           </div>
 
           {/* Mobile Menu */}
-          <div className="flex lg:hidden items-center gap-2">
+          <div className="flex lg:hidden items-center gap-1">
+            <ThemeToggleCompact />
+            
             <Button asChild size="sm" className="btn-glow">
               <Link to="/publish">
                 <Plus className="h-4 w-4" />
@@ -129,7 +134,7 @@ const StickyHeader = () => {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-80 glass border-white/10">
+              <SheetContent side="right" className="w-80 bg-background border-border">
                 <div className="flex flex-col gap-6 mt-8">
                   {/* Mobile Navigation */}
                   <nav className="flex flex-col gap-1">
