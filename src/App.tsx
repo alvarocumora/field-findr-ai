@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
+import { ThemeProvider } from "./components/theme/ThemeProvider";
 
 // Pages
 import Index from "./pages/Index";
@@ -39,51 +40,53 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public Pages */}
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/explorar" element={<Explorar />} />
-            <Route path="/propiedad/:id" element={<PropertyDetail />} />
-            <Route path="/comparar" element={<ParcelComparator />} />
-            
-            {/* Legacy routes - to be migrated */}
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/search" element={<IntelligentSearch />} />
-            <Route path="/compare" element={<ParcelComparator />} />
-            <Route path="/calculators" element={<LandCalculators />} />
-            <Route path="/price-predictor" element={<PricePredictor />} />
-            <Route path="/risk-analysis" element={<RiskAnalysis />} />
-            <Route path="/ai-recommendations" element={<AIRecommendationEngine />} />
-            <Route path="/publish" element={<PublishProperty />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/favoritos" element={<Favorites />} />
-            <Route path="/alerts" element={<Alerts />} />
-            {/* Land Development Administration Routes */}
-            <Route path="/urbanization" element={<UrbanizationManagement />} />
-            <Route path="/crm" element={<CRMSystem />} />
-            <Route path="/analytics" element={<BusinessIntelligence />} />
-            <Route path="/inventory" element={<PropertyInventory />} />
-            <Route path="/sales" element={<SalesManagement />} />
-            <Route path="/agents" element={<AgentManagement />} />
-            {/* Loteo Management Routes */}
-            <Route path="/lots" element={<LotManagement />} />
-            <Route path="/leads" element={<LeadManagement />} />
-            <Route path="/projects" element={<ProjectsManagement />} />
-            <Route path="/profile" element={<Profile />} />
-            {/* New Tools Page */}
-            <Route path="/tools" element={<Tools />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="ofertaterrenos-theme">
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Public Pages */}
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/explorar" element={<Explorar />} />
+              <Route path="/propiedad/:id" element={<PropertyDetail />} />
+              <Route path="/comparar" element={<ParcelComparator />} />
+              
+              {/* Legacy routes - to be migrated */}
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/search" element={<IntelligentSearch />} />
+              <Route path="/compare" element={<ParcelComparator />} />
+              <Route path="/calculators" element={<LandCalculators />} />
+              <Route path="/price-predictor" element={<PricePredictor />} />
+              <Route path="/risk-analysis" element={<RiskAnalysis />} />
+              <Route path="/ai-recommendations" element={<AIRecommendationEngine />} />
+              <Route path="/publish" element={<PublishProperty />} />
+              <Route path="/favorites" element={<Favorites />} />
+              <Route path="/favoritos" element={<Favorites />} />
+              <Route path="/alerts" element={<Alerts />} />
+              {/* Land Development Administration Routes */}
+              <Route path="/urbanization" element={<UrbanizationManagement />} />
+              <Route path="/crm" element={<CRMSystem />} />
+              <Route path="/analytics" element={<BusinessIntelligence />} />
+              <Route path="/inventory" element={<PropertyInventory />} />
+              <Route path="/sales" element={<SalesManagement />} />
+              <Route path="/agents" element={<AgentManagement />} />
+              {/* Loteo Management Routes */}
+              <Route path="/lots" element={<LotManagement />} />
+              <Route path="/leads" element={<LeadManagement />} />
+              <Route path="/projects" element={<ProjectsManagement />} />
+              <Route path="/profile" element={<Profile />} />
+              {/* New Tools Page */}
+              <Route path="/tools" element={<Tools />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
