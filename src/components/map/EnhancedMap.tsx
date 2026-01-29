@@ -401,6 +401,7 @@ const EnhancedMap = ({
   const draw = useRef<MapboxDraw | null>(null);
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const popupRef = useRef<mapboxgl.Popup | null>(null);
+  const layerTooltipRef = useRef<mapboxgl.Popup | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawnArea, setDrawnArea] = useState<number | null>(null);
@@ -656,6 +657,327 @@ const EnhancedMap = ({
     
     return Math.abs(area / 2);
   };
+
+  // Generate tooltip HTML for different layer types
+  const generateLayerTooltipHTML = (
+    layerType: string,
+    properties: Record<string, unknown>
+  ): string => {
+    const baseStyle = `
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: white;
+      min-width: 200px;
+      max-width: 280px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1);
+    `;
+
+    const headerStyle = `
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    `;
+
+    const labelStyle = `
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 2px;
+    `;
+
+    const valueStyle = `
+      font-size: 13px;
+      font-weight: 500;
+      color: white;
+    `;
+
+    const badgeStyle = (color: string) => `
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      background: ${color}20;
+      color: ${color};
+      border: 1px solid ${color}40;
+    `;
+
+    switch (layerType) {
+      case 'zoning': {
+        const zoningLabels: Record<string, { label: string; icon: string; color: string; description: string }> = {
+          residential: { label: 'Zona Residencial', icon: '🏠', color: '#22c55e', description: 'Uso habitacional permitido' },
+          commercial: { label: 'Zona Comercial', icon: '🏪', color: '#3b82f6', description: 'Comercio y servicios' },
+          industrial: { label: 'Zona Industrial', icon: '🏭', color: '#f59e0b', description: 'Actividad industrial' },
+          agricultural: { label: 'Zona Agrícola', icon: '🌾', color: '#84cc16', description: 'Uso agrícola y rural' },
+          mixed: { label: 'Zona Mixta', icon: '🏗️', color: '#8b5cf6', description: 'Uso mixto permitido' },
+          protected: { label: 'Zona Protegida', icon: '🛡️', color: '#ef4444', description: 'Área de conservación' },
+        };
+        const type = properties.type as string || 'mixed';
+        const info = zoningLabels[type] || zoningLabels.mixed;
+        const name = properties.name as string || 'Zona sin nombre';
+        
+        return `
+          <div style="${baseStyle}">
+            <div style="${headerStyle}">
+              <span style="font-size: 20px;">${info.icon}</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 600;">${info.label}</div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.6);">Zonificación Urbana</div>
+              </div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <div style="${labelStyle}">Nombre del Sector</div>
+              <div style="${valueStyle}">${name}</div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <div style="${labelStyle}">Uso Permitido</div>
+              <div style="${valueStyle}">${info.description}</div>
+            </div>
+            <div style="${badgeStyle(info.color)}">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: ${info.color};"></span>
+              ${info.label}
+            </div>
+          </div>
+        `;
+      }
+
+      case 'risk': {
+        const riskLabels: Record<string, { label: string; icon: string; color: string; description: string; recommendation: string }> = {
+          flood: { label: 'Riesgo de Inundación', icon: '🌊', color: '#0ea5e9', description: 'Zona susceptible a inundaciones', recommendation: 'Verificar historial de anegamientos' },
+          landslide: { label: 'Riesgo de Remoción', icon: '⛰️', color: '#f59e0b', description: 'Riesgo de deslizamiento de tierra', recommendation: 'Evaluar estabilidad del terreno' },
+          seismic: { label: 'Zona Sísmica', icon: '📈', color: '#ef4444', description: 'Actividad sísmica elevada', recommendation: 'Construcción antisísmica requerida' },
+          tsunami: { label: 'Riesgo de Tsunami', icon: '🌊', color: '#6366f1', description: 'Zona de riesgo por maremoto', recommendation: 'Revisar rutas de evacuación' },
+        };
+        const type = properties.type as string || 'seismic';
+        const info = riskLabels[type] || riskLabels.seismic;
+        const risk = properties.risk as string || 'medium';
+        const name = properties.name as string || 'Zona de riesgo';
+        const riskLevels: Record<string, { label: string; color: string }> = {
+          high: { label: 'Alto', color: '#ef4444' },
+          medium: { label: 'Medio', color: '#f59e0b' },
+          low: { label: 'Bajo', color: '#22c55e' },
+        };
+        const riskInfo = riskLevels[risk] || riskLevels.medium;
+        
+        return `
+          <div style="${baseStyle}">
+            <div style="${headerStyle}">
+              <span style="font-size: 20px;">${info.icon}</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 600;">${info.label}</div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.6);">Análisis de Riesgo</div>
+              </div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <div style="${labelStyle}">Zona</div>
+              <div style="${valueStyle}">${name}</div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <div style="${labelStyle}">Nivel de Riesgo</div>
+              <div style="${badgeStyle(riskInfo.color)}">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: ${riskInfo.color};"></span>
+                ${riskInfo.label}
+              </div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <div style="${labelStyle}">Descripción</div>
+              <div style="${valueStyle}">${info.description}</div>
+            </div>
+            <div style="padding: 8px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-top: 8px;">
+              <div style="font-size: 10px; color: #f59e0b; margin-bottom: 4px;">⚠️ Recomendación</div>
+              <div style="font-size: 12px; color: rgba(255,255,255,0.8);">${info.recommendation}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      case 'infrastructure': {
+        const coverage = properties.coverage as string || 'partial';
+        const services = (properties.services as string[]) || ['electricity'];
+        const coverageInfo: Record<string, { label: string; color: string; icon: string }> = {
+          full: { label: 'Cobertura Completa', color: '#22c55e', icon: '✅' },
+          partial: { label: 'Cobertura Parcial', color: '#f59e0b', icon: '⚡' },
+          limited: { label: 'Cobertura Limitada', color: '#ef4444', icon: '⚠️' },
+        };
+        const info = coverageInfo[coverage] || coverageInfo.partial;
+        const serviceLabels: Record<string, { label: string; icon: string }> = {
+          water: { label: 'Agua Potable', icon: '💧' },
+          electricity: { label: 'Electricidad', icon: '⚡' },
+          sewage: { label: 'Alcantarillado', icon: '🚰' },
+          gas: { label: 'Gas Natural', icon: '🔥' },
+        };
+        
+        return `
+          <div style="${baseStyle}">
+            <div style="${headerStyle}">
+              <span style="font-size: 20px;">${info.icon}</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 600;">${info.label}</div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.6);">Servicios Básicos</div>
+              </div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <div style="${labelStyle}">Servicios Disponibles</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+                ${services.map(s => {
+                  const svc = serviceLabels[s] || { label: s, icon: '📍' };
+                  return `<div style="${badgeStyle('#22c55e')}">${svc.icon} ${svc.label}</div>`;
+                }).join('')}
+              </div>
+            </div>
+            <div style="${badgeStyle(info.color)}">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: ${info.color};"></span>
+              ${info.label}
+            </div>
+          </div>
+        `;
+      }
+
+      case 'water': {
+        const type = properties.type as string || 'river';
+        const name = properties.name as string || 'Cuerpo de agua';
+        const waterInfo: Record<string, { label: string; icon: string }> = {
+          river: { label: 'Río', icon: '🏞️' },
+          lake: { label: 'Lago', icon: '🌊' },
+          wetland: { label: 'Humedal', icon: '🌿' },
+        };
+        const info = waterInfo[type] || waterInfo.river;
+        
+        return `
+          <div style="${baseStyle}">
+            <div style="${headerStyle}">
+              <span style="font-size: 20px;">${info.icon}</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 600;">${name}</div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.6);">${info.label}</div>
+              </div>
+            </div>
+            <div style="${badgeStyle('#0ea5e9')}">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #0ea5e9;"></span>
+              Cuerpo de Agua
+            </div>
+          </div>
+        `;
+      }
+
+      case 'green': {
+        const type = properties.type as string || 'park';
+        const name = properties.name as string || 'Área verde';
+        const greenInfo: Record<string, { label: string; icon: string; description: string }> = {
+          park: { label: 'Parque', icon: '🌳', description: 'Espacio público de recreación' },
+          reserve: { label: 'Reserva Natural', icon: '🦜', description: 'Área de conservación ecológica' },
+          forest: { label: 'Bosque', icon: '🌲', description: 'Zona forestal' },
+        };
+        const info = greenInfo[type] || greenInfo.park;
+        
+        return `
+          <div style="${baseStyle}">
+            <div style="${headerStyle}">
+              <span style="font-size: 20px;">${info.icon}</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 600;">${name}</div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.6);">${info.label}</div>
+              </div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <div style="${labelStyle}">Descripción</div>
+              <div style="${valueStyle}">${info.description}</div>
+            </div>
+            <div style="${badgeStyle('#22c55e')}">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e;"></span>
+              Área Verde
+            </div>
+          </div>
+        `;
+      }
+
+      case 'road': {
+        const type = properties.type as string || 'main';
+        const name = properties.name as string || 'Vía sin nombre';
+        const roadInfo: Record<string, { label: string; icon: string }> = {
+          highway: { label: 'Autopista', icon: '🛣️' },
+          main: { label: 'Vía Principal', icon: '🚗' },
+          secondary: { label: 'Vía Secundaria', icon: '🚙' },
+        };
+        const info = roadInfo[type] || roadInfo.main;
+        
+        return `
+          <div style="${baseStyle}">
+            <div style="${headerStyle}">
+              <span style="font-size: 20px;">${info.icon}</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 600;">${name}</div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.6);">${info.label}</div>
+              </div>
+            </div>
+            <div style="${badgeStyle('#64748b')}">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #64748b;"></span>
+              Red Vial
+            </div>
+          </div>
+        `;
+      }
+
+      default:
+        return '';
+    }
+  };
+
+  // Setup layer hover events
+  const setupLayerHoverEvents = useCallback(() => {
+    if (!map.current || !layerTooltipRef.current) return;
+
+    const layerEventMap: { layerId: string; type: string }[] = [
+      { layerId: 'zoning-layer', type: 'zoning' },
+      { layerId: 'risk-layer', type: 'risk' },
+      { layerId: 'infrastructure-layer', type: 'infrastructure' },
+      { layerId: 'water-areas', type: 'water' },
+      { layerId: 'water-lines', type: 'water' },
+      { layerId: 'green-layer', type: 'green' },
+      { layerId: 'roads-layer', type: 'road' },
+    ];
+
+    layerEventMap.forEach(({ layerId, type }) => {
+      // Mouse enter - show tooltip
+      map.current?.on('mouseenter', layerId, (e) => {
+        if (!map.current || !e.features?.length) return;
+        
+        map.current.getCanvas().style.cursor = 'pointer';
+        
+        const properties = e.features[0].properties || {};
+        const html = generateLayerTooltipHTML(type, properties);
+        
+        if (html && layerTooltipRef.current) {
+          layerTooltipRef.current
+            .setLngLat(e.lngLat)
+            .setHTML(html)
+            .addTo(map.current);
+        }
+      });
+
+      // Mouse move - update tooltip position
+      map.current?.on('mousemove', layerId, (e) => {
+        if (!layerTooltipRef.current || !e.features?.length) return;
+        layerTooltipRef.current.setLngLat(e.lngLat);
+      });
+
+      // Mouse leave - hide tooltip
+      map.current?.on('mouseleave', layerId, () => {
+        if (!map.current) return;
+        map.current.getCanvas().style.cursor = '';
+        layerTooltipRef.current?.remove();
+      });
+    });
+  }, []);
 
   // Get map style URL
   const getMapStyle = useCallback(() => {
@@ -1050,6 +1372,15 @@ const EnhancedMap = ({
       className: 'enhanced-map-popup-container',
     });
 
+    // Initialize layer tooltip popup
+    layerTooltipRef.current = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      offset: 15,
+      maxWidth: '320px',
+      className: 'layer-tooltip-popup',
+    });
+
     // Initialize draw control
     if (showDrawTools) {
       draw.current = new MapboxDraw({
@@ -1117,6 +1448,9 @@ const EnhancedMap = ({
 
       // Add info layers
       addInfoLayers();
+
+      // Setup hover events for info layers
+      setupLayerHoverEvents();
 
       // Add clustering source
       if (showClusters && listings.length > 0) {
@@ -1244,9 +1578,10 @@ const EnhancedMap = ({
       Object.values(markersRef.current).forEach((marker) => marker.remove());
       markersRef.current = {};
       popupRef.current?.remove();
+      layerTooltipRef.current?.remove();
       map.current?.remove();
     };
-  }, [mapboxToken, tokenLoading, getCenter, getMapStyle, mapMode, showDrawTools, addInfoLayers]);
+  }, [mapboxToken, tokenLoading, getCenter, getMapStyle, mapMode, showDrawTools, addInfoLayers, setupLayerHoverEvents]);
 
   // Update markers when listings change (only when not using clusters)
   useEffect(() => {
