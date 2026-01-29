@@ -39,6 +39,8 @@ import { Listing, formatPrice, formatArea, getListingTypeLabel } from '@/hooks/u
 import { useNavigate } from 'react-router-dom';
 import MapInfoLayers, { InfoLayerState, InfoLayerConfig } from './MapInfoLayers';
 import { buildWMSTileUrl, getProxiedUrl, WMS_BASE_URLS } from '@/services/chileGIS';
+import TouchMapControls from './TouchMapControls';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface EnhancedMapProps {
   listings: Listing[];
@@ -410,8 +412,10 @@ const EnhancedMap = ({
   const [showClusters, setShowClusters] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
   const [controlsExpanded, setControlsExpanded] = useState(false);
+  const [showLayersPanel, setShowLayersPanel] = useState(false);
   const { token: mapboxToken, loading: tokenLoading, error: tokenError } = useMapboxToken();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Info layers state
   const [infoLayers, setInfoLayers] = useState<InfoLayerState>({
@@ -2038,13 +2042,13 @@ const EnhancedMap = ({
           </span>
         </Badge>
 
-        {/* Main Controls - Left Side */}
-        <div className="absolute top-16 left-4 flex flex-col gap-2 z-10">
+        {/* Main Controls - Left Side (Desktop only) */}
+        <div className="absolute top-16 left-4 flex-col gap-2 z-10 hidden md:flex">
           {/* Zoom Controls */}
           <div className="flex flex-col gap-1 bg-background/95 backdrop-blur-sm rounded-lg border border-white/10 p-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" onClick={handleZoomIn} className="h-8 w-8">
+                <Button size="icon" variant="ghost" onClick={handleZoomIn} className="h-9 w-9">
                   <ZoomIn className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -2052,7 +2056,7 @@ const EnhancedMap = ({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" onClick={handleZoomOut} className="h-8 w-8">
+                <Button size="icon" variant="ghost" onClick={handleZoomOut} className="h-9 w-9">
                   <ZoomOut className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -2064,7 +2068,7 @@ const EnhancedMap = ({
           <div className="flex flex-col gap-1 bg-background/95 backdrop-blur-sm rounded-lg border border-white/10 p-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" onClick={handleLocate} className="h-8 w-8">
+                <Button size="icon" variant="ghost" onClick={handleLocate} className="h-9 w-9">
                   <Target className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -2072,7 +2076,7 @@ const EnhancedMap = ({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" onClick={handleFitAll} className="h-8 w-8">
+                <Button size="icon" variant="ghost" onClick={handleFitAll} className="h-9 w-9">
                   <Maximize2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -2080,7 +2084,7 @@ const EnhancedMap = ({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" onClick={handleResetNorth} className="h-8 w-8">
+                <Button size="icon" variant="ghost" onClick={handleResetNorth} className="h-9 w-9">
                   <Compass className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -2088,7 +2092,7 @@ const EnhancedMap = ({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" onClick={handleResetView} className="h-8 w-8">
+                <Button size="icon" variant="ghost" onClick={handleResetView} className="h-9 w-9">
                   <RotateCcw className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -2104,7 +2108,7 @@ const EnhancedMap = ({
                   size="icon" 
                   variant={mapMode === 'streets' ? 'secondary' : 'ghost'} 
                   onClick={() => changeMapMode('streets')} 
-                  className="h-8 w-8"
+                  className="h-9 w-9"
                 >
                   <MapIcon className="h-4 w-4" />
                 </Button>
@@ -2117,7 +2121,7 @@ const EnhancedMap = ({
                   size="icon" 
                   variant={mapMode === 'satellite' ? 'secondary' : 'ghost'} 
                   onClick={() => changeMapMode('satellite')} 
-                  className="h-8 w-8"
+                  className="h-9 w-9"
                 >
                   <Satellite className="h-4 w-4" />
                 </Button>
@@ -2130,7 +2134,7 @@ const EnhancedMap = ({
                   size="icon" 
                   variant={mapMode === '3d' ? 'secondary' : 'ghost'} 
                   onClick={() => changeMapMode('3d')} 
-                  className="h-8 w-8"
+                  className="h-9 w-9"
                 >
                   <Mountain className="h-4 w-4" />
                 </Button>
@@ -2158,7 +2162,7 @@ const EnhancedMap = ({
                     size="icon" 
                     variant={isDrawing ? 'default' : 'ghost'} 
                     onClick={startDrawing} 
-                    className="h-8 w-8"
+                    className="h-9 w-9"
                   >
                     <PenTool className="h-4 w-4" />
                   </Button>
@@ -2172,7 +2176,7 @@ const EnhancedMap = ({
                       size="icon" 
                       variant="ghost" 
                       onClick={clearDrawing} 
-                      className="h-8 w-8 text-destructive"
+                      className="h-9 w-9 text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -2184,8 +2188,106 @@ const EnhancedMap = ({
           )}
         </div>
 
-        {/* Legend */}
-        <Card className="absolute bottom-4 left-4 p-3 bg-background/95 backdrop-blur-sm z-10 border border-white/10">
+        {/* Touch-Optimized Mobile Controls */}
+        <TouchMapControls
+          mapMode={mapMode}
+          isDrawing={isDrawing}
+          drawnArea={drawnArea}
+          showDrawTools={showDrawTools}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onLocate={handleLocate}
+          onFitAll={handleFitAll}
+          onResetNorth={handleResetNorth}
+          onResetView={handleResetView}
+          onChangeMapMode={changeMapMode}
+          onStartDrawing={startDrawing}
+          onClearDrawing={clearDrawing}
+          onOpenLayers={() => setShowLayersPanel(true)}
+          activeLayersCount={Object.values(infoLayers).filter(Boolean).length}
+        />
+
+        {/* Mobile Layers Panel */}
+        {showLayersPanel && isMobile && (
+          <div className="absolute inset-0 z-30 bg-background/95 backdrop-blur-md md:hidden overflow-auto">
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Capas de Información</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowLayersPanel(false)}
+                  className="h-10 px-4"
+                >
+                  Cerrar
+                </Button>
+              </div>
+              <div className="space-y-4">
+                {/* Render layer toggles for mobile */}
+                {[
+                  { key: 'zoning', label: 'Zonificación Urbana', desc: 'Uso de suelo permitido' },
+                  { key: 'heatmap', label: 'Plusvalía Histórica', desc: 'Tendencia de precios' },
+                  { key: 'infrastructure', label: 'Servicios Básicos', desc: 'Agua, luz, alcantarillado' },
+                  { key: 'roads', label: 'Red Vial', desc: 'Carreteras y caminos' },
+                  { key: 'riskZones', label: 'Zonas de Riesgo', desc: 'Inundaciones, deslizamientos' },
+                  { key: 'waterBodies', label: 'Cuerpos de Agua', desc: 'Ríos, lagos, humedales' },
+                  { key: 'greenAreas', label: 'Áreas Verdes', desc: 'Parques, reservas' },
+                  { key: 'hydrology', label: 'Red Hidrográfica', desc: 'DGA - Cuencas, acuíferos' },
+                  { key: 'mining', label: 'Catastro Minero', desc: 'Concesiones, faenas' },
+                  { key: 'biodiversity', label: 'Biodiversidad', desc: 'Ecosistemas, especies' },
+                ].map(({ key, label, desc }) => (
+                  <button
+                    key={key}
+                    onClick={() => handleLayerChange(key as keyof InfoLayerState, !infoLayers[key as keyof InfoLayerState])}
+                    className={`w-full p-4 rounded-xl border transition-all touch-manipulation ${
+                      infoLayers[key as keyof InfoLayerState]
+                        ? 'bg-primary/10 border-primary'
+                        : 'bg-muted/50 border-transparent hover:bg-muted'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-left">
+                        <p className="font-medium">{label}</p>
+                        <p className="text-sm text-muted-foreground">{desc}</p>
+                      </div>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                        infoLayers[key as keyof InfoLayerState] ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                      }`}>
+                        {infoLayers[key as keyof InfoLayerState] && (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {/* Real Data Toggle */}
+              <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20">
+                <button
+                  onClick={() => handleConfigChange({ useRealData: !layerConfig.useRealData })}
+                  className="w-full flex items-center justify-between touch-manipulation"
+                >
+                  <div className="text-left">
+                    <p className="font-medium">{layerConfig.useRealData ? 'Datos Reales' : 'Datos Demo'}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {layerConfig.useRealData ? 'IDE Chile / MINVU' : 'Datos de demostración'}
+                    </p>
+                  </div>
+                  <div className={`w-12 h-7 rounded-full flex items-center px-1 transition-colors ${
+                    layerConfig.useRealData ? 'bg-primary justify-end' : 'bg-muted justify-start'
+                  }`}>
+                    <div className="w-5 h-5 rounded-full bg-white shadow-sm" />
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Legend - Desktop only, mobile gets simplified view */}
+        <Card className="absolute bottom-4 left-4 p-3 bg-background/95 backdrop-blur-sm z-10 border border-white/10 hidden md:block">
           <div className="flex gap-4 text-xs">
             {Object.entries(statusLabels).map(([key, label]) => (
               <div key={key} className="flex items-center gap-1.5">
@@ -2199,14 +2301,29 @@ const EnhancedMap = ({
           </div>
         </Card>
 
+        {/* Mobile Legend - Simplified */}
+        <Card className="absolute bottom-28 left-4 p-2 bg-background/95 backdrop-blur-sm z-10 border border-white/10 md:hidden">
+          <div className="flex gap-2 text-[10px]">
+            {Object.entries(statusLabels).map(([key, label]) => (
+              <div key={key} className="flex items-center gap-1">
+                <div 
+                  className="w-2.5 h-2.5 rounded-full" 
+                  style={{ backgroundColor: statusColors[key as keyof typeof statusColors] }} 
+                />
+                <span className="text-muted-foreground">{label}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
         {/* Results count & Drawn area */}
-        <Card className="absolute top-4 right-4 px-4 py-2 bg-background/95 backdrop-blur-sm z-10 border border-white/10">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-foreground">
+        <Card className="absolute top-4 right-4 px-3 py-1.5 md:px-4 md:py-2 bg-background/95 backdrop-blur-sm z-10 border border-white/10">
+          <div className="space-y-0.5 md:space-y-1">
+            <p className="text-xs md:text-sm font-medium text-foreground">
               {listings.filter((l) => l.lat && l.lng).length} propiedades
             </p>
             {drawnArea !== null && (
-              <p className="text-xs text-primary flex items-center gap-1">
+              <p className="text-[10px] md:text-xs text-primary flex items-center gap-1">
                 <Ruler className="h-3 w-3" />
                 {drawnArea >= 10000 
                   ? `${(drawnArea / 10000).toFixed(2)} ha` 
@@ -2217,9 +2334,9 @@ const EnhancedMap = ({
           </div>
         </Card>
 
-        {/* Active layers indicator */}
+        {/* Active layers indicator - Desktop only */}
         {Object.values(infoLayers).some(Boolean) && (
-          <Card className="absolute bottom-4 right-4 p-2 bg-background/95 backdrop-blur-sm z-10 border border-white/10 text-xs text-muted-foreground">
+          <Card className="absolute bottom-4 right-4 p-2 bg-background/95 backdrop-blur-sm z-10 border border-white/10 text-xs text-muted-foreground hidden md:block">
             <div className="flex items-center gap-2">
               <Layers className="h-3 w-3 text-primary" />
               <span>{Object.values(infoLayers).filter(Boolean).length} capas activas</span>
@@ -2227,9 +2344,9 @@ const EnhancedMap = ({
           </Card>
         )}
 
-        {/* 3D Mode indicator */}
+        {/* 3D Mode indicator - Desktop only */}
         {mapMode === '3d' && !Object.values(infoLayers).some(Boolean) && (
-          <Card className="absolute bottom-4 right-4 p-2 bg-background/95 backdrop-blur-sm z-10 border border-white/10 text-xs text-muted-foreground">
+          <Card className="absolute bottom-4 right-4 p-2 bg-background/95 backdrop-blur-sm z-10 border border-white/10 text-xs text-muted-foreground hidden md:block">
             <div className="flex items-center gap-2">
               <Mountain className="h-3 w-3 text-primary" />
               <span>Terreno 3D • Arrastre para rotar</span>
@@ -2237,12 +2354,13 @@ const EnhancedMap = ({
           </Card>
         )}
 
-        {/* Drawing mode indicator */}
+        {/* Drawing mode indicator - Positioned higher on mobile */}
         {isDrawing && (
-          <Card className="absolute bottom-16 left-1/2 -translate-x-1/2 px-4 py-2 bg-primary text-primary-foreground z-20 animate-pulse">
-            <div className="flex items-center gap-2 text-sm">
+          <Card className="absolute bottom-36 md:bottom-16 left-1/2 -translate-x-1/2 px-3 py-2 md:px-4 bg-primary text-primary-foreground z-20 animate-pulse">
+            <div className="flex items-center gap-2 text-xs md:text-sm">
               <PenTool className="h-4 w-4" />
-              <span>Dibujando área • Haz clic para agregar puntos</span>
+              <span className="hidden md:inline">Dibujando área • Haz clic para agregar puntos</span>
+              <span className="md:hidden">Toca para agregar puntos</span>
             </div>
           </Card>
         )}
