@@ -422,6 +422,9 @@ const EnhancedMap = ({
     waterBodies: false,
     greenAreas: false,
     roads: false,
+    hydrology: false,
+    mining: false,
+    biodiversity: false,
   });
 
   const [layerConfig, setLayerConfig] = useState<InfoLayerConfig>({
@@ -1303,6 +1306,7 @@ const EnhancedMap = ({
 
     // WMS sources configuration for Chilean public data
     const wmsSources = [
+      // Existing sources
       {
         id: 'wms-zonificacion',
         url: buildWMSTileUrl(getProxiedUrl(WMS_BASE_URLS.minvu), 'prms_zonificacion'),
@@ -1328,6 +1332,39 @@ const EnhancedMap = ({
         url: buildWMSTileUrl(getProxiedUrl(WMS_BASE_URLS.mop), 'red_vial'),
         attribution: '© MOP',
       },
+      // Hydrology sources (DGA)
+      {
+        id: 'wms-hidrografia',
+        url: buildWMSTileUrl(getProxiedUrl(WMS_BASE_URLS.dga), 'red_hidrografica'),
+        attribution: '© DGA',
+      },
+      {
+        id: 'wms-cuencas',
+        url: buildWMSTileUrl(getProxiedUrl(WMS_BASE_URLS.dga), 'cuencas'),
+        attribution: '© DGA',
+      },
+      // Mining sources (SERNAGEOMIN)
+      {
+        id: 'wms-catastro-minero',
+        url: buildWMSTileUrl(getProxiedUrl(WMS_BASE_URLS.sernageomin), 'catastro_minero'),
+        attribution: '© SERNAGEOMIN',
+      },
+      {
+        id: 'wms-faenas-mineras',
+        url: buildWMSTileUrl(getProxiedUrl(WMS_BASE_URLS.sernageomin), 'faenas_mineras'),
+        attribution: '© SERNAGEOMIN',
+      },
+      // Biodiversity sources (MMA)
+      {
+        id: 'wms-ecosistemas',
+        url: buildWMSTileUrl(getProxiedUrl(WMS_BASE_URLS.mma), 'ecosistemas_terrestres'),
+        attribution: '© MMA',
+      },
+      {
+        id: 'wms-especies-amenazadas',
+        url: buildWMSTileUrl(getProxiedUrl(WMS_BASE_URLS.mma), 'especies_amenazadas'),
+        attribution: '© MMA',
+      },
     ];
 
     // Add WMS sources
@@ -1344,10 +1381,20 @@ const EnhancedMap = ({
 
     // Add WMS layers (raster type)
     const wmsLayers = [
+      // Original layers
       { id: 'wms-layer-zonificacion', source: 'wms-zonificacion', forLayer: 'zoning' },
       { id: 'wms-layer-riesgo', source: 'wms-riesgo-volcanico', forLayer: 'riskZones' },
       { id: 'wms-layer-areas-protegidas', source: 'wms-areas-protegidas', forLayer: 'greenAreas' },
       { id: 'wms-layer-red-vial', source: 'wms-red-vial', forLayer: 'roads' },
+      // Hydrology layers
+      { id: 'wms-layer-hidrografia', source: 'wms-hidrografia', forLayer: 'hydrology' },
+      { id: 'wms-layer-cuencas', source: 'wms-cuencas', forLayer: 'hydrology' },
+      // Mining layers
+      { id: 'wms-layer-catastro-minero', source: 'wms-catastro-minero', forLayer: 'mining' },
+      { id: 'wms-layer-faenas-mineras', source: 'wms-faenas-mineras', forLayer: 'mining' },
+      // Biodiversity layers
+      { id: 'wms-layer-ecosistemas', source: 'wms-ecosistemas', forLayer: 'biodiversity' },
+      { id: 'wms-layer-especies-amenazadas', source: 'wms-especies-amenazadas', forLayer: 'biodiversity' },
     ];
 
     wmsLayers.forEach(({ id, source, forLayer }) => {
@@ -1389,6 +1436,12 @@ const EnhancedMap = ({
       'wms-layer-riesgo',
       'wms-layer-areas-protegidas',
       'wms-layer-red-vial',
+      'wms-layer-hidrografia',
+      'wms-layer-cuencas',
+      'wms-layer-catastro-minero',
+      'wms-layer-faenas-mineras',
+      'wms-layer-ecosistemas',
+      'wms-layer-especies-amenazadas',
     ];
 
     // Show/hide based on useRealData setting
@@ -1409,6 +1462,12 @@ const EnhancedMap = ({
         'wms-layer-riesgo': 'riskZones',
         'wms-layer-areas-protegidas': 'greenAreas',
         'wms-layer-red-vial': 'roads',
+        'wms-layer-hidrografia': 'hydrology',
+        'wms-layer-cuencas': 'hydrology',
+        'wms-layer-catastro-minero': 'mining',
+        'wms-layer-faenas-mineras': 'mining',
+        'wms-layer-ecosistemas': 'biodiversity',
+        'wms-layer-especies-amenazadas': 'biodiversity',
       };
 
       Object.entries(wmsLayerMappings).forEach(([layerId, stateKey]) => {
@@ -1437,6 +1496,9 @@ const EnhancedMap = ({
         greenAreas: ['green-layer'],
         roads: ['roads-layer'],
         heatmap: ['heatmap-layer'],
+        hydrology: [],
+        mining: [],
+        biodiversity: [],
       };
 
       Object.entries(layerMappings).forEach(([key, layers]) => {
@@ -1465,6 +1527,9 @@ const EnhancedMap = ({
       greenAreas: ['green-layer'],
       roads: ['roads-layer'],
       heatmap: ['heatmap-layer'],
+      hydrology: [],
+      mining: [],
+      biodiversity: [],
     };
 
     Object.entries(layerMappings).forEach(([key, layers]) => {

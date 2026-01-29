@@ -25,6 +25,9 @@ import {
   Database,
   Globe,
   Info,
+  Droplets,
+  Mountain,
+  Leaf,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -36,6 +39,10 @@ export interface InfoLayerState {
   waterBodies: boolean;
   greenAreas: boolean;
   roads: boolean;
+  // New layers
+  hydrology: boolean;
+  mining: boolean;
+  biodiversity: boolean;
 }
 
 export interface InfoLayerConfig {
@@ -121,6 +128,42 @@ const MapInfoLayers = ({
           icon: TreePine, 
           description: 'Parques, reservas naturales',
           color: '#22c55e'
+        },
+      ],
+    },
+    {
+      title: 'Hidrografía (DGA)',
+      layers: [
+        { 
+          key: 'hydrology' as const, 
+          label: 'Red Hidrográfica', 
+          icon: Droplets, 
+          description: 'Ríos, cuencas, acuíferos, derechos de agua',
+          color: '#06b6d4'
+        },
+      ],
+    },
+    {
+      title: 'Minería (SERNAGEOMIN)',
+      layers: [
+        { 
+          key: 'mining' as const, 
+          label: 'Catastro Minero', 
+          icon: Mountain, 
+          description: 'Concesiones, faenas, pasivos ambientales',
+          color: '#a855f7'
+        },
+      ],
+    },
+    {
+      title: 'Biodiversidad (MMA)',
+      layers: [
+        { 
+          key: 'biodiversity' as const, 
+          label: 'Ecosistemas y Especies', 
+          icon: Leaf, 
+          description: 'Ecosistemas, especies amenazadas, corredores',
+          color: '#84cc16'
         },
       ],
     },
@@ -324,6 +367,78 @@ const MapInfoLayers = ({
                       style={{ backgroundColor: risk.color, opacity: 0.6 }}
                     />
                     <span className="text-[10px] text-muted-foreground">{risk.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {layers.hydrology && (
+            <div className="space-y-2 pt-3 border-t border-white/10">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                Leyenda Hidrografía
+              </Label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {[
+                  { label: 'Ríos', color: '#0ea5e9' },
+                  { label: 'Lagos', color: '#0284c7' },
+                  { label: 'Cuencas', color: '#06b6d4' },
+                  { label: 'Acuíferos', color: '#22d3ee' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-1.5">
+                    <div 
+                      className="w-3 h-3 rounded-sm border border-white/20"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-[10px] text-muted-foreground">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {layers.mining && (
+            <div className="space-y-2 pt-3 border-t border-white/10">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                Leyenda Minería
+              </Label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {[
+                  { label: 'Exploración', color: '#fbbf24' },
+                  { label: 'Explotación', color: '#a855f7' },
+                  { label: 'Faena activa', color: '#22c55e' },
+                  { label: 'Pasivo amb.', color: '#ef4444' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-1.5">
+                    <div 
+                      className="w-3 h-3 rounded-sm border border-white/20"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-[10px] text-muted-foreground">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {layers.biodiversity && (
+            <div className="space-y-2 pt-3 border-t border-white/10">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                Leyenda Biodiversidad
+              </Label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {[
+                  { label: 'Ecosistema', color: '#22c55e' },
+                  { label: 'Esp. amenazada', color: '#ef4444' },
+                  { label: 'Corredor', color: '#84cc16' },
+                  { label: 'Humedal', color: '#0ea5e9' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-1.5">
+                    <div 
+                      className="w-3 h-3 rounded-sm border border-white/20"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-[10px] text-muted-foreground">{item.label}</span>
                   </div>
                 ))}
               </div>
