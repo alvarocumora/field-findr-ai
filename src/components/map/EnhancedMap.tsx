@@ -38,6 +38,7 @@ import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Listing, formatPrice, formatArea, getListingTypeLabel } from '@/hooks/useListings';
 import { useNavigate } from 'react-router-dom';
 import MapInfoLayers, { InfoLayerState, InfoLayerConfig } from './MapInfoLayers';
+import { buildWMSTileUrl, getProxiedUrl, WMS_BASE_URLS } from '@/services/chileGIS';
 
 interface EnhancedMapProps {
   listings: Listing[];
@@ -426,6 +427,7 @@ const EnhancedMap = ({
   const [layerConfig, setLayerConfig] = useState<InfoLayerConfig>({
     opacity: 0.6,
     heatmapIntensity: 0.8,
+    useRealData: false,
   });
 
   const handleLayerChange = (layer: keyof InfoLayerState, value: boolean) => {
@@ -1295,9 +1297,165 @@ const EnhancedMap = ({
     }
   }, [infoLayers, layerConfig, listings]);
 
+  // Add real WMS layers from Chilean GIS services
+  const addRealWMSLayers = useCallback(() => {
+    if (!map.current) return;
+
+    // WMS sources configuration for Chilean public data
+    const wmsSources = [
+      {
+        id: 'wms-zonificacion',
+        url: buildWMSTileUrl(getProxiedUrl(WMS_BASE_URLS.minvu), 'prms_zonificacion'),
+        attribution: '© MINVU',
+      },
+      {
+        id: 'wms-riesgo-volcanico',
+        url: buildWMSTileUrl(getProxiedUrl(WMS_BASE_URLS.sernageomin), 'amenaza_volcanica'),
+        attribution: '© SERNAGEOMIN',
+      },
+      {
+        id: 'wms-riesgo-tsunami',
+        url: buildWMSTileUrl(getProxiedUrl(WMS_BASE_URLS.shoa), 'cartas_inundacion'),
+        attribution: '© SHOA',
+      },
+      {
+        id: 'wms-areas-protegidas',
+        url: buildWMSTileUrl(getProxiedUrl(WMS_BASE_URLS.conaf), 'snaspe'),
+        attribution: '© CONAF',
+      },
+      {
+        id: 'wms-red-vial',
+        url: buildWMSTileUrl(getProxiedUrl(WMS_BASE_URLS.mop), 'red_vial'),
+        attribution: '© MOP',
+      },
+    ];
+
+    // Add WMS sources
+    wmsSources.forEach(({ id, url, attribution }) => {
+      if (!map.current?.getSource(id)) {
+        map.current?.addSource(id, {
+          type: 'raster',
+          tiles: [url],
+          tileSize: 256,
+          attribution,
+        });
+      }
+    });
+
+    // Add WMS layers (raster type)
+    const wmsLayers = [
+      { id: 'wms-layer-zonificacion', source: 'wms-zonificacion', forLayer: 'zoning' },
+      { id: 'wms-layer-riesgo', source: 'wms-riesgo-volcanico', forLayer: 'riskZones' },
+      { id: 'wms-layer-areas-protegidas', source: 'wms-areas-protegidas', forLayer: 'greenAreas' },
+      { id: 'wms-layer-red-vial', source: 'wms-red-vial', forLayer: 'roads' },
+    ];
+
+    wmsLayers.forEach(({ id, source, forLayer }) => {
+      if (!map.current?.getLayer(id)) {
+        map.current?.addLayer({
+          id,
+          type: 'raster',
+          source,
+          paint: {
+            'raster-opacity': layerConfig.opacity,
+          },
+          layout: {
+            visibility: infoLayers[forLayer as keyof InfoLayerState] && layerConfig.useRealData 
+              ? 'visible' 
+              : 'none',
+          },
+        });
+      }
+    });
+  }, [infoLayers, layerConfig]);
+
+  // Toggle between demo and real data layers
+  useEffect(() => {
+    if (!map.current || isLoading) return;
+
+    // Demo layer IDs
+    const demoLayers = [
+      'zoning-layer', 'zoning-outline',
+      'risk-layer', 'risk-outline',
+      'infrastructure-layer',
+      'water-lines', 'water-areas',
+      'green-layer',
+      'roads-layer',
+    ];
+
+    // WMS layer IDs
+    const wmsLayers = [
+      'wms-layer-zonificacion',
+      'wms-layer-riesgo',
+      'wms-layer-areas-protegidas',
+      'wms-layer-red-vial',
+    ];
+
+    // Show/hide based on useRealData setting
+    if (layerConfig.useRealData) {
+      // Add WMS layers if not present
+      addRealWMSLayers();
+
+      // Hide demo layers
+      demoLayers.forEach(layerId => {
+        if (map.current?.getLayer(layerId)) {
+          map.current.setLayoutProperty(layerId, 'visibility', 'none');
+        }
+      });
+
+      // Show active WMS layers
+      const wmsLayerMappings: Record<string, keyof InfoLayerState> = {
+        'wms-layer-zonificacion': 'zoning',
+        'wms-layer-riesgo': 'riskZones',
+        'wms-layer-areas-protegidas': 'greenAreas',
+        'wms-layer-red-vial': 'roads',
+      };
+
+      Object.entries(wmsLayerMappings).forEach(([layerId, stateKey]) => {
+        if (map.current?.getLayer(layerId)) {
+          const isVisible = infoLayers[stateKey];
+          map.current.setLayoutProperty(layerId, 'visibility', isVisible ? 'visible' : 'none');
+          if (isVisible) {
+            map.current.setPaintProperty(layerId, 'raster-opacity', layerConfig.opacity);
+          }
+        }
+      });
+    } else {
+      // Hide WMS layers
+      wmsLayers.forEach(layerId => {
+        if (map.current?.getLayer(layerId)) {
+          map.current.setLayoutProperty(layerId, 'visibility', 'none');
+        }
+      });
+
+      // Show active demo layers
+      const layerMappings: Record<keyof InfoLayerState, string[]> = {
+        zoning: ['zoning-layer', 'zoning-outline'],
+        riskZones: ['risk-layer', 'risk-outline'],
+        infrastructure: ['infrastructure-layer'],
+        waterBodies: ['water-lines', 'water-areas'],
+        greenAreas: ['green-layer'],
+        roads: ['roads-layer'],
+        heatmap: ['heatmap-layer'],
+      };
+
+      Object.entries(layerMappings).forEach(([key, layers]) => {
+        const isVisible = infoLayers[key as keyof InfoLayerState];
+        layers.forEach(layerId => {
+          if (map.current?.getLayer(layerId)) {
+            map.current.setLayoutProperty(layerId, 'visibility', isVisible ? 'visible' : 'none');
+          }
+        });
+      });
+    }
+  }, [layerConfig.useRealData, infoLayers, layerConfig.opacity, isLoading, addRealWMSLayers]);
+
   // Update layer visibility
   useEffect(() => {
     if (!map.current || isLoading) return;
+
+    // Skip if useRealData is true - handled by the toggle effect above
+    if (layerConfig.useRealData) return;
 
     const layerMappings: Record<keyof InfoLayerState, string[]> = {
       zoning: ['zoning-layer', 'zoning-outline'],
@@ -1317,7 +1475,7 @@ const EnhancedMap = ({
         }
       });
     });
-  }, [infoLayers, isLoading]);
+  }, [infoLayers, isLoading, layerConfig.useRealData]);
 
   // Update layer opacity
   useEffect(() => {
