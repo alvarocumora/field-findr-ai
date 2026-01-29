@@ -6,6 +6,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 
+// PWA Components
+import OfflineIndicator from "./components/pwa/OfflineIndicator";
+import InstallPrompt from "./components/pwa/InstallPrompt";
+
 // Pages
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -14,6 +18,7 @@ import Tools from "./pages/Tools";
 import Profile from "./pages/Profile";
 import Explorar from "./pages/Explorar";
 import PropertyDetail from "./pages/PropertyDetail";
+import Install from "./pages/Install";
 
 // Legacy Components (to be migrated)
 import AIRecommendationEngine from "./components/AIRecommendationEngine";
@@ -53,6 +58,7 @@ const App = () => (
               <Route path="/explorar" element={<Explorar />} />
               <Route path="/propiedad/:id" element={<PropertyDetail />} />
               <Route path="/comparar" element={<ParcelComparator />} />
+              <Route path="/instalar" element={<Install />} />
               
               {/* Legacy routes - to be migrated */}
               <Route path="/dashboard" element={<Dashboard />} />
@@ -84,6 +90,10 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
+          
+          {/* PWA Components */}
+          <OfflineIndicator />
+          <InstallPrompt />
         </TooltipProvider>
       </AuthProvider>
     </ThemeProvider>
