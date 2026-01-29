@@ -17,15 +17,14 @@ import {
   Layers,
   Building2,
   TrendingUp,
-  Droplets,
   Zap,
   TreePine,
   AlertTriangle,
   Route,
-  Factory,
   Waves,
-  Shield,
-  MapPin,
+  Database,
+  Globe,
+  Info,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -42,6 +41,7 @@ export interface InfoLayerState {
 export interface InfoLayerConfig {
   opacity: number;
   heatmapIntensity: number;
+  useRealData: boolean;
 }
 
 interface MapInfoLayersProps {
@@ -212,6 +212,40 @@ const MapInfoLayers = ({
               <Label className="text-xs text-muted-foreground uppercase tracking-wider">
                 Configuración
               </Label>
+              
+              {/* Real Data Toggle */}
+              <div className="flex items-center justify-between p-2 rounded-lg bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md flex items-center justify-center bg-primary/20">
+                    {config.useRealData ? (
+                      <Globe className="h-3.5 w-3.5 text-primary" />
+                    ) : (
+                      <Database className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">
+                      {config.useRealData ? 'Datos Reales' : 'Datos Demo'}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {config.useRealData ? 'IDE Chile / MINVU' : 'Datos de demostración'}
+                    </span>
+                  </div>
+                </div>
+                <Switch
+                  checked={config.useRealData}
+                  onCheckedChange={(checked) => onConfigChange({ useRealData: checked })}
+                />
+              </div>
+
+              {config.useRealData && (
+                <div className="flex items-start gap-2 p-2 rounded-lg bg-info/10 border border-info/20">
+                  <Info className="h-4 w-4 text-info mt-0.5 flex-shrink-0" />
+                  <p className="text-[10px] text-muted-foreground">
+                    Los datos se obtienen de servicios WMS oficiales de IDE Chile, MINVU, SERNAGEOMIN y otros organismos públicos.
+                  </p>
+                </div>
+              )}
               
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
