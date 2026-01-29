@@ -1809,11 +1809,31 @@ const EnhancedMap = ({
     }
 
     return () => {
+      // Clean up markers
       Object.values(markersRef.current).forEach((marker) => marker.remove());
       markersRef.current = {};
       popupRef.current?.remove();
       layerTooltipRef.current?.remove();
-      map.current?.remove();
+      
+      // Remove draw control before removing map to avoid errors
+      if (draw.current && map.current) {
+        try {
+          map.current.removeControl(draw.current);
+        } catch (e) {
+          // Ignore errors during cleanup
+        }
+        draw.current = null;
+      }
+      
+      // Remove map
+      if (map.current) {
+        try {
+          map.current.remove();
+        } catch (e) {
+          // Ignore errors during cleanup
+        }
+        map.current = null;
+      }
     };
   }, [mapboxToken, tokenLoading, getCenter, getMapStyle, mapMode, showDrawTools, addInfoLayers, setupLayerHoverEvents]);
 
