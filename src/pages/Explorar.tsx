@@ -609,7 +609,7 @@ const Explorar = () => {
               </div>
             )}
 
-            {/* Map Panel - shown in map and split views */}
+            {/* Map Panel - conditionally rendered based on view */}
             {(view === 'map' || view === 'split') && (
               <div className={`${view === 'split' ? 'hidden md:block md:w-1/2' : 'w-full'} h-[calc(100vh-180px)] md:h-[calc(100vh-132px)] relative`}>
                 <EnhancedMap 
@@ -618,6 +618,7 @@ const Explorar = () => {
                   onListingHover={setHoveredListing}
                   onListingClick={(listing) => navigate(`/propiedad/${listing.id}`)}
                   className="w-full h-full"
+                  key="enhanced-map" // Stable key to prevent unnecessary remounts
                 />
               </div>
             )}
