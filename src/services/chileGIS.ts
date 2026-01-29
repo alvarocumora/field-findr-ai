@@ -18,7 +18,7 @@ export interface WMSLayerConfig {
   attribution: string;
   description: string;
   available: boolean;
-  category: 'zoning' | 'risk' | 'infrastructure' | 'environment';
+  category: 'zoning' | 'risk' | 'infrastructure' | 'environment' | 'hydrology' | 'mining' | 'biodiversity';
 }
 
 // Official Chilean GIS WMS endpoints
@@ -30,10 +30,10 @@ export const WMS_BASE_URLS = {
   // MINVU - Urban Planning and Zoning
   minvu: 'https://ide.minvu.cl/geoserver/wms',
   
-  // SERNAGEOMIN - Geological Hazards
+  // SERNAGEOMIN - Geological Hazards and Mining Cadastre
   sernageomin: 'https://geonode.sernageomin.cl/geoserver/wms',
   
-  // MMA - Environmental Ministry
+  // MMA - Environmental Ministry and Biodiversity
   mma: 'https://ide.mma.gob.cl/geoserver/wms',
   
   // MOP - Infrastructure (GEOMOP)
@@ -47,6 +47,12 @@ export const WMS_BASE_URLS = {
   
   // CONAF - Protected Areas and Forests
   conaf: 'https://sig.conaf.cl/geoserver/wms',
+  
+  // DGA - Dirección General de Aguas (Hydrology)
+  dga: 'https://snia.mop.gob.cl/geoserver/wms',
+  
+  // SAG - Servicio Agrícola y Ganadero
+  sag: 'https://www.ide.sag.cl/geoserver/wms',
 } as const;
 
 // Pre-configured WMS layers from Chilean GIS services
@@ -189,6 +195,122 @@ export const CHILE_GIS_LAYERS: WMSLayerConfig[] = [
     description: 'Áreas de alto valor ecológico identificadas para conservación',
     available: true,
     category: 'environment',
+  },
+  
+  // Hydrology Layers (DGA)
+  {
+    id: 'rios-principales',
+    name: 'Ríos Principales',
+    source: 'DGA',
+    url: WMS_BASE_URLS.dga,
+    layers: 'red_hidrografica',
+    attribution: '© DGA - Dirección General de Aguas',
+    description: 'Red hidrográfica principal de Chile',
+    available: true,
+    category: 'hydrology',
+  },
+  {
+    id: 'cuencas',
+    name: 'Cuencas Hidrográficas',
+    source: 'DGA',
+    url: WMS_BASE_URLS.dga,
+    layers: 'cuencas',
+    attribution: '© DGA - Dirección General de Aguas',
+    description: 'Delimitación de cuencas hidrográficas',
+    available: true,
+    category: 'hydrology',
+  },
+  {
+    id: 'acuiferos',
+    name: 'Acuíferos',
+    source: 'DGA',
+    url: WMS_BASE_URLS.dga,
+    layers: 'acuiferos',
+    attribution: '© DGA - Dirección General de Aguas',
+    description: 'Ubicación y extensión de acuíferos subterráneos',
+    available: true,
+    category: 'hydrology',
+  },
+  {
+    id: 'derechos-agua',
+    name: 'Derechos de Agua',
+    source: 'DGA',
+    url: WMS_BASE_URLS.dga,
+    layers: 'derechos_aprovechamiento',
+    attribution: '© DGA - Dirección General de Aguas',
+    description: 'Derechos de aprovechamiento de aguas otorgados',
+    available: true,
+    category: 'hydrology',
+  },
+  
+  // Mining Cadastre (SERNAGEOMIN)
+  {
+    id: 'concesiones-mineras',
+    name: 'Concesiones Mineras',
+    source: 'SERNAGEOMIN',
+    url: WMS_BASE_URLS.sernageomin,
+    layers: 'catastro_minero',
+    attribution: '© SERNAGEOMIN - Servicio Nacional de Geología y Minería',
+    description: 'Concesiones mineras de exploración y explotación vigentes',
+    available: true,
+    category: 'mining',
+  },
+  {
+    id: 'faenas-mineras',
+    name: 'Faenas Mineras Activas',
+    source: 'SERNAGEOMIN',
+    url: WMS_BASE_URLS.sernageomin,
+    layers: 'faenas_mineras',
+    attribution: '© SERNAGEOMIN - Servicio Nacional de Geología y Minería',
+    description: 'Ubicación de faenas mineras en operación',
+    available: true,
+    category: 'mining',
+  },
+  {
+    id: 'pasivos-ambientales',
+    name: 'Pasivos Ambientales Mineros',
+    source: 'SERNAGEOMIN',
+    url: WMS_BASE_URLS.sernageomin,
+    layers: 'pasivos_ambientales',
+    attribution: '© SERNAGEOMIN - Servicio Nacional de Geología y Minería',
+    description: 'Faenas mineras abandonadas o paralizadas con potencial riesgo ambiental',
+    available: true,
+    category: 'mining',
+  },
+  
+  // Biodiversity (MMA)
+  {
+    id: 'ecosistemas',
+    name: 'Ecosistemas Terrestres',
+    source: 'MMA',
+    url: WMS_BASE_URLS.mma,
+    layers: 'ecosistemas_terrestres',
+    attribution: '© MMA - Ministerio del Medio Ambiente',
+    description: 'Clasificación de ecosistemas terrestres de Chile',
+    available: true,
+    category: 'biodiversity',
+  },
+  {
+    id: 'especies-amenazadas',
+    name: 'Hábitats Especies Amenazadas',
+    source: 'MMA',
+    url: WMS_BASE_URLS.mma,
+    layers: 'especies_amenazadas',
+    attribution: '© MMA - Ministerio del Medio Ambiente',
+    description: 'Áreas con presencia de especies en categoría de conservación',
+    available: true,
+    category: 'biodiversity',
+  },
+  {
+    id: 'corredores-biologicos',
+    name: 'Corredores Biológicos',
+    source: 'MMA',
+    url: WMS_BASE_URLS.mma,
+    layers: 'corredores_biologicos',
+    attribution: '© MMA - Ministerio del Medio Ambiente',
+    description: 'Corredores de conectividad ecológica',
+    available: true,
+    category: 'biodiversity',
   },
 ];
 
