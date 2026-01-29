@@ -17,20 +17,15 @@ import {
   ZoomIn, 
   ZoomOut, 
   Locate, 
-  Navigation, 
   Compass, 
   Mountain,
   PenTool,
   Trash2,
   Maximize2,
   Layers,
-  Sun,
-  Moon,
   Satellite,
   Map as MapIcon,
   RotateCcw,
-  Eye,
-  EyeOff,
   Ruler,
   Target
 } from 'lucide-react';
@@ -43,6 +38,11 @@ import TouchMapControls from './TouchMapControls';
 import GestureFeedback from './GestureFeedback';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTouchGestures } from '@/hooks/useTouchGestures';
+import MapControlsToolbar from './MapControlsToolbar';
+import MapModeSelector, { MapMode } from './MapModeSelector';
+import MapLegend from './MapLegend';
+import MapStatusBadge from './MapStatusBadge';
+import DrawingIndicator from './DrawingIndicator';
 
 interface EnhancedMapProps {
   listings: Listing[];
@@ -410,7 +410,7 @@ const EnhancedMap = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawnArea, setDrawnArea] = useState<number | null>(null);
-  const [mapMode, setMapMode] = useState<'streets' | 'satellite' | '3d'>('3d');
+  const [mapMode, setMapMode] = useState<MapMode>('3d');
   const [showClusters, setShowClusters] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
   const [controlsExpanded, setControlsExpanded] = useState(false);
