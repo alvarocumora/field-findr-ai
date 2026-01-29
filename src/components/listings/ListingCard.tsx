@@ -22,14 +22,16 @@ import { useToggleFavorite, useFavoriteIds } from '@/hooks/useFavorites';
 import { useAuth } from '@/hooks/useAuth';
 import MatchScoreBadge from '@/components/matching/MatchScoreBadge';
 import { MatchResult } from '@/hooks/useMatchScore';
+import { cn } from '@/lib/utils';
 
 interface ListingCardProps {
   listing: Listing;
   onHover?: (listing: Listing | null) => void;
   matchResult?: MatchResult | null;
+  className?: string;
 }
 
-const ListingCard = ({ listing, onHover, matchResult }: ListingCardProps) => {
+const ListingCard = ({ listing, onHover, matchResult, className }: ListingCardProps) => {
   const { user } = useAuth();
   const { toggle, isLoading } = useToggleFavorite();
   const { data: favoriteIds = [] } = useFavoriteIds();
@@ -60,28 +62,36 @@ const ListingCard = ({ listing, onHover, matchResult }: ListingCardProps) => {
       to={`/propiedad/${listing.id}`}
       onMouseEnter={() => onHover?.(listing)}
       onMouseLeave={() => onHover?.(null)}
+      className="block focus-ring rounded-xl"
     >
-      <Card className="group overflow-hidden glass border-white/10 hover:border-primary/30 transition-all duration-300 card-hover">
+      <Card className={cn(
+        "group overflow-hidden glass border-white/10",
+        "hover:border-primary/40 hover:shadow-glow",
+        "transition-all duration-300 ease-out",
+        "active:scale-[0.98]",
+        className
+      )}>
         {/* Image Container */}
         <div className="relative aspect-[4/3] overflow-hidden">
           <img
             src={listing.images[0] || '/placeholder.svg'}
             alt={listing.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
           
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          {/* Gradient Overlay - Enhanced */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
           
           {/* Top Badges */}
-          <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+          <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
             {listing.featured && (
-              <Badge className="bg-primary text-primary-foreground flex items-center gap-1">
+              <Badge className="bg-primary text-primary-foreground flex items-center gap-1 text-xs shadow-lg">
                 <Sparkles className="h-3 w-3" />
                 Destacado
               </Badge>
             )}
-            <Badge variant="secondary" className="glass">
+            <Badge variant="secondary" className="glass text-xs shadow-lg">
               {getListingTypeLabel(listing.type)}
             </Badge>
             {matchResult && matchResult.score >= 50 && (
@@ -94,11 +104,11 @@ const ListingCard = ({ listing, onHover, matchResult }: ListingCardProps) => {
           </div>
 
           {/* Top Right Actions */}
-          <div className="absolute top-3 right-3 flex gap-2">
+          <div className="absolute top-3 right-3 flex gap-1.5">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 glass hover:bg-white/20"
+              className="h-9 w-9 glass hover:bg-white/30 transition-colors touch-target"
               onClick={handleShare}
             >
               <Share2 className="h-4 w-4 text-white" />
@@ -107,22 +117,25 @@ const ListingCard = ({ listing, onHover, matchResult }: ListingCardProps) => {
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-8 w-8 glass hover:bg-white/20 ${isFavorite ? 'text-red-500' : 'text-white'}`}
+                className={cn(
+                  "h-9 w-9 glass hover:bg-white/30 transition-colors touch-target",
+                  isFavorite ? 'text-red-500' : 'text-white'
+                )}
                 onClick={handleFavoriteClick}
                 disabled={isLoading}
               >
-                <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
+                <Heart className={cn("h-4 w-4", isFavorite && 'fill-current')} />
               </Button>
             )}
           </div>
 
           {/* Bottom Info on Image */}
           <div className="absolute bottom-3 left-3 right-3">
-            <p className="text-2xl font-bold text-white mb-1">
+            <p className="text-xl sm:text-2xl font-bold text-white mb-1 drop-shadow-lg">
               {formatPrice(listing.price, listing.currency)}
             </p>
-            <div className="flex items-center gap-2 text-white/80 text-sm">
-              <MapPin className="h-4 w-4" />
+            <div className="flex items-center gap-1.5 text-white/90 text-sm">
+              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
               <span className="truncate">{listing.location}</span>
             </div>
           </div>
@@ -130,18 +143,18 @@ const ListingCard = ({ listing, onHover, matchResult }: ListingCardProps) => {
 
         {/* Content */}
         <CardContent className="p-4">
-          <h3 className="font-semibold text-foreground line-clamp-2 mb-3 group-hover:text-primary transition-colors">
+          <h3 className="font-semibold text-foreground line-clamp-2 mb-3 group-hover:text-primary transition-colors text-sm sm:text-base leading-snug">
             {listing.title}
           </h3>
 
           {/* Stats Row */}
           <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-            <div className="flex items-center gap-1">
-              <Ruler className="h-4 w-4" />
+            <div className="flex items-center gap-1.5">
+              <Ruler className="h-4 w-4 text-primary/70" />
               <span>{formatArea(listing.area_m2, listing.area_ha)}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <Eye className="h-4 w-4" />
+            <div className="flex items-center gap-1.5">
+              <Eye className="h-4 w-4 text-muted-foreground/70" />
               <span>{listing.views_count} vistas</span>
             </div>
           </div>
@@ -152,7 +165,7 @@ const ListingCard = ({ listing, onHover, matchResult }: ListingCardProps) => {
               <Badge 
                 key={tag} 
                 variant="outline" 
-                className="text-xs border-white/10 text-muted-foreground"
+                className="text-xs border-border/50 text-muted-foreground px-2 py-0.5"
               >
                 {tag}
               </Badge>
@@ -160,7 +173,7 @@ const ListingCard = ({ listing, onHover, matchResult }: ListingCardProps) => {
             {listing.tags.length > 3 && (
               <Badge 
                 variant="outline" 
-                className="text-xs border-white/10 text-muted-foreground"
+                className="text-xs border-border/50 text-muted-foreground px-2 py-0.5"
               >
                 +{listing.tags.length - 3}
               </Badge>
@@ -169,12 +182,12 @@ const ListingCard = ({ listing, onHover, matchResult }: ListingCardProps) => {
 
           {/* Legal Status */}
           <div className="flex items-center justify-between">
-            <Badge className={`${legalStatus.color} text-xs`}>
+            <Badge className={cn(legalStatus.color, "text-xs")}>
               {listing.legal_status === 'verified' && <CheckCircle className="h-3 w-3 mr-1" />}
               {legalStatus.label}
             </Badge>
             {listing.subdivision_eligible && (
-              <span className="text-xs text-primary">Apto subdivisión</span>
+              <span className="text-xs text-primary font-medium">Apto subdivisión</span>
             )}
           </div>
         </CardContent>
