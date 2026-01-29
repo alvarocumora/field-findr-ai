@@ -1686,96 +1686,10 @@ const EnhancedMap = ({
       // Setup hover events for info layers
       setupLayerHoverEvents();
 
-      // Add clustering source
-      if (showClusters && listings.length > 0) {
-        const validListings = listings.filter(l => l.lat && l.lng);
-        
-        map.current?.addSource('listings-cluster', {
-          type: 'geojson',
-          data: {
-            type: 'FeatureCollection',
-            features: validListings.map(l => ({
-              type: 'Feature' as const,
-              properties: { id: l.id, price: l.price, status: l.status, type: l.type },
-              geometry: { type: 'Point' as const, coordinates: [l.lng!, l.lat!] },
-            })),
-          },
-          cluster: true,
-          clusterMaxZoom: 12,
-          clusterRadius: 60,
-        });
-
-        // Cluster circles
-        map.current?.addLayer({
-          id: 'clusters',
-          type: 'circle',
-          source: 'listings-cluster',
-          filter: ['has', 'point_count'],
-          paint: {
-            'circle-color': [
-              'step',
-              ['get', 'point_count'],
-              '#10b981',
-              5,
-              '#f59e0b',
-              10,
-              '#ef4444',
-            ],
-            'circle-radius': [
-              'step',
-              ['get', 'point_count'],
-              20,
-              5,
-              30,
-              10,
-              40,
-            ],
-            'circle-stroke-width': 3,
-            'circle-stroke-color': '#ffffff',
-          },
-        });
-
-        // Cluster count
-        map.current?.addLayer({
-          id: 'cluster-count',
-          type: 'symbol',
-          source: 'listings-cluster',
-          filter: ['has', 'point_count'],
-          layout: {
-            'text-field': '{point_count_abbreviated}',
-            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-            'text-size': 14,
-          },
-          paint: {
-            'text-color': '#ffffff',
-          },
-        });
-
-        // Click on cluster to zoom
-        map.current?.on('click', 'clusters', (e) => {
-          if (!e.features?.length) return;
-          
-          const clusterId = e.features[0].properties?.cluster_id;
-          const source = map.current?.getSource('listings-cluster') as mapboxgl.GeoJSONSource;
-          
-          source?.getClusterExpansionZoom(clusterId, (err, zoom) => {
-            if (err || !e.features?.length) return;
-            const geometry = e.features[0].geometry as GeoJSON.Point;
-            map.current?.easeTo({
-              center: geometry.coordinates as [number, number],
-              zoom: zoom || 10,
-            });
-          });
-        });
-
-        // Change cursor on cluster hover
-        map.current?.on('mouseenter', 'clusters', () => {
-          if (map.current) map.current.getCanvas().style.cursor = 'pointer';
-        });
-        map.current?.on('mouseleave', 'clusters', () => {
-          if (map.current) map.current.getCanvas().style.cursor = '';
-        });
-      }
+      // Trigger resize to ensure proper dimensions after mount
+      setTimeout(() => {
+        map.current?.resize();
+      }, 100);
 
       setIsLoading(false);
     });
@@ -1882,6 +1796,127 @@ const EnhancedMap = ({
       }
     }
   }, [listings, isLoading, hoveredListing, showClusters]);
+
+  // Setup and update cluster source when listings change
+  useEffect(() => {
+    if (!map.current || isLoading || !showClusters) return;
+    
+    // Wait for style to be loaded
+    const setupClusters = () => {
+      if (!map.current?.isStyleLoaded()) return;
+      
+      const validListings = listings.filter(l => l.lat && l.lng);
+      const geoJsonData: GeoJSON.FeatureCollection = {
+        type: 'FeatureCollection',
+        features: validListings.map(l => ({
+          type: 'Feature' as const,
+          properties: { id: l.id, price: l.price, status: l.status, type: l.type },
+          geometry: { type: 'Point' as const, coordinates: [l.lng!, l.lat!] },
+        })),
+      };
+      
+      // Update existing source or create new one
+      const existingSource = map.current?.getSource('listings-cluster') as mapboxgl.GeoJSONSource;
+      if (existingSource) {
+        existingSource.setData(geoJsonData);
+      } else if (validListings.length > 0) {
+        // Add new source
+        map.current?.addSource('listings-cluster', {
+          type: 'geojson',
+          data: geoJsonData,
+          cluster: true,
+          clusterMaxZoom: 12,
+          clusterRadius: 60,
+        });
+
+        // Cluster circles
+        map.current?.addLayer({
+          id: 'clusters',
+          type: 'circle',
+          source: 'listings-cluster',
+          filter: ['has', 'point_count'],
+          paint: {
+            'circle-color': [
+              'step',
+              ['get', 'point_count'],
+              '#10b981',
+              5,
+              '#f59e0b',
+              10,
+              '#ef4444',
+            ],
+            'circle-radius': [
+              'step',
+              ['get', 'point_count'],
+              20,
+              5,
+              30,
+              10,
+              40,
+            ],
+            'circle-stroke-width': 3,
+            'circle-stroke-color': '#ffffff',
+          },
+        });
+
+        // Cluster count
+        map.current?.addLayer({
+          id: 'cluster-count',
+          type: 'symbol',
+          source: 'listings-cluster',
+          filter: ['has', 'point_count'],
+          layout: {
+            'text-field': '{point_count_abbreviated}',
+            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+            'text-size': 14,
+          },
+          paint: {
+            'text-color': '#ffffff',
+          },
+        });
+
+        // Click on cluster to zoom
+        map.current?.on('click', 'clusters', (e) => {
+          if (!e.features?.length) return;
+          
+          const clusterId = e.features[0].properties?.cluster_id;
+          const source = map.current?.getSource('listings-cluster') as mapboxgl.GeoJSONSource;
+          
+          source?.getClusterExpansionZoom(clusterId, (err, zoom) => {
+            if (err || !e.features?.length) return;
+            const geometry = e.features[0].geometry as GeoJSON.Point;
+            map.current?.easeTo({
+              center: geometry.coordinates as [number, number],
+              zoom: zoom || 10,
+            });
+          });
+        });
+
+        // Change cursor on cluster hover
+        map.current?.on('mouseenter', 'clusters', () => {
+          if (map.current) map.current.getCanvas().style.cursor = 'pointer';
+        });
+        map.current?.on('mouseleave', 'clusters', () => {
+          if (map.current) map.current.getCanvas().style.cursor = '';
+        });
+      }
+      
+      // Fit bounds if we have listings
+      if (validListings.length > 1) {
+        const bounds = new mapboxgl.LngLatBounds();
+        validListings.forEach((l) => bounds.extend([l.lng!, l.lat!]));
+        map.current?.fitBounds(bounds, { padding: 80, maxZoom: 10 });
+      }
+    };
+    
+    // If style is already loaded, setup immediately
+    if (map.current?.isStyleLoaded()) {
+      setupClusters();
+    } else {
+      // Wait for style load
+      map.current?.once('style.load', setupClusters);
+    }
+  }, [listings, isLoading, showClusters]);
 
   const attachMarkerEvents = (el: HTMLElement, listing: Listing) => {
     el.addEventListener('mouseenter', () => {
