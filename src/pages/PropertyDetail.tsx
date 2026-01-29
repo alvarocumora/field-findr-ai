@@ -12,6 +12,7 @@ import ListingCard from '@/components/listings/ListingCard';
 import ImageGallery from '@/components/property/ImageGallery';
 import PropertyMap from '@/components/property/PropertyMap';
 import ContactForm from '@/components/property/ContactForm';
+import { AIInvestmentCopilot } from '@/components/ai/AIInvestmentCopilot';
 import {
   Heart,
   Share2,
@@ -28,7 +29,8 @@ import {
   Zap,
   Car,
   Mountain,
-  ArrowLeft
+  ArrowLeft,
+  Brain
 } from 'lucide-react';
 
 const PropertyDetail = () => {
@@ -350,6 +352,30 @@ const PropertyDetail = () => {
                   {listing.legal_status === 'verified' && <CheckCircle className="h-3 w-3 mr-1" />}
                   {legalStatus.label}
                 </Badge>
+
+                <AIInvestmentCopilot 
+                  property={{
+                    id: listing.id,
+                    title: listing.title,
+                    price: listing.price,
+                    area_m2: listing.area_m2,
+                    area_ha: listing.area_ha,
+                    location: listing.location,
+                    region: listing.region,
+                    type: listing.type,
+                    zoning: listing.zoning,
+                    legal_status: listing.legal_status,
+                    utilities: utilities as Record<string, boolean>,
+                    subdivision_eligible: listing.subdivision_eligible,
+                    tags: listing.tags,
+                  }}
+                  trigger={
+                    <Button className="w-full gap-2 mb-3">
+                      <Brain className="h-4 w-4" />
+                      Analizar con IA
+                    </Button>
+                  }
+                />
 
                 <Button variant="ghost" className="w-full glass border-white/10">
                   <Download className="h-4 w-4 mr-2" />
