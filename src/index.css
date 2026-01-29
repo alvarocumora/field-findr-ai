@@ -482,3 +482,40 @@ h1, h2, h3, h4, h5, h6, .heading {
 .status-warning { color: hsl(var(--warning)); }
 .status-error { color: hsl(var(--destructive)); }
 .status-info { color: hsl(var(--info)); }
+
+/* Map Layer Tooltip Styles */
+.layer-tooltip-popup .mapboxgl-popup-content {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 12px !important;
+}
+
+.layer-tooltip-popup .mapboxgl-popup-tip {
+  display: none !important;
+}
+
+/* Enhanced Map Popup Styles */
+.enhanced-map-popup-container .mapboxgl-popup-content {
+  padding: 0 !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow: 
+    0 10px 40px -10px hsla(0, 0%, 0%, 0.25),
+    0 0 0 1px hsla(0, 0%, 0%, 0.05) !important;
+}
+
+.enhanced-map-popup-container .mapboxgl-popup-close-button {
+  font-size: 20px;
+  color: white;
+  right: 8px;
+  top: 8px;
+  padding: 4px 8px;
+  background: hsla(0, 0%, 0%, 0.3);
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+}
+
+.enhanced-map-popup-container .mapboxgl-popup-close-button:hover {
+  background: hsla(0, 0%, 0%, 0.5);
+}
