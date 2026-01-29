@@ -37,7 +37,7 @@ import {
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Listing, formatPrice, formatArea, getListingTypeLabel } from '@/hooks/useListings';
 import { useNavigate } from 'react-router-dom';
-import EnhancedMapControls from './EnhancedMapControls';
+import MapInfoLayers, { InfoLayerState, InfoLayerConfig } from './MapInfoLayers';
 
 interface EnhancedMapProps {
   listings: Listing[];
@@ -59,6 +59,332 @@ const statusLabels = {
   active: 'Disponible',
   reserved: 'Reservado',
   sold: 'Vendido',
+};
+
+// Demo GeoJSON data for Chile regions
+const generateDemoZoningData = (): GeoJSON.FeatureCollection => ({
+  type: 'FeatureCollection',
+  features: [
+    // Residential zones (Santiago area)
+    {
+      type: 'Feature',
+      properties: { type: 'residential', name: 'Zona Residencial Las Condes' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.58, -33.40], [-70.54, -33.40], [-70.54, -33.43], [-70.58, -33.43], [-70.58, -33.40]
+        ]]
+      }
+    },
+    // Commercial zones
+    {
+      type: 'Feature',
+      properties: { type: 'commercial', name: 'Zona Comercial Providencia' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.62, -33.42], [-70.58, -33.42], [-70.58, -33.45], [-70.62, -33.45], [-70.62, -33.42]
+        ]]
+      }
+    },
+    // Industrial zones
+    {
+      type: 'Feature',
+      properties: { type: 'industrial', name: 'Zona Industrial Quilicura' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.70, -33.35], [-70.65, -33.35], [-70.65, -33.40], [-70.70, -33.40], [-70.70, -33.35]
+        ]]
+      }
+    },
+    // Agricultural zones (Valparaíso region)
+    {
+      type: 'Feature',
+      properties: { type: 'agricultural', name: 'Zona Agrícola Casablanca' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-71.45, -33.30], [-71.35, -33.30], [-71.35, -33.40], [-71.45, -33.40], [-71.45, -33.30]
+        ]]
+      }
+    },
+    // Mixed use
+    {
+      type: 'Feature',
+      properties: { type: 'mixed', name: 'Zona Mixta Ñuñoa' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.60, -33.45], [-70.56, -33.45], [-70.56, -33.48], [-70.60, -33.48], [-70.60, -33.45]
+        ]]
+      }
+    },
+    // Protected areas
+    {
+      type: 'Feature',
+      properties: { type: 'protected', name: 'Reserva Nacional Río Clarillo' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.48, -33.72], [-70.38, -33.72], [-70.38, -33.82], [-70.48, -33.82], [-70.48, -33.72]
+        ]]
+      }
+    },
+  ]
+});
+
+const generateRiskZonesData = (): GeoJSON.FeatureCollection => ({
+  type: 'FeatureCollection',
+  features: [
+    // Flood zones
+    {
+      type: 'Feature',
+      properties: { type: 'flood', risk: 'high', name: 'Zona Inundable Mapocho' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.68, -33.43], [-70.55, -33.43], [-70.55, -33.45], [-70.68, -33.45], [-70.68, -33.43]
+        ]]
+      }
+    },
+    // Landslide zones
+    {
+      type: 'Feature',
+      properties: { type: 'landslide', risk: 'medium', name: 'Riesgo Remoción Lo Barnechea' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.45, -33.35], [-70.38, -33.35], [-70.38, -33.42], [-70.45, -33.42], [-70.45, -33.35]
+        ]]
+      }
+    },
+    // Seismic zones
+    {
+      type: 'Feature',
+      properties: { type: 'seismic', risk: 'medium', name: 'Zona Sísmica Central' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.75, -33.50], [-70.50, -33.50], [-70.50, -33.55], [-70.75, -33.55], [-70.75, -33.50]
+        ]]
+      }
+    },
+    // Tsunami zones (coastal)
+    {
+      type: 'Feature',
+      properties: { type: 'tsunami', risk: 'high', name: 'Zona Tsunami Valparaíso' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-71.65, -33.02], [-71.60, -33.02], [-71.60, -33.08], [-71.65, -33.08], [-71.65, -33.02]
+        ]]
+      }
+    },
+  ]
+});
+
+const generateInfrastructureData = (): GeoJSON.FeatureCollection => ({
+  type: 'FeatureCollection',
+  features: [
+    // Full services areas
+    {
+      type: 'Feature',
+      properties: { coverage: 'full', services: ['water', 'electricity', 'sewage', 'gas'] },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.68, -33.40], [-70.52, -33.40], [-70.52, -33.50], [-70.68, -33.50], [-70.68, -33.40]
+        ]]
+      }
+    },
+    // Partial services
+    {
+      type: 'Feature',
+      properties: { coverage: 'partial', services: ['water', 'electricity'] },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.80, -33.35], [-70.68, -33.35], [-70.68, -33.45], [-70.80, -33.45], [-70.80, -33.35]
+        ]]
+      }
+    },
+    // Limited services
+    {
+      type: 'Feature',
+      properties: { coverage: 'limited', services: ['electricity'] },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.90, -33.30], [-70.80, -33.30], [-70.80, -33.45], [-70.90, -33.45], [-70.90, -33.30]
+        ]]
+      }
+    },
+  ]
+});
+
+const generateWaterBodiesData = (): GeoJSON.FeatureCollection => ({
+  type: 'FeatureCollection',
+  features: [
+    // Rivers
+    {
+      type: 'Feature',
+      properties: { type: 'river', name: 'Río Mapocho' },
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [-70.78, -33.42], [-70.70, -33.43], [-70.60, -33.43], [-70.50, -33.44], [-70.40, -33.45]
+        ]
+      }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'river', name: 'Río Maipo' },
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [-70.30, -33.60], [-70.45, -33.62], [-70.60, -33.65], [-70.80, -33.68], [-71.00, -33.70]
+        ]
+      }
+    },
+    // Lakes
+    {
+      type: 'Feature',
+      properties: { type: 'lake', name: 'Laguna Carén' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.88, -33.45], [-70.86, -33.45], [-70.86, -33.47], [-70.88, -33.47], [-70.88, -33.45]
+        ]]
+      }
+    },
+  ]
+});
+
+const generateGreenAreasData = (): GeoJSON.FeatureCollection => ({
+  type: 'FeatureCollection',
+  features: [
+    // Parks
+    {
+      type: 'Feature',
+      properties: { type: 'park', name: 'Parque Metropolitano' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.64, -33.40], [-70.60, -33.40], [-70.60, -33.44], [-70.64, -33.44], [-70.64, -33.40]
+        ]]
+      }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'park', name: 'Parque O\'Higgins' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.66, -33.46], [-70.64, -33.46], [-70.64, -33.48], [-70.66, -33.48], [-70.66, -33.46]
+        ]]
+      }
+    },
+    // Nature reserves
+    {
+      type: 'Feature',
+      properties: { type: 'reserve', name: 'Santuario de la Naturaleza Yerba Loca' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-70.35, -33.28], [-70.25, -33.28], [-70.25, -33.38], [-70.35, -33.38], [-70.35, -33.28]
+        ]]
+      }
+    },
+  ]
+});
+
+const generateRoadsData = (): GeoJSON.FeatureCollection => ({
+  type: 'FeatureCollection',
+  features: [
+    // Highways
+    {
+      type: 'Feature',
+      properties: { type: 'highway', name: 'Autopista Central' },
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [-70.65, -33.30], [-70.65, -33.40], [-70.65, -33.50], [-70.65, -33.60]
+        ]
+      }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'highway', name: 'Ruta 5' },
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [-70.70, -33.00], [-70.68, -33.20], [-70.66, -33.40], [-70.68, -33.60], [-70.70, -33.80]
+        ]
+      }
+    },
+    // Main roads
+    {
+      type: 'Feature',
+      properties: { type: 'main', name: 'Costanera Norte' },
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [-70.78, -33.42], [-70.70, -33.42], [-70.60, -33.42], [-70.50, -33.43]
+        ]
+      }
+    },
+  ]
+});
+
+// Generate heatmap points for appreciation
+const generateHeatmapData = (listings: Listing[]): GeoJSON.FeatureCollection => {
+  // Create synthetic appreciation data points
+  const points: GeoJSON.Feature[] = [];
+  
+  // Add points based on listings with weighted values
+  listings.forEach(listing => {
+    if (listing.lat && listing.lng) {
+      // Calculate appreciation factor based on price and area
+      const pricePerM2 = listing.price / (listing.area_m2 || 1);
+      const appreciation = Math.min(pricePerM2 / 10000, 1); // Normalize
+      
+      points.push({
+        type: 'Feature',
+        properties: { weight: appreciation },
+        geometry: {
+          type: 'Point',
+          coordinates: [listing.lng, listing.lat]
+        }
+      });
+    }
+  });
+
+  // Add synthetic high-value zones
+  const highValueZones = [
+    { lng: -70.57, lat: -33.41, weight: 0.95 }, // Las Condes
+    { lng: -70.59, lat: -33.42, weight: 0.90 }, // Vitacura
+    { lng: -70.61, lat: -33.43, weight: 0.85 }, // Providencia
+    { lng: -70.55, lat: -33.40, weight: 0.88 }, // Lo Barnechea
+    { lng: -71.55, lat: -33.02, weight: 0.75 }, // Viña del Mar
+    { lng: -71.62, lat: -33.04, weight: 0.70 }, // Valparaíso
+  ];
+
+  highValueZones.forEach(zone => {
+    points.push({
+      type: 'Feature',
+      properties: { weight: zone.weight },
+      geometry: {
+        type: 'Point',
+        coordinates: [zone.lng, zone.lat]
+      }
+    });
+  });
+
+  return {
+    type: 'FeatureCollection',
+    features: points
+  };
 };
 
 const EnhancedMap = ({
@@ -84,6 +410,30 @@ const EnhancedMap = ({
   const [controlsExpanded, setControlsExpanded] = useState(false);
   const { token: mapboxToken, loading: tokenLoading, error: tokenError } = useMapboxToken();
   const navigate = useNavigate();
+
+  // Info layers state
+  const [infoLayers, setInfoLayers] = useState<InfoLayerState>({
+    zoning: false,
+    heatmap: false,
+    infrastructure: false,
+    riskZones: false,
+    waterBodies: false,
+    greenAreas: false,
+    roads: false,
+  });
+
+  const [layerConfig, setLayerConfig] = useState<InfoLayerConfig>({
+    opacity: 0.6,
+    heatmapIntensity: 0.8,
+  });
+
+  const handleLayerChange = (layer: keyof InfoLayerState, value: boolean) => {
+    setInfoLayers(prev => ({ ...prev, [layer]: value }));
+  };
+
+  const handleConfigChange = (config: Partial<InfoLayerConfig>) => {
+    setLayerConfig(prev => ({ ...prev, ...config }));
+  };
 
   // Calculate center from listings
   const getCenter = useCallback((): [number, number] => {
@@ -296,7 +646,6 @@ const EnhancedMap = ({
     
     for (let i = 0; i < n; i++) {
       const j = (i + 1) % n;
-      // Convert to approximate meters (rough estimate at latitude -33)
       const x1 = coordinates[i][0] * 111320 * Math.cos(coordinates[i][1] * Math.PI / 180);
       const y1 = coordinates[i][1] * 110540;
       const x2 = coordinates[j][0] * 111320 * Math.cos(coordinates[j][1] * Math.PI / 180);
@@ -319,6 +668,363 @@ const EnhancedMap = ({
         return 'mapbox://styles/mapbox/light-v11';
     }
   }, [mapMode]);
+
+  // Add info layers to map
+  const addInfoLayers = useCallback(() => {
+    if (!map.current) return;
+
+    const zoningColors: Record<string, string> = {
+      residential: '#22c55e',
+      commercial: '#3b82f6',
+      industrial: '#f59e0b',
+      agricultural: '#84cc16',
+      mixed: '#8b5cf6',
+      protected: '#ef4444',
+    };
+
+    const riskColors: Record<string, string> = {
+      flood: '#0ea5e9',
+      landslide: '#f59e0b',
+      seismic: '#ef4444',
+      tsunami: '#6366f1',
+    };
+
+    const infrastructureColors: Record<string, string> = {
+      full: '#22c55e',
+      partial: '#f59e0b',
+      limited: '#ef4444',
+    };
+
+    // Add sources if not exists
+    if (!map.current.getSource('zoning-source')) {
+      map.current.addSource('zoning-source', {
+        type: 'geojson',
+        data: generateDemoZoningData()
+      });
+    }
+
+    if (!map.current.getSource('risk-source')) {
+      map.current.addSource('risk-source', {
+        type: 'geojson',
+        data: generateRiskZonesData()
+      });
+    }
+
+    if (!map.current.getSource('infrastructure-source')) {
+      map.current.addSource('infrastructure-source', {
+        type: 'geojson',
+        data: generateInfrastructureData()
+      });
+    }
+
+    if (!map.current.getSource('water-source')) {
+      map.current.addSource('water-source', {
+        type: 'geojson',
+        data: generateWaterBodiesData()
+      });
+    }
+
+    if (!map.current.getSource('green-source')) {
+      map.current.addSource('green-source', {
+        type: 'geojson',
+        data: generateGreenAreasData()
+      });
+    }
+
+    if (!map.current.getSource('roads-source')) {
+      map.current.addSource('roads-source', {
+        type: 'geojson',
+        data: generateRoadsData()
+      });
+    }
+
+    if (!map.current.getSource('heatmap-source')) {
+      map.current.addSource('heatmap-source', {
+        type: 'geojson',
+        data: generateHeatmapData(listings)
+      });
+    }
+
+    // Add zoning layer
+    if (!map.current.getLayer('zoning-layer')) {
+      map.current.addLayer({
+        id: 'zoning-layer',
+        type: 'fill',
+        source: 'zoning-source',
+        paint: {
+          'fill-color': [
+            'match',
+            ['get', 'type'],
+            'residential', zoningColors.residential,
+            'commercial', zoningColors.commercial,
+            'industrial', zoningColors.industrial,
+            'agricultural', zoningColors.agricultural,
+            'mixed', zoningColors.mixed,
+            'protected', zoningColors.protected,
+            '#888888'
+          ],
+          'fill-opacity': layerConfig.opacity * 0.5
+        },
+        layout: {
+          visibility: infoLayers.zoning ? 'visible' : 'none'
+        }
+      });
+
+      map.current.addLayer({
+        id: 'zoning-outline',
+        type: 'line',
+        source: 'zoning-source',
+        paint: {
+          'line-color': [
+            'match',
+            ['get', 'type'],
+            'residential', zoningColors.residential,
+            'commercial', zoningColors.commercial,
+            'industrial', zoningColors.industrial,
+            'agricultural', zoningColors.agricultural,
+            'mixed', zoningColors.mixed,
+            'protected', zoningColors.protected,
+            '#888888'
+          ],
+          'line-width': 2,
+          'line-opacity': layerConfig.opacity
+        },
+        layout: {
+          visibility: infoLayers.zoning ? 'visible' : 'none'
+        }
+      });
+    }
+
+    // Add risk zones layer
+    if (!map.current.getLayer('risk-layer')) {
+      map.current.addLayer({
+        id: 'risk-layer',
+        type: 'fill',
+        source: 'risk-source',
+        paint: {
+          'fill-color': [
+            'match',
+            ['get', 'type'],
+            'flood', riskColors.flood,
+            'landslide', riskColors.landslide,
+            'seismic', riskColors.seismic,
+            'tsunami', riskColors.tsunami,
+            '#888888'
+          ],
+          'fill-opacity': layerConfig.opacity * 0.4,
+          'fill-pattern': ['literal', '']
+        },
+        layout: {
+          visibility: infoLayers.riskZones ? 'visible' : 'none'
+        }
+      });
+
+      map.current.addLayer({
+        id: 'risk-outline',
+        type: 'line',
+        source: 'risk-source',
+        paint: {
+          'line-color': [
+            'match',
+            ['get', 'type'],
+            'flood', riskColors.flood,
+            'landslide', riskColors.landslide,
+            'seismic', riskColors.seismic,
+            'tsunami', riskColors.tsunami,
+            '#888888'
+          ],
+          'line-width': 2,
+          'line-dasharray': [2, 2],
+          'line-opacity': layerConfig.opacity
+        },
+        layout: {
+          visibility: infoLayers.riskZones ? 'visible' : 'none'
+        }
+      });
+    }
+
+    // Add infrastructure layer
+    if (!map.current.getLayer('infrastructure-layer')) {
+      map.current.addLayer({
+        id: 'infrastructure-layer',
+        type: 'fill',
+        source: 'infrastructure-source',
+        paint: {
+          'fill-color': [
+            'match',
+            ['get', 'coverage'],
+            'full', infrastructureColors.full,
+            'partial', infrastructureColors.partial,
+            'limited', infrastructureColors.limited,
+            '#888888'
+          ],
+          'fill-opacity': layerConfig.opacity * 0.3
+        },
+        layout: {
+          visibility: infoLayers.infrastructure ? 'visible' : 'none'
+        }
+      });
+    }
+
+    // Add water bodies layer
+    if (!map.current.getLayer('water-lines')) {
+      map.current.addLayer({
+        id: 'water-lines',
+        type: 'line',
+        source: 'water-source',
+        filter: ['==', ['geometry-type'], 'LineString'],
+        paint: {
+          'line-color': '#0ea5e9',
+          'line-width': 3,
+          'line-opacity': layerConfig.opacity
+        },
+        layout: {
+          visibility: infoLayers.waterBodies ? 'visible' : 'none'
+        }
+      });
+
+      map.current.addLayer({
+        id: 'water-areas',
+        type: 'fill',
+        source: 'water-source',
+        filter: ['==', ['geometry-type'], 'Polygon'],
+        paint: {
+          'fill-color': '#0ea5e9',
+          'fill-opacity': layerConfig.opacity * 0.5
+        },
+        layout: {
+          visibility: infoLayers.waterBodies ? 'visible' : 'none'
+        }
+      });
+    }
+
+    // Add green areas layer
+    if (!map.current.getLayer('green-layer')) {
+      map.current.addLayer({
+        id: 'green-layer',
+        type: 'fill',
+        source: 'green-source',
+        paint: {
+          'fill-color': '#22c55e',
+          'fill-opacity': layerConfig.opacity * 0.4
+        },
+        layout: {
+          visibility: infoLayers.greenAreas ? 'visible' : 'none'
+        }
+      });
+    }
+
+    // Add roads layer
+    if (!map.current.getLayer('roads-layer')) {
+      map.current.addLayer({
+        id: 'roads-layer',
+        type: 'line',
+        source: 'roads-source',
+        paint: {
+          'line-color': [
+            'match',
+            ['get', 'type'],
+            'highway', '#64748b',
+            'main', '#94a3b8',
+            '#cbd5e1'
+          ],
+          'line-width': [
+            'match',
+            ['get', 'type'],
+            'highway', 4,
+            'main', 2,
+            1
+          ],
+          'line-opacity': layerConfig.opacity
+        },
+        layout: {
+          visibility: infoLayers.roads ? 'visible' : 'none'
+        }
+      });
+    }
+
+    // Add heatmap layer
+    if (!map.current.getLayer('heatmap-layer')) {
+      map.current.addLayer({
+        id: 'heatmap-layer',
+        type: 'heatmap',
+        source: 'heatmap-source',
+        paint: {
+          'heatmap-weight': ['get', 'weight'],
+          'heatmap-intensity': layerConfig.heatmapIntensity,
+          'heatmap-color': [
+            'interpolate',
+            ['linear'],
+            ['heatmap-density'],
+            0, 'rgba(0, 0, 255, 0)',
+            0.2, 'rgb(0, 255, 255)',
+            0.4, 'rgb(0, 255, 0)',
+            0.6, 'rgb(255, 255, 0)',
+            0.8, 'rgb(255, 165, 0)',
+            1, 'rgb(255, 0, 0)'
+          ],
+          'heatmap-radius': 30,
+          'heatmap-opacity': layerConfig.opacity
+        },
+        layout: {
+          visibility: infoLayers.heatmap ? 'visible' : 'none'
+        }
+      });
+    }
+  }, [infoLayers, layerConfig, listings]);
+
+  // Update layer visibility
+  useEffect(() => {
+    if (!map.current || isLoading) return;
+
+    const layerMappings: Record<keyof InfoLayerState, string[]> = {
+      zoning: ['zoning-layer', 'zoning-outline'],
+      riskZones: ['risk-layer', 'risk-outline'],
+      infrastructure: ['infrastructure-layer'],
+      waterBodies: ['water-lines', 'water-areas'],
+      greenAreas: ['green-layer'],
+      roads: ['roads-layer'],
+      heatmap: ['heatmap-layer'],
+    };
+
+    Object.entries(layerMappings).forEach(([key, layers]) => {
+      const isVisible = infoLayers[key as keyof InfoLayerState];
+      layers.forEach(layerId => {
+        if (map.current?.getLayer(layerId)) {
+          map.current.setLayoutProperty(layerId, 'visibility', isVisible ? 'visible' : 'none');
+        }
+      });
+    });
+  }, [infoLayers, isLoading]);
+
+  // Update layer opacity
+  useEffect(() => {
+    if (!map.current || isLoading) return;
+
+    const opacityLayers = [
+      { id: 'zoning-layer', prop: 'fill-opacity', base: 0.5 },
+      { id: 'zoning-outline', prop: 'line-opacity', base: 1 },
+      { id: 'risk-layer', prop: 'fill-opacity', base: 0.4 },
+      { id: 'risk-outline', prop: 'line-opacity', base: 1 },
+      { id: 'infrastructure-layer', prop: 'fill-opacity', base: 0.3 },
+      { id: 'water-lines', prop: 'line-opacity', base: 1 },
+      { id: 'water-areas', prop: 'fill-opacity', base: 0.5 },
+      { id: 'green-layer', prop: 'fill-opacity', base: 0.4 },
+      { id: 'roads-layer', prop: 'line-opacity', base: 1 },
+      { id: 'heatmap-layer', prop: 'heatmap-opacity', base: 1 },
+    ];
+
+    opacityLayers.forEach(({ id, prop, base }) => {
+      if (map.current?.getLayer(id)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        map.current.setPaintProperty(id, prop as any, layerConfig.opacity * base);
+      }
+    });
+
+    if (map.current?.getLayer('heatmap-layer')) {
+      map.current.setPaintProperty('heatmap-layer', 'heatmap-intensity', layerConfig.heatmapIntensity);
+    }
+  }, [layerConfig, isLoading]);
 
   // Initialize map
   useEffect(() => {
@@ -408,6 +1114,9 @@ const EnhancedMap = ({
           },
         });
       }
+
+      // Add info layers
+      addInfoLayers();
 
       // Add clustering source
       if (showClusters && listings.length > 0) {
@@ -537,7 +1246,7 @@ const EnhancedMap = ({
       popupRef.current?.remove();
       map.current?.remove();
     };
-  }, [mapboxToken, tokenLoading, getCenter, getMapStyle, mapMode, showDrawTools]);
+  }, [mapboxToken, tokenLoading, getCenter, getMapStyle, mapMode, showDrawTools, addInfoLayers]);
 
   // Update markers when listings change (only when not using clusters)
   useEffect(() => {
@@ -726,13 +1435,15 @@ const EnhancedMap = ({
           map.current?.setTerrain(null);
           map.current?.easeTo({ pitch: 0, bearing: 0, duration: 500 });
         }
+
+        // Re-add info layers after style change
+        addInfoLayers();
       });
     }
   };
 
   const toggleClusters = () => {
     setShowClusters(!showClusters);
-    // Would need to reinitialize map for this to take effect fully
   };
 
   if (tokenError) {
@@ -870,6 +1581,16 @@ const EnhancedMap = ({
             </Tooltip>
           </div>
 
+          {/* Info Layers Control */}
+          <div className="flex flex-col gap-1 bg-background/95 backdrop-blur-sm rounded-lg border border-white/10 p-1">
+            <MapInfoLayers
+              layers={infoLayers}
+              config={layerConfig}
+              onLayerChange={handleLayerChange}
+              onConfigChange={handleConfigChange}
+            />
+          </div>
+
           {/* Drawing Tools */}
           {showDrawTools && (
             <div className="flex flex-col gap-1 bg-background/95 backdrop-blur-sm rounded-lg border border-white/10 p-1">
@@ -938,8 +1659,18 @@ const EnhancedMap = ({
           </div>
         </Card>
 
+        {/* Active layers indicator */}
+        {Object.values(infoLayers).some(Boolean) && (
+          <Card className="absolute bottom-4 right-4 p-2 bg-background/95 backdrop-blur-sm z-10 border border-white/10 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Layers className="h-3 w-3 text-primary" />
+              <span>{Object.values(infoLayers).filter(Boolean).length} capas activas</span>
+            </div>
+          </Card>
+        )}
+
         {/* 3D Mode indicator */}
-        {mapMode === '3d' && (
+        {mapMode === '3d' && !Object.values(infoLayers).some(Boolean) && (
           <Card className="absolute bottom-4 right-4 p-2 bg-background/95 backdrop-blur-sm z-10 border border-white/10 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
               <Mountain className="h-3 w-3 text-primary" />
