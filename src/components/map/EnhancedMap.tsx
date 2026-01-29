@@ -995,7 +995,7 @@ const EnhancedMap = ({
 
   // Add info layers to map
   const addInfoLayers = useCallback(() => {
-    if (!map.current) return;
+    if (!map.current || !map.current.isStyleLoaded()) return;
 
     const zoningColors: Record<string, string> = {
       residential: '#22c55e',
@@ -1299,7 +1299,7 @@ const EnhancedMap = ({
 
   // Add real WMS layers from Chilean GIS services
   const addRealWMSLayers = useCallback(() => {
-    if (!map.current) return;
+    if (!map.current || !map.current.isStyleLoaded()) return;
 
     // WMS sources configuration for Chilean public data
     const wmsSources = [
@@ -1371,7 +1371,7 @@ const EnhancedMap = ({
 
   // Toggle between demo and real data layers
   useEffect(() => {
-    if (!map.current || isLoading) return;
+    if (!map.current || isLoading || !map.current.isStyleLoaded()) return;
 
     // Demo layer IDs
     const demoLayers = [
@@ -1452,7 +1452,7 @@ const EnhancedMap = ({
 
   // Update layer visibility
   useEffect(() => {
-    if (!map.current || isLoading) return;
+    if (!map.current || isLoading || !map.current.isStyleLoaded()) return;
 
     // Skip if useRealData is true - handled by the toggle effect above
     if (layerConfig.useRealData) return;
@@ -1479,7 +1479,7 @@ const EnhancedMap = ({
 
   // Update layer opacity
   useEffect(() => {
-    if (!map.current || isLoading) return;
+    if (!map.current || isLoading || !map.current.isStyleLoaded()) return;
 
     const opacityLayers = [
       { id: 'zoning-layer', prop: 'fill-opacity', base: 0.5 },
