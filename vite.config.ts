@@ -18,7 +18,10 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt'],
       manifest: false, // Use existing manifest.json
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // Increase limit to handle large bundles - cache them via runtime caching instead
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10 MB
+        // Only precache essential small files, large JS bundles will be cached at runtime
+        globPatterns: ['**/*.{css,html,ico,png,svg,woff,woff2}'],
         runtimeCaching: [
           // Cache Mapbox tiles for offline map access
           {
