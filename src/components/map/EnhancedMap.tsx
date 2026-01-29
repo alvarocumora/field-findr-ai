@@ -40,7 +40,9 @@ import { useNavigate } from 'react-router-dom';
 import MapInfoLayers, { InfoLayerState, InfoLayerConfig } from './MapInfoLayers';
 import { buildWMSTileUrl, getProxiedUrl, WMS_BASE_URLS } from '@/services/chileGIS';
 import TouchMapControls from './TouchMapControls';
+import GestureFeedback from './GestureFeedback';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTouchGestures } from '@/hooks/useTouchGestures';
 
 interface EnhancedMapProps {
   listings: Listing[];
@@ -416,6 +418,11 @@ const EnhancedMap = ({
   const { token: mapboxToken, loading: tokenLoading, error: tokenError } = useMapboxToken();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+
+  // Touch gestures hook for mobile
+  const { gestureFeedback } = useTouchGestures(map, mapContainer, {
+    enableFeedback: isMobile,
+  });
 
   // Info layers state
   const [infoLayers, setInfoLayers] = useState<InfoLayerState>({
@@ -2206,6 +2213,16 @@ const EnhancedMap = ({
           onOpenLayers={() => setShowLayersPanel(true)}
           activeLayersCount={Object.values(infoLayers).filter(Boolean).length}
         />
+
+        {/* Touch Gesture Feedback Overlay */}
+        {isMobile && (
+          <GestureFeedback
+            type={gestureFeedback.type}
+            position={gestureFeedback.position}
+            scale={gestureFeedback.scale}
+            visible={gestureFeedback.visible}
+          />
+        )}
 
         {/* Mobile Layers Panel */}
         {showLayersPanel && isMobile && (
