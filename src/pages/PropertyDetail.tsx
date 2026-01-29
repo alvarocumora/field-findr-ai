@@ -13,6 +13,7 @@ import ImageGallery from '@/components/property/ImageGallery';
 import PropertyMap from '@/components/property/PropertyMap';
 import ContactForm from '@/components/property/ContactForm';
 import { AIInvestmentCopilot } from '@/components/ai/AIInvestmentCopilot';
+import { cn } from '@/lib/utils';
 import {
   Heart,
   Share2,
@@ -29,8 +30,8 @@ import {
   Zap,
   Car,
   Mountain,
-  ArrowLeft,
-  Brain
+  Brain,
+  ChevronLeft
 } from 'lucide-react';
 
 const PropertyDetail = () => {
@@ -40,7 +41,6 @@ const PropertyDetail = () => {
   const { user } = useAuth();
   const { toggle, isLoading: isFavoriteLoading } = useToggleFavorite();
   const { data: favoriteIds = [] } = useFavoriteIds();
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const isFavorite = listing ? favoriteIds.includes(listing.id) : false;
   const similarListings = allListings.filter(l => l.id !== id).slice(0, 3);
@@ -48,8 +48,8 @@ const PropertyDetail = () => {
   if (isLoading) {
     return (
       <PublicLayout>
-        <div className="container px-4 py-8">
-          <div className="grid lg:grid-cols-3 gap-8">
+        <div className="container px-4 py-6 md:py-8">
+          <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
             <div className="lg:col-span-2 space-y-6">
               <Skeleton className="aspect-video rounded-2xl" />
               <Skeleton className="h-8 w-3/4" />
@@ -68,16 +68,18 @@ const PropertyDetail = () => {
   if (!listing) {
     return (
       <PublicLayout>
-        <div className="container px-4 py-16 text-center">
-          <div className="glass rounded-2xl p-8 max-w-md mx-auto">
-            <Mountain className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-foreground mb-2">
+        <div className="container px-4 py-12 md:py-16 text-center">
+          <div className="glass rounded-2xl p-6 md:p-8 max-w-md mx-auto">
+            <div className="p-4 rounded-full bg-muted/50 w-fit mx-auto mb-4">
+              <Mountain className="h-12 w-12 md:h-16 md:w-16 text-muted-foreground" />
+            </div>
+            <h1 className="text-xl md:text-2xl font-bold text-foreground mb-2">
               Propiedad no encontrada
             </h1>
             <p className="text-muted-foreground mb-6">
               La propiedad que buscas no existe o ha sido removida.
             </p>
-            <Button asChild>
+            <Button asChild className="touch-target">
               <Link to="/explorar">Explorar propiedades</Link>
             </Button>
           </div>
@@ -88,18 +90,6 @@ const PropertyDetail = () => {
 
   const legalStatus = getLegalStatusLabel(listing.legal_status);
   const utilities = listing.utilities as { water?: boolean; electricity?: string; road_access?: string } || {};
-
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => 
-      prev === listing.images.length - 1 ? 0 : prev + 1
-    );
-  };
-
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => 
-      prev === 0 ? listing.images.length - 1 : prev - 1
-    );
-  };
 
   const handleShare = () => {
     navigator.share?.({
@@ -112,29 +102,39 @@ const PropertyDetail = () => {
 
   return (
     <PublicLayout>
-      <div className="container px-4 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+      <div className="container px-4 py-4 md:py-8">
+        {/* Back Button - Mobile */}
+        <div className="flex items-center gap-4 mb-4 md:hidden">
+          <Button variant="ghost" size="sm" asChild className="touch-target -ml-2">
+            <Link to="/explorar">
+              <ChevronLeft className="h-5 w-5 mr-1" />
+              Volver
+            </Link>
+          </Button>
+        </div>
+
+        {/* Breadcrumb - Desktop */}
+        <nav className="hidden md:flex items-center gap-2 text-sm text-muted-foreground mb-6">
           <Link to="/" className="hover:text-foreground transition-colors">Inicio</Link>
           <span>/</span>
           <Link to="/explorar" className="hover:text-foreground transition-colors">Explorar</Link>
           <span>/</span>
-          <span className="text-foreground">{listing.title}</span>
+          <span className="text-foreground truncate max-w-[200px]">{listing.title}</span>
         </nav>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6 md:space-y-8">
             {/* Gallery */}
             <div className="relative">
               <ImageGallery images={listing.images} title={listing.title} />
               
-              {/* Actions Overlay - positioned over gallery */}
-              <div className="absolute top-4 right-4 flex gap-2 z-10">
+              {/* Actions Overlay */}
+              <div className="absolute top-3 md:top-4 right-3 md:right-4 flex gap-2 z-10">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="glass hover:bg-white/20"
+                  className="h-10 w-10 glass hover:bg-white/30 touch-target"
                   onClick={handleShare}
                 >
                   <Share2 className="h-5 w-5 text-white" />
@@ -143,21 +143,24 @@ const PropertyDetail = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`glass hover:bg-white/20 ${isFavorite ? 'text-red-500' : 'text-white'}`}
+                    className={cn(
+                      "h-10 w-10 glass hover:bg-white/30 touch-target",
+                      isFavorite ? 'text-red-500' : 'text-white'
+                    )}
                     onClick={() => toggle(listing.id)}
                     disabled={isFavoriteLoading}
                   >
-                    <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
+                    <Heart className={cn("h-5 w-5", isFavorite && 'fill-current')} />
                   </Button>
                 )}
               </div>
 
               {/* Badges */}
-              <div className="absolute top-4 left-4 flex gap-2 z-10">
+              <div className="absolute top-3 md:top-4 left-3 md:left-4 flex gap-2 z-10">
                 {listing.featured && (
-                  <Badge className="bg-primary text-primary-foreground">Destacado</Badge>
+                  <Badge className="bg-primary text-primary-foreground shadow-lg">Destacado</Badge>
                 )}
-                <Badge variant="secondary" className="glass">
+                <Badge variant="secondary" className="glass shadow-lg">
                   {getListingTypeLabel(listing.type)}
                 </Badge>
               </div>
@@ -165,126 +168,109 @@ const PropertyDetail = () => {
 
             {/* Title & Location */}
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2 leading-tight">
                 {listing.title}
               </h1>
               <div className="flex items-center gap-2 text-muted-foreground">
-                <MapPin className="h-5 w-5" />
-                <span>{listing.location}, {listing.region}</span>
+                <MapPin className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
+                <span className="text-sm md:text-base">{listing.location}, {listing.region}</span>
               </div>
             </div>
 
-            {/* Key Facts */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card className="glass border-white/10">
-                <CardContent className="p-4 text-center">
-                  <Ruler className="h-6 w-6 mx-auto mb-2 text-primary" />
-                  <p className="text-sm text-muted-foreground">Superficie</p>
-                  <p className="font-semibold text-foreground">
-                    {formatArea(listing.area_m2, listing.area_ha)}
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card className="glass border-white/10">
-                <CardContent className="p-4 text-center">
-                  <FileText className="h-6 w-6 mx-auto mb-2 text-primary" />
-                  <p className="text-sm text-muted-foreground">ROL</p>
-                  <p className="font-semibold text-foreground">
-                    {listing.rol || 'N/A'}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass border-white/10">
-                <CardContent className="p-4 text-center">
-                  <Eye className="h-6 w-6 mx-auto mb-2 text-primary" />
-                  <p className="text-sm text-muted-foreground">Visitas</p>
-                  <p className="font-semibold text-foreground">
-                    {listing.views_count}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass border-white/10">
-                <CardContent className="p-4 text-center">
-                  <Calendar className="h-6 w-6 mx-auto mb-2 text-primary" />
-                  <p className="text-sm text-muted-foreground">Publicado</p>
-                  <p className="font-semibold text-foreground">
-                    {new Date(listing.created_at).toLocaleDateString('es-CL')}
-                  </p>
-                </CardContent>
-              </Card>
+            {/* Key Facts - Mobile optimized grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+              {[
+                { icon: Ruler, label: 'Superficie', value: formatArea(listing.area_m2, listing.area_ha) },
+                { icon: FileText, label: 'ROL', value: listing.rol || 'N/A' },
+                { icon: Eye, label: 'Visitas', value: listing.views_count.toString() },
+                { icon: Calendar, label: 'Publicado', value: new Date(listing.created_at).toLocaleDateString('es-CL') },
+              ].map((item) => (
+                <Card key={item.label} className="glass border-border/50">
+                  <CardContent className="p-3 md:p-4 text-center">
+                    <item.icon className="h-5 w-5 md:h-6 md:w-6 mx-auto mb-1.5 md:mb-2 text-primary" />
+                    <p className="text-xs text-muted-foreground">{item.label}</p>
+                    <p className="font-semibold text-foreground text-sm md:text-base truncate">
+                      {item.value}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
 
             {/* Description */}
-            <Card className="glass border-white/10">
-              <CardHeader>
-                <CardTitle>Descripción</CardTitle>
+            <Card className="glass border-border/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Descripción</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
                   {listing.description || 'Sin descripción disponible.'}
                 </p>
               </CardContent>
             </Card>
 
             {/* Utilities */}
-            <Card className="glass border-white/10">
-              <CardHeader>
-                <CardTitle>Servicios y Accesos</CardTitle>
+            <Card className="glass border-border/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Servicios y Accesos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${utilities.water ? 'bg-green-500/20' : 'bg-muted'}`}>
-                      <Droplets className={`h-5 w-5 ${utilities.water ? 'text-green-400' : 'text-muted-foreground'}`} />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[
+                    { 
+                      icon: Droplets, 
+                      label: 'Agua', 
+                      value: utilities.water ? 'Disponible' : 'No disponible',
+                      active: utilities.water,
+                      color: 'green'
+                    },
+                    { 
+                      icon: Zap, 
+                      label: 'Electricidad', 
+                      value: utilities.electricity || 'No disponible',
+                      active: !!utilities.electricity,
+                      color: 'yellow'
+                    },
+                    { 
+                      icon: Car, 
+                      label: 'Acceso', 
+                      value: utilities.road_access || 'No especificado',
+                      active: !!utilities.road_access,
+                      color: 'blue'
+                    },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center gap-3">
+                      <div className={cn(
+                        "p-2.5 rounded-lg flex-shrink-0",
+                        item.active ? `bg-${item.color}-500/20` : 'bg-muted'
+                      )}>
+                        <item.icon className={cn(
+                          "h-5 w-5",
+                          item.active ? `text-${item.color}-400` : 'text-muted-foreground'
+                        )} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium">{item.label}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {item.value}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">Agua</p>
-                      <p className="text-xs text-muted-foreground">
-                        {utilities.water ? 'Disponible' : 'No disponible'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${utilities.electricity ? 'bg-yellow-500/20' : 'bg-muted'}`}>
-                      <Zap className={`h-5 w-5 ${utilities.electricity ? 'text-yellow-400' : 'text-muted-foreground'}`} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Electricidad</p>
-                      <p className="text-xs text-muted-foreground">
-                        {utilities.electricity || 'No disponible'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${utilities.road_access ? 'bg-blue-500/20' : 'bg-muted'}`}>
-                      <Car className={`h-5 w-5 ${utilities.road_access ? 'text-blue-400' : 'text-muted-foreground'}`} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Acceso</p>
-                      <p className="text-xs text-muted-foreground">
-                        {utilities.road_access || 'No especificado'}
-                      </p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
 
             {/* Tags */}
             {listing.tags.length > 0 && (
-              <Card className="glass border-white/10">
-                <CardHeader>
-                  <CardTitle>Características</CardTitle>
+              <Card className="glass border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Características</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
                     {listing.tags.map(tag => (
-                      <Badge key={tag} variant="secondary">
+                      <Badge key={tag} variant="secondary" className="text-sm">
                         {tag}
                       </Badge>
                     ))}
@@ -294,12 +280,12 @@ const PropertyDetail = () => {
             )}
 
             {/* Document Checklist */}
-            <Card className="glass border-white/10">
-              <CardHeader>
-                <CardTitle>Checklist Documental</CardTitle>
+            <Card className="glass border-border/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Checklist Documental</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2 md:space-y-3">
                   {[
                     { name: 'Título de dominio', status: listing.legal_status === 'verified' ? 'verified' : 'pending' },
                     { name: 'Certificado de dominio vigente', status: listing.legal_status === 'verified' ? 'verified' : 'pending' },
@@ -307,19 +293,19 @@ const PropertyDetail = () => {
                     { name: 'Informe de tasación', status: 'pending' },
                   ].map((doc, idx) => (
                     <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                      <span className="text-foreground">{doc.name}</span>
+                      <span className="text-foreground text-sm md:text-base">{doc.name}</span>
                       {doc.status === 'verified' ? (
-                        <Badge className="bg-green-500/20 text-green-400">
+                        <Badge className="bg-green-500/20 text-green-400 text-xs">
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Verificado
                         </Badge>
                       ) : doc.status === 'reviewing' ? (
-                        <Badge className="bg-blue-500/20 text-blue-400">
+                        <Badge className="bg-blue-500/20 text-blue-400 text-xs">
                           <Clock className="h-3 w-3 mr-1" />
                           En revisión
                         </Badge>
                       ) : (
-                        <Badge className="bg-yellow-500/20 text-yellow-400">
+                        <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">
                           <AlertCircle className="h-3 w-3 mr-1" />
                           Pendiente
                         </Badge>
@@ -332,13 +318,13 @@ const PropertyDetail = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {/* Price Card */}
-            <Card className="glass border-white/10">
-              <CardContent className="p-6">
-                <div className="mb-6">
+            <Card className="glass border-border/50 sticky top-20">
+              <CardContent className="p-4 md:p-6">
+                <div className="mb-4 md:mb-6">
                   <p className="text-sm text-muted-foreground mb-1">Precio</p>
-                  <p className="text-3xl font-bold text-primary">
+                  <p className="text-2xl md:text-3xl font-bold text-primary">
                     {formatPrice(listing.price, listing.currency)}
                   </p>
                   {listing.area_m2 && (
@@ -348,7 +334,7 @@ const PropertyDetail = () => {
                   )}
                 </div>
 
-                <Badge className={`${legalStatus.color} mb-6`}>
+                <Badge className={cn(legalStatus.color, "mb-4 md:mb-6")}>
                   {listing.legal_status === 'verified' && <CheckCircle className="h-3 w-3 mr-1" />}
                   {legalStatus.label}
                 </Badge>
@@ -370,14 +356,14 @@ const PropertyDetail = () => {
                     tags: listing.tags,
                   }}
                   trigger={
-                    <Button className="w-full gap-2 mb-3">
+                    <Button className="w-full gap-2 mb-3 h-11 touch-target">
                       <Brain className="h-4 w-4" />
                       Analizar con IA
                     </Button>
                   }
                 />
 
-                <Button variant="ghost" className="w-full glass border-white/10">
+                <Button variant="ghost" className="w-full glass border-border/50 h-11 touch-target">
                   <Download className="h-4 w-4 mr-2" />
                   Descargar ficha PDF
                 </Button>
@@ -388,9 +374,9 @@ const PropertyDetail = () => {
             <ContactForm listingId={listing.id} listingTitle={listing.title} />
 
             {/* Property Map */}
-            <Card className="glass border-white/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <Card className="glass border-border/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <MapPin className="h-5 w-5 text-primary" />
                   Ubicación
                 </CardTitle>
@@ -411,11 +397,11 @@ const PropertyDetail = () => {
 
         {/* Similar Properties */}
         {similarListings.length > 0 && (
-          <section className="mt-16">
-            <h2 className="text-2xl font-bold text-foreground mb-6">
+          <section className="mt-12 md:mt-16">
+            <h2 className="text-xl md:text-2xl font-bold text-foreground mb-4 md:mb-6">
               Propiedades similares
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
               {similarListings.map(listing => (
                 <ListingCard key={listing.id} listing={listing} />
               ))}
