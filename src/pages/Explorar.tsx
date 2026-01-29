@@ -2,8 +2,7 @@ import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import ListingCard from '@/components/listings/ListingCard';
-import ExploreMap from '@/components/map/ExploreMap';
-import Map3DViewer from '@/components/map/Map3DViewer';
+import EnhancedMap from '@/components/map/EnhancedMap';
 import { useListings, Listing, getListingTypeLabel, formatPrice } from '@/hooks/useListings';
 import { useMatchScore } from '@/hooks/useMatchScore';
 import MatchScoreBadge from '@/components/matching/MatchScoreBadge';
@@ -65,8 +64,7 @@ const TAGS = [
 
 const Explorar = () => {
   const navigate = useNavigate();
-  const [view, setView] = useState<'grid' | 'map' | 'split' | '3d'>('split');
-  const [use3DMap, setUse3DMap] = useState(true);
+  const [view, setView] = useState<'grid' | 'map' | 'split'>('split');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('relevancia');
   const [hoveredListing, setHoveredListing] = useState<Listing | null>(null);
@@ -479,23 +477,13 @@ const Explorar = () => {
             {/* Map Panel - shown in map and split views */}
             {(view === 'map' || view === 'split') && (
               <div className={`${view === 'split' ? 'w-1/2' : 'w-full'} h-[calc(100vh-132px)] relative`}>
-                {use3DMap ? (
-                  <Map3DViewer 
-                    listings={filteredListings}
-                    hoveredListing={hoveredListing}
-                    onListingHover={setHoveredListing}
-                    onListingClick={(listing) => navigate(`/propiedad/${listing.id}`)}
-                    className="w-full h-full"
-                  />
-                ) : (
-                  <ExploreMap 
-                    listings={filteredListings}
-                    hoveredListing={hoveredListing}
-                    onListingHover={setHoveredListing}
-                    onListingClick={(listing) => navigate(`/propiedad/${listing.id}`)}
-                    className="w-full h-full"
-                  />
-                )}
+                <EnhancedMap 
+                  listings={filteredListings}
+                  hoveredListing={hoveredListing}
+                  onListingHover={setHoveredListing}
+                  onListingClick={(listing) => navigate(`/propiedad/${listing.id}`)}
+                  className="w-full h-full"
+                />
               </div>
             )}
           </div>
