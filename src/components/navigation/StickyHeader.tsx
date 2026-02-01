@@ -2,6 +2,15 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Logo from '@/components/brand/Logo';
 import LogoIcon from '@/components/brand/LogoIcon';
 import { ThemeToggle, ThemeToggleCompact } from '@/components/theme/ThemeToggle';
@@ -13,7 +22,11 @@ import {
   User,
   LogIn,
   Plus,
-  X
+  X,
+  Settings,
+  LayoutDashboard,
+  Building2,
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -119,16 +132,57 @@ const StickyHeader = () => {
             </Button>
 
             {user ? (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                asChild 
-                className="text-muted-foreground hover:text-foreground focus-ring"
-              >
-                <Link to="/profile">
-                  <User className="h-5 w-5" />
-                </Link>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="text-muted-foreground hover:text-foreground focus-ring rounded-full"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                        {user.email?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-popover border border-border shadow-lg z-50">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{user.user_metadata?.first_name || 'Usuario'}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="flex items-center cursor-pointer">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/inventory" className="flex items-center cursor-pointer">
+                      <Building2 className="mr-2 h-4 w-4" />
+                      Mis Propiedades
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Configuración
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => signOut()}
+                    className="text-destructive focus:text-destructive cursor-pointer"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Cerrar Sesión
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button variant="outline" asChild className="border-border focus-ring">
                 <Link to="/auth">
