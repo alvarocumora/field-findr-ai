@@ -4,14 +4,15 @@ interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showText?: boolean;
-  variant?: 'default' | 'light' | 'dark';
+  variant?: 'default' | 'light' | 'dark' | 'monochrome';
+  animated?: boolean;
 }
 
 const sizeClasses = {
-  sm: 'h-7 w-7',
-  md: 'h-9 w-9',
-  lg: 'h-11 w-11',
-  xl: 'h-14 w-14',
+  sm: 'h-8 w-8',
+  md: 'h-10 w-10',
+  lg: 'h-12 w-12',
+  xl: 'h-16 w-16',
 };
 
 const textSizeClasses = {
@@ -25,72 +26,148 @@ const Logo = ({
   className, 
   size = 'md', 
   showText = true,
-  variant = 'default' 
+  variant = 'default',
+  animated = false
 }: LogoProps) => {
+  const isMonochrome = variant === 'monochrome';
+  
   return (
-    <div className={cn('flex items-center gap-2.5', className)}>
-      {/* Logo Icon */}
+    <div 
+      className={cn('flex items-center gap-3', className)}
+      role="img"
+      aria-label="Ofertaterrenos logo"
+    >
+      {/* Logo Icon Container */}
       <div className={cn(
-        'relative flex items-center justify-center rounded-xl',
-        'bg-gradient-to-br from-primary via-emerald-500 to-accent',
-        'shadow-lg shadow-primary/25',
+        'relative flex items-center justify-center rounded-xl overflow-hidden',
+        'transition-all duration-300 ease-out',
+        isMonochrome 
+          ? 'bg-foreground/10' 
+          : 'bg-gradient-to-br from-primary via-emerald-500 to-accent',
+        !isMonochrome && 'shadow-lg shadow-primary/20',
+        animated && 'logo-breathe',
+        'group',
         sizeClasses[size]
       )}>
-        {/* SVG Logo Mark - Parcela/Terreno + Tech Diamond */}
+        {/* Animated shimmer overlay */}
+        {animated && !isMonochrome && (
+          <div className="absolute inset-0 logo-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        )}
+        
+        {/* SVG Logo Mark - Enhanced terrain + tech design */}
         <svg 
           viewBox="0 0 32 32" 
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
-          className="w-[60%] h-[60%]"
+          className={cn(
+            'w-[58%] h-[58%] relative z-10',
+            'transition-transform duration-300',
+            animated && 'group-hover:scale-105'
+          )}
         >
-          {/* Base land/terrain shape */}
+          {/* Background terrain layers */}
           <path 
-            d="M4 22L16 6L28 22H4Z" 
+            d="M3 23L10 14L16 18L22 11L29 23H3Z" 
             fill="currentColor"
-            className="text-primary-foreground/90"
+            className={cn(
+              isMonochrome ? 'text-foreground/20' : 'text-primary-foreground/25'
+            )}
           />
-          {/* Inner diamond - tech element */}
+          
+          {/* Main terrain peak */}
           <path 
-            d="M16 10L22 18H10L16 10Z" 
+            d="M5 22L16 7L27 22H5Z" 
             fill="currentColor"
-            className="text-primary-foreground/40"
+            className={cn(
+              isMonochrome ? 'text-foreground/60' : 'text-primary-foreground/90'
+            )}
           />
+          
+          {/* Inner tech diamond */}
+          <path 
+            d="M16 11L21 18H11L16 11Z" 
+            fill="currentColor"
+            className={cn(
+              isMonochrome ? 'text-foreground/30' : 'text-primary-foreground/35'
+            )}
+          />
+          
+          {/* Diamond highlight */}
+          <path 
+            d="M16 13L18.5 17H13.5L16 13Z" 
+            fill="currentColor"
+            className={cn(
+              isMonochrome ? 'text-foreground/15' : 'text-primary-foreground/20'
+            )}
+          />
+          
           {/* Horizon line */}
           <path 
             d="M2 24H30" 
             stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
-            className="text-primary-foreground"
+            className={cn(
+              isMonochrome ? 'text-foreground/80' : 'text-primary-foreground'
+            )}
           />
-          {/* Small parcels indicator */}
+          
+          {/* Parcel division indicators */}
           <path 
-            d="M8 22V26M16 22V28M24 22V26" 
+            d="M9 22V26M16 22V28M23 22V26" 
             stroke="currentColor"
             strokeWidth="1.5"
             strokeLinecap="round"
-            className="text-primary-foreground/60"
+            className={cn(
+              isMonochrome ? 'text-foreground/50' : 'text-primary-foreground/60'
+            )}
+          />
+          
+          {/* Corner accent dots */}
+          <circle 
+            cx="5" cy="26" r="1" 
+            fill="currentColor"
+            className={cn(
+              isMonochrome ? 'text-foreground/40' : 'text-primary-foreground/50'
+            )}
+          />
+          <circle 
+            cx="27" cy="26" r="1" 
+            fill="currentColor"
+            className={cn(
+              isMonochrome ? 'text-foreground/40' : 'text-primary-foreground/50'
+            )}
           />
         </svg>
         
-        {/* Subtle glow effect */}
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-transparent to-white/10" />
+        {/* Subtle glow effect on hover */}
+        {!isMonochrome && (
+          <div className={cn(
+            'absolute inset-0 rounded-xl',
+            'bg-gradient-to-t from-transparent via-transparent to-white/15',
+            'opacity-100 transition-opacity duration-300'
+          )} />
+        )}
       </div>
 
       {/* Logo Text */}
       {showText && (
         <div className="flex flex-col">
           <span className={cn(
-            'font-bold tracking-tight leading-none',
+            'font-bold tracking-tight leading-none font-heading',
             textSizeClasses[size],
-            variant === 'light' ? 'text-white' : 'text-foreground'
+            variant === 'light' ? 'text-white' : 
+            variant === 'monochrome' ? 'text-foreground' : 'text-foreground'
           )}>
-            Oferta<span className="text-primary">terrenos</span>
+            Oferta<span className={cn(
+              variant === 'monochrome' ? 'text-foreground/70' : 'text-primary'
+            )}>terrenos</span>
           </span>
           {size !== 'sm' && (
             <span className={cn(
-              'text-[10px] uppercase tracking-widest font-medium',
-              variant === 'light' ? 'text-white/60' : 'text-muted-foreground'
+              'text-[10px] uppercase tracking-[0.15em] font-medium mt-0.5',
+              variant === 'light' ? 'text-white/60' : 
+              variant === 'monochrome' ? 'text-foreground/50' : 'text-muted-foreground'
             )}>
               Proptech Chile
             </span>
