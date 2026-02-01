@@ -625,3 +625,250 @@ html {
     0 12px 40px -12px hsla(0, 0%, 0%, 0.25),
     0 0 0 1px hsla(var(--primary) / 0.1);
 }
+
+/* ========================================
+   LOGO ANIMATIONS
+   ======================================== */
+
+/* Breathing animation for logo - subtle scale pulse */
+@keyframes logo-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.logo-breathe {
+  animation: logo-breathe 4s ease-in-out infinite;
+}
+
+/* Shimmer effect that sweeps across the logo */
+@keyframes logo-shimmer-sweep {
+  0% {
+    transform: translateX(-100%) rotate(25deg);
+  }
+  100% {
+    transform: translateX(200%) rotate(25deg);
+  }
+}
+
+.logo-shimmer {
+  position: absolute;
+  inset: -50%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsla(0, 0%, 100%, 0.25) 45%,
+    hsla(0, 0%, 100%, 0.35) 50%,
+    hsla(0, 0%, 100%, 0.25) 55%,
+    transparent 100%
+  );
+  animation: logo-shimmer-sweep 2s ease-in-out;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .logo-breathe {
+    animation: none;
+  }
+  
+  .logo-shimmer {
+    animation: none;
+    display: none;
+  }
+}
+
+/* ========================================
+   DASHBOARD & KPI COMPONENTS
+   ======================================== */
+
+/* KPI Card styles */
+.kpi-card {
+  @apply relative overflow-hidden rounded-xl border bg-card p-5;
+  @apply transition-all duration-300 ease-out;
+}
+
+.kpi-card:hover {
+  @apply shadow-lg;
+  transform: translateY(-2px);
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.kpi-card:hover::before {
+  opacity: 1;
+}
+
+/* Activity feed item */
+.activity-item {
+  @apply relative flex items-start gap-3 p-3 rounded-lg;
+  @apply transition-all duration-200 ease-out;
+}
+
+.activity-item:hover {
+  @apply bg-muted/50;
+}
+
+.activity-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 0;
+  background: hsl(var(--primary));
+  border-radius: 1px;
+  transition: height 0.2s ease;
+}
+
+.activity-item:hover::before {
+  height: 60%;
+}
+
+/* ========================================
+   MAP COMPONENTS
+   ======================================== */
+
+/* Drawing toolbar */
+.drawing-toolbar {
+  @apply flex items-center gap-1 p-1.5 rounded-xl;
+  @apply bg-background/95 backdrop-blur-md;
+  @apply border shadow-lg;
+}
+
+/* Property popup on map */
+.map-popup {
+  @apply rounded-xl overflow-hidden;
+  @apply bg-card border shadow-xl;
+  min-width: 280px;
+  max-width: 320px;
+}
+
+.map-popup-image {
+  @apply w-full h-32 object-cover;
+}
+
+.map-popup-content {
+  @apply p-4 space-y-3;
+}
+
+/* Cluster marker */
+.cluster-marker {
+  @apply flex items-center justify-center rounded-full;
+  @apply font-semibold text-sm;
+  @apply transition-transform duration-200;
+  @apply cursor-pointer;
+}
+
+.cluster-marker:hover {
+  transform: scale(1.1);
+}
+
+/* Cluster density gradient classes */
+.cluster-low {
+  @apply bg-primary/80 text-primary-foreground;
+  box-shadow: 0 0 0 4px hsla(142, 76%, 36%, 0.2);
+}
+
+.cluster-medium {
+  @apply bg-accent/80 text-accent-foreground;
+  box-shadow: 0 0 0 4px hsla(199, 89%, 48%, 0.2);
+}
+
+.cluster-high {
+  @apply bg-warning text-white;
+  box-shadow: 0 0 0 4px hsla(38, 92%, 50%, 0.2);
+}
+
+/* ========================================
+   SLIDE ANIMATIONS
+   ======================================== */
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s ease-out forwards;
+}
+
+.animate-slide-in-up {
+  animation: slide-in-up 0.4s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.4s ease-out forwards;
+}
+
+/* Extended stagger delays */
+.stagger-6 { animation-delay: 0.6s; }
+.stagger-7 { animation-delay: 0.7s; }
+.stagger-8 { animation-delay: 0.8s; }
+
+/* ========================================
+   SPARKLINE & MICRO CHARTS
+   ======================================== */
+
+.sparkline-container {
+  @apply relative h-8 w-full;
+}
+
+.sparkline-positive {
+  stroke: hsl(var(--success));
+  fill: hsla(142, 76%, 36%, 0.1);
+}
+
+.sparkline-negative {
+  stroke: hsl(var(--destructive));
+  fill: hsla(0, 84%, 60%, 0.1);
+}
+
+/* ========================================
+   FONT HEADING CLASS
+   ======================================== */
+
+.font-heading {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+}

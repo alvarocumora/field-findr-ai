@@ -57,9 +57,9 @@ const TouchMapControls = ({
 }: TouchMapControlsProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Common button classes for touch-friendly sizing
-  const touchButtonClass = "h-12 w-12 min-h-[48px] min-w-[48px] touch-manipulation active:scale-95 transition-transform";
-  const touchIconClass = "h-5 w-5";
+  // Common button classes for touch-friendly sizing (56px for better touch targets)
+  const touchButtonClass = "h-14 w-14 min-h-[56px] min-w-[56px] touch-manipulation active:scale-95 transition-all duration-200 hover:bg-accent/80";
+  const touchIconClass = "h-6 w-6";
 
   return (
     <>

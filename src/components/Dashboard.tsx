@@ -1,21 +1,21 @@
+import { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { 
-  TrendingUp, 
-  TrendingDown, 
-  MapPin, 
-  Users, 
   DollarSign, 
-  FileText,
-  Calendar,
-  AlertCircle,
-  CheckCircle,
-  Clock
+  CheckCircle, 
+  Users, 
+  TrendingUp,
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { DashboardHeader } from './dashboard/DashboardHeader';
+import { KPICard } from './dashboard/KPICard';
+import { ActivityFeed } from './dashboard/ActivityFeed';
+import { QuickActions } from './dashboard/QuickActions';
+import { PropertyInsights } from './dashboard/PropertyInsights';
 
 const Dashboard = () => {
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
+
   const kpis = [
     { 
       title: "Ingresos del Mes", 
@@ -23,7 +23,11 @@ const Dashboard = () => {
       change: "+15.3%", 
       positive: true, 
       icon: DollarSign,
-      detail: "vs mes anterior"
+      changeLabel: "vs mes anterior",
+      sparklineData: [
+        { value: 85 }, { value: 92 }, { value: 88 }, 
+        { value: 105 }, { value: 98 }, { value: 125 }
+      ]
     },
     { 
       title: "Parcelas Vendidas", 
@@ -31,7 +35,11 @@ const Dashboard = () => {
       change: "+8", 
       positive: true, 
       icon: CheckCircle,
-      detail: "este mes"
+      changeLabel: "este mes",
+      sparklineData: [
+        { value: 15 }, { value: 18 }, { value: 16 }, 
+        { value: 20 }, { value: 19 }, { value: 23 }
+      ]
     },
     { 
       title: "Leads Activos", 
@@ -39,7 +47,11 @@ const Dashboard = () => {
       change: "+12%", 
       positive: true, 
       icon: Users,
-      detail: "en pipeline"
+      changeLabel: "en pipeline",
+      sparklineData: [
+        { value: 120 }, { value: 125 }, { value: 138 }, 
+        { value: 142 }, { value: 140 }, { value: 147 }
+      ]
     },
     { 
       title: "Tasa de Conversión", 
@@ -47,7 +59,11 @@ const Dashboard = () => {
       change: "-2%", 
       positive: false, 
       icon: TrendingUp,
-      detail: "últimos 30 días"
+      changeLabel: "últimos 30 días",
+      sparklineData: [
+        { value: 38 }, { value: 36 }, { value: 37 }, 
+        { value: 35 }, { value: 36 }, { value: 34 }
+      ]
     },
   ];
 
@@ -62,183 +78,205 @@ const Dashboard = () => {
 
   const projectsData = [
     { name: "Valle Verde", value: 35, color: "hsl(var(--primary))" },
-    { name: "Los Aromos", value: 28, color: "hsl(var(--secondary))" },
-    { name: "Pinar del Sol", value: 22, color: "hsl(var(--accent))" },
-    { name: "Otros", value: 15, color: "hsl(var(--muted))" },
+    { name: "Los Aromos", value: 28, color: "hsl(var(--accent))" },
+    { name: "Pinar del Sol", value: 22, color: "hsl(38, 92%, 50%)" },
+    { name: "Otros", value: 15, color: "hsl(var(--muted-foreground))" },
   ];
 
   const recentActivities = [
-    { type: "sale", title: "Venta confirmada - Lote 45", project: "Valle Verde", time: "Hace 2 horas", status: "success" },
-    { type: "lead", title: "Nuevo lead calificado", project: "Los Aromos", time: "Hace 4 horas", status: "info" },
-    { type: "meeting", title: "Reunión con cliente potencial", project: "Pinar del Sol", time: "Hace 6 horas", status: "warning" },
-    { type: "document", title: "Contrato firmado - Lote 23", project: "Valle Verde", time: "Hace 8 horas", status: "success" },
-    { type: "alert", title: "Pago pendiente - Cliente #127", project: "Los Aromos", time: "Hace 1 día", status: "error" },
+    { 
+      id: '1',
+      type: 'sale' as const, 
+      title: "Venta confirmada - Lote 45", 
+      project: "Valle Verde", 
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), 
+      status: 'success' as const 
+    },
+    { 
+      id: '2',
+      type: 'lead' as const, 
+      title: "Nuevo lead calificado", 
+      description: "Cliente interesado en parcelas de 5+ hectáreas",
+      project: "Los Aromos", 
+      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), 
+      status: 'info' as const 
+    },
+    { 
+      id: '3',
+      type: 'meeting' as const, 
+      title: "Reunión con cliente potencial", 
+      project: "Pinar del Sol", 
+      timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), 
+      status: 'warning' as const 
+    },
+    { 
+      id: '4',
+      type: 'document' as const, 
+      title: "Contrato firmado - Lote 23", 
+      project: "Valle Verde", 
+      timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), 
+      status: 'success' as const 
+    },
+    { 
+      id: '5',
+      type: 'alert' as const, 
+      title: "Pago pendiente - Cliente #127", 
+      description: "Vencimiento en 3 días",
+      project: "Los Aromos", 
+      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), 
+      status: 'error' as const 
+    },
   ];
 
   const featuredProperties = [
     { 
-      id: 1, 
+      id: '1', 
       title: "Lote 45 - Valle Verde", 
       area: "5.2 há", 
       price: "$32.5M", 
-      status: "Disponible",
+      status: 'available' as const,
       views: 234,
-      inquiries: 12
+      inquiries: 12,
+      trend: 'up' as const,
+      score: 85
     },
     { 
-      id: 2, 
+      id: '2', 
       title: "Lote 18 - Los Aromos", 
       area: "3.8 há", 
       price: "$28.0M", 
-      status: "Reservado",
+      status: 'reserved' as const,
       views: 189,
-      inquiries: 8
+      inquiries: 8,
+      score: 72
     },
     { 
-      id: 3, 
+      id: '3', 
       title: "Lote 32 - Pinar del Sol", 
       area: "7.5 há", 
       price: "$45.0M", 
-      status: "Disponible",
+      status: 'available' as const,
       views: 312,
-      inquiries: 18
+      inquiries: 18,
+      trend: 'up' as const,
+      score: 92
     },
   ];
 
-  const upcomingTasks = [
-    { title: "Visita a terreno - Cliente González", date: "Hoy 15:00", priority: "high" },
-    { title: "Firma de contrato - Lote 23", date: "Mañana 10:00", priority: "high" },
-    { title: "Seguimiento lead #234", date: "25 Nov", priority: "medium" },
-    { title: "Revisión de documentos", date: "26 Nov", priority: "low" },
-  ];
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "success":
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case "error":
-        return <AlertCircle className="h-4 w-4 text-red-600" />;
-      case "warning":
-        return <Clock className="h-4 w-4 text-orange-600" />;
-      default:
-        return <AlertCircle className="h-4 w-4 text-blue-600" />;
-    }
-  };
-
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard Ejecutivo</h1>
-          <p className="text-muted-foreground">Vista general de tu negocio de parcelas</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <FileText className="mr-2 h-4 w-4" />
-            Exportar
-          </Button>
-          <Button>
-            <Calendar className="mr-2 h-4 w-4" />
-            Este Mes
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-6 p-4 sm:p-6">
+      {/* Header */}
+      <DashboardHeader
+        userName="Agente"
+        selectedPeriod={selectedPeriod}
+        onPeriodChange={setSelectedPeriod}
+        notificationCount={3}
+        onExport={() => console.log('Export')}
+      />
 
       {/* KPIs Principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((kpi, index) => (
-          <Card key={index} className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <kpi.icon className="h-5 w-5 text-primary" />
-              </div>
-              <Badge variant={kpi.positive ? "default" : "secondary"}>
-                {kpi.positive ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
-                {kpi.change}
-              </Badge>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">{kpi.title}</p>
-              <p className="text-3xl font-bold text-foreground">{kpi.value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{kpi.detail}</p>
-            </div>
-          </Card>
+          <KPICard
+            key={index}
+            title={kpi.title}
+            value={kpi.value}
+            change={kpi.change}
+            changeLabel={kpi.changeLabel}
+            positive={kpi.positive}
+            icon={kpi.icon}
+            sparklineData={kpi.sparklineData}
+            delay={index + 1}
+          />
         ))}
+      </div>
+
+      {/* Quick Actions + Activity Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <QuickActions className="lg:col-span-1" />
+        <ActivityFeed 
+          activities={recentActivities} 
+          maxItems={5}
+          className="lg:col-span-2"
+        />
       </div>
 
       {/* Gráficos Principales */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="p-6 lg:col-span-2">
           <h3 className="text-lg font-semibold mb-4 text-foreground">Tendencia de Ventas</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={280}>
             <BarChart data={salesData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-              <YAxis stroke="hsl(var(--muted-foreground))" />
-              <Tooltip />
-              <Bar dataKey="ventas" fill="hsl(var(--primary))" />
-              <Bar dataKey="ingresos" fill="hsl(var(--secondary))" />
+              <XAxis 
+                dataKey="month" 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={12}
+                tickLine={false}
+              />
+              <YAxis 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--popover))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                }}
+              />
+              <Bar 
+                dataKey="ventas" 
+                fill="hsl(var(--primary))" 
+                radius={[4, 4, 0, 0]}
+                name="Ventas"
+              />
+              <Bar 
+                dataKey="ingresos" 
+                fill="hsl(var(--accent))" 
+                radius={[4, 4, 0, 0]}
+                name="Ingresos (M)"
+              />
             </BarChart>
           </ResponsiveContainer>
         </Card>
 
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 text-foreground">Ventas por Proyecto</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={280}>
             <PieChart>
               <Pie
                 data={projectsData}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                innerRadius={50}
                 outerRadius={80}
-                fill="#8884d8"
+                paddingAngle={3}
                 dataKey="value"
               >
                 {projectsData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--popover))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
-        </Card>
-      </div>
-
-      {/* Actividad Reciente y Tareas */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4 text-foreground">Actividad Reciente</h3>
-          <div className="space-y-3">
-            {recentActivities.map((activity, index) => (
-              <div key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
-                {getStatusIcon(activity.status)}
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-foreground">{activity.title}</p>
-                  <p className="text-xs text-muted-foreground">{activity.project}</p>
-                </div>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">{activity.time}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4 text-foreground">Próximas Tareas</h3>
-          <div className="space-y-3">
-            {upcomingTasks.map((task, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                <div className="flex-1">
-                  <p className="font-medium text-sm text-foreground">{task.title}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Calendar className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">{task.date}</span>
-                  </div>
-                </div>
-                <Badge variant={task.priority === "high" ? "destructive" : task.priority === "medium" ? "secondary" : "outline"}>
-                  {task.priority}
-                </Badge>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            {projectsData.map((item, index) => (
+              <div key={index} className="flex items-center gap-2 text-xs">
+                <div 
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: item.color }}
+                />
+                <span className="truncate text-muted-foreground">{item.name}</span>
               </div>
             ))}
           </div>
@@ -246,32 +284,12 @@ const Dashboard = () => {
       </div>
 
       {/* Propiedades Destacadas */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-foreground">Propiedades Destacadas</h3>
-          <Button variant="outline" size="sm">Ver Todas</Button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {featuredProperties.map((property) => (
-            <div key={property.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h4 className="font-semibold text-foreground">{property.title}</h4>
-                  <p className="text-sm text-muted-foreground">{property.area}</p>
-                </div>
-                <Badge variant={property.status === "Disponible" ? "default" : "secondary"}>
-                  {property.status}
-                </Badge>
-              </div>
-              <p className="text-2xl font-bold text-primary mb-3">{property.price}</p>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>{property.views} vistas</span>
-                <span>{property.inquiries} consultas</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+      <PropertyInsights 
+        properties={featuredProperties}
+        maxItems={3}
+        onViewAll={() => console.log('View all')}
+        onViewProperty={(id) => console.log('View property', id)}
+      />
     </div>
   );
 };
