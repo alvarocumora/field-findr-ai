@@ -31,14 +31,20 @@ const StickyHeader = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navigation = [
+  const publicNavigation = [
     { name: 'Explorar', href: '/explorar' },
     { name: 'Comparar', href: '/comparar' },
     { name: 'Proyectos', href: '/projects' },
-    { name: 'Agentes', href: '/agentes' },
-    { name: 'Empresas', href: '/empresas' },
-    { name: 'Blog', href: '/blog' },
   ];
+
+  const authenticatedNavigation = [
+    { name: 'Dashboard', href: '/dashboard' },
+    { name: 'Mis Propiedades', href: '/inventory' },
+  ];
+
+  const navigation = user 
+    ? [...publicNavigation, ...authenticatedNavigation]
+    : [...publicNavigation, { name: 'Agentes', href: '/agentes' }, { name: 'Blog', href: '/blog' }];
 
   const isActive = (path: string) => location.pathname === path;
 
