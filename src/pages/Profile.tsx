@@ -1,77 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { User, Mail, Phone, Camera, ArrowLeft, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, Loader2, LogOut, User, Shield, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useProfile, ProfileUpdate } from '@/hooks/useProfile';
+import { useProfile } from '@/hooks/useProfile';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-
-const profileSchema = z.object({
-  first_name: z.string().min(1, 'El nombre es requerido').max(50, 'Máximo 50 caracteres'),
-  last_name: z.string().max(50, 'Máximo 50 caracteres').optional().or(z.literal('')),
-  phone: z.string().max(20, 'Máximo 20 caracteres').optional().or(z.literal('')),
-  avatar_url: z.string().url('URL inválida').optional().or(z.literal('')),
-});
-
-type ProfileFormValues = z.infer<typeof profileSchema>;
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import PersonalInfoTab from '@/components/profile/PersonalInfoTab';
+import SecurityTab from '@/components/profile/SecurityTab';
+import PreferencesTab from '@/components/profile/PreferencesTab';
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile, isLoading, updateProfile, isUpdating } = useProfile();
 
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      first_name: '',
-      last_name: '',
-      phone: '',
-      avatar_url: '',
-    },
-  });
-
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
     }
   }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    if (profile) {
-      form.reset({
-        first_name: profile.first_name || '',
-        last_name: profile.last_name || '',
-        phone: profile.phone || '',
-        avatar_url: profile.avatar_url || '',
-      });
-    }
-  }, [profile, form]);
-
-  const onSubmit = (values: ProfileFormValues) => {
-    const updates: ProfileUpdate = {
-      first_name: values.first_name || null,
-      last_name: values.last_name || null,
-      phone: values.phone || null,
-      avatar_url: values.avatar_url || null,
-    };
-    updateProfile(updates);
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -94,16 +44,26 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-2xl py-8 px-4">
+      <div className="container max-w-3xl py-8 px-4">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Mi Perfil</h1>
-            <p className="text-muted-foreground">Gestiona tu información personal</p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Mi Perfil</h1>
+              <p className="text-muted-foreground">Gestiona tu cuenta y preferencias</p>
+            </div>
           </div>
+          <Button 
+            variant="outline" 
+            onClick={handleSignOut}
+            className="hidden sm:flex"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Cerrar Sesión
+          </Button>
         </div>
 
         {/* Avatar Card */}
@@ -135,164 +95,59 @@ const Profile = () => {
                   </>
                 )}
               </div>
+              <Button 
+                variant="outline" 
+                onClick={handleSignOut}
+                className="sm:hidden"
+                size="icon"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Profile Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Información Personal
-            </CardTitle>
-            <CardDescription>
-              Actualiza tu información de contacto y preferencias
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            ) : (
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="first_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nombre</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Input 
-                                placeholder="Tu nombre" 
-                                className="pl-9" 
-                                {...field} 
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+        {/* Tabs */}
+        {isLoading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        ) : (
+          <Tabs defaultValue="personal" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="personal" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">Personal</span>
+              </TabsTrigger>
+              <TabsTrigger value="security" className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                <span className="hidden sm:inline">Seguridad</span>
+              </TabsTrigger>
+              <TabsTrigger value="preferences" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Preferencias</span>
+              </TabsTrigger>
+            </TabsList>
 
-                    <FormField
-                      control={form.control}
-                      name="last_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Apellido</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Tu apellido" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+            <TabsContent value="personal">
+              <PersonalInfoTab 
+                profile={profile}
+                user={user}
+                updateProfile={updateProfile}
+                isUpdating={isUpdating}
+              />
+            </TabsContent>
 
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Teléfono</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            <Input 
-                              placeholder="+56 9 1234 5678" 
-                              className="pl-9" 
-                              {...field} 
-                            />
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          Número de contacto para comunicaciones
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            <TabsContent value="security">
+              <SecurityTab />
+            </TabsContent>
 
-                  <FormField
-                    control={form.control}
-                    name="avatar_url"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>URL de Avatar</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Camera className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            <Input 
-                              placeholder="https://ejemplo.com/mi-foto.jpg" 
-                              className="pl-9" 
-                              {...field} 
-                            />
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          URL de tu imagen de perfil
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Email (read-only) */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      Correo Electrónico
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        value={user?.email || ''} 
-                        disabled 
-                        className="pl-9 bg-muted" 
-                      />
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      El correo no se puede modificar
-                    </p>
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex justify-between">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={handleSignOut}
-                    >
-                      Cerrar Sesión
-                    </Button>
-                    <Button type="submit" disabled={isUpdating}>
-                      {isUpdating ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Guardando...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="mr-2 h-4 w-4" />
-                          Guardar Cambios
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            )}
-          </CardContent>
-        </Card>
+            <TabsContent value="preferences">
+              <PreferencesTab />
+            </TabsContent>
+          </Tabs>
+        )}
 
         {/* Account Info */}
         <Card className="mt-6">
