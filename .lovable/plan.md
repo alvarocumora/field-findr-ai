@@ -1,239 +1,153 @@
 
-# Plan: Mejora de Logo, Sistema de Gestion de Propiedades y Mapa
 
-## Resumen Ejecutivo
+# Plan: Experiencia Explorar Mobile-First con Mapa Central
 
-Este plan mejora tres areas clave de la plataforma Ofertaterrenos.com:
+## Resumen
 
-1. **Logo Mejorado**: Rediseno del logo con animaciones sutiles, variantes para diferentes fondos y una marca visual mas profesional.
-
-2. **Sistema de Gestion de Propiedades**: Modernizacion del dashboard, inventario y gestion de proyectos/lotes con mejor UX, visualizaciones y flujos de trabajo.
-
-3. **Mapa Mejorado**: Optimizacion del mapa interactivo con mejor rendimiento, clustering inteligente y herramientas de dibujo mejoradas.
+Rediseño completo de la página de exploración de terrenos con enfoque **mobile-first**, donde el mapa será la herramienta central de navegación. La experiencia en teléfono tendrá un mapa a pantalla completa con una barra de búsqueda flotante y un panel deslizable (bottom sheet) para ver los resultados.
 
 ---
 
-## Parte 1: Rediseno del Logo
+## Diseño Visual
 
-### Cambios Visuales
-
-**Nuevo Diseno SVG**
-- Forma de terreno/parcela mas definida con capas multiples
-- Gradiente animado sutil que respira (emerald a sky blue)
-- Efecto de brillo dinamico en hover
-- Sombra refinada con blur suave
-
-**Variantes del Logo**
-- `animated`: Version con animacion CSS sutil
-- `monochrome`: Version monocromatica para fondos complejos
-- `inverted`: Para uso sobre fondos oscuros
-
-**Archivos a Modificar**
-```
-src/components/brand/Logo.tsx
-src/components/brand/LogoIcon.tsx
-src/index.css (nuevas animaciones)
-```
-
-### Mejoras Tecnicas
-
-- Animacion `@keyframes logo-shimmer` para efecto de brillo
-- Transiciones suaves de 300ms en estados hover/focus
-- Soporte para `prefers-reduced-motion`
-- Accesibilidad mejorada con `aria-label`
-
----
-
-## Parte 2: Sistema de Gestion de Propiedades
-
-### 2.1 Dashboard Ejecutivo Mejorado
-
-**Nuevos Componentes**
-```
-src/components/dashboard/DashboardHeader.tsx
-src/components/dashboard/KPICard.tsx
-src/components/dashboard/ActivityFeed.tsx
-src/components/dashboard/QuickActions.tsx
-src/components/dashboard/PropertyInsights.tsx
-```
-
-**Mejoras UX**
-- KPI cards con micro-animaciones y sparklines
-- Feed de actividad en tiempo real con timestamps relativos
-- Acciones rapidas flotantes (nueva propiedad, nuevo lead, etc.)
-- Graficos interactivos con tooltips mejorados
-
-### 2.2 Inventario de Propiedades Modernizado
-
-**Rediseno de PropertyInventory.tsx**
-- Vista Kanban para estados (Disponible, Reservado, Vendido)
-- Filtros avanzados con chips interactivos
-- Bulk actions (seleccion multiple)
-- Quick edit inline sin modales
-- Thumbnails de propiedades en la tabla
-
-**Nuevo Componente de Estadisticas**
-```
-src/components/inventory/InventoryStats.tsx
-```
-- Graficos de rosquilla para distribucion por tipo
-- Tendencia de precios con sparkline
-- Indicadores de rendimiento por agente
-
-### 2.3 Gestion de Proyectos y Lotes Mejorada
-
-**ProjectsManagement.tsx - Mejoras**
-- Cards de proyecto con miniatura de mapa
-- Barra de progreso animada con porcentajes
-- Panel lateral de detalles deslizable
-- Timeline de actividad del proyecto
-
-**LotManagement.tsx - Mejoras**
-- Mapa integrado con lotes dibujados
-- Formulario de lote con picker de coordenadas
-- Estado de lotes con colores consistentes
-- Acciones contextuales en hover
-
-**LotCard.tsx y LotStats.tsx - Refinamientos**
-- Iconos consistentes con el sistema de diseno
-- Animaciones de entrada escalonadas
-- Badges con iconos para servicios
-- Tooltips informativos
-
----
-
-## Parte 3: Mejoras del Mapa
-
-### 3.1 Optimizacion de Rendimiento
-
-**EnhancedMap.tsx - Refactorizacion**
-- Lazy loading de capas WMS
-- Debounce en actualizaciones de clusters (300ms)
-- Memoizacion de GeoJSON data
-- Cleanup robusto de marcadores y popups
-
-### 3.2 Clustering Inteligente
-
-**Nuevas Caracteristicas**
-- Clusters con gradiente de color segun densidad
-- Animacion de zoom al expandir cluster
-- Contador de propiedades en cluster con precio promedio
-- Icono diferenciado por tipo de propiedad
-
-### 3.3 Herramientas de Dibujo Mejoradas
-
-**DrawingToolbar.tsx (nuevo)**
-```
-src/components/map/DrawingToolbar.tsx
-```
-- Toolbar flotante con iconos claros
-- Feedback visual durante el dibujo
-- Calculo de area en tiempo real (m2 y hectareas)
-- Opcion de editar poligono existente
-- Snap a vertices cercanos
-
-### 3.4 Popups Mejorados
-
-**PropertyPopup.tsx (nuevo)**
-```
-src/components/map/PropertyPopup.tsx
-```
-- Imagen hero con lazy loading
-- Informacion clave compacta
-- Botones de accion (ver, favorito, contactar)
-- Animacion de entrada suave
-
-### 3.5 Controles Touch Mejorados
-
-**TouchMapControls.tsx - Mejoras**
-- Botones mas grandes (56px) para movil
-- Gestos mejorados (doble tap para zoom)
-- Feedback haptico (si soportado)
-- Panel de capas colapsable
-
----
-
-## Parte 4: Estilos Globales
-
-### Nuevas Clases CSS en index.css
-
-```css
-/* Animaciones de Logo */
-.logo-shimmer { ... }
-.logo-breathe { ... }
-
-/* Cards de Dashboard */
-.kpi-card { ... }
-.activity-item { ... }
-
-/* Componentes de Mapa */
-.map-popup { ... }
-.drawing-toolbar { ... }
-.cluster-marker { ... }
-
-/* Transiciones */
-.stagger-1 through .stagger-5
-.slide-in-right
-.slide-in-up
-```
-
----
-
-## Seccion Tecnica
-
-### Estructura de Archivos
-
+### Vista Móvil (Principal)
 ```text
-src/
-  components/
-    brand/
-      Logo.tsx (modificado)
-      LogoIcon.tsx (modificado)
-    dashboard/
-      DashboardHeader.tsx (nuevo)
-      KPICard.tsx (nuevo)
-      ActivityFeed.tsx (nuevo)
-      QuickActions.tsx (nuevo)
-    inventory/
-      InventoryStats.tsx (nuevo)
-      PropertyCard.tsx (nuevo)
-    map/
-      DrawingToolbar.tsx (nuevo)
-      PropertyPopup.tsx (nuevo)
-      EnhancedMap.tsx (modificado)
-      TouchMapControls.tsx (modificado)
-    lots/
-      LotCard.tsx (modificado)
-      LotStats.tsx (modificado)
-  pages/
-    Dashboard.tsx (nuevo - reemplazo)
-  index.css (modificado)
++----------------------------------+
+|  [Search Bar Flotante]    [≡]   |  <- Barra de búsqueda + filtros
++----------------------------------+
+|                                  |
+|                                  |
+|         MAPA FULLSCREEN          |
+|      (con marcadores)            |
+|                                  |
+|    [📍] [+] [-] [🧭]             |  <- Controles del mapa
+|                                  |
++----------------------------------+
+|  ◉ Drag handle                   |  <- Bottom Sheet
+|  12 terrenos encontrados         |
+|  +-----+  +-----+  +-----+       |
+|  |Card1|  |Card2|  |Card3|       |  <- Scroll horizontal
+|  +-----+  +-----+  +-----+       |
++----------------------------------+
 ```
 
-### Orden de Implementacion
+### Estados del Bottom Sheet
+1. **Colapsado**: Solo muestra contador de resultados y preview
+2. **Expandido parcial** (50%): Muestra tarjetas en scroll horizontal
+3. **Expandido completo** (90%): Lista vertical completa con más detalles
 
-1. **Fase 1**: Logo y estilos globales
-2. **Fase 2**: Componentes de dashboard
-3. **Fase 3**: Mejoras de inventario y lotes
-4. **Fase 4**: Optimizaciones del mapa
+---
 
-### Dependencias
+## Cambios Técnicos
 
-No se requieren nuevas dependencias. Se utilizan las existentes:
-- `lucide-react` para iconos
-- `recharts` para graficos
-- `mapbox-gl` para mapas
-- `@radix-ui/*` para componentes UI
+### 1. Nueva Arquitectura de Componentes
 
-### Consideraciones de Rendimiento
+**Componentes a crear:**
+- `MobileExploreView.tsx` - Vista principal mobile con mapa fullscreen
+- `ExplorBottomSheet.tsx` - Panel deslizable con resultados
+- `CompactListingCard.tsx` - Tarjeta compacta para carousel horizontal
+- `FloatingSearchBar.tsx` - Barra de búsqueda flotante glassmorphism
 
-- Code splitting por ruta ya implementado
-- Lazy loading de imagenes con Intersection Observer
-- Memoizacion de componentes pesados con `React.memo`
-- Debounce en handlers de eventos frecuentes
+### 2. Modificaciones a `Explorar.tsx`
 
-### Compatibilidad
+- Detección automática de viewport móvil con `useIsMobile()`
+- Renderizado condicional: vista desktop actual vs nueva vista móvil
+- Estado compartido para sincronización mapa-lista
 
-- Desktop: Chrome, Firefox, Safari, Edge (ultimas 2 versiones)
-- Mobile: iOS Safari 15+, Chrome Android 100+
-- Touch: Soporte completo con gestos optimizados
+### 3. Bottom Sheet con Vaul
+
+Utilizando el componente `Drawer` existente (`vaul`):
+- Snap points: `[0.1, 0.5, 0.9]` para los 3 estados
+- Contenido dinámico según nivel de expansión
+- Scroll horizontal de tarjetas en estado parcial
+- Lista vertical completa en estado expandido
+
+### 4. Barra de Búsqueda Flotante
+
+- Posición absoluta sobre el mapa
+- Diseño glassmorphism compacto
+- Input de búsqueda + botón de filtros
+- Chips de filtros activos con scroll horizontal
+- Transición suave al hacer scroll
+
+### 5. Tarjetas Compactas
+
+Nueva `CompactListingCard`:
+- Dimensiones: 160px x 180px
+- Imagen cuadrada con overlay de precio
+- Ubicación y área en texto mínimo
+- Badge de estado (disponible/reservado)
+- Touch targets de 44px mínimo
+
+### 6. Sincronización Mapa-Lista
+
+- Al tocar una tarjeta: centrar mapa en esa propiedad
+- Al tocar un marcador: resaltar tarjeta y hacer scroll
+- Animaciones suaves de transición
+
+---
+
+## Mejoras de UX Mobile
+
+| Problema Actual | Solución |
+|-----------------|----------|
+| Vista split oculta en móvil | Mapa siempre visible como base |
+| Cards ocupan pantalla completa | Bottom sheet con cards compactas |
+| Filtros en Sheet lateral | Búsqueda flotante + Sheet de filtros optimizado |
+| Toggle de vistas poco intuitivo | Transición fluida mapa↔lista con gestos |
+| Información perdida en pantalla pequeña | Diseño compacto sin perder datos clave |
+
+---
+
+## Especificaciones de Diseño
+
+### Colores y Estilos
+- Glassmorphism: `bg-background/80 backdrop-blur-xl`
+- Sombras suaves: `shadow-lg shadow-black/10`
+- Bordes sutiles: `border border-white/10`
+- Touch targets mínimos: 44px
+
+### Animaciones
+- Bottom sheet: spring animation de Vaul
+- Transiciones: 300ms ease-out
+- Scroll snapping para carousel
+
+### Breakpoints
+- Mobile: `< 768px` - Nueva experiencia mobile-first
+- Tablet/Desktop: `≥ 768px` - Vista actual con mejoras menores
+
+---
+
+## Archivos a Modificar/Crear
+
+| Archivo | Acción | Descripción |
+|---------|--------|-------------|
+| `src/pages/Explorar.tsx` | Modificar | Renderizado condicional mobile/desktop |
+| `src/components/explore/MobileExploreView.tsx` | Crear | Vista móvil completa |
+| `src/components/explore/ExploreBottomSheet.tsx` | Crear | Bottom sheet con resultados |
+| `src/components/explore/CompactListingCard.tsx` | Crear | Tarjeta compacta para carousel |
+| `src/components/explore/FloatingSearchBar.tsx` | Crear | Barra de búsqueda flotante |
+| `src/components/explore/MobileFilterSheet.tsx` | Crear | Panel de filtros optimizado móvil |
+| `src/index.css` | Modificar | Estilos adicionales para bottom sheet |
+
+---
+
+## Flujo de Usuario Mobile
+
+1. **Entrada**: Usuario ve mapa a pantalla completa con marcadores
+2. **Exploración**: Navega el mapa con gestos táctiles
+3. **Descubrimiento**: Bottom sheet muestra preview de resultados
+4. **Interés**: Desliza hacia arriba para ver más propiedades
+5. **Detalle**: Toca una tarjeta para ver detalles completos
+6. **Filtrado**: Usa barra flotante para refinar búsqueda
+
+---
+
+## Consideraciones de Accesibilidad
+
+- Contraste adecuado en overlays
+- Labels ARIA para controles del mapa
+- Anuncio de cambios de estado
+- Navegación por teclado funcional
+- Touch targets de 44px mínimo
+
