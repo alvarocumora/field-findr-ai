@@ -28,125 +28,107 @@ const LogoIcon = ({
       className={cn(
         'relative flex items-center justify-center rounded-xl overflow-hidden',
         'transition-all duration-300 ease-out group',
-        isMonochrome 
-          ? 'bg-foreground/10' 
-          : isInverted
-          ? 'bg-white/10 backdrop-blur-sm'
-          : 'bg-gradient-to-br from-primary via-emerald-500 to-accent',
-        !isMonochrome && !isInverted && 'shadow-lg shadow-primary/25',
-        animated && 'logo-breathe',
         sizeClasses[size],
         className
       )}
       role="img"
       aria-label="Ofertaterrenos logo icon"
     >
-      {/* Animated shimmer overlay */}
-      {animated && !isMonochrome && (
-        <div className="absolute inset-0 logo-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      )}
-      
-      {/* SVG Logo Mark */}
+      {/* SVG Logo Mark - Geometric Hexagon */}
       <svg 
-        viewBox="0 0 32 32" 
+        viewBox="0 0 512 512" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
         className={cn(
-          'w-[58%] h-[58%] relative z-10',
+          'w-full h-full relative z-10',
           'transition-transform duration-300',
           animated && 'group-hover:scale-105'
         )}
       >
-        {/* Background terrain layers */}
-        <path 
-          d="M3 23L10 14L16 18L22 11L29 23H3Z" 
-          fill="currentColor"
-          className={cn(
-            isMonochrome ? 'text-foreground/20' : 
-            isInverted ? 'text-white/25' : 'text-primary-foreground/25'
-          )}
+        <defs>
+          <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={isMonochrome ? 'currentColor' : '#22C55E'} stopOpacity={isMonochrome ? 0.1 : 1}/>
+            <stop offset="50%" stopColor={isMonochrome ? 'currentColor' : '#10B981'} stopOpacity={isMonochrome ? 0.1 : 1}/>
+            <stop offset="100%" stopColor={isMonochrome ? 'currentColor' : '#0EA5E9'} stopOpacity={isMonochrome ? 0.1 : 1}/>
+          </linearGradient>
+          <linearGradient id="glowGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3"/>
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0"/>
+          </linearGradient>
+        </defs>
+        
+        {/* Background rounded square */}
+        <rect 
+          x="32" y="32" width="448" height="448" rx="96" 
+          fill={isMonochrome ? 'transparent' : 'url(#bgGrad)'}
+          stroke={isMonochrome ? 'currentColor' : 'none'}
+          strokeWidth={isMonochrome ? 8 : 0}
+          className={isMonochrome ? 'text-foreground/20' : ''}
         />
         
-        {/* Main terrain peak */}
+        {/* Inner glow */}
+        {!isMonochrome && (
+          <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#glowGrad)"/>
+        )}
+        
+        {/* Hexagon frame */}
         <path 
-          d="M5 22L16 7L27 22H5Z" 
-          fill="currentColor"
-          className={cn(
-            isMonochrome ? 'text-foreground/60' : 
-            isInverted ? 'text-white/90' : 'text-primary-foreground/90'
-          )}
+          d="M256 96L400 180V348L256 432L112 348V180L256 96Z" 
+          fill="none" 
+          stroke={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.9)'}
+          strokeWidth="16"
+          strokeLinejoin="round"
+          className={isMonochrome ? 'text-foreground/60' : ''}
         />
         
-        {/* Inner tech diamond */}
+        {/* Main terrain mountain */}
         <path 
-          d="M16 11L21 18H11L16 11Z" 
-          fill="currentColor"
-          className={cn(
-            isMonochrome ? 'text-foreground/30' : 
-            isInverted ? 'text-white/35' : 'text-primary-foreground/35'
-          )}
+          d="M160 320L256 180L352 320H160Z" 
+          fill={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.85)'}
+          className={isMonochrome ? 'text-foreground/50' : ''}
         />
         
-        {/* Diamond highlight */}
+        {/* Secondary peak */}
         <path 
-          d="M16 13L18.5 17H13.5L16 13Z" 
-          fill="currentColor"
-          className={cn(
-            isMonochrome ? 'text-foreground/15' : 
-            isInverted ? 'text-white/20' : 'text-primary-foreground/20'
-          )}
+          d="M200 320L280 220L360 320H200Z" 
+          fill={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.5)'}
+          className={isMonochrome ? 'text-foreground/25' : ''}
         />
         
-        {/* Horizon line */}
+        {/* Diamond center */}
         <path 
-          d="M2 24H30" 
-          stroke="currentColor"
-          strokeWidth="2"
+          d="M256 220L290 280H222L256 220Z" 
+          fill={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.3)'}
+          className={isMonochrome ? 'text-foreground/15' : ''}
+        />
+        
+        {/* Base line */}
+        <line 
+          x1="140" y1="340" x2="372" y2="340" 
+          stroke={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.95)'}
+          strokeWidth="12" 
           strokeLinecap="round"
-          className={cn(
-            isMonochrome ? 'text-foreground/80' : 
-            isInverted ? 'text-white' : 'text-primary-foreground'
-          )}
+          className={isMonochrome ? 'text-foreground/70' : ''}
         />
         
-        {/* Parcel division indicators */}
-        <path 
-          d="M9 22V26M16 22V28M23 22V26" 
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          className={cn(
-            isMonochrome ? 'text-foreground/50' : 
-            isInverted ? 'text-white/60' : 'text-primary-foreground/60'
-          )}
-        />
-        
-        {/* Corner accent dots */}
-        <circle 
-          cx="5" cy="26" r="1" 
-          fill="currentColor"
-          className={cn(
-            isMonochrome ? 'text-foreground/40' : 
-            isInverted ? 'text-white/50' : 'text-primary-foreground/50'
-          )}
-        />
-        <circle 
-          cx="27" cy="26" r="1" 
-          fill="currentColor"
-          className={cn(
-            isMonochrome ? 'text-foreground/40' : 
-            isInverted ? 'text-white/50' : 'text-primary-foreground/50'
-          )}
-        />
+        {/* Grid markers */}
+        <line x1="200" y1="320" x2="200" y2="360" 
+              stroke={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.6)'} 
+              strokeWidth="8" strokeLinecap="round"
+              className={isMonochrome ? 'text-foreground/40' : ''}/>
+        <line x1="256" y1="320" x2="256" y2="370" 
+              stroke={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.6)'} 
+              strokeWidth="8" strokeLinecap="round"
+              className={isMonochrome ? 'text-foreground/40' : ''}/>
+        <line x1="312" y1="320" x2="312" y2="360" 
+              stroke={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.6)'} 
+              strokeWidth="8" strokeLinecap="round"
+              className={isMonochrome ? 'text-foreground/40' : ''}/>
       </svg>
       
-      {/* Subtle glow effect */}
-      {!isMonochrome && (
-        <div className={cn(
-          'absolute inset-0 rounded-xl',
-          'bg-gradient-to-t from-transparent via-transparent to-white/15',
-          'opacity-100 transition-opacity duration-300'
-        )} />
+      {/* Animated shimmer overlay */}
+      {animated && !isMonochrome && (
+        <div className="absolute inset-0 logo-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
       )}
     </div>
   );
