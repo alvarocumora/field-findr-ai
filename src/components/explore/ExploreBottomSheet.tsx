@@ -1,6 +1,6 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { Drawer } from 'vaul';
-import { MapPin, ChevronUp, List } from 'lucide-react';
+import { MapPin, ChevronUp, List, Sparkles } from 'lucide-react';
 import { Listing } from '@/hooks/useListings';
 import CompactListingCard from './CompactListingCard';
 import ListingCard from '@/components/listings/ListingCard';
@@ -29,23 +29,65 @@ const ExploreBottomSheet = ({
   onSnapPointChange,
 }: ExploreBottomSheetProps) => {
   const carouselRef = useRef<HTMLDivElement>(null);
-
-  // Scroll to selected listing in carousel
-  useEffect(() => {
-    if (selectedListing && carouselRef.current && snapPoint < 0.9) {
-      const index = listings.findIndex(l => l.id === selectedListing.id);
-      if (index >= 0) {
-        const cardWidth = 168; // 160px + 8px gap
-        carouselRef.current.scrollTo({
-          left: index * cardWidth - 16,
-          behavior: 'smooth'
-        });
-      }
-    }
-  }, [selectedListing, listings, snapPoint]);
+  const expandedListRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const isExpanded = snapPoint >= 0.9;
   const isCollapsed = snapPoint <= 0.12;
+
+  // Register card ref
+  const registerCardRef = useCallback((id: string, el: HTMLDivElement | null) => {
+    if (el) {
+      cardRefs.current.set(id, el);
+    } else {
+      cardRefs.current.delete(id);
+    }
+  }, []);
+
+  // Scroll to selected listing in carousel (horizontal)
+  useEffect(() => {
+    if (!selectedListing || isLoading) return;
+
+    // Small delay to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      if (!isExpanded && carouselRef.current) {
+        // Horizontal scroll in carousel
+        const index = listings.findIndex(l => l.id === selectedListing.id);
+        if (index >= 0) {
+          const cardWidth = 172; // 160px card + 12px gap
+          const containerWidth = carouselRef.current.clientWidth;
+          const scrollPosition = index * cardWidth - (containerWidth / 2) + (cardWidth / 2);
+          
+          carouselRef.current.scrollTo({
+            left: Math.max(0, scrollPosition),
+            behavior: 'smooth'
+          });
+        }
+      } else if (isExpanded && expandedListRef.current) {
+        // Vertical scroll in expanded list
+        const cardEl = cardRefs.current.get(selectedListing.id);
+        if (cardEl) {
+          const containerRect = expandedListRef.current.getBoundingClientRect();
+          const cardRect = cardEl.getBoundingClientRect();
+          const scrollOffset = cardRect.top - containerRect.top - 20;
+          
+          expandedListRef.current.scrollTo({
+            top: expandedListRef.current.scrollTop + scrollOffset,
+            behavior: 'smooth'
+          });
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [selectedListing, listings, isExpanded, isLoading]);
+
+  // Auto-expand sheet when a listing is selected from map
+  useEffect(() => {
+    if (selectedListing && isCollapsed) {
+      onSnapPointChange(0.5);
+    }
+  }, [selectedListing, isCollapsed, onSnapPointChange]);
 
   return (
     <Drawer.Root
@@ -78,16 +120,27 @@ const ExploreBottomSheet = ({
           {/* Header */}
           <div className="flex items-center justify-between px-4 pb-3">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-primary/10">
-                <MapPin className="h-4 w-4 text-primary" />
+              <div className={cn(
+                "p-1.5 rounded-lg transition-colors duration-300",
+                selectedListing ? "bg-primary/20" : "bg-primary/10"
+              )}>
+                {selectedListing ? (
+                  <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                ) : (
+                  <MapPin className="h-4 w-4 text-primary" />
+                )}
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  {isLoading ? 'Buscando...' : `${listings.length} terrenos`}
+                  {isLoading ? 'Buscando...' : selectedListing 
+                    ? 'Terreno seleccionado' 
+                    : `${listings.length} terrenos`}
                 </p>
                 {!isCollapsed && (
                   <p className="text-xs text-muted-foreground">
-                    {isExpanded ? 'Vista completa' : 'Desliza para ver más'}
+                    {selectedListing 
+                      ? 'Toca otra tarjeta o marcador'
+                      : isExpanded ? 'Vista completa' : 'Desliza para ver más'}
                   </p>
                 )}
               </div>
@@ -118,14 +171,20 @@ const ExploreBottomSheet = ({
               </div>
             ) : isExpanded ? (
               /* Expanded: Vertical list */
-              <div className="h-full overflow-y-auto px-4 pb-8 space-y-3">
+              <div 
+                ref={expandedListRef}
+                className="h-full overflow-y-auto px-4 pb-8 space-y-3 scroll-smooth"
+              >
                 {listings.map(listing => (
                   <div
                     key={listing.id}
+                    ref={(el) => registerCardRef(listing.id, el)}
                     onClick={() => onSelectListing(listing)}
                     className={cn(
-                      "transition-all",
-                      selectedListing?.id === listing.id && "ring-2 ring-primary rounded-xl"
+                      "transition-all duration-300 rounded-xl",
+                      selectedListing?.id === listing.id 
+                        ? "ring-2 ring-primary shadow-lg shadow-primary/10 scale-[1.01]" 
+                        : "hover:shadow-md"
                     )}
                   >
                     <ListingCard
@@ -150,7 +209,7 @@ const ExploreBottomSheet = ({
               /* Collapsed/Partial: Horizontal carousel */
               <div
                 ref={carouselRef}
-                className="flex gap-3 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide"
+                className="flex gap-3 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide scroll-smooth"
               >
                 {listings.map(listing => (
                   <CompactListingCard
