@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import ListingCard from '@/components/listings/ListingCard';
 import EnhancedMap from '@/components/map/EnhancedMap';
+import MobileExploreView from '@/components/explore/MobileExploreView';
 import { useListings, Listing, getListingTypeLabel, formatPrice } from '@/hooks/useListings';
 import { useMatchScore } from '@/hooks/useMatchScore';
+import { useIsMobile } from '@/hooks/use-mobile';
 import MatchScoreBadge from '@/components/matching/MatchScoreBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -330,6 +332,35 @@ const Explorar = () => {
     </div>
   );
 
+  const isMobile = useIsMobile();
+
+  // Mobile-first view
+  if (isMobile) {
+    return (
+      <PublicLayout showFooter={false}>
+        <MobileExploreView
+          listings={filteredListings}
+          isLoading={isLoading}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedTypes={selectedTypes}
+          selectedRegions={selectedRegions}
+          selectedTags={selectedTags}
+          priceRange={priceRange}
+          areaRange={areaRange}
+          onToggleType={toggleType}
+          onToggleRegion={toggleRegion}
+          onToggleTag={toggleTag}
+          onPriceRangeChange={setPriceRange}
+          onAreaRangeChange={setAreaRange}
+          onClearFilters={clearFilters}
+          activeFiltersCount={activeFiltersCount}
+        />
+      </PublicLayout>
+    );
+  }
+
+  // Desktop view
   return (
     <PublicLayout showFooter={false}>
       <div className="min-h-screen bg-background">
