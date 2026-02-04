@@ -1,153 +1,212 @@
 
 
-# Plan: Experiencia Explorar Mobile-First con Mapa Central
+# Plan: Dashboard Premium + Gestión de Usuarios y Paquetes
 
-## Resumen
+## Resumen Ejecutivo
 
-Rediseño completo de la página de exploración de terrenos con enfoque **mobile-first**, donde el mapa será la herramienta central de navegación. La experiencia en teléfono tendrá un mapa a pantalla completa con una barra de búsqueda flotante y un panel deslizable (bottom sheet) para ver los resultados.
+Implementar un sistema de control de acceso basado en suscripciones que restrinja el dashboard y herramientas avanzadas solo a usuarios con planes de pago (Professional/Enterprise). Además, agregar una página de gestión de suscripción donde los usuarios puedan ver y mejorar sus paquetes, y para administradores, una sección de gestión de usuarios.
 
 ---
 
-## Diseño Visual
+## Fase 1: Sistema de Rutas Protegidas
 
-### Vista Móvil (Principal)
+### 1.1 Crear componente ProtectedRoute
+
+Nuevo componente que verificará:
+- Autenticación del usuario
+- Suscripción activa (plan de pago)
+- Rol del usuario (opcional)
+
 ```text
-+----------------------------------+
-|  [Search Bar Flotante]    [≡]   |  <- Barra de búsqueda + filtros
-+----------------------------------+
-|                                  |
-|                                  |
-|         MAPA FULLSCREEN          |
-|      (con marcadores)            |
-|                                  |
-|    [📍] [+] [-] [🧭]             |  <- Controles del mapa
-|                                  |
-+----------------------------------+
-|  ◉ Drag handle                   |  <- Bottom Sheet
-|  12 terrenos encontrados         |
-|  +-----+  +-----+  +-----+       |
-|  |Card1|  |Card2|  |Card3|       |  <- Scroll horizontal
-|  +-----+  +-----+  +-----+       |
-+----------------------------------+
+┌─────────────────────────────────────────────────┐
+│              ProtectedRoute                      │
+├─────────────────────────────────────────────────┤
+│ Props:                                           │
+│ - requireAuth: boolean (requerir login)         │
+│ - requirePremium: boolean (plan pago)           │
+│ - requireRole: 'agent' | 'admin' (opcional)     │
+│ - fallback: ReactNode (loading)                 │
+│ - redirectTo: string (donde redirigir)          │
+└─────────────────────────────────────────────────┘
 ```
 
-### Estados del Bottom Sheet
-1. **Colapsado**: Solo muestra contador de resultados y preview
-2. **Expandido parcial** (50%): Muestra tarjetas en scroll horizontal
-3. **Expandido completo** (90%): Lista vertical completa con más detalles
+### 1.2 Nuevo archivo: `src/components/auth/ProtectedRoute.tsx`
+
+- Verifica autenticación con `useAuth()`
+- Verifica suscripción con `useCurrentPlan()`
+- Verifica roles con `useUserRoles()`
+- Redirige a `/auth` si no autenticado
+- Redirige a `/pricing` si no tiene plan premium
+- Muestra página de acceso denegado si no tiene rol requerido
 
 ---
 
-## Cambios Técnicos
+## Fase 2: Actualizar Rutas en App.tsx
 
-### 1. Nueva Arquitectura de Componentes
+### 2.1 Rutas que requerirán plan PREMIUM
 
-**Componentes a crear:**
-- `MobileExploreView.tsx` - Vista principal mobile con mapa fullscreen
-- `ExplorBottomSheet.tsx` - Panel deslizable con resultados
-- `CompactListingCard.tsx` - Tarjeta compacta para carousel horizontal
-- `FloatingSearchBar.tsx` - Barra de búsqueda flotante glassmorphism
+| Ruta | Componente | Requisito |
+|------|------------|-----------|
+| `/dashboard` | Dashboard | Premium |
+| `/inventory` | PropertyInventory | Premium |
+| `/leads` | LeadManagement | Premium |
+| `/analytics` | BusinessIntelligence | Premium |
+| `/crm` | CRMSystem | Premium |
+| `/agents` | AgentManagement | Premium + Admin |
+| `/sales` | SalesManagement | Premium |
+| `/projects` | ProjectsManagement | Premium |
+| `/lots` | LotManagement | Premium |
 
-### 2. Modificaciones a `Explorar.tsx`
+### 2.2 Rutas que solo requerirán autenticación
 
-- Detección automática de viewport móvil con `useIsMobile()`
-- Renderizado condicional: vista desktop actual vs nueva vista móvil
-- Estado compartido para sincronización mapa-lista
+| Ruta | Componente | Requisito |
+|------|------------|-----------|
+| `/favorites` | Favorites | Auth |
+| `/alerts` | Alerts | Auth |
+| `/profile` | Profile | Auth |
+| `/publish` | PublishProperty | Auth + Agent/Admin |
 
-### 3. Bottom Sheet con Vaul
+### 2.3 Rutas públicas (sin cambios)
 
-Utilizando el componente `Drawer` existente (`vaul`):
-- Snap points: `[0.1, 0.5, 0.9]` para los 3 estados
-- Contenido dinámico según nivel de expansión
-- Scroll horizontal de tarjetas en estado parcial
-- Lista vertical completa en estado expandido
-
-### 4. Barra de Búsqueda Flotante
-
-- Posición absoluta sobre el mapa
-- Diseño glassmorphism compacto
-- Input de búsqueda + botón de filtros
-- Chips de filtros activos con scroll horizontal
-- Transición suave al hacer scroll
-
-### 5. Tarjetas Compactas
-
-Nueva `CompactListingCard`:
-- Dimensiones: 160px x 180px
-- Imagen cuadrada con overlay de precio
-- Ubicación y área en texto mínimo
-- Badge de estado (disponible/reservado)
-- Touch targets de 44px mínimo
-
-### 6. Sincronización Mapa-Lista
-
-- Al tocar una tarjeta: centrar mapa en esa propiedad
-- Al tocar un marcador: resaltar tarjeta y hacer scroll
-- Animaciones suaves de transición
+- `/`, `/explorar`, `/propiedad/:id`, `/comparar`, `/pricing`, `/auth`
 
 ---
 
-## Mejoras de UX Mobile
+## Fase 3: Página de Gestión de Suscripción
 
-| Problema Actual | Solución |
-|-----------------|----------|
-| Vista split oculta en móvil | Mapa siempre visible como base |
-| Cards ocupan pantalla completa | Bottom sheet con cards compactas |
-| Filtros en Sheet lateral | Búsqueda flotante + Sheet de filtros optimizado |
-| Toggle de vistas poco intuitivo | Transición fluida mapa↔lista con gestos |
-| Información perdida en pantalla pequeña | Diseño compacto sin perder datos clave |
+### 3.1 Nuevo archivo: `src/pages/Subscription.tsx`
 
----
+Panel donde el usuario puede:
+- Ver su plan actual y estado
+- Historial de pagos
+- Fecha de próximo cobro
+- Botón para mejorar/cambiar plan
+- Botón para cancelar suscripción
 
-## Especificaciones de Diseño
-
-### Colores y Estilos
-- Glassmorphism: `bg-background/80 backdrop-blur-xl`
-- Sombras suaves: `shadow-lg shadow-black/10`
-- Bordes sutiles: `border border-white/10`
-- Touch targets mínimos: 44px
-
-### Animaciones
-- Bottom sheet: spring animation de Vaul
-- Transiciones: 300ms ease-out
-- Scroll snapping para carousel
-
-### Breakpoints
-- Mobile: `< 768px` - Nueva experiencia mobile-first
-- Tablet/Desktop: `≥ 768px` - Vista actual con mejoras menores
-
----
-
-## Archivos a Modificar/Crear
-
-| Archivo | Acción | Descripción |
-|---------|--------|-------------|
-| `src/pages/Explorar.tsx` | Modificar | Renderizado condicional mobile/desktop |
-| `src/components/explore/MobileExploreView.tsx` | Crear | Vista móvil completa |
-| `src/components/explore/ExploreBottomSheet.tsx` | Crear | Bottom sheet con resultados |
-| `src/components/explore/CompactListingCard.tsx` | Crear | Tarjeta compacta para carousel |
-| `src/components/explore/FloatingSearchBar.tsx` | Crear | Barra de búsqueda flotante |
-| `src/components/explore/MobileFilterSheet.tsx` | Crear | Panel de filtros optimizado móvil |
-| `src/index.css` | Modificar | Estilos adicionales para bottom sheet |
+```text
+┌─────────────────────────────────────────────────────────┐
+│  Mi Suscripción                                          │
+├─────────────────────────────────────────────────────────┤
+│  ┌───────────────────────────────────┐                  │
+│  │  Plan Profesional          $49.990/mes              │
+│  │  ✓ Activo desde: 01 Feb 2026                        │
+│  │  Próximo cobro: 01 Mar 2026                         │
+│  │                                                      │
+│  │  [Mejorar a Enterprise]  [Cancelar]                 │
+│  └───────────────────────────────────┘                  │
+│                                                          │
+│  Historial de Pagos                                      │
+│  ┌───────────────────────────────────┐                  │
+│  │ Feb 2026  │ $49.990  │ ✓ Pagado                     │
+│  │ Ene 2026  │ $49.990  │ ✓ Pagado                     │
+│  └───────────────────────────────────┘                  │
+└─────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Flujo de Usuario Mobile
+## Fase 4: Panel de Administración de Usuarios
 
-1. **Entrada**: Usuario ve mapa a pantalla completa con marcadores
-2. **Exploración**: Navega el mapa con gestos táctiles
-3. **Descubrimiento**: Bottom sheet muestra preview de resultados
-4. **Interés**: Desliza hacia arriba para ver más propiedades
-5. **Detalle**: Toca una tarjeta para ver detalles completos
-6. **Filtrado**: Usa barra flotante para refinar búsqueda
+### 4.1 Nuevo archivo: `src/pages/AdminUsers.tsx`
+
+Solo accesible para usuarios con rol `admin`:
+- Lista de todos los usuarios
+- Ver perfil y suscripción de cada usuario
+- Asignar/remover roles (buyer, agent, admin)
+- Activar/desactivar cuentas
+- Filtros por rol, plan, estado
+
+### 4.2 Hook para administración
+
+Nuevo hook `useAdminUsers` para:
+- Listar usuarios (requiere función edge o política RLS de admin)
+- Actualizar roles de usuarios
 
 ---
 
-## Consideraciones de Accesibilidad
+## Fase 5: Mejoras al Sidebar y Navegación
 
-- Contraste adecuado en overlays
-- Labels ARIA para controles del mapa
-- Anuncio de cambios de estado
-- Navegación por teclado funcional
-- Touch targets de 44px mínimo
+### 5.1 Actualizar ModernSidebar.tsx
+
+- Mostrar badge del plan actual junto al perfil
+- Ocultar/deshabilitar links premium para usuarios free
+- Agregar indicador visual (candado) en items bloqueados
+- Link a "Ver Planes" para usuarios free
+
+```text
+┌─────────────────────────────────────┐
+│  🌍 Explorar Mapa                   │
+│  🔍 Búsqueda IA                     │
+│  ⚡ Herramientas IA                  │
+│  ❤️ Mis Favoritos                   │
+├─────────────────────────────────────┤
+│  📊 Mi Dashboard        🔒          │
+│  🏠 Mis Propiedades     🔒          │
+│  👥 CRM Leads           🔒          │
+│  📈 Analytics           🔒          │
+├─────────────────────────────────────┤
+│  👤 Mi Perfil                       │
+│  ─────────────────────────          │
+│  [ Plan: Gratuito ]                 │
+│  [ 💎 Ver Planes Premium ]          │
+└─────────────────────────────────────┘
+```
+
+---
+
+## Fase 6: Componente de Upgrade Prompt
+
+### 6.1 Nuevo archivo: `src/components/subscription/UpgradePrompt.tsx`
+
+Modal/Card que aparece cuando:
+- Usuario free intenta acceder a feature premium
+- Se muestra en lugar del contenido bloqueado
+
+Contenido:
+- Beneficios del plan premium
+- Comparación de features
+- CTA para ir a /pricing
+
+---
+
+## Detalles Técnicos
+
+### Archivos a Crear
+
+1. `src/components/auth/ProtectedRoute.tsx` - Componente de rutas protegidas
+2. `src/pages/Subscription.tsx` - Gestión de suscripción personal
+3. `src/pages/AdminUsers.tsx` - Panel de administración de usuarios
+4. `src/components/subscription/UpgradePrompt.tsx` - Modal de upgrade
+5. `src/hooks/useAdminUsers.ts` - Hook para gestión de usuarios (admin)
+
+### Archivos a Modificar
+
+1. `src/App.tsx` - Envolver rutas premium con ProtectedRoute
+2. `src/components/ModernSidebar.tsx` - Agregar badges y locks
+3. `src/components/Layout.tsx` - Integrar estado de suscripción
+4. `supabase/functions/` - Edge function para admin (listar usuarios)
+
+### Base de Datos
+
+- Crear política RLS para que admins puedan ver todos los usuarios
+- Crear política RLS para que admins puedan modificar user_roles
+- Ya existe la función `has_role()` que se usará
+
+### Seguridad
+
+- Todas las verificaciones de roles y suscripciones se harán del lado del servidor (RLS)
+- El frontend solo oculta UI, pero el backend bloquea el acceso real
+- Los admins solo pueden asignar roles a través de políticas RLS controladas
+
+---
+
+## Orden de Implementación
+
+1. ProtectedRoute component
+2. Actualizar App.tsx con rutas protegidas
+3. Actualizar ModernSidebar con indicadores visuales
+4. Crear página Subscription.tsx
+5. Crear UpgradePrompt component
+6. Crear AdminUsers.tsx + hook
+7. Crear edge function para admin si es necesario
 
