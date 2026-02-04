@@ -19,6 +19,9 @@ import Profile from "./pages/Profile";
 import Explorar from "./pages/Explorar";
 import PropertyDetail from "./pages/PropertyDetail";
 import Install from "./pages/Install";
+import Pricing from "./pages/Pricing";
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
+import SubscriptionFailure from "./pages/SubscriptionFailure";
 
 // Legacy Components (to be migrated)
 import AIRecommendationEngine from "./components/AIRecommendationEngine";
@@ -59,6 +62,9 @@ const App = () => (
               <Route path="/propiedad/:id" element={<PropertyDetail />} />
               <Route path="/comparar" element={<ParcelComparator />} />
               <Route path="/instalar" element={<Install />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/subscription/success" element={<SubscriptionSuccess />} />
+              <Route path="/subscription/failure" element={<SubscriptionFailure />} />
               
               {/* Legacy routes - to be migrated */}
               <Route path="/dashboard" element={<Dashboard />} />
