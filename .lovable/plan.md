@@ -237,21 +237,35 @@ Ya instaladas:
 
 ## Orden de Implementacion
 
-1. **FloatingResultsPanel** - Panel flotante base con estados
-2. **QuickPropertyCard** - Tarjetas compactas para el panel
-3. **Sincronizacion Lista-Mapa** - Hover y seleccion bidireccional
-4. **FilterBar** - Barra de filtros colapsable superior
-5. **PropertyPreviewSheet** - Preview sin salir del mapa
-6. **SearchAreaButton** - Filtrar por area visible
-7. **Virtualizacion** - Optimizacion de rendimiento
-8. **Clustering** - Agrupacion de marcadores
+1. ✅ **FloatingResultsPanel** - Panel flotante base con estados
+2. ✅ **QuickPropertyCard** - Tarjetas compactas para el panel
+3. ✅ **Sincronizacion Lista-Mapa** - Hover y seleccion bidireccional
+4. ✅ **FilterBar** - Barra de filtros colapsable superior
+5. ✅ **PropertyPreviewSheet** - Preview sin salir del mapa
+6. ⏳ **SearchAreaButton** - Filtrar por area visible (componente creado, pendiente integración)
+7. ⏳ **Virtualizacion** - Optimizacion de rendimiento (pendiente)
+8. ⏳ **Clustering** - Agrupacion de marcadores (pendiente)
+
+---
+
+## Archivos Creados
+
+| Archivo | Estado |
+|---------|--------|
+| `src/components/explore/FloatingResultsPanel.tsx` | ✅ Implementado |
+| `src/components/explore/QuickPropertyCard.tsx` | ✅ Implementado |
+| `src/components/explore/PropertyPreviewSheet.tsx` | ✅ Implementado |
+| `src/components/explore/FilterBar.tsx` | ✅ Implementado |
+| `src/components/explore/SearchAreaButton.tsx` | ✅ Creado |
+| `src/hooks/useMapViewport.ts` | ✅ Implementado |
+| `src/pages/Explorar.tsx` | ✅ Actualizado con nueva arquitectura |
 
 ---
 
 ## Resultado Esperado
 
-- **Mapa siempre visible** como elemento principal
-- **Contexto preservado** al explorar propiedades
-- **Interacciones fluidas** entre lista y mapa
-- **Carga instantanea** sin cambios de pagina
-- **Filtros accesibles** sin ocupar espacio permanente
+- ✅ **Mapa siempre visible** como elemento principal
+- ✅ **Contexto preservado** al explorar propiedades
+- ✅ **Interacciones fluidas** entre lista y mapa
+- ✅ **Carga instantanea** sin cambios de pagina
+- ✅ **Filtros accesibles** sin ocupar espacio permanente
