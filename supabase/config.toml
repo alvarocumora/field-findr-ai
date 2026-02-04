@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.ai-investment-copilot]
 verify_jwt = false
+
+[functions.mercadopago]
+verify_jwt = false
+
+[functions.mercadopago-webhook]
+verify_jwt = false
