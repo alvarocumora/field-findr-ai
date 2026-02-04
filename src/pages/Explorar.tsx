@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import ListingCard from '@/components/listings/ListingCard';
@@ -8,6 +8,9 @@ import { useListings, Listing, getListingTypeLabel, formatPrice } from '@/hooks/
 import { useMatchScore } from '@/hooks/useMatchScore';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MatchScoreBadge from '@/components/matching/MatchScoreBadge';
+import EnhancedAISearch from '@/components/ai/EnhancedAISearch';
+import AIRecommendationsPanel from '@/components/ai/AIRecommendationsPanel';
+import LocationSearchBar from '@/components/explore/LocationSearchBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +38,8 @@ import {
   Grid3X3, 
   Map as MapIcon,
   X,
-  LayoutGrid
+  LayoutGrid,
+  Sparkles
 } from 'lucide-react';
 
 const PROPERTY_TYPES = [
@@ -70,6 +74,8 @@ const Explorar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('relevancia');
   const [hoveredListing, setHoveredListing] = useState<Listing | null>(null);
+  const [showAISearch, setShowAISearch] = useState(false);
+  const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
   
   // Filters state
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -173,6 +179,31 @@ const Explorar = () => {
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
   };
+
+  // Handle location selection from search
+  const handleLocationSelect = useCallback((location: { 
+    name: string; 
+    center: [number, number]; 
+  }) => {
+    setMapCenter(location.center);
+    setSearchQuery(location.name);
+  }, []);
+
+  // Handle AI search filter application
+  const handleAIFilters = useCallback((filters: {
+    types?: string[];
+    regions?: string[];
+    priceRange?: [number, number];
+    areaRange?: [number, number];
+    tags?: string[];
+  }) => {
+    if (filters.types?.length) setSelectedTypes(filters.types);
+    if (filters.regions?.length) setSelectedRegions(filters.regions);
+    if (filters.priceRange) setPriceRange(filters.priceRange);
+    if (filters.areaRange) setAreaRange(filters.areaRange);
+    if (filters.tags?.length) setSelectedTags(filters.tags);
+    setShowAISearch(false);
+  }, []);
 
   const FiltersPanel = () => (
     <div className="space-y-8">
@@ -367,27 +398,38 @@ const Explorar = () => {
         {/* Search Header - Modern design */}
         <div className="sticky top-16 z-30 bg-background/80 backdrop-blur-xl border-b border-border/30 shadow-sm">
           <div className="container px-4 py-3 md:py-4">
-            <div className="flex flex-col md:flex-row gap-3">
-              {/* Search Input - Enhanced */}
-              <div className="relative flex-1 group">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-primary/10 group-focus-within:bg-primary/20 transition-colors">
-                  <Search className="h-4 w-4 text-primary" />
-                </div>
-                <Input
-                  placeholder="Buscar ubicación, tipo de terreno..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 h-12 md:h-11 bg-muted/50 border-border/30 text-base rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all placeholder:text-muted-foreground/60"
+            {/* AI Search Toggle */}
+            {showAISearch && (
+              <div className="mb-4">
+                <EnhancedAISearch
+                  onApplyFilters={handleAIFilters}
+                  className="w-full"
                 />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-muted transition-colors"
-                  >
-                    <X className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                )}
               </div>
+            )}
+            
+            <div className="flex flex-col md:flex-row gap-3">
+              {/* Location Search with geocoding */}
+              <div className="relative flex-1">
+                <LocationSearchBar
+                  onLocationSelect={handleLocationSelect}
+                  onAISearch={(query) => {
+                    setSearchQuery(query);
+                    setShowAISearch(true);
+                  }}
+                  className="w-full"
+                />
+              </div>
+
+              {/* AI Search Toggle Button */}
+              <Button
+                variant={showAISearch ? 'default' : 'outline'}
+                className="h-12 md:h-11 px-4 rounded-xl gap-2 hidden md:flex"
+                onClick={() => setShowAISearch(!showAISearch)}
+              >
+                <Sparkles className="h-4 w-4" />
+                Búsqueda IA
+              </Button>
 
               {/* Controls */}
               <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
@@ -535,6 +577,13 @@ const Explorar = () => {
                 )}
               </div>
               <FiltersPanel />
+              
+              {/* AI Recommendations */}
+              <AIRecommendationsPanel
+                listings={filteredListings}
+                onListingClick={(listing) => navigate(`/propiedad/${listing.id}`)}
+                className="mt-6"
+              />
             </div>
           </aside>
 
@@ -649,7 +698,7 @@ const Explorar = () => {
                   onListingHover={setHoveredListing}
                   onListingClick={(listing) => navigate(`/propiedad/${listing.id}`)}
                   className="w-full h-full"
-                  key="enhanced-map" // Stable key to prevent unnecessary remounts
+                  key="enhanced-map"
                 />
               </div>
             )}
