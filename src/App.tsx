@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 
+// Auth Components
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+
 // PWA Components
 import OfflineIndicator from "./components/pwa/OfflineIndicator";
 import InstallPrompt from "./components/pwa/InstallPrompt";
@@ -22,6 +25,8 @@ import Install from "./pages/Install";
 import Pricing from "./pages/Pricing";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import SubscriptionFailure from "./pages/SubscriptionFailure";
+import Subscription from "./pages/Subscription";
+import AdminUsers from "./pages/AdminUsers";
 
 // Legacy Components (to be migrated)
 import AIRecommendationEngine from "./components/AIRecommendationEngine";
@@ -66,32 +71,108 @@ const App = () => (
               <Route path="/subscription/success" element={<SubscriptionSuccess />} />
               <Route path="/subscription/failure" element={<SubscriptionFailure />} />
               
-              {/* Legacy routes - to be migrated */}
-              <Route path="/dashboard" element={<Dashboard />} />
+              {/* Auth-only routes */}
+              <Route path="/favorites" element={
+                <ProtectedRoute requireAuth>
+                  <Favorites />
+                </ProtectedRoute>
+              } />
+              <Route path="/favoritos" element={
+                <ProtectedRoute requireAuth>
+                  <Favorites />
+                </ProtectedRoute>
+              } />
+              <Route path="/alerts" element={
+                <ProtectedRoute requireAuth>
+                  <Alerts />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute requireAuth>
+                  <Profile />
+                </ProtectedRoute>
+              } />
+              <Route path="/subscription" element={
+                <ProtectedRoute requireAuth>
+                  <Subscription />
+                </ProtectedRoute>
+              } />
+              
+              {/* Premium routes - require paid subscription */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute requireAuth requirePremium>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/inventory" element={
+                <ProtectedRoute requireAuth requirePremium>
+                  <PropertyInventory />
+                </ProtectedRoute>
+              } />
+              <Route path="/leads" element={
+                <ProtectedRoute requireAuth requirePremium>
+                  <LeadManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/analytics" element={
+                <ProtectedRoute requireAuth requirePremium>
+                  <BusinessIntelligence />
+                </ProtectedRoute>
+              } />
+              <Route path="/crm" element={
+                <ProtectedRoute requireAuth requirePremium>
+                  <CRMSystem />
+                </ProtectedRoute>
+              } />
+              <Route path="/sales" element={
+                <ProtectedRoute requireAuth requirePremium>
+                  <SalesManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/projects" element={
+                <ProtectedRoute requireAuth requirePremium>
+                  <ProjectsManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/lots" element={
+                <ProtectedRoute requireAuth requirePremium>
+                  <LotManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/urbanization" element={
+                <ProtectedRoute requireAuth requirePremium>
+                  <UrbanizationManagement />
+                </ProtectedRoute>
+              } />
+              
+              {/* Admin-only routes */}
+              <Route path="/agents" element={
+                <ProtectedRoute requireAuth requirePremium requireRole="admin">
+                  <AgentManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/users" element={
+                <ProtectedRoute requireAuth requireRole="admin">
+                  <AdminUsers />
+                </ProtectedRoute>
+              } />
+              
+              {/* Agent/Admin routes */}
+              <Route path="/publish" element={
+                <ProtectedRoute requireAuth requireRole="agent">
+                  <PublishProperty />
+                </ProtectedRoute>
+              } />
+              
+              {/* Public tools */}
               <Route path="/search" element={<IntelligentSearch />} />
               <Route path="/compare" element={<ParcelComparator />} />
               <Route path="/calculators" element={<LandCalculators />} />
               <Route path="/price-predictor" element={<PricePredictor />} />
               <Route path="/risk-analysis" element={<RiskAnalysis />} />
               <Route path="/ai-recommendations" element={<AIRecommendationEngine />} />
-              <Route path="/publish" element={<PublishProperty />} />
-              <Route path="/favorites" element={<Favorites />} />
-              <Route path="/favoritos" element={<Favorites />} />
-              <Route path="/alerts" element={<Alerts />} />
-              {/* Land Development Administration Routes */}
-              <Route path="/urbanization" element={<UrbanizationManagement />} />
-              <Route path="/crm" element={<CRMSystem />} />
-              <Route path="/analytics" element={<BusinessIntelligence />} />
-              <Route path="/inventory" element={<PropertyInventory />} />
-              <Route path="/sales" element={<SalesManagement />} />
-              <Route path="/agents" element={<AgentManagement />} />
-              {/* Loteo Management Routes */}
-              <Route path="/lots" element={<LotManagement />} />
-              <Route path="/leads" element={<LeadManagement />} />
-              <Route path="/projects" element={<ProjectsManagement />} />
-              <Route path="/profile" element={<Profile />} />
-              {/* New Tools Page */}
               <Route path="/tools" element={<Tools />} />
+              
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
