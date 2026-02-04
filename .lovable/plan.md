@@ -237,35 +237,57 @@ Ya instaladas:
 
 ## Orden de Implementacion
 
-1. ✅ **FloatingResultsPanel** - Panel flotante base con estados
-2. ✅ **QuickPropertyCard** - Tarjetas compactas para el panel
-3. ✅ **Sincronizacion Lista-Mapa** - Hover y seleccion bidireccional
-4. ✅ **FilterBar** - Barra de filtros colapsable superior
-5. ✅ **PropertyPreviewSheet** - Preview sin salir del mapa
-6. ⏳ **SearchAreaButton** - Filtrar por area visible (componente creado, pendiente integración)
-7. ⏳ **Virtualizacion** - Optimizacion de rendimiento (pendiente)
-8. ⏳ **Clustering** - Agrupacion de marcadores (pendiente)
+1. ✅ **FloatingResultsPanel** - Panel flotante base con 3 estados (colapsado/normal/expandido)
+2. ✅ **QuickPropertyCard** - Tarjetas compactas con sync hover bidireccional
+3. ✅ **Sincronizacion Lista-Mapa** - flyTo + popup al hover (con/sin clusters)
+4. ✅ **FilterBar** - Barra de filtros colapsable en header
+5. ✅ **PropertyPreviewSheet** - Side drawer para preview sin navegar
+6. ⏳ **SearchAreaButton** - Filtrar por viewport (creado, pendiente integración)
+7. ⏳ **Virtualizacion** - react-virtual para >100 items
+8. ⏳ **Clustering inteligente** - Auto-activar a zoom bajo
 
 ---
 
-## Archivos Creados
+## Archivos Creados/Modificados
 
-| Archivo | Estado |
-|---------|--------|
-| `src/components/explore/FloatingResultsPanel.tsx` | ✅ Implementado |
-| `src/components/explore/QuickPropertyCard.tsx` | ✅ Implementado |
-| `src/components/explore/PropertyPreviewSheet.tsx` | ✅ Implementado |
-| `src/components/explore/FilterBar.tsx` | ✅ Implementado |
-| `src/components/explore/SearchAreaButton.tsx` | ✅ Creado |
-| `src/hooks/useMapViewport.ts` | ✅ Implementado |
-| `src/pages/Explorar.tsx` | ✅ Actualizado con nueva arquitectura |
+| Archivo | Estado | Descripción |
+|---------|--------|-------------|
+| `FloatingResultsPanel.tsx` | ✅ | Panel con 3 estados, infinite scroll |
+| `QuickPropertyCard.tsx` | ✅ | Tarjeta compacta con favoritos |
+| `PropertyPreviewSheet.tsx` | ✅ | Side sheet con galería |
+| `FilterBar.tsx` | ✅ | Dropdowns colapsables |
+| `SearchAreaButton.tsx` | ✅ | Botón bounds-based |
+| `useMapViewport.ts` | ✅ | Hook flyTo/fitBounds |
+| `Explorar.tsx` | ✅ | Nueva arquitectura unificada |
+| `EnhancedMap.tsx` | ✅ | Sync hover con/sin clusters |
 
 ---
 
-## Resultado Esperado
+## Mejoras Mapbox Aplicadas
 
-- ✅ **Mapa siempre visible** como elemento principal
-- ✅ **Contexto preservado** al explorar propiedades
-- ✅ **Interacciones fluidas** entre lista y mapa
-- ✅ **Carga instantanea** sin cambios de pagina
-- ✅ **Filtros accesibles** sin ocupar espacio permanente
+### Best Practices Implementadas
+
+- ✅ `isStyleLoaded()` guards en todas las operaciones de layers
+- ✅ `essential: true` en flyTo para animaciones prioritarias
+- ✅ Cleanup adecuado de markers, popups y MapboxDraw
+- ✅ Clusters desactivados por defecto para mejor hover sync
+- ✅ Hover sync funciona tanto con markers como con clusters
+- ✅ Popup positioning con offset para evitar overlap
+
+### Performance
+
+- ✅ Lazy loading de imágenes en cards
+- ✅ Intersection Observer para infinite scroll
+- ✅ Debounced viewport changes
+- ⏳ Virtualización (react-virtual) pendiente
+
+---
+
+## Resultado Final
+
+- ✅ **Mapa siempre visible** como canvas principal (100% width)
+- ✅ **Contexto preservado** - panel flotante mantiene estado
+- ✅ **Sincronización bidireccional** - hover/click entre lista y mapa
+- ✅ **Preview sin navegación** - PropertyPreviewSheet lateral
+- ✅ **Filtros no invasivos** - barra superior colapsable
+- ✅ **Mobile-first** - MobileExploreView con bottom sheet
