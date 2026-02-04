@@ -411,7 +411,7 @@ const EnhancedMap = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawnArea, setDrawnArea] = useState<number | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>('3d');
-  const [showClusters, setShowClusters] = useState(true);
+  const [showClusters, setShowClusters] = useState(false); // Disabled by default for better hover sync
   const [showLabels, setShowLabels] = useState(true);
   const [controlsExpanded, setControlsExpanded] = useState(false);
   const [showLayersPanel, setShowLayersPanel] = useState(false);
@@ -1945,33 +1945,53 @@ const EnhancedMap = ({
     });
   };
 
-  // Highlight hovered listing
+  // Highlight hovered listing - works with both clusters and markers
   useEffect(() => {
-    if (!map.current || isLoading || showClusters) return;
+    if (!map.current || isLoading) return;
+    if (!map.current.isStyleLoaded()) return;
 
-    Object.entries(markersRef.current).forEach(([id, marker]) => {
-      const el = marker.getElement();
-      const listing = listings.find((l) => l.id === id);
-      if (!listing) return;
+    // Handle marker-based hover sync
+    if (!showClusters) {
+      Object.entries(markersRef.current).forEach(([id, marker]) => {
+        const el = marker.getElement();
+        const listing = listings.find((l) => l.id === id);
+        if (!listing) return;
 
-      const isHovered = hoveredListing?.id === id;
+        const isHovered = hoveredListing?.id === id;
 
-      el.style.transform = isHovered ? 'scale(1.15) translateY(-10px)' : 'scale(1)';
-      el.style.zIndex = isHovered ? '1000' : '1';
+        el.style.transform = isHovered ? 'scale(1.15) translateY(-10px)' : 'scale(1)';
+        el.style.zIndex = isHovered ? '1000' : '1';
 
-      if (isHovered && listing.lat && listing.lng) {
+        if (isHovered && listing.lat && listing.lng) {
+          map.current?.flyTo({
+            center: [listing.lng, listing.lat],
+            zoom: Math.max(map.current.getZoom(), 10),
+            duration: 800,
+            essential: true,
+          });
+
+          popupRef.current
+            ?.setLngLat([listing.lng, listing.lat])
+            .setHTML(createPopupHTML(listing))
+            .addTo(map.current!);
+        }
+      });
+    } else {
+      // Handle cluster-based hover sync - use feature state for highlighting
+      if (hoveredListing && hoveredListing.lat && hoveredListing.lng) {
         map.current?.flyTo({
-          center: [listing.lng, listing.lat],
-          zoom: Math.max(map.current.getZoom(), 10),
+          center: [hoveredListing.lng, hoveredListing.lat],
+          zoom: Math.max(map.current.getZoom(), 12),
           duration: 800,
+          essential: true,
         });
 
         popupRef.current
-          ?.setLngLat([listing.lng, listing.lat])
-          .setHTML(createPopupHTML(listing))
+          ?.setLngLat([hoveredListing.lng, hoveredListing.lat])
+          .setHTML(createPopupHTML(hoveredListing))
           .addTo(map.current!);
       }
-    });
+    }
 
     if (!hoveredListing) {
       popupRef.current?.remove();
