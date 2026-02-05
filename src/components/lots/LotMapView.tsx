@@ -3,12 +3,12 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Layers, Upload } from 'lucide-react';
+import { AlertCircle, Layers, Upload, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints } from '@/lib/kmz';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
+import { MasterPlanOverlay } from './MasterPlanOverlay';
 interface Lot {
   id: string;
   lot_number: string;
@@ -145,6 +145,10 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [importing, setImporting] = useState(false);
   const [loadingKmz, setLoadingKmz] = useState(false);
   const [kmzLoaded, setKmzLoaded] = useState(false);
+  const [showMasterPlanOverlay, setShowMasterPlanOverlay] = useState(false);
+  
+  // Master plan image URL - uses the project's first gallery image or default
+  const masterPlanImageUrl = '/projects/brisas-de-caone-masterplan.jpg';
 
   // Auto-load KMZ from URL if lots don't have polygons yet
   useEffect(() => {
@@ -613,6 +617,17 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           {mapStyle === 'satellite' ? 'Calles' : 'Satélite'}
         </Button>
         
+        {/* Master plan overlay toggle */}
+        <Button
+          variant={showMasterPlanOverlay ? "default" : "secondary"}
+          size="sm"
+          className="gap-2 glass"
+          onClick={() => setShowMasterPlanOverlay(!showMasterPlanOverlay)}
+        >
+          <Image className="h-4 w-4" />
+          Master Plan
+        </Button>
+        
         {/* Import KMZ button */}
         {projectId && (
           <Button
@@ -627,6 +642,14 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           </Button>
         )}
       </div>
+      
+      {/* Master plan overlay controls */}
+      <MasterPlanOverlay
+        map={map.current}
+        imageUrl={masterPlanImageUrl}
+        isVisible={showMasterPlanOverlay}
+        onClose={() => setShowMasterPlanOverlay(false)}
+      />
       
       {/* Status indicator */}
       {!hasRealPolygons && (
