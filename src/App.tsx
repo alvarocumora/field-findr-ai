@@ -143,7 +143,7 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/projects" element={
-                <ProtectedRoute requireAuth requirePremium>
+                <ProtectedRoute requireAuth>
                   <ProjectsManagement />
                 </ProtectedRoute>
               } />
