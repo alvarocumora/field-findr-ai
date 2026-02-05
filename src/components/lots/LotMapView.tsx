@@ -183,9 +183,9 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           return;
         }
         
-        // Check if we have real polygons or just points
+        // Check if we have real polygons (isPolygon flag)
         const polygonPlacemarks = parsed.placemarks.filter(p => p.isPolygon);
-        console.log('Polygon placemarks:', polygonPlacemarks.length);
+        console.log('Polygon placemarks found:', polygonPlacemarks.length);
         
         // If we only have points, generate approximate polygons based on lot areas
         let placemarksToUse = polygonPlacemarks;
@@ -198,37 +198,60 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           console.log('Generated polygons:', placemarksToUse.length);
         }
         
-        // Match placemarks to existing lots and update them
-        let updatedCount = 0;
+        // Sort lots by lot_number for sequential assignment
+        const sortedLots = [...lots].sort((a, b) => {
+          const numA = parseInt(a.lot_number) || 0;
+          const numB = parseInt(b.lot_number) || 0;
+          return numA - numB;
+        });
         
-        for (const placemark of placemarksToUse) {
-          const lotNumberMatch = placemark.name.match(/(\d+)/);
-          const lotNumber = lotNumberMatch ? lotNumberMatch[1] : placemark.name;
+        // Match placemarks to existing lots
+        let updatedCount = 0;
+        const usedPlacemarkIndices = new Set<number>();
+        
+        for (const lot of sortedLots) {
+          // Strategy 1: Try to match by name containing lot number
+          let matchingPlacemark = placemarksToUse.find((p, idx) => {
+            if (usedPlacemarkIndices.has(idx)) return false;
+            const match = p.name.match(/(\d+)/);
+            return match && (match[1] === lot.lot_number || p.name === lot.lot_number);
+          });
           
-          const matchingLot = lots.find(lot => 
-            lot.lot_number === lotNumber || 
-            lot.lot_number === placemark.name
-          );
+          let matchIndex = matchingPlacemark ? placemarksToUse.indexOf(matchingPlacemark) : -1;
           
-          if (matchingLot) {
-            const centroid = placemark.coordinates.reduce(
+          // Strategy 2: If no name match, assign sequentially by index
+          if (!matchingPlacemark) {
+            const availableIndex = placemarksToUse.findIndex((_, idx) => !usedPlacemarkIndices.has(idx));
+            if (availableIndex !== -1) {
+              matchingPlacemark = placemarksToUse[availableIndex];
+              matchIndex = availableIndex;
+            }
+          }
+          
+          if (matchingPlacemark && matchIndex !== -1) {
+            usedPlacemarkIndices.add(matchIndex);
+            
+            const centroid = matchingPlacemark.coordinates.reduce(
               (acc, [lng, lat]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }),
               { lat: 0, lng: 0 }
             );
-            centroid.lat /= placemark.coordinates.length;
-            centroid.lng /= placemark.coordinates.length;
+            centroid.lat /= matchingPlacemark.coordinates.length;
+            centroid.lng /= matchingPlacemark.coordinates.length;
             
             const { error } = await supabase
               .from('lots')
               .update({
-                polygon: placemark.coordinates,
+                polygon: matchingPlacemark.coordinates,
                 latitude: centroid.lat,
                 longitude: centroid.lng,
-                area: placemark.area || matchingLot.area,
+                area: matchingPlacemark.area || lot.area,
               })
-              .eq('id', matchingLot.id);
+              .eq('id', lot.id);
             
-            if (!error) updatedCount++;
+            if (!error) {
+              updatedCount++;
+              console.log(`Lot ${lot.lot_number} updated with polygon (${matchingPlacemark.coordinates.length} points)`);
+            }
           }
         }
         
