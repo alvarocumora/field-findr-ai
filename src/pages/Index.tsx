@@ -18,11 +18,13 @@ import {
   Mountain, 
   Landmark,
   MapPin,
-  TrendingUp,
-  Shield,
-  Zap
+  Play
 } from 'lucide-react';
 import { useState } from 'react';
+import HeroStats from '@/components/landing/HeroStats';
+import FeaturedProjects from '@/components/landing/FeaturedProjects';
+import TrustBadges from '@/components/landing/TrustBadges';
+import FloatingCTA from '@/components/landing/FloatingCTA';
 
 const CATEGORIES = [
   { name: 'Parcelas', icon: TreePine, type: 'parcela_rural' },
@@ -31,13 +33,6 @@ const CATEGORIES = [
   { name: 'Urbano', icon: Building2, type: 'terreno_urbano' },
   { name: 'Costero', icon: Waves, type: 'terreno_costero' },
   { name: 'Montaña', icon: Mountain, type: 'terreno_montana' },
-];
-
-const STATS = [
-  { value: '15K+', label: 'Terrenos', icon: MapPin },
-  { value: '98%', label: 'Precisión IA', icon: Zap },
-  { value: '$2.5B', label: 'En ventas', icon: TrendingUp },
-  { value: '100%', label: 'Verificados', icon: Shield },
 ];
 
 const Index = () => {
@@ -50,69 +45,70 @@ const Index = () => {
   };
 
   return (
-    <PublicLayout showFooter={false}>
+    <PublicLayout showFooter={true}>
       {/* Hero Section */}
-      <section className="relative py-16 md:py-24 overflow-hidden">
+      <section className="relative py-16 md:py-28 overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0 grid-pattern opacity-30" />
         <div className="orb orb-1" />
         <div className="orb orb-2" />
+        <div className="orb orb-3" />
         
         <div className="container relative z-10 px-4">
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            {/* AI Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm mb-6 animate-fade-in">
-              <span className="relative flex h-2 w-2">
+          <div className="max-w-4xl mx-auto text-center mb-16">
+            {/* AI Badge with live pulse */}
+            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full glass border border-primary/20 text-sm mb-8 animate-fade-in">
+              <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
               </span>
               <span className="text-muted-foreground">Potenciado por</span>
               <span className="text-primary font-semibold">Inteligencia Artificial</span>
             </div>
 
-            {/* Headline */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 leading-tight animate-fade-in-up stagger-1">
-              Encuentra tu{' '}
-              <span className="gradient-text-hero">terreno ideal</span>
+            {/* Headline - Bigger and bolder */}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-[1.1] animate-fade-in-up stagger-1">
+              Descubre tu{' '}
+              <span className="gradient-text-hero block sm:inline">terreno ideal</span>
             </h1>
             
-            <p className="text-muted-foreground text-base sm:text-lg md:text-xl mb-8 max-w-2xl mx-auto animate-fade-in-up stagger-2">
-              Terrenos verificados en todo Chile con análisis inteligente de inversión
+            <p className="text-muted-foreground text-lg md:text-xl mb-10 max-w-2xl mx-auto animate-fade-in-up stagger-2">
+              La plataforma #1 en Chile para inversión en terrenos con análisis predictivo y datos verificados
             </p>
 
-            {/* Search Bar */}
-            <div className="glass-strong rounded-2xl p-2 max-w-2xl mx-auto shadow-glow animate-fade-in-up stagger-3">
+            {/* Search Bar - Enhanced */}
+            <div className="glass-strong rounded-2xl p-2 max-w-2xl mx-auto shadow-2xl border border-primary/10 animate-fade-in-up stagger-3">
               <div className="flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar ubicación, tipo de terreno..."
+                    placeholder="Buscar por ubicación, tipo, características..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="pl-12 h-12 sm:h-14 bg-transparent border-0 focus-visible:ring-0 text-base"
+                    className="pl-12 h-14 bg-transparent border-0 focus-visible:ring-0 text-base"
                   />
                 </div>
                 <Button 
                   onClick={handleSearch} 
                   size="lg" 
-                  className="h-12 sm:h-14 px-6 sm:px-8 btn-glow animate-pulse-glow"
+                  className="h-14 px-8 btn-glow animate-pulse-glow"
                 >
                   <Sparkles className="h-5 w-5 mr-2" />
-                  Buscar
+                  Buscar con IA
                 </Button>
               </div>
             </div>
 
             {/* Category Pills */}
-            <div className="flex flex-wrap justify-center gap-2 mt-6 animate-fade-in-up stagger-4">
+            <div className="flex flex-wrap justify-center gap-2 mt-8 animate-fade-in-up stagger-4">
               {CATEGORIES.map((cat) => (
                 <Button
                   key={cat.type}
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate(`/explorar?type=${cat.type}`)}
-                  className="h-10 px-4 text-sm rounded-full hover:bg-primary/10 hover:text-primary transition-all duration-300"
+                  className="h-10 px-4 text-sm rounded-full glass hover:bg-primary/10 hover:text-primary transition-all duration-300 border border-transparent hover:border-primary/20"
                 >
                   <cat.icon className="h-4 w-4 mr-2" />
                   {cat.name}
@@ -121,28 +117,18 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Stats - Mobile optimized */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto animate-fade-in-up stagger-5">
-            {STATS.map((stat) => (
-              <div 
-                key={stat.label}
-                className="glass rounded-xl p-4 md:p-6 text-center card-hover border-gradient"
-              >
-                <stat.icon className="h-5 w-5 md:h-6 md:w-6 text-primary mx-auto mb-2" />
-                <div className="text-xl md:text-2xl font-bold text-foreground">
-                  {stat.value}
-                </div>
-                <div className="text-xs md:text-sm text-muted-foreground">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
+          {/* Stats with animated counters */}
+          <div className="animate-fade-in-up stagger-5">
+            <HeroStats />
           </div>
         </div>
       </section>
 
+      {/* Featured Projects Section */}
+      <FeaturedProjects />
+
       {/* Featured Properties Section */}
-      <section className="pb-16">
+      <section className="py-16 md:py-20">
         <div className="container px-4">
           <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Properties Grid */}
@@ -151,7 +137,7 @@ const Index = () => {
                 <div className="flex items-center gap-3">
                   <Badge variant="outline" className="border-primary/30 text-primary text-sm px-3 py-1">
                     <Sparkles className="h-3 w-3 mr-1.5" />
-                    Destacados
+                    Terrenos Destacados
                   </Badge>
                   <span className="text-sm text-muted-foreground hidden sm:inline">
                     {featuredListings.length} propiedades
@@ -199,7 +185,7 @@ const Index = () => {
                   <div className="p-2 rounded-lg bg-primary/10">
                     <MapPin className="h-4 w-4 text-primary" />
                   </div>
-                  <span className="text-sm font-medium text-foreground">Ubicaciones</span>
+                  <span className="text-sm font-medium text-foreground">Ubicaciones en Chile</span>
                 </div>
                 <MiniMap 
                   listings={featuredListings} 
@@ -210,6 +196,12 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Trust Badges */}
+      <TrustBadges />
+
+      {/* Floating CTA */}
+      <FloatingCTA />
     </PublicLayout>
   );
 };
