@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,9 +6,10 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
 import { 
   Upload, FileArchive, Map, Check, AlertCircle, 
-  Loader2, Layers, Image as ImageIcon, X
+  Loader2, Layers, Image as ImageIcon, X, RefreshCw, PlusCircle
 } from 'lucide-react';
 import { parseKMZFile, parseKMLFile, ParsedKMZ, KMLPlacemark } from '@/lib/kmzParser';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +23,21 @@ interface KMZImportDialogProps {
   onCancel: () => void;
 }
 
+interface ExistingLot {
+  id: string;
+  lot_number: string;
+  name: string | null;
+  area: number;
+  status: string | null;
+}
+
+interface LotMatchResult {
+  placemark: KMLPlacemark;
+  existingLot: ExistingLot | null;
+  matchedBy: 'lot_number' | 'name' | null;
+  lotNumber: string;
+}
+
 type ImportStep = 'upload' | 'preview' | 'configure' | 'importing' | 'complete';
 
 export const KMZImportDialog = ({ 
@@ -33,12 +49,62 @@ export const KMZImportDialog = ({
   const { user } = useAuth();
   const [step, setStep] = useState<ImportStep>('upload');
   const [parsedData, setParsedData] = useState<ParsedKMZ | null>(null);
+  const [existingLots, setExistingLots] = useState<ExistingLot[]>([]);
+  const [matchResults, setMatchResults] = useState<LotMatchResult[]>([]);
   const [masterPlanFile, setMasterPlanFile] = useState<File | null>(null);
   const [masterPlanPreview, setMasterPlanPreview] = useState<string | null>(null);
   const [importProgress, setImportProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [basePrice, setBasePrice] = useState<number>(15000000);
   const [pricePerSqm, setPricePerSqm] = useState<number>(3000);
+  const [updateExisting, setUpdateExisting] = useState(true);
+  const [importStats, setImportStats] = useState({ updated: 0, created: 0 });
+
+  // Fetch existing lots when dialog opens
+  useEffect(() => {
+    const fetchExistingLots = async () => {
+      const { data } = await supabase
+        .from('lots')
+        .select('id, lot_number, name, area, status')
+        .eq('project_id', projectId);
+      
+      if (data) {
+        setExistingLots(data);
+      }
+    };
+    fetchExistingLots();
+  }, [projectId]);
+
+  // Match placemarks with existing lots
+  useEffect(() => {
+    if (!parsedData) return;
+
+    const results: LotMatchResult[] = parsedData.placemarks.map(placemark => {
+      // Extract lot number from placemark name
+      const lotNumber = placemark.name.match(/\d+/)?.[0] || '';
+      
+      // Try to match by lot_number first
+      let existingLot = existingLots.find(lot => lot.lot_number === lotNumber);
+      let matchedBy: 'lot_number' | 'name' | null = existingLot ? 'lot_number' : null;
+      
+      // If no match by lot_number, try by name
+      if (!existingLot) {
+        existingLot = existingLots.find(lot => 
+          lot.name?.toLowerCase() === placemark.name.toLowerCase()
+        );
+        matchedBy = existingLot ? 'name' : null;
+      }
+
+      return {
+        placemark,
+        existingLot: existingLot || null,
+        matchedBy,
+        lotNumber,
+      };
+    });
+
+    setMatchResults(results);
+  }, [parsedData, existingLots]);
 
   const handleKMZUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -90,19 +156,19 @@ export const KMZImportDialog = ({
 
     setStep('importing');
     setImportProgress(0);
+    let updatedCount = 0;
+    let createdCount = 0;
 
     try {
-      const totalSteps = parsedData.placemarks.length + 2; // lots + project update + optional image
+      const totalSteps = matchResults.length + 2;
       let completed = 0;
 
-      // Update project with center coordinates
+      // Update project with center coordinates (don't override lot counts - trigger handles it)
       const { error: projectError } = await supabase
         .from('projects')
         .update({
           latitude: parsedData.center.lat,
           longitude: parsedData.center.lng,
-          total_lots: parsedData.placemarks.length,
-          available_lots: parsedData.placemarks.length,
         })
         .eq('id', projectId);
 
@@ -124,14 +190,11 @@ export const KMZImportDialog = ({
       completed++;
       setImportProgress((completed / totalSteps) * 100);
 
-      // Create lots
-      for (let i = 0; i < parsedData.placemarks.length; i++) {
-        const placemark = parsedData.placemarks[i];
+      // Process each lot - update existing or create new
+      for (const match of matchResults) {
+        const { placemark, existingLot } = match;
         const area = placemark.area || 5000;
         const calculatedPrice = basePrice + (area * pricePerSqm / 1000);
-        
-        // Extract lot number from name or use index
-        const lotNumber = placemark.name.match(/\d+/)?.[0] || String(i + 1);
         
         // Calculate centroid for lat/lng
         const centroid = placemark.coordinates.reduce(
@@ -139,37 +202,67 @@ export const KMZImportDialog = ({
           { lat: 0, lng: 0 }
         );
         const numCoords = placemark.coordinates.length;
+        const polygonData = {
+          type: 'Polygon',
+          coordinates: [placemark.coordinates],
+        };
 
-        const { error: lotError } = await supabase
-          .from('lots')
-          .insert({
-            project_id: projectId,
-            user_id: user.id,
-            lot_number: lotNumber,
-            name: placemark.name,
-            description: placemark.description,
-            area: area,
-            price: Math.round(calculatedPrice),
-            price_per_sqm: pricePerSqm,
-            status: 'available',
-            latitude: centroid.lat / numCoords,
-            longitude: centroid.lng / numCoords,
-            polygon: {
-              type: 'Polygon',
-              coordinates: [placemark.coordinates],
-            },
-          });
+        if (existingLot && updateExisting) {
+          // Update existing lot with polygon data
+          const { error: updateError } = await supabase
+            .from('lots')
+            .update({
+              latitude: centroid.lat / numCoords,
+              longitude: centroid.lng / numCoords,
+              polygon: polygonData,
+              area: area, // Update area from KMZ
+            })
+            .eq('id', existingLot.id);
 
-        if (lotError) {
-          console.error('Error creating lot:', lotError);
+          if (updateError) {
+            console.error('Error updating lot:', updateError);
+          } else {
+            updatedCount++;
+          }
+        } else if (!existingLot) {
+          // Create new lot
+          const lotNumber = match.lotNumber || String(completed);
+          
+          const { error: lotError } = await supabase
+            .from('lots')
+            .insert({
+              project_id: projectId,
+              user_id: user.id,
+              lot_number: lotNumber,
+              name: placemark.name,
+              description: placemark.description,
+              area: area,
+              price: Math.round(calculatedPrice),
+              price_per_sqm: pricePerSqm,
+              status: 'available',
+              latitude: centroid.lat / numCoords,
+              longitude: centroid.lng / numCoords,
+              polygon: polygonData,
+            });
+
+          if (lotError) {
+            console.error('Error creating lot:', lotError);
+          } else {
+            createdCount++;
+          }
         }
 
         completed++;
         setImportProgress((completed / totalSteps) * 100);
       }
 
+      setImportStats({ updated: updatedCount, created: createdCount });
       setStep('complete');
-      toast.success(`${parsedData.placemarks.length} lotes importados correctamente`);
+      
+      const message = updateExisting && updatedCount > 0
+        ? `${updatedCount} lotes actualizados, ${createdCount} lotes creados`
+        : `${createdCount} lotes importados correctamente`;
+      toast.success(message);
     } catch (err: any) {
       setError(err.message || 'Error durante la importación');
       setStep('configure');
@@ -251,34 +344,66 @@ export const KMZImportDialog = ({
               <CardContent className="p-4 text-center">
                 <Layers className="h-8 w-8 mx-auto text-primary mb-2" />
                 <p className="text-2xl font-bold">{parsedData.placemarks.length}</p>
-                <p className="text-sm text-muted-foreground">Lotes detectados</p>
+                <p className="text-sm text-muted-foreground">Lotes en KMZ</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <Map className="h-8 w-8 mx-auto text-blue-500 mb-2" />
+                <RefreshCw className="h-8 w-8 mx-auto text-amber-500 mb-2" />
+                <p className="text-2xl font-bold">{matchResults.filter(m => m.existingLot).length}</p>
+                <p className="text-sm text-muted-foreground">Coincidencias</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <PlusCircle className="h-8 w-8 mx-auto text-emerald-500 mb-2" />
+                <p className="text-2xl font-bold">{matchResults.filter(m => !m.existingLot).length}</p>
+                <p className="text-sm text-muted-foreground">Nuevos lotes</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <Map className="h-8 w-8 mx-auto text-sky-500 mb-2" />
                 <p className="text-sm font-medium">Centro</p>
                 <p className="text-xs text-muted-foreground">
                   {parsedData.center.lat.toFixed(4)}, {parsedData.center.lng.toFixed(4)}
                 </p>
               </CardContent>
             </Card>
-            <Card className="col-span-2">
-              <CardContent className="p-4">
-                <p className="text-sm font-medium mb-2">Primeros lotes detectados:</p>
-                <div className="flex flex-wrap gap-1">
-                  {parsedData.placemarks.slice(0, 10).map((p, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs">
-                      {p.name} ({p.area?.toLocaleString() || '?'} m²)
-                    </Badge>
-                  ))}
-                  {parsedData.placemarks.length > 10 && (
-                    <Badge variant="outline">+{parsedData.placemarks.length - 10} más</Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
           </div>
+
+          {/* Match Summary */}
+          {existingLots.length > 0 && (
+            <Alert>
+              <RefreshCw className="h-4 w-4" />
+              <AlertDescription>
+                Se encontraron <strong>{matchResults.filter(m => m.existingLot).length}</strong> lotes que ya existen en la base de datos. 
+                Sus polígonos serán actualizados sin crear duplicados.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Detected lots preview */}
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-sm font-medium mb-2">Lotes detectados:</p>
+              <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+                {matchResults.slice(0, 20).map((match, i) => (
+                  <Badge 
+                    key={i} 
+                    variant={match.existingLot ? "default" : "secondary"} 
+                    className={`text-xs ${match.existingLot ? 'bg-amber-500/20 text-amber-700 border-amber-500/30' : ''}`}
+                  >
+                    {match.existingLot && <RefreshCw className="h-3 w-3 mr-1" />}
+                    {match.placemark.name} ({match.placemark.area?.toLocaleString() || '?'} m²)
+                  </Badge>
+                ))}
+                {matchResults.length > 20 && (
+                  <Badge variant="outline">+{matchResults.length - 20} más</Badge>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="flex justify-between">
             <Button variant="outline" onClick={() => setStep('upload')}>Atrás</Button>
@@ -290,13 +415,37 @@ export const KMZImportDialog = ({
       {/* Configure Step */}
       {step === 'configure' && parsedData && (
         <div className="space-y-6">
+          {/* Update existing toggle */}
+          {matchResults.filter(m => m.existingLot).length > 0 && (
+            <Card className="border-primary/30 bg-primary/5">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <RefreshCw className="h-4 w-4 text-primary" />
+                      <span className="font-medium">Actualizar lotes existentes</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {matchResults.filter(m => m.existingLot).length} lotes coinciden con registros existentes. 
+                      Se actualizarán sus polígonos y coordenadas.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={updateExisting}
+                    onCheckedChange={setUpdateExisting}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Pricing Config */}
+            {/* Pricing Config - only for new lots */}
             <Card>
               <CardContent className="p-4 space-y-4">
                 <h3 className="font-semibold flex items-center gap-2">
                   <Map className="h-4 w-4" />
-                  Configuración de Precios
+                  Precios (solo lotes nuevos)
                 </h3>
                 <div className="space-y-3">
                   <div>
@@ -305,6 +454,7 @@ export const KMZImportDialog = ({
                       type="number"
                       value={basePrice}
                       onChange={(e) => setBasePrice(parseInt(e.target.value) || 0)}
+                      disabled={matchResults.filter(m => !m.existingLot).length === 0}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       Precio mínimo para lotes pequeños
@@ -316,6 +466,7 @@ export const KMZImportDialog = ({
                       type="number"
                       value={pricePerSqm}
                       onChange={(e) => setPricePerSqm(parseInt(e.target.value) || 0)}
+                      disabled={matchResults.filter(m => !m.existingLot).length === 0}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       Se suma al precio base según área
@@ -376,11 +527,24 @@ export const KMZImportDialog = ({
             </Card>
           </div>
 
+          {/* Import summary */}
+          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+            <div className="text-sm">
+              <p>
+                <span className="font-medium">{matchResults.filter(m => m.existingLot && updateExisting).length}</span> lotes se actualizarán
+                {' • '}
+                <span className="font-medium">{matchResults.filter(m => !m.existingLot).length}</span> lotes nuevos se crearán
+              </p>
+            </div>
+          </div>
+
           <div className="flex justify-between">
             <Button variant="outline" onClick={() => setStep('preview')}>Atrás</Button>
             <Button onClick={handleImport} className="gap-2">
               <Upload className="h-4 w-4" />
-              Importar {parsedData.placemarks.length} Lotes
+              {updateExisting && matchResults.filter(m => m.existingLot).length > 0 
+                ? 'Actualizar e Importar' 
+                : `Importar ${matchResults.filter(m => !m.existingLot).length} Lotes`}
             </Button>
           </div>
         </div>
@@ -390,22 +554,33 @@ export const KMZImportDialog = ({
       {step === 'importing' && (
         <div className="py-8 text-center space-y-4">
           <Loader2 className="h-12 w-12 mx-auto animate-spin text-primary" />
-          <h3 className="text-lg font-semibold">Importando lotes...</h3>
+          <h3 className="text-lg font-semibold">Procesando lotes...</h3>
           <Progress value={importProgress} className="max-w-md mx-auto" />
           <p className="text-sm text-muted-foreground">{Math.round(importProgress)}% completado</p>
         </div>
       )}
 
       {/* Complete Step */}
-      {step === 'complete' && parsedData && (
+      {step === 'complete' && (
         <div className="py-8 text-center space-y-4">
-          <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
-            <Check className="h-8 w-8 text-green-500" />
+          <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto">
+            <Check className="h-8 w-8 text-emerald-500" />
           </div>
           <h3 className="text-lg font-semibold">¡Importación completada!</h3>
-          <p className="text-muted-foreground">
-            Se importaron {parsedData.placemarks.length} lotes al proyecto "{projectName}"
-          </p>
+          <div className="space-y-1 text-muted-foreground">
+            {importStats.updated > 0 && (
+              <p className="flex items-center justify-center gap-2">
+                <RefreshCw className="h-4 w-4 text-amber-500" />
+                {importStats.updated} lotes actualizados con polígonos
+              </p>
+            )}
+            {importStats.created > 0 && (
+              <p className="flex items-center justify-center gap-2">
+                <PlusCircle className="h-4 w-4 text-emerald-500" />
+                {importStats.created} lotes nuevos creados
+              </p>
+            )}
+          </div>
           <Button onClick={onComplete} className="mt-4">
             Ver Proyecto
           </Button>
