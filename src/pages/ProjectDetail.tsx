@@ -215,8 +215,8 @@ const ProjectDetail = () => {
                   <LotMapView
                     lots={lots}
                     projectCenter={{
-                      lat: project.latitude || -38.7359,
-                      lng: project.longitude || -72.5904
+                      lat: project.latitude || -34.9767,
+                      lng: project.longitude || -71.7856
                     }}
                     onLotClick={(lot) => {
                       setSelectedLot(lot.id);
@@ -225,6 +225,11 @@ const ProjectDetail = () => {
                       }
                     }}
                     selectedLotId={selectedLot}
+                    projectId={project.id}
+                    onLotsUpdated={() => {
+                      // Refetch lots data
+                      window.location.reload();
+                    }}
                   />
                 </TabsContent>
 
