@@ -5,7 +5,7 @@ import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, Layers, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { parseKMZFile, parseKMLFile } from '@/lib/kmzParser';
+import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints } from '@/lib/kmzParser';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -151,9 +151,13 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     const loadKmzFromUrl = async () => {
       if (!kmzFileUrl || !projectId || kmzLoaded) return;
       
-      // Check if lots already have polygon data
-      const hasPolygons = lots.some(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length > 0);
-      if (hasPolygons) {
+      // Check if lots already have VALID polygon data (at least 3 points)
+      const hasValidPolygons = lots.some(lot => 
+        lot.polygon && 
+        Array.isArray(lot.polygon) && 
+        lot.polygon.length >= 3
+      );
+      if (hasValidPolygons) {
         setKmzLoaded(true);
         return;
       }
@@ -171,15 +175,33 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           ? await parseKMLFile(file)
           : await parseKMZFile(file);
         
+        console.log('Parsed KMZ placemarks:', parsed.placemarks.length);
+        console.log('First placemark sample:', parsed.placemarks[0]);
+        
         if (parsed.placemarks.length === 0) {
           console.warn('No placemarks found in KMZ');
           return;
         }
         
+        // Check if we have real polygons or just points
+        const polygonPlacemarks = parsed.placemarks.filter(p => p.isPolygon);
+        console.log('Polygon placemarks:', polygonPlacemarks.length);
+        
+        // If we only have points, generate approximate polygons based on lot areas
+        let placemarksToUse = polygonPlacemarks;
+        if (polygonPlacemarks.length === 0) {
+          console.log('No polygons found, generating from points...');
+          placemarksToUse = generatePolygonsFromPoints(
+            parsed.placemarks,
+            lots.map(l => ({ lot_number: l.lot_number, area: l.area }))
+          );
+          console.log('Generated polygons:', placemarksToUse.length);
+        }
+        
         // Match placemarks to existing lots and update them
         let updatedCount = 0;
         
-        for (const placemark of parsed.placemarks) {
+        for (const placemark of placemarksToUse) {
           const lotNumberMatch = placemark.name.match(/(\d+)/);
           const lotNumber = lotNumberMatch ? lotNumberMatch[1] : placemark.name;
           
