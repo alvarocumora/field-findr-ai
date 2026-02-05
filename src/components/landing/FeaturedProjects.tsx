@@ -90,9 +90,11 @@ const FeaturedProjects = () => {
                 </div>
                 
                 {/* CTA */}
-                <Button className="w-full group/btn" variant="outline">
-                  Ver proyecto
-                  <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                <Button className="w-full group/btn" variant="outline" asChild>
+                  <Link to={`/proyecto/${project.id}`}>
+                    Ver proyecto
+                    <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                  </Link>
                 </Button>
               </div>
             </div>
