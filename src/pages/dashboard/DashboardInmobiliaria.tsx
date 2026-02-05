@@ -7,7 +7,6 @@ import {
   UserCheck,
   FileText,
   ChevronRight,
-  Plus,
   Eye,
   Loader2
 } from 'lucide-react';
@@ -20,6 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import Layout from '@/components/Layout';
 import { useAgencyStats, useAgencyAgents, useAgencyProperties } from '@/hooks/useDashboardStats';
+import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
+import { ListingFormDialog } from '@/components/listings/ListingFormDialog';
 
 const DashboardInmobiliaria = () => {
   const { data: stats, isLoading: statsLoading } = useAgencyStats();
@@ -61,10 +62,8 @@ const DashboardInmobiliaria = () => {
                 <FileText className="h-4 w-4" />
                 Reportes
               </Button>
-              <Button className="rounded-xl gap-2">
-                <Plus className="h-4 w-4" />
-                Agregar Agente
-              </Button>
+              <LeadFormDialog />
+              <ListingFormDialog />
             </div>
           </div>
 
