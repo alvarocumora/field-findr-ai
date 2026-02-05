@@ -5,11 +5,12 @@ import JSZip from 'jszip';
 import { KMLPlacemark, ParsedKMZ, LotInfo } from './types';
 import { parseKML } from './kmlParser';
 import { generatePolygonsFromPoints } from './polygonBuilder';
+import { buildPolygonsAdvanced, validatePolygon } from './advancedPolygonBuilder';
 import { calculatePolygonArea } from './geometry';
 
 // Re-export types and utilities
 export type { KMLPlacemark, ParsedKMZ, LotInfo };
-export { calculatePolygonArea, generatePolygonsFromPoints };
+export { calculatePolygonArea, generatePolygonsFromPoints, buildPolygonsAdvanced, validatePolygon };
 
 // Calculate bounds and center from placemarks
 const calculateBoundsAndCenter = (placemarks: KMLPlacemark[]) => {
