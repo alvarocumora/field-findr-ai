@@ -5,7 +5,7 @@ import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, Layers, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints } from '@/lib/kmzParser';
+import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints } from '@/lib/kmz';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
