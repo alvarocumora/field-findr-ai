@@ -3,8 +3,11 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Layers } from 'lucide-react';
+import { AlertCircle, Layers, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { parseKMZFile, parseKMLFile } from '@/lib/kmzParser';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Lot {
   id: string;
@@ -22,50 +25,87 @@ interface LotMapViewProps {
   projectCenter: { lat: number; lng: number };
   onLotClick: (lot: Lot) => void;
   selectedLotId?: string | null;
+  projectId?: string;
+  onLotsUpdated?: () => void;
 }
 
-// Generate grid-based polygons for lots that don't have polygon data
-const generateLotPolygons = (lots: Lot[], center: { lat: number; lng: number }) => {
+// Generate GeoJSON from lots - uses real polygons if available, otherwise generates grid
+const generateLotGeoJSON = (lots: Lot[], center: { lat: number; lng: number }) => {
   const features: GeoJSON.Feature[] = [];
-  const cols = 9; // 9 columns
-  const lotWidth = 0.0012; // ~120m
-  const lotHeight = 0.0008; // ~80m
-  const gap = 0.0001;
   
-  lots.forEach((lot, index) => {
-    const row = Math.floor(index / cols);
-    const col = index % cols;
-    
-    const baseLng = center.lng - (cols * (lotWidth + gap)) / 2;
-    const baseLat = center.lat + 0.002;
-    
-    const lng = baseLng + col * (lotWidth + gap);
-    const lat = baseLat - row * (lotHeight + gap);
-    
-    const coordinates = [[
-      [lng, lat],
-      [lng + lotWidth, lat],
-      [lng + lotWidth, lat - lotHeight],
-      [lng, lat - lotHeight],
-      [lng, lat]
-    ]];
-
-    features.push({
-      type: 'Feature',
-      id: lot.id,
-      properties: {
-        id: lot.id,
-        lot_number: lot.lot_number,
-        area: lot.area,
-        price: lot.price,
-        status: lot.status || 'available',
-      },
-      geometry: {
-        type: 'Polygon',
-        coordinates,
-      },
+  // Check if any lots have real polygon data
+  const lotsWithPolygons = lots.filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length > 0);
+  const useRealPolygons = lotsWithPolygons.length > 0;
+  
+  if (useRealPolygons) {
+    // Use real polygon data
+    lots.forEach((lot) => {
+      if (lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3) {
+        // Ensure polygon is closed (first point = last point)
+        const coords = [...lot.polygon];
+        if (coords.length > 0 && (coords[0][0] !== coords[coords.length - 1][0] || coords[0][1] !== coords[coords.length - 1][1])) {
+          coords.push(coords[0]);
+        }
+        
+        features.push({
+          type: 'Feature',
+          id: lot.id,
+          properties: {
+            id: lot.id,
+            lot_number: lot.lot_number,
+            area: lot.area,
+            price: lot.price,
+            status: lot.status || 'available',
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [coords],
+          },
+        });
+      }
     });
-  });
+  }
+  
+  // If no real polygons found, generate grid-based ones
+  if (features.length === 0) {
+    const cols = 9;
+    const lotWidth = 0.0012;
+    const lotHeight = 0.0008;
+    const gap = 0.0001;
+    
+    lots.forEach((lot, index) => {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      
+      const baseLng = center.lng - (cols * (lotWidth + gap)) / 2;
+      const baseLat = center.lat + 0.002;
+      
+      const lng = baseLng + col * (lotWidth + gap);
+      const lat = baseLat - row * (lotHeight + gap);
+      
+      features.push({
+        type: 'Feature',
+        id: lot.id,
+        properties: {
+          id: lot.id,
+          lot_number: lot.lot_number,
+          area: lot.area,
+          price: lot.price,
+          status: lot.status || 'available',
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[
+            [lng, lat],
+            [lng + lotWidth, lat],
+            [lng + lotWidth, lat - lotHeight],
+            [lng, lat - lotHeight],
+            [lng, lat]
+          ]],
+        },
+      });
+    });
+  }
 
   return {
     type: 'FeatureCollection' as const,
@@ -93,25 +133,128 @@ const formatPrice = (price: number | null) => {
   }).format(price);
 };
 
-export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId }: LotMapViewProps) => {
+export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, onLotsUpdated }: LotMapViewProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { token, loading: tokenLoading, error: tokenError } = useMapboxToken();
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapStyle, setMapStyle] = useState<'satellite' | 'streets'>('satellite');
+  const [importing, setImporting] = useState(false);
+
+  // Handle KMZ/KML file import
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !projectId) return;
+    
+    setImporting(true);
+    try {
+      const parsed = file.name.endsWith('.kml') 
+        ? await parseKMLFile(file)
+        : await parseKMZFile(file);
+      
+      if (parsed.placemarks.length === 0) {
+        toast.error('No se encontraron polígonos en el archivo');
+        return;
+      }
+      
+      // Match placemarks to existing lots and update them
+      let updatedCount = 0;
+      let newCount = 0;
+      
+      for (const placemark of parsed.placemarks) {
+        // Extract lot number from placemark name
+        const lotNumberMatch = placemark.name.match(/(\d+)/);
+        const lotNumber = lotNumberMatch ? lotNumberMatch[1] : placemark.name;
+        
+        // Find matching lot
+        const matchingLot = lots.find(lot => 
+          lot.lot_number === lotNumber || 
+          lot.lot_number === placemark.name
+        );
+        
+        if (matchingLot) {
+          // Update existing lot with polygon data
+          const centroid = placemark.coordinates.reduce(
+            (acc, [lng, lat]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }),
+            { lat: 0, lng: 0 }
+          );
+          centroid.lat /= placemark.coordinates.length;
+          centroid.lng /= placemark.coordinates.length;
+          
+          const { error } = await supabase
+            .from('lots')
+            .update({
+              polygon: placemark.coordinates,
+              latitude: centroid.lat,
+              longitude: centroid.lng,
+              area: placemark.area || matchingLot.area,
+            })
+            .eq('id', matchingLot.id);
+          
+          if (!error) updatedCount++;
+        }
+      }
+      
+      // Update project center
+      await supabase
+        .from('projects')
+        .update({
+          latitude: parsed.center.lat,
+          longitude: parsed.center.lng,
+        })
+        .eq('id', projectId);
+      
+      toast.success(`${updatedCount} lotes actualizados con polígonos reales`);
+      onLotsUpdated?.();
+      
+    } catch (error) {
+      console.error('Error importing KMZ:', error);
+      toast.error('Error al importar el archivo');
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Calculate actual bounds from lot polygons
+  const calculateBounds = useCallback(() => {
+    const lotsWithPolygons = lots.filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length > 0);
+    
+    if (lotsWithPolygons.length > 0) {
+      let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+      
+      lotsWithPolygons.forEach(lot => {
+        lot.polygon.forEach(([lng, lat]: [number, number]) => {
+          if (lng < minLng) minLng = lng;
+          if (lng > maxLng) maxLng = lng;
+          if (lat < minLat) minLat = lat;
+          if (lat > maxLat) maxLat = lat;
+        });
+      });
+      
+      return new mapboxgl.LngLatBounds([minLng, minLat], [maxLng, maxLat]);
+    }
+    
+    return null;
+  }, [lots]);
 
   const initializeMap = useCallback(() => {
     if (!mapContainer.current || !token || map.current) return;
 
     mapboxgl.accessToken = token;
-
+    
+    const bounds = calculateBounds();
+    
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: mapStyle === 'satellite' 
         ? 'mapbox://styles/mapbox/satellite-streets-v12'
         : 'mapbox://styles/mapbox/streets-v12',
-      center: [projectCenter.lng, projectCenter.lat],
+      center: bounds ? bounds.getCenter() : [projectCenter.lng, projectCenter.lat],
       zoom: 15,
       pitch: 45,
     });
@@ -121,8 +264,13 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId }: L
     map.current.on('load', () => {
       if (!map.current) return;
       setMapLoaded(true);
+      
+      // Fit to bounds if we have real polygons
+      if (bounds) {
+        map.current.fitBounds(bounds, { padding: 50, pitch: 45 });
+      }
 
-      const geojson = generateLotPolygons(lots, projectCenter);
+      const geojson = generateLotGeoJSON(lots, projectCenter);
 
       // Add source
       map.current.addSource('lots', {
@@ -239,7 +387,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId }: L
       map.current?.remove();
       map.current = null;
     };
-  }, [token, lots, projectCenter, onLotClick, mapStyle]);
+  }, [token, lots, projectCenter, onLotClick, mapStyle, calculateBounds]);
 
   useEffect(() => {
     initializeMap();
@@ -299,26 +447,62 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId }: L
     );
   }
 
+  // Check if lots have real polygons
+  const hasRealPolygons = lots.some(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length > 0);
+
   return (
     <div className="relative w-full h-[500px] rounded-xl overflow-hidden">
       <div ref={mapContainer} className="w-full h-full" />
       
-      {/* Style toggle */}
-      <Button
-        variant="secondary"
-        size="sm"
-        className="absolute top-3 left-3 gap-2 glass"
-        onClick={toggleStyle}
-      >
-        <Layers className="h-4 w-4" />
-        {mapStyle === 'satellite' ? 'Calles' : 'Satélite'}
-      </Button>
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".kmz,.kml"
+        onChange={handleFileImport}
+        className="hidden"
+      />
+      
+      {/* Controls row */}
+      <div className="absolute top-3 left-3 flex gap-2">
+        {/* Style toggle */}
+        <Button
+          variant="secondary"
+          size="sm"
+          className="gap-2 glass"
+          onClick={toggleStyle}
+        >
+          <Layers className="h-4 w-4" />
+          {mapStyle === 'satellite' ? 'Calles' : 'Satélite'}
+        </Button>
+        
+        {/* Import KMZ button */}
+        {projectId && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="gap-2 glass"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+          >
+            <Upload className="h-4 w-4" />
+            {importing ? 'Importando...' : 'Importar KMZ'}
+          </Button>
+        )}
+      </div>
+      
+      {/* Status indicator */}
+      {!hasRealPolygons && (
+        <div className="absolute top-3 right-14 px-3 py-1 glass rounded-full text-xs text-muted-foreground">
+          Polígonos simulados - Importa KMZ para ver datos reales
+        </div>
+      )}
 
       {/* Legend */}
       <div className="absolute bottom-3 left-3 p-3 glass rounded-lg text-sm space-y-1">
         <div className="font-semibold mb-2">Leyenda</div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-gray-500" />
+          <div className="w-4 h-4 rounded bg-muted-foreground" />
           <span>Vendido</span>
         </div>
         <div className="flex items-center gap-2">
