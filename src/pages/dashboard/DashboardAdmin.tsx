@@ -10,37 +10,35 @@ import {
   Search,
   Filter,
   MoreVertical,
-  ChevronRight,
-  UserCheck,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
 import Layout from '@/components/Layout';
+import { useAdminStats, useAdminUsers, useAdminListings } from '@/hooks/useDashboardStats';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const DashboardAdmin = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const { data: stats, isLoading: statsLoading } = useAdminStats();
+  const { data: users, isLoading: usersLoading } = useAdminUsers(searchQuery);
+  const { data: listings, isLoading: listingsLoading } = useAdminListings();
 
-  // Placeholder stats
-  const stats = [
-    { label: 'Usuarios Totales', value: '1,247', change: '+12%', icon: Users, color: 'text-blue-500' },
-    { label: 'Propiedades Activas', value: '438', change: '+8%', icon: Building2, color: 'text-emerald-500' },
-    { label: 'Ingresos Mensuales', value: '$24.5M', change: '+23%', icon: TrendingUp, color: 'text-purple-500' },
-    { label: 'Alertas Pendientes', value: '7', change: '-3', icon: AlertTriangle, color: 'text-amber-500' },
-  ];
-
-  // Placeholder recent users
-  const recentUsers = [
-    { id: '1', name: 'Carlos Mendoza', email: 'carlos@email.com', role: 'agent', status: 'active', joined: '2024-01-15' },
-    { id: '2', name: 'María González', email: 'maria@email.com', role: 'buyer', status: 'pending', joined: '2024-01-14' },
-    { id: '3', name: 'Juan Pérez', email: 'juan@email.com', role: 'agent', status: 'active', joined: '2024-01-13' },
-    { id: '4', name: 'Ana Silva', email: 'ana@email.com', role: 'admin', status: 'active', joined: '2024-01-12' },
+  const statsConfig = [
+    { label: 'Usuarios Totales', value: stats?.totalUsers || 0, icon: Users, color: 'text-blue-500' },
+    { label: 'Propiedades Activas', value: stats?.activeListings || 0, icon: Building2, color: 'text-emerald-500' },
+    { label: 'Total Propiedades', value: stats?.totalListings || 0, icon: TrendingUp, color: 'text-purple-500' },
+    { label: 'Alertas Pendientes', value: stats?.pendingAlerts || 0, icon: AlertTriangle, color: 'text-amber-500' },
   ];
 
   const getRoleBadge = (role: string) => {
@@ -50,6 +48,12 @@ const DashboardAdmin = () => {
       buyer: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
     };
     return styles[role as keyof typeof styles] || styles.buyer;
+  };
+
+  const formatPrice = (price: number) => {
+    if (price >= 1000000000) return `$${(price / 1000000000).toFixed(1)}B`;
+    if (price >= 1000000) return `$${(price / 1000000).toFixed(0)}M`;
+    return `$${price.toLocaleString('es-CL')}`;
   };
 
   return (
@@ -74,16 +78,19 @@ const DashboardAdmin = () => {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {stats.map((stat, index) => (
+            {statsConfig.map((stat, index) => (
               <Card key={index} className="border-border/40 bg-card/50 backdrop-blur">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between">
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">{stat.label}</p>
-                      <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                      <Badge variant="secondary" className="text-xs">
-                        {stat.change}
-                      </Badge>
+                      {statsLoading ? (
+                        <Skeleton className="h-8 w-20" />
+                      ) : (
+                        <p className="text-2xl font-bold text-foreground">
+                          {typeof stat.value === 'number' ? stat.value.toLocaleString('es-CL') : stat.value}
+                        </p>
+                      )}
                     </div>
                     <div className={`h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center ${stat.color}`}>
                       <stat.icon className="h-6 w-6" />
@@ -136,48 +143,94 @@ const DashboardAdmin = () => {
               {/* Users Table */}
               <Card className="border-border/40">
                 <ScrollArea className="h-[400px]">
-                  <div className="divide-y divide-border/40">
-                    {recentUsers.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
-                        <div className="flex items-center gap-4">
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback className="bg-primary/10 text-primary">
-                              {user.name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium text-foreground">{user.name}</p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                  {usersLoading ? (
+                    <div className="flex items-center justify-center h-40">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : users && users.length > 0 ? (
+                    <div className="divide-y divide-border/40">
+                      {users.map((user) => (
+                        <div key={user.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <Avatar className="h-10 w-10">
+                              <AvatarFallback className="bg-primary/10 text-primary">
+                                {user.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium text-foreground">{user.name}</p>
+                              <p className="text-sm text-muted-foreground">{user.email}</p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Badge variant="outline" className={getRoleBadge(user.role)}>
-                            {user.role}
-                          </Badge>
-                          <div className="flex items-center gap-1 text-sm">
-                            {user.status === 'active' ? (
+                          <div className="flex items-center gap-4">
+                            <Badge variant="outline" className={getRoleBadge(user.role)}>
+                              {user.role}
+                            </Badge>
+                            <div className="flex items-center gap-1 text-sm">
                               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                            ) : (
-                              <AlertTriangle className="h-4 w-4 text-amber-500" />
-                            )}
-                            <span className="text-muted-foreground capitalize">{user.status}</span>
+                              <span className="text-muted-foreground">
+                                {formatDistanceToNow(new Date(user.joined), { addSuffix: true, locale: es })}
+                              </span>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+                      <Users className="h-8 w-8 mb-2" />
+                      <p>No se encontraron usuarios</p>
+                    </div>
+                  )}
                 </ScrollArea>
               </Card>
             </TabsContent>
 
-            <TabsContent value="properties">
-              <Card className="border-border/40 p-8 text-center">
-                <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="font-semibold text-lg">Gestión de Propiedades</h3>
-                <p className="text-muted-foreground mt-2">Próximamente: Moderación y verificación de listings</p>
+            <TabsContent value="properties" className="space-y-4">
+              <Card className="border-border/40">
+                <ScrollArea className="h-[400px]">
+                  {listingsLoading ? (
+                    <div className="flex items-center justify-center h-40">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : listings && listings.length > 0 ? (
+                    <div className="divide-y divide-border/40">
+                      {listings.map((listing) => (
+                        <div key={listing.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
+                              <Building2 className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-foreground">{listing.title}</p>
+                              <p className="text-sm text-muted-foreground">{listing.location}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <p className="font-semibold text-primary">{formatPrice(listing.price)}</p>
+                            <Badge variant="secondary" className={
+                              listing.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' : 
+                              listing.status === 'pending' ? 'bg-amber-500/10 text-amber-500' : ''
+                            }>
+                              {listing.status === 'active' ? 'Activa' : listing.status}
+                            </Badge>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+                      <Building2 className="h-8 w-8 mb-2" />
+                      <p>No hay propiedades registradas</p>
+                    </div>
+                  )}
+                </ScrollArea>
               </Card>
             </TabsContent>
 
