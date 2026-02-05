@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LotReservationDialog } from '@/components/lots/LotReservationDialog';
+import { LotMapView } from '@/components/lots/LotMapView';
 import {
   MapPin,
   ArrowLeft,
@@ -19,7 +20,8 @@ import {
   X,
   Image as ImageIcon,
   Map,
-  List
+  List,
+  Navigation
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -168,6 +170,10 @@ const ProjectDetail = () => {
                     <Map className="h-4 w-4" />
                     Master Plan
                   </TabsTrigger>
+                  <TabsTrigger value="interactive-map" className="gap-2">
+                    <Navigation className="h-4 w-4" />
+                    Mapa 3D
+                  </TabsTrigger>
                   <TabsTrigger value="lots" className="gap-2">
                     <List className="h-4 w-4" />
                     Lista de Lotes
@@ -202,6 +208,24 @@ const ProjectDetail = () => {
                       className="w-full h-auto"
                     />
                   </div>
+                </TabsContent>
+
+                {/* Interactive 3D Map Tab */}
+                <TabsContent value="interactive-map" className="space-y-4">
+                  <LotMapView
+                    lots={lots}
+                    projectCenter={{
+                      lat: project.latitude || -38.7359,
+                      lng: project.longitude || -72.5904
+                    }}
+                    onLotClick={(lot) => {
+                      setSelectedLot(lot.id);
+                      if (lot.status !== 'sold') {
+                        setReservationLot(lot);
+                      }
+                    }}
+                    selectedLotId={selectedLot}
+                  />
                 </TabsContent>
 
                 {/* Lots List Tab */}
