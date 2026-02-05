@@ -5,7 +5,7 @@ import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, Layers, Upload, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints } from '@/lib/kmz';
+import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced } from '@/lib/kmz';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MasterPlanOverlay } from './MasterPlanOverlay';
@@ -146,6 +146,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [loadingKmz, setLoadingKmz] = useState(false);
   const [kmzLoaded, setKmzLoaded] = useState(false);
   const [showMasterPlanOverlay, setShowMasterPlanOverlay] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   
   // Master plan image URL - uses the project's first gallery image or default
   const masterPlanImageUrl = '/projects/brisas-de-caone-masterplan.jpg';
@@ -191,15 +192,15 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         const polygonPlacemarks = parsed.placemarks.filter(p => p.isPolygon);
         console.log('Polygon placemarks found:', polygonPlacemarks.length);
         
-        // If we only have points, generate approximate polygons based on lot areas
+        // Use advanced polygon builder for better reconstruction
         let placemarksToUse = polygonPlacemarks;
-        if (polygonPlacemarks.length === 0) {
-          console.log('No polygons found, generating from points...');
-          placemarksToUse = generatePolygonsFromPoints(
+        if (polygonPlacemarks.length === 0 || polygonPlacemarks.length < lots.length * 0.5) {
+          console.log('Using advanced polygon builder...');
+          placemarksToUse = buildPolygonsAdvanced(
             parsed.placemarks,
             lots.map(l => ({ lot_number: l.lot_number, area: l.area }))
           );
-          console.log('Generated polygons:', placemarksToUse.length);
+          console.log('Advanced builder generated:', placemarksToUse.length, 'polygons');
         }
         
         // Sort lots by lot_number for sequential assignment
@@ -358,6 +359,86 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    }
+  };
+
+  // Regenerate polygons using advanced algorithm
+  const handleRegeneratePolygons = async () => {
+    if (!kmzFileUrl || !projectId) {
+      toast.error('No hay archivo KMZ configurado para este proyecto');
+      return;
+    }
+    
+    setRegenerating(true);
+    try {
+      // Reset existing polygons first
+      const { error: resetError } = await supabase
+        .from('lots')
+        .update({ polygon: null, latitude: null, longitude: null })
+        .eq('project_id', projectId);
+      
+      if (resetError) throw resetError;
+      
+      // Fetch and parse KMZ
+      const response = await fetch(kmzFileUrl);
+      if (!response.ok) throw new Error('Failed to fetch KMZ');
+      
+      const blob = await response.blob();
+      const file = new File([blob], 'project.kmz', { type: 'application/vnd.google-earth.kmz' });
+      
+      const parsed = kmzFileUrl.endsWith('.kml') 
+        ? await parseKMLFile(file)
+        : await parseKMZFile(file);
+      
+      console.log('=== REGENERATE POLYGONS ===');
+      console.log('Parsed placemarks:', parsed.placemarks.length);
+      
+      // Use advanced builder
+      const polygons = buildPolygonsAdvanced(
+        parsed.placemarks,
+        lots.map(l => ({ lot_number: l.lot_number, area: l.area }))
+      );
+      
+      console.log('Generated polygons:', polygons.length);
+      
+      // Match and update lots
+      let updatedCount = 0;
+      for (const polygon of polygons) {
+        const lotNumber = polygon.name.match(/(\d+)/)?.[1];
+        if (!lotNumber) continue;
+        
+        const matchingLot = lots.find(l => l.lot_number === lotNumber);
+        if (!matchingLot) continue;
+        
+        const centroid = polygon.coordinates.reduce(
+          (acc, [lng, lat]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }),
+          { lat: 0, lng: 0 }
+        );
+        centroid.lat /= polygon.coordinates.length;
+        centroid.lng /= polygon.coordinates.length;
+        
+        const { error } = await supabase
+          .from('lots')
+          .update({
+            polygon: polygon.coordinates,
+            latitude: centroid.lat,
+            longitude: centroid.lng,
+            area: polygon.area || matchingLot.area,
+          })
+          .eq('id', matchingLot.id);
+        
+        if (!error) updatedCount++;
+      }
+      
+      toast.success(`${updatedCount} polígonos regenerados con algoritmo avanzado`);
+      setKmzLoaded(true);
+      onLotsUpdated?.();
+      
+    } catch (error) {
+      console.error('Error regenerating polygons:', error);
+      toast.error('Error al regenerar polígonos');
+    } finally {
+      setRegenerating(false);
     }
   };
 
@@ -639,6 +720,20 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           >
             <Upload className="h-4 w-4" />
             {importing ? 'Importando...' : 'Importar KMZ'}
+          </Button>
+        )}
+        
+        {/* Regenerate polygons button */}
+        {projectId && kmzFileUrl && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 glass"
+            onClick={handleRegeneratePolygons}
+            disabled={regenerating}
+          >
+            <Layers className="h-4 w-4" />
+            {regenerating ? 'Regenerando...' : 'Regenerar'}
           </Button>
         )}
       </div>
