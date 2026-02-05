@@ -26,6 +26,7 @@ interface LotMapViewProps {
   onLotClick: (lot: Lot) => void;
   selectedLotId?: string | null;
   projectId?: string;
+  kmzFileUrl?: string | null;
   onLotsUpdated?: () => void;
 }
 
@@ -133,7 +134,7 @@ const formatPrice = (price: number | null) => {
   }).format(price);
 };
 
-export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, onLotsUpdated }: LotMapViewProps) => {
+export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, onLotsUpdated }: LotMapViewProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
@@ -142,6 +143,97 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapStyle, setMapStyle] = useState<'satellite' | 'streets'>('satellite');
   const [importing, setImporting] = useState(false);
+  const [loadingKmz, setLoadingKmz] = useState(false);
+  const [kmzLoaded, setKmzLoaded] = useState(false);
+
+  // Auto-load KMZ from URL if lots don't have polygons yet
+  useEffect(() => {
+    const loadKmzFromUrl = async () => {
+      if (!kmzFileUrl || !projectId || kmzLoaded) return;
+      
+      // Check if lots already have polygon data
+      const hasPolygons = lots.some(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length > 0);
+      if (hasPolygons) {
+        setKmzLoaded(true);
+        return;
+      }
+      
+      setLoadingKmz(true);
+      try {
+        // Fetch the KMZ file from the public URL
+        const response = await fetch(kmzFileUrl);
+        if (!response.ok) throw new Error('Failed to fetch KMZ file');
+        
+        const blob = await response.blob();
+        const file = new File([blob], 'project.kmz', { type: 'application/vnd.google-earth.kmz' });
+        
+        const parsed = kmzFileUrl.endsWith('.kml') 
+          ? await parseKMLFile(file)
+          : await parseKMZFile(file);
+        
+        if (parsed.placemarks.length === 0) {
+          console.warn('No placemarks found in KMZ');
+          return;
+        }
+        
+        // Match placemarks to existing lots and update them
+        let updatedCount = 0;
+        
+        for (const placemark of parsed.placemarks) {
+          const lotNumberMatch = placemark.name.match(/(\d+)/);
+          const lotNumber = lotNumberMatch ? lotNumberMatch[1] : placemark.name;
+          
+          const matchingLot = lots.find(lot => 
+            lot.lot_number === lotNumber || 
+            lot.lot_number === placemark.name
+          );
+          
+          if (matchingLot) {
+            const centroid = placemark.coordinates.reduce(
+              (acc, [lng, lat]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }),
+              { lat: 0, lng: 0 }
+            );
+            centroid.lat /= placemark.coordinates.length;
+            centroid.lng /= placemark.coordinates.length;
+            
+            const { error } = await supabase
+              .from('lots')
+              .update({
+                polygon: placemark.coordinates,
+                latitude: centroid.lat,
+                longitude: centroid.lng,
+                area: placemark.area || matchingLot.area,
+              })
+              .eq('id', matchingLot.id);
+            
+            if (!error) updatedCount++;
+          }
+        }
+        
+        // Update project center
+        await supabase
+          .from('projects')
+          .update({
+            latitude: parsed.center.lat,
+            longitude: parsed.center.lng,
+          })
+          .eq('id', projectId);
+        
+        if (updatedCount > 0) {
+          toast.success(`${updatedCount} lotes actualizados con polígonos del KMZ`);
+          setKmzLoaded(true);
+          onLotsUpdated?.();
+        }
+        
+      } catch (error) {
+        console.error('Error loading KMZ from URL:', error);
+      } finally {
+        setLoadingKmz(false);
+      }
+    };
+    
+    loadKmzFromUrl();
+  }, [kmzFileUrl, projectId, lots, kmzLoaded, onLotsUpdated]);
 
   // Handle KMZ/KML file import
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {

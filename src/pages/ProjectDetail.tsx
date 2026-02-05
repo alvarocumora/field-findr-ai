@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import { Button } from '@/components/ui/button';
@@ -57,6 +57,7 @@ const GALLERY_IMAGES = [
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
   const [selectedLot, setSelectedLot] = useState<string | null>(null);
   const [reservationLot, setReservationLot] = useState<any | null>(null);
   const [viewMode, setViewMode] = useState<'masterplan' | 'list'>('masterplan');
@@ -226,9 +227,11 @@ const ProjectDetail = () => {
                     }}
                     selectedLotId={selectedLot}
                     projectId={project.id}
+                    kmzFileUrl={(project as any).kmz_file_url}
                     onLotsUpdated={() => {
-                      // Refetch lots data
-                      window.location.reload();
+                      // Refetch lots and project data
+                      queryClient.invalidateQueries({ queryKey: ['project-lots', id] });
+                      queryClient.invalidateQueries({ queryKey: ['project', id] });
                     }}
                   />
                 </TabsContent>
