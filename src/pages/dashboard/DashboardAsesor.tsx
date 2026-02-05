@@ -15,10 +15,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import Layout from '@/components/Layout';
 import { useAgentStats, useAgentLeads, useAgentGoals } from '@/hooks/useDashboardStats';
+import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
+import { ListingFormDialog } from '@/components/listings/ListingFormDialog';
 
 const DashboardAsesor = () => {
   const { data: stats, isLoading: statsLoading } = useAgentStats();
@@ -58,14 +59,22 @@ const DashboardAsesor = () => {
               <p className="text-muted-foreground mt-1">Gestiona tus leads, propiedades y citas</p>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" className="rounded-xl gap-2">
-                <Plus className="h-4 w-4" />
-                Nuevo Lead
-              </Button>
-              <Button className="rounded-xl gap-2">
-                <Building2 className="h-4 w-4" />
-                Nueva Propiedad
-              </Button>
+              <LeadFormDialog
+                trigger={
+                  <Button variant="outline" className="rounded-xl gap-2">
+                    <Plus className="h-4 w-4" />
+                    Nuevo Lead
+                  </Button>
+                }
+              />
+              <ListingFormDialog
+                trigger={
+                  <Button className="rounded-xl gap-2">
+                    <Building2 className="h-4 w-4" />
+                    Nueva Propiedad
+                  </Button>
+                }
+              />
             </div>
           </div>
 
