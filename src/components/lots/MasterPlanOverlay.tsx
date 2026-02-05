@@ -124,11 +124,17 @@ export const MasterPlanOverlay = ({ map, imageUrl, isVisible, onClose }: MasterP
   // Remove overlay when hidden
   useEffect(() => {
     if (!isVisible && map) {
-      if (map.getLayer('masterplan-layer')) {
-        map.removeLayer('masterplan-layer');
-      }
-      if (map.getSource('masterplan-overlay')) {
-        map.removeSource('masterplan-overlay');
+      try {
+        if (map.isStyleLoaded()) {
+          if (map.getLayer('masterplan-layer')) {
+            map.removeLayer('masterplan-layer');
+          }
+          if (map.getSource('masterplan-overlay')) {
+            map.removeSource('masterplan-overlay');
+          }
+        }
+      } catch (error) {
+        console.warn('Error removing masterplan overlay:', error);
       }
     }
   }, [isVisible, map]);
