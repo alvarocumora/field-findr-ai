@@ -10,10 +10,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   FolderOpen, Plus, Search, MapPin, 
-  TrendingUp, Building2, Eye, Edit, Settings, Loader2
+  TrendingUp, Building2, Eye, Edit, Settings, Loader2,
+  FileArchive, Upload
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Layout from './Layout';
 import { useProjects, Project } from '@/hooks/useProjects';
+import { KMZImportDialog } from './projects/KMZImportDialog';
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   planning: { label: 'En Planificación', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
@@ -23,9 +26,11 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 };
 
 const ProjectsManagement = () => {
-  const { projects, isLoading, stats, createProject } = useProjects();
+  const { projects, isLoading, stats, createProject, refetch } = useProjects();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [selectedProjectForImport, setSelectedProjectForImport] = useState<Project | null>(null);
   const [newProject, setNewProject] = useState({
     name: '',
     location: '',
@@ -293,13 +298,22 @@ const ProjectsManagement = () => {
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" className="flex-1 gap-1">
-                    <Eye className="h-4 w-4" />
-                    Ver Lotes
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 gap-1"
+                    onClick={() => {
+                      setSelectedProjectForImport(project);
+                      setShowImportDialog(true);
+                    }}
+                  >
+                    <FileArchive className="h-4 w-4" />
+                    Importar KMZ
                   </Button>
-                  <Button variant="outline" className="flex-1 gap-1">
-                    <Edit className="h-4 w-4" />
-                    Editar
+                  <Button variant="outline" className="flex-1 gap-1" asChild>
+                    <Link to={`/proyecto/${project.id}`}>
+                      <Eye className="h-4 w-4" />
+                      Ver
+                    </Link>
                   </Button>
                   <Button variant="ghost" size="icon">
                     <Settings className="h-4 w-4" />
@@ -309,6 +323,33 @@ const ProjectsManagement = () => {
             </Card>
           ))}
         </div>
+
+        {/* KMZ Import Dialog */}
+        <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileArchive className="h-5 w-5" />
+                Importar Lotes desde KMZ
+              </DialogTitle>
+            </DialogHeader>
+            {selectedProjectForImport && (
+              <KMZImportDialog
+                projectId={selectedProjectForImport.id}
+                projectName={selectedProjectForImport.name}
+                onComplete={() => {
+                  setShowImportDialog(false);
+                  setSelectedProjectForImport(null);
+                  refetch();
+                }}
+                onCancel={() => {
+                  setShowImportDialog(false);
+                  setSelectedProjectForImport(null);
+                }}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
