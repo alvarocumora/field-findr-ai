@@ -11,7 +11,8 @@ import {
   Upload, FileArchive, Map, Check, AlertCircle, 
   Loader2, Layers, Image as ImageIcon, X, RefreshCw, PlusCircle
 } from 'lucide-react';
-import { parseKMZFile, parseKMLFile, ParsedKMZ, KMLPlacemark } from '@/lib/kmzParser';
+import { parseKMZFile, parseKMLFile } from '@/lib/kmz';
+import type { ParsedKMZ, KMLPlacemark } from '@/lib/kmz/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
