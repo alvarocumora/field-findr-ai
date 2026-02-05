@@ -29,6 +29,7 @@ import Tools from "./pages/Tools";
 import Profile from "./pages/Profile";
 import Explorar from "./pages/Explorar";
 import PropertyDetail from "./pages/PropertyDetail";
+import ProjectDetail from "./pages/ProjectDetail";
 import Install from "./pages/Install";
 import Pricing from "./pages/Pricing";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
@@ -76,6 +77,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/explorar" element={<Explorar />} />
               <Route path="/propiedad/:id" element={<PropertyDetail />} />
+              <Route path="/proyecto/:id" element={<ProjectDetail />} />
               <Route path="/comparar" element={<ParcelComparator />} />
               <Route path="/instalar" element={<Install />} />
               <Route path="/pricing" element={<Pricing />} />
