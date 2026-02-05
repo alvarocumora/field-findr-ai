@@ -180,27 +180,52 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           ? await parseKMLFile(file)
           : await parseKMZFile(file);
         
-        console.log('Parsed KMZ placemarks:', parsed.placemarks.length);
-        console.log('First placemark sample:', parsed.placemarks[0]);
+        console.log('=== KMZ AUTO-IMPORT ===');
+        console.log('Parsed placemarks:', parsed.placemarks.length);
         
         if (parsed.placemarks.length === 0) {
           console.warn('No placemarks found in KMZ');
           return;
         }
         
-        // Check if we have real polygons (isPolygon flag)
-        const polygonPlacemarks = parsed.placemarks.filter(p => p.isPolygon);
-        console.log('Polygon placemarks found:', polygonPlacemarks.length);
+        // Priority 1: Real Polygons or LinearRings from the KML
+        const realPolygons = parsed.placemarks.filter(p => 
+          p.isPolygon && 
+          (p.originalType === 'Polygon' || p.originalType === 'LinearRing') &&
+          p.coordinates.length >= 4
+        );
         
-        // Use advanced polygon builder for better reconstruction
-        let placemarksToUse = polygonPlacemarks;
-        if (polygonPlacemarks.length === 0 || polygonPlacemarks.length < lots.length * 0.5) {
-          console.log('Using advanced polygon builder...');
+        // Priority 2: Closed LineStrings (polygons in disguise)
+        const closedLineStrings = parsed.placemarks.filter(p => 
+          p.isPolygon && 
+          p.originalType === 'LineString' &&
+          p.coordinates.length >= 4
+        );
+        
+        // Priority 3: MultiGeometry with polygons
+        const multiGeomPolygons = parsed.placemarks.filter(p => 
+          p.isPolygon && 
+          p.originalType === 'MultiGeometry' &&
+          p.coordinates.length >= 4
+        );
+        
+        console.log('Real Polygons:', realPolygons.length);
+        console.log('Closed LineStrings:', closedLineStrings.length);
+        console.log('MultiGeometry Polygons:', multiGeomPolygons.length);
+        
+        // Combine all polygon sources, prioritizing real polygons
+        let placemarksToUse = [...realPolygons, ...closedLineStrings, ...multiGeomPolygons];
+        
+        // Only use advanced builder as last resort if we don't have enough polygons
+        if (placemarksToUse.length < lots.length * 0.3) {
+          console.log('Not enough polygons, using advanced builder...');
           placemarksToUse = buildPolygonsAdvanced(
             parsed.placemarks,
             lots.map(l => ({ lot_number: l.lot_number, area: l.area }))
           );
           console.log('Advanced builder generated:', placemarksToUse.length, 'polygons');
+        } else {
+          console.log(`Using ${placemarksToUse.length} REAL polygons from KMZ`);
         }
         
         // Sort lots by lot_number for sequential assignment
