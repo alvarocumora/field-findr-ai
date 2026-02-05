@@ -7,10 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LotReservationDialog } from '@/components/lots/LotReservationDialog';
 import {
   MapPin,
   ArrowLeft,
-  Layers,
   DollarSign,
   Maximize2,
   Phone,
@@ -56,6 +56,7 @@ const GALLERY_IMAGES = [
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [selectedLot, setSelectedLot] = useState<string | null>(null);
+  const [reservationLot, setReservationLot] = useState<any | null>(null);
   const [viewMode, setViewMode] = useState<'masterplan' | 'list'>('masterplan');
 
   const { data: project, isLoading: projectLoading } = useQuery({
@@ -216,7 +217,12 @@ const ProjectDetail = () => {
                           className={`cursor-pointer transition-all duration-200 hover:scale-105 ${
                             isSelected ? 'ring-2 ring-primary' : ''
                           } ${lot.status === 'sold' ? 'opacity-60' : ''}`}
-                          onClick={() => setSelectedLot(isSelected ? null : lot.id)}
+                          onClick={() => {
+                            setSelectedLot(isSelected ? null : lot.id);
+                            if (lot.status === 'available') {
+                              setReservationLot(lot);
+                            }
+                          }}
                         >
                           <CardContent className="p-3">
                             <div className={`${colors.bg} text-white text-center py-2 rounded-lg mb-2`}>
@@ -366,7 +372,10 @@ const ProjectDetail = () => {
                           </div>
 
                           {lot.status === 'available' && (
-                            <Button className="w-full mt-2">
+                            <Button 
+                              className="w-full mt-2"
+                              onClick={() => setReservationLot(lot)}
+                            >
                               Reservar este lote
                             </Button>
                           )}
@@ -379,6 +388,14 @@ const ProjectDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Reservation Dialog */}
+        <LotReservationDialog
+          lot={reservationLot}
+          projectName={project.name}
+          open={!!reservationLot}
+          onOpenChange={(open) => !open && setReservationLot(null)}
+        />
       </div>
     </PublicLayout>
   );
