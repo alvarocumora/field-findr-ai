@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, List, Loader2, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, List, Loader2, MapPin, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import QuickPropertyCard from './QuickPropertyCard';
@@ -26,9 +25,9 @@ interface FloatingResultsPanelProps {
 }
 
 const PANEL_WIDTHS: Record<PanelState, string> = {
-  collapsed: 'w-12',
-  normal: 'w-80',
-  expanded: 'w-[420px]',
+  collapsed: 'w-14',
+  normal: 'w-[360px]',
+  expanded: 'w-[440px]',
 };
 
 const FloatingResultsPanel = ({
@@ -97,55 +96,70 @@ const FloatingResultsPanel = ({
     <div
       className={cn(
         'absolute left-4 top-4 bottom-4 z-20',
-        'flex flex-col bg-background/95 backdrop-blur-xl',
-        'rounded-2xl border border-border/40 shadow-2xl',
-        'transition-all duration-300 ease-out',
+        'flex flex-col',
+        // Glassmorphism styling
+        'bg-background/90 backdrop-blur-2xl',
+        'rounded-3xl border border-border/30',
+        'shadow-2xl shadow-black/10',
+        'transition-all duration-400 ease-out',
         PANEL_WIDTHS[panelState],
         className
       )}
     >
       {/* Collapsed State */}
       {panelState === 'collapsed' ? (
-        <div className="flex flex-col items-center py-4 gap-4 h-full">
+        <div className="flex flex-col items-center py-5 gap-4 h-full">
           <Button
             variant="ghost"
             size="icon"
             onClick={expand}
-            className="h-10 w-10 rounded-xl hover:bg-primary/10"
+            className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-colors"
           >
             <ChevronRight className="h-5 w-5" />
           </Button>
-          <div className="flex-1 flex flex-col items-center justify-center gap-2">
-            <List className="h-5 w-5 text-muted-foreground" />
-            <div className="writing-mode-vertical text-xs font-medium text-muted-foreground rotate-180" style={{ writingMode: 'vertical-rl' }}>
-              {displayCount} resultados
+          
+          <div className="flex-1 flex flex-col items-center justify-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Layers className="h-5 w-5 text-primary" />
+            </div>
+            <div 
+              className="text-xs font-semibold text-muted-foreground rotate-180" 
+              style={{ writingMode: 'vertical-rl' }}
+            >
+              {displayCount} propiedades
             </div>
           </div>
         </div>
       ) : (
         <>
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <MapPin className="h-4 w-4 text-primary" />
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border/20">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center shadow-inner">
+                <MapPin className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <span className="text-sm font-semibold text-foreground">
-                  {displayCount}
-                </span>
-                <span className="text-xs text-muted-foreground ml-1">
-                  propiedades
-                </span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl font-bold text-foreground">
+                    {displayCount}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    propiedades
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground/70">
+                  en el área visible
+                </p>
               </div>
             </div>
+            
             <div className="flex items-center gap-1">
               {panelState === 'normal' ? (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={expand}
-                  className="h-8 w-8 rounded-lg"
+                  className="h-9 w-9 rounded-xl hover:bg-accent/10"
                   title="Expandir panel"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -155,7 +169,7 @@ const FloatingResultsPanel = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => setPanelState('normal')}
-                  className="h-8 w-8 rounded-lg"
+                  className="h-9 w-9 rounded-xl hover:bg-accent/10"
                   title="Reducir panel"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -165,7 +179,7 @@ const FloatingResultsPanel = ({
                 variant="ghost"
                 size="icon"
                 onClick={collapse}
-                className="h-8 w-8 rounded-lg"
+                className="h-9 w-9 rounded-xl hover:bg-accent/10"
                 title="Colapsar panel"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -175,62 +189,71 @@ const FloatingResultsPanel = ({
 
           {/* Content */}
           <ScrollArea className="flex-1" ref={scrollRef}>
-            <div className="p-2 space-y-1">
+            <div className="p-3 space-y-2">
               {isLoading ? (
-                // Loading skeletons
+                // Loading skeletons with animation
                 Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2">
-                    <Skeleton className="w-20 h-16 rounded-lg" />
+                  <div 
+                    key={i} 
+                    className="flex items-center gap-3 p-3 animate-pulse"
+                    style={{ animationDelay: `${i * 100}ms` }}
+                  >
+                    <Skeleton className="w-24 h-20 rounded-xl" />
                     <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-3 w-full" />
-                      <Skeleton className="h-3 w-20" />
+                      <Skeleton className="h-4 w-28" />
+                      <Skeleton className="h-3.5 w-full" />
+                      <Skeleton className="h-3 w-24" />
                     </div>
                   </div>
                 ))
               ) : listings.length === 0 ? (
-                // Empty state
-                <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                  <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-                    <MapPin className="h-8 w-8 text-muted-foreground" />
+                // Empty state with better design
+                <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                  <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center mb-5 shadow-inner">
+                    <MapPin className="h-10 w-10 text-muted-foreground/50" />
                   </div>
-                  <h4 className="text-sm font-medium text-foreground mb-1">
+                  <h4 className="text-base font-semibold text-foreground mb-2">
                     Sin resultados
                   </h4>
-                  <p className="text-xs text-muted-foreground">
-                    Ajusta los filtros para encontrar propiedades
+                  <p className="text-sm text-muted-foreground max-w-[200px]">
+                    Ajusta los filtros o mueve el mapa para encontrar propiedades
                   </p>
                 </div>
               ) : (
                 <>
-                  {listings.map((listing) => (
-                    <QuickPropertyCard
+                  {listings.map((listing, index) => (
+                    <div
                       key={listing.id}
-                      listing={listing}
-                      isHovered={hoveredListing?.id === listing.id}
-                      isSelected={selectedListing?.id === listing.id}
-                      onHover={onListingHover}
-                      onClick={onListingClick}
-                      onPreview={onListingPreview}
-                    />
+                      className="animate-fade-in"
+                      style={{ animationDelay: `${Math.min(index * 50, 300)}ms` }}
+                    >
+                      <QuickPropertyCard
+                        listing={listing}
+                        isHovered={hoveredListing?.id === listing.id}
+                        isSelected={selectedListing?.id === listing.id}
+                        onHover={onListingHover}
+                        onClick={onListingClick}
+                        onPreview={onListingPreview}
+                      />
+                    </div>
                   ))}
 
                   {/* Load more trigger */}
                   {hasMore && (
-                    <div ref={loadMoreRef} className="py-4 flex justify-center">
+                    <div ref={loadMoreRef} className="py-6 flex justify-center">
                       {isLoadingMore ? (
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="text-xs">Cargando más...</span>
+                          <span className="text-sm">Cargando más...</span>
                         </div>
                       ) : (
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={onLoadMore}
-                          className="text-xs h-8"
+                          className="text-sm h-9 rounded-xl hover:bg-primary/5 hover:border-primary/30"
                         >
-                          Cargar más
+                          Cargar más propiedades
                         </Button>
                       )}
                     </div>
@@ -240,10 +263,13 @@ const FloatingResultsPanel = ({
             </div>
           </ScrollArea>
 
-          {/* Footer with expand/collapse handle */}
-          <div className="px-4 py-2 border-t border-border/30 flex justify-center">
+          {/* Footer with resize handle */}
+          <div className="px-5 py-3 border-t border-border/20 flex justify-center">
             <div
-              className="w-12 h-1 rounded-full bg-border/50 cursor-pointer hover:bg-border transition-colors"
+              className={cn(
+                'w-16 h-1.5 rounded-full cursor-pointer transition-all duration-200',
+                'bg-border/40 hover:bg-primary/40 hover:scale-x-110'
+              )}
               onClick={toggleState}
               title="Redimensionar panel"
             />

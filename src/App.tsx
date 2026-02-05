@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +14,13 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import OfflineIndicator from "./components/pwa/OfflineIndicator";
 import InstallPrompt from "./components/pwa/InstallPrompt";
 
+// Loading fallback
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="animate-pulse text-muted-foreground">Cargando...</div>
+  </div>
+);
+
 // Pages
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -27,6 +35,9 @@ import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import SubscriptionFailure from "./pages/SubscriptionFailure";
 import Subscription from "./pages/Subscription";
 import AdminUsers from "./pages/AdminUsers";
+
+// Dashboard pages (lazy loaded)
+import { DashboardAdmin, DashboardAsesor, DashboardInmobiliaria } from "./pages/dashboard";
 
 // Legacy Components (to be migrated)
 import AIRecommendationEngine from "./components/AIRecommendationEngine";
@@ -154,6 +165,31 @@ const App = () => (
               <Route path="/admin/users" element={
                 <ProtectedRoute requireAuth requireRole="admin">
                   <AdminUsers />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/dashboard" element={
+                <ProtectedRoute requireAuth requireRole="admin">
+                  <Suspense fallback={<PageLoader />}>
+                    <DashboardAdmin />
+                  </Suspense>
+                </ProtectedRoute>
+              } />
+              
+              {/* Agent dashboard */}
+              <Route path="/asesor/dashboard" element={
+                <ProtectedRoute requireAuth requireRole="agent">
+                  <Suspense fallback={<PageLoader />}>
+                    <DashboardAsesor />
+                  </Suspense>
+                </ProtectedRoute>
+              } />
+              
+              {/* Inmobiliaria dashboard (for agents managing teams) */}
+              <Route path="/inmobiliaria/dashboard" element={
+                <ProtectedRoute requireAuth requireRole="agent">
+                  <Suspense fallback={<PageLoader />}>
+                    <DashboardInmobiliaria />
+                  </Suspense>
                 </ProtectedRoute>
               } />
               
