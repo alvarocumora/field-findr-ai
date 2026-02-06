@@ -312,6 +312,8 @@ const ProjectDetail = () => {
                   lotPrice={financingLot.price || 0}
                   lotNumber={financingLot.lot_number}
                   lotArea={Number(financingLot.area)}
+                  projectName={project.name}
+                  projectLocation={`${project.city}, ${project.region}`}
                   onClose={() => setFinancingLot(null)}
                 />
               )}

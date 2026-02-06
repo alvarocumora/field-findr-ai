@@ -16,7 +16,9 @@ import {
   Info,
   Sparkles,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  FileDown,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -24,11 +26,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { generateQuotePDF, QuotePDFData } from '@/lib/pdfGenerator';
+import { toast } from 'sonner';
 
 interface FinancingCalculatorProps {
   lotPrice: number;
   lotNumber: string;
   lotArea: number;
+  projectName?: string;
+  projectLocation?: string;
   onClose?: () => void;
 }
 
@@ -66,6 +72,8 @@ export const FinancingCalculator = ({
   lotPrice, 
   lotNumber, 
   lotArea,
+  projectName = 'Proyecto',
+  projectLocation = 'Chile',
   onClose 
 }: FinancingCalculatorProps) => {
   // Simulator state
@@ -79,6 +87,7 @@ export const FinancingCalculator = ({
   
   // UI state
   const [showDetails, setShowDetails] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Calculate financing values
   const calculations = useMemo(() => {
@@ -115,6 +124,45 @@ export const FinancingCalculator = ({
   }, [monthlyIncome, maxDebtPercent, interestRate, termMonths, downPaymentPercent]);
 
   const canAffordLot = maxAffordablePrice >= lotPrice;
+
+  // Generate PDF quote
+  const handleGeneratePDF = () => {
+    setIsGeneratingPDF(true);
+    
+    try {
+      const now = new Date();
+      const validUntil = new Date(now);
+      validUntil.setDate(validUntil.getDate() + 30); // Valid for 30 days
+      
+      const pdfData: QuotePDFData = {
+        projectName,
+        projectLocation,
+        lotNumber,
+        lotArea,
+        lotPrice,
+        pricePerSqm: lotPrice / lotArea,
+        downPaymentPercent,
+        downPayment: calculations.downPayment,
+        financedAmount: calculations.financedAmount,
+        termMonths,
+        interestRate,
+        monthlyPayment: calculations.monthlyPayment,
+        totalInterest: calculations.totalInterest,
+        totalCost: calculations.totalCost,
+        cae: calculations.cae,
+        generatedAt: now,
+        validUntil,
+      };
+      
+      generateQuotePDF(pdfData);
+      toast.success('Cotización PDF generada exitosamente');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Error al generar la cotización');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   return (
     <Card className="glass-strong border-primary/20">
@@ -254,6 +302,21 @@ export const FinancingCalculator = ({
                   </div>
                 </CollapsibleContent>
               </Collapsible>
+              
+              {/* Download PDF Button */}
+              <Button 
+                onClick={handleGeneratePDF}
+                disabled={isGeneratingPDF}
+                className="w-full gap-2"
+                variant="outline"
+              >
+                {isGeneratingPDF ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileDown className="h-4 w-4" />
+                )}
+                {isGeneratingPDF ? 'Generando...' : 'Descargar Cotización PDF'}
+              </Button>
             </div>
           </TabsContent>
 
