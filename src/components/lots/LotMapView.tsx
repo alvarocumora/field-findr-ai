@@ -5,7 +5,7 @@ import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, Layers, Upload, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced } from '@/lib/kmz';
+import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced, buildPolygonsFromMixedGeometry } from '@/lib/kmz';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MasterPlanOverlay } from './MasterPlanOverlay';
@@ -188,44 +188,26 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           return;
         }
         
-        // Priority 1: Real Polygons or LinearRings from the KML
-        const realPolygons = parsed.placemarks.filter(p => 
-          p.isPolygon && 
-          (p.originalType === 'Polygon' || p.originalType === 'LinearRing') &&
-          p.coordinates.length >= 4
+        // Use smart polygon builder that tries multiple strategies:
+        // 1. Real Polygons from KML
+        // 2. Connect LineStrings to form polygons
+        // 3. Closed LineStrings (hidden polygons)
+        // 4. Advanced reconstruction as fallback
+        let placemarksToUse = buildPolygonsFromMixedGeometry(
+          parsed.placemarks,
+          lots.map(l => ({ lot_number: l.lot_number, area: l.area }))
         );
         
-        // Priority 2: Closed LineStrings (polygons in disguise)
-        const closedLineStrings = parsed.placemarks.filter(p => 
-          p.isPolygon && 
-          p.originalType === 'LineString' &&
-          p.coordinates.length >= 4
-        );
+        console.log(`Smart builder produced: ${placemarksToUse.length} polygons`);
         
-        // Priority 3: MultiGeometry with polygons
-        const multiGeomPolygons = parsed.placemarks.filter(p => 
-          p.isPolygon && 
-          p.originalType === 'MultiGeometry' &&
-          p.coordinates.length >= 4
-        );
-        
-        console.log('Real Polygons:', realPolygons.length);
-        console.log('Closed LineStrings:', closedLineStrings.length);
-        console.log('MultiGeometry Polygons:', multiGeomPolygons.length);
-        
-        // Combine all polygon sources, prioritizing real polygons
-        let placemarksToUse = [...realPolygons, ...closedLineStrings, ...multiGeomPolygons];
-        
-        // Only use advanced builder as last resort if we don't have enough polygons
+        // If still not enough, use the more aggressive advanced builder
         if (placemarksToUse.length < lots.length * 0.3) {
-          console.log('Not enough polygons, using advanced builder...');
+          console.log('Still not enough polygons, using aggressive builder...');
           placemarksToUse = buildPolygonsAdvanced(
             parsed.placemarks,
             lots.map(l => ({ lot_number: l.lot_number, area: l.area }))
           );
-          console.log('Advanced builder generated:', placemarksToUse.length, 'polygons');
-        } else {
-          console.log(`Using ${placemarksToUse.length} REAL polygons from KMZ`);
+          console.log('Aggressive builder generated:', placemarksToUse.length, 'polygons');
         }
         
         // Sort lots by lot_number for sequential assignment
@@ -418,17 +400,27 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       console.log('=== REGENERATE POLYGONS ===');
       console.log('Parsed placemarks:', parsed.placemarks.length);
       
-      // Use advanced builder
-      const polygons = buildPolygonsAdvanced(
+      // Use smart builder that connects LineStrings
+      const polygons = buildPolygonsFromMixedGeometry(
         parsed.placemarks,
         lots.map(l => ({ lot_number: l.lot_number, area: l.area }))
       );
       
-      console.log('Generated polygons:', polygons.length);
+      console.log('Smart builder generated:', polygons.length);
+      
+      // If not enough, fall back to aggressive builder
+      const finalPolygons = polygons.length >= lots.length * 0.3 
+        ? polygons 
+        : buildPolygonsAdvanced(
+            parsed.placemarks, 
+            lots.map(l => ({ lot_number: l.lot_number, area: l.area }))
+          );
+      
+      console.log('Final polygons:', finalPolygons.length);
       
       // Match and update lots
       let updatedCount = 0;
-      for (const polygon of polygons) {
+      for (const polygon of finalPolygons) {
         const lotNumber = polygon.name.match(/(\d+)/)?.[1];
         if (!lotNumber) continue;
         
@@ -455,7 +447,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         if (!error) updatedCount++;
       }
       
-      toast.success(`${updatedCount} polígonos regenerados con algoritmo avanzado`);
+      toast.success(`${updatedCount} polígonos regenerados con algoritmo inteligente`);
       setKmzLoaded(true);
       onLotsUpdated?.();
       
