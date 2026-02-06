@@ -6,11 +6,19 @@ import { KMLPlacemark, ParsedKMZ, LotInfo } from './types';
 import { parseKML } from './kmlParser';
 import { generatePolygonsFromPoints } from './polygonBuilder';
 import { buildPolygonsAdvanced, validatePolygon } from './advancedPolygonBuilder';
+import { buildPolygonsFromMixedGeometry, convertLineStringsToPolygons } from './lineStringToPolygon';
 import { calculatePolygonArea } from './geometry';
 
 // Re-export types and utilities
 export type { KMLPlacemark, ParsedKMZ, LotInfo };
-export { calculatePolygonArea, generatePolygonsFromPoints, buildPolygonsAdvanced, validatePolygon };
+export { 
+  calculatePolygonArea, 
+  generatePolygonsFromPoints, 
+  buildPolygonsAdvanced, 
+  validatePolygon,
+  buildPolygonsFromMixedGeometry,
+  convertLineStringsToPolygons
+};
 
 // Calculate bounds and center from placemarks
 const calculateBoundsAndCenter = (placemarks: KMLPlacemark[]) => {
