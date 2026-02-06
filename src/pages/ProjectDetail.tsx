@@ -9,6 +9,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LotReservationDialog } from '@/components/lots/LotReservationDialog';
 import { LotMapView } from '@/components/lots/LotMapView';
+import { LegalTab } from '@/components/projects/LegalTab';
+import { FinancingCalculator } from '@/components/projects/FinancingCalculator';
+import { EnhancedLotCard } from '@/components/lots/EnhancedLotCard';
 import {
   MapPin,
   ArrowLeft,
@@ -21,7 +24,9 @@ import {
   Image as ImageIcon,
   Map,
   List,
-  Navigation
+  Navigation,
+  Scale,
+  Calculator
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -60,7 +65,7 @@ const ProjectDetail = () => {
   const queryClient = useQueryClient();
   const [selectedLot, setSelectedLot] = useState<string | null>(null);
   const [reservationLot, setReservationLot] = useState<any | null>(null);
-  const [viewMode, setViewMode] = useState<'masterplan' | 'list'>('masterplan');
+  const [financingLot, setFinancingLot] = useState<any | null>(null);
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
@@ -99,6 +104,12 @@ const ProjectDetail = () => {
     { price: 29990000, label: '$29.990.000', color: 'bg-slate-800' },
   ];
 
+  // Parse legal data from project (new columns)
+  const legalDocuments = (project as any)?.legal_documents || [];
+  const legalStatus = (project as any)?.legal_status || 'pending';
+  const rolNumber = (project as any)?.rol_number;
+  const permits = (project as any)?.permits || [];
+
   if (projectLoading) {
     return (
       <PublicLayout>
@@ -122,6 +133,8 @@ const ProjectDetail = () => {
       </PublicLayout>
     );
   }
+
+  const selectedLotData = lots.find(l => l.id === selectedLot);
 
   return (
     <PublicLayout>
@@ -166,7 +179,7 @@ const ProjectDetail = () => {
             {/* Main Content */}
             <div className="lg:col-span-3">
               <Tabs defaultValue="masterplan" className="space-y-4">
-                <TabsList className="glass">
+                <TabsList className="glass flex-wrap">
                   <TabsTrigger value="masterplan" className="gap-2">
                     <Map className="h-4 w-4" />
                     Master Plan
@@ -177,7 +190,11 @@ const ProjectDetail = () => {
                   </TabsTrigger>
                   <TabsTrigger value="lots" className="gap-2">
                     <List className="h-4 w-4" />
-                    Lista de Lotes
+                    Lotes
+                  </TabsTrigger>
+                  <TabsTrigger value="legal" className="gap-2">
+                    <Scale className="h-4 w-4" />
+                    Legal
                   </TabsTrigger>
                   <TabsTrigger value="gallery" className="gap-2">
                     <ImageIcon className="h-4 w-4" />
@@ -229,71 +246,45 @@ const ProjectDetail = () => {
                     projectId={project.id}
                     kmzFileUrl={(project as any).kmz_file_url}
                     onLotsUpdated={() => {
-                      // Refetch lots and project data
                       queryClient.invalidateQueries({ queryKey: ['project-lots', id] });
                       queryClient.invalidateQueries({ queryKey: ['project', id] });
                     }}
                   />
                 </TabsContent>
 
-                {/* Lots List Tab */}
+                {/* Lots List Tab - Using Enhanced Cards */}
                 <TabsContent value="lots" className="space-y-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {lots.map((lot) => {
-                      const colors = getPriceColor(lot.price, lot.status || 'available');
-                      const isSelected = selectedLot === lot.id;
-                      
-                      return (
-                        <Card
-                          key={lot.id}
-                          className={`cursor-pointer transition-all duration-200 hover:scale-105 ${
-                            isSelected ? 'ring-2 ring-primary' : ''
-                          } ${lot.status === 'sold' ? 'opacity-60' : ''}`}
-                          onClick={() => {
-                            setSelectedLot(isSelected ? null : lot.id);
-                            if (lot.status === 'available') {
-                              setReservationLot(lot);
-                            }
-                          }}
-                        >
-                          <CardContent className="p-3">
-                            <div className={`${colors.bg} text-white text-center py-2 rounded-lg mb-2`}>
-                              <span className="font-bold text-lg">{lot.lot_number}</span>
-                            </div>
-                            <div className="space-y-1 text-xs">
-                              <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Área</span>
-                                <span className="font-medium">{lot.area} m²</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Precio</span>
-                                <span className={`font-bold ${colors.text}`}>
-                                  {formatPrice(lot.price)}
-                                </span>
-                              </div>
-                              <div className="pt-1">
-                                {lot.status === 'sold' ? (
-                                  <Badge variant="secondary" className="w-full justify-center text-xs">
-                                    <X className="h-3 w-3 mr-1" />
-                                    Vendido
-                                  </Badge>
-                                ) : lot.status === 'reserved' ? (
-                                  <Badge className="w-full justify-center text-xs bg-amber-500">
-                                    Reservado
-                                  </Badge>
-                                ) : (
-                                  <Badge className="w-full justify-center text-xs bg-emerald-500">
-                                    <Check className="h-3 w-3 mr-1" />
-                                    Disponible
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {lots.map((lot, index) => (
+                      <EnhancedLotCard
+                        key={lot.id}
+                        lot={lot}
+                        index={index}
+                        totalAvailable={availableLots.length}
+                        isSelected={selectedLot === lot.id}
+                        onView={(lot) => {
+                          setSelectedLot(lot.id);
+                          if (lot.status !== 'sold') {
+                            setReservationLot(lot);
+                          }
+                        }}
+                        onSimulateFinancing={(lot) => {
+                          setSelectedLot(lot.id);
+                          setFinancingLot(lot);
+                        }}
+                      />
+                    ))}
                   </div>
+                </TabsContent>
+
+                {/* Legal Tab */}
+                <TabsContent value="legal" className="space-y-4">
+                  <LegalTab
+                    legalDocuments={legalDocuments}
+                    legalStatus={legalStatus}
+                    rolNumber={rolNumber}
+                    permits={permits}
+                  />
                 </TabsContent>
 
                 {/* Gallery Tab */}
@@ -315,6 +306,16 @@ const ProjectDetail = () => {
 
             {/* Sidebar */}
             <div className="lg:col-span-1 space-y-4">
+              {/* Financing Calculator (shows when lot is selected for financing) */}
+              {financingLot && (
+                <FinancingCalculator
+                  lotPrice={financingLot.price || 0}
+                  lotNumber={financingLot.lot_number}
+                  lotArea={Number(financingLot.area)}
+                  onClose={() => setFinancingLot(null)}
+                />
+              )}
+
               {/* Stats Card */}
               <Card className="glass-strong">
                 <CardContent className="p-4 space-y-4">
@@ -323,11 +324,11 @@ const ProjectDetail = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10">
                       <span className="text-sm">Disponibles</span>
-                      <span className="font-bold text-emerald-500">{availableLots.length}</span>
+                      <span className="font-bold text-emerald-600">{availableLots.length}</span>
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/10">
                       <span className="text-sm">Reservados</span>
-                      <span className="font-bold text-amber-500">{reservedLots.length}</span>
+                      <span className="font-bold text-amber-600">{reservedLots.length}</span>
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                       <span className="text-sm">Vendidos</span>
@@ -373,47 +374,47 @@ const ProjectDetail = () => {
               </Card>
 
               {/* Selected Lot Detail */}
-              {selectedLot && (
+              {selectedLotData && !financingLot && (
                 <Card className="glass-strong border-primary">
                   <CardContent className="p-4 space-y-3">
-                    {(() => {
-                      const lot = lots.find(l => l.id === selectedLot);
-                      if (!lot) return null;
-                      const colors = getPriceColor(lot.price, lot.status || 'available');
-                      
-                      return (
-                        <>
-                          <div className="flex items-center justify-between">
-                            <h3 className="font-bold text-xl">Lote {lot.lot_number}</h3>
-                            <Badge className={colors.bg}>
-                              {lot.status === 'sold' ? 'Vendido' : lot.status === 'reserved' ? 'Reservado' : 'Disponible'}
-                            </Badge>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="p-3 rounded-lg bg-muted text-center">
-                              <Maximize2 className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
-                              <div className="text-sm font-semibold">{lot.area} m²</div>
-                              <div className="text-xs text-muted-foreground">Superficie</div>
-                            </div>
-                            <div className="p-3 rounded-lg bg-muted text-center">
-                              <DollarSign className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
-                              <div className="text-sm font-semibold">{formatPrice(lot.price)}</div>
-                              <div className="text-xs text-muted-foreground">Precio</div>
-                            </div>
-                          </div>
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-xl">Lote {selectedLotData.lot_number}</h3>
+                      <Badge className={getPriceColor(selectedLotData.price, selectedLotData.status || 'available').bg}>
+                        {selectedLotData.status === 'sold' ? 'Vendido' : selectedLotData.status === 'reserved' ? 'Reservado' : 'Disponible'}
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 rounded-lg bg-muted text-center">
+                        <Maximize2 className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+                        <div className="text-sm font-semibold">{selectedLotData.area} m²</div>
+                        <div className="text-xs text-muted-foreground">Superficie</div>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted text-center">
+                        <DollarSign className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+                        <div className="text-sm font-semibold">{formatPrice(selectedLotData.price)}</div>
+                        <div className="text-xs text-muted-foreground">Precio</div>
+                      </div>
+                    </div>
 
-                          {lot.status === 'available' && (
-                            <Button 
-                              className="w-full mt-2"
-                              onClick={() => setReservationLot(lot)}
-                            >
-                              Reservar este lote
-                            </Button>
-                          )}
-                        </>
-                      );
-                    })()}
+                    {selectedLotData.status === 'available' && (
+                      <div className="space-y-2 pt-2">
+                        <Button 
+                          className="w-full gap-2"
+                          onClick={() => setFinancingLot(selectedLotData)}
+                        >
+                          <Calculator className="h-4 w-4" />
+                          Simular Financiamiento
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => setReservationLot(selectedLotData)}
+                        >
+                          Reservar este lote
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}

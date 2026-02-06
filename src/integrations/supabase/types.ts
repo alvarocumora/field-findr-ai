@@ -479,11 +479,15 @@ export type Database = {
           id: string
           kmz_file_url: string | null
           latitude: number | null
+          legal_documents: Json | null
+          legal_status: string | null
           location: string | null
           longitude: number | null
           name: string
+          permits: Json | null
           region: string | null
           reserved_lots: number | null
+          rol_number: string | null
           sold_lots: number | null
           status: string | null
           total_area: number | null
@@ -501,11 +505,15 @@ export type Database = {
           id?: string
           kmz_file_url?: string | null
           latitude?: number | null
+          legal_documents?: Json | null
+          legal_status?: string | null
           location?: string | null
           longitude?: number | null
           name: string
+          permits?: Json | null
           region?: string | null
           reserved_lots?: number | null
+          rol_number?: string | null
           sold_lots?: number | null
           status?: string | null
           total_area?: number | null
@@ -523,11 +531,15 @@ export type Database = {
           id?: string
           kmz_file_url?: string | null
           latitude?: number | null
+          legal_documents?: Json | null
+          legal_status?: string | null
           location?: string | null
           longitude?: number | null
           name?: string
+          permits?: Json | null
           region?: string | null
           reserved_lots?: number | null
+          rol_number?: string | null
           sold_lots?: number | null
           status?: string | null
           total_area?: number | null
