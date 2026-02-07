@@ -2,13 +2,16 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { usePolygonDrawing } from '@/hooks/usePolygonDrawing';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Layers, Upload, Image } from 'lucide-react';
+import { AlertCircle, Layers, Upload, Image, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced, buildPolygonsFromMixedGeometry } from '@/lib/kmz';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MasterPlanOverlay } from './MasterPlanOverlay';
+import { LotDrawingTool } from './LotDrawingTool';
+
 interface Lot {
   id: string;
   lot_number: string;
@@ -147,9 +150,47 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [kmzLoaded, setKmzLoaded] = useState(false);
   const [showMasterPlanOverlay, setShowMasterPlanOverlay] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [showDrawingPanel, setShowDrawingPanel] = useState(false);
   
   // Master plan image URL - uses the project's first gallery image or default
   const masterPlanImageUrl = '/projects/brisas-de-caone-masterplan.jpg';
+
+  // Polygon drawing hook
+  const {
+    isDrawingMode,
+    currentMode,
+    currentPolygon,
+    selectedLotId: drawingSelectedLotId,
+    isSaving,
+    setSelectedLotId: setDrawingSelectedLotId,
+    initializeDraw,
+    startDrawing,
+    startEditing,
+    startDeleting,
+    cancelDrawing,
+    exitDrawingMode,
+    savePolygonToLot,
+    deletePolygonFromLot,
+  } = usePolygonDrawing({
+    map: map.current,
+    lots: lots.map(l => ({ id: l.id, lot_number: l.lot_number, area: l.area, polygon: l.polygon })),
+    onLotsUpdated,
+  });
+
+  // Enable drawing mode
+  const handleEnableDrawingMode = useCallback(() => {
+    if (map.current && mapLoaded) {
+      setShowDrawingPanel(true);
+      setShowMasterPlanOverlay(true); // Show master plan for reference
+      initializeDraw();
+    }
+  }, [mapLoaded, initializeDraw]);
+
+  // Disable drawing mode
+  const handleDisableDrawingMode = useCallback(() => {
+    exitDrawingMode();
+    setShowDrawingPanel(false);
+  }, [exitDrawingMode]);
 
   // Auto-load KMZ from URL if lots don't have polygons yet
   useEffect(() => {
@@ -703,7 +744,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       />
       
       {/* Controls row */}
-      <div className="absolute top-3 left-3 flex gap-2">
+      <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
         {/* Style toggle */}
         <Button
           variant="secondary"
@@ -726,8 +767,21 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           Master Plan
         </Button>
         
-        {/* Import KMZ button */}
+        {/* Drawing mode toggle */}
         {projectId && (
+          <Button
+            variant={showDrawingPanel ? "default" : "secondary"}
+            size="sm"
+            className="gap-2 glass"
+            onClick={showDrawingPanel ? handleDisableDrawingMode : handleEnableDrawingMode}
+          >
+            <PenTool className="h-4 w-4" />
+            {showDrawingPanel ? 'Salir Edición' : 'Dibujar Lotes'}
+          </Button>
+        )}
+        
+        {/* Import KMZ button - hide when drawing */}
+        {projectId && !showDrawingPanel && (
           <Button
             variant="secondary"
             size="sm"
@@ -740,8 +794,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           </Button>
         )}
         
-        {/* Regenerate polygons button */}
-        {projectId && kmzFileUrl && (
+        {/* Regenerate polygons button - hide when drawing */}
+        {projectId && kmzFileUrl && !showDrawingPanel && (
           <Button
             variant="outline"
             size="sm"
@@ -754,6 +808,34 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           </Button>
         )}
       </div>
+      
+      {/* Drawing Tool Panel */}
+      {showDrawingPanel && (
+        <div className="absolute top-16 left-3 z-10 w-64">
+          <LotDrawingTool
+            lots={lots.map(l => ({ 
+              id: l.id, 
+              lot_number: l.lot_number, 
+              area: l.area, 
+              status: l.status,
+              polygon: l.polygon 
+            }))}
+            isDrawingMode={isDrawingMode}
+            currentMode={currentMode}
+            currentPolygon={currentPolygon}
+            selectedLotId={drawingSelectedLotId}
+            isSaving={isSaving}
+            onStartDrawing={startDrawing}
+            onStartEditing={startEditing}
+            onStartDeleting={startDeleting}
+            onCancelDrawing={cancelDrawing}
+            onExitDrawingMode={handleDisableDrawingMode}
+            onSelectLot={setDrawingSelectedLotId}
+            onSavePolygon={savePolygonToLot}
+            onDeletePolygon={deletePolygonFromLot}
+          />
+        </div>
+      )}
       
       {/* Master plan overlay controls */}
       <MasterPlanOverlay
