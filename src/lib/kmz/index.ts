@@ -8,6 +8,13 @@ import { generatePolygonsFromPoints } from './polygonBuilder';
 import { buildPolygonsAdvanced, validatePolygon } from './advancedPolygonBuilder';
 import { buildPolygonsFromMixedGeometry, convertLineStringsToPolygons } from './lineStringToPolygon';
 import { calculatePolygonArea } from './geometry';
+import { 
+  validatePolygonShape, 
+  calculateCentroid as calcPolygonCentroid, 
+  simplifyPolygon, 
+  isReasonableLotShape,
+  formatPolygonArea 
+} from './polygonValidator';
 
 // Re-export types and utilities
 export type { KMLPlacemark, ParsedKMZ, LotInfo };
@@ -17,7 +24,13 @@ export {
   buildPolygonsAdvanced, 
   validatePolygon,
   buildPolygonsFromMixedGeometry,
-  convertLineStringsToPolygons
+  convertLineStringsToPolygons,
+  // Polygon validator exports
+  validatePolygonShape,
+  calcPolygonCentroid,
+  simplifyPolygon,
+  isReasonableLotShape,
+  formatPolygonArea,
 };
 
 // Calculate bounds and center from placemarks
