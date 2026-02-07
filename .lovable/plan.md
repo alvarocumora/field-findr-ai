@@ -1,112 +1,58 @@
 
+# Plan: Sistema Mejorado de Visualizacion de Mapa 3D con Poligonos Reales
 
-# Plan: Mejoras al Modulo de Proyectos
+## Diagnostico del Problema Actual
 
-## Resumen Ejecutivo
-Implementar mejoras significativas en el sistema de gestion de proyectos inmobiliarios, incluyendo una nueva pestana legal para documentacion y compliance, tarjetas de lotes mejoradas con mas informacion visual, y un modulo de calculo de financiamiento integrado en la vista de proyecto.
+**Problema Identificado:**
+El mapa 3D muestra poligonos distorsionados (formas tipo "abanico" o "estrella") porque:
+1. El archivo KMZ actual (`brisas-original.kmz`) contiene datos catastrales oficiales (158 puntos + 86 segmentos de lineas) pero NO los poligonos cerrados de los lotes del proyecto
+2. Los algoritmos actuales intentan "reconstruir" poligonos conectando estos segmentos, pero el resultado no coincide con la distribucion real de lotes
+3. Algunos lotes tienen 500+ vertices (formas complejas incorrectas) y otros solo 5 vertices
 
----
-
-## 1. Nueva Pestana Legal en Proyectos
-
-### Objetivo
-Agregar una pestana "Legal" al detalle del proyecto que muestre toda la informacion juridica y documental relevante.
-
-### Contenido de la Pestana Legal
-
-**Seccion Documentos del Proyecto:**
-- Titulo de dominio
-- Planos aprobados
-- Certificado de subdivisión
-- Permisos municipales
-- Recepcion final (si aplica)
-- Factibilidad de servicios (agua, electricidad)
-
-**Seccion Estado Juridico:**
-- ROL de la propiedad
-- Situacion catastral
-- Gravamenes e hipotecas
-- Prohibiciones
-- Litigios pendientes
-
-**Seccion Permisos y Aprobaciones:**
-- Permiso de loteo
-- Resolucion sanitaria
-- Informe de impacto ambiental
-- Certificado de urbanizacion
-
-### Componente a Crear
-`src/components/projects/LegalTab.tsx`
-
-### Cambios en Base de Datos
-Agregar nuevas columnas a la tabla `projects`:
-- `legal_documents` (jsonb) - almacena lista de documentos con estado
-- `legal_status` (text) - estado legal general del proyecto
-- `rol_number` (text) - numero de ROL catastral
-- `permits` (jsonb) - permisos y aprobaciones
+**Datos Actuales en BD:**
+- Lotes con poligonos de 5 a 987 puntos
+- Areas calculadas desde 23 m2 hasta 125,746 m2 (claramente erroneas)
+- Los poligonos no corresponden a la forma rectangular/trapezoidal de los lotes reales del master plan
 
 ---
 
-## 2. Tarjetas de Lotes Mejoradas
+## Solucion Propuesta: Sistema Completo de Gestion de Poligonos
 
-### Mejoras Visuales
+### Parte 1: Herramienta de Dibujo Manual de Poligonos
 
-**Informacion Adicional a Mostrar:**
-- Precio por m2 calculado automaticamente
-- Indicador visual de orientacion (si disponible)
-- Mini-preview del poligono del lote
-- Tiempo en venta / dias desde reserva
-- Historial de cambios de precio
+Agregar una herramienta de dibujo interactivo usando Mapbox Draw que permita:
 
-**Mejoras de Interaccion:**
-- Animacion al seleccionar
-- Vista rapida (quick view) sin abrir modal
-- Comparacion directa entre lotes seleccionados
-- Indicador de "ultimo disponible" cuando queden pocos
+- Trazar poligonos directamente sobre el mapa satelital
+- Superponer el master plan como referencia visual (ya existe)
+- Asignar cada poligono dibujado a un lote especifico
+- Calcular el area automaticamente al cerrar el poligono
+- Guardar las coordenadas en la base de datos
 
-### Indicadores Visuales
-- Badge de "Destacado" para lotes premium
-- Icono de servicios disponibles mas prominente
-- Progress bar visual de financiamiento (si aplica)
-- Etiqueta de descuento si hay promocion activa
+**Flujo de uso:**
+1. Usuario activa modo "Dibujar Lotes"
+2. Se muestra el master plan superpuesto con opacidad ajustable
+3. Usuario dibuja el poligono siguiendo los limites del lote en el master plan
+4. Al cerrar, se muestra el area calculada
+5. Usuario selecciona el numero de lote de un dropdown
+6. Se guarda automaticamente
 
-### Componentes a Modificar
-- `src/components/lots/LotCard.tsx`
-- `src/pages/ProjectDetail.tsx` (seccion de lista de lotes)
+### Parte 2: Mejora del Parser KMZ para Poligonos Reales
 
----
+Optimizar el sistema para que si el KMZ contiene poligonos cerrados reales (exportados correctamente desde Google Earth Pro), se usen directamente sin transformacion:
 
-## 3. Modulo de Calculo de Financiamiento
+- Detectar geometrias `<Polygon>` con `<outerBoundaryIs>` validos
+- Validar que los poligonos tienen forma razonable (4-50 vertices)
+- Calcular area y centroide correctamente
+- Matchear por nombre o numero de lote
 
-### Ubicacion
-Integrado en la sidebar del detalle del proyecto, aparece al seleccionar un lote.
+### Parte 3: Generador de Poligonos desde PDF de Planos
 
-### Calculadoras Incluidas
+Agregar capacidad de extraer coordenadas de planos PDF georeferenciados:
 
-**3.1 Simulador de Cuotas:**
-- Precio del lote (precargado)
-- Porcentaje de pie (slider 10-50%)
-- Plazo en meses (12, 24, 36, 48, 60)
-- Tasa de interes mensual
-- Resultado: cuota mensual, total a pagar, CAE estimado
-
-**3.2 Capacidad de Compra:**
-- Ingreso mensual del comprador
-- Porcentaje maximo de endeudamiento (25-40%)
-- Resultado: precio maximo que puede pagar
-
-**3.3 Comparador de Escenarios:**
-- Comparar 2-3 escenarios de financiamiento
-- Tabla comparativa de cuotas y totales
-- Recomendacion automatica
-
-### Componente a Crear
-`src/components/projects/FinancingCalculator.tsx`
-
-### Integracion
-- Aparece en sidebar cuando se selecciona un lote disponible
-- Boton "Simular Financiamiento" en las tarjetas de lotes
-- Puede generar cotizacion en PDF
+- Subir PDF del plano catastral
+- Detectar coordenadas UTM o geograficas en el documento
+- Convertir a formato compatible con Mapbox
+- Generar poligonos aproximados basados en el analisis del plano
 
 ---
 
@@ -115,113 +61,154 @@ Integrado en la sidebar del detalle del proyecto, aparece al seleccionar un lote
 ```text
 src/
 ├── components/
-│   ├── projects/
-│   │   ├── LegalTab.tsx          (NUEVO)
-│   │   ├── FinancingCalculator.tsx (NUEVO)
-│   │   ├── LegalDocumentCard.tsx  (NUEVO)
-│   │   └── KMZImportDialog.tsx   (existente)
-│   └── lots/
-│       └── LotCard.tsx           (MODIFICAR)
-└── pages/
-    └── ProjectDetail.tsx         (MODIFICAR)
-```
-
----
-
-## Flujo de Usuario
-
-```text
-Usuario en ProjectDetail.tsx
-         │
-         ├─► Tab "Legal" ──► Ver documentos, estados, permisos
-         │
-         ├─► Tab "Lotes" ──► Tarjetas mejoradas con mas info
-         │        │
-         │        └─► Click en lote ──► Sidebar con:
-         │                                  ├─ Detalle del lote
-         │                                  ├─ Boton "Simular Financiamiento"
-         │                                  └─ Calculadora desplegable
-         │
-         └─► Tab "Mapa 3D" ──► Click en poligono ──► Mismo flujo
+│   ├── lots/
+│   │   ├── LotMapView.tsx         (MODIFICAR - agregar modo dibujo)
+│   │   ├── LotDrawingTool.tsx     (NUEVO - herramienta de dibujo)
+│   │   ├── LotPolygonEditor.tsx   (NUEVO - editor de poligonos)
+│   │   └── MasterPlanOverlay.tsx  (existente)
+│   └── map/
+│       └── DrawingToolbar.tsx     (existente - extender)
+├── lib/
+│   └── kmz/
+│       ├── kmlParser.ts           (MODIFICAR - mejorar extraccion)
+│       └── polygonValidator.ts    (NUEVO - validar formas)
+└── hooks/
+    └── usePolygonDrawing.ts       (NUEVO - logica de dibujo)
 ```
 
 ---
 
 ## Detalles Tecnicos
 
-### Migracion de Base de Datos
+### Componente LotDrawingTool.tsx
+
+```text
+Funcionalidades:
+- Integrar @mapbox/mapbox-gl-draw (ya instalado)
+- Modo poligono para dibujar lotes
+- Snapping a vertices cercanos
+- Calculo de area en tiempo real
+- Selector de lote para asignar
+- Guardar en tabla lots.polygon
+```
+
+### Mejora de LotMapView.tsx
+
+```text
+Cambios:
+- Agregar boton "Modo Edicion" para activar dibujo
+- Mostrar toolbar de dibujo cuando esta activo
+- Permitir editar poligonos existentes
+- Boton "Limpiar y Redibujar" por lote
+```
+
+### Nuevo Hook usePolygonDrawing.ts
+
+```text
+Responsabilidades:
+- Inicializar MapboxDraw
+- Manejar eventos de dibujo
+- Calcular area con formula Shoelace
+- Guardar/actualizar poligonos en Supabase
+- Validar que el poligono este cerrado
+```
+
+### Validador de Poligonos polygonValidator.ts
+
+```text
+Funciones:
+- validatePolygonShape() - verificar forma valida
+- calculatePolygonArea() - area en m2
+- simplifyPolygon() - reducir vertices innecesarios
+- isReasonableLotShape() - detectar formas anormales
+```
+
+---
+
+## Flujo de Usuario Mejorado
+
+```text
+Usuario en ProjectDetail > Mapa 3D
+         │
+         ├─► Ver poligonos existentes
+         │        │
+         │        └─► Si incorrectos ──► "Modo Edicion"
+         │                                    │
+         │                                    ├─► Superponer Master Plan
+         │                                    │
+         │                                    ├─► Dibujar nuevo poligono
+         │                                    │
+         │                                    ├─► Seleccionar lote
+         │                                    │
+         │                                    └─► Guardar
+         │
+         ├─► Importar KMZ correcto
+         │        │
+         │        └─► Detectar poligonos reales ──► Asignar a lotes
+         │
+         └─► Subir PDF de plano (futuro)
+                  │
+                  └─► Extraer georeferencias ──► Generar poligonos
+```
+
+---
+
+## Interfaz de Modo Edicion
+
+Cuando el usuario active "Modo Edicion":
+
+1. **Toolbar de Dibujo** (esquina superior izquierda):
+   - Boton "Dibujar Poligono"
+   - Boton "Editar Existente"  
+   - Boton "Eliminar Poligono"
+   - Selector de lote activo
+
+2. **Panel de Informacion** (lateral):
+   - Area del poligono actual
+   - Numero de vertices
+   - Lote asignado
+   - Boton "Guardar Cambios"
+
+3. **Indicadores Visuales**:
+   - Vertices arrastrables
+   - Area en tiempo real mientras dibuja
+   - Color diferente para poligonos sin asignar
+
+---
+
+## Migracion de Datos Existentes
+
+Antes de implementar, limpiar los poligonos incorrectos:
 
 ```sql
--- Agregar columnas legales a projects
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS legal_documents jsonb DEFAULT '[]'::jsonb;
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS legal_status text DEFAULT 'pending';
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS rol_number text;
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS permits jsonb DEFAULT '[]'::jsonb;
-```
-
-### Estructura de legal_documents (jsonb)
-```json
-[
-  {
-    "type": "titulo_dominio",
-    "name": "Titulo de Dominio",
-    "status": "verified", // pending | verified | rejected
-    "file_url": "...",
-    "verified_at": "2025-01-15",
-    "notes": "..."
-  }
-]
-```
-
-### Estructura de permits (jsonb)
-```json
-[
-  {
-    "type": "permiso_loteo",
-    "name": "Permiso de Loteo",
-    "number": "RES-2024-1234",
-    "status": "approved",
-    "issued_date": "2024-06-15",
-    "expiry_date": "2026-06-15"
-  }
-]
-```
-
-### Formulas de Financiamiento
-
-**Cuota Mensual (Sistema Frances):**
-```
-M = P * [r(1+r)^n] / [(1+r)^n - 1]
-
-Donde:
-M = Cuota mensual
-P = Principal (monto a financiar)
-r = Tasa de interes mensual (en decimal)
-n = Numero total de cuotas
-```
-
-**CAE Aproximado:**
-```
-CAE = ((Total Pagado / Principal) ^ (1/años)) - 1
+-- Resetear poligonos con formas anomalas (>100 vertices o area <100m2)
+UPDATE lots 
+SET polygon = NULL, latitude = NULL, longitude = NULL
+WHERE project_id = 'e0d83d66-c7be-4c94-a017-3ad331d74699'
+  AND (
+    jsonb_array_length(polygon::jsonb) > 100
+    OR area < 100
+  );
 ```
 
 ---
 
 ## Orden de Implementacion
 
-1. **Migracion de BD** - Agregar columnas legales a projects
-2. **LegalTab.tsx** - Componente de pestana legal
-3. **FinancingCalculator.tsx** - Calculadora de financiamiento
-4. **LotCard.tsx** - Mejoras visuales
-5. **ProjectDetail.tsx** - Integrar nuevas pestanas y calculadora
-6. **Actualizar tipos TypeScript** - Reflejar nuevas columnas
+1. **usePolygonDrawing.ts** - Hook para manejar logica de dibujo
+2. **LotDrawingTool.tsx** - Componente de herramienta de dibujo
+3. **polygonValidator.ts** - Validador de formas
+4. **LotMapView.tsx** - Integrar modo edicion
+5. **Limpiar datos** - Resetear poligonos incorrectos
+6. **Testing** - Probar flujo completo de dibujo
 
 ---
 
-## Consideraciones
+## Consideraciones Tecnicas
 
-- La pestana legal solo mostrara informacion publica al visitante
-- Los campos editables de documentos solo estaran disponibles para el dueno del proyecto (dashboard)
-- El modulo de financiamiento usara tasas de referencia chilenas actualizables
-- Las tarjetas de lotes mantendran compatibilidad con la vista actual
+- MapboxDraw ya esta instalado (`@mapbox/mapbox-gl-draw`)
+- El master plan overlay ya funciona para usarlo como referencia
+- Formula de area: Shoelace (ya implementada en geometry.ts)
+- Conversion de coordenadas: lat/lng a metros para calculos de area
+- Guardado optimista con rollback si falla
 
