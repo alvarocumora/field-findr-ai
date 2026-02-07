@@ -552,6 +552,90 @@ export type Database = {
         }
         Relationships: []
       }
+      reservations: {
+        Row: {
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string | null
+          buyer_rut: string | null
+          contract_id: string | null
+          converted_at: string | null
+          created_at: string
+          currency: string
+          expires_at: string
+          id: string
+          lead_id: string | null
+          lot_id: string
+          mercadopago_payment_id: string | null
+          mercadopago_preference_id: string | null
+          notes: string | null
+          paid_at: string | null
+          reservation_amount: number
+          status: Database["public"]["Enums"]["reservation_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          buyer_email: string
+          buyer_name: string
+          buyer_phone?: string | null
+          buyer_rut?: string | null
+          contract_id?: string | null
+          converted_at?: string | null
+          created_at?: string
+          currency?: string
+          expires_at?: string
+          id?: string
+          lead_id?: string | null
+          lot_id: string
+          mercadopago_payment_id?: string | null
+          mercadopago_preference_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          reservation_amount?: number
+          status?: Database["public"]["Enums"]["reservation_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          buyer_email?: string
+          buyer_name?: string
+          buyer_phone?: string | null
+          buyer_rut?: string | null
+          contract_id?: string | null
+          converted_at?: string | null
+          created_at?: string
+          currency?: string
+          expires_at?: string
+          id?: string
+          lead_id?: string | null
+          lot_id?: string
+          mercadopago_payment_id?: string | null
+          mercadopago_preference_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          reservation_amount?: number
+          status?: Database["public"]["Enums"]["reservation_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_searches: {
         Row: {
           created_at: string | null
@@ -657,6 +741,12 @@ export type Database = {
     }
     Enums: {
       app_role: "buyer" | "agent" | "admin"
+      reservation_status:
+        | "pending_payment"
+        | "paid"
+        | "expired"
+        | "cancelled"
+        | "converted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -785,6 +875,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["buyer", "agent", "admin"],
+      reservation_status: [
+        "pending_payment",
+        "paid",
+        "expired",
+        "cancelled",
+        "converted",
+      ],
     },
   },
 } as const

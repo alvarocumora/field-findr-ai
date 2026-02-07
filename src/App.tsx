@@ -36,6 +36,9 @@ import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import SubscriptionFailure from "./pages/SubscriptionFailure";
 import Subscription from "./pages/Subscription";
 import AdminUsers from "./pages/AdminUsers";
+import ReservationSuccess from "./pages/ReservationSuccess";
+import ReservationError from "./pages/ReservationError";
+import ReservationPending from "./pages/ReservationPending";
 
 // Dashboard pages (lazy loaded)
 import { DashboardAdmin, DashboardAsesor, DashboardInmobiliaria } from "./pages/dashboard";
@@ -83,6 +86,11 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/subscription/success" element={<SubscriptionSuccess />} />
               <Route path="/subscription/failure" element={<SubscriptionFailure />} />
+              
+              {/* Reservation result pages */}
+              <Route path="/reserva/exito" element={<ReservationSuccess />} />
+              <Route path="/reserva/error" element={<ReservationError />} />
+              <Route path="/reserva/pendiente" element={<ReservationPending />} />
               
               {/* Auth-only routes */}
               <Route path="/favorites" element={

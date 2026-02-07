@@ -21,15 +21,16 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { Maximize2, DollarSign, MapPin, Send, Loader2 } from 'lucide-react';
+import { useCreateReservation } from '@/hooks/useReservations';
+import { Maximize2, DollarSign, Clock, Send, Loader2, CreditCard, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const reservationSchema = z.object({
   firstName: z.string().min(2, 'Mínimo 2 caracteres').max(50),
   lastName: z.string().min(2, 'Mínimo 2 caracteres').max(50),
   email: z.string().email('Email inválido').max(100),
   phone: z.string().min(8, 'Teléfono inválido').max(20),
+  rut: z.string().max(12).optional(),
   message: z.string().max(500).optional(),
 });
 
@@ -49,6 +50,7 @@ interface LotReservationDialogProps {
   projectName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  reservationAmount?: number;
 }
 
 const formatPrice = (price: number | null) => {
@@ -65,8 +67,10 @@ export const LotReservationDialog = ({
   projectName,
   open,
   onOpenChange,
+  reservationAmount = 500000,
 }: LotReservationDialogProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [step, setStep] = useState<'form' | 'payment'>('form');
+  const createReservation = useCreateReservation();
 
   const form = useForm<ReservationFormData>({
     resolver: zodResolver(reservationSchema),
@@ -75,6 +79,7 @@ export const LotReservationDialog = ({
       lastName: '',
       email: '',
       phone: '',
+      rut: '',
       message: '',
     },
   });
@@ -82,79 +87,91 @@ export const LotReservationDialog = ({
   const onSubmit = async (data: ReservationFormData) => {
     if (!lot) return;
     
-    setIsSubmitting(true);
-    try {
-      // Create a lead for this reservation request
-      const { error } = await supabase.from('leads').insert({
-        first_name: data.firstName,
-        last_name: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        notes: `Solicitud de reserva para Lote ${lot.lot_number} en ${projectName}. ${data.message || ''}`,
-        project_id: lot.project_id,
-        lot_id: lot.id,
-        source: 'web_reservation',
-        status: 'new',
-        budget_min: lot.price ? lot.price * 0.9 : null,
-        budget_max: lot.price ? lot.price * 1.1 : null,
-        user_id: (await supabase.auth.getUser()).data.user?.id || '',
-      });
+    const result = await createReservation.mutateAsync({
+      lot_id: lot.id,
+      buyer_name: `${data.firstName} ${data.lastName}`,
+      buyer_email: data.email,
+      buyer_phone: data.phone,
+      buyer_rut: data.rut,
+      reservation_amount: reservationAmount,
+      notes: data.message,
+    });
 
-      if (error) throw error;
-
-      toast.success('¡Solicitud enviada!', {
-        description: 'Nos pondremos en contacto contigo pronto.',
-      });
-      
+    // If we got a payment URL, redirect to MercadoPago
+    if (result.payment_url) {
+      window.location.href = result.payment_url;
+    } else {
+      // No payment URL, just close the dialog
       form.reset();
+      setStep('form');
       onOpenChange(false);
-    } catch (error: any) {
-      console.error('Error submitting reservation:', error);
-      toast.error('Error al enviar', {
-        description: 'Por favor intenta de nuevo más tarde.',
-      });
-    } finally {
-      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (!createReservation.isPending) {
+      form.reset();
+      setStep('form');
+      onOpenChange(false);
     }
   };
 
   if (!lot) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Badge className="bg-primary text-primary-foreground">
               Lote {lot.lot_number}
             </Badge>
-            Solicitar Reserva
+            Reservar con Seña
           </DialogTitle>
           <DialogDescription>
-            Completa tus datos para reservar este lote en {projectName}
+            Reserva este lote en {projectName} con una seña de {formatPrice(reservationAmount)}
           </DialogDescription>
         </DialogHeader>
 
         {/* Lot Summary */}
-        <div className="grid grid-cols-2 gap-3 p-3 rounded-lg bg-muted/50 mb-4">
+        <div className="grid grid-cols-3 gap-3 p-3 rounded-lg bg-muted/50 mb-4">
           <div className="flex items-center gap-2">
             <Maximize2 className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Superficie</p>
-              <p className="font-semibold">{lot.area.toLocaleString()} m²</p>
+              <p className="font-semibold text-sm">{lot.area.toLocaleString()} m²</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Precio</p>
-              <p className="font-semibold text-primary">{formatPrice(lot.price)}</p>
+              <p className="text-xs text-muted-foreground">Precio Total</p>
+              <p className="font-semibold text-sm text-primary">{formatPrice(lot.price)}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-xs text-muted-foreground">Reserva válida</p>
+              <p className="font-semibold text-sm">48 horas</p>
             </div>
           </div>
         </div>
 
+        {/* Reservation Amount Highlight */}
+        <Alert className="border-primary/50 bg-primary/5">
+          <CreditCard className="h-4 w-4" />
+          <AlertDescription className="text-sm">
+            <strong>Seña de reserva: {formatPrice(reservationAmount)}</strong>
+            <br />
+            <span className="text-muted-foreground">
+              Este monto se descontará del precio total al firmar la promesa de compraventa.
+            </span>
+          </AlertDescription>
+        </Alert>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
@@ -198,19 +215,34 @@ export const LotReservationDialog = ({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Teléfono</FormLabel>
-                  <FormControl>
-                    <Input type="tel" placeholder="+56 9 1234 5678" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Teléfono</FormLabel>
+                    <FormControl>
+                      <Input type="tel" placeholder="+56 9 1234 5678" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="rut"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>RUT (opcional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="12.345.678-9" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
@@ -222,7 +254,7 @@ export const LotReservationDialog = ({
                     <Textarea 
                       placeholder="¿Alguna consulta adicional?"
                       className="resize-none"
-                      rows={3}
+                      rows={2}
                       {...field} 
                     />
                   </FormControl>
@@ -231,14 +263,29 @@ export const LotReservationDialog = ({
               )}
             />
 
-            <Button type="submit" className="w-full gap-2" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-              {isSubmitting ? 'Enviando...' : 'Solicitar Reserva'}
-            </Button>
+            <div className="flex flex-col gap-2 pt-2">
+              <Button 
+                type="submit" 
+                className="w-full gap-2" 
+                disabled={createReservation.isPending}
+                size="lg"
+              >
+                {createReservation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-4 w-4" />
+                    Pagar Seña {formatPrice(reservationAmount)}
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Serás redirigido a MercadoPago para completar el pago de forma segura
+              </p>
+            </div>
           </form>
         </Form>
       </DialogContent>

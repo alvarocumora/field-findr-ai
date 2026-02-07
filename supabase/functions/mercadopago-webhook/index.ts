@@ -52,14 +52,21 @@ serve(async (req) => {
       console.log("Payment details:", JSON.stringify(payment, null, 2));
 
       // Parse external reference
-      let externalRef: { user_id: string; plan_type: string } | null = null;
+      let externalRef: { 
+        type?: string;
+        user_id?: string; 
+        plan_type?: string;
+        reservation_id?: string;
+        lot_id?: string;
+      } | null = null;
+      
       try {
         externalRef = JSON.parse(payment.external_reference || "{}");
       } catch (e) {
         console.error("Failed to parse external reference:", e);
       }
 
-      if (!externalRef?.user_id || !externalRef?.plan_type) {
+      if (!externalRef) {
         console.error("Invalid external reference");
         return new Response(JSON.stringify({ error: "Invalid external reference" }), {
           status: 400,
@@ -69,81 +76,128 @@ serve(async (req) => {
 
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-      // Record the payment
-      const { error: paymentError } = await supabase.from("payments").insert({
-        user_id: externalRef.user_id,
-        amount: payment.transaction_amount,
-        currency: payment.currency_id,
-        status: payment.status,
-        mercadopago_payment_id: paymentId.toString(),
-        mercadopago_preference_id: payment.preference_id,
-        description: `Suscripción ${externalRef.plan_type}`
-      });
+      // Handle RESERVATION payments
+      if (externalRef.type === "reservation" && externalRef.reservation_id) {
+        console.log("Processing reservation payment:", externalRef.reservation_id);
+        
+        if (payment.status === "approved") {
+          // Update reservation to paid
+          const { error: updateError } = await supabase
+            .from("reservations")
+            .update({
+              status: "paid",
+              mercadopago_payment_id: paymentId.toString(),
+              paid_at: new Date().toISOString(),
+            })
+            .eq("id", externalRef.reservation_id);
 
-      if (paymentError) {
-        console.error("Failed to record payment:", paymentError);
+          if (updateError) {
+            console.error("Failed to update reservation:", updateError);
+          } else {
+            console.log("Reservation marked as paid:", externalRef.reservation_id);
+          }
+
+          // Record the payment
+          await supabase.from("payments").insert({
+            user_id: externalRef.user_id,
+            amount: payment.transaction_amount,
+            currency: payment.currency_id,
+            status: payment.status,
+            mercadopago_payment_id: paymentId.toString(),
+            mercadopago_preference_id: payment.preference_id,
+            description: `Reserva de lote - ID: ${externalRef.lot_id}`
+          });
+        } else if (payment.status === "rejected" || payment.status === "cancelled") {
+          // Mark reservation as cancelled if payment failed
+          await supabase
+            .from("reservations")
+            .update({ status: "cancelled" })
+            .eq("id", externalRef.reservation_id);
+        }
+
+        return new Response(JSON.stringify({ received: true, type: "reservation" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
       }
 
-      // If payment approved, update or create subscription
-      if (payment.status === "approved") {
-        const now = new Date();
-        const periodEnd = new Date(now);
-        periodEnd.setMonth(periodEnd.getMonth() + 1);
+      // Handle SUBSCRIPTION payments (existing logic)
+      if (externalRef.user_id && externalRef.plan_type) {
+        // Record the payment
+        const { error: paymentError } = await supabase.from("payments").insert({
+          user_id: externalRef.user_id,
+          amount: payment.transaction_amount,
+          currency: payment.currency_id,
+          status: payment.status,
+          mercadopago_payment_id: paymentId.toString(),
+          mercadopago_preference_id: payment.preference_id,
+          description: `Suscripción ${externalRef.plan_type}`
+        });
 
-        // Check if user already has a subscription
-        const { data: existingSub } = await supabase
-          .from("subscriptions")
-          .select("id")
-          .eq("user_id", externalRef.user_id)
-          .single();
+        if (paymentError) {
+          console.error("Failed to record payment:", paymentError);
+        }
 
-        if (existingSub) {
-          // Update existing subscription
-          const { error: updateError } = await supabase
+        // If payment approved, update or create subscription
+        if (payment.status === "approved") {
+          const now = new Date();
+          const periodEnd = new Date(now);
+          periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+          // Check if user already has a subscription
+          const { data: existingSub } = await supabase
             .from("subscriptions")
-            .update({
+            .select("id")
+            .eq("user_id", externalRef.user_id)
+            .single();
+
+          if (existingSub) {
+            // Update existing subscription
+            const { error: updateError } = await supabase
+              .from("subscriptions")
+              .update({
+                plan_type: externalRef.plan_type,
+                status: "active",
+                mercadopago_payer_id: payment.payer?.id?.toString(),
+                current_period_start: now.toISOString(),
+                current_period_end: periodEnd.toISOString(),
+                cancel_at_period_end: false
+              })
+              .eq("id", existingSub.id);
+
+            if (updateError) {
+              console.error("Failed to update subscription:", updateError);
+            }
+          } else {
+            // Create new subscription
+            const { error: insertError } = await supabase.from("subscriptions").insert({
+              user_id: externalRef.user_id,
               plan_type: externalRef.plan_type,
               status: "active",
               mercadopago_payer_id: payment.payer?.id?.toString(),
               current_period_start: now.toISOString(),
-              current_period_end: periodEnd.toISOString(),
-              cancel_at_period_end: false
-            })
-            .eq("id", existingSub.id);
-
-          if (updateError) {
-            console.error("Failed to update subscription:", updateError);
-          }
-        } else {
-          // Create new subscription
-          const { error: insertError } = await supabase.from("subscriptions").insert({
-            user_id: externalRef.user_id,
-            plan_type: externalRef.plan_type,
-            status: "active",
-            mercadopago_payer_id: payment.payer?.id?.toString(),
-            current_period_start: now.toISOString(),
-            current_period_end: periodEnd.toISOString()
-          });
-
-          if (insertError) {
-            console.error("Failed to create subscription:", insertError);
-          }
-        }
-
-        // Assign agent role if upgrading to professional or enterprise
-        if (externalRef.plan_type === "professional" || externalRef.plan_type === "enterprise") {
-          const { data: existingRole } = await supabase
-            .from("user_roles")
-            .select("id")
-            .eq("user_id", externalRef.user_id)
-            .eq("role", "agent")
-            .single();
-
-          if (!existingRole) {
-            await supabase.from("user_roles").insert({
-              user_id: externalRef.user_id,
-              role: "agent"
+              current_period_end: periodEnd.toISOString()
             });
+
+            if (insertError) {
+              console.error("Failed to create subscription:", insertError);
+            }
+          }
+
+          // Assign agent role if upgrading to professional or enterprise
+          if (externalRef.plan_type === "professional" || externalRef.plan_type === "enterprise") {
+            const { data: existingRole } = await supabase
+              .from("user_roles")
+              .select("id")
+              .eq("user_id", externalRef.user_id)
+              .eq("role", "agent")
+              .single();
+
+            if (!existingRole) {
+              await supabase.from("user_roles").insert({
+                user_id: externalRef.user_id,
+                role: "agent"
+              });
+            }
           }
         }
       }
