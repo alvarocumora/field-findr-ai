@@ -26,8 +26,7 @@ import {
   List,
   Navigation,
   Scale,
-  Calculator,
-  Globe
+  Calculator
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -179,21 +178,15 @@ const ProjectDetail = () => {
           <div className="grid lg:grid-cols-4 gap-6">
             {/* Main Content */}
             <div className="lg:col-span-3">
-              <Tabs defaultValue={(project as any).embed_map_url ? "landid" : "masterplan"} className="space-y-4">
+              <Tabs defaultValue="interactive-map" className="space-y-4">
                 <TabsList className="glass flex-wrap">
-                  {(project as any).embed_map_url && (
-                    <TabsTrigger value="landid" className="gap-2">
-                      <Globe className="h-4 w-4" />
-                      Mapa Interactivo
-                    </TabsTrigger>
-                  )}
+                  <TabsTrigger value="interactive-map" className="gap-2">
+                    <Navigation className="h-4 w-4" />
+                    Mapa Interactivo
+                  </TabsTrigger>
                   <TabsTrigger value="masterplan" className="gap-2">
                     <Map className="h-4 w-4" />
                     Master Plan
-                  </TabsTrigger>
-                  <TabsTrigger value="interactive-map" className="gap-2">
-                    <Navigation className="h-4 w-4" />
-                    Mapa 3D
                   </TabsTrigger>
                   <TabsTrigger value="lots" className="gap-2">
                     <List className="h-4 w-4" />
@@ -209,9 +202,9 @@ const ProjectDetail = () => {
                   </TabsTrigger>
                 </TabsList>
 
-                {/* Land id Embed Tab */}
-                {(project as any).embed_map_url && (
-                  <TabsContent value="landid" className="space-y-4">
+                {/* Interactive Map Tab - Uses embed if available, otherwise 3D map */}
+                <TabsContent value="interactive-map" className="space-y-4">
+                  {(project as any).embed_map_url ? (
                     <div className="relative glass rounded-xl overflow-hidden">
                       <iframe
                         src={(project as any).embed_map_url}
@@ -223,57 +216,28 @@ const ProjectDetail = () => {
                         className="bg-muted"
                       />
                     </div>
-                  </TabsContent>
-                )}
-
-                {/* Master Plan Tab */}
-                <TabsContent value="masterplan" className="space-y-4">
-                  {/* Legend */}
-                  <div className="flex flex-wrap gap-4 p-4 glass rounded-xl">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-gray-400 rounded" />
-                      <span className="text-sm">Vendido</span>
-                    </div>
-                    {priceRanges.map((range) => (
-                      <div key={range.price} className="flex items-center gap-2">
-                        <div className={`w-4 h-4 ${range.color} rounded`} />
-                        <span className="text-sm">{range.label}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Master Plan Image */}
-                  <div className="relative glass rounded-xl overflow-hidden">
-                    <img
-                      src="/projects/brisas-de-caone-masterplan.jpg"
-                      alt={`Master Plan - ${project.name}`}
-                      className="w-full h-auto"
+                  ) : (
+                    <LotMapView
+                      lots={lots}
+                      projectCenter={{
+                        lat: project.latitude || -34.9767,
+                        lng: project.longitude || -71.7856
+                      }}
+                      onLotClick={(lot) => {
+                        setSelectedLot(lot.id);
+                        if (lot.status !== 'sold') {
+                          setReservationLot(lot);
+                        }
+                      }}
+                      selectedLotId={selectedLot}
+                      projectId={project.id}
+                      kmzFileUrl={(project as any).kmz_file_url}
+                      onLotsUpdated={() => {
+                        queryClient.invalidateQueries({ queryKey: ['project-lots', id] });
+                        queryClient.invalidateQueries({ queryKey: ['project', id] });
+                      }}
                     />
-                  </div>
-                </TabsContent>
-
-                {/* Interactive 3D Map Tab */}
-                <TabsContent value="interactive-map" className="space-y-4">
-                  <LotMapView
-                    lots={lots}
-                    projectCenter={{
-                      lat: project.latitude || -34.9767,
-                      lng: project.longitude || -71.7856
-                    }}
-                    onLotClick={(lot) => {
-                      setSelectedLot(lot.id);
-                      if (lot.status !== 'sold') {
-                        setReservationLot(lot);
-                      }
-                    }}
-                    selectedLotId={selectedLot}
-                    projectId={project.id}
-                    kmzFileUrl={(project as any).kmz_file_url}
-                    onLotsUpdated={() => {
-                      queryClient.invalidateQueries({ queryKey: ['project-lots', id] });
-                      queryClient.invalidateQueries({ queryKey: ['project', id] });
-                    }}
-                  />
+                  )}
                 </TabsContent>
 
                 {/* Lots List Tab - Using Enhanced Cards */}
