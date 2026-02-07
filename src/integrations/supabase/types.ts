@@ -476,6 +476,7 @@ export type Database = {
           country: string | null
           created_at: string
           description: string | null
+          embed_map_url: string | null
           id: string
           kmz_file_url: string | null
           latitude: number | null
@@ -502,6 +503,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           description?: string | null
+          embed_map_url?: string | null
           id?: string
           kmz_file_url?: string | null
           latitude?: number | null
@@ -528,6 +530,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           description?: string | null
+          embed_map_url?: string | null
           id?: string
           kmz_file_url?: string | null
           latitude?: number | null
