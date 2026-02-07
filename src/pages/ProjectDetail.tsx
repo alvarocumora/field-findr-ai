@@ -26,7 +26,8 @@ import {
   List,
   Navigation,
   Scale,
-  Calculator
+  Calculator,
+  Globe
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -178,8 +179,14 @@ const ProjectDetail = () => {
           <div className="grid lg:grid-cols-4 gap-6">
             {/* Main Content */}
             <div className="lg:col-span-3">
-              <Tabs defaultValue="masterplan" className="space-y-4">
+              <Tabs defaultValue={(project as any).embed_map_url ? "landid" : "masterplan"} className="space-y-4">
                 <TabsList className="glass flex-wrap">
+                  {(project as any).embed_map_url && (
+                    <TabsTrigger value="landid" className="gap-2">
+                      <Globe className="h-4 w-4" />
+                      Mapa Interactivo
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger value="masterplan" className="gap-2">
                     <Map className="h-4 w-4" />
                     Master Plan
@@ -201,6 +208,23 @@ const ProjectDetail = () => {
                     Galería
                   </TabsTrigger>
                 </TabsList>
+
+                {/* Land id Embed Tab */}
+                {(project as any).embed_map_url && (
+                  <TabsContent value="landid" className="space-y-4">
+                    <div className="relative glass rounded-xl overflow-hidden">
+                      <iframe
+                        src={(project as any).embed_map_url}
+                        width="100%"
+                        height="600"
+                        style={{ border: 0, borderRadius: '12px' }}
+                        allowFullScreen
+                        title={project.name}
+                        className="bg-muted"
+                      />
+                    </div>
+                  </TabsContent>
+                )}
 
                 {/* Master Plan Tab */}
                 <TabsContent value="masterplan" className="space-y-4">
