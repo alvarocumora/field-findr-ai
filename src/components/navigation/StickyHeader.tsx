@@ -46,8 +46,7 @@ const StickyHeader = () => {
 
   const publicNavigation = [
     { name: 'Explorar', href: '/explorar' },
-    { name: 'Comparar', href: '/comparar' },
-    { name: 'Proyectos', href: '/projects' },
+    { name: 'Precios', href: '/pricing' },
   ];
 
   const authenticatedNavigation = [
@@ -57,7 +56,7 @@ const StickyHeader = () => {
 
   const navigation = user 
     ? [...publicNavigation, ...authenticatedNavigation]
-    : [...publicNavigation, { name: 'Agentes', href: '/agentes' }, { name: 'Blog', href: '/blog' }];
+    : publicNavigation;
 
   const isActive = (path: string) => location.pathname === path;
 
