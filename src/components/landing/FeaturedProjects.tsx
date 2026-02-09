@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, MapPin, Layers, Sparkles } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { ArrowRight, MapPin, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const FeaturedProjects = () => {
@@ -18,15 +19,35 @@ const FeaturedProjects = () => {
     },
   });
 
+  // Fetch min lot price per project
+  const projectIds = projects.map((p) => p.id);
+  const { data: lotPrices = {} } = useQuery({
+    queryKey: ['lot-min-prices', projectIds],
+    queryFn: async () => {
+      if (projectIds.length === 0) return {};
+      const { data } = await supabase
+        .from('lots')
+        .select('project_id, price')
+        .in('project_id', projectIds)
+        .not('price', 'is', null)
+        .order('price', { ascending: true });
+
+      const result: Record<string, number> = {};
+      (data || []).forEach((lot) => {
+        if (!result[lot.project_id]) result[lot.project_id] = lot.price!;
+      });
+      return result;
+    },
+    enabled: projectIds.length > 0,
+  });
+
   if (projects.length === 0) return null;
 
   return (
     <section className="py-16 md:py-24 relative overflow-hidden">
-      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/5 to-background" />
-      
+
       <div className="container relative z-10 px-4">
-        {/* Header */}
         <div className="text-center mb-12">
           <Badge variant="outline" className="border-primary/30 text-primary mb-4">
             <Sparkles className="h-3 w-3 mr-1.5" />
@@ -41,67 +62,80 @@ const FeaturedProjects = () => {
           </p>
         </div>
 
-        {/* Projects Grid */}
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {projects.map((project, index) => (
-            <div
-              key={project.id}
-              className="group relative glass-strong rounded-3xl overflow-hidden card-hover"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              
-              {/* Top accent bar */}
-              <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary" />
-              
-              <div className="p-6 relative z-10">
-                {/* Status badge */}
-                <Badge className="mb-4 bg-primary/20 text-primary border-0">
-                  {project.available_lots || 0} lotes disponibles
-                </Badge>
-                
-                {/* Title */}
-                <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
-                  {project.name}
-                </h3>
-                
-                {/* Location */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <span>{project.city}, {project.region}</span>
-                </div>
-                
-                {/* Description */}
-                <p className="text-sm text-muted-foreground mb-6 line-clamp-2">
-                  {project.description}
-                </p>
-                
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="text-center p-3 rounded-xl bg-background/50">
-                    <div className="text-lg font-bold text-foreground">{project.total_lots || 0}</div>
-                    <div className="text-xs text-muted-foreground">Lotes totales</div>
+          {projects.map((project, index) => {
+            const total = project.total_lots ?? 0;
+            const sold = (project.sold_lots ?? 0) + (project.reserved_lots ?? 0);
+            const progress = total > 0 ? Math.round((sold / total) * 100) : 0;
+            const minPrice = lotPrices[project.id];
+
+            return (
+              <div
+                key={project.id}
+                className="group relative glass-strong rounded-3xl overflow-hidden card-hover"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary" />
+
+                <div className="p-6 relative z-10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Badge className="bg-primary/20 text-primary border-0">
+                      {project.available_lots || 0} disponibles
+                    </Badge>
+                    {progress > 0 && (
+                      <Badge variant="outline" className="border-accent/30 text-accent">
+                        {progress}% vendido
+                      </Badge>
+                    )}
                   </div>
-                  <div className="text-center p-3 rounded-xl bg-background/50">
-                    <Layers className="h-5 w-5 text-primary mx-auto mb-1" />
-                    <div className="text-xs text-muted-foreground">{project.total_area ? `${project.total_area} ha` : 'Ver detalles'}</div>
+
+                  <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                    {project.name}
+                  </h3>
+
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    <span>{project.city}, {project.region}</span>
                   </div>
+
+                  <p className="text-sm text-muted-foreground mb-5 line-clamp-2">
+                    {project.description}
+                  </p>
+
+                  {/* Progress bar */}
+                  {total > 0 && (
+                    <div className="mb-5">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+                        <span>{sold} de {total} lotes vendidos</span>
+                        <span>{progress}%</span>
+                      </div>
+                      <Progress value={progress} className="h-2" />
+                    </div>
+                  )}
+
+                  {/* Price from */}
+                  {minPrice && (
+                    <div className="mb-5 p-3 rounded-xl bg-background/50 text-center">
+                      <span className="text-xs text-muted-foreground">Desde</span>
+                      <div className="text-lg font-bold text-foreground">
+                        ${minPrice.toLocaleString('es-CL')} CLP
+                      </div>
+                    </div>
+                  )}
+
+                  <Button className="w-full group/btn" variant="outline" asChild>
+                    <Link to={`/proyecto/${project.id}`}>
+                      Ver proyecto
+                      <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
                 </div>
-                
-                {/* CTA */}
-                <Button className="w-full group/btn" variant="outline" asChild>
-                  <Link to={`/proyecto/${project.id}`}>
-                    Ver proyecto
-                    <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* View all link */}
         <div className="text-center mt-10">
           <Button variant="ghost" size="lg" asChild className="group">
             <Link to="/explorar">

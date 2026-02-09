@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import HeroStats from '@/components/landing/HeroStats';
+import HowItWorks from '@/components/landing/HowItWorks';
 import FeaturedProjects from '@/components/landing/FeaturedProjects';
 import TrustBadges from '@/components/landing/TrustBadges';
 import FloatingCTA from '@/components/landing/FloatingCTA';
@@ -123,6 +124,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* How It Works */}
+      <HowItWorks />
 
       {/* Featured Projects Section */}
       <FeaturedProjects />
