@@ -1,54 +1,118 @@
 
+# Plan de Mejora Integral: Landing, Logo, Mapa, Busqueda y Fichas
 
-# Rediseno del PDF de Promesa de Compraventa
+Este plan aborda 5 areas clave para lograr una plataforma visualmente consistente, funcional y profesional.
 
-## Problemas actuales
-- El header dice "FIELD FINDR" en vez de "Ofertaterrenos"
-- No tiene logo de la marca
-- Las clausulas son genericas y basicas
-- El diseno visual es plano y poco profesional
+---
 
-## Cambios planificados
+## Fase 1: Logo Epico y Limpio
 
-### 1. Header con logo y branding correcto
-- Dibujar el logo hexagonal de Ofertaterrenos directamente con jsPDF (usando las rutas SVG del LogoIcon)
-- Cambiar "FIELD FINDR" por "Ofertaterrenos" con subtitulo "Proptech Chile"
-- Usar los colores de marca: gradiente Emerald (#22C55E) a Sky Blue (#0EA5E9)
-- Agregar una franja decorativa con gradiente simulado
+**Problema actual:** El logo tiene demasiados elementos SVG (hexagono, montana, diamante, lineas de parcela, circulos) lo que lo hace visualmente ruidoso a tamanos pequenos.
 
-### 2. Diseno visual mejorado
-- Header con gradiente verde-azul de la marca
-- Tipografia mas refinada con mejor jerarquia
-- Tablas con bordes sutiles y alternancia de colores en filas
-- Iconos decorativos usando caracteres Unicode para secciones
-- Lineas decorativas entre secciones
-- Watermark sutil de "Ofertaterrenos" en paginas
-- Footer con los colores de marca y datos de contacto
+**Solucion:**
+- Redisenar `Logo.tsx` y `LogoIcon.tsx` con un icono minimalista: una "O" estilizada con forma de parcela/terreno (cuadrado redondeado con una diagonal que sugiere topografia)
+- Reducir los paths SVG de 7+ a maximo 3, priorizando legibilidad a cualquier tamano
+- Mantener el gradiente Emerald-to-Sky pero simplificar la geometria
+- Texto "Oferta" en peso bold + "terrenos" en peso medium con color primary
+- Eliminar el subtitulo "Proptech Chile" del logo (moverlo solo al footer)
+- Asegurar que el icono funcione como favicon tambien
 
-### 3. Clausulas legales mas completas y realistas
-Reemplazar las 6 clausulas basicas con un set completo adaptado a la legislacion chilena:
-- **Objeto del contrato**: descripcion del inmueble y la promesa
-- **Precio y forma de pago**: desglose de sena, saldo, plazos
-- **Plazo para escritura definitiva**: 90 dias con posibilidad de prorroga
-- **Obligaciones del vendedor**: saneamiento, libre de gravamenes, entrega de documentacion
-- **Obligaciones del comprador**: pago oportuno, comparecencia ante notario
-- **Clausula penal por incumplimiento**: consecuencias para ambas partes
-- **Arras**: naturaleza juridica de la sena (art. 1803-1805 Codigo Civil)
-- **Gastos e impuestos**: quien asume notaria, inscripcion, impuestos
-- **Domicilio y jurisdiccion**: tribunales competentes
-- **Clausula de buena fe**: declaraciones de ambas partes
+---
 
-### 4. Seccion de anexos y notas legales
-- Referencia a articulos del Codigo Civil chileno aplicables
-- Nota sobre la necesidad de escritura publica para la compraventa de inmuebles
-- Espacio para observaciones adicionales
+## Fase 2: Landing Page Premium
 
-## Detalle tecnico
+**Cambios en el Hero:**
+- Reducir los orbs de fondo (de 3 a 1 sutil) para un look mas limpio
+- Simplificar el badge de IA: quitar el pulse constante que distrae, usar un badge estatico mas elegante
+- Mejorar el `gradient-text-hero` para que funcione bien en ambos temas (actualmente en light mode el blanco se pierde)
+- Hacer la barra de busqueda mas prominente con placeholder mas descriptivo
 
-Se reescribira `src/lib/contractPdfGenerator.ts` con:
-- Logo renderizado como formas geometricas jsPDF (hexagono + montana estilizada)
-- Paleta de colores actualizada: PRIMARY=#22C55E, ACCENT=#0EA5E9
-- Clausulas expandidas de 6 a ~10 clausulas con lenguaje legal chileno
-- Mejor manejo de paginacion con header/footer consistente en cada pagina
-- Nombre de archivo: `promesa-ofertaterrenos-{lote}-{numero}.pdf`
+**HeroStats:**
+- Quitar la stat "100% Datos verificados" que parece falsa/marketing y reemplazarla con algo real como "Regiones cubiertas" o "Usuarios activos"
 
+**HowItWorks:**
+- Agregar iconografia mas grande y reducir texto
+- Conectar los pasos con una linea continua en vez de dashes aislados
+
+**FeaturedProjects:**
+- Agregar imagen del proyecto si existe (`master_plan_url` o imagen de portada)
+- Mostrar el area total del proyecto si esta disponible
+
+**TrustBadges:**
+- Convertir en un banner horizontal tipo marquee con logos de instituciones (SII, Conservador, IDE Chile) en vez de iconos genericos
+
+**Footer:**
+- Eliminar links muertos (#) - dejar solo los que funcionan
+- Agregar link a la app en App Store/Play Store si aplica
+
+---
+
+## Fase 3: Mapa y Explorar
+
+**Mejoras al mapa (EnhancedMap):**
+- Agregar un boton "Mi ubicacion" mas visible con feedback visual al centrar
+- Mejorar los popups de marcadores: incluir imagen thumbnail, precio y area en una tarjeta compacta
+- Agregar conteo de resultados visible en el mapa ("12 terrenos en esta zona")
+
+**Mejoras al explorador (Explorar.tsx):**
+- Agregar ordenamiento (precio asc/desc, area, mas reciente) en el `FloatingResultsPanel`
+- Mostrar "Buscar en esta area" como boton flotante cuando el usuario mueve el mapa
+- Mejorar la `LocationSearchBar` con sugerencias de regiones populares como chips debajo
+
+**FilterBar:**
+- Agregar filtro rapido de "Solo verificados" como toggle
+- Mostrar el rango de precio seleccionado de forma legible (ej: "$50M - $200M" en vez de slider abstracto)
+
+---
+
+## Fase 4: Fichas de Propiedad (ListingCard + PropertyDetail)
+
+**ListingCard:**
+- Agregar precio por m2 debajo del precio total cuando sea calculable
+- Reemplazar "vistas" por la region/comuna que es mas util
+- Mejorar la transicion de hover para que sea mas sutil (reducir el scale de 1.05 a 1.02)
+
+**PropertyDetail:**
+- Agregar seccion de "Precio por m2" destacada junto al precio total
+- Mejorar el grid de "Key Facts" con iconos mas expresivos
+- Agregar boton de "Agendar visita" en la sidebar
+- Hacer que el mapa de ubicacion sea interactivo (actualmente puede ser estatico)
+- Agregar breadcrumb completo con region y comuna
+
+---
+
+## Fase 5: Consistencia Visual Global
+
+- Auditar y unificar border-radius: usar `rounded-xl` (12px) como estandar para cards, `rounded-2xl` para containers principales
+- Unificar spacing: `gap-4` para grids, `gap-6` para secciones, `p-4` para cards, `p-6` para containers
+- Corregir `glass-strong` que tiene background hardcodeado para dark mode pero usa selector `.light` en vez de `:root` para light mode
+- Asegurar que todos los componentes usan variables CSS del tema en vez de colores hardcodeados
+- Limpiar `App.css` que tiene estilos legacy de Vite que no se usan
+
+---
+
+## Detalle Tecnico
+
+### Archivos a modificar:
+1. `src/components/brand/Logo.tsx` - Logo minimalista
+2. `src/components/brand/LogoIcon.tsx` - Icono simplificado
+3. `src/pages/Index.tsx` - Landing refinada
+4. `src/components/landing/HeroStats.tsx` - Stats reales
+5. `src/components/landing/HowItWorks.tsx` - Pasos con linea continua
+6. `src/components/landing/FeaturedProjects.tsx` - Con imagenes
+7. `src/components/landing/TrustBadges.tsx` - Banner institucional
+8. `src/components/landing/FloatingCTA.tsx` - Ajustes menores
+9. `src/components/FooterSection.tsx` - Limpiar links muertos
+10. `src/components/listings/ListingCard.tsx` - Precio/m2 y region
+11. `src/pages/PropertyDetail.tsx` - Seccion precio mejorada y agendar visita
+12. `src/pages/Explorar.tsx` - Ordenamiento y filtro verificados
+13. `src/components/explore/FloatingResultsPanel.tsx` - Selector de orden
+14. `src/index.css` - Corregir glass-strong y limpiar inconsistencias
+15. `src/App.css` - Eliminar estilos legacy no usados
+
+### Orden de implementacion sugerido:
+Dado el volumen de cambios, se recomienda dividir en 3-4 prompts:
+1. **Prompt 1**: Logo + CSS cleanup + consistencia visual base
+2. **Prompt 2**: Landing page completa (Hero, Stats, HowItWorks, Projects, Trust, Footer)
+3. **Prompt 3**: Explorar + Mapa + Filtros
+4. **Prompt 4**: Fichas (ListingCard + PropertyDetail)
