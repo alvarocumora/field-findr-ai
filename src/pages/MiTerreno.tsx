@@ -28,6 +28,7 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
+import { generateContractPDF } from '@/lib/contractPdfGenerator';
 
 type ReservationStatus = 'pending_payment' | 'paid' | 'expired' | 'cancelled' | 'converted';
 
@@ -269,23 +270,48 @@ const ReservationCard = ({ reservation }: { reservation: any }) => {
           )}
         </div>
 
-        {/* Documents placeholder */}
+        {/* Documents */}
         <div className="rounded-xl border border-dashed border-border/60 p-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center">
               <FileText className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">Documentos</p>
+              <p className="text-sm font-medium text-foreground">Promesa de Compraventa</p>
               <p className="text-xs text-muted-foreground">
-                {status === 'converted'
-                  ? 'Tu contrato estará disponible próximamente'
-                  : 'Los documentos estarán disponibles una vez completada la venta'}
+                {['paid', 'converted'].includes(status)
+                  ? 'Descarga tu documento preliminar de compraventa'
+                  : 'Disponible una vez confirmado el pago de la seña'}
               </p>
             </div>
-            <Button variant="outline" size="sm" disabled className="rounded-xl gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!['paid', 'converted'].includes(status)}
+              className="rounded-xl gap-1"
+              onClick={() => {
+                generateContractPDF({
+                  projectName: project?.name || 'Proyecto',
+                  projectLocation: project?.location || project?.city || '',
+                  projectRol: project?.rol_number || undefined,
+                  lotNumber: lot?.lot_number || '',
+                  lotArea: lot?.area || 0,
+                  lotPrice: lot?.price ?? null,
+                  buyerName: reservation.buyer_name,
+                  buyerRut: reservation.buyer_rut || undefined,
+                  buyerEmail: reservation.buyer_email,
+                  buyerPhone: reservation.buyer_phone || undefined,
+                  reservationId: reservation.id,
+                  reservationAmount: reservation.reservation_amount,
+                  currency: reservation.currency,
+                  paidAt: reservation.paid_at || undefined,
+                  createdAt: reservation.created_at,
+                  generatedAt: new Date(),
+                });
+              }}
+            >
               <Download className="h-4 w-4" />
-              Descargar
+              Descargar PDF
             </Button>
           </div>
         </div>
