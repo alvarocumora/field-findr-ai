@@ -12,7 +12,8 @@ import {
   MoreVertical,
   AlertTriangle,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,6 +27,7 @@ import Layout from '@/components/Layout';
 import { useAdminStats, useAdminUsers, useAdminListings } from '@/hooks/useDashboardStats';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import ReservationsManager from '@/components/reservations/ReservationsManager';
 
 const DashboardAdmin = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -111,6 +113,10 @@ const DashboardAdmin = () => {
               <TabsTrigger value="properties" className="rounded-lg gap-2">
                 <Building2 className="h-4 w-4" />
                 Propiedades
+              </TabsTrigger>
+              <TabsTrigger value="reservations" className="rounded-lg gap-2">
+                <Calendar className="h-4 w-4" />
+                Reservas
               </TabsTrigger>
               <TabsTrigger value="analytics" className="rounded-lg gap-2">
                 <BarChart3 className="h-4 w-4" />
@@ -232,6 +238,10 @@ const DashboardAdmin = () => {
                   )}
                 </ScrollArea>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="reservations">
+              <ReservationsManager />
             </TabsContent>
 
             <TabsContent value="analytics">
