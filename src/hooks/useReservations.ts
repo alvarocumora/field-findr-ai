@@ -54,12 +54,16 @@ export const useReservations = (projectId?: string) => {
           lots (
             id,
             lot_number,
+            name,
             area,
             price,
             project_id,
             projects (
               id,
-              name
+              name,
+              location,
+              city,
+              rol_number
             )
           )
         `)
