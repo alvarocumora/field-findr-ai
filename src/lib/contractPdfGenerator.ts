@@ -1,30 +1,21 @@
 import jsPDF from 'jspdf';
 
 interface ContractPDFData {
-  // Project
   projectName: string;
   projectLocation: string;
   projectRol?: string;
-  
-  // Lot
   lotNumber: string;
   lotArea: number;
   lotPrice: number | null;
-  
-  // Buyer
   buyerName: string;
   buyerRut?: string;
   buyerEmail: string;
   buyerPhone?: string;
-  
-  // Reservation
   reservationId: string;
   reservationAmount: number;
   currency: string;
   paidAt?: string;
   createdAt: string;
-  
-  // Meta
   generatedAt: Date;
 }
 
@@ -34,118 +25,310 @@ const formatCurrency = (value: number, currency = 'CLP'): string =>
 const formatDate = (date: Date): string =>
   new Intl.DateTimeFormat('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }).format(date);
 
-const PRIMARY: [number, number, number] = [34, 139, 34];
-const DARK: [number, number, number] = [30, 30, 30];
-const GRAY: [number, number, number] = [100, 100, 100];
-const LIGHT: [number, number, number] = [245, 245, 245];
+// Brand colors
+const EMERALD: [number, number, number] = [34, 197, 94];
+const SKY: [number, number, number] = [14, 165, 233];
+const DARK: [number, number, number] = [15, 23, 42];
+const GRAY: [number, number, number] = [100, 116, 139];
+const LIGHT_BG: [number, number, number] = [248, 250, 252];
+const WHITE: [number, number, number] = [255, 255, 255];
+const EMERALD_LIGHT: [number, number, number] = [220, 252, 231];
+
+const drawLogo = (doc: jsPDF, x: number, y: number, size: number) => {
+  const cx = x + size / 2;
+  const cy = y + size / 2;
+  const r = size / 2;
+
+  // Hexagon frame
+  const hexPoints: [number, number][] = [];
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i - Math.PI / 2;
+    hexPoints.push([cx + r * 0.85 * Math.cos(angle), cy + r * 0.85 * Math.sin(angle)]);
+  }
+
+  doc.setFillColor(...EMERALD);
+  doc.setDrawColor(...EMERALD);
+  doc.setLineWidth(0.8);
+
+  // Fill hexagon background
+  const hexPath = hexPoints.map((p, i) => (i === 0 ? `${p[0]} ${p[1]} m` : `${p[0]} ${p[1]} l`)).join(' ');
+  // Use triangle fan approach
+  for (let i = 1; i < hexPoints.length - 1; i++) {
+    doc.triangle(
+      hexPoints[0][0], hexPoints[0][1],
+      hexPoints[i][0], hexPoints[i][1],
+      hexPoints[i + 1][0], hexPoints[i + 1][1],
+      'F'
+    );
+  }
+
+  // Mountain shape (white)
+  doc.setFillColor(...WHITE);
+  const mScale = r * 0.012;
+  const mCx = cx;
+  const mCy = cy + r * 0.05;
+  // Main peak
+  doc.triangle(
+    mCx - 28 * mScale, mCy + 20 * mScale,
+    mCx, mCy - 22 * mScale,
+    mCx + 28 * mScale, mCy + 20 * mScale,
+    'F'
+  );
+  // Secondary smaller peak
+  doc.setFillColor(255, 255, 255, 0.6);
+  doc.triangle(
+    mCx + 5 * mScale, mCy + 20 * mScale,
+    mCx + 20 * mScale, mCy - 8 * mScale,
+    mCx + 35 * mScale, mCy + 20 * mScale,
+    'F'
+  );
+
+  // Base line
+  doc.setDrawColor(...WHITE);
+  doc.setLineWidth(1);
+  doc.line(cx - r * 0.55, cy + r * 0.35, cx + r * 0.55, cy + r * 0.35);
+};
+
+const addHeaderToPage = (doc: jsPDF, contractNum: string, isFirstPage: boolean) => {
+  const pw = doc.internal.pageSize.getWidth();
+
+  if (isFirstPage) {
+    // Gradient-like header using multiple rects
+    const headerH = 42;
+    const steps = 20;
+    for (let i = 0; i < steps; i++) {
+      const ratio = i / steps;
+      const r = Math.round(EMERALD[0] + (SKY[0] - EMERALD[0]) * ratio);
+      const g = Math.round(EMERALD[1] + (SKY[1] - EMERALD[1]) * ratio);
+      const b = Math.round(EMERALD[2] + (SKY[2] - EMERALD[2]) * ratio);
+      doc.setFillColor(r, g, b);
+      doc.rect((pw / steps) * i, 0, (pw / steps) + 1, headerH, 'F');
+    }
+
+    // Logo
+    drawLogo(doc, 12, 5, 30);
+
+    // Brand text
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Ofertaterrenos', 48, 19);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Proptech Chile', 48, 27);
+    doc.setFontSize(8);
+    doc.text('Promesa de Compraventa – Documento Preliminar', 48, 35);
+
+    // Contract number
+    doc.setFontSize(8);
+    doc.text(contractNum, pw - 15, 18, { align: 'right' });
+  } else {
+    // Thin colored bar on subsequent pages
+    doc.setFillColor(...EMERALD);
+    doc.rect(0, 0, pw, 4, 'F');
+    doc.setFillColor(...SKY);
+    doc.rect(pw / 2, 0, pw / 2, 4, 'F');
+
+    doc.setFontSize(7);
+    doc.setTextColor(...GRAY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Ofertaterrenos | ${contractNum}`, 15, 12);
+  }
+};
+
+const addFooterToPage = (doc: jsPDF, contractNum: string, pageNum: number, totalPages: number) => {
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  const fY = ph - 18;
+
+  // Footer bar
+  doc.setFillColor(...LIGHT_BG);
+  doc.rect(0, fY - 2, pw, 20, 'F');
+  doc.setDrawColor(...EMERALD);
+  doc.setLineWidth(0.4);
+  doc.line(15, fY - 2, pw - 15, fY - 2);
+
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...GRAY);
+  doc.text(
+    'Este documento es de carácter preliminar y referencial. No constituye un contrato vinculante hasta la firma ante notario.',
+    pw / 2, fY + 4, { align: 'center' }
+  );
+  doc.text(
+    `Ofertaterrenos | ${contractNum} | Página ${pageNum} de ${totalPages}`,
+    pw / 2, fY + 10, { align: 'center' }
+  );
+};
+
+const addWatermark = (doc: jsPDF) => {
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  doc.setTextColor(200, 220, 200);
+  doc.setFontSize(50);
+  doc.setFont('helvetica', 'bold');
+  // Diagonal watermark
+  const text = 'OFERTATERRENOS';
+  doc.text(text, pw / 2, ph / 2, {
+    align: 'center',
+    angle: 45,
+  });
+};
 
 export const generateContractPDF = (data: ContractPDFData): void => {
   const doc = new jsPDF();
   const pw = doc.internal.pageSize.getWidth();
+  const contractNum = `PROM-${data.reservationId.slice(0, 8).toUpperCase()}`;
   let y = 0;
 
-  // ── Header ──
-  doc.setFillColor(...PRIMARY);
-  doc.rect(0, 0, pw, 38, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.text('FIELD FINDR', 20, 20);
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Promesa de Compraventa – Documento Preliminar', 20, 30);
+  // ── Page 1: Header ──
+  addWatermark(doc);
+  addHeaderToPage(doc, contractNum, true);
+  y = 52;
 
-  const contractNum = `PROM-${data.reservationId.slice(0, 8).toUpperCase()}`;
+  // Date line
   doc.setFontSize(9);
-  doc.text(contractNum, pw - 20, 20, { align: 'right' });
-  doc.text(formatDate(data.generatedAt), pw - 20, 28, { align: 'right' });
+  doc.setFont('helvetica', 'italic');
+  doc.setTextColor(...GRAY);
+  doc.text(`Generado el ${formatDate(data.generatedAt)}`, pw - 15, y, { align: 'right' });
+  y += 12;
 
-  y = 50;
-
-  // ── Section helper ──
-  const sectionTitle = (title: string) => {
-    doc.setFontSize(13);
+  // ── Section helpers ──
+  const sectionTitle = (num: string, title: string) => {
+    if (y > 255) {
+      doc.addPage();
+      addWatermark(doc);
+      addHeaderToPage(doc, contractNum, false);
+      y = 22;
+    }
+    doc.setFillColor(...EMERALD);
+    doc.roundedRect(15, y - 5, pw - 30, 10, 2, 2, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...PRIMARY);
-    doc.text(title, 20, y);
-    y += 2;
-    doc.setDrawColor(...PRIMARY);
-    doc.setLineWidth(0.5);
-    doc.line(20, y, pw - 20, y);
-    y += 8;
+    doc.text(`${num}. ${title}`, 20, y + 2);
+    y += 14;
   };
 
-  const row = (label: string, value: string) => {
-    doc.setFontSize(10);
+  const row = (label: string, value: string, altBg = false) => {
+    if (y > 268) {
+      doc.addPage();
+      addWatermark(doc);
+      addHeaderToPage(doc, contractNum, false);
+      y = 22;
+    }
+    if (altBg) {
+      doc.setFillColor(...LIGHT_BG);
+      doc.rect(18, y - 4, pw - 36, 7, 'F');
+    }
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...GRAY);
-    doc.text(label, 25, y);
+    doc.text(label, 22, y);
     doc.setTextColor(...DARK);
     doc.setFont('helvetica', 'bold');
-    doc.text(value, 80, y);
+    doc.text(value, 78, y);
     y += 7;
   };
 
   // ── 1. Partes ──
-  sectionTitle('1. PARTES INTERVINIENTES');
+  sectionTitle('I', 'PARTES INTERVINIENTES');
 
-  doc.setFillColor(...LIGHT);
-  doc.roundedRect(20, y - 2, pw - 40, 38, 2, 2, 'F');
+  doc.setDrawColor(...EMERALD_LIGHT);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(18, y - 3, pw - 36, data.buyerRut && data.buyerPhone ? 32 : 22, 2, 2, 'S');
 
-  row('Comprador:', data.buyerName);
-  if (data.buyerRut) row('RUT:', data.buyerRut);
-  row('Email:', data.buyerEmail);
-  if (data.buyerPhone) row('Teléfono:', data.buyerPhone);
-
-  y += 8;
+  row('Comprador:', data.buyerName, false);
+  if (data.buyerRut) row('RUT:', data.buyerRut, true);
+  row('Email:', data.buyerEmail, !data.buyerRut);
+  if (data.buyerPhone) row('Teléfono:', data.buyerPhone, true);
+  y += 6;
 
   // ── 2. Inmueble ──
-  sectionTitle('2. IDENTIFICACIÓN DEL INMUEBLE');
+  sectionTitle('II', 'IDENTIFICACIÓN DEL INMUEBLE');
 
-  doc.setFillColor(...LIGHT);
-  doc.roundedRect(20, y - 2, pw - 40, 32, 2, 2, 'F');
+  doc.setDrawColor(...EMERALD_LIGHT);
+  doc.roundedRect(18, y - 3, pw - 36, data.projectRol ? 38 : 32, 2, 2, 'S');
 
-  row('Proyecto:', data.projectName);
-  row('Ubicación:', data.projectLocation);
-  if (data.projectRol) row('Rol:', data.projectRol);
-  row('Lote:', data.lotNumber);
-  row('Superficie:', `${data.lotArea.toLocaleString('es-CL')} m²`);
-  if (data.lotPrice) row('Precio:', formatCurrency(data.lotPrice, data.currency));
+  row('Proyecto:', data.projectName, false);
+  row('Ubicación:', data.projectLocation, true);
+  if (data.projectRol) row('Rol:', data.projectRol, false);
+  row('Lote:', data.lotNumber, !data.projectRol);
+  row('Superficie:', `${data.lotArea.toLocaleString('es-CL')} m²`, true);
+  if (data.lotPrice) row('Precio:', formatCurrency(data.lotPrice, data.currency), false);
+  y += 6;
 
-  y += 8;
+  // ── 3. Condiciones Económicas ──
+  sectionTitle('III', 'CONDICIONES ECONÓMICAS');
 
-  // ── 3. Condiciones económicas ──
-  sectionTitle('3. CONDICIONES ECONÓMICAS');
-
-  doc.setFillColor(...PRIMARY);
-  doc.roundedRect(20, y, pw - 40, 28, 3, 3, 'F');
-  y += 10;
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(10);
+  // Highlight box for amount
+  const boxH = 24;
+  // Gradient-like box
+  for (let i = 0; i < 10; i++) {
+    const ratio = i / 10;
+    const r = Math.round(EMERALD[0] + (SKY[0] - EMERALD[0]) * ratio);
+    const g = Math.round(EMERALD[1] + (SKY[1] - EMERALD[1]) * ratio);
+    const b = Math.round(EMERALD[2] + (SKY[2] - EMERALD[2]) * ratio);
+    doc.setFillColor(r, g, b);
+    doc.rect(18 + ((pw - 36) / 10) * i, y, (pw - 36) / 10 + 1, boxH, 'F');
+  }
+  doc.setTextColor(...WHITE);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.text('Seña abonada', pw / 2, y, { align: 'center' });
-  y += 10;
-  doc.setFontSize(20);
+  doc.text('Seña abonada', pw / 2, y + 8, { align: 'center' });
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(data.reservationAmount, data.currency), pw / 2, y, { align: 'center' });
-  y += 18;
+  doc.text(formatCurrency(data.reservationAmount, data.currency), pw / 2, y + 19, { align: 'center' });
+  y += boxH + 8;
 
-  doc.setTextColor(...DARK);
-  row('Fecha de pago:', data.paidAt ? formatDate(new Date(data.paidAt)) : 'Pendiente');
-  row('Fecha de reserva:', formatDate(new Date(data.createdAt)));
-
-  y += 8;
+  row('Fecha de pago:', data.paidAt ? formatDate(new Date(data.paidAt)) : 'Pendiente', false);
+  row('Fecha de reserva:', formatDate(new Date(data.createdAt)), true);
+  y += 6;
 
   // ── 4. Cláusulas ──
-  sectionTitle('4. CLÁUSULAS GENERALES');
+  sectionTitle('IV', 'CLÁUSULAS GENERALES');
 
   const clauses = [
-    'El presente documento constituye una promesa preliminar de compraventa y no tiene carácter vinculante hasta la firma del contrato definitivo ante notario.',
-    'La seña abonada será descontada del precio total del inmueble al momento de la escrituración.',
-    'En caso de desistimiento por parte del comprador, la seña quedará a favor del vendedor como indemnización por los daños y perjuicios ocasionados.',
-    'El vendedor se compromete a entregar el inmueble libre de gravámenes, hipotecas y cualquier otro tipo de carga que pueda afectar la titularidad del comprador.',
-    'Las partes acuerdan suscribir el contrato definitivo de compraventa dentro de los 90 días corridos siguientes a la fecha de este documento.',
-    'Cualquier controversia derivada de este acuerdo será resuelta ante los tribunales competentes del domicilio del inmueble.',
+    {
+      title: 'Objeto del Contrato',
+      text: `Por medio del presente instrumento, las partes acuerdan celebrar una promesa de compraventa respecto del inmueble individualizado en la cláusula II, ubicado en ${data.projectLocation}, correspondiente al Lote ${data.lotNumber} del proyecto "${data.projectName}", con una superficie de ${data.lotArea.toLocaleString('es-CL')} m².`
+    },
+    {
+      title: 'Precio y Forma de Pago',
+      text: `El precio total del inmueble es de ${data.lotPrice ? formatCurrency(data.lotPrice, data.currency) : '[por definir]'}. A cuenta de dicho precio, el promitente comprador ha entregado en este acto la suma de ${formatCurrency(data.reservationAmount, data.currency)} a título de seña o arras, la cual será imputada al precio de venta al momento de la escrituración definitiva. El saldo restante deberá ser pagado en la forma y plazos que las partes convengan en el contrato definitivo.`
+    },
+    {
+      title: 'Plazo para Escritura Definitiva',
+      text: 'Las partes se obligan a suscribir el contrato definitivo de compraventa mediante escritura pública dentro del plazo de noventa (90) días corridos contados desde la fecha de este documento. Dicho plazo podrá ser prorrogado de común acuerdo por las partes, dejando constancia por escrito de dicha prórroga.'
+    },
+    {
+      title: 'Obligaciones del Vendedor',
+      text: 'El promitente vendedor se obliga a: (a) entregar el inmueble libre de todo gravamen, hipoteca, prohibición, embargo y cualquier otro vicio que afecte la libre disposición del bien; (b) proporcionar al comprador toda la documentación legal necesaria para la escrituración, incluyendo certificados de dominio vigente, certificados de hipotecas y gravámenes, y certificado de no expropiación; (c) mantener el inmueble en las mismas condiciones actuales hasta la entrega.'
+    },
+    {
+      title: 'Obligaciones del Comprador',
+      text: 'El promitente comprador se obliga a: (a) pagar el precio en la forma y plazos estipulados; (b) comparecer ante notario para la firma de la escritura definitiva en el plazo acordado; (c) asumir los gastos que le correspondan según lo estipulado en la cláusula VIII del presente instrumento.'
+    },
+    {
+      title: 'Cláusula Penal por Incumplimiento',
+      text: 'Si el promitente comprador no cumpliere con la obligación de celebrar el contrato definitivo dentro del plazo señalado, perderá la seña entregada, la que quedará en beneficio del vendedor a título de indemnización de perjuicios convencional. Si el incumplimiento fuere del promitente vendedor, éste deberá restituir el doble de la seña recibida al comprador, sin perjuicio de las demás acciones legales que correspondan.'
+    },
+    {
+      title: 'Arras (Arts. 1803–1805 Código Civil)',
+      text: 'La suma entregada como seña tendrá el carácter de arras confirmatorias en los términos del artículo 1803 del Código Civil chileno, constituyendo parte del precio y prueba de la celebración del contrato. Las partes renuncian expresamente al derecho de retractación contemplado en el artículo 1804 del mismo cuerpo legal.'
+    },
+    {
+      title: 'Gastos e Impuestos',
+      text: 'Los gastos notariales de la escritura definitiva serán de cargo del comprador. Los gastos de inscripción en el Conservador de Bienes Raíces serán igualmente de cargo del comprador. El impuesto a la renta por la utilidad en la enajenación, si correspondiere, será de cargo del vendedor conforme a la legislación tributaria vigente.'
+    },
+    {
+      title: 'Domicilio y Jurisdicción',
+      text: `Para todos los efectos legales derivados del presente instrumento, las partes fijan su domicilio en la ciudad de ${data.projectLocation.split(',')[0] || 'Santiago'} y se someten a la competencia de sus tribunales ordinarios de justicia.`
+    },
+    {
+      title: 'Declaración de Buena Fe',
+      text: 'Ambas partes declaran que actúan de buena fe en la celebración del presente instrumento, que los datos proporcionados son verídicos y que no existe impedimento legal alguno para la celebración del contrato definitivo de compraventa. Asimismo, declaran conocer y aceptar íntegramente las condiciones aquí estipuladas.'
+    },
   ];
 
   doc.setFontSize(9);
@@ -153,64 +336,124 @@ export const generateContractPDF = (data: ContractPDFData): void => {
   doc.setTextColor(...DARK);
 
   clauses.forEach((clause, i) => {
-    if (y > 260) {
+    if (y > 248) {
       doc.addPage();
-      y = 20;
+      addWatermark(doc);
+      addHeaderToPage(doc, contractNum, false);
+      y = 22;
     }
-    const text = `${i + 1}. ${clause}`;
-    const lines = doc.splitTextToSize(text, pw - 50);
-    doc.text(lines, 25, y);
-    y += lines.length * 5 + 3;
+
+    // Clause title
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...EMERALD);
+    doc.setFontSize(9);
+    doc.text(`${i + 1}. ${clause.title}`, 20, y);
+    y += 5;
+
+    // Clause text
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...DARK);
+    doc.setFontSize(8.5);
+    const lines = doc.splitTextToSize(clause.text, pw - 44);
+    
+    // Check if we need a page break for the text
+    if (y + lines.length * 4.2 > 268) {
+      doc.addPage();
+      addWatermark(doc);
+      addHeaderToPage(doc, contractNum, false);
+      y = 22;
+    }
+    
+    doc.text(lines, 22, y);
+    y += lines.length * 4.2 + 5;
+  });
+
+  y += 6;
+
+  // ── 5. Notas Legales ──
+  if (y > 230) {
+    doc.addPage();
+    addWatermark(doc);
+    addHeaderToPage(doc, contractNum, false);
+    y = 22;
+  }
+
+  sectionTitle('V', 'NOTAS LEGALES Y ANEXOS');
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'italic');
+  doc.setTextColor(...GRAY);
+
+  const legalNotes = [
+    'Conforme al artículo 1801 del Código Civil chileno, la venta de bienes raíces no se reputa perfecta ante la ley mientras no se haya otorgado escritura pública.',
+    'El presente documento constituye una promesa de celebrar un contrato de compraventa en los términos del artículo 1554 del Código Civil.',
+    'Se deja constancia que este instrumento preliminar no transfiere dominio ni posesión del inmueble prometido.',
+    'Las partes podrán agregar anexos con planos, especificaciones técnicas y condiciones particulares que formarán parte integrante de este acuerdo.',
+  ];
+
+  legalNotes.forEach((note, i) => {
+    if (y > 264) {
+      doc.addPage();
+      addWatermark(doc);
+      addHeaderToPage(doc, contractNum, false);
+      y = 22;
+    }
+    const prefix = `${String.fromCharCode(97 + i)}) `;
+    const lines = doc.splitTextToSize(prefix + note, pw - 44);
+    doc.text(lines, 22, y);
+    y += lines.length * 4 + 3;
   });
 
   y += 10;
 
-  // ── 5. Firmas ──
-  if (y > 230) {
+  // ── 6. Firmas ──
+  if (y > 220) {
     doc.addPage();
-    y = 30;
+    addWatermark(doc);
+    addHeaderToPage(doc, contractNum, false);
+    y = 22;
   }
 
-  sectionTitle('5. FIRMAS');
+  sectionTitle('VI', 'FIRMAS');
 
-  const sigX1 = 30;
-  const sigX2 = pw / 2 + 15;
-  const sigW = pw / 2 - 45;
+  y += 5;
+  const sigX1 = 28;
+  const sigX2 = pw / 2 + 12;
+  const sigW = pw / 2 - 40;
 
-  doc.setDrawColor(...GRAY);
-  doc.setLineWidth(0.3);
+  // Signature lines
+  doc.setDrawColor(...DARK);
+  doc.setLineWidth(0.4);
   doc.line(sigX1, y + 20, sigX1 + sigW, y + 20);
   doc.line(sigX2, y + 20, sigX2 + sigW, y + 20);
 
-  doc.setFontSize(9);
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...GRAY);
-  doc.text('EL COMPRADOR', sigX1 + sigW / 2, y + 27, { align: 'center' });
-  doc.text('EL VENDEDOR', sigX2 + sigW / 2, y + 27, { align: 'center' });
+  doc.text('EL PROMITENTE COMPRADOR', sigX1 + sigW / 2, y + 27, { align: 'center' });
+  doc.text('EL PROMITENTE VENDEDOR', sigX2 + sigW / 2, y + 27, { align: 'center' });
 
   doc.setTextColor(...DARK);
   doc.setFont('helvetica', 'bold');
-  doc.text(data.buyerName, sigX1 + sigW / 2, y + 33, { align: 'center' });
-  doc.text(data.projectName, sigX2 + sigW / 2, y + 33, { align: 'center' });
+  doc.setFontSize(9);
+  doc.text(data.buyerName, sigX1 + sigW / 2, y + 34, { align: 'center' });
+  doc.text(data.projectName, sigX2 + sigW / 2, y + 34, { align: 'center' });
 
-  // ── Footer ──
-  const pages = doc.getNumberOfPages();
-  for (let p = 1; p <= pages; p++) {
-    doc.setPage(p);
-    const fY = doc.internal.pageSize.getHeight() - 15;
-    doc.setFillColor(...LIGHT);
-    doc.rect(0, fY - 5, pw, 20, 'F');
-    doc.setFontSize(7);
+  if (data.buyerRut) {
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
     doc.setTextColor(...GRAY);
-    doc.text(
-      'Este documento es de carácter preliminar y referencial. No constituye un contrato vinculante.',
-      pw / 2, fY, { align: 'center' }
-    );
-    doc.text(`Field Findr | ${contractNum} | Página ${p} de ${pages}`, pw / 2, fY + 6, { align: 'center' });
+    doc.text(`RUT: ${data.buyerRut}`, sigX1 + sigW / 2, y + 40, { align: 'center' });
   }
 
-  doc.save(`promesa-${data.lotNumber.toLowerCase().replace(/\s+/g, '-')}-${contractNum}.pdf`);
+  // ── Apply footers to all pages ──
+  const totalPages = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    addFooterToPage(doc, contractNum, p, totalPages);
+  }
+
+  doc.save(`promesa-ofertaterrenos-${data.lotNumber.toLowerCase().replace(/\s+/g, '-')}-${contractNum}.pdf`);
 };
 
 export type { ContractPDFData };
