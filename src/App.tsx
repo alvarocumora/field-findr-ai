@@ -39,6 +39,7 @@ import AdminUsers from "./pages/AdminUsers";
 import ReservationSuccess from "./pages/ReservationSuccess";
 import ReservationError from "./pages/ReservationError";
 import ReservationPending from "./pages/ReservationPending";
+import MiTerreno from "./pages/MiTerreno";
 
 // Dashboard pages (lazy loaded)
 import { DashboardAdmin, DashboardAsesor, DashboardInmobiliaria } from "./pages/dashboard";
@@ -111,6 +112,11 @@ const App = () => (
               <Route path="/profile" element={
                 <ProtectedRoute requireAuth>
                   <Profile />
+                </ProtectedRoute>
+              } />
+              <Route path="/mi-terreno" element={
+                <ProtectedRoute requireAuth>
+                  <MiTerreno />
                 </ProtectedRoute>
               } />
               <Route path="/subscription" element={
