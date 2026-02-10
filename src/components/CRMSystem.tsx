@@ -1,549 +1,253 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useRef, DragEvent } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Users, 
-  TrendingUp, 
-  Phone, 
-  Mail, 
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Users,
+  Phone,
+  Mail,
   Calendar,
   DollarSign,
   Target,
-  Star,
-  Clock,
   UserPlus,
-  Filter,
-  Download,
-  MessageSquare,
-  Eye,
-  Edit,
-  MoreHorizontal,
+  Search,
+  GripVertical,
   ArrowUpRight,
-  ArrowDownRight,
-  Brain
+  Clock,
+  Loader2,
 } from 'lucide-react';
+import { useLeads, LeadStatus, LEAD_STATUS_CONFIG } from '@/hooks/useLeads';
+import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+const PIPELINE_COLUMNS: { status: LeadStatus; label: string; accent: string }[] = [
+  { status: 'new', label: 'Nuevos', accent: 'border-t-blue-500' },
+  { status: 'contacted', label: 'Contactados', accent: 'border-t-purple-500' },
+  { status: 'interested', label: 'Interesados', accent: 'border-t-emerald-500' },
+  { status: 'negotiating', label: 'Negociando', accent: 'border-t-amber-500' },
+  { status: 'converted', label: 'Convertidos', accent: 'border-t-green-600' },
+  { status: 'lost', label: 'Perdidos', accent: 'border-t-red-500' },
+];
 
 const CRMSystem = () => {
-  const [selectedLead, setSelectedLead] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState('all');
+  const { leads, isLoading, stats, updateLead } = useLeads();
   const [searchTerm, setSearchTerm] = useState('');
-
-  const leads = [
-    {
-      id: '1',
-      name: 'María González',
-      email: 'maria.gonzalez@email.com',
-      phone: '+56912345678',
-      status: 'hot',
-      score: 95,
-      source: 'Website',
-      project: 'Condominio Las Palmas',
-      budget: 180000000,
-      timeline: '1-3 meses',
-      lastContact: '2024-01-18',
-      assignedAgent: 'Carlos Mendoza',
-      interactions: 8,
-      stage: 'Negociación',
-      notes: 'Interesada en departamento con vista, presupuesto confirmado.',
-      nextAction: 'Visita programada para el viernes'
-    },
-    {
-      id: '2',
-      name: 'Roberto Silva',
-      email: 'roberto.silva@empresa.cl',
-      phone: '+56987654321',
-      status: 'warm',
-      score: 72,
-      source: 'Referido',
-      project: 'Parcelas El Roble',
-      budget: 120000000,
-      timeline: '3-6 meses',
-      lastContact: '2024-01-16',
-      assignedAgent: 'Ana Sepúlveda',
-      interactions: 5,
-      stage: 'Evaluación',
-      notes: 'Busca parcela para proyecto familiar, evalúa financiamiento.',
-      nextAction: 'Envío de cotización detallada'
-    },
-    {
-      id: '3',
-      name: 'Carmen López',
-      email: 'carmen.lopez@gmail.com',
-      phone: '+56956789123',
-      status: 'cold',
-      score: 48,
-      source: 'Social Media',
-      project: 'Terreno Industrial Norte',
-      budget: 250000000,
-      timeline: '6+ meses',
-      lastContact: '2024-01-10',
-      assignedAgent: 'Jorge Ruiz',
-      interactions: 2,
-      stage: 'Inicial',
-      notes: 'Primera consulta, información general solicitada.',
-      nextAction: 'Llamada de seguimiento programada'
-    }
-  ];
-
-  const opportunities = [
-    {
-      id: 'opp-1',
-      client: 'María González',
-      project: 'Condominio Las Palmas',
-      value: 180000000,
-      probability: 90,
-      stage: 'Cierre',
-      expectedDate: '2024-02-15',
-      agent: 'Carlos Mendoza'
-    },
-    {
-      id: 'opp-2',
-      client: 'Roberto Silva',
-      project: 'Parcelas El Roble',
-      value: 120000000,
-      probability: 65,
-      stage: 'Propuesta',
-      expectedDate: '2024-03-30',
-      agent: 'Ana Sepúlveda'
-    }
-  ];
-
-  const activities = [
-    {
-      id: 'act-1',
-      type: 'call',
-      description: 'Llamada con María González - Confirmación de visita',
-      date: '2024-01-18 14:30',
-      agent: 'Carlos Mendoza',
-      status: 'completed'
-    },
-    {
-      id: 'act-2',
-      type: 'email',
-      description: 'Envío de cotización detallada a Roberto Silva',
-      date: '2024-01-18 10:15',
-      agent: 'Ana Sepúlveda',
-      status: 'completed'
-    },
-    {
-      id: 'act-3',
-      type: 'meeting',
-      description: 'Reunión programada con Carmen López',
-      date: '2024-01-19 15:00',
-      agent: 'Jorge Ruiz',
-      status: 'scheduled'
-    }
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'hot': return 'bg-red-100 text-red-800';
-      case 'warm': return 'bg-orange-100 text-orange-800';
-      case 'cold': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStageColor = (stage: string) => {
-    switch (stage) {
-      case 'Inicial': return 'bg-gray-100 text-gray-800';
-      case 'Evaluación': return 'bg-blue-100 text-blue-800';
-      case 'Negociación': return 'bg-orange-100 text-orange-800';
-      case 'Cierre': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
   const filteredLeads = leads.filter(lead => {
-    const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         lead.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || lead.status === filterStatus;
-    return matchesSearch && matchesStatus;
+    if (!searchTerm) return true;
+    const q = searchTerm.toLowerCase();
+    return (
+      lead.first_name?.toLowerCase().includes(q) ||
+      lead.last_name?.toLowerCase().includes(q) ||
+      lead.email?.toLowerCase().includes(q) ||
+      lead.phone?.toLowerCase().includes(q)
+    );
   });
 
+  const getColumnLeads = (status: LeadStatus) =>
+    filteredLeads.filter(l => (l.status || 'new') === status);
+
+  const handleDragStart = (e: DragEvent, leadId: string) => {
+    e.dataTransfer.setData('text/plain', leadId);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedLeadId(leadId);
+  };
+
+  const handleDragOver = (e: DragEvent, status: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverColumn(status);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverColumn(null);
+  };
+
+  const handleDrop = (e: DragEvent, newStatus: LeadStatus) => {
+    e.preventDefault();
+    const leadId = e.dataTransfer.getData('text/plain');
+    setDragOverColumn(null);
+    setDraggedLeadId(null);
+
+    const lead = leads.find(l => l.id === leadId);
+    if (!lead || lead.status === newStatus) return;
+
+    updateLead.mutate({ id: leadId, status: newStatus });
+  };
+
+  const handleDragEnd = () => {
+    setDraggedLeadId(null);
+    setDragOverColumn(null);
+  };
+
+  const totalBudget = leads.reduce((sum, l) => sum + (l.budget_max || 0), 0);
+  const convertedCount = stats.statusCounts.converted || 0;
+  const conversionRate = leads.length > 0 ? Math.round((convertedCount / leads.length) * 100) : 0;
+
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold gradient-text">CRM Inmobiliario</h1>
-          <p className="text-muted-foreground">Gestiona leads, oportunidades y relaciones con clientes</p>
+          <h1 className="text-2xl font-bold text-foreground">Pipeline de Ventas</h1>
+          <p className="text-sm text-muted-foreground">Arrastra los leads entre columnas para actualizar su estado</p>
         </div>
-        <div className="flex space-x-2">
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
-          <Button className="bg-gradient-primary text-white">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Nuevo Lead
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="card-elegant">
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Leads Activos</p>
-                <p className="text-2xl font-bold">247</p>
-                <div className="flex items-center text-sm text-green-600">
-                  <ArrowUpRight className="h-3 w-3 mr-1" />
-                  +12% vs mes anterior
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="card-elegant">
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <Target className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Tasa Conversión</p>
-                <p className="text-2xl font-bold">18.5%</p>
-                <div className="flex items-center text-sm text-green-600">
-                  <ArrowUpRight className="h-3 w-3 mr-1" />
-                  +3.2% vs mes anterior
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="card-elegant">
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="h-12 w-12 rounded-lg bg-orange-100 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-orange-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Pipeline Valor</p>
-                <p className="text-2xl font-bold">$4.8B</p>
-                <div className="flex items-center text-sm text-red-600">
-                  <ArrowDownRight className="h-3 w-3 mr-1" />
-                  -2.1% vs mes anterior
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="card-elegant">
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Score IA Promedio</p>
-                <p className="text-2xl font-bold">73.2</p>
-                <div className="flex items-center text-sm text-green-600">
-                  <ArrowUpRight className="h-3 w-3 mr-1" />
-                  +5.8 vs mes anterior
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content */}
-      <Tabs defaultValue="leads" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="leads">Leads</TabsTrigger>
-          <TabsTrigger value="opportunities">Oportunidades</TabsTrigger>
-          <TabsTrigger value="activities">Actividades</TabsTrigger>
-          <TabsTrigger value="analytics">Analíticas</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="leads" className="space-y-6">
-          {/* Search and Filters */}
-          <div className="flex space-x-4">
-            <div className="flex-1">
-              <Input
-                placeholder="Buscar leads..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
-              />
-            </div>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="hot">Hot</SelectItem>
-                <SelectItem value="warm">Warm</SelectItem>
-                <SelectItem value="cold">Cold</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Más Filtros
-            </Button>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar leads..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-[220px] rounded-xl"
+            />
           </div>
+          <LeadFormDialog
+            trigger={
+              <Button className="rounded-xl gap-2">
+                <UserPlus className="h-4 w-4" />
+                Nuevo Lead
+              </Button>
+            }
+          />
+        </div>
+      </div>
 
-          {/* Leads Table */}
-          <Card className="card-elegant">
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="border-b">
-                    <tr>
-                      <th className="text-left p-4 font-medium">Cliente</th>
-                      <th className="text-left p-4 font-medium">Estado</th>
-                      <th className="text-left p-4 font-medium">Score IA</th>
-                      <th className="text-left p-4 font-medium">Proyecto</th>
-                      <th className="text-left p-4 font-medium">Presupuesto</th>
-                      <th className="text-left p-4 font-medium">Agente</th>
-                      <th className="text-left p-4 font-medium">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredLeads.map((lead) => (
-                      <tr key={lead.id} className="border-b hover:bg-muted/50">
-                        <td className="p-4">
-                          <div>
-                            <p className="font-medium">{lead.name}</p>
-                            <p className="text-sm text-muted-foreground">{lead.email}</p>
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: 'Total Leads', value: stats.total, icon: Users, color: 'text-primary' },
+          { label: 'Conversión', value: `${conversionRate}%`, icon: Target, color: 'text-green-500' },
+          { label: 'Pipeline', value: totalBudget >= 1e9 ? `$${(totalBudget / 1e9).toFixed(1)}B` : `$${(totalBudget / 1e6).toFixed(0)}M`, icon: DollarSign, color: 'text-amber-500' },
+          { label: 'Seguimiento', value: stats.thisWeek, icon: Clock, color: 'text-purple-500' },
+        ].map((s, i) => (
+          <Card key={i} className="border-border/40">
+            <CardContent className="p-3 flex items-center gap-3">
+              <div className={`h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center ${s.color}`}>
+                <s.icon className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">{s.label}</p>
+                <p className="text-lg font-bold text-foreground">{s.value}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Kanban Board */}
+      {isLoading ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-[400px] rounded-xl" />
+          ))}
+        </div>
+      ) : (
+        <div className="overflow-x-auto pb-4">
+          <div className="grid grid-cols-6 gap-3 min-w-[1100px]">
+            {PIPELINE_COLUMNS.map(col => {
+              const columnLeads = getColumnLeads(col.status);
+              const isDragOver = dragOverColumn === col.status;
+
+              return (
+                <div
+                  key={col.status}
+                  className={`rounded-xl border-t-4 ${col.accent} bg-muted/30 border border-border/40 transition-all ${
+                    isDragOver ? 'ring-2 ring-primary/40 bg-primary/5' : ''
+                  }`}
+                  onDragOver={(e) => handleDragOver(e, col.status)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, col.status)}
+                >
+                  {/* Column Header */}
+                  <div className="px-3 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-foreground">{col.label}</h3>
+                      <Badge variant="secondary" className="text-xs h-5 px-1.5 rounded-md">
+                        {columnLeads.length}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Cards */}
+                  <div className="px-2 pb-2 space-y-2 min-h-[200px]">
+                    {columnLeads.length === 0 && (
+                      <div className="flex items-center justify-center h-24 text-xs text-muted-foreground border border-dashed border-border/50 rounded-lg">
+                        Sin leads
+                      </div>
+                    )}
+                    {columnLeads.map(lead => (
+                      <div
+                        key={lead.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, lead.id)}
+                        onDragEnd={handleDragEnd}
+                        className={`group bg-card rounded-lg border border-border/50 p-3 cursor-grab active:cursor-grabbing hover:border-primary/30 hover:shadow-sm transition-all ${
+                          draggedLeadId === lead.id ? 'opacity-40 scale-95' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <GripVertical className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {lead.first_name} {lead.last_name || ''}
+                            </p>
                           </div>
-                        </td>
-                        <td className="p-4">
-                          <Badge className={getStatusColor(lead.status)}>
-                            {lead.status.toUpperCase()}
+                        </div>
+
+                        {lead.email && (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1 truncate">
+                            <Mail className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{lead.email}</span>
+                          </div>
+                        )}
+
+                        {lead.phone && (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                            <Phone className="h-3 w-3 shrink-0" />
+                            <span>{lead.phone}</span>
+                          </div>
+                        )}
+
+                        {(lead.budget_min || lead.budget_max) && (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                            <DollarSign className="h-3 w-3 shrink-0" />
+                            <span>
+                              {lead.budget_min ? `$${(Number(lead.budget_min) / 1e6).toFixed(0)}M` : ''}
+                              {lead.budget_min && lead.budget_max ? ' - ' : ''}
+                              {lead.budget_max ? `$${(Number(lead.budget_max) / 1e6).toFixed(0)}M` : ''}
+                            </span>
+                          </div>
+                        )}
+
+                        {lead.next_follow_up && (
+                          <div className="flex items-center gap-1.5 text-xs text-amber-600 mt-2">
+                            <Calendar className="h-3 w-3 shrink-0" />
+                            <span>
+                              {formatDistanceToNow(new Date(lead.next_follow_up), { addSuffix: true, locale: es })}
+                            </span>
+                          </div>
+                        )}
+
+                        {lead.source && (
+                          <Badge variant="outline" className="mt-2 text-[10px] h-4 px-1.5">
+                            {lead.source}
                           </Badge>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center space-x-2">
-                            <Brain className="h-4 w-4 text-primary" />
-                            <span className="font-medium">{lead.score}</span>
-                            <Progress value={lead.score} className="w-16 h-2" />
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <p className="text-sm">{lead.project}</p>
-                        </td>
-                        <td className="p-4">
-                          <p className="font-medium">${(lead.budget / 1000000).toFixed(0)}M</p>
-                          <p className="text-sm text-muted-foreground">{lead.timeline}</p>
-                        </td>
-                        <td className="p-4">
-                          <p className="text-sm">{lead.assignedAgent}</p>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex space-x-2">
-                            <Button variant="ghost" size="sm">
-                              <Phone className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <Mail className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <MessageSquare className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
+                        )}
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="opportunities" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {opportunities.map((opp) => (
-              <Card key={opp.id} className="card-elegant">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">{opp.client}</h3>
-                    <Badge className={getStageColor(opp.stage)}>
-                      {opp.stage}
-                    </Badge>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Proyecto</p>
-                      <p className="font-medium">{opp.project}</p>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm text-muted-foreground">Valor Estimado</p>
-                      <p className="text-xl font-bold text-green-600">
-                        ${(opp.value / 1000000).toFixed(0)}M
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Probabilidad: {opp.probability}%
-                      </p>
-                      <Progress value={opp.probability} className="h-2" />
-                    </div>
-                    
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Cierre esperado:</span>
-                      <span>{new Date(opp.expectedDate).toLocaleDateString('es-ES')}</span>
-                    </div>
-                    
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Agente:</span>
-                      <span>{opp.agent}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="activities" className="space-y-6">
-          <Card className="card-elegant">
-            <CardHeader>
-              <CardTitle>Actividades Recientes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {activities.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-4 p-4 border rounded-lg">
-                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
-                      activity.type === 'call' ? 'bg-blue-100' :
-                      activity.type === 'email' ? 'bg-green-100' :
-                      'bg-orange-100'
-                    }`}>
-                      {activity.type === 'call' && <Phone className="h-5 w-5 text-blue-600" />}
-                      {activity.type === 'email' && <Mail className="h-5 w-5 text-green-600" />}
-                      {activity.type === 'meeting' && <Calendar className="h-5 w-5 text-orange-600" />}
-                    </div>
-                    
-                    <div className="flex-1">
-                      <p className="font-medium">{activity.description}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {activity.date} • {activity.agent}
-                      </p>
-                    </div>
-                    
-                    <Badge className={
-                      activity.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      'bg-orange-100 text-orange-800'
-                    }>
-                      {activity.status === 'completed' ? 'Completado' : 'Programado'}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="card-elegant">
-              <CardHeader>
-                <CardTitle>Rendimiento por Agente</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 border rounded">
-                    <div>
-                      <p className="font-medium">Carlos Mendoza</p>
-                      <p className="text-sm text-muted-foreground">15 leads • 6 cerrados</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-green-600">40%</p>
-                      <p className="text-sm text-muted-foreground">Conversión</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center p-3 border rounded">
-                    <div>
-                      <p className="font-medium">Ana Sepúlveda</p>
-                      <p className="text-sm text-muted-foreground">12 leads • 4 cerrados</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-green-600">33%</p>
-                      <p className="text-sm text-muted-foreground">Conversión</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center p-3 border rounded">
-                    <div>
-                      <p className="font-medium">Jorge Ruiz</p>
-                      <p className="text-sm text-muted-foreground">8 leads • 2 cerrados</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-orange-600">25%</p>
-                      <p className="text-sm text-muted-foreground">Conversión</p>
-                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="card-elegant">
-              <CardHeader>
-                <CardTitle>Fuentes de Leads</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span>Website</span>
-                    <div className="flex items-center space-x-2">
-                      <Progress value={45} className="w-24 h-2" />
-                      <span className="text-sm font-medium">45%</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span>Referencias</span>
-                    <div className="flex items-center space-x-2">
-                      <Progress value={30} className="w-24 h-2" />
-                      <span className="text-sm font-medium">30%</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span>Social Media</span>
-                    <div className="flex items-center space-x-2">
-                      <Progress value={15} className="w-24 h-2" />
-                      <span className="text-sm font-medium">15%</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span>Eventos</span>
-                    <div className="flex items-center space-x-2">
-                      <Progress value={10} className="w-24 h-2" />
-                      <span className="text-sm font-medium">10%</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              );
+            })}
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 };
