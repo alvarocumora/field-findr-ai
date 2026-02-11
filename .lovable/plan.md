@@ -1,102 +1,90 @@
 
-# Plan: Conectar Todo el Sistema a Datos Reales y Preparar para Ventas
+# Plan: Sistema de Exploracion Premium - Experiencia Inmobiliaria de Clase Mundial
 
-## Diagnostico
+## Vision
 
-Varios componentes criticos del sistema usan **datos mock hardcodeados** en lugar de la base de datos real:
+Transformar la pagina de exploracion actual en una experiencia inmobiliaria de nivel Zillow/Idealista, con tarjetas visualmente impactantes, interacciones fluidas, mejor uso del espacio y funcionalidades que conviertan visitantes en leads.
 
-| Componente | Estado Actual | Accion |
-|---|---|---|
-| SalesManagement | 100% mock (oportunidades, contratos, pagos) | Conectar a DB |
-| PropertyInventory | 100% mock (propiedades hardcodeadas) | Conectar a useListings |
-| LeadManagement | 100% mock (leads hardcodeados) | Conectar a useLeads |
-| BusinessIntelligence | 100% mock (KPIs, graficos) | Conectar a queries reales |
-| CRMSystem | Ya conectado a DB real | Sin cambios |
-| DashboardAsesor | Ya conectado a DB real | Eliminar Layout duplicado |
-| DashboardAdmin | Ya conectado a DB real | Eliminar Layout duplicado |
+## Problemas Actuales
 
-Ademas, DashboardAsesor y DashboardAdmin envuelven su contenido en el componente `Layout` legacy (que agrega un sidebar duplicado), cuando ya estan envueltos en `DashboardLayout` desde App.tsx.
+1. **Tarjetas demasiado compactas**: Las QuickPropertyCard muestran poca informacion visual - solo un thumbnail de 96x80px
+2. **Panel flotante rigido**: Solo 3 estados (collapsed/normal/expanded) sin transicion suave
+3. **Sin precio por m2 visible**: Dato clave para compradores ausente en la lista
+4. **Sin indicadores de engagement**: No se ve cuantas vistas tiene cada propiedad
+5. **Mapa sin clustering visual**: Los marcadores se superponen en zonas densas
+6. **FilterBar ocupa espacio vertical**: Reduce el area util del mapa
+7. **Sin feedback de carga progresiva**: Skeleton generico sin contexto
 
 ## Cambios a Implementar
 
-### 1. PropertyInventory - Conectar a datos reales
+### 1. Tarjetas de Propiedad Rediseñadas (QuickPropertyCard)
 
-Reescribir para usar el hook `useListings` existente con filtro por `user_id` del agente:
-- Reemplazar array `properties` hardcodeado por query real a tabla `listings`
-- Mantener filtros de busqueda, tipo y estado pero contra datos reales
-- Agregar acciones de editar/eliminar con mutaciones reales
-- Incluir stats reales (total, activas, vendidas, vistas totales)
+Redisenar la tarjeta con layout horizontal mejorado:
+- Thumbnail mas grande (120x88px) con aspect-ratio consistente
+- **Precio por m2** visible debajo del precio principal
+- Badge de pais (bandera) junto al tipo de propiedad
+- Indicador de vistas (ojo + numero) para social proof
+- Animacion de entrada escalonada mas sutil
+- Hover con preview de segunda imagen (si existe)
+- Gradiente de precio: verde para buenos precios, naranja para caros (relativo al mercado)
 
-### 2. LeadManagement - Conectar a datos reales
+### 2. Panel de Resultados Mejorado (FloatingResultsPanel)
 
-Reescribir para usar el hook `useLeads` existente:
-- Reemplazar `mockLeads` por datos de la tabla `leads`
-- Conectar filtros de busqueda y estado a queries reales
-- Habilitar acciones de crear/editar/eliminar lead con mutaciones
-- Mostrar stats reales (total leads, por estado, tasa de conversion)
+- Header con resumen inteligente: "20 terrenos desde $50M en 3 regiones"
+- Tabs rapidos: "Todos | Destacados | Nuevos" como filtro inline
+- Seccion sticky de "Mejor oportunidad" que muestra la propiedad con mejor relacion precio/m2
+- Footer con CTA: "No encuentras lo que buscas? Activar alertas"
+- Transicion de ancho mas suave con CSS resize en lugar de estados discretos
 
-### 3. SalesManagement - Conectar a datos reales
+### 3. Marcadores de Mapa con Precio (EnhancedMap)
 
-Conectar el pipeline de ventas a datos de las tablas `reservations`, `lots` y `leads`:
-- Pipeline visual: calcular conteos reales por estado de lead
-- Oportunidades: mostrar leads con sus datos reales (presupuesto, proyecto asociado, estado)
-- Contratos: mostrar reservaciones con estado `paid` o `converted`
-- Stats: calcular pipeline total, deal promedio y tasa de conversion desde DB
+Cambiar los marcadores circulares genericos por marcadores con precio visible:
+- Mostrar precio abreviado en el marcador ($950M, $1.8B, 15 UF)
+- Color segun tipo de propiedad (verde=rural, azul=urbano, naranja=agricola)
+- Marcador activo con flecha apuntando hacia abajo (pin style)
+- Cluster markers que muestran rango de precios del grupo
 
-### 4. BusinessIntelligence - Conectar a datos reales
+### 4. Barra de Filtros Compacta (FilterBar)
 
-Reemplazar KPIs y graficos hardcodeados:
-- Ingresos totales: sumar precios de lotes vendidos
-- Unidades vendidas: contar lotes con status `sold`
-- Leads activos: contar leads no perdidos/convertidos
-- Tendencias: calcular variacion mes a mes
-- Grafico por region: agrupar ventas/listings por region desde DB
+- Reducir altura: de 2 filas a 1 fila con scroll horizontal
+- Chips de filtro activo inline (no separados)
+- Contador de resultados integrado en la barra: "20 resultados"
+- Boton de "Buscar en esta area" que aparece al mover el mapa
 
-### 5. Eliminar Layout duplicado de Dashboards
+### 5. Preview Sheet Enriquecido (PropertyPreviewSheet)
 
-DashboardAsesor y DashboardAdmin ya estan envueltos en `DashboardLayout` (que incluye sidebar), pero internamente tambien usan `<Layout>` que agrega OTRO sidebar. Esto causa un sidebar doble.
+- Galeria con swipe horizontal nativo
+- Seccion de "Propiedades similares" al final (hasta 3)
+- Boton de WhatsApp directo (ademas de llamar/contactar)
+- Mini-mapa de ubicacion dentro del sheet
+- Score de inversion (si existe match score)
 
-Cambios:
-- `DashboardAsesor`: eliminar wrapper `<Layout>`, dejar solo el contenido
-- `DashboardAdmin`: eliminar wrapper `<Layout>`, dejar solo el contenido
-- `ProjectsManagement`: eliminar wrapper `<Layout>`, dejar solo el contenido
+### 6. Estado Vacio Mejorado
 
-### 6. Sidebar mejorado para ejecutivos
-
-Agregar items de navegacion faltantes al sidebar de agente:
-- Reservas (`/asesor/reservations`) - nueva ruta
-- Documentos (link a gestion de documentos)
-
-Agregar al sidebar de admin:
-- Reservas (`/admin/reservations`) - nueva ruta
-- Listings (`/admin/listings`) - ya existe la ruta
-
-### 7. Ruta de Reservas para Agente
-
-Crear ruta `/asesor/reservations` que muestre el `ReservationsManager` filtrado por proyectos del agente, para que pueda gestionar las reservas de sus propios lotes.
+- Cuando no hay resultados: mostrar sugerencias de busqueda
+- "Ampliar area de busqueda" como accion directa
+- Mostrar propiedades cercanas como alternativa
 
 ## Detalle Tecnico
 
 ### Archivos a modificar:
-- `src/components/PropertyInventory.tsx` - Reescribir con useListings + useAuth
-- `src/components/LeadManagement.tsx` - Reescribir con useLeads real
-- `src/components/SalesManagement.tsx` - Conectar a reservations/lots/leads
-- `src/components/BusinessIntelligence.tsx` - Conectar a queries reales
-- `src/pages/dashboard/DashboardAsesor.tsx` - Eliminar `<Layout>` wrapper
-- `src/pages/dashboard/DashboardAdmin.tsx` - Eliminar `<Layout>` wrapper
-- `src/components/ProjectsManagement.tsx` - Eliminar `<Layout>` wrapper
-- `src/components/ModernSidebar.tsx` - Agregar items de Reservas y Documentos
-- `src/App.tsx` - Agregar ruta `/asesor/reservations`
+- `src/components/explore/QuickPropertyCard.tsx` - Redisenar con precio/m2, vistas, banderas
+- `src/components/explore/FloatingResultsPanel.tsx` - Header inteligente, tabs, CTA
+- `src/components/explore/FilterBar.tsx` - Layout compacto de 1 fila
+- `src/components/explore/PropertyPreviewSheet.tsx` - WhatsApp, similares, score
+- `src/components/map/EnhancedMap.tsx` - Marcadores con precio abreviado
+- `src/pages/Explorar.tsx` - Integrar nuevas props y estado de tabs
+- `src/components/explore/MobileExploreView.tsx` - Adaptar mejoras a mobile
+- `src/components/explore/CompactListingCard.tsx` - Actualizar para mobile cards
 
-### Hooks existentes reutilizados (no se crean nuevos):
-- `useListings` - para PropertyInventory
-- `useLeads` - para LeadManagement y SalesManagement
-- `useAuth` - para filtrar por usuario
-- `useDashboardStats` - para BusinessIntelligence (ampliar)
+### Archivos nuevos:
+- Ninguno - todas las mejoras se integran en componentes existentes
 
-### Hook a ampliar:
-- `useDashboardStats.ts` - Agregar `useBusinessIntelligence()` que calcule KPIs reales desde lots, leads y reservations
+### Funciones helper nuevas (en useListings.ts):
+- `formatPriceShort()` - Para marcadores: $950M, $1.8B, 15UF
+- `getPricePerM2()` - Calculo inline reutilizable
+- `getCountryFlag()` - Bandera por pais del listing
 
 ## Resultado
 
-Un sistema SaaS profesional donde TODOS los componentes de gestion muestran datos reales de la base de datos, sin mock data, listo para demostracion y venta a clientes.
+Una experiencia de exploracion premium donde cada interaccion esta optimizada para convertir: tarjetas informativas que muestran datos clave sin salir de la lista, marcadores de mapa con precio visible que eliminan clics innecesarios, y un flujo de preview-a-contacto que reduce la friccion para generar leads.
