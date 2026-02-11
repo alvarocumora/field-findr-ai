@@ -541,96 +541,66 @@ const EnhancedMap = ({
     </div>
   `;
 
+  // Get color by property type
+  const getTypeColor = (type: string): string => {
+    const colors: Record<string, string> = {
+      parcela_rural: '#22c55e',
+      campo_agricola: '#84cc16',
+      terreno_urbano: '#3b82f6',
+      sitio_industrial: '#f59e0b',
+      terreno_costero: '#06b6d4',
+      terreno_montana: '#8b5cf6',
+      inversion: '#ec4899',
+    };
+    return colors[type] || '#10b981';
+  };
+
   // Create enhanced marker element
   const createMarkerElement = (listing: Listing, isHovered: boolean = false) => {
     const el = document.createElement('div');
     el.className = 'enhanced-map-marker';
     el.setAttribute('data-listing-id', listing.id);
 
-    const size = isHovered ? 52 : 44;
-    const color = statusColors[listing.status as keyof typeof statusColors] || statusColors.active;
+    const color = getTypeColor(listing.type);
+    const priceLabel = formatCompactPrice(listing.price);
 
+    // Price-first marker design
     el.style.cssText = `
-      width: ${size}px;
-      height: ${size}px;
       cursor: pointer;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
       transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      transform: ${isHovered ? 'scale(1.15) translateY(-10px)' : 'scale(1)'};
+      transform: ${isHovered ? 'scale(1.15) translateY(-8px)' : 'scale(1)'};
       z-index: ${isHovered ? 1000 : 1};
-      filter: ${isHovered ? 'drop-shadow(0 12px 24px rgba(0,0,0,0.4))' : 'drop-shadow(0 6px 12px rgba(0,0,0,0.25))'};
+      filter: ${isHovered ? 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))' : 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))'};
     `;
 
-    // Premium 3D pin design
     el.innerHTML = `
-      <div style="position: relative; width: ${size}px; height: ${size + 16}px;">
-        <div style="
-          position: relative;
-          width: ${size}px;
-          height: ${size}px;
-          border-radius: 50% 50% 50% 0;
-          transform: rotate(-45deg);
-          background: linear-gradient(145deg, ${color}, ${adjustColor(color, -20)});
-          border: 3px solid rgba(255,255,255,0.9);
-          box-shadow: 
-            inset 0 3px 6px rgba(255,255,255,0.4),
-            inset 0 -3px 6px rgba(0,0,0,0.1),
-            0 4px 12px rgba(0,0,0,0.2);
-          overflow: hidden;
-        ">
-          <div style="
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 50%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
-            border-radius: inherit;
-          "></div>
-          <div style="
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transform: rotate(45deg);
-          ">
-            <span style="font-size: 16px;">${getTypeEmoji(listing.type)}</span>
-          </div>
-        </div>
-        <!-- Pin shadow -->
-        <div style="
-          position: absolute;
-          bottom: 2px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: ${size * 0.5}px;
-          height: 6px;
-          background: radial-gradient(ellipse, rgba(0,0,0,0.25), transparent);
-          border-radius: 50%;
-        "></div>
-        <!-- Price tag -->
-        ${listing.price ? `
-          <div style="
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: white;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 9px;
-            font-weight: 600;
-            color: ${color};
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-            white-space: nowrap;
-            transform: rotate(45deg);
-          ">
-            ${formatCompactPrice(listing.price)}
-          </div>
-        ` : ''}
+      <div style="
+        position: relative;
+        background: ${isHovered ? color : 'white'};
+        color: ${isHovered ? 'white' : '#1e293b'};
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: system-ui, -apple-system, sans-serif;
+        white-space: nowrap;
+        border: 2.5px solid ${color};
+        box-shadow: ${isHovered ? `0 0 0 3px ${color}40` : 'none'};
+        transition: all 0.2s ease;
+      ">
+        ${priceLabel}
       </div>
+      <div style="
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 7px solid ${isHovered ? color : color};
+        margin-top: -1px;
+      "></div>
     `;
 
     return el;

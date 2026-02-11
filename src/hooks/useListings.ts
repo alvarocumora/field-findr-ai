@@ -270,6 +270,29 @@ export const formatPrice = (price: number, currency = 'CLP') => {
   return `$${price.toLocaleString('en-US')} ${currency}`;
 };
 
+export const formatPriceShort = (price: number, currency = 'CLP') => {
+  if (currency === 'UF') return `${price.toLocaleString('es-CL', { maximumFractionDigits: 0 })} UF`;
+  if (price >= 1_000_000_000) return `$${(price / 1_000_000_000).toFixed(1)}B`;
+  if (price >= 1_000_000) return `$${(price / 1_000_000).toFixed(0)}M`;
+  if (price >= 1_000) return `$${(price / 1_000).toFixed(0)}K`;
+  return `$${price}`;
+};
+
+export const getPricePerM2 = (price: number, areaM2: number | null): number | null => {
+  if (!areaM2 || areaM2 <= 0) return null;
+  return Math.round(price / areaM2);
+};
+
+export const getCountryFlag = (country: string | null): string => {
+  if (!country) return '🌎';
+  const flags: Record<string, string> = {
+    Chile: '🇨🇱', Argentina: '🇦🇷', Colombia: '🇨🇴', México: '🇲🇽', Peru: '🇵🇪', Perú: '🇵🇪',
+    Brasil: '🇧🇷', Uruguay: '🇺🇾', Paraguay: '🇵🇾', Ecuador: '🇪🇨', Bolivia: '🇧🇴',
+    'Costa Rica': '🇨🇷', Panamá: '🇵🇦', 'República Dominicana': '🇩🇴',
+  };
+  return flags[country] || '🌎';
+};
+
 export const formatArea = (areaM2: number | null, areaHa: number | null) => {
   if (areaHa && areaHa >= 1) {
     return `${areaHa.toLocaleString('es-CL')} há`;
