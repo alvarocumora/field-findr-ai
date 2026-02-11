@@ -1,118 +1,146 @@
 
-# Plan de Mejora Integral: Landing, Logo, Mapa, Busqueda y Fichas
 
-Este plan aborda 5 areas clave para lograr una plataforma visualmente consistente, funcional y profesional.
+# Plan: Reestructurar Sistema de Rutas, Perfiles y Accesos como SaaS Profesional
 
----
+## Problema Actual
 
-## Fase 1: Logo Epico y Limpio
+El sistema tiene rutas desorganizadas, accesos inconsistentes y navegacion que no diferencia claramente entre los 3 perfiles de usuario. Hay rutas duplicadas (/favorites y /favoritos), componentes legacy sin layout consistente, y la navegacion post-login no redirige al dashboard correcto segun el rol del usuario.
 
-**Problema actual:** El logo tiene demasiados elementos SVG (hexagono, montana, diamante, lineas de parcela, circulos) lo que lo hace visualmente ruidoso a tamanos pequenos.
+## Arquitectura de Perfiles Propuesta
 
-**Solucion:**
-- Redisenar `Logo.tsx` y `LogoIcon.tsx` con un icono minimalista: una "O" estilizada con forma de parcela/terreno (cuadrado redondeado con una diagonal que sugiere topografia)
-- Reducir los paths SVG de 7+ a maximo 3, priorizando legibilidad a cualquier tamano
-- Mantener el gradiente Emerald-to-Sky pero simplificar la geometria
-- Texto "Oferta" en peso bold + "terrenos" en peso medium con color primary
-- Eliminar el subtitulo "Proptech Chile" del logo (moverlo solo al footer)
-- Asegurar que el icono funcione como favicon tambien
+```text
++------------------+     +------------------+     +------------------+
+|    COMPRADOR     |     |      AGENTE      |     |   ADMIN          |
+|    (buyer)       |     |    (agent)       |     |  (admin)         |
++------------------+     +------------------+     +------------------+
+| /explorar        |     | /asesor/dashboard|     | /admin/dashboard |
+| /favoritos       |     | /asesor/listings |     | /admin/users     |
+| /mi-terreno      |     | /asesor/leads    |     | /admin/listings  |
+| /profile         |     | /asesor/projects |     | /admin/analytics |
+|                  |     | /asesor/lots     |     | /admin/security  |
+|                  |     | /asesor/analytics|     |                  |
+|                  |     | /asesor/crm      |     |                  |
+|                  |     | /publish         |     |                  |
++------------------+     +------------------+     +------------------+
+```
 
----
+## Cambios a Implementar
 
-## Fase 2: Landing Page Premium
+### 1. Smart Redirect post-login
 
-**Cambios en el Hero:**
-- Reducir los orbs de fondo (de 3 a 1 sutil) para un look mas limpio
-- Simplificar el badge de IA: quitar el pulse constante que distrae, usar un badge estatico mas elegante
-- Mejorar el `gradient-text-hero` para que funcione bien en ambos temas (actualmente en light mode el blanco se pierde)
-- Hacer la barra de busqueda mas prominente con placeholder mas descriptivo
+Modificar `Auth.tsx` para que al hacer login, redirija automaticamente segun el rol:
+- **buyer** -> `/explorar` (o redirect param)
+- **agent** -> `/asesor/dashboard`
+- **admin** -> `/admin/dashboard`
 
-**HeroStats:**
-- Quitar la stat "100% Datos verificados" que parece falsa/marketing y reemplazarla con algo real como "Regiones cubiertas" o "Usuarios activos"
+Crear un hook `useSmartRedirect` que consulte `user_roles` y determine la ruta correcta.
 
-**HowItWorks:**
-- Agregar iconografia mas grande y reducir texto
-- Conectar los pasos con una linea continua en vez de dashes aislados
+### 2. Reestructurar Rutas en App.tsx
 
-**FeaturedProjects:**
-- Agregar imagen del proyecto si existe (`master_plan_url` o imagen de portada)
-- Mostrar el area total del proyecto si esta disponible
+Limpiar y agrupar las rutas con namespaces claros:
 
-**TrustBadges:**
-- Convertir en un banner horizontal tipo marquee con logos de instituciones (SII, Conservador, IDE Chile) en vez de iconos genericos
+**Publicas (sin auth):**
+- `/` - Landing
+- `/explorar` - Mapa exploracion
+- `/propiedad/:id` - Detalle propiedad
+- `/proyecto/:id` - Detalle proyecto
+- `/pricing` - Precios
+- `/auth` - Login/Registro
+- `/tools` - Herramientas publicas
+- `/search` - Busqueda IA
 
-**Footer:**
-- Eliminar links muertos (#) - dejar solo los que funcionan
-- Agregar link a la app en App Store/Play Store si aplica
+**Comprador (auth requerido):**
+- `/favoritos` - Favoritos (eliminar duplicado `/favorites`)
+- `/mi-terreno` - Portal del comprador
+- `/profile` - Mi perfil
+- `/subscription` - Mi suscripcion
 
----
+**Agente (auth + role agent o premium):**
+- `/asesor/dashboard` - Dashboard del agente
+- `/asesor/listings` - Inventario de propiedades (renombrar /inventory)
+- `/asesor/leads` - CRM Leads (renombrar /leads)
+- `/asesor/projects` - Gestion de proyectos (renombrar /projects)
+- `/asesor/lots` - Gestion de lotes (renombrar /lots)
+- `/asesor/analytics` - Analytics (renombrar /analytics)
+- `/asesor/crm` - CRM avanzado (renombrar /crm)
+- `/asesor/sales` - Ventas (renombrar /sales)
+- `/publish` - Publicar propiedad
 
-## Fase 3: Mapa y Explorar
+**Admin (auth + role admin):**
+- `/admin/dashboard` - Panel admin
+- `/admin/users` - Gestion usuarios
+- `/admin/agents` - Gestion agentes (renombrar /agents)
 
-**Mejoras al mapa (EnhancedMap):**
-- Agregar un boton "Mi ubicacion" mas visible con feedback visual al centrar
-- Mejorar los popups de marcadores: incluir imagen thumbnail, precio y area en una tarjeta compacta
-- Agregar conteo de resultados visible en el mapa ("12 terrenos en esta zona")
+### 3. Layout Inteligente por Rol
 
-**Mejoras al explorador (Explorar.tsx):**
-- Agregar ordenamiento (precio asc/desc, area, mas reciente) en el `FloatingResultsPanel`
-- Mostrar "Buscar en esta area" como boton flotante cuando el usuario mueve el mapa
-- Mejorar la `LocationSearchBar` con sugerencias de regiones populares como chips debajo
+Crear un `DashboardLayout` que envuelva todas las rutas de gestion (/asesor/*, /admin/*) con el sidebar contextual. Las rutas publicas y de comprador usan `PublicLayout` (sin sidebar, con StickyHeader).
 
-**FilterBar:**
-- Agregar filtro rapido de "Solo verificados" como toggle
-- Mostrar el rango de precio seleccionado de forma legible (ej: "$50M - $200M" en vez de slider abstracto)
+Modificar `ModernSidebar.tsx` para mostrar navegacion contextual:
+- Si es agente: mostrar menu de agente
+- Si es admin: mostrar menu de admin con seccion extra de administracion
 
----
+### 4. Mejorar ProtectedRoute
 
-## Fase 4: Fichas de Propiedad (ListingCard + PropertyDetail)
+Actualizar `ProtectedRoute` para soportar multiples roles y manejar la carga de roles correctamente (actualmente no espera a que los roles carguen antes de evaluar acceso).
 
-**ListingCard:**
-- Agregar precio por m2 debajo del precio total cuando sea calculable
-- Reemplazar "vistas" por la region/comuna que es mas util
-- Mejorar la transicion de hover para que sea mas sutil (reducir el scale de 1.05 a 1.02)
+### 5. Navegacion Contextual en StickyHeader
 
-**PropertyDetail:**
-- Agregar seccion de "Precio por m2" destacada junto al precio total
-- Mejorar el grid de "Key Facts" con iconos mas expresivos
-- Agregar boton de "Agendar visita" en la sidebar
-- Hacer que el mapa de ubicacion sea interactivo (actualmente puede ser estatico)
-- Agregar breadcrumb completo con region y comuna
+Actualizar el header publico para mostrar accesos inteligentes segun rol:
+- **Sin auth**: Explorar, Precios, Ingresar
+- **Buyer**: Explorar, Favoritos, Mi Terreno, avatar dropdown
+- **Agent**: Explorar, Mi Dashboard, Publicar, avatar dropdown
+- **Admin**: Explorar, Panel Admin, avatar dropdown
 
----
+El dropdown del avatar mostrara opciones relevantes al rol del usuario.
 
-## Fase 5: Consistencia Visual Global
+### 6. Eliminar Rutas y Componentes Legacy
 
-- Auditar y unificar border-radius: usar `rounded-xl` (12px) como estandar para cards, `rounded-2xl` para containers principales
-- Unificar spacing: `gap-4` para grids, `gap-6` para secciones, `p-4` para cards, `p-6` para containers
-- Corregir `glass-strong` que tiene background hardcodeado para dark mode pero usa selector `.light` en vez de `:root` para light mode
-- Asegurar que todos los componentes usan variables CSS del tema en vez de colores hardcodeados
-- Limpiar `App.css` que tiene estilos legacy de Vite que no se usan
+Remover las rutas huerfanas que duplican funcionalidad:
+- `/favorites` (usar solo `/favoritos`)
+- `/compare` (duplicado de `/comparar`)
+- `/calculators`, `/price-predictor`, `/risk-analysis`, `/ai-recommendations` (consolidar en `/tools`)
+- `/urbanization` (mover a `/asesor/projects`)
 
----
+### 7. Onboarding Post-Registro
 
-## Detalle Tecnico
+Agregar seleccion de perfil en el flujo de registro: "Soy comprador" o "Soy corredor/desarrollador". Si elige corredor, redirigir a `/pricing` para elegir plan. Si elige comprador, redirigir a `/explorar`.
+
+## Detalles Tecnicos
+
+### Hook useSmartRedirect
+```text
+useSmartRedirect()
+  -> Lee user_roles del usuario
+  -> Retorna la ruta de dashboard correcta
+  -> Prioridad: admin > agent > buyer
+  -> Fallback: /explorar
+```
+
+### DashboardLayout (nuevo componente)
+```text
+DashboardLayout
+  -> Wrapper con ModernSidebar contextual
+  -> Lee rol del usuario y adapta menu
+  -> Responsive con hamburger mobile
+  -> Breadcrumbs de navegacion
+```
+
+### Archivos a crear:
+- `src/hooks/useSmartRedirect.ts`
+- `src/components/layouts/DashboardLayout.tsx`
 
 ### Archivos a modificar:
-1. `src/components/brand/Logo.tsx` - Logo minimalista
-2. `src/components/brand/LogoIcon.tsx` - Icono simplificado
-3. `src/pages/Index.tsx` - Landing refinada
-4. `src/components/landing/HeroStats.tsx` - Stats reales
-5. `src/components/landing/HowItWorks.tsx` - Pasos con linea continua
-6. `src/components/landing/FeaturedProjects.tsx` - Con imagenes
-7. `src/components/landing/TrustBadges.tsx` - Banner institucional
-8. `src/components/landing/FloatingCTA.tsx` - Ajustes menores
-9. `src/components/FooterSection.tsx` - Limpiar links muertos
-10. `src/components/listings/ListingCard.tsx` - Precio/m2 y region
-11. `src/pages/PropertyDetail.tsx` - Seccion precio mejorada y agendar visita
-12. `src/pages/Explorar.tsx` - Ordenamiento y filtro verificados
-13. `src/components/explore/FloatingResultsPanel.tsx` - Selector de orden
-14. `src/index.css` - Corregir glass-strong y limpiar inconsistencias
-15. `src/App.css` - Eliminar estilos legacy no usados
+- `src/App.tsx` - Reestructurar todas las rutas
+- `src/pages/Auth.tsx` - Smart redirect post-login + seleccion de perfil
+- `src/components/auth/ProtectedRoute.tsx` - Esperar carga de roles
+- `src/components/ModernSidebar.tsx` - Navegacion contextual por rol
+- `src/components/navigation/StickyHeader.tsx` - Menu contextual por rol
+- `src/hooks/useUserRole.ts` - Agregar utilidades de redirect
 
-### Orden de implementacion sugerido:
-Dado el volumen de cambios, se recomienda dividir en 3-4 prompts:
-1. **Prompt 1**: Logo + CSS cleanup + consistencia visual base
-2. **Prompt 2**: Landing page completa (Hero, Stats, HowItWorks, Projects, Trust, Footer)
-3. **Prompt 3**: Explorar + Mapa + Filtros
-4. **Prompt 4**: Fichas (ListingCard + PropertyDetail)
+### Archivos a eliminar:
+- Rutas duplicadas consolidadas (no archivos, solo rutas en App.tsx)
+
+## Resultado Final
+
+Un sistema SaaS profesional donde cada tipo de usuario tiene una experiencia personalizada, con rutas limpias bajo namespaces claros, navegacion contextual, y un flujo de acceso que guia naturalmente al usuario segun su perfil y suscripcion.
+
