@@ -26,6 +26,7 @@ const Explorar = () => {
   // Filters state
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000000]);
   const [areaRange, setAreaRange] = useState<[number, number]>([0, 1000000]);
@@ -39,6 +40,7 @@ const Explorar = () => {
   const { data: listings = [], isLoading } = useListings({
     type: selectedTypes.length > 0 ? selectedTypes : undefined,
     region: selectedRegions.length > 0 ? selectedRegions : undefined,
+    country: selectedCountries.length > 0 ? selectedCountries : undefined,
     priceMin: priceRange[0] > 0 ? priceRange[0] : undefined,
     priceMax: priceRange[1] < 5000000000 ? priceRange[1] : undefined,
     areaMin: areaRange[0] > 0 ? areaRange[0] : undefined,
@@ -74,14 +76,16 @@ const Explorar = () => {
   }, [listings, searchQuery, selectedTags]);
 
   // Calculate active filters count
-  const activeFiltersCount = selectedTypes.length + selectedRegions.length + selectedTags.length +
+  const activeFiltersCount = selectedTypes.length + selectedRegions.length + selectedCountries.length + selectedTags.length +
     (priceRange[0] > 0 || priceRange[1] < 5000000000 ? 1 : 0) +
+    (areaRange[0] > 0 || areaRange[1] < 1000000 ? 1 : 0);
     (areaRange[0] > 0 || areaRange[1] < 1000000 ? 1 : 0);
 
   // Filter handlers
   const clearFilters = useCallback(() => {
     setSelectedTypes([]);
     setSelectedRegions([]);
+    setSelectedCountries([]);
     setSelectedTags([]);
     setPriceRange([0, 5000000000]);
     setAreaRange([0, 1000000]);
@@ -103,6 +107,12 @@ const Explorar = () => {
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags(prev => 
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  }, []);
+
+  const toggleCountry = useCallback((country: string) => {
+    setSelectedCountries(prev => 
+      prev.includes(country) ? prev.filter(c => c !== country) : [...prev, country]
     );
   }, []);
 
@@ -220,6 +230,8 @@ const Explorar = () => {
             onToggleType={toggleType}
             selectedRegions={selectedRegions}
             onToggleRegion={toggleRegion}
+            selectedCountries={selectedCountries}
+            onToggleCountry={toggleCountry}
             selectedTags={selectedTags}
             onToggleTag={toggleTag}
             priceRange={priceRange}

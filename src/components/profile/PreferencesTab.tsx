@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { useToast } from '@/hooks/use-toast';
+import { getAllCurrencies } from '@/lib/latam';
 
 const PreferencesTab = () => {
   const { theme, setTheme } = useTheme();
@@ -196,14 +197,16 @@ const PreferencesTab = () => {
 
           <div className="space-y-2">
             <Label htmlFor="currency">Moneda Preferida</Label>
-            <Select defaultValue="clp">
+            <Select defaultValue="CLP">
               <SelectTrigger id="currency" className="w-full md:w-[200px]">
                 <SelectValue placeholder="Seleccionar moneda" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="clp">CLP (Peso Chileno)</SelectItem>
-                <SelectItem value="uf">UF (Unidad de Fomento)</SelectItem>
-                <SelectItem value="usd">USD (Dólar)</SelectItem>
+                {getAllCurrencies().map(cur => (
+                  <SelectItem key={cur.code} value={cur.code}>
+                    {cur.symbol} {cur.code} ({cur.label})
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

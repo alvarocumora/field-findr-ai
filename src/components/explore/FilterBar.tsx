@@ -5,7 +5,8 @@ import {
   SlidersHorizontal, 
   Sparkles,
   MapPin,
-  Tag
+  Tag,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,12 +24,15 @@ import {
 } from '@/components/ui/popover';
 import { formatPrice } from '@/hooks/useListings';
 import { cn } from '@/lib/utils';
+import { LATAM_COUNTRIES, getCountryByName } from '@/lib/latam';
 
 interface FilterBarProps {
   selectedTypes: string[];
   onToggleType: (type: string) => void;
   selectedRegions: string[];
   onToggleRegion: (region: string) => void;
+  selectedCountries: string[];
+  onToggleCountry: (country: string) => void;
   selectedTags: string[];
   onToggleTag: (tag: string) => void;
   priceRange: [number, number];
@@ -77,6 +81,8 @@ const FilterBar = ({
   onToggleType,
   selectedRegions,
   onToggleRegion,
+  selectedCountries,
+  onToggleCountry,
   selectedTags,
   onToggleTag,
   priceRange,
@@ -149,6 +155,42 @@ const FilterBar = ({
                         onCheckedChange={() => onToggleType(type.value)}
                       />
                       <span className="text-sm">{type.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Country Filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    'h-9 rounded-xl gap-1 flex-shrink-0 border-border/50',
+                    selectedCountries.length > 0 && 'border-primary/30 bg-primary/5'
+                  )}
+                >
+                  <Globe className="h-3.5 w-3.5" />
+                  {selectedCountries.length === 0 ? 'País' : selectedCountries.length === 1 
+                    ? LATAM_COUNTRIES.find(c => c.name === selectedCountries[0])?.flag + ' ' + selectedCountries[0]
+                    : `${selectedCountries.length} países`}
+                  <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-2" align="start">
+                <div className="space-y-1">
+                  {LATAM_COUNTRIES.map((country) => (
+                    <label
+                      key={country.code}
+                      className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-muted"
+                    >
+                      <Checkbox
+                        checked={selectedCountries.includes(country.name)}
+                        onCheckedChange={() => onToggleCountry(country.name)}
+                      />
+                      <span className="text-sm">{country.flag} {country.name}</span>
                     </label>
                   ))}
                 </div>
