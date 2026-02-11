@@ -70,9 +70,6 @@ const Explorar = () => {
       );
     }
 
-    // Sort by featured first
-    result.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-
     return result;
   }, [listings, searchQuery, selectedTags]);
 

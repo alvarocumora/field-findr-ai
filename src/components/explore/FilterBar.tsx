@@ -25,25 +25,18 @@ import { formatPrice } from '@/hooks/useListings';
 import { cn } from '@/lib/utils';
 
 interface FilterBarProps {
-  // Type filter
   selectedTypes: string[];
   onToggleType: (type: string) => void;
-  // Region filter
   selectedRegions: string[];
   onToggleRegion: (region: string) => void;
-  // Tags filter
   selectedTags: string[];
   onToggleTag: (tag: string) => void;
-  // Price filter
   priceRange: [number, number];
   onPriceRangeChange: (range: [number, number]) => void;
-  // Area filter
   areaRange: [number, number];
   onAreaRangeChange: (range: [number, number]) => void;
-  // Actions
   onClearFilters: () => void;
   activeFiltersCount: number;
-  // AI
   showAISearch?: boolean;
   onToggleAISearch?: () => void;
   className?: string;
@@ -70,6 +63,13 @@ const TAGS = [
   { value: 'camino', label: 'Camino' },
   { value: 'riego', label: 'Riego' },
   { value: 'bosque', label: 'Bosque' },
+];
+
+const PRICE_PRESETS = [
+  { label: '< $50M', range: [0, 50000000] as [number, number] },
+  { label: '$50M - $200M', range: [50000000, 200000000] as [number, number] },
+  { label: '$200M - $500M', range: [200000000, 500000000] as [number, number] },
+  { label: '> $500M', range: [500000000, 5000000000] as [number, number] },
 ];
 
 const FilterBar = ({
@@ -109,10 +109,12 @@ const FilterBar = ({
     const hasMin = priceRange[0] > 0;
     const hasMax = priceRange[1] < 5000000000;
     if (!hasMin && !hasMax) return 'Precio';
-    if (hasMin && hasMax) return `${formatPrice(priceRange[0])} - ${formatPrice(priceRange[1])}`;
+    if (hasMin && hasMax) return `${formatPrice(priceRange[0])} – ${formatPrice(priceRange[1])}`;
     if (hasMin) return `Desde ${formatPrice(priceRange[0])}`;
     return `Hasta ${formatPrice(priceRange[1])}`;
   };
+
+  const hasPriceFilter = priceRange[0] > 0 || priceRange[1] < 5000000000;
 
   return (
     <div className={cn('bg-background/80 backdrop-blur-xl border-b border-border/30', className)}>
@@ -187,7 +189,7 @@ const FilterBar = ({
               </PopoverContent>
             </Popover>
 
-            {/* Price Filter */}
+            {/* Price Filter - with presets */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -195,7 +197,7 @@ const FilterBar = ({
                   size="sm"
                   className={cn(
                     'h-9 rounded-xl gap-1 flex-shrink-0 border-border/50',
-                    (priceRange[0] > 0 || priceRange[1] < 5000000000) && 'border-primary/30 bg-primary/5'
+                    hasPriceFilter && 'border-primary/30 bg-primary/5'
                   )}
                 >
                   {getPriceLabel()}
@@ -205,6 +207,27 @@ const FilterBar = ({
               <PopoverContent className="w-72 p-4" align="start">
                 <div className="space-y-4">
                   <h4 className="text-sm font-medium">Rango de precio</h4>
+                  
+                  {/* Quick presets */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {PRICE_PRESETS.map((preset) => {
+                      const isActive = priceRange[0] === preset.range[0] && priceRange[1] === preset.range[1];
+                      return (
+                        <Badge
+                          key={preset.label}
+                          variant={isActive ? 'default' : 'outline'}
+                          className={cn(
+                            'cursor-pointer text-xs transition-colors',
+                            isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                          )}
+                          onClick={() => onPriceRangeChange(isActive ? [0, 5000000000] : preset.range)}
+                        >
+                          {preset.label}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+
                   <Slider
                     value={[Math.log10(priceRange[0] + 1), Math.log10(priceRange[1])]}
                     min={0}
@@ -218,7 +241,7 @@ const FilterBar = ({
                     }}
                     className="py-4"
                   />
-                  <div className="flex justify-between text-xs text-muted-foreground">
+                  <div className="flex justify-between text-xs text-muted-foreground font-medium">
                     <span>{formatPrice(priceRange[0])}</span>
                     <span>{formatPrice(priceRange[1])}</span>
                   </div>
@@ -281,7 +304,7 @@ const FilterBar = ({
               {/* Area Range */}
               <div className="space-y-3">
                 <h4 className="text-sm font-medium flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                   Superficie (m²)
                 </h4>
                 <Slider
