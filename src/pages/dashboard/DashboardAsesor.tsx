@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import Layout from '@/components/Layout';
+
 import { useAgentStats, useAgentLeads, useAgentGoals } from '@/hooks/useDashboardStats';
 import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
 import { ListingFormDialog } from '@/components/listings/ListingFormDialog';
@@ -49,8 +49,7 @@ const DashboardAsesor = () => {
   };
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <div className="container py-8 space-y-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -232,7 +231,6 @@ const DashboardAsesor = () => {
           </div>
         </div>
       </div>
-    </Layout>
   );
 };
 

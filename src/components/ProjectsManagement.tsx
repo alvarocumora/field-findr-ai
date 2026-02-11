@@ -14,7 +14,7 @@ import {
   FileArchive, Upload
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Layout from './Layout';
+
 import { useProjects, Project } from '@/hooks/useProjects';
 import { KMZImportDialog } from './projects/KMZImportDialog';
 
@@ -75,30 +75,27 @@ const ProjectsManagement = () => {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="p-6 space-y-6">
-          <div className="flex justify-between items-center">
-            <Skeleton className="h-10 w-64" />
-            <Skeleton className="h-10 w-40" />
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-24" />
-            ))}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-80" />
-            ))}
-          </div>
+      <div className="p-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-10 w-40" />
         </div>
-      </Layout>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-80" />
+          ))}
+        </div>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -351,7 +348,6 @@ const ProjectsManagement = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </Layout>
   );
 };
 
