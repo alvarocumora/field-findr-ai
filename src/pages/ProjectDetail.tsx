@@ -12,6 +12,8 @@ import { LotMapView } from '@/components/lots/LotMapView';
 import { LegalTab } from '@/components/projects/LegalTab';
 import { FinancingCalculator } from '@/components/projects/FinancingCalculator';
 import { EnhancedLotCard } from '@/components/lots/EnhancedLotCard';
+import { AIMasterplanTab } from '@/components/projects/AIMasterplanTab';
+import { useAuth } from '@/hooks/useAuth';
 import {
   MapPin,
   ArrowLeft,
@@ -26,7 +28,8 @@ import {
   List,
   Navigation,
   Scale,
-  Calculator
+  Calculator,
+  Brain
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -63,6 +66,7 @@ const GALLERY_IMAGES = [
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [selectedLot, setSelectedLot] = useState<string | null>(null);
   const [reservationLot, setReservationLot] = useState<any | null>(null);
   const [financingLot, setFinancingLot] = useState<any | null>(null);
@@ -135,7 +139,7 @@ const ProjectDetail = () => {
   }
 
   const selectedLotData = lots.find(l => l.id === selectedLot);
-
+  const isOwner = !!user && project.user_id === user.id;
   return (
     <PublicLayout>
       <div className="min-h-screen bg-background">
@@ -200,11 +204,17 @@ const ProjectDetail = () => {
                     <ImageIcon className="h-4 w-4" />
                     Galería
                   </TabsTrigger>
+                  {isOwner && (
+                    <TabsTrigger value="ai-analysis" className="gap-2">
+                      <Brain className="h-4 w-4" />
+                      IA Análisis
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
-                {/* Interactive Map Tab - Uses embed if available, otherwise 3D map */}
+                {/* Interactive Map Tab - Uses embed only for owner, otherwise internal map */}
                 <TabsContent value="interactive-map" className="space-y-4">
-                  {(project as any).embed_map_url ? (
+                  {isOwner && (project as any).embed_map_url ? (
                     <div className="relative glass rounded-xl overflow-hidden">
                       <iframe
                         src={(project as any).embed_map_url}
@@ -236,6 +246,7 @@ const ProjectDetail = () => {
                         queryClient.invalidateQueries({ queryKey: ['project-lots', id] });
                         queryClient.invalidateQueries({ queryKey: ['project', id] });
                       }}
+                      readOnly={!isOwner}
                     />
                   )}
                 </TabsContent>
@@ -289,6 +300,16 @@ const ProjectDetail = () => {
                     ))}
                   </div>
                 </TabsContent>
+
+                {/* AI Analysis Tab - Owner only */}
+                {isOwner && (
+                  <TabsContent value="ai-analysis" className="space-y-4">
+                    <AIMasterplanTab
+                      project={project}
+                      lots={lots}
+                    />
+                  </TabsContent>
+                )}
               </Tabs>
             </div>
 
