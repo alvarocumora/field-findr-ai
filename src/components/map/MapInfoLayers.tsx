@@ -43,6 +43,7 @@ export interface InfoLayerState {
   hydrology: boolean;
   mining: boolean;
   biodiversity: boolean;
+  isochrone: boolean;
 }
 
 export interface InfoLayerConfig {
@@ -72,10 +73,17 @@ const MapInfoLayers = ({
       layers: [
         { 
           key: 'heatmap' as const, 
-          label: 'Plusvalía Histórica', 
+          label: 'Heatmap Precio/m²', 
           icon: TrendingUp, 
-          description: 'Mapa de calor con tendencia de precios',
+          description: 'Mapa de calor con precio real por m² de la plataforma',
           color: '#10b981'
+        },
+        { 
+          key: 'isochrone' as const, 
+          label: 'Isócronas de Conectividad', 
+          icon: Route, 
+          description: 'Click en propiedad → muestra 5/10/15 min en auto',
+          color: '#6366f1'
         },
         { 
           key: 'zoning' as const, 
@@ -319,6 +327,52 @@ const MapInfoLayers = ({
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Heatmap Legend */}
+          {layers.heatmap && (
+            <div className="space-y-2 pt-3 border-t border-white/10">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                Leyenda Precio/m²
+              </Label>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-muted-foreground">Bajo</span>
+                <div className="flex-1 h-3 rounded-full" style={{
+                  background: 'linear-gradient(to right, rgba(0,0,255,0.6), rgb(0,255,255), rgb(0,255,0), rgb(255,255,0), rgb(255,165,0), rgb(255,0,0))'
+                }} />
+                <span className="text-[10px] text-muted-foreground">Alto</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Basado en datos reales de propiedades publicadas
+              </p>
+            </div>
+          )}
+
+          {/* Isochrone Legend */}
+          {layers.isochrone && (
+            <div className="space-y-2 pt-3 border-t border-white/10">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                Isócronas de Conectividad
+              </Label>
+              <div className="grid grid-cols-3 gap-1.5">
+                {[
+                  { label: '5 min', color: '#10b981' },
+                  { label: '10 min', color: '#f59e0b' },
+                  { label: '15 min', color: '#ef4444' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-1.5">
+                    <div 
+                      className="w-3 h-3 rounded-sm border border-white/20"
+                      style={{ backgroundColor: item.color, opacity: 0.5 }}
+                    />
+                    <span className="text-[10px] text-muted-foreground">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Haz click en una propiedad para ver sus isócronas
+              </p>
             </div>
           )}
 
