@@ -44,6 +44,14 @@ import MapModeSelector, { MapMode } from './MapModeSelector';
 import MapLegend from './MapLegend';
 import MapStatusBadge from './MapStatusBadge';
 import DrawingIndicator from './DrawingIndicator';
+import {
+  generateDemoZoningData,
+  generateRiskZonesData,
+  generateInfrastructureData,
+  generateWaterBodiesData,
+  generateGreenAreasData,
+  generateRoadsData,
+} from './demoGeoData';
 
 interface EnhancedMapProps {
   listings: Listing[];
@@ -67,281 +75,7 @@ const statusLabels = {
   sold: 'Vendido',
 };
 
-// Demo GeoJSON data for Chile regions
-const generateDemoZoningData = (): GeoJSON.FeatureCollection => ({
-  type: 'FeatureCollection',
-  features: [
-    // Residential zones (Santiago area)
-    {
-      type: 'Feature',
-      properties: { type: 'residential', name: 'Zona Residencial Las Condes' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.58, -33.40], [-70.54, -33.40], [-70.54, -33.43], [-70.58, -33.43], [-70.58, -33.40]
-        ]]
-      }
-    },
-    // Commercial zones
-    {
-      type: 'Feature',
-      properties: { type: 'commercial', name: 'Zona Comercial Providencia' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.62, -33.42], [-70.58, -33.42], [-70.58, -33.45], [-70.62, -33.45], [-70.62, -33.42]
-        ]]
-      }
-    },
-    // Industrial zones
-    {
-      type: 'Feature',
-      properties: { type: 'industrial', name: 'Zona Industrial Quilicura' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.70, -33.35], [-70.65, -33.35], [-70.65, -33.40], [-70.70, -33.40], [-70.70, -33.35]
-        ]]
-      }
-    },
-    // Agricultural zones (Valparaíso region)
-    {
-      type: 'Feature',
-      properties: { type: 'agricultural', name: 'Zona Agrícola Casablanca' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-71.45, -33.30], [-71.35, -33.30], [-71.35, -33.40], [-71.45, -33.40], [-71.45, -33.30]
-        ]]
-      }
-    },
-    // Mixed use
-    {
-      type: 'Feature',
-      properties: { type: 'mixed', name: 'Zona Mixta Ñuñoa' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.60, -33.45], [-70.56, -33.45], [-70.56, -33.48], [-70.60, -33.48], [-70.60, -33.45]
-        ]]
-      }
-    },
-    // Protected areas
-    {
-      type: 'Feature',
-      properties: { type: 'protected', name: 'Reserva Nacional Río Clarillo' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.48, -33.72], [-70.38, -33.72], [-70.38, -33.82], [-70.48, -33.82], [-70.48, -33.72]
-        ]]
-      }
-    },
-  ]
-});
-
-const generateRiskZonesData = (): GeoJSON.FeatureCollection => ({
-  type: 'FeatureCollection',
-  features: [
-    // Flood zones
-    {
-      type: 'Feature',
-      properties: { type: 'flood', risk: 'high', name: 'Zona Inundable Mapocho' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.68, -33.43], [-70.55, -33.43], [-70.55, -33.45], [-70.68, -33.45], [-70.68, -33.43]
-        ]]
-      }
-    },
-    // Landslide zones
-    {
-      type: 'Feature',
-      properties: { type: 'landslide', risk: 'medium', name: 'Riesgo Remoción Lo Barnechea' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.45, -33.35], [-70.38, -33.35], [-70.38, -33.42], [-70.45, -33.42], [-70.45, -33.35]
-        ]]
-      }
-    },
-    // Seismic zones
-    {
-      type: 'Feature',
-      properties: { type: 'seismic', risk: 'medium', name: 'Zona Sísmica Central' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.75, -33.50], [-70.50, -33.50], [-70.50, -33.55], [-70.75, -33.55], [-70.75, -33.50]
-        ]]
-      }
-    },
-    // Tsunami zones (coastal)
-    {
-      type: 'Feature',
-      properties: { type: 'tsunami', risk: 'high', name: 'Zona Tsunami Valparaíso' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-71.65, -33.02], [-71.60, -33.02], [-71.60, -33.08], [-71.65, -33.08], [-71.65, -33.02]
-        ]]
-      }
-    },
-  ]
-});
-
-const generateInfrastructureData = (): GeoJSON.FeatureCollection => ({
-  type: 'FeatureCollection',
-  features: [
-    // Full services areas
-    {
-      type: 'Feature',
-      properties: { coverage: 'full', services: ['water', 'electricity', 'sewage', 'gas'] },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.68, -33.40], [-70.52, -33.40], [-70.52, -33.50], [-70.68, -33.50], [-70.68, -33.40]
-        ]]
-      }
-    },
-    // Partial services
-    {
-      type: 'Feature',
-      properties: { coverage: 'partial', services: ['water', 'electricity'] },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.80, -33.35], [-70.68, -33.35], [-70.68, -33.45], [-70.80, -33.45], [-70.80, -33.35]
-        ]]
-      }
-    },
-    // Limited services
-    {
-      type: 'Feature',
-      properties: { coverage: 'limited', services: ['electricity'] },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.90, -33.30], [-70.80, -33.30], [-70.80, -33.45], [-70.90, -33.45], [-70.90, -33.30]
-        ]]
-      }
-    },
-  ]
-});
-
-const generateWaterBodiesData = (): GeoJSON.FeatureCollection => ({
-  type: 'FeatureCollection',
-  features: [
-    // Rivers
-    {
-      type: 'Feature',
-      properties: { type: 'river', name: 'Río Mapocho' },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [-70.78, -33.42], [-70.70, -33.43], [-70.60, -33.43], [-70.50, -33.44], [-70.40, -33.45]
-        ]
-      }
-    },
-    {
-      type: 'Feature',
-      properties: { type: 'river', name: 'Río Maipo' },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [-70.30, -33.60], [-70.45, -33.62], [-70.60, -33.65], [-70.80, -33.68], [-71.00, -33.70]
-        ]
-      }
-    },
-    // Lakes
-    {
-      type: 'Feature',
-      properties: { type: 'lake', name: 'Laguna Carén' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.88, -33.45], [-70.86, -33.45], [-70.86, -33.47], [-70.88, -33.47], [-70.88, -33.45]
-        ]]
-      }
-    },
-  ]
-});
-
-const generateGreenAreasData = (): GeoJSON.FeatureCollection => ({
-  type: 'FeatureCollection',
-  features: [
-    // Parks
-    {
-      type: 'Feature',
-      properties: { type: 'park', name: 'Parque Metropolitano' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.64, -33.40], [-70.60, -33.40], [-70.60, -33.44], [-70.64, -33.44], [-70.64, -33.40]
-        ]]
-      }
-    },
-    {
-      type: 'Feature',
-      properties: { type: 'park', name: 'Parque O\'Higgins' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.66, -33.46], [-70.64, -33.46], [-70.64, -33.48], [-70.66, -33.48], [-70.66, -33.46]
-        ]]
-      }
-    },
-    // Nature reserves
-    {
-      type: 'Feature',
-      properties: { type: 'reserve', name: 'Santuario de la Naturaleza Yerba Loca' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-70.35, -33.28], [-70.25, -33.28], [-70.25, -33.38], [-70.35, -33.38], [-70.35, -33.28]
-        ]]
-      }
-    },
-  ]
-});
-
-const generateRoadsData = (): GeoJSON.FeatureCollection => ({
-  type: 'FeatureCollection',
-  features: [
-    // Highways
-    {
-      type: 'Feature',
-      properties: { type: 'highway', name: 'Autopista Central' },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [-70.65, -33.30], [-70.65, -33.40], [-70.65, -33.50], [-70.65, -33.60]
-        ]
-      }
-    },
-    {
-      type: 'Feature',
-      properties: { type: 'highway', name: 'Ruta 5' },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [-70.70, -33.00], [-70.68, -33.20], [-70.66, -33.40], [-70.68, -33.60], [-70.70, -33.80]
-        ]
-      }
-    },
-    // Main roads
-    {
-      type: 'Feature',
-      properties: { type: 'main', name: 'Costanera Norte' },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [-70.78, -33.42], [-70.70, -33.42], [-70.60, -33.42], [-70.50, -33.43]
-        ]
-      }
-    },
-  ]
-});
+// Demo data generators moved to ./demoGeoData.ts
 
 // Generate heatmap points from real listing data - price per m²
 const generateHeatmapData = (listings: Listing[]): GeoJSON.FeatureCollection => {
@@ -412,10 +146,14 @@ const EnhancedMap = ({
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const layerTooltipRef = useRef<mapboxgl.Popup | null>(null);
+  const addInfoLayersRef = useRef<() => void>(() => {});
+  const setupLayerHoverEventsRef = useRef<() => void>(() => {});
+  const showDrawToolsRef = useRef(showDrawTools);
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawnArea, setDrawnArea] = useState<number | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>('3d');
+  const mapModeRef = useRef<MapMode>(mapMode);
   const [showClusters, setShowClusters] = useState(false); // Disabled by default for better hover sync
   const [showLabels, setShowLabels] = useState(true);
   const [controlsExpanded, setControlsExpanded] = useState(false);
@@ -1570,19 +1308,32 @@ const EnhancedMap = ({
     }
   }, [layerConfig, isLoading]);
 
-  // Initialize map
+  // Keep refs in sync with latest callbacks
+  useEffect(() => { addInfoLayersRef.current = addInfoLayers; }, [addInfoLayers]);
+  useEffect(() => { setupLayerHoverEventsRef.current = setupLayerHoverEvents; }, [setupLayerHoverEvents]);
+  useEffect(() => { showDrawToolsRef.current = showDrawTools; });
+  useEffect(() => { mapModeRef.current = mapMode; }, [mapMode]);
+
+  // Initialize map - ONLY depends on token availability
   useEffect(() => {
     if (!mapContainer.current || tokenLoading || !mapboxToken) return;
 
     mapboxgl.accessToken = mapboxToken;
 
+    const currentMode = mapModeRef.current;
+    const styleUrl = currentMode === 'satellite'
+      ? 'mapbox://styles/mapbox/satellite-streets-v12'
+      : currentMode === '3d'
+      ? 'mapbox://styles/mapbox/outdoors-v12'
+      : 'mapbox://styles/mapbox/light-v11';
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: getMapStyle(),
-      center: getCenter(),
+      style: styleUrl,
+      center: [-70.6693, -33.4489],
       zoom: 6,
-      pitch: mapMode === '3d' ? 50 : 0,
-      bearing: mapMode === '3d' ? -17 : 0,
+      pitch: currentMode === '3d' ? 50 : 0,
+      bearing: currentMode === '3d' ? -17 : 0,
       antialias: true,
     });
 
@@ -1594,7 +1345,6 @@ const EnhancedMap = ({
       className: 'enhanced-map-popup-container',
     });
 
-    // Initialize layer tooltip popup
     layerTooltipRef.current = new mapboxgl.Popup({
       closeButton: false,
       closeOnClick: false,
@@ -1603,8 +1353,7 @@ const EnhancedMap = ({
       className: 'layer-tooltip-popup',
     });
 
-    // Initialize draw control
-    if (showDrawTools) {
+    if (showDrawToolsRef.current) {
       draw.current = new MapboxDraw({
         displayControlsDefault: false,
         controls: {},
@@ -1614,31 +1363,19 @@ const EnhancedMap = ({
             id: 'gl-draw-polygon-fill',
             type: 'fill',
             filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
-            paint: {
-              'fill-color': '#10b981',
-              'fill-opacity': 0.2,
-            },
+            paint: { 'fill-color': '#10b981', 'fill-opacity': 0.2 },
           },
           {
             id: 'gl-draw-polygon-stroke',
             type: 'line',
             filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
-            paint: {
-              'line-color': '#10b981',
-              'line-width': 3,
-              'line-dasharray': [2, 2],
-            },
+            paint: { 'line-color': '#10b981', 'line-width': 3, 'line-dasharray': [2, 2] },
           },
           {
             id: 'gl-draw-point',
             type: 'circle',
             filter: ['all', ['==', '$type', 'Point'], ['==', 'meta', 'vertex']],
-            paint: {
-              'circle-radius': 6,
-              'circle-color': '#10b981',
-              'circle-stroke-width': 2,
-              'circle-stroke-color': '#fff',
-            },
+            paint: { 'circle-radius': 6, 'circle-color': '#10b981', 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' },
           },
         ],
       });
@@ -1646,8 +1383,7 @@ const EnhancedMap = ({
     }
 
     map.current.on('load', () => {
-      // Add 3D terrain
-      if (mapMode === '3d' && map.current) {
+      if (currentMode === '3d' && map.current) {
         map.current.addSource('mapbox-dem', {
           type: 'raster-dem',
           url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
@@ -1655,35 +1391,21 @@ const EnhancedMap = ({
           maxzoom: 14,
         });
         map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
-
-        // Add atmosphere
         map.current.addLayer({
           id: 'sky',
           type: 'sky',
-          paint: {
-            'sky-type': 'atmosphere',
-            'sky-atmosphere-sun': [0, 75],
-            'sky-atmosphere-sun-intensity': 15,
-          },
+          paint: { 'sky-type': 'atmosphere', 'sky-atmosphere-sun': [0, 75], 'sky-atmosphere-sun-intensity': 15 },
         });
       }
 
-      // Add info layers
-      addInfoLayers();
+      addInfoLayersRef.current();
+      setupLayerHoverEventsRef.current();
 
-      // Setup hover events for info layers
-      setupLayerHoverEvents();
-
-      // Trigger resize to ensure proper dimensions after mount
-      setTimeout(() => {
-        map.current?.resize();
-      }, 100);
-
+      setTimeout(() => { map.current?.resize(); }, 100);
       setIsLoading(false);
     });
 
-    // Drawing events
-    if (showDrawTools) {
+    if (showDrawToolsRef.current) {
       map.current.on('draw.create', (e: { features: GeoJSON.Feature[] }) => {
         const polygon = e.features[0];
         if (polygon.geometry.type === 'Polygon') {
@@ -1711,33 +1433,22 @@ const EnhancedMap = ({
     }
 
     return () => {
-      // Clean up markers
       Object.values(markersRef.current).forEach((marker) => marker.remove());
       markersRef.current = {};
       popupRef.current?.remove();
       layerTooltipRef.current?.remove();
-      
-      // Remove draw control before removing map to avoid errors
+
       if (draw.current && map.current) {
-        try {
-          map.current.removeControl(draw.current);
-        } catch (e) {
-          // Ignore errors during cleanup
-        }
+        try { map.current.removeControl(draw.current); } catch (e) { /* ignore */ }
         draw.current = null;
       }
-      
-      // Remove map
+
       if (map.current) {
-        try {
-          map.current.remove();
-        } catch (e) {
-          // Ignore errors during cleanup
-        }
+        try { map.current.remove(); } catch (e) { /* ignore */ }
         map.current = null;
       }
     };
-  }, [mapboxToken, tokenLoading, getCenter, getMapStyle, mapMode, showDrawTools, addInfoLayers, setupLayerHoverEvents]);
+  }, [mapboxToken, tokenLoading]);
 
   // Update markers when listings change (only when not using clusters)
   useEffect(() => {
@@ -2150,7 +1861,8 @@ const EnhancedMap = ({
         }
 
         // Re-add info layers after style change
-        addInfoLayers();
+        addInfoLayersRef.current();
+        setupLayerHoverEventsRef.current();
       });
     }
   };
