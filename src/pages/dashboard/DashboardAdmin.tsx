@@ -23,7 +23,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import Layout from '@/components/Layout';
+
 import { useAdminStats, useAdminUsers, useAdminListings } from '@/hooks/useDashboardStats';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -59,8 +59,7 @@ const DashboardAdmin = () => {
   };
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <div className="container py-8 space-y-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -262,7 +261,6 @@ const DashboardAdmin = () => {
           </Tabs>
         </div>
       </div>
-    </Layout>
   );
 };
 
