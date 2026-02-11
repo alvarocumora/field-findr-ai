@@ -34,59 +34,14 @@ const LIGHT_BG: [number, number, number] = [248, 250, 252];
 const WHITE: [number, number, number] = [255, 255, 255];
 const EMERALD_LIGHT: [number, number, number] = [220, 252, 231];
 
-const drawLogo = (doc: jsPDF, x: number, y: number, size: number) => {
-  const cx = x + size / 2;
-  const cy = y + size / 2;
-  const r = size / 2;
-
-  // Hexagon frame
-  const hexPoints: [number, number][] = [];
-  for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 3) * i - Math.PI / 2;
-    hexPoints.push([cx + r * 0.85 * Math.cos(angle), cy + r * 0.85 * Math.sin(angle)]);
-  }
-
-  doc.setFillColor(...EMERALD);
-  doc.setDrawColor(...EMERALD);
-  doc.setLineWidth(0.8);
-
-  // Fill hexagon background
-  const hexPath = hexPoints.map((p, i) => (i === 0 ? `${p[0]} ${p[1]} m` : `${p[0]} ${p[1]} l`)).join(' ');
-  // Use triangle fan approach
-  for (let i = 1; i < hexPoints.length - 1; i++) {
-    doc.triangle(
-      hexPoints[0][0], hexPoints[0][1],
-      hexPoints[i][0], hexPoints[i][1],
-      hexPoints[i + 1][0], hexPoints[i + 1][1],
-      'F'
-    );
-  }
-
-  // Mountain shape (white)
-  doc.setFillColor(...WHITE);
-  const mScale = r * 0.012;
-  const mCx = cx;
-  const mCy = cy + r * 0.05;
-  // Main peak
-  doc.triangle(
-    mCx - 28 * mScale, mCy + 20 * mScale,
-    mCx, mCy - 22 * mScale,
-    mCx + 28 * mScale, mCy + 20 * mScale,
-    'F'
-  );
-  // Secondary smaller peak
-  doc.setFillColor(255, 255, 255, 0.6);
-  doc.triangle(
-    mCx + 5 * mScale, mCy + 20 * mScale,
-    mCx + 20 * mScale, mCy - 8 * mScale,
-    mCx + 35 * mScale, mCy + 20 * mScale,
-    'F'
-  );
-
-  // Base line
-  doc.setDrawColor(...WHITE);
-  doc.setLineWidth(1);
-  doc.line(cx - r * 0.55, cy + r * 0.35, cx + r * 0.55, cy + r * 0.35);
+const drawTextLogo = (doc: jsPDF, x: number, y: number) => {
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.setTextColor(...WHITE);
+  doc.text('Oferta', x, y);
+  const ofertaWidth = doc.getTextWidth('Oferta');
+  doc.setFont('helvetica', 'normal');
+  doc.text('terrenos', x + ofertaWidth, y);
 };
 
 const addHeaderToPage = (doc: jsPDF, contractNum: string, isFirstPage: boolean) => {
@@ -105,19 +60,15 @@ const addHeaderToPage = (doc: jsPDF, contractNum: string, isFirstPage: boolean) 
       doc.rect((pw / steps) * i, 0, (pw / steps) + 1, headerH, 'F');
     }
 
-    // Logo
-    drawLogo(doc, 12, 5, 30);
+    // Text logo
+    drawTextLogo(doc, 14, 19);
 
-    // Brand text
+    // Subtitle
     doc.setTextColor(...WHITE);
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Ofertaterrenos', 48, 19);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Proptech Chile', 48, 27);
     doc.setFontSize(8);
-    doc.text('Promesa de Compraventa – Documento Preliminar', 48, 35);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Promesa de Compraventa – Documento Preliminar', 14, 27);
+
 
     // Contract number
     doc.setFontSize(8);
