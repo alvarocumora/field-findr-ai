@@ -1,87 +1,121 @@
 
-# Plan: Sistema de Explorar Robusto - Fix del Mapa
+# Plan: Sistema de Exploracion Limpio y Funcional
 
-## Problema Principal
+## Problemas Actuales (visible en screenshot)
 
-El mapa en `/explorar` falla porque el `useEffect` de inicializacion del mapa (linea 1740) tiene dependencias inestables que causan que el mapa se destruya y recree constantemente:
+1. **Barra lateral izquierda con ~12 botones** apilados verticalmente -- ocupa demasiado espacio visual
+2. **Marcadores de precio se superponen** entre si cuando hay muchos en zoom bajo
+3. **Elementos redundantes**: badge de modo (centro-arriba), contador de propiedades (derecha-arriba), leyenda (izquierda-abajo), indicador de capas (derecha-abajo) -- 4 cards flotantes compitiendo por atencion
+4. **Controles duplicados**: la barra lateral izquierda renderiza manualmente los mismos botones que ya existen como componentes (MapControlsToolbar, MapModeSelector) pero no los usa
+5. **Vista general desordenada**: demasiada informacion compitiendo por la atencion del usuario
 
-```
-// Linea 1740 - PROBLEMATICO
-[mapboxToken, tokenLoading, getCenter, getMapStyle, mapMode, showDrawTools, addInfoLayers, setupLayerHoverEvents]
-```
+## Solucion: Interfaz Minimalista Inspirada en Apps Modernas de Mapas
 
-- `getCenter` depende de `listings` -- cada vez que llegan datos, el mapa se reinicia
-- `addInfoLayers` depende de `infoLayers`, `layerConfig`, y `listings` -- cada toggle de capa reinicia el mapa
-- `getMapStyle` depende de `mapMode` (OK pero ya esta `mapMode` en el array)
+### Principio de Diseno
+Reducir los controles visibles al minimo necesario. Agrupar funciones secundarias detras de un solo boton. Los marcadores deben ser legibles sin superponer.
 
-Esto crea un ciclo destructivo: datos llegan -> mapa se destruye -> mapa se recrea -> los tiles no alcanzan a cargar -> pantalla gris.
+### 1. Controles del Mapa Simplificados
 
-## Solucion
-
-Refactorizar `EnhancedMap.tsx` para estabilizar el ciclo de vida del mapa:
-
-### 1. Estabilizar el useEffect de inicializacion
-
-Cambiar las dependencias del useEffect de inicializacion para que solo se ejecute cuando cambia el token. Mover `getCenter`, `addInfoLayers`, y `setupLayerHoverEvents` fuera del array de dependencias usando refs.
-
-### 2. Usar refs para funciones que cambian frecuentemente
-
-Almacenar `addInfoLayers`, `setupLayerHoverEvents`, y `getCenter` en refs para que el useEffect de inicializacion no dependa de ellas:
+Reemplazar los ~12 botones individuales por 3 grupos compactos:
 
 ```text
-Antes:                              Despues:
-useEffect(init, [                   useEffect(init, [
-  mapboxToken,                        mapboxToken,
-  tokenLoading,                       tokenLoading,
-  getCenter,        <-- inestable   ]);
-  getMapStyle,      <-- redundante
-  mapMode,          <-- movido
-  showDrawTools,
-  addInfoLayers,    <-- inestable
-  setupLayerHoverEvents <-- inest.
-]);
+Antes (izquierda del mapa):          Despues:
++--------+                           Esquina inferior-derecha:
+| Zoom + |                           +--------+
+| Zoom - |                           | Zoom + |
+|--------|                           | Zoom - |
+| Ubicar |                           +--------+
+| Ver All|                           | Estilos| (streets/satellite/3D toggle)
+| Norte  |                           +--------+
+| Reset  |
+|--------|                           Esquina superior-derecha:
+| Calles |                           +------------------+
+| Satel. |                           | 20 propiedades   |
+| 3D     |                           +------------------+
+|--------|
+| Capas  |                           Todo lo demas: oculto o accesible
+|--------|                           desde menu contextual
+| Dibujar|
+| Borrar |
++--------+
 ```
 
-### 3. Manejar cambios de modo de mapa sin reiniciar
+### 2. Marcadores de Precio con Anti-Colision
 
-En lugar de incluir `mapMode` en el useEffect de init (que destruye el mapa), usar el metodo `changeMapMode` existente que ya maneja el cambio de estilo con `setStyle` + `style.load`.
+- A zoom bajo (< 7): mostrar solo clusters con conteo
+- A zoom medio (7-10): mostrar marcadores pero limitar a los N mas cercanos al viewport
+- A zoom alto (> 10): mostrar todos los marcadores con precio
 
-### 4. Mover datos GeoJSON demo a archivos separados
+### 3. Eliminar Elementos Redundantes
 
-Extraer las ~300 lineas de datos GeoJSON demo (generateDemoZoningData, generateRiskZonesData, etc.) a un archivo separado para reducir el tamano del componente.
+- **Quitar**: Badge de modo de mapa (centro-arriba) -- el usuario ya sabe que modo eligio
+- **Quitar**: Leyenda de disponible/reservado/vendido (abajo-izquierda) -- raramente util en exploracion
+- **Quitar**: Indicador de capas activas (abajo-derecha) -- redundante con el boton de capas
+- **Quitar**: Indicador de modo 3D (abajo-derecha)
+- **Mantener**: Solo el contador de propiedades (arriba-derecha), simplificado
 
-### 5. Agregar error boundary al mapa
+### 4. Selector de Estilo Compacto
 
-Envolver el mapa en un error boundary para que si falla, muestre el `MapErrorState` en lugar de romper toda la pagina.
+Reemplazar los 3 botones separados de estilo (Calles/Satelite/3D) por un toggle horizontal compacto en la esquina inferior derecha, debajo del zoom.
+
+### 5. Capas y Herramientas Avanzadas
+
+Mover las capas GIS y herramientas de dibujo a un panel lateral que se abre con un solo boton, en lugar de mostrarlos siempre en la barra izquierda.
 
 ## Archivos a Modificar
 
-- `src/components/map/EnhancedMap.tsx` - Fix principal: estabilizar dependencias del useEffect, usar refs
-- `src/components/map/demoGeoData.ts` (nuevo) - Extraer datos GeoJSON demo
-- `src/components/map/MapErrorBoundary.tsx` (nuevo) - Error boundary para el mapa
-- `src/pages/Explorar.tsx` - Envolver mapa con error boundary
+### `src/components/map/EnhancedMap.tsx`
+- Eliminar toda la seccion de controles manuales (lineas 1908-2052) que renderiza botones inline
+- Reemplazar con un layout limpio:
+  - Esquina superior-derecha: contador compacto de propiedades
+  - Esquina inferior-derecha: zoom +/- y selector de estilo compacto
+  - Boton flotante para capas/herramientas avanzadas
+- Eliminar badges redundantes (modo, leyenda, capas activas, 3D indicator)
+- Agregar logica de clustering nativo de Mapbox para evitar superposicion de marcadores a zoom bajo
+
+### `src/components/map/CompactMapControls.tsx` (nuevo)
+- Componente con zoom +/-, selector de estilo (3 iconos inline), y boton de capas
+- Diseno compacto y glassmorphism consistente
+
+### `src/components/map/MapToolsDrawer.tsx` (nuevo)
+- Panel lateral que agrupa: capas GIS, herramientas de dibujo, configuracion de opacidad
+- Se abre desde un solo boton en el mapa
+- Reemplaza la barra vertical de 12 botones
+
+### `src/pages/Explorar.tsx`
+- Sin cambios estructurales, el layout split-view se mantiene
 
 ## Detalle Tecnico
 
-### Fix del useEffect de inicializacion:
+### Clustering nativo de Mapbox para marcadores
+En lugar de crear marcadores DOM individuales que se superponen, usar una fuente GeoJSON con clustering habilitado:
 
-El cambio clave es:
-
-1. Crear refs para funciones inestables:
-   - `addInfoLayersRef` = useRef que siempre apunta a la version actual de `addInfoLayers`
-   - `getCenter` se calcula una sola vez al init, no reactivamente
-
-2. El useEffect de init solo depende de `[mapboxToken, tokenLoading]`
-
-3. Mover la logica de `mapMode` a un useEffect separado que use `map.current.setStyle()` sin destruir el mapa
-
-4. Llamar `addInfoLayers` desde un useEffect separado que se ejecute en `style.load`
-
-### Error Boundary:
 ```text
-<MapErrorBoundary fallback={<MapErrorState />}>
-  <EnhancedMap ... />
-</MapErrorBoundary>
+Zoom < 7:  Circulos con numero "12 terrenos"
+Zoom 7-10: Marcadores de precio individuales (los mas grandes primero)
+Zoom > 10: Todos los marcadores visibles
 ```
 
-Esto previene que un crash del mapa (WebGL, token, etc.) deje la pagina en blanco.
+Esto se implementa con `map.addSource('listings', { type: 'geojson', cluster: true })` y capas de tipo `circle` + `symbol`.
+
+### Layout de controles final
+```text
++------------------------------------------+
+|                              [20 terrenos]|
+|                                           |
+|                                           |
+|              MAPA LIMPIO                  |
+|                                           |
+|                                           |
+|                          [+]              |
+|                          [-]              |
+|                          [Calles|Sat|3D]  |
+|                          [Capas]          |
++------------------------------------------+
+```
+
+### Resultado esperado
+- Mapa limpio con maximo espacio para visualizacion
+- Controles agrupados y no intrusivos
+- Marcadores legibles sin superposicion
+- Herramientas avanzadas accesibles pero no visibles por defecto
