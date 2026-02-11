@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.create-reservation-payment]
 verify_jwt = false
+
+[functions.ai-masterplan-analyzer]
+verify_jwt = false

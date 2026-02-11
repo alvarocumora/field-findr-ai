@@ -31,6 +31,7 @@ interface LotMapViewProps {
   projectId?: string;
   kmzFileUrl?: string | null;
   onLotsUpdated?: () => void;
+  readOnly?: boolean;
 }
 
 // Generate GeoJSON from lots - uses real polygons if available, otherwise generates grid
@@ -137,7 +138,7 @@ const formatPrice = (price: number | null) => {
   }).format(price);
 };
 
-export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, onLotsUpdated }: LotMapViewProps) => {
+export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, onLotsUpdated, readOnly = false }: LotMapViewProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
@@ -192,10 +193,10 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     setShowDrawingPanel(false);
   }, [exitDrawingMode]);
 
-  // Auto-load KMZ from URL if lots don't have polygons yet
+  // Auto-load KMZ from URL if lots don't have polygons yet (skip in readOnly mode)
   useEffect(() => {
     const loadKmzFromUrl = async () => {
-      if (!kmzFileUrl || !projectId || kmzLoaded) return;
+      if (!kmzFileUrl || !projectId || kmzLoaded || readOnly) return;
       
       // Check if lots already have VALID polygon data (at least 3 points)
       const hasValidPolygons = lots.some(lot => 
@@ -331,7 +332,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     };
     
     loadKmzFromUrl();
-  }, [kmzFileUrl, projectId, lots, kmzLoaded, onLotsUpdated]);
+  }, [kmzFileUrl, projectId, lots, kmzLoaded, onLotsUpdated, readOnly]);
 
   // Handle KMZ/KML file import
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -756,61 +757,66 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           {mapStyle === 'satellite' ? 'Calles' : 'Satélite'}
         </Button>
         
-        {/* Master plan overlay toggle */}
-        <Button
-          variant={showMasterPlanOverlay ? "default" : "secondary"}
-          size="sm"
-          className="gap-2 glass"
-          onClick={() => setShowMasterPlanOverlay(!showMasterPlanOverlay)}
-        >
-          <Image className="h-4 w-4" />
-          Master Plan
-        </Button>
-        
-        {/* Drawing mode toggle */}
-        {projectId && (
-          <Button
-            variant={showDrawingPanel ? "default" : "secondary"}
-            size="sm"
-            className="gap-2 glass"
-            onClick={showDrawingPanel ? handleDisableDrawingMode : handleEnableDrawingMode}
-          >
-            <PenTool className="h-4 w-4" />
-            {showDrawingPanel ? 'Salir Edición' : 'Dibujar Lotes'}
-          </Button>
-        )}
-        
-        {/* Import KMZ button - hide when drawing */}
-        {projectId && !showDrawingPanel && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="gap-2 glass"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={importing}
-          >
-            <Upload className="h-4 w-4" />
-            {importing ? 'Importando...' : 'Importar KMZ'}
-          </Button>
-        )}
-        
-        {/* Regenerate polygons button - hide when drawing */}
-        {projectId && kmzFileUrl && !showDrawingPanel && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 glass"
-            onClick={handleRegeneratePolygons}
-            disabled={regenerating}
-          >
-            <Layers className="h-4 w-4" />
-            {regenerating ? 'Regenerando...' : 'Regenerar'}
-          </Button>
+        {/* Admin-only controls - hidden in readOnly mode */}
+        {!readOnly && (
+          <>
+            {/* Master plan overlay toggle */}
+            <Button
+              variant={showMasterPlanOverlay ? "default" : "secondary"}
+              size="sm"
+              className="gap-2 glass"
+              onClick={() => setShowMasterPlanOverlay(!showMasterPlanOverlay)}
+            >
+              <Image className="h-4 w-4" />
+              Master Plan
+            </Button>
+            
+            {/* Drawing mode toggle */}
+            {projectId && (
+              <Button
+                variant={showDrawingPanel ? "default" : "secondary"}
+                size="sm"
+                className="gap-2 glass"
+                onClick={showDrawingPanel ? handleDisableDrawingMode : handleEnableDrawingMode}
+              >
+                <PenTool className="h-4 w-4" />
+                {showDrawingPanel ? 'Salir Edición' : 'Dibujar Lotes'}
+              </Button>
+            )}
+            
+            {/* Import KMZ button - hide when drawing */}
+            {projectId && !showDrawingPanel && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="gap-2 glass"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={importing}
+              >
+                <Upload className="h-4 w-4" />
+                {importing ? 'Importando...' : 'Importar KMZ'}
+              </Button>
+            )}
+            
+            {/* Regenerate polygons button - hide when drawing */}
+            {projectId && kmzFileUrl && !showDrawingPanel && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 glass"
+                onClick={handleRegeneratePolygons}
+                disabled={regenerating}
+              >
+                <Layers className="h-4 w-4" />
+                {regenerating ? 'Regenerando...' : 'Regenerar'}
+              </Button>
+            )}
+          </>
         )}
       </div>
       
       {/* Drawing Tool Panel */}
-      {showDrawingPanel && (
+      {!readOnly && showDrawingPanel && (
         <div className="absolute top-16 left-3 z-10 w-64">
           <LotDrawingTool
             lots={lots.map(l => ({ 
