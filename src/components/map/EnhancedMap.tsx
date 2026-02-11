@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { useIsochrone, IsochroneProfile } from '@/hooks/useIsochrone';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -342,48 +343,52 @@ const generateRoadsData = (): GeoJSON.FeatureCollection => ({
   ]
 });
 
-// Generate heatmap points for appreciation
+// Generate heatmap points from real listing data - price per m²
 const generateHeatmapData = (listings: Listing[]): GeoJSON.FeatureCollection => {
-  // Create synthetic appreciation data points
   const points: GeoJSON.Feature[] = [];
   
-  // Add points based on listings with weighted values
+  // Calculate price/m² stats for normalization
+  const pricesPerM2 = listings
+    .filter(l => l.lat && l.lng && l.area_m2 && l.area_m2 > 0)
+    .map(l => l.price / l.area_m2!);
+  
+  const maxPrice = pricesPerM2.length > 0 ? Math.max(...pricesPerM2) : 100000;
+  const minPrice = pricesPerM2.length > 0 ? Math.min(...pricesPerM2) : 0;
+  const range = maxPrice - minPrice || 1;
+
+  // Add real listing data points
   listings.forEach(listing => {
-    if (listing.lat && listing.lng) {
-      // Calculate appreciation factor based on price and area
-      const pricePerM2 = listing.price / (listing.area_m2 || 1);
-      const appreciation = Math.min(pricePerM2 / 10000, 1); // Normalize
+    if (listing.lat && listing.lng && listing.area_m2 && listing.area_m2 > 0) {
+      const pricePerM2 = listing.price / listing.area_m2;
+      const weight = Math.max(0.1, (pricePerM2 - minPrice) / range);
       
       points.push({
         type: 'Feature',
-        properties: { weight: appreciation },
+        properties: { 
+          weight,
+          pricePerM2: Math.round(pricePerM2),
+          title: listing.title,
+        },
         geometry: {
           type: 'Point',
           coordinates: [listing.lng, listing.lat]
         }
       });
-    }
-  });
 
-  // Add synthetic high-value zones
-  const highValueZones = [
-    { lng: -70.57, lat: -33.41, weight: 0.95 }, // Las Condes
-    { lng: -70.59, lat: -33.42, weight: 0.90 }, // Vitacura
-    { lng: -70.61, lat: -33.43, weight: 0.85 }, // Providencia
-    { lng: -70.55, lat: -33.40, weight: 0.88 }, // Lo Barnechea
-    { lng: -71.55, lat: -33.02, weight: 0.75 }, // Viña del Mar
-    { lng: -71.62, lat: -33.04, weight: 0.70 }, // Valparaíso
-  ];
-
-  highValueZones.forEach(zone => {
-    points.push({
-      type: 'Feature',
-      properties: { weight: zone.weight },
-      geometry: {
-        type: 'Point',
-        coordinates: [zone.lng, zone.lat]
+      // Add nearby scatter points for better visualization
+      for (let i = 0; i < 3; i++) {
+        const jitterLng = listing.lng + (Math.random() - 0.5) * 0.02;
+        const jitterLat = listing.lat + (Math.random() - 0.5) * 0.02;
+        points.push({
+          type: 'Feature',
+          properties: { weight: weight * (0.5 + Math.random() * 0.3) },
+          geometry: {
+            type: 'Point',
+            coordinates: [jitterLng, jitterLat]
+          }
+        });
       }
-    });
+    }
   });
 
   return {
@@ -419,6 +424,16 @@ const EnhancedMap = ({
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
+  // Isochrone hook
+  const { 
+    geojson: isochroneData, 
+    center: isochroneCenter, 
+    profile: isochroneProfile,
+    isLoading: isochroneLoading, 
+    fetchIsochrone, 
+    clearIsochrone 
+  } = useIsochrone();
+
   // Touch gestures hook for mobile
   const { gestureFeedback } = useTouchGestures(map, mapContainer, {
     enableFeedback: isMobile,
@@ -436,6 +451,7 @@ const EnhancedMap = ({
     hydrology: false,
     mining: false,
     biodiversity: false,
+    isochrone: false,
   });
 
   const [layerConfig, setLayerConfig] = useState<InfoLayerConfig>({
@@ -1510,6 +1526,7 @@ const EnhancedMap = ({
         hydrology: [],
         mining: [],
         biodiversity: [],
+        isochrone: ['isochrone-fill', 'isochrone-outline'],
       };
 
       Object.entries(layerMappings).forEach(([key, layers]) => {
@@ -1541,6 +1558,7 @@ const EnhancedMap = ({
       hydrology: [],
       mining: [],
       biodiversity: [],
+      isochrone: ['isochrone-fill', 'isochrone-outline'],
     };
 
     Object.entries(layerMappings).forEach(([key, layers]) => {
@@ -1937,6 +1955,11 @@ const EnhancedMap = ({
     });
 
     el.addEventListener('click', () => {
+      // If isochrone mode is active, fetch isochrone for this listing
+      if (infoLayers.isochrone && listing.lat && listing.lng) {
+        fetchIsochrone(listing.lng, listing.lat);
+      }
+      
       if (onListingClick) {
         onListingClick(listing);
       } else {
@@ -1997,6 +2020,82 @@ const EnhancedMap = ({
       popupRef.current?.remove();
     }
   }, [hoveredListing, listings, isLoading, showClusters]);
+
+  // Render isochrone data on map
+  useEffect(() => {
+    if (!map.current || !map.current.isStyleLoaded()) return;
+
+    // Remove existing isochrone layers
+    ['isochrone-fill', 'isochrone-outline', 'isochrone-labels'].forEach(id => {
+      if (map.current?.getLayer(id)) map.current.removeLayer(id);
+    });
+    if (map.current.getSource('isochrone-source')) {
+      map.current.removeSource('isochrone-source');
+    }
+
+    if (!isochroneData || !infoLayers.isochrone) return;
+
+    // Add isochrone source
+    map.current.addSource('isochrone-source', {
+      type: 'geojson',
+      data: isochroneData,
+    });
+
+    // Isochrone fill with gradient colors per contour
+    const isoColors = ['#10b981', '#f59e0b', '#ef4444']; // 5min green, 10min yellow, 15min red
+
+    map.current.addLayer({
+      id: 'isochrone-fill',
+      type: 'fill',
+      source: 'isochrone-source',
+      paint: {
+        'fill-color': [
+          'match',
+          ['get', 'contour'],
+          5, isoColors[0],
+          10, isoColors[1],
+          15, isoColors[2],
+          '#888888'
+        ],
+        'fill-opacity': 0.15,
+      },
+    });
+
+    map.current.addLayer({
+      id: 'isochrone-outline',
+      type: 'line',
+      source: 'isochrone-source',
+      paint: {
+        'line-color': [
+          'match',
+          ['get', 'contour'],
+          5, isoColors[0],
+          10, isoColors[1],
+          15, isoColors[2],
+          '#888888'
+        ],
+        'line-width': 2,
+        'line-dasharray': [3, 2],
+        'line-opacity': 0.8,
+      },
+    });
+
+    // Fly to isochrone center
+    if (isochroneCenter) {
+      map.current.flyTo({
+        center: isochroneCenter,
+        zoom: 12,
+        duration: 1000,
+      });
+    }
+  }, [isochroneData, isochroneCenter, infoLayers.isochrone]);
+
+  // Clear isochrone when layer is toggled off
+  useEffect(() => {
+    if (!infoLayers.isochrone) {
+      clearIsochrone();
+    }
+  }, [infoLayers.isochrone, clearIsochrone]);
 
   // Control handlers
   const handleZoomIn = () => map.current?.zoomIn();
@@ -2317,8 +2416,9 @@ const EnhancedMap = ({
               <div className="space-y-4">
                 {/* Render layer toggles for mobile */}
                 {[
+                  { key: 'heatmap', label: 'Heatmap Precio/m²', desc: 'Precio real por m² de la plataforma' },
+                  { key: 'isochrone', label: 'Isócronas de Conectividad', desc: 'Click en propiedad → 5/10/15 min' },
                   { key: 'zoning', label: 'Zonificación Urbana', desc: 'Uso de suelo permitido' },
-                  { key: 'heatmap', label: 'Plusvalía Histórica', desc: 'Tendencia de precios' },
                   { key: 'infrastructure', label: 'Servicios Básicos', desc: 'Agua, luz, alcantarillado' },
                   { key: 'roads', label: 'Red Vial', desc: 'Carreteras y caminos' },
                   { key: 'riskZones', label: 'Zonas de Riesgo', desc: 'Inundaciones, deslizamientos' },
