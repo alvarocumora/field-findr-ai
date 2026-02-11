@@ -14,6 +14,7 @@ export interface Listing {
   area_m2: number | null;
   area_ha: number | null;
   location: string;
+  country: string | null;
   region: string | null;
   city: string | null;
   address: string | null;
@@ -37,6 +38,7 @@ export interface Listing {
 export interface ListingFilters {
   type?: string[];
   region?: string[];
+  country?: string[];
   priceMin?: number;
   priceMax?: number;
   areaMin?: number;
@@ -63,6 +65,10 @@ export const useListings = (filters?: ListingFilters) => {
 
       if (filters?.region && filters.region.length > 0) {
         query = query.in('region', filters.region);
+      }
+
+      if (filters?.country && filters.country.length > 0) {
+        query = query.in('country', filters.country);
       }
 
       if (filters?.priceMin) {
@@ -139,6 +145,7 @@ export const useCreateListing = () => {
       price: number;
       location: string;
       user_id?: string;
+      country?: string;
       description?: string;
       currency?: string;
       area_m2?: number;

@@ -34,6 +34,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useListingGenerator } from "@/hooks/useAI";
 import LocationPicker from "./LocationPicker";
 import ImageUploader from "./ImageUploader";
+import { LATAM_COUNTRIES, getCountryConfig, type CountryConfig } from "@/lib/latam";
 
 const PROPERTY_TYPES = [
   { value: 'parcela_rural', label: 'Parcela Rural' },
@@ -42,12 +43,6 @@ const PROPERTY_TYPES = [
   { value: 'terreno_urbano', label: 'Terreno Urbano' },
   { value: 'terreno_costero', label: 'Terreno Costero' },
   { value: 'terreno_montana', label: 'Terreno de Montaña' },
-];
-
-const REGIONS = [
-  'Arica y Parinacota', 'Tarapacá', 'Antofagasta', 'Atacama', 'Coquimbo',
-  'Valparaíso', 'Metropolitana', "O'Higgins", 'Maule', 'Ñuble', 'Biobío',
-  'Araucanía', 'Los Ríos', 'Los Lagos', 'Aysén', 'Magallanes'
 ];
 
 const AVAILABLE_TAGS = [
@@ -69,6 +64,7 @@ interface FormData {
   currency: string;
   area_ha: string;
   location: string;
+  country: string;
   region: string;
   city: string;
   lat: number | null;
@@ -99,6 +95,7 @@ const PublishForm = () => {
     currency: "CLP",
     area_ha: "",
     location: "",
+    country: "CL",
     region: "",
     city: "",
     lat: null,
@@ -178,6 +175,7 @@ const PublishForm = () => {
     }
 
     try {
+      const countryConfig = getCountryConfig(formData.country);
       await createListing.mutateAsync({
         title: formData.title,
         description: formData.description || undefined,
@@ -187,6 +185,7 @@ const PublishForm = () => {
         area_ha: parseFloat(formData.area_ha),
         area_m2: parseFloat(formData.area_ha) * 10000,
         location: formData.location,
+        country: countryConfig.name,
         region: formData.region,
         city: formData.city || undefined,
         lat: formData.lat || undefined,
@@ -434,10 +433,37 @@ const PublishForm = () => {
           {/* Step 2: Ubicación */}
           {currentStep === 2 && (
             <div className="space-y-6 animate-fade-in">
+              {/* Country Selector */}
+              <div>
+                <Label htmlFor="country" className="text-foreground">
+                  País *
+                </Label>
+                <Select 
+                  value={formData.country} 
+                  onValueChange={(value) => {
+                    const config = getCountryConfig(value);
+                    handleInputChange("country", value);
+                    handleInputChange("region", "");
+                    handleInputChange("currency", config.defaultCurrency);
+                  }}
+                >
+                  <SelectTrigger className="mt-2 glass border-white/10">
+                    <SelectValue placeholder="Seleccionar país" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LATAM_COUNTRIES.map(c => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.flag} {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="region" className="text-foreground">
-                    Región *
+                    Región / Estado / Departamento *
                   </Label>
                   <Select 
                     value={formData.region} 
@@ -447,7 +473,7 @@ const PublishForm = () => {
                       <SelectValue placeholder="Seleccionar región" />
                     </SelectTrigger>
                     <SelectContent>
-                      {REGIONS.map(region => (
+                      {getCountryConfig(formData.country).regions.map(region => (
                         <SelectItem key={region} value={region}>
                           {region}
                         </SelectItem>
@@ -485,11 +511,11 @@ const PublishForm = () => {
 
               <div>
                 <Label htmlFor="rol" className="text-foreground">
-                  ROL SII
+                  {getCountryConfig(formData.country).taxIdLabel}
                 </Label>
                 <Input
                   id="rol"
-                  placeholder="Ej: 1234-5678"
+                  placeholder={getCountryConfig(formData.country).taxIdPlaceholder}
                   value={formData.rol}
                   onChange={(e) => handleInputChange("rol", e.target.value)}
                   className="mt-2 glass border-white/10"
@@ -598,9 +624,11 @@ const PublishForm = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="CLP">CLP (Pesos)</SelectItem>
-                      <SelectItem value="UF">UF</SelectItem>
-                      <SelectItem value="USD">USD</SelectItem>
+                      {getCountryConfig(formData.country).currencies.map(cur => (
+                        <SelectItem key={cur.code} value={cur.code}>
+                          {cur.code} ({cur.label})
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

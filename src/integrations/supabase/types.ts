@@ -177,6 +177,7 @@ export type Database = {
           area_ha: number | null
           area_m2: number | null
           city: string | null
+          country: string | null
           created_at: string | null
           currency: string | null
           description: string | null
@@ -207,6 +208,7 @@ export type Database = {
           area_ha?: number | null
           area_m2?: number | null
           city?: string | null
+          country?: string | null
           created_at?: string | null
           currency?: string | null
           description?: string | null
@@ -237,6 +239,7 @@ export type Database = {
           area_ha?: number | null
           area_m2?: number | null
           city?: string | null
+          country?: string | null
           created_at?: string | null
           currency?: string | null
           description?: string | null
