@@ -126,7 +126,7 @@ const FilterBar = ({
     <div className={cn('bg-background/80 backdrop-blur-xl border-b border-border/30', className)}>
       <Collapsible open={expanded} onOpenChange={setExpanded}>
         {/* Collapsed bar */}
-        <div className="container px-4 py-2">
+        <div className="px-4 py-2">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
             {/* Type Filter */}
             <Popover>
@@ -341,7 +341,7 @@ const FilterBar = ({
 
         {/* Expanded section */}
         <CollapsibleContent>
-          <div className="container px-4 py-4 border-t border-border/30">
+          <div className="px-4 py-4 border-t border-border/30">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Area Range */}
               <div className="space-y-3">
