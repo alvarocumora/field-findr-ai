@@ -1,101 +1,84 @@
 
-# Plan: Redisenar Explorar desde Cero - Layout Split-View Profesional
+# Plan: Mapa Publico sin Login + Generador de Master Plan con IA
 
-## Problema
+## Problema 1: El Mapa Interactivo Pide Login
 
-La pagina actual tiene demasiadas capas visuales apiladas: header sticky, barra de busqueda, barra de filtros, y luego un panel flotante sobre el mapa. Esto comprime el mapa y crea una experiencia visualmente cargada. Los marcadores de precio flotan sobre un mapa reducido.
+La causa raiz es que el campo `embed_map_url` del proyecto contiene una URL de otro proyecto Lovable (`https://5c2c49b8-...lovableproject.com/embed/...`) que requiere autenticacion. Cuando un visitante publico abre la pestana "Mapa Interactivo", el iframe carga esa URL y muestra una pantalla de login.
 
-## Nuevo Enfoque: Split-View (Zillow/Airbnb Style)
+**Solucion**: Para visitantes publicos (no autenticados), mostrar siempre el `LotMapView` interno en lugar del iframe embebido. Ademas, ocultar los controles de administracion (Importar KMZ, Regenerar, Dibujar Lotes, Master Plan overlay) para usuarios no autenticados.
 
-En lugar de un mapa con panel flotante encima, implementar un layout de dos columnas:
+### Cambios en ProjectDetail.tsx:
+- Importar `useAuth` para detectar si el usuario esta autenticado
+- Solo mostrar el iframe embed cuando el usuario esta autenticado Y es dueno del proyecto
+- Para visitantes publicos: siempre usar `LotMapView` en modo lectura (sin controles de edicion)
 
-```text
-+------------------------------------------+----------------------------+
-|         MAPA (60-65% del ancho)           |     LISTA (35-40%)         |
-|                                          |  [Buscar...]               |
-|  [Filtros flotantes sobre el mapa]       |  [Tipo] [Precio] [Region]  |
-|                                          |  20 terrenos desde $45M    |
-|     Marcadores con precio ($950M)        |  +----------------------+  |
-|                                          |  | Tarjeta propiedad 1  |  |
-|                                          |  +----------------------+  |
-|                                          |  | Tarjeta propiedad 2  |  |
-|                                          |  +----------------------+  |
-|                                          |  | ...                  |  |
-+------------------------------------------+----------------------------+
-```
+### Cambios en LotMapView.tsx:
+- Agregar una prop `readOnly` (default: false)
+- Cuando `readOnly = true`:
+  - Ocultar botones de "Importar KMZ", "Regenerar", "Dibujar Lotes", "Master Plan"
+  - No ejecutar el auto-import de KMZ (que intenta escribir en la DB)
+  - Solo mostrar el mapa con los poligonos existentes y la leyenda
+- ProjectDetail pasara `readOnly={true}` cuando el usuario no sea el dueno del proyecto
 
-## Cambios a Implementar
+## Problema 2: Generador de Master Plan con IA
 
-### 1. Nuevo Layout en Explorar.tsx
+Crear una nueva funcionalidad que permita usar IA para analizar los datos del KMZ y generar sugerencias de mejora del master plan.
 
-Eliminar el header sticky con search + filters que consume espacio vertical. Reemplazar con:
-- Layout split-view: mapa ocupa el lado izquierdo (65%), lista el derecho (35%)
-- El mapa ocupa TODA la altura de la ventana (100vh - header height)
-- La barra de busqueda y filtros se mueven al panel de lista (lado derecho)
-- Sin PublicLayout wrapper para explorar desktop (solo StickyHeader directo)
+### Nueva Edge Function: `ai-masterplan-analyzer`
+- Recibe: datos de lotes (poligonos, areas, precios), metadatos del proyecto (ubicacion, nombre)
+- Usa Lovable AI (google/gemini-3-flash-preview) para analizar:
+  - Optimizacion de la distribucion de lotes
+  - Sugerencias de precios basadas en area y ubicacion
+  - Identificacion de lotes irregulares que necesitan ajuste
+  - Recomendaciones de infraestructura (accesos, areas verdes)
+- Devuelve: analisis textual con recomendaciones accionables
 
-### 2. Panel de Lista Rediseñado (reemplaza FloatingResultsPanel)
+### Nuevo componente: Pestana "IA Analisis" en ProjectDetail
+- Agregar una nueva pestana "IA" junto a las existentes (Mapa, Lotes, Legal, Galeria)
+- Muestra un boton "Analizar con IA" que envia los datos del proyecto
+- Renderiza las recomendaciones de la IA en secciones organizadas
+- Streaming de la respuesta para feedback inmediato
 
-Crear un nuevo componente `ExploreListPanel` que reemplaza al FloatingResultsPanel:
-- Input de busqueda integrado en la parte superior del panel
-- Filtros como chips compactos debajo del search (scrollable horizontal)
-- Resumen inteligente: "20 terrenos desde $45M"
-- Lista de tarjetas con scroll vertical
-- El panel es parte del layout, no flota sobre el mapa
-- Borde izquierdo sutil para separar del mapa
+### Archivos nuevos:
+- `supabase/functions/ai-masterplan-analyzer/index.ts` - Edge function con Lovable AI
 
-### 3. Tarjetas Mejoradas para el Panel
-
-Redisenar QuickPropertyCard para el contexto split-view:
-- Layout vertical (en vez de horizontal): imagen arriba, contenido abajo
-- Imagen mas grande (aspect-ratio 16/10, ancho completo del card)
-- 2 columnas de tarjetas cuando el panel es lo suficientemente ancho
-- Precio grande y prominente
-- Precio/m2, ubicacion, area en una sola linea compacta
-- Hover sincronizado con el mapa (marcador se activa)
-
-### 4. Mapa Limpio sin Overlays Pesados
-
-Simplificar la vista del mapa en el contexto explorar:
-- Solo marcadores de precio y controles basicos (zoom, locate, layers)
-- Eliminar la toolbar de dibujo del modo explorar
-- Sin panel flotante sobre el mapa
-- Marcadores de precio mas limpios y legibles
-- Al hacer click en marcador: selecciona la tarjeta en el panel derecho (scroll to)
-
-### 5. Interaccion Bidireccional Mejorada
-
-- Hover en tarjeta -> marcador se agranda en el mapa + fly-to suave
-- Click en marcador -> scroll a tarjeta en la lista + highlight
-- Click en tarjeta -> abre PropertyPreviewSheet (se mantiene como esta)
-- Resize handle entre mapa y lista (usando react-resizable-panels)
-
-### 6. Filtros Integrados en el Panel
-
-Mover los filtros al panel de lista como chips inline:
-- Primera fila: [Tipo v] [Precio v] [Region v] [Mas filtros]
-- Sin barra expandible separada - todo inline
-- Los popover filters se mantienen pero son mas compactos
-- Contador de resultados inline: "20 resultados" al lado de los filtros
+### Archivos a modificar:
+- `src/pages/ProjectDetail.tsx` - Agregar deteccion de auth, modo readOnly para LotMapView, nueva pestana IA
+- `src/components/lots/LotMapView.tsx` - Agregar prop `readOnly` para ocultar controles de admin
+- `supabase/config.toml` - Registrar la nueva edge function
 
 ## Detalle Tecnico
 
-### Archivos nuevos:
-- `src/components/explore/ExploreListPanel.tsx` - Panel lateral con search, filtros y lista de tarjetas
+### LotMapView readOnly mode:
+```text
+readOnly=false (default, owner):     readOnly=true (public visitor):
++----------------------------------+ +----------------------------------+
+| [Satelite] [Master Plan] [Dibujar]| | Solo el mapa limpio              |
+| [Importar KMZ] [Regenerar]       | |                                  |
+|                                  | |                                  |
+|     Mapa con poligonos           | |     Mapa con poligonos           |
+|                                  | |                                  |
+|  [Leyenda]                       | |  [Leyenda]                       |
++----------------------------------+ +----------------------------------+
+```
 
-### Archivos a modificar:
-- `src/pages/Explorar.tsx` - Reescribir con layout split-view usando react-resizable-panels
-- `src/components/explore/QuickPropertyCard.tsx` - Layout vertical con imagen grande
-- `src/components/explore/FilterBar.tsx` - Version compacta inline para el panel
+### AI Masterplan Analyzer Flow:
+```text
+ProjectDetail -> Click "Analizar con IA"
+  -> POST /ai-masterplan-analyzer { lots, project }
+  -> Lovable AI (gemini-3-flash-preview) analiza datos
+  -> Streaming response con recomendaciones
+  -> Renderizar en la pestana IA
+```
 
-### Archivos que se mantienen sin cambios:
-- `src/components/map/EnhancedMap.tsx` - Se reutiliza tal cual
-- `src/components/explore/PropertyPreviewSheet.tsx` - Se mantiene
-- `src/components/explore/MobileExploreView.tsx` - Se mantiene para mobile
+### Edge Function prompt incluira:
+- Numero y distribucion de lotes
+- Rango de areas y precios
+- Coordenadas y formas de poligonos
+- Status de cada lote (disponible/reservado/vendido)
+- Contexto geografico (ciudad, region)
 
-### Dependencia existente reutilizada:
-- `react-resizable-panels` (ya instalado) - Para el resize entre mapa y lista
-
-## Resultado
-
-Una experiencia tipo Zillow/Airbnb Maps donde el mapa y la lista coexisten sin competir por espacio, los filtros estan integrados en el flujo natural de la lista, y cada interaccion (hover, click) conecta ambos paneles de forma fluida.
+### Resultado:
+1. Visitantes publicos ven el mapa interactivo sin login, con poligonos de lotes clickeables
+2. Los duenos del proyecto mantienen acceso completo a herramientas de edicion
+3. Nueva capacidad de analisis IA que genera recomendaciones profesionales para optimizar el loteo
