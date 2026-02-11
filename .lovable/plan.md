@@ -1,84 +1,87 @@
 
-# Plan: Mapa Publico sin Login + Generador de Master Plan con IA
+# Plan: Sistema de Explorar Robusto - Fix del Mapa
 
-## Problema 1: El Mapa Interactivo Pide Login
+## Problema Principal
 
-La causa raiz es que el campo `embed_map_url` del proyecto contiene una URL de otro proyecto Lovable (`https://5c2c49b8-...lovableproject.com/embed/...`) que requiere autenticacion. Cuando un visitante publico abre la pestana "Mapa Interactivo", el iframe carga esa URL y muestra una pantalla de login.
+El mapa en `/explorar` falla porque el `useEffect` de inicializacion del mapa (linea 1740) tiene dependencias inestables que causan que el mapa se destruya y recree constantemente:
 
-**Solucion**: Para visitantes publicos (no autenticados), mostrar siempre el `LotMapView` interno en lugar del iframe embebido. Ademas, ocultar los controles de administracion (Importar KMZ, Regenerar, Dibujar Lotes, Master Plan overlay) para usuarios no autenticados.
+```
+// Linea 1740 - PROBLEMATICO
+[mapboxToken, tokenLoading, getCenter, getMapStyle, mapMode, showDrawTools, addInfoLayers, setupLayerHoverEvents]
+```
 
-### Cambios en ProjectDetail.tsx:
-- Importar `useAuth` para detectar si el usuario esta autenticado
-- Solo mostrar el iframe embed cuando el usuario esta autenticado Y es dueno del proyecto
-- Para visitantes publicos: siempre usar `LotMapView` en modo lectura (sin controles de edicion)
+- `getCenter` depende de `listings` -- cada vez que llegan datos, el mapa se reinicia
+- `addInfoLayers` depende de `infoLayers`, `layerConfig`, y `listings` -- cada toggle de capa reinicia el mapa
+- `getMapStyle` depende de `mapMode` (OK pero ya esta `mapMode` en el array)
 
-### Cambios en LotMapView.tsx:
-- Agregar una prop `readOnly` (default: false)
-- Cuando `readOnly = true`:
-  - Ocultar botones de "Importar KMZ", "Regenerar", "Dibujar Lotes", "Master Plan"
-  - No ejecutar el auto-import de KMZ (que intenta escribir en la DB)
-  - Solo mostrar el mapa con los poligonos existentes y la leyenda
-- ProjectDetail pasara `readOnly={true}` cuando el usuario no sea el dueno del proyecto
+Esto crea un ciclo destructivo: datos llegan -> mapa se destruye -> mapa se recrea -> los tiles no alcanzan a cargar -> pantalla gris.
 
-## Problema 2: Generador de Master Plan con IA
+## Solucion
 
-Crear una nueva funcionalidad que permita usar IA para analizar los datos del KMZ y generar sugerencias de mejora del master plan.
+Refactorizar `EnhancedMap.tsx` para estabilizar el ciclo de vida del mapa:
 
-### Nueva Edge Function: `ai-masterplan-analyzer`
-- Recibe: datos de lotes (poligonos, areas, precios), metadatos del proyecto (ubicacion, nombre)
-- Usa Lovable AI (google/gemini-3-flash-preview) para analizar:
-  - Optimizacion de la distribucion de lotes
-  - Sugerencias de precios basadas en area y ubicacion
-  - Identificacion de lotes irregulares que necesitan ajuste
-  - Recomendaciones de infraestructura (accesos, areas verdes)
-- Devuelve: analisis textual con recomendaciones accionables
+### 1. Estabilizar el useEffect de inicializacion
 
-### Nuevo componente: Pestana "IA Analisis" en ProjectDetail
-- Agregar una nueva pestana "IA" junto a las existentes (Mapa, Lotes, Legal, Galeria)
-- Muestra un boton "Analizar con IA" que envia los datos del proyecto
-- Renderiza las recomendaciones de la IA en secciones organizadas
-- Streaming de la respuesta para feedback inmediato
+Cambiar las dependencias del useEffect de inicializacion para que solo se ejecute cuando cambia el token. Mover `getCenter`, `addInfoLayers`, y `setupLayerHoverEvents` fuera del array de dependencias usando refs.
 
-### Archivos nuevos:
-- `supabase/functions/ai-masterplan-analyzer/index.ts` - Edge function con Lovable AI
+### 2. Usar refs para funciones que cambian frecuentemente
 
-### Archivos a modificar:
-- `src/pages/ProjectDetail.tsx` - Agregar deteccion de auth, modo readOnly para LotMapView, nueva pestana IA
-- `src/components/lots/LotMapView.tsx` - Agregar prop `readOnly` para ocultar controles de admin
-- `supabase/config.toml` - Registrar la nueva edge function
+Almacenar `addInfoLayers`, `setupLayerHoverEvents`, y `getCenter` en refs para que el useEffect de inicializacion no dependa de ellas:
+
+```text
+Antes:                              Despues:
+useEffect(init, [                   useEffect(init, [
+  mapboxToken,                        mapboxToken,
+  tokenLoading,                       tokenLoading,
+  getCenter,        <-- inestable   ]);
+  getMapStyle,      <-- redundante
+  mapMode,          <-- movido
+  showDrawTools,
+  addInfoLayers,    <-- inestable
+  setupLayerHoverEvents <-- inest.
+]);
+```
+
+### 3. Manejar cambios de modo de mapa sin reiniciar
+
+En lugar de incluir `mapMode` en el useEffect de init (que destruye el mapa), usar el metodo `changeMapMode` existente que ya maneja el cambio de estilo con `setStyle` + `style.load`.
+
+### 4. Mover datos GeoJSON demo a archivos separados
+
+Extraer las ~300 lineas de datos GeoJSON demo (generateDemoZoningData, generateRiskZonesData, etc.) a un archivo separado para reducir el tamano del componente.
+
+### 5. Agregar error boundary al mapa
+
+Envolver el mapa en un error boundary para que si falla, muestre el `MapErrorState` en lugar de romper toda la pagina.
+
+## Archivos a Modificar
+
+- `src/components/map/EnhancedMap.tsx` - Fix principal: estabilizar dependencias del useEffect, usar refs
+- `src/components/map/demoGeoData.ts` (nuevo) - Extraer datos GeoJSON demo
+- `src/components/map/MapErrorBoundary.tsx` (nuevo) - Error boundary para el mapa
+- `src/pages/Explorar.tsx` - Envolver mapa con error boundary
 
 ## Detalle Tecnico
 
-### LotMapView readOnly mode:
+### Fix del useEffect de inicializacion:
+
+El cambio clave es:
+
+1. Crear refs para funciones inestables:
+   - `addInfoLayersRef` = useRef que siempre apunta a la version actual de `addInfoLayers`
+   - `getCenter` se calcula una sola vez al init, no reactivamente
+
+2. El useEffect de init solo depende de `[mapboxToken, tokenLoading]`
+
+3. Mover la logica de `mapMode` a un useEffect separado que use `map.current.setStyle()` sin destruir el mapa
+
+4. Llamar `addInfoLayers` desde un useEffect separado que se ejecute en `style.load`
+
+### Error Boundary:
 ```text
-readOnly=false (default, owner):     readOnly=true (public visitor):
-+----------------------------------+ +----------------------------------+
-| [Satelite] [Master Plan] [Dibujar]| | Solo el mapa limpio              |
-| [Importar KMZ] [Regenerar]       | |                                  |
-|                                  | |                                  |
-|     Mapa con poligonos           | |     Mapa con poligonos           |
-|                                  | |                                  |
-|  [Leyenda]                       | |  [Leyenda]                       |
-+----------------------------------+ +----------------------------------+
+<MapErrorBoundary fallback={<MapErrorState />}>
+  <EnhancedMap ... />
+</MapErrorBoundary>
 ```
 
-### AI Masterplan Analyzer Flow:
-```text
-ProjectDetail -> Click "Analizar con IA"
-  -> POST /ai-masterplan-analyzer { lots, project }
-  -> Lovable AI (gemini-3-flash-preview) analiza datos
-  -> Streaming response con recomendaciones
-  -> Renderizar en la pestana IA
-```
-
-### Edge Function prompt incluira:
-- Numero y distribucion de lotes
-- Rango de areas y precios
-- Coordenadas y formas de poligonos
-- Status de cada lote (disponible/reservado/vendido)
-- Contexto geografico (ciudad, region)
-
-### Resultado:
-1. Visitantes publicos ven el mapa interactivo sin login, con poligonos de lotes clickeables
-2. Los duenos del proyecto mantienen acceso completo a herramientas de edicion
-3. Nueva capacidad de analisis IA que genera recomendaciones profesionales para optimizar el loteo
+Esto previene que un crash del mapa (WebGL, token, etc.) deje la pagina en blanco.
