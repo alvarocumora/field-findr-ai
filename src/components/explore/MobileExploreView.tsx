@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EnhancedMap from '@/components/map/EnhancedMap';
+import MapErrorBoundary from '@/components/map/MapErrorBoundary';
 import FloatingSearchBar from './FloatingSearchBar';
 import ExploreBottomSheet from './ExploreBottomSheet';
 import MobileFilterSheet from './MobileFilterSheet';
@@ -83,14 +84,16 @@ const MobileExploreView = ({
     <div className="fixed inset-0 top-16 bg-background">
       {/* Fullscreen Map */}
       <div className="absolute inset-0">
-        <EnhancedMap
-          listings={listings}
-          hoveredListing={hoveredListing}
-          onListingHover={setHoveredListing}
-          onListingClick={handleMapListingClick}
-          className="h-full w-full"
-          showDrawTools={false}
-        />
+        <MapErrorBoundary>
+          <EnhancedMap
+            listings={listings}
+            hoveredListing={hoveredListing}
+            onListingHover={setHoveredListing}
+            onListingClick={handleMapListingClick}
+            className="h-full w-full"
+            showDrawTools={false}
+          />
+        </MapErrorBoundary>
       </div>
 
       {/* Floating Search Bar */}

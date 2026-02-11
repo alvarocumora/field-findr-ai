@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import StickyHeader from '@/components/navigation/StickyHeader';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import EnhancedMap from '@/components/map/EnhancedMap';
+import MapErrorBoundary from '@/components/map/MapErrorBoundary';
 import MobileExploreView from '@/components/explore/MobileExploreView';
 import ExploreListPanel from '@/components/explore/ExploreListPanel';
 import PropertyPreviewSheet from '@/components/explore/PropertyPreviewSheet';
@@ -163,14 +164,16 @@ const Explorar = () => {
           {/* Map Panel */}
           <ResizablePanel defaultSize={62} minSize={45} maxSize={80}>
             <div className="h-full relative">
-              <EnhancedMap
-                listings={filteredListings}
-                hoveredListing={hoveredListing}
-                onListingHover={setHoveredListing}
-                onListingClick={handleListingPreview}
-                className="w-full h-full"
-                key="enhanced-map"
-              />
+              <MapErrorBoundary>
+                <EnhancedMap
+                  listings={filteredListings}
+                  hoveredListing={hoveredListing}
+                  onListingHover={setHoveredListing}
+                  onListingClick={handleListingPreview}
+                  className="w-full h-full"
+                  key="enhanced-map"
+                />
+              </MapErrorBoundary>
             </div>
           </ResizablePanel>
 
