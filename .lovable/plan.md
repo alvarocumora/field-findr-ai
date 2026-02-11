@@ -1,146 +1,102 @@
 
+# Plan: Conectar Todo el Sistema a Datos Reales y Preparar para Ventas
 
-# Plan: Reestructurar Sistema de Rutas, Perfiles y Accesos como SaaS Profesional
+## Diagnostico
 
-## Problema Actual
+Varios componentes criticos del sistema usan **datos mock hardcodeados** en lugar de la base de datos real:
 
-El sistema tiene rutas desorganizadas, accesos inconsistentes y navegacion que no diferencia claramente entre los 3 perfiles de usuario. Hay rutas duplicadas (/favorites y /favoritos), componentes legacy sin layout consistente, y la navegacion post-login no redirige al dashboard correcto segun el rol del usuario.
+| Componente | Estado Actual | Accion |
+|---|---|---|
+| SalesManagement | 100% mock (oportunidades, contratos, pagos) | Conectar a DB |
+| PropertyInventory | 100% mock (propiedades hardcodeadas) | Conectar a useListings |
+| LeadManagement | 100% mock (leads hardcodeados) | Conectar a useLeads |
+| BusinessIntelligence | 100% mock (KPIs, graficos) | Conectar a queries reales |
+| CRMSystem | Ya conectado a DB real | Sin cambios |
+| DashboardAsesor | Ya conectado a DB real | Eliminar Layout duplicado |
+| DashboardAdmin | Ya conectado a DB real | Eliminar Layout duplicado |
 
-## Arquitectura de Perfiles Propuesta
-
-```text
-+------------------+     +------------------+     +------------------+
-|    COMPRADOR     |     |      AGENTE      |     |   ADMIN          |
-|    (buyer)       |     |    (agent)       |     |  (admin)         |
-+------------------+     +------------------+     +------------------+
-| /explorar        |     | /asesor/dashboard|     | /admin/dashboard |
-| /favoritos       |     | /asesor/listings |     | /admin/users     |
-| /mi-terreno      |     | /asesor/leads    |     | /admin/listings  |
-| /profile         |     | /asesor/projects |     | /admin/analytics |
-|                  |     | /asesor/lots     |     | /admin/security  |
-|                  |     | /asesor/analytics|     |                  |
-|                  |     | /asesor/crm      |     |                  |
-|                  |     | /publish         |     |                  |
-+------------------+     +------------------+     +------------------+
-```
+Ademas, DashboardAsesor y DashboardAdmin envuelven su contenido en el componente `Layout` legacy (que agrega un sidebar duplicado), cuando ya estan envueltos en `DashboardLayout` desde App.tsx.
 
 ## Cambios a Implementar
 
-### 1. Smart Redirect post-login
+### 1. PropertyInventory - Conectar a datos reales
 
-Modificar `Auth.tsx` para que al hacer login, redirija automaticamente segun el rol:
-- **buyer** -> `/explorar` (o redirect param)
-- **agent** -> `/asesor/dashboard`
-- **admin** -> `/admin/dashboard`
+Reescribir para usar el hook `useListings` existente con filtro por `user_id` del agente:
+- Reemplazar array `properties` hardcodeado por query real a tabla `listings`
+- Mantener filtros de busqueda, tipo y estado pero contra datos reales
+- Agregar acciones de editar/eliminar con mutaciones reales
+- Incluir stats reales (total, activas, vendidas, vistas totales)
 
-Crear un hook `useSmartRedirect` que consulte `user_roles` y determine la ruta correcta.
+### 2. LeadManagement - Conectar a datos reales
 
-### 2. Reestructurar Rutas en App.tsx
+Reescribir para usar el hook `useLeads` existente:
+- Reemplazar `mockLeads` por datos de la tabla `leads`
+- Conectar filtros de busqueda y estado a queries reales
+- Habilitar acciones de crear/editar/eliminar lead con mutaciones
+- Mostrar stats reales (total leads, por estado, tasa de conversion)
 
-Limpiar y agrupar las rutas con namespaces claros:
+### 3. SalesManagement - Conectar a datos reales
 
-**Publicas (sin auth):**
-- `/` - Landing
-- `/explorar` - Mapa exploracion
-- `/propiedad/:id` - Detalle propiedad
-- `/proyecto/:id` - Detalle proyecto
-- `/pricing` - Precios
-- `/auth` - Login/Registro
-- `/tools` - Herramientas publicas
-- `/search` - Busqueda IA
+Conectar el pipeline de ventas a datos de las tablas `reservations`, `lots` y `leads`:
+- Pipeline visual: calcular conteos reales por estado de lead
+- Oportunidades: mostrar leads con sus datos reales (presupuesto, proyecto asociado, estado)
+- Contratos: mostrar reservaciones con estado `paid` o `converted`
+- Stats: calcular pipeline total, deal promedio y tasa de conversion desde DB
 
-**Comprador (auth requerido):**
-- `/favoritos` - Favoritos (eliminar duplicado `/favorites`)
-- `/mi-terreno` - Portal del comprador
-- `/profile` - Mi perfil
-- `/subscription` - Mi suscripcion
+### 4. BusinessIntelligence - Conectar a datos reales
 
-**Agente (auth + role agent o premium):**
-- `/asesor/dashboard` - Dashboard del agente
-- `/asesor/listings` - Inventario de propiedades (renombrar /inventory)
-- `/asesor/leads` - CRM Leads (renombrar /leads)
-- `/asesor/projects` - Gestion de proyectos (renombrar /projects)
-- `/asesor/lots` - Gestion de lotes (renombrar /lots)
-- `/asesor/analytics` - Analytics (renombrar /analytics)
-- `/asesor/crm` - CRM avanzado (renombrar /crm)
-- `/asesor/sales` - Ventas (renombrar /sales)
-- `/publish` - Publicar propiedad
+Reemplazar KPIs y graficos hardcodeados:
+- Ingresos totales: sumar precios de lotes vendidos
+- Unidades vendidas: contar lotes con status `sold`
+- Leads activos: contar leads no perdidos/convertidos
+- Tendencias: calcular variacion mes a mes
+- Grafico por region: agrupar ventas/listings por region desde DB
 
-**Admin (auth + role admin):**
-- `/admin/dashboard` - Panel admin
-- `/admin/users` - Gestion usuarios
-- `/admin/agents` - Gestion agentes (renombrar /agents)
+### 5. Eliminar Layout duplicado de Dashboards
 
-### 3. Layout Inteligente por Rol
+DashboardAsesor y DashboardAdmin ya estan envueltos en `DashboardLayout` (que incluye sidebar), pero internamente tambien usan `<Layout>` que agrega OTRO sidebar. Esto causa un sidebar doble.
 
-Crear un `DashboardLayout` que envuelva todas las rutas de gestion (/asesor/*, /admin/*) con el sidebar contextual. Las rutas publicas y de comprador usan `PublicLayout` (sin sidebar, con StickyHeader).
+Cambios:
+- `DashboardAsesor`: eliminar wrapper `<Layout>`, dejar solo el contenido
+- `DashboardAdmin`: eliminar wrapper `<Layout>`, dejar solo el contenido
+- `ProjectsManagement`: eliminar wrapper `<Layout>`, dejar solo el contenido
 
-Modificar `ModernSidebar.tsx` para mostrar navegacion contextual:
-- Si es agente: mostrar menu de agente
-- Si es admin: mostrar menu de admin con seccion extra de administracion
+### 6. Sidebar mejorado para ejecutivos
 
-### 4. Mejorar ProtectedRoute
+Agregar items de navegacion faltantes al sidebar de agente:
+- Reservas (`/asesor/reservations`) - nueva ruta
+- Documentos (link a gestion de documentos)
 
-Actualizar `ProtectedRoute` para soportar multiples roles y manejar la carga de roles correctamente (actualmente no espera a que los roles carguen antes de evaluar acceso).
+Agregar al sidebar de admin:
+- Reservas (`/admin/reservations`) - nueva ruta
+- Listings (`/admin/listings`) - ya existe la ruta
 
-### 5. Navegacion Contextual en StickyHeader
+### 7. Ruta de Reservas para Agente
 
-Actualizar el header publico para mostrar accesos inteligentes segun rol:
-- **Sin auth**: Explorar, Precios, Ingresar
-- **Buyer**: Explorar, Favoritos, Mi Terreno, avatar dropdown
-- **Agent**: Explorar, Mi Dashboard, Publicar, avatar dropdown
-- **Admin**: Explorar, Panel Admin, avatar dropdown
+Crear ruta `/asesor/reservations` que muestre el `ReservationsManager` filtrado por proyectos del agente, para que pueda gestionar las reservas de sus propios lotes.
 
-El dropdown del avatar mostrara opciones relevantes al rol del usuario.
-
-### 6. Eliminar Rutas y Componentes Legacy
-
-Remover las rutas huerfanas que duplican funcionalidad:
-- `/favorites` (usar solo `/favoritos`)
-- `/compare` (duplicado de `/comparar`)
-- `/calculators`, `/price-predictor`, `/risk-analysis`, `/ai-recommendations` (consolidar en `/tools`)
-- `/urbanization` (mover a `/asesor/projects`)
-
-### 7. Onboarding Post-Registro
-
-Agregar seleccion de perfil en el flujo de registro: "Soy comprador" o "Soy corredor/desarrollador". Si elige corredor, redirigir a `/pricing` para elegir plan. Si elige comprador, redirigir a `/explorar`.
-
-## Detalles Tecnicos
-
-### Hook useSmartRedirect
-```text
-useSmartRedirect()
-  -> Lee user_roles del usuario
-  -> Retorna la ruta de dashboard correcta
-  -> Prioridad: admin > agent > buyer
-  -> Fallback: /explorar
-```
-
-### DashboardLayout (nuevo componente)
-```text
-DashboardLayout
-  -> Wrapper con ModernSidebar contextual
-  -> Lee rol del usuario y adapta menu
-  -> Responsive con hamburger mobile
-  -> Breadcrumbs de navegacion
-```
-
-### Archivos a crear:
-- `src/hooks/useSmartRedirect.ts`
-- `src/components/layouts/DashboardLayout.tsx`
+## Detalle Tecnico
 
 ### Archivos a modificar:
-- `src/App.tsx` - Reestructurar todas las rutas
-- `src/pages/Auth.tsx` - Smart redirect post-login + seleccion de perfil
-- `src/components/auth/ProtectedRoute.tsx` - Esperar carga de roles
-- `src/components/ModernSidebar.tsx` - Navegacion contextual por rol
-- `src/components/navigation/StickyHeader.tsx` - Menu contextual por rol
-- `src/hooks/useUserRole.ts` - Agregar utilidades de redirect
+- `src/components/PropertyInventory.tsx` - Reescribir con useListings + useAuth
+- `src/components/LeadManagement.tsx` - Reescribir con useLeads real
+- `src/components/SalesManagement.tsx` - Conectar a reservations/lots/leads
+- `src/components/BusinessIntelligence.tsx` - Conectar a queries reales
+- `src/pages/dashboard/DashboardAsesor.tsx` - Eliminar `<Layout>` wrapper
+- `src/pages/dashboard/DashboardAdmin.tsx` - Eliminar `<Layout>` wrapper
+- `src/components/ProjectsManagement.tsx` - Eliminar `<Layout>` wrapper
+- `src/components/ModernSidebar.tsx` - Agregar items de Reservas y Documentos
+- `src/App.tsx` - Agregar ruta `/asesor/reservations`
 
-### Archivos a eliminar:
-- Rutas duplicadas consolidadas (no archivos, solo rutas en App.tsx)
+### Hooks existentes reutilizados (no se crean nuevos):
+- `useListings` - para PropertyInventory
+- `useLeads` - para LeadManagement y SalesManagement
+- `useAuth` - para filtrar por usuario
+- `useDashboardStats` - para BusinessIntelligence (ampliar)
 
-## Resultado Final
+### Hook a ampliar:
+- `useDashboardStats.ts` - Agregar `useBusinessIntelligence()` que calcule KPIs reales desde lots, leads y reservations
 
-Un sistema SaaS profesional donde cada tipo de usuario tiene una experiencia personalizada, con rutas limpias bajo namespaces claros, navegacion contextual, y un flujo de acceso que guia naturalmente al usuario segun su perfil y suscripcion.
+## Resultado
 
+Un sistema SaaS profesional donde TODOS los componentes de gestion muestran datos reales de la base de datos, sin mock data, listo para demostracion y venta a clientes.
