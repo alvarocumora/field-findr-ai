@@ -1,8 +1,9 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Loader2, MapPin, Layers, ArrowUpDown } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Loader2, MapPin, Layers, ArrowUpDown, Star, Clock, Bell, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -11,11 +12,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import QuickPropertyCard from './QuickPropertyCard';
-import { Listing } from '@/hooks/useListings';
+import { Listing, formatPrice, formatPriceShort, getPricePerM2 } from '@/hooks/useListings';
 import { cn } from '@/lib/utils';
 
 type PanelState = 'collapsed' | 'normal' | 'expanded';
 type SortOption = 'featured' | 'price_asc' | 'price_desc' | 'area_asc' | 'area_desc' | 'recent';
+type TabFilter = 'all' | 'featured' | 'recent';
 
 interface FloatingResultsPanelProps {
   listings: Listing[];
@@ -34,8 +36,8 @@ interface FloatingResultsPanelProps {
 
 const PANEL_WIDTHS: Record<PanelState, string> = {
   collapsed: 'w-14',
-  normal: 'w-[360px]',
-  expanded: 'w-[440px]',
+  normal: 'w-[380px]',
+  expanded: 'w-[460px]',
 };
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
@@ -82,11 +84,49 @@ const FloatingResultsPanel = ({
 }: FloatingResultsPanelProps) => {
   const [panelState, setPanelState] = useState<PanelState>('normal');
   const [sortBy, setSortBy] = useState<SortOption>('featured');
+  const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const scrollRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const sortedListings = sortListings(listings, sortBy);
+  // Filter by tab
+  const tabFilteredListings = useMemo(() => {
+    if (activeTab === 'featured') return listings.filter(l => l.featured);
+    if (activeTab === 'recent') {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      return listings.filter(l => new Date(l.created_at) > oneWeekAgo);
+    }
+    return listings;
+  }, [listings, activeTab]);
+
+  const sortedListings = sortListings(tabFilteredListings, sortBy);
+
+  // Smart summary
+  const summary = useMemo(() => {
+    if (listings.length === 0) return null;
+    const prices = listings.map(l => l.price).sort((a, b) => a - b);
+    const minPrice = prices[0];
+    const regions = new Set(listings.map(l => l.region).filter(Boolean));
+    return {
+      minPrice,
+      regionCount: regions.size,
+    };
+  }, [listings]);
+
+  // Best opportunity (lowest price/m2)
+  const bestOpportunity = useMemo(() => {
+    let best: Listing | null = null;
+    let bestRatio = Infinity;
+    for (const l of listings) {
+      const ppm2 = getPricePerM2(l.price, l.area_m2);
+      if (ppm2 && ppm2 < bestRatio) {
+        bestRatio = ppm2;
+        best = l;
+      }
+    }
+    return best;
+  }, [listings]);
 
   // Cycle through states
   const toggleState = useCallback(() => {
@@ -103,7 +143,6 @@ const FloatingResultsPanel = ({
   // Infinite scroll observer
   useEffect(() => {
     if (!hasMore || !onLoadMore) return;
-
     observerRef.current = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !isLoadingMore) {
@@ -112,14 +151,10 @@ const FloatingResultsPanel = ({
       },
       { threshold: 0.1 }
     );
-
     if (loadMoreRef.current) {
       observerRef.current.observe(loadMoreRef.current);
     }
-
-    return () => {
-      observerRef.current?.disconnect();
-    };
+    return () => { observerRef.current?.disconnect(); };
   }, [hasMore, onLoadMore, isLoadingMore]);
 
   // Auto-expand when a listing is selected from map
@@ -130,6 +165,12 @@ const FloatingResultsPanel = ({
   }, [selectedListing, panelState]);
 
   const displayCount = totalCount ?? listings.length;
+  const featuredCount = listings.filter(l => l.featured).length;
+  const recentCount = listings.filter(l => {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    return new Date(l.created_at) > oneWeekAgo;
+  }).length;
 
   return (
     <div
@@ -155,7 +196,6 @@ const FloatingResultsPanel = ({
           >
             <ChevronRight className="h-5 w-5" />
           </Button>
-          
           <div className="flex-1 flex flex-col items-center justify-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <Layers className="h-5 w-5 text-primary" />
@@ -170,7 +210,7 @@ const FloatingResultsPanel = ({
         </div>
       ) : (
         <>
-          {/* Header */}
+          {/* Header with smart summary */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-border/20">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center shadow-inner">
@@ -182,47 +222,61 @@ const FloatingResultsPanel = ({
                     {displayCount}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    propiedades
+                    terrenos
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground/70">
-                  en el área visible
-                </p>
+                {summary && (
+                  <p className="text-[11px] text-muted-foreground/70">
+                    desde {formatPriceShort(summary.minPrice)}
+                    {summary.regionCount > 1 && ` en ${summary.regionCount} regiones`}
+                  </p>
+                )}
               </div>
             </div>
             
             <div className="flex items-center gap-1">
               {panelState === 'normal' ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={expand}
-                  className="h-9 w-9 rounded-xl hover:bg-accent/10"
-                  title="Expandir panel"
-                >
+                <Button variant="ghost" size="icon" onClick={expand} className="h-9 w-9 rounded-xl hover:bg-accent/10" title="Expandir panel">
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setPanelState('normal')}
-                  className="h-9 w-9 rounded-xl hover:bg-accent/10"
-                  title="Reducir panel"
-                >
+                <Button variant="ghost" size="icon" onClick={() => setPanelState('normal')} className="h-9 w-9 rounded-xl hover:bg-accent/10" title="Reducir panel">
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={collapse}
-                className="h-9 w-9 rounded-xl hover:bg-accent/10"
-                title="Colapsar panel"
-              >
+              <Button variant="ghost" size="icon" onClick={collapse} className="h-9 w-9 rounded-xl hover:bg-accent/10" title="Colapsar panel">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
             </div>
+          </div>
+
+          {/* Inline Tabs */}
+          <div className="px-4 py-2 border-b border-border/10 flex items-center gap-1">
+            {[
+              { key: 'all' as TabFilter, label: 'Todos', count: listings.length, icon: Layers },
+              { key: 'featured' as TabFilter, label: 'Destacados', count: featuredCount, icon: Star },
+              { key: 'recent' as TabFilter, label: 'Nuevos', count: recentCount, icon: Clock },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                  activeTab === tab.key
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-muted/50'
+                )}
+              >
+                <tab.icon className="h-3 w-3" />
+                {tab.label}
+                <span className={cn(
+                  'text-[10px] px-1.5 py-0.5 rounded-full',
+                  activeTab === tab.key ? 'bg-primary/20' : 'bg-muted'
+                )}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
           </div>
 
           {/* Sort selector */}
@@ -242,6 +296,23 @@ const FloatingResultsPanel = ({
             </Select>
           </div>
 
+          {/* Best Opportunity sticky banner */}
+          {bestOpportunity && activeTab === 'all' && !isLoading && (
+            <div 
+              className="mx-3 mt-2 p-2.5 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 cursor-pointer hover:border-emerald-500/40 transition-colors"
+              onClick={() => onListingPreview?.(bestOpportunity)}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingDown className="h-3.5 w-3.5 text-emerald-500" />
+                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Mejor oportunidad</span>
+              </div>
+              <p className="text-xs text-foreground font-medium truncate">{bestOpportunity.title}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {formatPriceShort(getPricePerM2(bestOpportunity.price, bestOpportunity.area_m2) || 0)}/m² · {formatPriceShort(bestOpportunity.price)}
+              </p>
+            </div>
+          )}
+
           {/* Content */}
           <ScrollArea className="flex-1" ref={scrollRef}>
             <div className="p-3 space-y-2">
@@ -252,7 +323,7 @@ const FloatingResultsPanel = ({
                     className="flex items-center gap-3 p-3 animate-pulse"
                     style={{ animationDelay: `${i * 100}ms` }}
                   >
-                    <Skeleton className="w-24 h-20 rounded-xl" />
+                    <Skeleton className="w-[120px] h-[88px] rounded-xl" />
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-4 w-28" />
                       <Skeleton className="h-3.5 w-full" />
@@ -316,16 +387,14 @@ const FloatingResultsPanel = ({
             </div>
           </ScrollArea>
 
-          {/* Footer with resize handle */}
-          <div className="px-5 py-3 border-t border-border/20 flex justify-center">
-            <div
-              className={cn(
-                'w-16 h-1.5 rounded-full cursor-pointer transition-all duration-200',
-                'bg-border/40 hover:bg-primary/40 hover:scale-x-110'
-              )}
-              onClick={toggleState}
-              title="Redimensionar panel"
-            />
+          {/* Footer with CTA */}
+          <div className="px-4 py-3 border-t border-border/20">
+            <button
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+            >
+              <Bell className="h-3.5 w-3.5" />
+              ¿No encuentras lo que buscas? Activar alertas
+            </button>
           </div>
         </>
       )}

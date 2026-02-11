@@ -1,7 +1,7 @@
-import { memo, useRef, useEffect } from 'react';
-import { Heart, ChevronRight, MapPin, Sparkles } from 'lucide-react';
+import { memo, useRef, useEffect, useState } from 'react';
+import { Heart, ChevronRight, MapPin, Sparkles, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Listing, formatPrice, formatArea, getListingTypeLabel } from '@/hooks/useListings';
+import { Listing, formatPrice, formatArea, getListingTypeLabel, getPricePerM2, formatPriceShort, getCountryFlag } from '@/hooks/useListings';
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
 import { cn } from '@/lib/utils';
 
@@ -26,6 +26,10 @@ const QuickPropertyCard = memo(({
   const { data: favoriteIds = [] } = useFavoriteIds();
   const { toggle: toggleFavorite } = useToggleFavorite();
   const favorite = favoriteIds.includes(listing.id);
+  const [showSecondImage, setShowSecondImage] = useState(false);
+
+  const pricePerM2 = getPricePerM2(listing.price, listing.area_m2);
+  const countryFlag = getCountryFlag(listing.country);
 
   // Auto-scroll into view when selected from map
   useEffect(() => {
@@ -42,6 +46,9 @@ const QuickPropertyCard = memo(({
     toggleFavorite(listing.id);
   };
 
+  const hasSecondImage = listing.images.length > 1;
+  const currentImage = showSecondImage && hasSecondImage ? listing.images[1] : (listing.images[0] || '/placeholder.svg');
+
   return (
     <div
       ref={cardRef}
@@ -53,16 +60,22 @@ const QuickPropertyCard = memo(({
         isHovered && 'ring-2 ring-primary/40 bg-primary/8 border-primary/20 shadow-lg shadow-primary/10 scale-[1.01]',
         isSelected && 'ring-2 ring-primary bg-primary/12 border-primary/30 shadow-xl shadow-primary/15 scale-[1.02]'
       )}
-      onMouseEnter={() => onHover?.(listing)}
-      onMouseLeave={() => onHover?.(null)}
+      onMouseEnter={() => {
+        onHover?.(listing);
+        if (hasSecondImage) setShowSecondImage(true);
+      }}
+      onMouseLeave={() => {
+        onHover?.(null);
+        setShowSecondImage(false);
+      }}
       onClick={() => onClick?.(listing)}
     >
       {/* Thumbnail with gradient overlay */}
-      <div className="relative w-24 h-20 rounded-xl overflow-hidden flex-shrink-0 shadow-md group-hover:shadow-lg transition-shadow duration-300">
+      <div className="relative w-[120px] h-[88px] rounded-xl overflow-hidden flex-shrink-0 shadow-md group-hover:shadow-lg transition-shadow duration-300">
         <img
-          src={listing.images[0] || '/placeholder.svg'}
+          src={currentImage}
           alt={listing.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
           loading="lazy"
         />
         {/* Gradient overlay */}
@@ -76,21 +89,27 @@ const QuickPropertyCard = memo(({
             </Badge>
           </div>
         )}
+
+        {/* Image count indicator */}
+        {listing.images.length > 1 && (
+          <div className="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[9px] font-medium px-1.5 py-0.5 rounded-md backdrop-blur-sm">
+            1/{listing.images.length}
+          </div>
+        )}
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0 py-0.5 space-y-1.5">
-        {/* Price and Type row */}
-        <div className="flex items-center gap-2">
+      <div className="flex-1 min-w-0 py-0.5 space-y-1">
+        {/* Price and Price per m2 */}
+        <div>
           <span className="font-bold text-base bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
             {formatPrice(listing.price, listing.currency)}
           </span>
-          <Badge 
-            variant="outline" 
-            className="h-5 px-2 text-[10px] font-medium text-muted-foreground border-border/60 bg-muted/30"
-          >
-            {getListingTypeLabel(listing.type)}
-          </Badge>
+          {pricePerM2 && (
+            <span className="text-[11px] text-muted-foreground ml-1.5">
+              {formatPriceShort(pricePerM2)}/m²
+            </span>
+          )}
         </div>
 
         {/* Title - truncated */}
@@ -98,7 +117,18 @@ const QuickPropertyCard = memo(({
           {listing.title}
         </h4>
 
-        {/* Location and Area */}
+        {/* Type badge with country flag */}
+        <div className="flex items-center gap-1.5">
+          <Badge 
+            variant="outline" 
+            className="h-5 px-2 text-[10px] font-medium text-muted-foreground border-border/60 bg-muted/30 gap-1"
+          >
+            <span className="text-xs">{countryFlag}</span>
+            {getListingTypeLabel(listing.type)}
+          </Badge>
+        </div>
+
+        {/* Location, Area, Views */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="flex items-center gap-1 truncate">
             <MapPin className="h-3 w-3 flex-shrink-0 text-primary/60" />
@@ -110,6 +140,15 @@ const QuickPropertyCard = memo(({
           <span className="flex-shrink-0 font-medium">
             {formatArea(listing.area_m2, listing.area_ha)}
           </span>
+          {listing.views_count > 0 && (
+            <>
+              <span className="w-1 h-1 rounded-full bg-border flex-shrink-0" />
+              <span className="flex items-center gap-0.5 flex-shrink-0 text-muted-foreground/70">
+                <Eye className="h-3 w-3" />
+                {listing.views_count}
+              </span>
+            </>
+          )}
         </div>
       </div>
 

@@ -155,6 +155,14 @@ const Explorar = () => {
     navigate(`/propiedad/${listing.id}`);
   }, [navigate]);
 
+  // Get similar listings for preview sheet
+  const similarListings = useMemo(() => {
+    if (!previewListing) return [];
+    return filteredListings
+      .filter(l => l.id !== previewListing.id && l.type === previewListing.type)
+      .slice(0, 3);
+  }, [previewListing, filteredListings]);
+
   // Mobile view
   if (isMobile) {
     return (
@@ -275,6 +283,7 @@ const Explorar = () => {
             open={!!previewListing}
             onOpenChange={(open) => !open && setPreviewListing(null)}
             onViewDetails={handleViewDetails}
+            similarListings={similarListings}
           />
         </div>
       </div>
