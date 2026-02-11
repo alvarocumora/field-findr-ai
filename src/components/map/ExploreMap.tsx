@@ -53,34 +53,45 @@ const ExploreMap = ({
   }, [listings]);
 
   // Create popup HTML
-  const createPopupHTML = (listing: Listing) => `
-    <div class="p-3 min-w-[220px]" style="font-family: system-ui, -apple-system, sans-serif;">
-      <div class="mb-2 rounded-lg overflow-hidden" style="height: 100px;">
+  const createPopupHTML = (listing: Listing) => {
+    const pricePerM2 = listing.area_m2 && listing.area_m2 > 0 
+      ? formatPrice(Math.round(listing.price / listing.area_m2)) + '/m²'
+      : '';
+    
+    return `
+    <div style="min-width: 240px; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; border-radius: 12px;">
+      <div style="height: 110px; position: relative; overflow: hidden;">
         <img 
           src="${listing.images[0] || '/placeholder.svg'}" 
           alt="${listing.title}"
           style="width: 100%; height: 100%; object-fit: cover;"
         />
+        <div style="position: absolute; bottom: 8px; left: 8px;">
+          <span style="font-size: 10px; padding: 3px 8px; border-radius: 6px; background: rgba(0,0,0,0.6); color: white; backdrop-filter: blur(4px);">
+            ${getListingTypeLabel(listing.type)}
+          </span>
+        </div>
       </div>
-      <h4 style="font-weight: 600; font-size: 14px; margin-bottom: 4px; color: #1e293b; line-height: 1.3;">
-        ${listing.title}
-      </h4>
-      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
-        <span style="font-size: 11px; padding: 2px 8px; border-radius: 9999px; background: #f1f5f9; color: #64748b;">
-          ${getListingTypeLabel(listing.type)}
-        </span>
+      <div style="padding: 12px;">
+        <h4 style="font-weight: 600; font-size: 13px; margin: 0 0 6px; color: #1e293b; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          ${listing.title}
+        </h4>
+        <p style="font-size: 11px; color: #64748b; margin: 0 0 4px; display: flex; align-items: center; gap: 4px;">
+          <span>📍</span> ${listing.region || listing.location}
+        </p>
+        <p style="font-size: 11px; color: #64748b; margin: 0 0 8px;">
+          📐 ${formatArea(listing.area_m2, listing.area_ha)}
+        </p>
+        <div style="display: flex; align-items: baseline; justify-content: space-between;">
+          <span style="font-weight: 700; color: #10b981; font-size: 15px;">
+            ${formatPrice(listing.price, listing.currency)}
+          </span>
+          ${pricePerM2 ? `<span style="font-size: 10px; color: #94a3b8;">${pricePerM2}</span>` : ''}
+        </div>
       </div>
-      <p style="font-size: 12px; color: #64748b; margin-bottom: 4px;">
-        📍 ${listing.location}
-      </p>
-      <p style="font-size: 12px; color: #64748b; margin-bottom: 6px;">
-        📐 ${formatArea(listing.area_m2, listing.area_ha)}
-      </p>
-      <p style="font-weight: 700; color: #10b981; font-size: 16px;">
-        ${formatPrice(listing.price, listing.currency)}
-      </p>
     </div>
   `;
+  };
 
   // Create custom marker element
   const createMarkerElement = (listing: Listing, isHovered: boolean = false) => {

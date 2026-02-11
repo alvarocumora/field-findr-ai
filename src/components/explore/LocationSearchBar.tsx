@@ -10,10 +10,6 @@ import {
   X, 
   Loader2,
   Sparkles,
-  Building2,
-  Mountain,
-  Trees,
-  Waves
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
@@ -48,13 +44,6 @@ const REGIONS_CHILE = [
   { name: 'Los Lagos', center: [-72.9395, -41.4693] as [number, number] },
   { name: 'Coquimbo', center: [-71.2422, -30.5867] as [number, number] },
   { name: 'Maule', center: [-71.2141, -35.4265] as [number, number] },
-];
-
-const QUICK_FILTERS = [
-  { icon: Building2, label: 'Urbano', type: 'terreno_urbano' },
-  { icon: Trees, label: 'Parcela', type: 'parcela_rural' },
-  { icon: Mountain, label: 'Montaña', type: 'terreno_montana' },
-  { icon: Waves, label: 'Costero', type: 'terreno_costero' },
 ];
 
 export default function LocationSearchBar({
@@ -112,18 +101,15 @@ export default function LocationSearchBar({
     }
   }, [token]);
 
-  // Handle input change with debounce
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
     setIsOpen(true);
 
-    // Clear previous debounce
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
-    // Debounce search
     debounceRef.current = setTimeout(() => {
       if (!isAIMode && value.length >= 2) {
         searchLocation(value);
@@ -131,7 +117,6 @@ export default function LocationSearchBar({
     }, 300);
   };
 
-  // Handle result selection
   const handleSelectResult = (result: LocationSearchResult) => {
     onLocationSelect({
       name: result.place_name,
@@ -141,7 +126,6 @@ export default function LocationSearchBar({
     setIsOpen(false);
   };
 
-  // Handle region selection
   const handleSelectRegion = (region: typeof REGIONS_CHILE[0]) => {
     onLocationSelect({
       name: region.name,
@@ -151,7 +135,6 @@ export default function LocationSearchBar({
     setIsOpen(false);
   };
 
-  // Handle AI search
   const handleAISearch = () => {
     if (query.trim() && onAISearch) {
       onAISearch(query);
@@ -159,7 +142,6 @@ export default function LocationSearchBar({
     }
   };
 
-  // Handle key press
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       if (isAIMode && onAISearch) {
@@ -173,7 +155,6 @@ export default function LocationSearchBar({
     }
   };
 
-  // Get user location
   const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -262,7 +243,7 @@ export default function LocationSearchBar({
               <div className="p-3 border-b border-border">
                 <Button
                   onClick={handleAISearch}
-                  className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-primary/80"
+                  className="w-full h-12 rounded-xl"
                 >
                   <Sparkles className="h-4 w-4 mr-2" />
                   Buscar con IA: "{query}"
@@ -299,7 +280,7 @@ export default function LocationSearchBar({
               </div>
             )}
 
-            {/* Quick Regions */}
+            {/* Quick Regions + Location when empty */}
             {!query && (
               <>
                 {/* User Location */}
@@ -313,42 +294,19 @@ export default function LocationSearchBar({
                   </button>
                 </div>
 
-                {/* Popular Regions */}
-                <div className="p-2">
-                  <p className="text-xs text-muted-foreground px-2 py-1 mb-1">Regiones populares</p>
-                  <div className="space-y-1">
+                {/* Popular Regions as chips */}
+                <div className="p-3">
+                  <p className="text-xs text-muted-foreground mb-2">Regiones populares</p>
+                  <div className="flex flex-wrap gap-1.5">
                     {REGIONS_CHILE.map((region) => (
-                      <button
-                        key={region.name}
-                        onClick={() => handleSelectRegion(region)}
-                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                      >
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{region.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Quick Filters */}
-                <div className="p-3 border-t border-border">
-                  <p className="text-xs text-muted-foreground mb-2">Filtros rápidos</p>
-                  <div className="flex flex-wrap gap-2">
-                    {QUICK_FILTERS.map((filter) => (
                       <Badge
-                        key={filter.type}
+                        key={region.name}
                         variant="outline"
-                        className="cursor-pointer hover:bg-muted transition-colors py-1.5 px-3"
-                        onClick={() => {
-                          setQuery(filter.label);
-                          if (onAISearch) {
-                            onAISearch(`terrenos tipo ${filter.type}`);
-                          }
-                          setIsOpen(false);
-                        }}
+                        className="cursor-pointer hover:bg-primary/10 hover:border-primary/30 transition-colors py-1.5 px-3"
+                        onClick={() => handleSelectRegion(region)}
                       >
-                        <filter.icon className="h-3 w-3 mr-1" />
-                        {filter.label}
+                        <MapPin className="h-3 w-3 mr-1 text-primary" />
+                        {region.name}
                       </Badge>
                     ))}
                   </div>

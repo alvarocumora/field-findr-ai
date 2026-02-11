@@ -1,13 +1,21 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, List, Loader2, MapPin, Layers } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, MapPin, Layers, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import QuickPropertyCard from './QuickPropertyCard';
 import { Listing } from '@/hooks/useListings';
 import { cn } from '@/lib/utils';
 
 type PanelState = 'collapsed' | 'normal' | 'expanded';
+type SortOption = 'featured' | 'price_asc' | 'price_desc' | 'area_asc' | 'area_desc' | 'recent';
 
 interface FloatingResultsPanelProps {
   listings: Listing[];
@@ -30,6 +38,34 @@ const PANEL_WIDTHS: Record<PanelState, string> = {
   expanded: 'w-[440px]',
 };
 
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'featured', label: 'Destacados' },
+  { value: 'price_asc', label: 'Precio: menor a mayor' },
+  { value: 'price_desc', label: 'Precio: mayor a menor' },
+  { value: 'area_desc', label: 'Superficie: mayor' },
+  { value: 'area_asc', label: 'Superficie: menor' },
+  { value: 'recent', label: 'Más recientes' },
+];
+
+const sortListings = (listings: Listing[], sort: SortOption): Listing[] => {
+  const sorted = [...listings];
+  switch (sort) {
+    case 'price_asc':
+      return sorted.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+    case 'price_desc':
+      return sorted.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
+    case 'area_asc':
+      return sorted.sort((a, b) => (a.area_m2 ?? 0) - (b.area_m2 ?? 0));
+    case 'area_desc':
+      return sorted.sort((a, b) => (b.area_m2 ?? 0) - (a.area_m2 ?? 0));
+    case 'recent':
+      return sorted.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
+    case 'featured':
+    default:
+      return sorted.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+  }
+};
+
 const FloatingResultsPanel = ({
   listings,
   isLoading = false,
@@ -45,9 +81,12 @@ const FloatingResultsPanel = ({
   className,
 }: FloatingResultsPanelProps) => {
   const [panelState, setPanelState] = useState<PanelState>('normal');
+  const [sortBy, setSortBy] = useState<SortOption>('featured');
   const scrollRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  const sortedListings = sortListings(listings, sortBy);
 
   // Cycle through states
   const toggleState = useCallback(() => {
@@ -97,7 +136,6 @@ const FloatingResultsPanel = ({
       className={cn(
         'absolute left-4 top-4 bottom-4 z-20',
         'flex flex-col',
-        // Glassmorphism styling
         'bg-background/90 backdrop-blur-2xl',
         'rounded-3xl border border-border/30',
         'shadow-2xl shadow-black/10',
@@ -187,11 +225,27 @@ const FloatingResultsPanel = ({
             </div>
           </div>
 
+          {/* Sort selector */}
+          <div className="px-4 py-2 border-b border-border/10">
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+              <SelectTrigger className="h-8 text-xs rounded-lg border-border/40">
+                <ArrowUpDown className="h-3 w-3 mr-1.5 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Content */}
           <ScrollArea className="flex-1" ref={scrollRef}>
             <div className="p-3 space-y-2">
               {isLoading ? (
-                // Loading skeletons with animation
                 Array.from({ length: 6 }).map((_, i) => (
                   <div 
                     key={i} 
@@ -206,8 +260,7 @@ const FloatingResultsPanel = ({
                     </div>
                   </div>
                 ))
-              ) : listings.length === 0 ? (
-                // Empty state with better design
+              ) : sortedListings.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
                   <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center mb-5 shadow-inner">
                     <MapPin className="h-10 w-10 text-muted-foreground/50" />
@@ -221,7 +274,7 @@ const FloatingResultsPanel = ({
                 </div>
               ) : (
                 <>
-                  {listings.map((listing, index) => (
+                  {sortedListings.map((listing, index) => (
                     <div
                       key={listing.id}
                       className="animate-fade-in"
