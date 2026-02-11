@@ -119,6 +119,18 @@ const PropertyDetail = () => {
           <span>/</span>
           <Link to="/explorar" className="hover:text-foreground transition-colors">Explorar</Link>
           <span>/</span>
+          {listing.region && (
+            <>
+              <Link to={`/explorar?region=${listing.region}`} className="hover:text-foreground transition-colors">{listing.region}</Link>
+              <span>/</span>
+            </>
+          )}
+          {listing.city && (
+            <>
+              <span className="hover:text-foreground transition-colors">{listing.city}</span>
+              <span>/</span>
+            </>
+          )}
           <span className="text-foreground truncate max-w-[200px]">{listing.title}</span>
         </nav>
 
@@ -327,10 +339,12 @@ const PropertyDetail = () => {
                   <p className="text-2xl md:text-3xl font-bold text-primary">
                     {formatPrice(listing.price, listing.currency)}
                   </p>
-                  {listing.area_m2 && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {formatPrice(listing.price / listing.area_m2)} / m²
-                    </p>
+                  {listing.area_m2 && listing.area_m2 > 0 && (
+                    <div className="mt-2 p-2.5 rounded-lg bg-primary/10 border border-primary/20">
+                      <p className="text-sm font-semibold text-primary">
+                        {formatPrice(Math.round(listing.price / listing.area_m2))} / m²
+                      </p>
+                    </div>
                   )}
                 </div>
 
@@ -362,6 +376,11 @@ const PropertyDetail = () => {
                     </Button>
                   }
                 />
+
+                <Button variant="outline" className="w-full glass border-primary/30 text-primary hover:bg-primary/10 h-11 touch-target mb-3">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Agendar visita
+                </Button>
 
                 <Button variant="ghost" className="w-full glass border-border/50 h-11 touch-target">
                   <Download className="h-4 w-4 mr-2" />

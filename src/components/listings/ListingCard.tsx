@@ -6,7 +6,6 @@ import {
   Heart, 
   MapPin, 
   Ruler, 
-  Eye,
   CheckCircle,
   Sparkles,
   Share2
@@ -68,6 +67,7 @@ const ListingCard = ({ listing, onHover, matchResult, className }: ListingCardPr
         "group overflow-hidden glass border-white/10",
         "hover:border-primary/40 hover:shadow-glow",
         "transition-all duration-300 ease-out",
+        "hover:scale-[1.02]",
         "active:scale-[0.98]",
         className
       )}>
@@ -148,16 +148,23 @@ const ListingCard = ({ listing, onHover, matchResult, className }: ListingCardPr
           </h3>
 
           {/* Stats Row */}
-          <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+          <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
             <div className="flex items-center gap-1.5">
               <Ruler className="h-4 w-4 text-primary/70" />
               <span>{formatArea(listing.area_m2, listing.area_ha)}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Eye className="h-4 w-4 text-muted-foreground/70" />
-              <span>{listing.views_count} vistas</span>
+              <MapPin className="h-4 w-4 text-muted-foreground/70" />
+              <span className="truncate max-w-[120px]">{listing.region || listing.city || 'Chile'}</span>
             </div>
           </div>
+
+          {/* Price per m² */}
+          {listing.area_m2 && listing.area_m2 > 0 && (
+            <p className="text-xs text-muted-foreground mb-3">
+              {formatPrice(Math.round(listing.price / listing.area_m2))} / m²
+            </p>
+          )}
 
           {/* Tags */}
           <div className="flex flex-wrap gap-1.5 mb-3">
