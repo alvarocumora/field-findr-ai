@@ -18,7 +18,6 @@ import {
   Mountain, 
   Landmark,
   MapPin,
-  Play
 } from 'lucide-react';
 import { useState } from 'react';
 import HeroStats from '@/components/landing/HeroStats';
@@ -48,42 +47,37 @@ const Index = () => {
   return (
     <PublicLayout showFooter={true}>
       {/* Hero Section */}
-      <section className="relative py-16 md:py-28 overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 grid-pattern opacity-30" />
-        <div className="orb orb-1" />
-        <div className="orb orb-2" />
-        <div className="orb orb-3" />
+      <section className="relative py-20 md:py-32 overflow-hidden">
+        {/* Background - single subtle orb */}
+        <div className="absolute inset-0 grid-pattern opacity-20" />
+        <div className="orb orb-1 opacity-20" />
         
         <div className="container relative z-10 px-4">
           <div className="max-w-4xl mx-auto text-center mb-16">
-            {/* AI Badge with live pulse */}
-            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full glass border border-primary/20 text-sm mb-8 animate-fade-in">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
-              </span>
-              <span className="text-muted-foreground">Potenciado por</span>
-              <span className="text-primary font-semibold">Inteligencia Artificial</span>
+            {/* AI Badge - static, elegant */}
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass border border-primary/15 text-sm mb-8 animate-fade-in">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span className="text-muted-foreground">Plataforma potenciada por</span>
+              <span className="text-primary font-semibold">IA</span>
             </div>
 
-            {/* Headline - Bigger and bolder */}
+            {/* Headline */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-[1.1] animate-fade-in-up stagger-1">
               Descubre tu{' '}
-              <span className="gradient-text-hero block sm:inline">terreno ideal</span>
+              <span className="gradient-text-hero">terreno ideal</span>
             </h1>
             
             <p className="text-muted-foreground text-lg md:text-xl mb-10 max-w-2xl mx-auto animate-fade-in-up stagger-2">
               La plataforma #1 en Chile para inversión en terrenos con análisis predictivo y datos verificados
             </p>
 
-            {/* Search Bar - Enhanced */}
-            <div className="glass-strong rounded-2xl p-2 max-w-2xl mx-auto shadow-2xl border border-primary/10 animate-fade-in-up stagger-3">
+            {/* Search Bar */}
+            <div className="glass-strong rounded-2xl p-2 max-w-2xl mx-auto shadow-xl border border-border/50 animate-fade-in-up stagger-3">
               <div className="flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar por ubicación, tipo, características..."
+                    placeholder="Ej: parcela 5.000 m² en Región de Los Lagos..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -93,10 +87,10 @@ const Index = () => {
                 <Button 
                   onClick={handleSearch} 
                   size="lg" 
-                  className="h-14 px-8 btn-glow animate-pulse-glow"
+                  className="h-14 px-8"
                 >
-                  <Sparkles className="h-5 w-5 mr-2" />
-                  Buscar con IA
+                  <Search className="h-5 w-5 mr-2" />
+                  Buscar
                 </Button>
               </div>
             </div>
@@ -109,16 +103,16 @@ const Index = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate(`/explorar?type=${cat.type}`)}
-                  className="h-10 px-4 text-sm rounded-full glass hover:bg-primary/10 hover:text-primary transition-all duration-300 border border-transparent hover:border-primary/20"
+                  className="h-9 px-4 text-sm rounded-full hover:bg-primary/10 hover:text-primary transition-colors border border-border/50 hover:border-primary/20"
                 >
-                  <cat.icon className="h-4 w-4 mr-2" />
+                  <cat.icon className="h-4 w-4 mr-1.5" />
                   {cat.name}
                 </Button>
               ))}
             </div>
           </div>
 
-          {/* Stats with animated counters */}
+          {/* Stats */}
           <div className="animate-fade-in-up stagger-5">
             <HeroStats />
           </div>

@@ -21,7 +21,6 @@ const LogoIcon = ({
   animated = false
 }: LogoIconProps) => {
   const isMonochrome = variant === 'monochrome';
-  const isInverted = variant === 'inverted';
   
   return (
     <div 
@@ -34,9 +33,8 @@ const LogoIcon = ({
       role="img"
       aria-label="Ofertaterrenos logo icon"
     >
-      {/* SVG Logo Mark - Geometric Hexagon */}
       <svg 
-        viewBox="0 0 512 512" 
+        viewBox="0 0 48 48" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
         className={cn(
@@ -46,90 +44,37 @@ const LogoIcon = ({
         )}
       >
         <defs>
-          <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={isMonochrome ? 'currentColor' : '#22C55E'} stopOpacity={isMonochrome ? 0.1 : 1}/>
-            <stop offset="50%" stopColor={isMonochrome ? 'currentColor' : '#10B981'} stopOpacity={isMonochrome ? 0.1 : 1}/>
-            <stop offset="100%" stopColor={isMonochrome ? 'currentColor' : '#0EA5E9'} stopOpacity={isMonochrome ? 0.1 : 1}/>
-          </linearGradient>
-          <linearGradient id="glowGrad" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3"/>
-            <stop offset="100%" stopColor="#ffffff" stopOpacity="0"/>
+          <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={isMonochrome ? 'currentColor' : '#22C55E'} />
+            <stop offset="100%" stopColor={isMonochrome ? 'currentColor' : '#0EA5E9'} />
           </linearGradient>
         </defs>
         
-        {/* Background rounded square */}
+        {/* Rounded square background */}
         <rect 
-          x="32" y="32" width="448" height="448" rx="96" 
-          fill={isMonochrome ? 'transparent' : 'url(#bgGrad)'}
+          x="2" y="2" width="44" height="44" rx="12" 
+          fill={isMonochrome ? 'transparent' : 'url(#logoGrad)'}
           stroke={isMonochrome ? 'currentColor' : 'none'}
-          strokeWidth={isMonochrome ? 8 : 0}
-          className={isMonochrome ? 'text-foreground/20' : ''}
+          strokeWidth={isMonochrome ? 2 : 0}
+          className={isMonochrome ? 'text-foreground/30' : ''}
         />
         
-        {/* Inner glow */}
-        {!isMonochrome && (
-          <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#glowGrad)"/>
-        )}
-        
-        {/* Hexagon frame */}
+        {/* Single clean terrain peak */}
         <path 
-          d="M256 96L400 180V348L256 432L112 348V180L256 96Z" 
-          fill="none" 
-          stroke={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.9)'}
-          strokeWidth="16"
-          strokeLinejoin="round"
+          d="M10 32L24 14L38 32H10Z" 
+          fill={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.9)'}
           className={isMonochrome ? 'text-foreground/60' : ''}
         />
         
-        {/* Main terrain mountain */}
-        <path 
-          d="M160 320L256 180L352 320H160Z" 
-          fill={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.85)'}
+        {/* Horizon line */}
+        <line 
+          x1="8" y1="34" x2="40" y2="34" 
+          stroke={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.7)'}
+          strokeWidth="2.5" 
+          strokeLinecap="round"
           className={isMonochrome ? 'text-foreground/50' : ''}
         />
-        
-        {/* Secondary peak */}
-        <path 
-          d="M200 320L280 220L360 320H200Z" 
-          fill={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.5)'}
-          className={isMonochrome ? 'text-foreground/25' : ''}
-        />
-        
-        {/* Diamond center */}
-        <path 
-          d="M256 220L290 280H222L256 220Z" 
-          fill={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.3)'}
-          className={isMonochrome ? 'text-foreground/15' : ''}
-        />
-        
-        {/* Base line */}
-        <line 
-          x1="140" y1="340" x2="372" y2="340" 
-          stroke={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.95)'}
-          strokeWidth="12" 
-          strokeLinecap="round"
-          className={isMonochrome ? 'text-foreground/70' : ''}
-        />
-        
-        {/* Grid markers */}
-        <line x1="200" y1="320" x2="200" y2="360" 
-              stroke={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.6)'} 
-              strokeWidth="8" strokeLinecap="round"
-              className={isMonochrome ? 'text-foreground/40' : ''}/>
-        <line x1="256" y1="320" x2="256" y2="370" 
-              stroke={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.6)'} 
-              strokeWidth="8" strokeLinecap="round"
-              className={isMonochrome ? 'text-foreground/40' : ''}/>
-        <line x1="312" y1="320" x2="312" y2="360" 
-              stroke={isMonochrome ? 'currentColor' : 'rgba(255,255,255,0.6)'} 
-              strokeWidth="8" strokeLinecap="round"
-              className={isMonochrome ? 'text-foreground/40' : ''}/>
       </svg>
-      
-      {/* Animated shimmer overlay */}
-      {animated && !isMonochrome && (
-        <div className="absolute inset-0 logo-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
-      )}
     </div>
   );
 };

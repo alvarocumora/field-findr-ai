@@ -1,4 +1,4 @@
-import { MapPin, Layers, ShieldCheck, CalendarCheck } from 'lucide-react';
+import { MapPin, Layers, ShieldCheck, Map } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLandingStats } from '@/hooks/useLandingStats';
 
@@ -53,8 +53,8 @@ const HeroStats = () => {
   const STATS = [
     { value: stats?.totalProjects ?? 0, suffix: '', label: 'Proyectos activos', icon: MapPin },
     { value: stats?.totalLots ?? 0, suffix: '', label: 'Lotes disponibles', icon: Layers },
-    { value: stats?.totalReservations ?? 0, suffix: '', label: 'Reservas pagadas', icon: CalendarCheck },
-    { value: 100, suffix: '%', label: 'Datos verificados', icon: ShieldCheck },
+    { value: stats?.totalRegions ?? 0, suffix: '', label: 'Regiones cubiertas', icon: Map },
+    { value: stats?.totalListings ?? 0, suffix: '', label: 'Publicaciones activas', icon: ShieldCheck },
   ];
 
   return (
@@ -62,18 +62,14 @@ const HeroStats = () => {
       {STATS.map((stat, index) => (
         <div
           key={stat.label}
-          className="group relative glass rounded-2xl p-4 md:p-6 text-center card-hover border-gradient overflow-hidden"
+          className="group relative rounded-2xl p-4 md:p-6 text-center border border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/20 transition-all duration-300"
           style={{ animationDelay: `${0.4 + index * 0.1}s` }}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl opacity-0 group-hover:opacity-60 transition-opacity" />
-            <stat.icon className="h-5 w-5 md:h-6 md:w-6 text-primary mx-auto mb-2 relative z-10 group-hover:scale-110 transition-transform duration-300" />
-          </div>
-          <div className="text-xl md:text-3xl font-bold text-foreground relative z-10">
+          <stat.icon className="h-5 w-5 md:h-6 md:w-6 text-primary mx-auto mb-2 group-hover:scale-110 transition-transform duration-300" />
+          <div className="text-xl md:text-3xl font-bold text-foreground">
             <AnimatedCounter value={stat.value} suffix={stat.suffix} />
           </div>
-          <div className="text-xs md:text-sm text-muted-foreground relative z-10">
+          <div className="text-xs md:text-sm text-muted-foreground">
             {stat.label}
           </div>
         </div>
