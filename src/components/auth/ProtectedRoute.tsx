@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCurrentPlan } from '@/hooks/useSubscription';
-import { useHasRole, AppRole } from '@/hooks/useUserRole';
+import { useUserRoles, AppRole } from '@/hooks/useUserRole';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -34,39 +34,38 @@ const ProtectedRoute = ({
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   const { isPremium, isLoading: planLoading } = useCurrentPlan();
-  const hasRequiredRole = useHasRole(requireRole || 'buyer');
+  const { data: roles = [], isLoading: rolesLoading } = useUserRoles();
 
-  // Show loading state while checking auth/subscription
-  if (authLoading || (requirePremium && planLoading)) {
+  // Wait for auth + roles to load
+  if (authLoading || (requireRole && rolesLoading) || (requirePremium && planLoading)) {
     return <LoadingFallback />;
   }
 
-  // Check authentication
   if (requireAuth && !user) {
     const redirectPath = redirectTo || `/auth?redirect=${encodeURIComponent(location.pathname)}`;
     return <Navigate to={redirectPath} replace />;
   }
 
-  // Check premium subscription
   if (requirePremium && !isPremium) {
     return <UpgradePrompt currentPath={location.pathname} />;
   }
 
-  // Check role requirement
-  if (requireRole && !hasRequiredRole) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center p-8 max-w-md">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Acceso Denegado</h1>
-          <p className="text-muted-foreground mb-6">
-            No tienes los permisos necesarios para acceder a esta sección.
-          </p>
-          <a href="/" className="text-primary hover:underline">
-            Volver al inicio
-          </a>
+  if (requireRole) {
+    const hasRole = roles.some(r => r.role === requireRole);
+    const isAdmin = roles.some(r => r.role === 'admin');
+    if (!hasRole && !isAdmin) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center p-8 max-w-md">
+            <h1 className="text-2xl font-bold text-foreground mb-4">Acceso Denegado</h1>
+            <p className="text-muted-foreground mb-6">
+              No tienes los permisos necesarios para acceder a esta sección.
+            </p>
+            <a href="/" className="text-primary hover:underline">Volver al inicio</a>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   return <>{children}</>;

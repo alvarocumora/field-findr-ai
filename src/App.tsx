@@ -3,12 +3,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 
 // Auth Components
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+
+// Layouts
+import DashboardLayout from "./components/layouts/DashboardLayout";
 
 // PWA Components
 import OfflineIndicator from "./components/pwa/OfflineIndicator";
@@ -21,49 +24,47 @@ const PageLoader = () => (
   </div>
 );
 
-// Pages
+// ===== Public Pages =====
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Tools from "./pages/Tools";
-import Profile from "./pages/Profile";
 import Explorar from "./pages/Explorar";
 import PropertyDetail from "./pages/PropertyDetail";
 import ProjectDetail from "./pages/ProjectDetail";
 import Install from "./pages/Install";
 import Pricing from "./pages/Pricing";
+import IntelligentSearch from "./components/IntelligentSearch";
+
+// ===== Buyer Pages =====
+import Profile from "./pages/Profile";
+import MiTerreno from "./pages/MiTerreno";
+import Subscription from "./pages/Subscription";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import SubscriptionFailure from "./pages/SubscriptionFailure";
-import Subscription from "./pages/Subscription";
-import AdminUsers from "./pages/AdminUsers";
+import Favorites from "./components/Favorites";
+
+// ===== Reservation Pages =====
 import ReservationSuccess from "./pages/ReservationSuccess";
 import ReservationError from "./pages/ReservationError";
 import ReservationPending from "./pages/ReservationPending";
-import MiTerreno from "./pages/MiTerreno";
 
-// Dashboard pages (lazy loaded)
-import { DashboardAdmin, DashboardAsesor, DashboardInmobiliaria } from "./pages/dashboard";
-
-// Legacy Components (to be migrated)
-import AIRecommendationEngine from "./components/AIRecommendationEngine";
-import UrbanizationManagement from "./components/ProjectManagement";
-import CRMSystem from "./components/CRMSystem";
-import BusinessIntelligence from "./components/BusinessIntelligence";
-import PropertyInventory from "./components/PropertyInventory";
-import SalesManagement from "./components/SalesManagement";
-import ParcelComparator from "./components/ParcelComparator";
-import LandCalculators from "./components/LandCalculators";
-import IntelligentSearch from "./components/IntelligentSearch";
-import AgentManagement from "./components/AgentManagement";
-import PricePredictor from "./components/PricePredictor";
-import RiskAnalysis from "./components/RiskAnalysis";
-import Dashboard from "./components/Dashboard";
+// ===== Agent Pages =====
 import PublishProperty from "./components/PublishProperty";
-import Favorites from "./components/Favorites";
-import Alerts from "./components/Alerts";
-import LotManagement from "./components/LotManagement";
+import PropertyInventory from "./components/PropertyInventory";
 import LeadManagement from "./components/LeadManagement";
 import ProjectsManagement from "./components/ProjectsManagement";
+import LotManagement from "./components/LotManagement";
+import CRMSystem from "./components/CRMSystem";
+import SalesManagement from "./components/SalesManagement";
+import BusinessIntelligence from "./components/BusinessIntelligence";
+
+// ===== Admin Pages =====
+import AdminUsers from "./pages/AdminUsers";
+import AgentManagement from "./components/AgentManagement";
+
+// ===== Dashboard Pages (lazy) =====
+import { DashboardAdmin, DashboardAsesor, DashboardInmobiliaria } from "./pages/dashboard";
 
 const queryClient = new QueryClient();
 
@@ -76,160 +77,137 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Public Pages */}
+              {/* ====== PUBLIC ROUTES ====== */}
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/explorar" element={<Explorar />} />
               <Route path="/propiedad/:id" element={<PropertyDetail />} />
               <Route path="/proyecto/:id" element={<ProjectDetail />} />
-              <Route path="/comparar" element={<ParcelComparator />} />
-              <Route path="/instalar" element={<Install />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/tools" element={<Tools />} />
+              <Route path="/search" element={<IntelligentSearch />} />
+              <Route path="/instalar" element={<Install />} />
+
+              {/* Subscription result pages */}
               <Route path="/subscription/success" element={<SubscriptionSuccess />} />
               <Route path="/subscription/failure" element={<SubscriptionFailure />} />
-              
+
               {/* Reservation result pages */}
               <Route path="/reserva/exito" element={<ReservationSuccess />} />
               <Route path="/reserva/error" element={<ReservationError />} />
               <Route path="/reserva/pendiente" element={<ReservationPending />} />
-              
-              {/* Auth-only routes */}
-              <Route path="/favorites" element={
-                <ProtectedRoute requireAuth>
-                  <Favorites />
-                </ProtectedRoute>
-              } />
+
+              {/* ====== BUYER ROUTES (auth required) ====== */}
               <Route path="/favoritos" element={
-                <ProtectedRoute requireAuth>
-                  <Favorites />
-                </ProtectedRoute>
-              } />
-              <Route path="/alerts" element={
-                <ProtectedRoute requireAuth>
-                  <Alerts />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute requireAuth>
-                  <Profile />
-                </ProtectedRoute>
+                <ProtectedRoute requireAuth><Favorites /></ProtectedRoute>
               } />
               <Route path="/mi-terreno" element={
-                <ProtectedRoute requireAuth>
-                  <MiTerreno />
-                </ProtectedRoute>
+                <ProtectedRoute requireAuth><MiTerreno /></ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute requireAuth><Profile /></ProtectedRoute>
               } />
               <Route path="/subscription" element={
-                <ProtectedRoute requireAuth>
-                  <Subscription />
-                </ProtectedRoute>
+                <ProtectedRoute requireAuth><Subscription /></ProtectedRoute>
               } />
-              
-              {/* Premium routes - require paid subscription */}
-              <Route path="/dashboard" element={
-                <ProtectedRoute requireAuth requirePremium>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/inventory" element={
-                <ProtectedRoute requireAuth requirePremium>
-                  <PropertyInventory />
-                </ProtectedRoute>
-              } />
-              <Route path="/leads" element={
-                <ProtectedRoute requireAuth requirePremium>
-                  <LeadManagement />
-                </ProtectedRoute>
-              } />
-              <Route path="/analytics" element={
-                <ProtectedRoute requireAuth requirePremium>
-                  <BusinessIntelligence />
-                </ProtectedRoute>
-              } />
-              <Route path="/crm" element={
-                <ProtectedRoute requireAuth requirePremium>
-                  <CRMSystem />
-                </ProtectedRoute>
-              } />
-              <Route path="/sales" element={
-                <ProtectedRoute requireAuth requirePremium>
-                  <SalesManagement />
-                </ProtectedRoute>
-              } />
-              <Route path="/projects" element={
-                <ProtectedRoute requireAuth>
-                  <ProjectsManagement />
-                </ProtectedRoute>
-              } />
-              <Route path="/lots" element={
-                <ProtectedRoute requireAuth requirePremium>
-                  <LotManagement />
-                </ProtectedRoute>
-              } />
-              <Route path="/urbanization" element={
-                <ProtectedRoute requireAuth requirePremium>
-                  <UrbanizationManagement />
-                </ProtectedRoute>
-              } />
-              
-              {/* Admin-only routes */}
-              <Route path="/agents" element={
-                <ProtectedRoute requireAuth requirePremium requireRole="admin">
-                  <AgentManagement />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/users" element={
-                <ProtectedRoute requireAuth requireRole="admin">
-                  <AdminUsers />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/dashboard" element={
-                <ProtectedRoute requireAuth requireRole="admin">
-                  <Suspense fallback={<PageLoader />}>
-                    <DashboardAdmin />
-                  </Suspense>
-                </ProtectedRoute>
-              } />
-              
-              {/* Agent dashboard */}
+
+              {/* ====== AGENT ROUTES (/asesor/*) ====== */}
               <Route path="/asesor/dashboard" element={
-                <ProtectedRoute requireAuth requireRole="agent">
+                <DashboardLayout requiredRole="agent">
                   <Suspense fallback={<PageLoader />}>
                     <DashboardAsesor />
                   </Suspense>
-                </ProtectedRoute>
+                </DashboardLayout>
               } />
-              
-              {/* Inmobiliaria dashboard (for agents managing teams) */}
-              <Route path="/inmobiliaria/dashboard" element={
-                <ProtectedRoute requireAuth requireRole="agent">
-                  <Suspense fallback={<PageLoader />}>
-                    <DashboardInmobiliaria />
-                  </Suspense>
-                </ProtectedRoute>
+              <Route path="/asesor/listings" element={
+                <DashboardLayout requiredRole="agent">
+                  <PropertyInventory />
+                </DashboardLayout>
               } />
-              
-              {/* Agent/Admin routes */}
+              <Route path="/asesor/leads" element={
+                <DashboardLayout requiredRole="agent">
+                  <LeadManagement />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/projects" element={
+                <DashboardLayout requiredRole="agent">
+                  <ProjectsManagement />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/lots" element={
+                <DashboardLayout requiredRole="agent">
+                  <LotManagement />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/analytics" element={
+                <DashboardLayout requiredRole="agent">
+                  <BusinessIntelligence />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/crm" element={
+                <DashboardLayout requiredRole="agent">
+                  <CRMSystem />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/sales" element={
+                <DashboardLayout requiredRole="agent">
+                  <SalesManagement />
+                </DashboardLayout>
+              } />
               <Route path="/publish" element={
                 <ProtectedRoute requireAuth requireRole="agent">
                   <PublishProperty />
                 </ProtectedRoute>
               } />
-              
-              {/* Public tools */}
-              <Route path="/search" element={<IntelligentSearch />} />
-              <Route path="/compare" element={<ParcelComparator />} />
-              <Route path="/calculators" element={<LandCalculators />} />
-              <Route path="/price-predictor" element={<PricePredictor />} />
-              <Route path="/risk-analysis" element={<RiskAnalysis />} />
-              <Route path="/ai-recommendations" element={<AIRecommendationEngine />} />
-              <Route path="/tools" element={<Tools />} />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+
+              {/* ====== ADMIN ROUTES (/admin/*) ====== */}
+              <Route path="/admin/dashboard" element={
+                <DashboardLayout requiredRole="admin">
+                  <Suspense fallback={<PageLoader />}>
+                    <DashboardAdmin />
+                  </Suspense>
+                </DashboardLayout>
+              } />
+              <Route path="/admin/users" element={
+                <DashboardLayout requiredRole="admin">
+                  <AdminUsers />
+                </DashboardLayout>
+              } />
+              <Route path="/admin/agents" element={
+                <DashboardLayout requiredRole="admin">
+                  <AgentManagement />
+                </DashboardLayout>
+              } />
+              <Route path="/admin/analytics" element={
+                <DashboardLayout requiredRole="admin">
+                  <BusinessIntelligence />
+                </DashboardLayout>
+              } />
+
+              {/* ====== LEGACY REDIRECTS ====== */}
+              <Route path="/favorites" element={<Navigate to="/favoritos" replace />} />
+              <Route path="/dashboard" element={<Navigate to="/asesor/dashboard" replace />} />
+              <Route path="/inventory" element={<Navigate to="/asesor/listings" replace />} />
+              <Route path="/leads" element={<Navigate to="/asesor/leads" replace />} />
+              <Route path="/projects" element={<Navigate to="/asesor/projects" replace />} />
+              <Route path="/lots" element={<Navigate to="/asesor/lots" replace />} />
+              <Route path="/analytics" element={<Navigate to="/asesor/analytics" replace />} />
+              <Route path="/crm" element={<Navigate to="/asesor/crm" replace />} />
+              <Route path="/sales" element={<Navigate to="/asesor/sales" replace />} />
+              <Route path="/agents" element={<Navigate to="/admin/agents" replace />} />
+              <Route path="/compare" element={<Navigate to="/tools" replace />} />
+              <Route path="/comparar" element={<Navigate to="/tools" replace />} />
+              <Route path="/calculators" element={<Navigate to="/tools" replace />} />
+              <Route path="/price-predictor" element={<Navigate to="/tools" replace />} />
+              <Route path="/risk-analysis" element={<Navigate to="/tools" replace />} />
+              <Route path="/ai-recommendations" element={<Navigate to="/tools" replace />} />
+              <Route path="/urbanization" element={<Navigate to="/asesor/projects" replace />} />
+
+              {/* ====== CATCH-ALL ====== */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-          
+
           {/* PWA Components */}
           <OfflineIndicator />
           <InstallPrompt />
