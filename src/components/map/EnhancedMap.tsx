@@ -7,8 +7,7 @@ import { useIsochrone, IsochroneProfile } from '@/hooks/useIsochrone';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { 
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -39,11 +38,9 @@ import TouchMapControls from './TouchMapControls';
 import GestureFeedback from './GestureFeedback';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTouchGestures } from '@/hooks/useTouchGestures';
-import MapControlsToolbar from './MapControlsToolbar';
-import MapModeSelector, { MapMode } from './MapModeSelector';
-import MapLegend from './MapLegend';
-import MapStatusBadge from './MapStatusBadge';
-import DrawingIndicator from './DrawingIndicator';
+import { MapMode } from './MapModeSelector';
+import CompactMapControls from './CompactMapControls';
+import MapToolsDrawer from './MapToolsDrawer';
 import {
   generateDemoZoningData,
   generateRiskZonesData,
@@ -154,9 +151,10 @@ const EnhancedMap = ({
   const [drawnArea, setDrawnArea] = useState<number | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>('3d');
   const mapModeRef = useRef<MapMode>(mapMode);
-  const [showClusters, setShowClusters] = useState(false); // Disabled by default for better hover sync
+  const [showClusters, setShowClusters] = useState(true); // Clustering enabled by default for clean UI
   const [showLabels, setShowLabels] = useState(true);
   const [controlsExpanded, setControlsExpanded] = useState(false);
+  const [showToolsDrawer, setShowToolsDrawer] = useState(false);
   const [showLayersPanel, setShowLayersPanel] = useState(false);
   const { token: mapboxToken, loading: tokenLoading, error: tokenError } = useMapboxToken();
   const navigate = useNavigate();
@@ -1893,163 +1891,36 @@ const EnhancedMap = ({
 
         <div ref={mapContainer} className="w-full h-full" />
 
-        {/* Mode Badge */}
-        <Badge
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-background/95 backdrop-blur-sm border border-white/10 px-4 py-1.5"
-        >
-          {mapMode === '3d' && <Mountain className="h-3.5 w-3.5 mr-1.5" />}
-          {mapMode === 'satellite' && <Satellite className="h-3.5 w-3.5 mr-1.5" />}
-          {mapMode === 'streets' && <MapIcon className="h-3.5 w-3.5 mr-1.5" />}
-          <span className="text-xs font-medium">
-            {mapMode === '3d' ? 'Vista 3D Inmersiva' : mapMode === 'satellite' ? 'Vista Satelital' : 'Vista Calles'}
-          </span>
-        </Badge>
+        {/* Desktop: Compact Controls */}
+        {!isMobile && (
+          <CompactMapControls
+            mapMode={mapMode}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            onChangeMapMode={changeMapMode}
+            onOpenTools={() => setShowToolsDrawer(!showToolsDrawer)}
+            activeLayersCount={Object.values(infoLayers).filter(Boolean).length}
+            listingsCount={listings.filter((l) => l.lat && l.lng).length}
+            drawnArea={drawnArea}
+          />
+        )}
 
-        {/* Main Controls - Left Side (Desktop only) */}
-        <div className="absolute top-16 left-4 flex-col gap-2 z-10 hidden md:flex">
-          {/* Zoom Controls */}
-          <div className="flex flex-col gap-1 bg-background/95 backdrop-blur-sm rounded-lg border border-white/10 p-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" onClick={handleZoomIn} className="h-9 w-9">
-                  <ZoomIn className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Acercar</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" onClick={handleZoomOut} className="h-9 w-9">
-                  <ZoomOut className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Alejar</TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* Navigation Controls */}
-          <div className="flex flex-col gap-1 bg-background/95 backdrop-blur-sm rounded-lg border border-white/10 p-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" onClick={handleLocate} className="h-9 w-9">
-                  <Target className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Mi ubicación</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" onClick={handleFitAll} className="h-9 w-9">
-                  <Maximize2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Ver todas</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" onClick={handleResetNorth} className="h-9 w-9">
-                  <Compass className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Orientar al norte</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" onClick={handleResetView} className="h-9 w-9">
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Restablecer vista</TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* Map Style Controls */}
-          <div className="flex flex-col gap-1 bg-background/95 backdrop-blur-sm rounded-lg border border-white/10 p-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  size="icon" 
-                  variant={mapMode === 'streets' ? 'secondary' : 'ghost'} 
-                  onClick={() => changeMapMode('streets')} 
-                  className="h-9 w-9"
-                >
-                  <MapIcon className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Vista Calles</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  size="icon" 
-                  variant={mapMode === 'satellite' ? 'secondary' : 'ghost'} 
-                  onClick={() => changeMapMode('satellite')} 
-                  className="h-9 w-9"
-                >
-                  <Satellite className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Vista Satelital</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  size="icon" 
-                  variant={mapMode === '3d' ? 'secondary' : 'ghost'} 
-                  onClick={() => changeMapMode('3d')} 
-                  className="h-9 w-9"
-                >
-                  <Mountain className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Vista 3D</TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* Info Layers Control */}
-          <div className="flex flex-col gap-1 bg-background/95 backdrop-blur-sm rounded-lg border border-white/10 p-1">
-            <MapInfoLayers
-              layers={infoLayers}
-              config={layerConfig}
-              onLayerChange={handleLayerChange}
-              onConfigChange={handleConfigChange}
-            />
-          </div>
-
-          {/* Drawing Tools */}
-          {showDrawTools && (
-            <div className="flex flex-col gap-1 bg-background/95 backdrop-blur-sm rounded-lg border border-white/10 p-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    size="icon" 
-                    variant={isDrawing ? 'default' : 'ghost'} 
-                    onClick={startDrawing} 
-                    className="h-9 w-9"
-                  >
-                    <PenTool className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">Dibujar área</TooltipContent>
-              </Tooltip>
-              {drawnArea !== null && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      onClick={clearDrawing} 
-                      className="h-9 w-9 text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">Borrar área</TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-          )}
-        </div>
+        {/* Desktop: Tools Drawer */}
+        {!isMobile && (
+          <MapToolsDrawer
+            open={showToolsDrawer}
+            onClose={() => setShowToolsDrawer(false)}
+            infoLayers={infoLayers}
+            layerConfig={layerConfig}
+            onLayerChange={handleLayerChange}
+            onConfigChange={handleConfigChange}
+            showDrawTools={showDrawTools}
+            isDrawing={isDrawing}
+            drawnArea={drawnArea}
+            onStartDrawing={startDrawing}
+            onClearDrawing={clearDrawing}
+          />
+        )}
 
         {/* Touch-Optimized Mobile Controls */}
         <TouchMapControls
@@ -2096,7 +1967,6 @@ const EnhancedMap = ({
                 </Button>
               </div>
               <div className="space-y-4">
-                {/* Render layer toggles for mobile */}
                 {[
                   { key: 'heatmap', label: 'Heatmap Precio/m²', desc: 'Precio real por m² de la plataforma' },
                   { key: 'isochrone', label: 'Isócronas de Conectividad', desc: 'Click en propiedad → 5/10/15 min' },
@@ -2137,7 +2007,6 @@ const EnhancedMap = ({
                   </button>
                 ))}
               </div>
-              {/* Real Data Toggle */}
               <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20">
                 <button
                   onClick={() => handleConfigChange({ useRealData: !layerConfig.useRealData })}
@@ -2160,83 +2029,17 @@ const EnhancedMap = ({
           </div>
         )}
 
-        {/* Legend - Desktop only, mobile gets simplified view */}
-        <Card className="absolute bottom-4 left-4 p-3 bg-background/95 backdrop-blur-sm z-10 border border-white/10 hidden md:block">
-          <div className="flex gap-4 text-xs">
-            {Object.entries(statusLabels).map(([key, label]) => (
-              <div key={key} className="flex items-center gap-1.5">
-                <div 
-                  className="w-3 h-3 rounded-full" 
-                  style={{ backgroundColor: statusColors[key as keyof typeof statusColors] }} 
-                />
-                <span className="text-muted-foreground">{label}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Mobile Legend - Simplified */}
-        <Card className="absolute bottom-28 left-4 p-2 bg-background/95 backdrop-blur-sm z-10 border border-white/10 md:hidden">
-          <div className="flex gap-2 text-[10px]">
-            {Object.entries(statusLabels).map(([key, label]) => (
-              <div key={key} className="flex items-center gap-1">
-                <div 
-                  className="w-2.5 h-2.5 rounded-full" 
-                  style={{ backgroundColor: statusColors[key as keyof typeof statusColors] }} 
-                />
-                <span className="text-muted-foreground">{label}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Results count & Drawn area */}
-        <Card className="absolute top-4 right-4 px-3 py-1.5 md:px-4 md:py-2 bg-background/95 backdrop-blur-sm z-10 border border-white/10">
-          <div className="space-y-0.5 md:space-y-1">
-            <p className="text-xs md:text-sm font-medium text-foreground">
-              {listings.filter((l) => l.lat && l.lng).length} propiedades
-            </p>
-            {drawnArea !== null && (
-              <p className="text-[10px] md:text-xs text-primary flex items-center gap-1">
-                <Ruler className="h-3 w-3" />
-                {drawnArea >= 10000 
-                  ? `${(drawnArea / 10000).toFixed(2)} ha` 
-                  : `${drawnArea.toFixed(0)} m²`
-                }
-              </p>
-            )}
-          </div>
-        </Card>
-
-        {/* Active layers indicator - Desktop only */}
-        {Object.values(infoLayers).some(Boolean) && (
-          <Card className="absolute bottom-4 right-4 p-2 bg-background/95 backdrop-blur-sm z-10 border border-white/10 text-xs text-muted-foreground hidden md:block">
-            <div className="flex items-center gap-2">
-              <Layers className="h-3 w-3 text-primary" />
-              <span>{Object.values(infoLayers).filter(Boolean).length} capas activas</span>
-            </div>
-          </Card>
-        )}
-
-        {/* 3D Mode indicator - Desktop only */}
-        {mapMode === '3d' && !Object.values(infoLayers).some(Boolean) && (
-          <Card className="absolute bottom-4 right-4 p-2 bg-background/95 backdrop-blur-sm z-10 border border-white/10 text-xs text-muted-foreground hidden md:block">
-            <div className="flex items-center gap-2">
-              <Mountain className="h-3 w-3 text-primary" />
-              <span>Terreno 3D • Arrastre para rotar</span>
-            </div>
-          </Card>
-        )}
-
-        {/* Drawing mode indicator - Positioned higher on mobile */}
+        {/* Drawing mode indicator */}
         {isDrawing && (
-          <Card className="absolute bottom-36 md:bottom-16 left-1/2 -translate-x-1/2 px-3 py-2 md:px-4 bg-primary text-primary-foreground z-20 animate-pulse">
-            <div className="flex items-center gap-2 text-xs md:text-sm">
-              <PenTool className="h-4 w-4" />
-              <span className="hidden md:inline">Dibujando área • Haz clic para agregar puntos</span>
-              <span className="md:hidden">Toca para agregar puntos</span>
+          <div className="absolute bottom-36 md:bottom-16 left-1/2 -translate-x-1/2 z-20">
+            <div className="bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg animate-pulse">
+              <div className="flex items-center gap-2 text-xs md:text-sm">
+                <PenTool className="h-4 w-4" />
+                <span className="hidden md:inline">Dibujando área • Haz clic para agregar puntos</span>
+                <span className="md:hidden">Toca para agregar puntos</span>
+              </div>
             </div>
-          </Card>
+          </div>
         )}
       </div>
     </TooltipProvider>
