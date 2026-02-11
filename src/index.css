@@ -62,6 +62,7 @@
     --gradient-brand: linear-gradient(135deg, hsl(142, 76%, 36%), hsl(160, 84%, 39%), hsl(199, 89%, 48%));
     --glass-bg: hsla(0, 0%, 100%, 0.8);
     --glass-border: hsla(222, 47%, 11%, 0.08);
+    --glass-strong-bg: hsla(0, 0%, 100%, 0.95);
   }
 
   /* ===== DARK MODE ===== */
@@ -119,6 +120,7 @@
     --gradient-brand: linear-gradient(135deg, hsl(142, 76%, 36%), hsl(160, 84%, 39%), hsl(199, 89%, 48%));
     --glass-bg: hsla(240, 6%, 8%, 0.7);
     --glass-border: hsla(0, 0%, 100%, 0.06);
+    --glass-strong-bg: hsla(240, 6%, 7%, 0.92);
   }
 }
 
@@ -303,14 +305,10 @@ h1, h2, h3, h4, h5, h6, .heading {
 }
 
 .glass-strong {
-  background: hsla(0, 0%, 100%, 0.95);
+  background: var(--glass-strong-bg);
   backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
   border: 1px solid var(--glass-border);
-}
-
-.dark .glass-strong {
-  background: hsla(240, 6%, 7%, 0.92);
 }
 
 /* Glowing effects */
@@ -591,30 +589,12 @@ html {
   display: none;
 }
 
-/* Skeleton Shimmer Animation */
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
+/* Skeleton Shimmer Animation - uses shimmer keyframe defined above */
 .skeleton-shimmer {
   animation: shimmer 1.5s infinite;
 }
 
-/* Enhanced Card Hover Effects */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
+/* Enhanced Card Hover Effects - uses float keyframe defined above */
 .hover-float {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
