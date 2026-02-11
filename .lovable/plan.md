@@ -1,90 +1,101 @@
 
-# Plan: Sistema de Exploracion Premium - Experiencia Inmobiliaria de Clase Mundial
+# Plan: Redisenar Explorar desde Cero - Layout Split-View Profesional
 
-## Vision
+## Problema
 
-Transformar la pagina de exploracion actual en una experiencia inmobiliaria de nivel Zillow/Idealista, con tarjetas visualmente impactantes, interacciones fluidas, mejor uso del espacio y funcionalidades que conviertan visitantes en leads.
+La pagina actual tiene demasiadas capas visuales apiladas: header sticky, barra de busqueda, barra de filtros, y luego un panel flotante sobre el mapa. Esto comprime el mapa y crea una experiencia visualmente cargada. Los marcadores de precio flotan sobre un mapa reducido.
 
-## Problemas Actuales
+## Nuevo Enfoque: Split-View (Zillow/Airbnb Style)
 
-1. **Tarjetas demasiado compactas**: Las QuickPropertyCard muestran poca informacion visual - solo un thumbnail de 96x80px
-2. **Panel flotante rigido**: Solo 3 estados (collapsed/normal/expanded) sin transicion suave
-3. **Sin precio por m2 visible**: Dato clave para compradores ausente en la lista
-4. **Sin indicadores de engagement**: No se ve cuantas vistas tiene cada propiedad
-5. **Mapa sin clustering visual**: Los marcadores se superponen en zonas densas
-6. **FilterBar ocupa espacio vertical**: Reduce el area util del mapa
-7. **Sin feedback de carga progresiva**: Skeleton generico sin contexto
+En lugar de un mapa con panel flotante encima, implementar un layout de dos columnas:
+
+```text
++------------------------------------------+----------------------------+
+|         MAPA (60-65% del ancho)           |     LISTA (35-40%)         |
+|                                          |  [Buscar...]               |
+|  [Filtros flotantes sobre el mapa]       |  [Tipo] [Precio] [Region]  |
+|                                          |  20 terrenos desde $45M    |
+|     Marcadores con precio ($950M)        |  +----------------------+  |
+|                                          |  | Tarjeta propiedad 1  |  |
+|                                          |  +----------------------+  |
+|                                          |  | Tarjeta propiedad 2  |  |
+|                                          |  +----------------------+  |
+|                                          |  | ...                  |  |
++------------------------------------------+----------------------------+
+```
 
 ## Cambios a Implementar
 
-### 1. Tarjetas de Propiedad Rediseñadas (QuickPropertyCard)
+### 1. Nuevo Layout en Explorar.tsx
 
-Redisenar la tarjeta con layout horizontal mejorado:
-- Thumbnail mas grande (120x88px) con aspect-ratio consistente
-- **Precio por m2** visible debajo del precio principal
-- Badge de pais (bandera) junto al tipo de propiedad
-- Indicador de vistas (ojo + numero) para social proof
-- Animacion de entrada escalonada mas sutil
-- Hover con preview de segunda imagen (si existe)
-- Gradiente de precio: verde para buenos precios, naranja para caros (relativo al mercado)
+Eliminar el header sticky con search + filters que consume espacio vertical. Reemplazar con:
+- Layout split-view: mapa ocupa el lado izquierdo (65%), lista el derecho (35%)
+- El mapa ocupa TODA la altura de la ventana (100vh - header height)
+- La barra de busqueda y filtros se mueven al panel de lista (lado derecho)
+- Sin PublicLayout wrapper para explorar desktop (solo StickyHeader directo)
 
-### 2. Panel de Resultados Mejorado (FloatingResultsPanel)
+### 2. Panel de Lista Rediseñado (reemplaza FloatingResultsPanel)
 
-- Header con resumen inteligente: "20 terrenos desde $50M en 3 regiones"
-- Tabs rapidos: "Todos | Destacados | Nuevos" como filtro inline
-- Seccion sticky de "Mejor oportunidad" que muestra la propiedad con mejor relacion precio/m2
-- Footer con CTA: "No encuentras lo que buscas? Activar alertas"
-- Transicion de ancho mas suave con CSS resize en lugar de estados discretos
+Crear un nuevo componente `ExploreListPanel` que reemplaza al FloatingResultsPanel:
+- Input de busqueda integrado en la parte superior del panel
+- Filtros como chips compactos debajo del search (scrollable horizontal)
+- Resumen inteligente: "20 terrenos desde $45M"
+- Lista de tarjetas con scroll vertical
+- El panel es parte del layout, no flota sobre el mapa
+- Borde izquierdo sutil para separar del mapa
 
-### 3. Marcadores de Mapa con Precio (EnhancedMap)
+### 3. Tarjetas Mejoradas para el Panel
 
-Cambiar los marcadores circulares genericos por marcadores con precio visible:
-- Mostrar precio abreviado en el marcador ($950M, $1.8B, 15 UF)
-- Color segun tipo de propiedad (verde=rural, azul=urbano, naranja=agricola)
-- Marcador activo con flecha apuntando hacia abajo (pin style)
-- Cluster markers que muestran rango de precios del grupo
+Redisenar QuickPropertyCard para el contexto split-view:
+- Layout vertical (en vez de horizontal): imagen arriba, contenido abajo
+- Imagen mas grande (aspect-ratio 16/10, ancho completo del card)
+- 2 columnas de tarjetas cuando el panel es lo suficientemente ancho
+- Precio grande y prominente
+- Precio/m2, ubicacion, area en una sola linea compacta
+- Hover sincronizado con el mapa (marcador se activa)
 
-### 4. Barra de Filtros Compacta (FilterBar)
+### 4. Mapa Limpio sin Overlays Pesados
 
-- Reducir altura: de 2 filas a 1 fila con scroll horizontal
-- Chips de filtro activo inline (no separados)
-- Contador de resultados integrado en la barra: "20 resultados"
-- Boton de "Buscar en esta area" que aparece al mover el mapa
+Simplificar la vista del mapa en el contexto explorar:
+- Solo marcadores de precio y controles basicos (zoom, locate, layers)
+- Eliminar la toolbar de dibujo del modo explorar
+- Sin panel flotante sobre el mapa
+- Marcadores de precio mas limpios y legibles
+- Al hacer click en marcador: selecciona la tarjeta en el panel derecho (scroll to)
 
-### 5. Preview Sheet Enriquecido (PropertyPreviewSheet)
+### 5. Interaccion Bidireccional Mejorada
 
-- Galeria con swipe horizontal nativo
-- Seccion de "Propiedades similares" al final (hasta 3)
-- Boton de WhatsApp directo (ademas de llamar/contactar)
-- Mini-mapa de ubicacion dentro del sheet
-- Score de inversion (si existe match score)
+- Hover en tarjeta -> marcador se agranda en el mapa + fly-to suave
+- Click en marcador -> scroll a tarjeta en la lista + highlight
+- Click en tarjeta -> abre PropertyPreviewSheet (se mantiene como esta)
+- Resize handle entre mapa y lista (usando react-resizable-panels)
 
-### 6. Estado Vacio Mejorado
+### 6. Filtros Integrados en el Panel
 
-- Cuando no hay resultados: mostrar sugerencias de busqueda
-- "Ampliar area de busqueda" como accion directa
-- Mostrar propiedades cercanas como alternativa
+Mover los filtros al panel de lista como chips inline:
+- Primera fila: [Tipo v] [Precio v] [Region v] [Mas filtros]
+- Sin barra expandible separada - todo inline
+- Los popover filters se mantienen pero son mas compactos
+- Contador de resultados inline: "20 resultados" al lado de los filtros
 
 ## Detalle Tecnico
 
-### Archivos a modificar:
-- `src/components/explore/QuickPropertyCard.tsx` - Redisenar con precio/m2, vistas, banderas
-- `src/components/explore/FloatingResultsPanel.tsx` - Header inteligente, tabs, CTA
-- `src/components/explore/FilterBar.tsx` - Layout compacto de 1 fila
-- `src/components/explore/PropertyPreviewSheet.tsx` - WhatsApp, similares, score
-- `src/components/map/EnhancedMap.tsx` - Marcadores con precio abreviado
-- `src/pages/Explorar.tsx` - Integrar nuevas props y estado de tabs
-- `src/components/explore/MobileExploreView.tsx` - Adaptar mejoras a mobile
-- `src/components/explore/CompactListingCard.tsx` - Actualizar para mobile cards
-
 ### Archivos nuevos:
-- Ninguno - todas las mejoras se integran en componentes existentes
+- `src/components/explore/ExploreListPanel.tsx` - Panel lateral con search, filtros y lista de tarjetas
 
-### Funciones helper nuevas (en useListings.ts):
-- `formatPriceShort()` - Para marcadores: $950M, $1.8B, 15UF
-- `getPricePerM2()` - Calculo inline reutilizable
-- `getCountryFlag()` - Bandera por pais del listing
+### Archivos a modificar:
+- `src/pages/Explorar.tsx` - Reescribir con layout split-view usando react-resizable-panels
+- `src/components/explore/QuickPropertyCard.tsx` - Layout vertical con imagen grande
+- `src/components/explore/FilterBar.tsx` - Version compacta inline para el panel
+
+### Archivos que se mantienen sin cambios:
+- `src/components/map/EnhancedMap.tsx` - Se reutiliza tal cual
+- `src/components/explore/PropertyPreviewSheet.tsx` - Se mantiene
+- `src/components/explore/MobileExploreView.tsx` - Se mantiene para mobile
+
+### Dependencia existente reutilizada:
+- `react-resizable-panels` (ya instalado) - Para el resize entre mapa y lista
 
 ## Resultado
 
-Una experiencia de exploracion premium donde cada interaccion esta optimizada para convertir: tarjetas informativas que muestran datos clave sin salir de la lista, marcadores de mapa con precio visible que eliminan clics innecesarios, y un flujo de preview-a-contacto que reduce la friccion para generar leads.
+Una experiencia tipo Zillow/Airbnb Maps donde el mapa y la lista coexisten sin competir por espacio, los filtros estan integrados en el flujo natural de la lista, y cada interaccion (hover, click) conecta ambos paneles de forma fluida.
