@@ -25,11 +25,13 @@ import {
   Zap,
   Car,
   Sparkles,
-  ImageIcon
+  ImageIcon,
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateListing } from "@/hooks/useListings";
 import { useAuth } from "@/hooks/useAuth";
+import { useListingGenerator } from "@/hooks/useAI";
 import LocationPicker from "./LocationPicker";
 import ImageUploader from "./ImageUploader";
 
@@ -87,6 +89,7 @@ const PublishForm = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const createListing = useCreateListing();
+  const { isLoading: isGenerating, generateListing } = useListingGenerator();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -340,6 +343,54 @@ const PublishForm = () => {
                   onChange={(e) => handleInputChange("description", e.target.value)}
                   className="mt-2 glass border-white/10"
                 />
+                {formData.title && formData.type && formData.area_ha && formData.region && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 gap-2 glass border-primary/30 text-primary hover:bg-primary/10"
+                    disabled={isGenerating}
+                    onClick={async () => {
+                      const result = await generateListing({
+                        title: formData.title,
+                        type: formData.type,
+                        area_ha: formData.area_ha,
+                        location: formData.location || formData.region,
+                        region: formData.region,
+                        city: formData.city,
+                        tags: formData.tags,
+                        utilities: formData.utilities,
+                        subdivision_eligible: formData.subdivision_eligible,
+                        price: formData.price,
+                        currency: formData.currency,
+                      });
+                      if (result) {
+                        handleInputChange("description", result.description);
+                        // Add suggested tags that aren't already selected
+                        if (result.suggested_tags?.length) {
+                          const newTags = [...new Set([...formData.tags, ...result.suggested_tags])];
+                          handleInputChange("tags", newTags);
+                        }
+                        toast({
+                          title: "✨ Ficha generada con IA",
+                          description: "Descripción y tags actualizados. Puedes editarlos.",
+                        });
+                      }
+                    }}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Generando con IA...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        Generar con IA
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
 
               <div>

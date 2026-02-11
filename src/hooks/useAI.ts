@@ -220,3 +220,48 @@ export const useContentGenerator = () => {
 
   return { content, isLoading, generateContent };
 };
+
+interface ListingData {
+  title: string;
+  type: string;
+  area_ha: string;
+  location: string;
+  region: string;
+  city?: string;
+  tags: string[];
+  utilities: { water: boolean; electricity: string; road_access: string };
+  subdivision_eligible: boolean;
+  price?: string;
+  currency?: string;
+}
+
+interface GeneratedListing {
+  description: string;
+  highlights: string[];
+  suggested_tags: string[];
+}
+
+export const useListingGenerator = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const generateListing = useCallback(async (listingData: ListingData): Promise<GeneratedListing | null> => {
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-assistant', {
+        body: { type: 'generate-listing', listingData },
+      });
+
+      if (error) throw error;
+      return data as GeneratedListing;
+    } catch (error) {
+      console.error('Listing generation error:', error);
+      toast.error('Error al generar ficha con IA');
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return { isLoading, generateListing };
+};
