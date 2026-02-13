@@ -1,166 +1,87 @@
 
+# Plan: Rediseño del Sistema de Exploración - Mapa Profesional
 
-# Plan: Ofertaterrenos Chile - MVP Completo
+## Problema Principal
 
-## Analisis del Estado Actual
+El mapa pierde el control cuando se interactúa con el sidebar porque:
 
-La plataforma ya cuenta con una base solida. Este plan se enfoca en las piezas faltantes para completar el MVP.
+1. **flyTo en cada hover**: Cuando pasas el mouse por una tarjeta del sidebar, el mapa ejecuta `map.flyTo()` con animación de 800ms, moviendo el viewport constantemente. Si mueves el mouse por varias tarjetas rápidamente, se encolan múltiples animaciones y el mapa "salta" sin control.
 
-### Ya Implementado (no requiere cambios)
-- Marketplace con listings, filtros, mapa Mapbox
-- Sistema de reservas con MercadoPago
-- Simulador de financiamiento (amortizacion francesa)
-- CRM con Kanban y pipeline de leads
-- Panel de admin (usuarios, agentes)
-- Roles (buyer/agent/admin)
-- Due diligence basica (legal tab)
-- Portal del comprador (/mi-terreno)
-- Generacion de contrato PDF
-- Business Intelligence
+2. **fitBounds en cada cambio de filtro**: Al filtrar propiedades, el mapa recalcula los bounds y se mueve, perdiendo la vista que el usuario había elegido.
 
-### Faltante - Se implementara en esta iteracion
+3. **Sin cancelación de animaciones**: No hay mecanismo para cancelar un flyTo previo antes de iniciar uno nuevo.
 
-## Fase 1: Nuevas Tablas de Base de Datos
+## Solución: Interacción Tipo Zillow/Idealista
 
-### Tabla `credits` - Gestion de Creditos Internos
-Permite a los loteadores ofrecer financiamiento directo a compradores, rastreando contratos, cuotas y morosidad.
+La interacción correcta entre sidebar y mapa es:
+- **Hover en sidebar**: resaltar el marcador en el mapa SIN mover la cámara
+- **Click en sidebar**: centrar el mapa suavemente SOLO en el click, no en el hover
+- **Hover en mapa**: resaltar la tarjeta en el sidebar con scroll automático
+- **Filtrar**: actualizar marcadores sin mover la cámara
 
-Columnas: id, reservation_id, lot_id, user_id (seller), buyer_user_id, total_amount, down_payment, financed_amount, interest_rate, term_months, monthly_payment, status (active/completed/defaulted/cancelled), contract_url, started_at, next_payment_date, created_at, updated_at.
+## Cambios Técnicos
 
-### Tabla `credit_payments` - Registro de Pagos de Cuotas
-Cada pago individual de un credito.
+### 1. `src/components/map/EnhancedMap.tsx` - Corregir interacción hover/click
 
-Columnas: id, credit_id, payment_number, amount, due_date, paid_date, status (pending/paid/overdue/partial), payment_method, receipt_url, notes, created_at.
+**Hover del sidebar (líneas 1650-1701)**: Eliminar completamente el `flyTo` del efecto de hover. En su lugar:
+- Solo destacar visualmente el marcador (cambiar estilo/escala)
+- Mostrar popup en la posición del marcador SIN mover la cámara
+- Si el marcador no está visible en el viewport, NO hacer nada (el usuario puede hacer click para centrar)
 
-### Tabla `closing_steps` - Timeline de Cierre Legal
-Rastrea el progreso legal de cada transaccion: Reserva, Promesa, Escritura, Inscripcion CBR.
+**Click del sidebar**: Agregar nuevo prop `selectedListing` separado de `hoveredListing`. Solo el click dispara `easeTo` (más suave que flyTo) con zoom controlado.
 
-Columnas: id, reservation_id, credit_id, step_type (enum: reserva/promesa/escritura/inscripcion_cbr), status (pending/in_progress/completed/blocked), completed_at, document_url, notes, assigned_to, created_at.
+**fitBounds**: Cambiar para que solo se ejecute en la carga inicial (primera vez que hay listings), no en cada cambio de filtro. Usar un ref `initialFitDone` para controlarlo.
 
-### Tabla `audit_logs` - Registro de Auditoria
-Registra acciones criticas del sistema para seguridad y compliance.
+**Cancelar animaciones**: Llamar `map.stop()` antes de iniciar cualquier nueva animación para cancelar la anterior.
 
-Columnas: id, user_id, action, entity_type, entity_id, details (jsonb), ip_address, created_at.
+### 2. `src/pages/Explorar.tsx` - Separar hover de selección
 
-### Tabla `property_approvals` - Aprobacion de Propiedades
-Workflow de aprobacion para que admin valide listings antes de publicar.
+Pasar tanto `hoveredListing` como `selectedListing` al mapa:
+- `hoveredListing`: solo visual, sin movimiento de cámara
+- `selectedListing` (click): dispara easeTo al marcador
 
-Columnas: id, listing_id, reviewer_id, status (pending/approved/rejected), rejection_reason, reviewed_at, created_at.
+Modificar `handleListingClick` para que setee `selectedListing` y dispare el centrado.
 
-Todas las tablas tendran RLS policies apropiadas usando la funcion `has_role()` existente.
+### 3. `src/components/map/EnhancedMap.tsx` - Marcadores con cluster mejorados
 
-## Fase 2: Modulo de Gestion de Creditos
+Cuando se usa clustering, agregar una capa de unclustered-point para que los marcadores individuales sean clickeables y hovereables:
+- Agregar capa `unclustered-point` con evento de click que busca el listing y dispara `onListingClick`
+- Agregar evento de hover que muestra popup y dispara `onListingHover`
 
-### Nuevo archivo: `src/components/credits/CreditManager.tsx`
-Panel principal para que el loteador gestione creditos activos:
-- Lista de creditos con filtros por estado
-- KPIs: monto total financiado, cuotas al dia, morosidad
-- Alertas de pagos vencidos (destacados en rojo)
+### 4. `src/components/explore/ExploreListPanel.tsx` - Scroll automático bidireccional
 
-### Nuevo archivo: `src/components/credits/CreditDetail.tsx`
-Vista detallada de un credito individual:
-- Calendario de pagos con estado visual (verde=pagado, amarillo=pendiente, rojo=vencido)
-- Boton para registrar pago manual
-- Upload de comprobantes
-- Historial de pagos
+Cuando el mapa dispara `onListingHover`, el sidebar debe hacer scroll automático a la tarjeta correspondiente. El `QuickPropertyCard` ya tiene `scrollIntoView` para `isSelected`, extenderlo para `isHovered` también (con comportamiento más suave).
 
-### Nuevo archivo: `src/components/credits/CreateCreditDialog.tsx`
-Formulario para crear un credito desde una reserva pagada:
-- Seleccionar reservacion
-- Configurar pie, tasa, plazo
-- Generar calendario automatico
-- Vista previa de cuotas
+### 5. `src/components/map/EnhancedMap.tsx` - Props interface actualizada
 
-### Nuevo hook: `src/hooks/useCredits.ts`
-CRUD para creditos y pagos, con queries para estadisticas de morosidad.
-
-## Fase 3: Timeline de Cierre Legal
-
-### Nuevo archivo: `src/components/closing/ClosingTimeline.tsx`
-Componente visual con 4 pasos horizontales conectados:
-
+Agregar nuevo prop:
 ```text
-[Reserva] --> [Promesa] --> [Escritura] --> [Inscripcion CBR]
-  (done)      (active)       (pending)        (pending)
+selectedListing?: Listing | null  -- dispara easeTo al marcador
+hoveredListing?: Listing | null   -- solo resalta visualmente, sin mover cámara
 ```
 
-Cada paso muestra: estado, fecha, documento adjunto, responsable asignado.
-
-### Nuevo archivo: `src/components/closing/ClosingManager.tsx`
-Panel para gestionar todos los cierres en curso:
-- Lista filtrable por estado
-- Acciones: avanzar paso, subir documento, asignar responsable
-- Notificaciones de pasos bloqueados
-
-### Integracion con portal del comprador
-Agregar el timeline de cierre en `/mi-terreno` para que el comprador vea su progreso.
-
-## Fase 4: Aprobacion de Propiedades (Admin)
-
-### Modificar: `src/components/PropertyInventory.tsx`
-Agregar badge de "Pendiente de aprobacion" y filtro por estado de aprobacion.
-
-### Nuevo archivo: `src/components/admin/PropertyApprovalQueue.tsx`
-Cola de aprobacion para admin:
-- Lista de listings pendientes con preview
-- Botones de aprobar/rechazar con motivo
-- Estadisticas de aprobacion
-
-### Nueva ruta: `/admin/approvals`
-Accesible desde el sidebar del admin.
-
-## Fase 5: Mejoras al CRM
-
-### WhatsApp links
-Agregar botones de "Contactar por WhatsApp" en:
-- Cards de leads (usando `https://wa.me/{phone}`)
-- Detalle de propiedad
-- Portal del comprador
-
-No requiere WhatsApp Business API (seria una fase futura), solo deep links.
-
-## Fase 6: Nuevas Rutas
-
-Agregar a `App.tsx`:
-- `/asesor/credits` - Gestion de creditos
-- `/asesor/closing` - Timeline de cierres
-- `/admin/approvals` - Cola de aprobacion
-- `/admin/credits` - Vista admin de todos los creditos
-
-Agregar items al sidebar (`ModernSidebar.tsx`).
-
-## Archivos a Crear (nuevos)
-- `src/components/credits/CreditManager.tsx`
-- `src/components/credits/CreditDetail.tsx`
-- `src/components/credits/CreateCreditDialog.tsx`
-- `src/components/credits/PaymentCalendar.tsx`
-- `src/components/closing/ClosingTimeline.tsx`
-- `src/components/closing/ClosingManager.tsx`
-- `src/components/admin/PropertyApprovalQueue.tsx`
-- `src/hooks/useCredits.ts`
-- `src/hooks/useClosingSteps.ts`
-
 ## Archivos a Modificar
-- `src/App.tsx` - Nuevas rutas
-- `src/components/ModernSidebar.tsx` - Nuevos items de menu
-- `src/pages/MiTerreno.tsx` - Agregar timeline de cierre
-- `src/components/CRMSystem.tsx` - WhatsApp links en leads
-- `src/components/leads/LeadFormDialog.tsx` - Boton WhatsApp
 
-## Migraciones SQL
-1. Crear enum `closing_step_type` y `closing_step_status`
-2. Crear tablas: `credits`, `credit_payments`, `closing_steps`, `audit_logs`, `property_approvals`
-3. RLS policies para cada tabla
-4. Trigger para actualizar `credits.next_payment_date` cuando se registra un pago
-5. Trigger para crear `closing_steps` automaticamente al crear una reserva
+### `src/components/map/EnhancedMap.tsx`
+- Agregar prop `selectedListing` a la interface
+- Reescribir efecto de hover (líneas 1650-1701): eliminar flyTo, solo resaltar marcador + popup estático
+- Nuevo efecto para `selectedListing`: easeTo suave con `map.stop()` previo
+- Agregar ref `initialFitDone` para que fitBounds solo ocurra una vez
+- Agregar capa `unclustered-point` para marcadores individuales en modo cluster
+- Agregar eventos de click/hover en unclustered-point
 
-## Orden de Implementacion
-1. Migraciones SQL (tablas + RLS + triggers)
-2. Hooks (useCredits, useClosingSteps)
-3. Componentes de creditos
-4. Componentes de cierre legal
-5. Cola de aprobacion admin
-6. WhatsApp links
-7. Rutas y sidebar
-8. Integracion en MiTerreno
+### `src/pages/Explorar.tsx`
+- Pasar `selectedListing` como prop al mapa
+- Cambiar `handleListingClick` para centrar mapa via `selectedListing`
+- Cambiar `handleListingPreview` para abrir sheet sin mover mapa
 
+### `src/components/explore/QuickPropertyCard.tsx`
+- Extender scrollIntoView para que también funcione con `isHovered` (scroll suave cuando el mapa hover dispara highlight en sidebar)
+
+## Resultado Esperado
+
+- Hover en sidebar: marcador se resalta pero el mapa NO se mueve
+- Click en tarjeta: mapa centra suavemente en la propiedad
+- Filtrar: marcadores se actualizan sin mover la cámara
+- Hover en marcador del mapa: sidebar hace scroll a la tarjeta
+- Sin saltos, sin animaciones encadenadas, experiencia fluida tipo Zillow
