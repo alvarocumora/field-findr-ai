@@ -1,121 +1,166 @@
 
-# Plan: Sistema de Exploracion Limpio y Funcional
 
-## Problemas Actuales (visible en screenshot)
+# Plan: Ofertaterrenos Chile - MVP Completo
 
-1. **Barra lateral izquierda con ~12 botones** apilados verticalmente -- ocupa demasiado espacio visual
-2. **Marcadores de precio se superponen** entre si cuando hay muchos en zoom bajo
-3. **Elementos redundantes**: badge de modo (centro-arriba), contador de propiedades (derecha-arriba), leyenda (izquierda-abajo), indicador de capas (derecha-abajo) -- 4 cards flotantes compitiendo por atencion
-4. **Controles duplicados**: la barra lateral izquierda renderiza manualmente los mismos botones que ya existen como componentes (MapControlsToolbar, MapModeSelector) pero no los usa
-5. **Vista general desordenada**: demasiada informacion compitiendo por la atencion del usuario
+## Analisis del Estado Actual
 
-## Solucion: Interfaz Minimalista Inspirada en Apps Modernas de Mapas
+La plataforma ya cuenta con una base solida. Este plan se enfoca en las piezas faltantes para completar el MVP.
 
-### Principio de Diseno
-Reducir los controles visibles al minimo necesario. Agrupar funciones secundarias detras de un solo boton. Los marcadores deben ser legibles sin superponer.
+### Ya Implementado (no requiere cambios)
+- Marketplace con listings, filtros, mapa Mapbox
+- Sistema de reservas con MercadoPago
+- Simulador de financiamiento (amortizacion francesa)
+- CRM con Kanban y pipeline de leads
+- Panel de admin (usuarios, agentes)
+- Roles (buyer/agent/admin)
+- Due diligence basica (legal tab)
+- Portal del comprador (/mi-terreno)
+- Generacion de contrato PDF
+- Business Intelligence
 
-### 1. Controles del Mapa Simplificados
+### Faltante - Se implementara en esta iteracion
 
-Reemplazar los ~12 botones individuales por 3 grupos compactos:
+## Fase 1: Nuevas Tablas de Base de Datos
+
+### Tabla `credits` - Gestion de Creditos Internos
+Permite a los loteadores ofrecer financiamiento directo a compradores, rastreando contratos, cuotas y morosidad.
+
+Columnas: id, reservation_id, lot_id, user_id (seller), buyer_user_id, total_amount, down_payment, financed_amount, interest_rate, term_months, monthly_payment, status (active/completed/defaulted/cancelled), contract_url, started_at, next_payment_date, created_at, updated_at.
+
+### Tabla `credit_payments` - Registro de Pagos de Cuotas
+Cada pago individual de un credito.
+
+Columnas: id, credit_id, payment_number, amount, due_date, paid_date, status (pending/paid/overdue/partial), payment_method, receipt_url, notes, created_at.
+
+### Tabla `closing_steps` - Timeline de Cierre Legal
+Rastrea el progreso legal de cada transaccion: Reserva, Promesa, Escritura, Inscripcion CBR.
+
+Columnas: id, reservation_id, credit_id, step_type (enum: reserva/promesa/escritura/inscripcion_cbr), status (pending/in_progress/completed/blocked), completed_at, document_url, notes, assigned_to, created_at.
+
+### Tabla `audit_logs` - Registro de Auditoria
+Registra acciones criticas del sistema para seguridad y compliance.
+
+Columnas: id, user_id, action, entity_type, entity_id, details (jsonb), ip_address, created_at.
+
+### Tabla `property_approvals` - Aprobacion de Propiedades
+Workflow de aprobacion para que admin valide listings antes de publicar.
+
+Columnas: id, listing_id, reviewer_id, status (pending/approved/rejected), rejection_reason, reviewed_at, created_at.
+
+Todas las tablas tendran RLS policies apropiadas usando la funcion `has_role()` existente.
+
+## Fase 2: Modulo de Gestion de Creditos
+
+### Nuevo archivo: `src/components/credits/CreditManager.tsx`
+Panel principal para que el loteador gestione creditos activos:
+- Lista de creditos con filtros por estado
+- KPIs: monto total financiado, cuotas al dia, morosidad
+- Alertas de pagos vencidos (destacados en rojo)
+
+### Nuevo archivo: `src/components/credits/CreditDetail.tsx`
+Vista detallada de un credito individual:
+- Calendario de pagos con estado visual (verde=pagado, amarillo=pendiente, rojo=vencido)
+- Boton para registrar pago manual
+- Upload de comprobantes
+- Historial de pagos
+
+### Nuevo archivo: `src/components/credits/CreateCreditDialog.tsx`
+Formulario para crear un credito desde una reserva pagada:
+- Seleccionar reservacion
+- Configurar pie, tasa, plazo
+- Generar calendario automatico
+- Vista previa de cuotas
+
+### Nuevo hook: `src/hooks/useCredits.ts`
+CRUD para creditos y pagos, con queries para estadisticas de morosidad.
+
+## Fase 3: Timeline de Cierre Legal
+
+### Nuevo archivo: `src/components/closing/ClosingTimeline.tsx`
+Componente visual con 4 pasos horizontales conectados:
 
 ```text
-Antes (izquierda del mapa):          Despues:
-+--------+                           Esquina inferior-derecha:
-| Zoom + |                           +--------+
-| Zoom - |                           | Zoom + |
-|--------|                           | Zoom - |
-| Ubicar |                           +--------+
-| Ver All|                           | Estilos| (streets/satellite/3D toggle)
-| Norte  |                           +--------+
-| Reset  |
-|--------|                           Esquina superior-derecha:
-| Calles |                           +------------------+
-| Satel. |                           | 20 propiedades   |
-| 3D     |                           +------------------+
-|--------|
-| Capas  |                           Todo lo demas: oculto o accesible
-|--------|                           desde menu contextual
-| Dibujar|
-| Borrar |
-+--------+
+[Reserva] --> [Promesa] --> [Escritura] --> [Inscripcion CBR]
+  (done)      (active)       (pending)        (pending)
 ```
 
-### 2. Marcadores de Precio con Anti-Colision
+Cada paso muestra: estado, fecha, documento adjunto, responsable asignado.
 
-- A zoom bajo (< 7): mostrar solo clusters con conteo
-- A zoom medio (7-10): mostrar marcadores pero limitar a los N mas cercanos al viewport
-- A zoom alto (> 10): mostrar todos los marcadores con precio
+### Nuevo archivo: `src/components/closing/ClosingManager.tsx`
+Panel para gestionar todos los cierres en curso:
+- Lista filtrable por estado
+- Acciones: avanzar paso, subir documento, asignar responsable
+- Notificaciones de pasos bloqueados
 
-### 3. Eliminar Elementos Redundantes
+### Integracion con portal del comprador
+Agregar el timeline de cierre en `/mi-terreno` para que el comprador vea su progreso.
 
-- **Quitar**: Badge de modo de mapa (centro-arriba) -- el usuario ya sabe que modo eligio
-- **Quitar**: Leyenda de disponible/reservado/vendido (abajo-izquierda) -- raramente util en exploracion
-- **Quitar**: Indicador de capas activas (abajo-derecha) -- redundante con el boton de capas
-- **Quitar**: Indicador de modo 3D (abajo-derecha)
-- **Mantener**: Solo el contador de propiedades (arriba-derecha), simplificado
+## Fase 4: Aprobacion de Propiedades (Admin)
 
-### 4. Selector de Estilo Compacto
+### Modificar: `src/components/PropertyInventory.tsx`
+Agregar badge de "Pendiente de aprobacion" y filtro por estado de aprobacion.
 
-Reemplazar los 3 botones separados de estilo (Calles/Satelite/3D) por un toggle horizontal compacto en la esquina inferior derecha, debajo del zoom.
+### Nuevo archivo: `src/components/admin/PropertyApprovalQueue.tsx`
+Cola de aprobacion para admin:
+- Lista de listings pendientes con preview
+- Botones de aprobar/rechazar con motivo
+- Estadisticas de aprobacion
 
-### 5. Capas y Herramientas Avanzadas
+### Nueva ruta: `/admin/approvals`
+Accesible desde el sidebar del admin.
 
-Mover las capas GIS y herramientas de dibujo a un panel lateral que se abre con un solo boton, en lugar de mostrarlos siempre en la barra izquierda.
+## Fase 5: Mejoras al CRM
+
+### WhatsApp links
+Agregar botones de "Contactar por WhatsApp" en:
+- Cards de leads (usando `https://wa.me/{phone}`)
+- Detalle de propiedad
+- Portal del comprador
+
+No requiere WhatsApp Business API (seria una fase futura), solo deep links.
+
+## Fase 6: Nuevas Rutas
+
+Agregar a `App.tsx`:
+- `/asesor/credits` - Gestion de creditos
+- `/asesor/closing` - Timeline de cierres
+- `/admin/approvals` - Cola de aprobacion
+- `/admin/credits` - Vista admin de todos los creditos
+
+Agregar items al sidebar (`ModernSidebar.tsx`).
+
+## Archivos a Crear (nuevos)
+- `src/components/credits/CreditManager.tsx`
+- `src/components/credits/CreditDetail.tsx`
+- `src/components/credits/CreateCreditDialog.tsx`
+- `src/components/credits/PaymentCalendar.tsx`
+- `src/components/closing/ClosingTimeline.tsx`
+- `src/components/closing/ClosingManager.tsx`
+- `src/components/admin/PropertyApprovalQueue.tsx`
+- `src/hooks/useCredits.ts`
+- `src/hooks/useClosingSteps.ts`
 
 ## Archivos a Modificar
+- `src/App.tsx` - Nuevas rutas
+- `src/components/ModernSidebar.tsx` - Nuevos items de menu
+- `src/pages/MiTerreno.tsx` - Agregar timeline de cierre
+- `src/components/CRMSystem.tsx` - WhatsApp links en leads
+- `src/components/leads/LeadFormDialog.tsx` - Boton WhatsApp
 
-### `src/components/map/EnhancedMap.tsx`
-- Eliminar toda la seccion de controles manuales (lineas 1908-2052) que renderiza botones inline
-- Reemplazar con un layout limpio:
-  - Esquina superior-derecha: contador compacto de propiedades
-  - Esquina inferior-derecha: zoom +/- y selector de estilo compacto
-  - Boton flotante para capas/herramientas avanzadas
-- Eliminar badges redundantes (modo, leyenda, capas activas, 3D indicator)
-- Agregar logica de clustering nativo de Mapbox para evitar superposicion de marcadores a zoom bajo
+## Migraciones SQL
+1. Crear enum `closing_step_type` y `closing_step_status`
+2. Crear tablas: `credits`, `credit_payments`, `closing_steps`, `audit_logs`, `property_approvals`
+3. RLS policies para cada tabla
+4. Trigger para actualizar `credits.next_payment_date` cuando se registra un pago
+5. Trigger para crear `closing_steps` automaticamente al crear una reserva
 
-### `src/components/map/CompactMapControls.tsx` (nuevo)
-- Componente con zoom +/-, selector de estilo (3 iconos inline), y boton de capas
-- Diseno compacto y glassmorphism consistente
+## Orden de Implementacion
+1. Migraciones SQL (tablas + RLS + triggers)
+2. Hooks (useCredits, useClosingSteps)
+3. Componentes de creditos
+4. Componentes de cierre legal
+5. Cola de aprobacion admin
+6. WhatsApp links
+7. Rutas y sidebar
+8. Integracion en MiTerreno
 
-### `src/components/map/MapToolsDrawer.tsx` (nuevo)
-- Panel lateral que agrupa: capas GIS, herramientas de dibujo, configuracion de opacidad
-- Se abre desde un solo boton en el mapa
-- Reemplaza la barra vertical de 12 botones
-
-### `src/pages/Explorar.tsx`
-- Sin cambios estructurales, el layout split-view se mantiene
-
-## Detalle Tecnico
-
-### Clustering nativo de Mapbox para marcadores
-En lugar de crear marcadores DOM individuales que se superponen, usar una fuente GeoJSON con clustering habilitado:
-
-```text
-Zoom < 7:  Circulos con numero "12 terrenos"
-Zoom 7-10: Marcadores de precio individuales (los mas grandes primero)
-Zoom > 10: Todos los marcadores visibles
-```
-
-Esto se implementa con `map.addSource('listings', { type: 'geojson', cluster: true })` y capas de tipo `circle` + `symbol`.
-
-### Layout de controles final
-```text
-+------------------------------------------+
-|                              [20 terrenos]|
-|                                           |
-|                                           |
-|              MAPA LIMPIO                  |
-|                                           |
-|                                           |
-|                          [+]              |
-|                          [-]              |
-|                          [Calles|Sat|3D]  |
-|                          [Capas]          |
-+------------------------------------------+
-```
-
-### Resultado esperado
-- Mapa limpio con maximo espacio para visualizacion
-- Controles agrupados y no intrusivos
-- Marcadores legibles sin superposicion
-- Herramientas avanzadas accesibles pero no visibles por defecto
