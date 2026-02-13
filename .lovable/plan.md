@@ -1,65 +1,101 @@
 
-# Plan: Wizard Multi-Paso para Creacion de Proyectos
+# Plan: Integrar KMZ en el Wizard + Mejoras Generales de la Plataforma
 
-## Problema Actual
+## 1. Integrar importacion KMZ como paso 5 del wizard
 
-El formulario de creacion de proyectos en `ProjectsManagement.tsx` es un dialog simple con solo 4 campos (nombre, ubicacion texto libre, total lotes, descripcion). No aprovecha los campos disponibles en la tabla `projects` (latitude, longitude, region, city, address, total_area, rol_number) ni ofrece mapa interactivo.
+### Problema actual
+Despues de crear un proyecto, el usuario debe volver a la lista, buscar el proyecto recien creado, y hacer click en "Importar KMZ". Es un flujo roto.
 
-## Solucion
+### Solucion
+Agregar un paso opcional (paso 4) entre "Lotes" y "Resumen" en el `CreateProjectWizard`. Este paso permite:
+- Cargar un archivo KMZ/KML (opcional, se puede saltar)
+- Ver preview de lotes detectados (cantidad, nombres, areas)
+- Configurar precio base para lotes nuevos
+- Al crear el proyecto, importar los lotes automaticamente
 
-Crear un componente `CreateProjectWizard` con 4 pasos que reemplaza el dialog actual, reutilizando el `LocationPicker` existente para seleccion de ubicacion con mapa.
+### Archivos a modificar
 
-## Pasos del Wizard
+**`src/components/projects/CreateProjectWizard.tsx`**:
+- Agregar paso 4 "Importar KMZ" (el resumen pasa a ser paso 5)
+- STEPS pasa de 4 a 5 items, con icono `FileArchive` para el nuevo paso
+- Agregar estado para `kmzFile`, `parsedKMZ` (ParsedKMZ | null), y `skipKmz`
+- En el paso 4: zona de drag-and-drop para KMZ, boton "Saltar este paso"
+- Si se carga un KMZ: mostrar preview (cantidad de lotes detectados, areas)
+- En `handleSubmit`: primero crear el proyecto, luego si hay KMZ parsado, insertar los lotes en batch usando el projectId retornado
+- Reutilizar la logica de parseo de `parseKMZFile`/`parseKMLFile` del modulo `@/lib/kmz`
+- La logica de insercion de lotes se extrae de `KMZImportDialog` (calcular centroides, crear poligonos GeoJSON, insertar en `lots`)
 
-### Paso 1: Datos Basicos
-- Nombre del proyecto (requerido)
-- Descripcion
-- Estado inicial (planning/active)
-- ROL SII del terreno
+**`src/components/projects/CreateProjectWizard.tsx` - Paso Resumen (ahora paso 5)**:
+- Mostrar resumen de KMZ importado si aplica (X lotes seran creados)
+- Mantener el badge de "podras importar KMZ despues" solo si se salto el paso
 
-### Paso 2: Ubicacion con Mapa
-- Mapa interactivo con `LocationPicker` (click para colocar marcador, arrastrar para ajustar)
-- Selector de Region (usando `CHILE_REGIONS` de `latam.ts`)
-- Campo de Ciudad/Comuna
-- Direccion (auto-completada por reverse geocoding del mapa)
-- Coordenadas lat/lng se guardan automaticamente al hacer click en el mapa
+## 2. Mejoras generales de usabilidad
 
-### Paso 3: Configuracion de Lotes
-- Total de lotes
-- Superficie total (m2)
-- Precio base por lote (opcional)
-- Precio por m2 (opcional, calculado automaticamente)
+### 2a. Empty states informativos en todas las secciones
 
-### Paso 4: Resumen y Confirmacion
-- Vista previa de todos los datos ingresados
-- Indicador de que puede importar KMZ despues de crear
-- Boton de crear proyecto
+**Archivos a modificar**: `ReservationsManager.tsx`, `CreditManager.tsx`, `ClosingManager.tsx`, `SalesManagement.tsx`
 
-## Archivos a Crear
+En cada seccion, cuando no hay datos, mostrar:
+- Icono grande relevante
+- Titulo explicativo ("No tienes reservas aun")
+- Texto que explica como llegar ahi ("Las reservas se crean desde la pagina del proyecto cuando un comprador reserva un lote")
+- Boton de accion primaria cuando aplique ("Ir a Proyectos" o "Crear Lead")
 
-### `src/components/projects/CreateProjectWizard.tsx`
-Componente wizard de 4 pasos con:
-- Barra de progreso con iconos por paso
-- Navegacion atras/adelante con validacion por paso
-- Reutiliza `LocationPicker` para el paso 2
-- Usa `CHILE_REGIONS` de `latam.ts` para el selector de region
-- Al completar, llama a `createProject.mutateAsync()` con todos los campos
+### 2b. Dashboard con accesos directos contextuales
 
-## Archivos a Modificar
+**Archivo a modificar**: `DashboardAsesor.tsx`
 
-### `src/components/ProjectsManagement.tsx`
-- Reemplazar el `Dialog` simple de creacion (lineas 105-162) por el nuevo `CreateProjectWizard` dentro de un `Dialog` mas amplio (`max-w-3xl`)
-- Eliminar el estado `newProject` y la funcion `handleCreateProject` (la logica se mueve al wizard)
-- Mantener todo lo demas igual (stats, cards, KMZ import, search)
+Agregar seccion "Acciones rapidas" con botones grandes:
+- "Crear Proyecto" -> abre dialog de wizard
+- "Importar Lotes" -> navega a /asesor/projects
+- "Ver Mapa" -> navega a /explorar
+- "Agregar Lead" -> abre LeadFormDialog
 
-## Detalles Tecnicos
+### 2c. Navegacion mejorada con contadores
 
-- El wizard es un componente controlado con estado interno de paso y datos del formulario
-- Paso 2 usa `LocationPicker` que ya implementa reverse geocoding con Mapbox
-- Al recibir callback de `onLocationSelect`, se auto-completan address, city, region
-- La validacion por paso previene avanzar sin datos requeridos (paso 1: nombre obligatorio)
-- El wizard no necesita migracion SQL porque todos los campos ya existen en la tabla `projects`
+**Archivo a modificar**: `ModernSidebar.tsx`
 
-## Resultado
+Agregar badges con contadores en el sidebar:
+- "Reservas" -> mostrar count de reservas pendientes
+- "Leads" -> mostrar count de leads nuevos
+- "Creditos" -> mostrar count de cuotas vencidas
 
-El boton "Nuevo Proyecto" abre un wizard profesional de 4 pasos con mapa interactivo, selector de region chilena, y configuracion de lotes, en lugar del formulario basico actual.
+Esto requiere un hook nuevo `useSidebarCounts` que haga queries ligeras para contar registros pendientes.
+
+### 2d. Confirmacion de eliminacion de proyectos
+
+**Archivo a modificar**: `ProjectsManagement.tsx`
+
+Agregar boton de eliminar proyecto con AlertDialog de confirmacion que advierte sobre lotes asociados.
+
+## Detalles tecnicos del paso KMZ en el wizard
+
+La logica de importacion de lotes en el wizard sera mas simple que en `KMZImportDialog` porque no necesita sincronizar con lotes existentes (el proyecto es nuevo):
+
+```text
+1. Usuario carga archivo KMZ/KML
+2. Se parsea con parseKMZFile() / parseKMLFile()
+3. Se muestra preview: cantidad de lotes, area total estimada
+4. Al hacer submit:
+   a. Crear proyecto -> obtener projectId
+   b. Para cada placemark: insertar lot con polygon, area, centroid
+   c. Actualizar project con coordenadas centrales del KMZ
+```
+
+Para modo edicion (proyecto existente), el paso KMZ mostrara un boton "Importar KMZ" que abre el `KMZImportDialog` existente como dialog separado, ya que ese componente maneja la logica de sincronizacion con lotes existentes.
+
+## Orden de implementacion
+
+1. Modificar `CreateProjectWizard.tsx` - agregar paso KMZ (cambio principal)
+2. Mejorar empty states en `ReservationsManager`, `CreditManager`, `ClosingManager`
+3. Agregar acciones rapidas al `DashboardAsesor`
+4. Agregar confirmacion de eliminacion en `ProjectsManagement`
+5. Crear `useSidebarCounts` hook y actualizar `ModernSidebar`
+
+## Resultado esperado
+
+- Flujo completo de creacion de proyecto en un solo wizard (datos -> ubicacion -> lotes -> KMZ -> resumen)
+- El loteador puede crear un proyecto con lotes importados en menos de 2 minutos
+- Todas las secciones vacias guian al usuario sobre que hacer
+- Dashboard con accesos directos utiles
+- Sidebar con indicadores de items pendientes
