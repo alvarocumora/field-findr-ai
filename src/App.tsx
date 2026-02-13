@@ -59,9 +59,12 @@ import CRMSystem from "./components/CRMSystem";
 import SalesManagement from "./components/SalesManagement";
 import BusinessIntelligence from "./components/BusinessIntelligence";
 import ReservationsManager from "./components/reservations/ReservationsManager";
+import CreditManager from "./components/credits/CreditManager";
+import ClosingManager from "./components/closing/ClosingManager";
 // ===== Admin Pages =====
 import AdminUsers from "./pages/AdminUsers";
 import AgentManagement from "./components/AgentManagement";
+import PropertyApprovalQueue from "./components/admin/PropertyApprovalQueue";
 
 // ===== Dashboard Pages (lazy) =====
 import { DashboardAdmin, DashboardAsesor, DashboardInmobiliaria } from "./pages/dashboard";
@@ -159,6 +162,16 @@ const App = () => (
                   <ReservationsManager />
                 </DashboardLayout>
               } />
+              <Route path="/asesor/credits" element={
+                <DashboardLayout requiredRole="agent">
+                  <CreditManager />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/closing" element={
+                <DashboardLayout requiredRole="agent">
+                  <ClosingManager />
+                </DashboardLayout>
+              } />
               <Route path="/publish" element={
                 <ProtectedRoute requireAuth requireRole="agent">
                   <PublishProperty />
@@ -186,6 +199,16 @@ const App = () => (
               <Route path="/admin/reservations" element={
                 <DashboardLayout requiredRole="admin">
                   <ReservationsManager />
+                </DashboardLayout>
+              } />
+              <Route path="/admin/approvals" element={
+                <DashboardLayout requiredRole="admin">
+                  <PropertyApprovalQueue />
+                </DashboardLayout>
+              } />
+              <Route path="/admin/credits" element={
+                <DashboardLayout requiredRole="admin">
+                  <CreditManager />
                 </DashboardLayout>
               } />
               <Route path="/admin/analytics" element={

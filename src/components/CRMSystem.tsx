@@ -211,6 +211,15 @@ const CRMSystem = () => {
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
                             <Phone className="h-3 w-3 shrink-0" />
                             <span>{lead.phone}</span>
+                            <a
+                              href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="ml-1 text-green-600 hover:text-green-500 font-medium"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              WA
+                            </a>
                           </div>
                         )}
 
