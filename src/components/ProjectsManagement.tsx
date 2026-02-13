@@ -4,19 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   FolderOpen, Plus, Search, MapPin, 
-  TrendingUp, Building2, Eye, Edit, Settings, Loader2,
-  FileArchive, Upload
+  TrendingUp, Building2, Eye, Settings,
+  FileArchive
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { useProjects, Project } from '@/hooks/useProjects';
 import { KMZImportDialog } from './projects/KMZImportDialog';
+import CreateProjectWizard from './projects/CreateProjectWizard';
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   planning: { label: 'En Planificación', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
@@ -31,12 +30,6 @@ const ProjectsManagement = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [selectedProjectForImport, setSelectedProjectForImport] = useState<Project | null>(null);
-  const [newProject, setNewProject] = useState({
-    name: '',
-    location: '',
-    description: '',
-    total_lots: 0,
-  });
 
   const filteredProjects = projects.filter(project =>
     project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -51,24 +44,6 @@ const ProjectsManagement = () => {
     const total = project.total_lots || 0;
     const sold = project.sold_lots || 0;
     return total > 0 ? Math.round((sold / total) * 100) : 0;
-  };
-
-  const handleCreateProject = async () => {
-    if (!newProject.name) return;
-    
-    await createProject.mutateAsync({
-      name: newProject.name,
-      location: newProject.location,
-      description: newProject.description,
-      total_lots: newProject.total_lots,
-      available_lots: newProject.total_lots,
-      reserved_lots: 0,
-      sold_lots: 0,
-      status: 'active',
-    });
-    
-    setShowAddDialog(false);
-    setNewProject({ name: '', location: '', description: '', total_lots: 0 });
   };
 
   const estimatedRevenue = stats.soldLots * 25000000;
@@ -109,55 +84,15 @@ const ProjectsManagement = () => {
                 Nuevo Proyecto
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Crear Nuevo Proyecto</DialogTitle>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Label>Nombre del Proyecto *</Label>
-                  <Input 
-                    placeholder="ej: Valle del Sol" 
-                    value={newProject.name}
-                    onChange={(e) => setNewProject(p => ({ ...p, name: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Ubicación</Label>
-                  <Input 
-                    placeholder="ej: La Serena, Región de Coquimbo"
-                    value={newProject.location}
-                    onChange={(e) => setNewProject(p => ({ ...p, location: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Total de Lotes</Label>
-                  <Input 
-                    type="number" 
-                    placeholder="50"
-                    value={newProject.total_lots || ''}
-                    onChange={(e) => setNewProject(p => ({ ...p, total_lots: parseInt(e.target.value) || 0 }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Descripción</Label>
-                  <Textarea 
-                    placeholder="Descripción del proyecto..."
-                    value={newProject.description}
-                    onChange={(e) => setNewProject(p => ({ ...p, description: e.target.value }))}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancelar</Button>
-                <Button 
-                  onClick={handleCreateProject}
-                  disabled={!newProject.name || createProject.isPending}
-                >
-                  {createProject.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Crear Proyecto
-                </Button>
-              </DialogFooter>
+              <CreateProjectWizard
+                createProject={createProject}
+                onComplete={() => setShowAddDialog(false)}
+                onCancel={() => setShowAddDialog(false)}
+              />
             </DialogContent>
           </Dialog>
         </div>
