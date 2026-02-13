@@ -1,129 +1,65 @@
 
-# Plan: SaaS de Gestion de Loteos - Onboarding y Funcionalidad Real
+# Plan: Wizard Multi-Paso para Creacion de Proyectos
 
-## Estado Actual del Sistema
+## Problema Actual
 
-La plataforma ya tiene una base solida con datos reales:
-- 1 proyecto activo ("Brisas de Caone") con 47 lotes (22 disponibles, 24 vendidos, 1 reservado)
-- 20 listings publicados
-- 1 usuario con roles admin + agent
-- Tablas completas: projects, lots, listings, reservations, credits, credit_payments, closing_steps, leads, documents, etc.
-- Sistema de roles (buyer/agent/admin) con RLS
+El formulario de creacion de proyectos en `ProjectsManagement.tsx` es un dialog simple con solo 4 campos (nombre, ubicacion texto libre, total lotes, descripcion). No aprovecha los campos disponibles en la tabla `projects` (latitude, longitude, region, city, address, total_area, rol_number) ni ofrece mapa interactivo.
 
-## Problemas Criticos Identificados
+## Solucion
 
-### 1. No hay onboarding para nuevos loteadores
-Cuando un usuario nuevo se registra, NO se le asigna ningun rol. Queda como "buyer" implicitamente pero sin entrada en `user_roles`. No hay forma de que un loteador se registre y empiece a usar la plataforma sin intervencion manual del admin.
+Crear un componente `CreateProjectWizard` con 4 pasos que reemplaza el dialog actual, reutilizando el `LocationPicker` existente para seleccion de ubicacion con mapa.
 
-### 2. El registro no asigna rol "buyer" automaticamente
-El trigger `handle_new_user` solo crea el perfil, pero no asigna el rol. El usuario queda sin acceso a nada.
+## Pasos del Wizard
 
-### 3. No hay flujo de "Crear mi primer proyecto"
-Un loteador nuevo que llega al dashboard ve pantallas vacias sin guia. No hay wizard de configuracion inicial.
+### Paso 1: Datos Basicos
+- Nombre del proyecto (requerido)
+- Descripcion
+- Estado inicial (planning/active)
+- ROL SII del terreno
 
-### 4. El formulario de crear proyecto es demasiado basico
-Solo pide nombre, ubicacion, descripcion y total de lotes. Falta: coordenadas, region/ciudad, precio base, superficie total, contacto comercial.
+### Paso 2: Ubicacion con Mapa
+- Mapa interactivo con `LocationPicker` (click para colocar marcador, arrastrar para ajustar)
+- Selector de Region (usando `CHILE_REGIONS` de `latam.ts`)
+- Campo de Ciudad/Comuna
+- Direccion (auto-completada por reverse geocoding del mapa)
+- Coordenadas lat/lng se guardan automaticamente al hacer click en el mapa
 
-### 5. No hay demo data ni cuentas de prueba
-Solo hay un usuario real. No hay forma de probar el sistema sin datos.
+### Paso 3: Configuracion de Lotes
+- Total de lotes
+- Superficie total (m2)
+- Precio base por lote (opcional)
+- Precio por m2 (opcional, calculado automaticamente)
 
-## Plan de Implementacion
-
-### Fase 1: Auto-asignacion de Rol al Registrarse
-
-**Migracion SQL**: Crear trigger que asigne rol "buyer" automaticamente al crear usuario.
-
-Modificar el formulario de registro (`Auth.tsx`) para agregar un selector de tipo de cuenta:
-- "Busco terreno" (buyer)
-- "Soy loteador / vendedor" (agent)
-
-El trigger asignara el rol correspondiente.
-
-### Fase 2: Onboarding Wizard para Loteadores
-
-**Nuevo archivo: `src/components/onboarding/OnboardingWizard.tsx`**
-
-Wizard de 4 pasos que aparece automaticamente cuando un agent no tiene proyectos:
-
-1. **Bienvenida**: Explicacion de la plataforma, que puede hacer
-2. **Perfil Comercial**: Nombre empresa, telefono, region de operacion
-3. **Primer Proyecto**: Formulario completo para crear el primer loteo (nombre, ubicacion con mapa, superficie, cantidad de lotes, precio base por lote)
-4. **Importar Lotes**: Opciones de importar KMZ o crear lotes manualmente
-
-**Nuevo archivo: `src/components/onboarding/ProjectSetupForm.tsx`**
-
-Formulario mejorado de creacion de proyecto con:
-- Mapa interactivo para seleccionar ubicacion (reutilizando LocationPicker)
-- Selector de region/comuna de Chile
-- Campos para superficie total, precio base por m2
-- Upload de master plan (imagen)
-
-### Fase 3: Dashboard Inteligente con Estado Vacio Mejorado
-
-**Modificar: `src/pages/dashboard/DashboardAsesor.tsx`**
-
-Detectar si el usuario tiene 0 proyectos y mostrar el OnboardingWizard en lugar del dashboard vacio. Una vez completado, mostrar el dashboard normal con datos reales.
-
-**Modificar: `src/components/ProjectsManagement.tsx`**
-
-Mejorar el empty state con un CTA visual que guie al usuario a crear su primer proyecto paso a paso, en lugar del dialog simple actual.
-
-### Fase 4: Formulario de Proyecto Mejorado
-
-**Modificar: `src/components/ProjectsManagement.tsx`**
-
-Reemplazar el dialog simple de "Crear Proyecto" con un formulario multi-paso:
-- Paso 1: Datos basicos (nombre, descripcion)
-- Paso 2: Ubicacion (mapa con marcador draggable, region, comuna, direccion)
-- Paso 3: Configuracion de lotes (cantidad, superficie promedio, precio base)
-- Paso 4: Documentos (upload master plan, KMZ opcional)
-
-### Fase 5: Seed Data y Demo Mode
-
-**Migracion SQL**: Insertar datos demo en la base de datos:
-- 3 proyectos demo con lotes variados (diferentes regiones de Chile)
-- Listings demo vinculados
-- Leads demo para el CRM
-
-Marcar los datos demo con `is_demo = true` para poder filtrarlos.
-
-**Nuevo archivo: `src/components/onboarding/DemoDataBanner.tsx`**
-
-Banner informativo que aparece cuando hay datos demo, con boton para "Limpiar datos demo y empezar con mi data real".
-
-### Fase 6: Mejoras de Flujo Post-Registro
-
-**Modificar: `src/pages/Auth.tsx`**
-
-Despues del registro exitoso:
-- Buyer: redirigir a `/explorar`
-- Agent: redirigir a `/asesor/dashboard` donde vera el onboarding wizard
-- Mostrar email de verificacion pendiente
-
-**Modificar: `src/hooks/useSmartRedirect.ts`**
-
-Agregar logica para detectar si es la primera vez del usuario (0 proyectos) y redirigir al onboarding.
+### Paso 4: Resumen y Confirmacion
+- Vista previa de todos los datos ingresados
+- Indicador de que puede importar KMZ despues de crear
+- Boton de crear proyecto
 
 ## Archivos a Crear
-- `src/components/onboarding/OnboardingWizard.tsx` - Wizard principal de 4 pasos
-- `src/components/onboarding/ProjectSetupForm.tsx` - Formulario mejorado de proyecto
-- `src/components/onboarding/WelcomeStep.tsx` - Paso de bienvenida
-- `src/components/onboarding/DemoDataBanner.tsx` - Banner de datos demo
+
+### `src/components/projects/CreateProjectWizard.tsx`
+Componente wizard de 4 pasos con:
+- Barra de progreso con iconos por paso
+- Navegacion atras/adelante con validacion por paso
+- Reutiliza `LocationPicker` para el paso 2
+- Usa `CHILE_REGIONS` de `latam.ts` para el selector de region
+- Al completar, llama a `createProject.mutateAsync()` con todos los campos
 
 ## Archivos a Modificar
-- `src/pages/Auth.tsx` - Selector de tipo de cuenta en registro
-- `src/pages/dashboard/DashboardAsesor.tsx` - Detectar estado vacio y mostrar onboarding
-- `src/components/ProjectsManagement.tsx` - Mejorar formulario de creacion
-- `src/hooks/useSmartRedirect.ts` - Logica de primera vez
 
-## Migraciones SQL
-1. Trigger para auto-asignar rol al registrarse
-2. Seed data con proyectos demo (opcional, se puede omitir si el usuario prefiere empezar desde cero)
+### `src/components/ProjectsManagement.tsx`
+- Reemplazar el `Dialog` simple de creacion (lineas 105-162) por el nuevo `CreateProjectWizard` dentro de un `Dialog` mas amplio (`max-w-3xl`)
+- Eliminar el estado `newProject` y la funcion `handleCreateProject` (la logica se mueve al wizard)
+- Mantener todo lo demas igual (stats, cards, KMZ import, search)
 
-## Orden de Implementacion
-1. Migracion SQL (trigger de rol automatico)
-2. Modificar Auth.tsx (selector de tipo de cuenta)
-3. Crear componentes de onboarding
-4. Integrar onboarding en DashboardAsesor
-5. Mejorar formulario de creacion de proyecto
-6. Datos demo (opcional)
+## Detalles Tecnicos
+
+- El wizard es un componente controlado con estado interno de paso y datos del formulario
+- Paso 2 usa `LocationPicker` que ya implementa reverse geocoding con Mapbox
+- Al recibir callback de `onLocationSelect`, se auto-completan address, city, region
+- La validacion por paso previene avanzar sin datos requeridos (paso 1: nombre obligatorio)
+- El wizard no necesita migracion SQL porque todos los campos ya existen en la tabla `projects`
+
+## Resultado
+
+El boton "Nuevo Proyecto" abre un wizard profesional de 4 pasos con mapa interactivo, selector de region chilena, y configuracion de lotes, en lugar del formulario basico actual.
