@@ -8,8 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   FolderOpen, Plus, Search, MapPin, 
-  TrendingUp, Building2, Eye, Settings,
-  FileArchive
+  TrendingUp, Building2, Eye, Edit,
+  Settings, FileArchive
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -25,9 +25,11 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 };
 
 const ProjectsManagement = () => {
-  const { projects, isLoading, stats, createProject, refetch } = useProjects();
+  const { projects, isLoading, stats, createProject, updateProject, refetch } = useProjects();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [selectedProjectForImport, setSelectedProjectForImport] = useState<Project | null>(null);
 
@@ -247,8 +249,15 @@ const ProjectsManagement = () => {
                       Ver
                     </Link>
                   </Button>
-                  <Button variant="ghost" size="icon">
-                    <Settings className="h-4 w-4" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setEditingProject(project);
+                      setShowEditDialog(true);
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
@@ -277,6 +286,33 @@ const ProjectsManagement = () => {
                 onCancel={() => {
                   setShowImportDialog(false);
                   setSelectedProjectForImport(null);
+                }}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Project Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={(open) => {
+          setShowEditDialog(open);
+          if (!open) setEditingProject(null);
+        }}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Editar Proyecto</DialogTitle>
+            </DialogHeader>
+            {editingProject && (
+              <CreateProjectWizard
+                createProject={createProject}
+                updateProject={updateProject}
+                editingProject={editingProject}
+                onComplete={() => {
+                  setShowEditDialog(false);
+                  setEditingProject(null);
+                }}
+                onCancel={() => {
+                  setShowEditDialog(false);
+                  setEditingProject(null);
                 }}
               />
             )}
