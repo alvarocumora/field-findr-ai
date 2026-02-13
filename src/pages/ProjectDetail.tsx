@@ -21,30 +21,17 @@ import {
   Maximize2,
   Phone,
   Mail,
-  Check,
-  X,
   Image as ImageIcon,
   Map,
   List,
   Navigation,
   Scale,
   Calculator,
-  Brain
+  Brain,
+  ImageOff,
+  MessageCircle
 } from 'lucide-react';
-import { useState } from 'react';
-
-// Color scheme based on price ranges
-const getPriceColor = (price: number | null, status: string) => {
-  if (status === 'sold') return { bg: 'bg-gray-400', border: 'border-gray-500', text: 'text-gray-600' };
-  if (status === 'reserved') return { bg: 'bg-amber-400', border: 'border-amber-500', text: 'text-amber-600' };
-  
-  if (!price) return { bg: 'bg-primary', border: 'border-primary', text: 'text-primary' };
-  
-  if (price <= 15990000) return { bg: 'bg-emerald-500', border: 'border-emerald-600', text: 'text-emerald-600' };
-  if (price <= 17990000) return { bg: 'bg-sky-500', border: 'border-sky-600', text: 'text-sky-600' };
-  if (price <= 24990000) return { bg: 'bg-stone-500', border: 'border-stone-600', text: 'text-stone-600' };
-  return { bg: 'bg-slate-800', border: 'border-slate-900', text: 'text-slate-800' };
-};
+import { useState, useMemo } from 'react';
 
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
@@ -55,13 +42,19 @@ const formatPrice = (price: number | null) => {
   }).format(price);
 };
 
-const GALLERY_IMAGES = [
-  '/projects/brisas-gallery-1.jpg',
-  '/projects/brisas-gallery-2.jpg',
-  '/projects/brisas-gallery-3.jpg',
-  '/projects/brisas-gallery-4.jpg',
-  '/projects/brisas-gallery-5.jpg',
-];
+const formatArea = (area: number) => {
+  return new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 }).format(area);
+};
+
+const getPriceColor = (price: number | null, status: string) => {
+  if (status === 'sold') return { bg: 'bg-gray-400', border: 'border-gray-500', text: 'text-gray-600' };
+  if (status === 'reserved') return { bg: 'bg-amber-400', border: 'border-amber-500', text: 'text-amber-600' };
+  if (!price) return { bg: 'bg-primary', border: 'border-primary', text: 'text-primary' };
+  if (price <= 15990000) return { bg: 'bg-emerald-500', border: 'border-emerald-600', text: 'text-emerald-600' };
+  if (price <= 17990000) return { bg: 'bg-sky-500', border: 'border-sky-600', text: 'text-sky-600' };
+  if (price <= 24990000) return { bg: 'bg-stone-500', border: 'border-stone-600', text: 'text-stone-600' };
+  return { bg: 'bg-slate-800', border: 'border-slate-900', text: 'text-slate-800' };
+};
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -97,18 +90,51 @@ const ProjectDetail = () => {
     enabled: !!id,
   });
 
-  const availableLots = lots.filter(l => l.status === 'available');
-  const soldLots = lots.filter(l => l.status === 'sold');
-  const reservedLots = lots.filter(l => l.status === 'reserved');
+  // Fetch owner profile for contact info
+  const { data: ownerProfile } = useQuery({
+    queryKey: ['owner-profile', project?.user_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', project!.user_id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!project?.user_id,
+  });
 
-  const priceRanges = [
-    { price: 15990000, label: '$15.990.000', color: 'bg-emerald-500' },
-    { price: 17990000, label: '$17.990.000', color: 'bg-sky-500' },
-    { price: 24990000, label: '$24.990.000', color: 'bg-stone-500' },
-    { price: 29990000, label: '$29.990.000', color: 'bg-slate-800' },
-  ];
+  // Sort lots numerically
+  const sortedLots = useMemo(() => {
+    return [...lots].sort((a, b) => {
+      const numA = parseInt(a.lot_number) || 0;
+      const numB = parseInt(b.lot_number) || 0;
+      return numA - numB;
+    });
+  }, [lots]);
 
-  // Parse legal data from project (new columns)
+  // Dynamic stats from real lot data
+  const { availableLots, soldLots, reservedLots, priceRange, areaRange } = useMemo(() => {
+    const available = lots.filter(l => l.status === 'available');
+    const sold = lots.filter(l => l.status === 'sold');
+    const reserved = lots.filter(l => l.status === 'reserved');
+    
+    const prices = lots.filter(l => l.price).map(l => l.price!);
+    const areas = lots.map(l => Number(l.area)).filter(a => a > 0);
+    
+    return {
+      availableLots: available,
+      soldLots: sold,
+      reservedLots: reserved,
+      priceRange: prices.length > 0 
+        ? { min: Math.min(...prices), max: Math.max(...prices) } 
+        : null,
+      areaRange: areas.length > 0 
+        ? { min: Math.min(...areas), max: Math.max(...areas) } 
+        : null,
+    };
+  }, [lots]);
+
   const legalDocuments = (project as any)?.legal_documents || [];
   const legalStatus = (project as any)?.legal_status || 'pending';
   const rolNumber = (project as any)?.rol_number;
@@ -140,6 +166,32 @@ const ProjectDetail = () => {
 
   const selectedLotData = lots.find(l => l.id === selectedLot);
   const isOwner = !!user && project.user_id === user.id;
+
+  // Contact handlers
+  const handleCall = () => {
+    const phone = ownerProfile?.phone;
+    if (phone) {
+      window.open(`tel:${phone}`, '_self');
+    } else {
+      // Fallback to WhatsApp with project info
+      const message = encodeURIComponent(`Hola, me interesa el proyecto ${project.name} en ${project.city}, ${project.region}.`);
+      window.open(`https://wa.me/?text=${message}`, '_blank');
+    }
+  };
+
+  const handleMessage = () => {
+    const phone = ownerProfile?.phone;
+    const message = encodeURIComponent(`Hola, me interesa el proyecto ${project.name} en ${project.city}, ${project.region}. ¿Podrían darme más información?`);
+    if (phone) {
+      // Clean phone number for WhatsApp
+      const cleanPhone = phone.replace(/[^0-9+]/g, '');
+      window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+    } else if (ownerProfile?.email) {
+      const subject = encodeURIComponent(`Consulta sobre ${project.name}`);
+      window.open(`mailto:${ownerProfile.email}?subject=${subject}&body=${message}`, '_self');
+    }
+  };
+
   return (
     <PublicLayout>
       <div className="min-h-screen bg-background">
@@ -212,49 +264,35 @@ const ProjectDetail = () => {
                   )}
                 </TabsList>
 
-                {/* Interactive Map Tab - Uses embed only for owner, otherwise internal map */}
+                {/* Interactive Map Tab - Always use LotMapView */}
                 <TabsContent value="interactive-map" className="space-y-4">
-                  {isOwner && (project as any).embed_map_url ? (
-                    <div className="relative glass rounded-xl overflow-hidden">
-                      <iframe
-                        src={(project as any).embed_map_url}
-                        width="100%"
-                        height="600"
-                        style={{ border: 0, borderRadius: '12px' }}
-                        allowFullScreen
-                        title={project.name}
-                        className="bg-muted"
-                      />
-                    </div>
-                  ) : (
-                    <LotMapView
-                      lots={lots}
-                      projectCenter={{
-                        lat: project.latitude || -34.9767,
-                        lng: project.longitude || -71.7856
-                      }}
-                      onLotClick={(lot) => {
-                        setSelectedLot(lot.id);
-                        if (lot.status !== 'sold') {
-                          setReservationLot(lot);
-                        }
-                      }}
-                      selectedLotId={selectedLot}
-                      projectId={project.id}
-                      kmzFileUrl={(project as any).kmz_file_url}
-                      onLotsUpdated={() => {
-                        queryClient.invalidateQueries({ queryKey: ['project-lots', id] });
-                        queryClient.invalidateQueries({ queryKey: ['project', id] });
-                      }}
-                      readOnly={!isOwner}
-                    />
-                  )}
+                  <LotMapView
+                    lots={lots}
+                    projectCenter={{
+                      lat: project.latitude || -34.9767,
+                      lng: project.longitude || -71.7856
+                    }}
+                    onLotClick={(lot) => {
+                      setSelectedLot(lot.id);
+                      if (lot.status !== 'sold') {
+                        setReservationLot(lot);
+                      }
+                    }}
+                    selectedLotId={selectedLot}
+                    projectId={project.id}
+                    kmzFileUrl={(project as any).kmz_file_url}
+                    onLotsUpdated={() => {
+                      queryClient.invalidateQueries({ queryKey: ['project-lots', id] });
+                      queryClient.invalidateQueries({ queryKey: ['project', id] });
+                    }}
+                    readOnly={!isOwner}
+                  />
                 </TabsContent>
 
-                {/* Lots List Tab - Using Enhanced Cards */}
+                {/* Lots List Tab - Numerically sorted */}
                 <TabsContent value="lots" className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {lots.map((lot, index) => (
+                    {sortedLots.map((lot, index) => (
                       <EnhancedLotCard
                         key={lot.id}
                         lot={lot}
@@ -286,18 +324,18 @@ const ProjectDetail = () => {
                   />
                 </TabsContent>
 
-                {/* Gallery Tab */}
+                {/* Gallery Tab - Dynamic */}
                 <TabsContent value="gallery" className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {GALLERY_IMAGES.map((img, idx) => (
-                      <div key={idx} className="aspect-[4/3] rounded-xl overflow-hidden glass">
-                        <img
-                          src={img}
-                          alt={`${project.name} - Imagen ${idx + 1}`}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                    ))}
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <ImageOff className="h-16 w-16 text-muted-foreground/40 mb-4" />
+                    <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                      Galería no disponible
+                    </h3>
+                    <p className="text-sm text-muted-foreground max-w-md">
+                      {isOwner 
+                        ? 'Aún no has subido imágenes para este proyecto. Pronto podrás agregar fotos desde aquí.'
+                        : 'Este proyecto aún no tiene imágenes disponibles.'}
+                    </p>
                   </div>
                 </TabsContent>
 
@@ -315,7 +353,7 @@ const ProjectDetail = () => {
 
             {/* Sidebar */}
             <div className="lg:col-span-1 space-y-4">
-              {/* Financing Calculator (shows when lot is selected for financing) */}
+              {/* Financing Calculator */}
               {financingLot && (
                 <FinancingCalculator
                   lotPrice={financingLot.price || 0}
@@ -327,7 +365,7 @@ const ProjectDetail = () => {
                 />
               )}
 
-              {/* Stats Card */}
+              {/* Stats Card - Dynamic */}
               <Card className="glass-strong">
                 <CardContent className="p-4 space-y-4">
                   <h3 className="font-semibold text-lg">Resumen del Proyecto</h3>
@@ -347,23 +385,29 @@ const ProjectDetail = () => {
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-border">
-                    <div className="text-sm text-muted-foreground mb-2">Rango de precios</div>
-                    <div className="text-xl font-bold text-primary">
-                      $15.990.000 - $29.990.000
+                  {priceRange && (
+                    <div className="pt-4 border-t border-border">
+                      <div className="text-sm text-muted-foreground mb-2">Rango de precios</div>
+                      <div className="text-xl font-bold text-primary">
+                        {formatPrice(priceRange.min)}
+                        {priceRange.min !== priceRange.max && ` - ${formatPrice(priceRange.max)}`}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="pt-4 border-t border-border">
-                    <div className="text-sm text-muted-foreground mb-2">Área por lote</div>
-                    <div className="text-lg font-semibold">
-                      5.000 - 12.500 m²
+                  {areaRange && (
+                    <div className="pt-4 border-t border-border">
+                      <div className="text-sm text-muted-foreground mb-2">Área por lote</div>
+                      <div className="text-lg font-semibold">
+                        {formatArea(areaRange.min)}
+                        {areaRange.min !== areaRange.max && ` - ${formatArea(areaRange.max)}`} m²
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
 
-              {/* Contact Card */}
+              {/* Contact Card - Functional */}
               <Card className="glass-strong">
                 <CardContent className="p-4 space-y-4">
                   <h3 className="font-semibold text-lg">¿Interesado?</h3>
@@ -372,13 +416,13 @@ const ProjectDetail = () => {
                   </p>
                   
                   <div className="space-y-2">
-                    <Button className="w-full gap-2">
+                    <Button className="w-full gap-2" onClick={handleCall}>
                       <Phone className="h-4 w-4" />
                       Llamar ahora
                     </Button>
-                    <Button variant="outline" className="w-full gap-2">
-                      <Mail className="h-4 w-4" />
-                      Enviar mensaje
+                    <Button variant="outline" className="w-full gap-2" onClick={handleMessage}>
+                      <MessageCircle className="h-4 w-4" />
+                      Enviar WhatsApp
                     </Button>
                   </div>
                 </CardContent>
@@ -398,7 +442,7 @@ const ProjectDetail = () => {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-lg bg-muted text-center">
                         <Maximize2 className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
-                        <div className="text-sm font-semibold">{selectedLotData.area} m²</div>
+                        <div className="text-sm font-semibold">{formatArea(Number(selectedLotData.area))} m²</div>
                         <div className="text-xs text-muted-foreground">Superficie</div>
                       </div>
                       <div className="p-3 rounded-lg bg-muted text-center">

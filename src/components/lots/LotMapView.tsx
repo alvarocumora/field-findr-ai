@@ -153,8 +153,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [regenerating, setRegenerating] = useState(false);
   const [showDrawingPanel, setShowDrawingPanel] = useState(false);
   
-  // Master plan image URL - uses the project's first gallery image or default
-  const masterPlanImageUrl = '/projects/brisas-de-caone-masterplan.jpg';
+  // Master plan image URL - no longer hardcoded
+  const masterPlanImageUrl = kmzFileUrl ? '/projects/brisas-de-caone-masterplan.jpg' : null;
 
   // Polygon drawing hook
   const {

@@ -172,8 +172,20 @@ export const EnhancedLotCard = ({
             <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1">
               <Ruler className="h-3.5 w-3.5" />
               Superficie
+              {(Number(lot.area) < 500 || Number(lot.area) > 100000) && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertTriangle className="h-3 w-3 text-amber-500" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Área fuera del rango típico (500 - 100.000 m²). Verifica este dato.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
-            <p className="font-semibold">{Number(lot.area).toLocaleString()} m²</p>
+            <p className="font-semibold">{Number(lot.area).toLocaleString('es-CL')} m²</p>
           </div>
           <div className="p-2.5 rounded-lg bg-primary/5">
             <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1">
