@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import Logo from '@/components/brand/Logo';
 import LogoIcon from '@/components/brand/LogoIcon';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
+import { useSidebarCounts } from '@/hooks/useSidebarCounts';
 import {
   MapPin,
   LayoutDashboard,
@@ -33,6 +34,7 @@ interface ModernSidebarProps {
 const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
   const location = useLocation();
   const { isAdmin, isAgent } = useSmartRedirect();
+  const counts = useSidebarCounts();
 
   // Agent navigation
   const agentNavigation = [
@@ -66,23 +68,42 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const NavItem = ({ item }: { item: { name: string; href: string; icon: React.ComponentType<{ className?: string }> } }) => (
-    <Link
-      to={item.href}
-      className={`
-        flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150
-        ${isActive(item.href)
-          ? 'bg-primary/10 text-primary'
-          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-        }
-        ${collapsed ? 'justify-center' : 'justify-start'}
-      `}
-      title={collapsed ? item.name : undefined}
-    >
-      <item.icon className={`h-5 w-5 flex-shrink-0 ${collapsed ? '' : 'mr-3'}`} />
-      {!collapsed && <span>{item.name}</span>}
-    </Link>
-  );
+  // Map nav items to badge counts
+  const badgeMap: Record<string, number> = {
+    '/asesor/reservations': counts.pendingReservations,
+    '/asesor/leads': counts.newLeads,
+    '/asesor/credits': counts.overduePayments,
+    '/admin/reservations': counts.pendingReservations,
+  };
+
+  const NavItem = ({ item }: { item: { name: string; href: string; icon: React.ComponentType<{ className?: string }> } }) => {
+    const badgeCount = badgeMap[item.href] || 0;
+    return (
+      <Link
+        to={item.href}
+        className={`
+          flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150
+          ${isActive(item.href)
+            ? 'bg-primary/10 text-primary'
+            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+          }
+          ${collapsed ? 'justify-center' : 'justify-start'}
+        `}
+        title={collapsed ? item.name : undefined}
+      >
+        <item.icon className={`h-5 w-5 flex-shrink-0 ${collapsed ? '' : 'mr-3'}`} />
+        {!collapsed && <span className="flex-1">{item.name}</span>}
+        {!collapsed && badgeCount > 0 && (
+          <Badge variant="destructive" className="ml-auto text-[10px] h-5 min-w-[20px] px-1.5 flex items-center justify-center">
+            {badgeCount}
+          </Badge>
+        )}
+        {collapsed && badgeCount > 0 && (
+          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive" />
+        )}
+      </Link>
+    );
+  };
 
   const primaryNav = isAdmin ? adminNavigation : isAgent ? agentNavigation : [];
 
@@ -130,7 +151,9 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
         {/* Primary Navigation */}
         <nav className="space-y-1">
           {primaryNav.map((item) => (
-            <NavItem key={item.href} item={item} />
+            <div key={item.href} className="relative">
+              <NavItem item={item} />
+            </div>
           ))}
         </nav>
 

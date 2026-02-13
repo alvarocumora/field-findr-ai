@@ -176,7 +176,13 @@ const SalesManagement = () => {
         <TabsContent value="opportunities" className="space-y-4">
           <Input placeholder="Buscar leads..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="max-w-sm" />
           {filteredLeads.length === 0 ? (
-            <Card className="p-8 text-center text-muted-foreground">No hay oportunidades aún</Card>
+            <Card className="p-12 text-center">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No hay oportunidades aún</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                Agrega leads desde el CRM para comenzar a gestionar tu pipeline de ventas.
+              </p>
+            </Card>
           ) : (
             <div className="space-y-3">
               {filteredLeads.map((lead) => {
@@ -215,7 +221,13 @@ const SalesManagement = () => {
 
         <TabsContent value="contracts" className="space-y-4">
           {paidReservations.length === 0 ? (
-            <Card className="p-8 text-center text-muted-foreground">No hay contratos aún</Card>
+            <Card className="p-12 text-center">
+              <Handshake className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No hay contratos aún</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                Los contratos aparecen cuando una reserva es pagada o convertida a venta.
+              </p>
+            </Card>
           ) : (
             <div className="space-y-3">
               {paidReservations.map((res: any) => (

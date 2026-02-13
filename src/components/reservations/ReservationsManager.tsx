@@ -39,6 +39,7 @@ import {
   User,
   Loader2,
   RefreshCw,
+  Building2,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -212,9 +213,18 @@ const ReservationsManager = () => {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
-              <Calendar className="h-8 w-8 mb-2" />
-              <p>No se encontraron reservas</p>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No tienes reservas aún</h3>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                Las reservas se crean desde la página del proyecto cuando un comprador reserva un lote.
+              </p>
+              <Button variant="outline" className="mt-4 gap-2" asChild>
+                <a href="/asesor/projects">
+                  <Building2 className="h-4 w-4" />
+                  Ir a Proyectos
+                </a>
+              </Button>
             </div>
           ) : (
             <div className="divide-y divide-border/40">

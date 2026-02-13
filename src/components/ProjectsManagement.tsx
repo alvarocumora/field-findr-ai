@@ -9,10 +9,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { 
   FolderOpen, Plus, Search, MapPin, 
   TrendingUp, Building2, Eye, Edit,
-  Settings, FileArchive
+  Settings, FileArchive, Trash2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useProjects, Project } from '@/hooks/useProjects';
 import { KMZImportDialog } from './projects/KMZImportDialog';
 import CreateProjectWizard from './projects/CreateProjectWizard';
@@ -25,7 +36,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 };
 
 const ProjectsManagement = () => {
-  const { projects, isLoading, stats, createProject, updateProject, refetch } = useProjects();
+  const { projects, isLoading, stats, createProject, updateProject, deleteProject, refetch } = useProjects();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -259,6 +270,30 @@ const ProjectsManagement = () => {
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar proyecto?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Se eliminará "{project.name}" y todos sus lotes asociados ({project.total_lots || 0} lotes). Esta acción no se puede deshacer.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteProject.mutate(project.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Sí, eliminar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </CardContent>
             </Card>

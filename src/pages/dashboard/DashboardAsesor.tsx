@@ -14,8 +14,11 @@ import { useProjects } from '@/hooks/useProjects';
 import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
 import { ListingFormDialog } from '@/components/listings/ListingFormDialog';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
+import { useNavigate } from 'react-router-dom';
+import { FolderKanban, Map, FileArchive } from 'lucide-react';
 
 const DashboardAsesor = () => {
+  const navigate = useNavigate();
   const { data: stats, isLoading: statsLoading } = useAgentStats();
   const { data: leads, isLoading: leadsLoading } = useAgentLeads();
   const { data: goals, isLoading: goalsLoading } = useAgentGoals();
@@ -110,6 +113,33 @@ const DashboardAsesor = () => {
                   </div>
                 </CardContent>
               </Card>
+            ))}
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: 'Crear Proyecto', icon: FolderKanban, onClick: () => navigate('/asesor/projects'), variant: 'default' as const },
+              { label: 'Importar Lotes', icon: FileArchive, onClick: () => navigate('/asesor/projects'), variant: 'outline' as const },
+              { label: 'Ver Mapa', icon: Map, onClick: () => navigate('/explorar'), variant: 'outline' as const },
+              { label: 'Nuevo Lead', icon: Users, onClick: () => {}, variant: 'outline' as const, isLeadDialog: true },
+            ].map((action, i) => (
+              action.isLeadDialog ? (
+                <LeadFormDialog
+                  key={i}
+                  trigger={
+                    <Button variant={action.variant} className="h-auto py-4 flex-col gap-2 w-full">
+                      <action.icon className="h-5 w-5" />
+                      <span className="text-xs font-medium">{action.label}</span>
+                    </Button>
+                  }
+                />
+              ) : (
+                <Button key={i} variant={action.variant} className="h-auto py-4 flex-col gap-2" onClick={action.onClick}>
+                  <action.icon className="h-5 w-5" />
+                  <span className="text-xs font-medium">{action.label}</span>
+                </Button>
+              )
             ))}
           </div>
 
