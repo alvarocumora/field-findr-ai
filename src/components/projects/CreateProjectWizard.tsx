@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { LATAM_COUNTRIES } from '@/lib/latam';
 import LocationPicker from '@/components/publish/LocationPicker';
 import { UseMutationResult } from '@tanstack/react-query';
-import { ProjectInsert } from '@/hooks/useProjects';
+import { Project, ProjectInsert, ProjectUpdate } from '@/hooks/useProjects';
 
 interface WizardData {
   name: string;
@@ -40,28 +40,48 @@ const STEPS = [
 
 const CHILE_REGIONS = LATAM_COUNTRIES.find(c => c.code === 'CL')?.regions || [];
 
+const projectToWizardData = (project: Project): WizardData => ({
+  name: project.name,
+  description: project.description || '',
+  status: project.status || 'active',
+  rol_number: project.rol_number || '',
+  latitude: project.latitude ? Number(project.latitude) : null,
+  longitude: project.longitude ? Number(project.longitude) : null,
+  region: project.region || '',
+  city: project.city || '',
+  address: project.address || '',
+  total_lots: project.total_lots || 0,
+  total_area: project.total_area ? Number(project.total_area) : null,
+  price_base: null,
+});
+
 interface CreateProjectWizardProps {
   createProject: UseMutationResult<any, Error, Omit<ProjectInsert, 'user_id'>, unknown>;
+  updateProject?: UseMutationResult<any, Error, ProjectUpdate & { id: string }, unknown>;
+  editingProject?: Project | null;
   onComplete: () => void;
   onCancel: () => void;
 }
 
-const CreateProjectWizard = ({ createProject, onComplete, onCancel }: CreateProjectWizardProps) => {
+const CreateProjectWizard = ({ createProject, updateProject, editingProject, onComplete, onCancel }: CreateProjectWizardProps) => {
+  const isEditing = !!editingProject;
   const [step, setStep] = useState(0);
-  const [data, setData] = useState<WizardData>({
-    name: '',
-    description: '',
-    status: 'active',
-    rol_number: '',
-    latitude: null,
-    longitude: null,
-    region: '',
-    city: '',
-    address: '',
-    total_lots: 0,
-    total_area: null,
-    price_base: null,
-  });
+  const [data, setData] = useState<WizardData>(() =>
+    editingProject ? projectToWizardData(editingProject) : {
+      name: '',
+      description: '',
+      status: 'active',
+      rol_number: '',
+      latitude: null,
+      longitude: null,
+      region: '',
+      city: '',
+      address: '',
+      total_lots: 0,
+      total_area: null,
+      price_base: null,
+    }
+  );
 
   const update = (partial: Partial<WizardData>) => setData(prev => ({ ...prev, ...partial }));
 
@@ -70,8 +90,8 @@ const CreateProjectWizard = ({ createProject, onComplete, onCancel }: CreateProj
     return true;
   };
 
-  const handleCreate = async () => {
-    await createProject.mutateAsync({
+  const handleSubmit = async () => {
+    const payload = {
       name: data.name,
       description: data.description || null,
       status: data.status,
@@ -83,13 +103,23 @@ const CreateProjectWizard = ({ createProject, onComplete, onCancel }: CreateProj
       address: data.address || null,
       location: data.address || data.city || data.region || null,
       total_lots: data.total_lots || 0,
-      available_lots: data.total_lots || 0,
-      reserved_lots: 0,
-      sold_lots: 0,
       total_area: data.total_area,
-    });
+    };
+
+    if (isEditing && updateProject && editingProject) {
+      await updateProject.mutateAsync({ id: editingProject.id, ...payload });
+    } else {
+      await createProject.mutateAsync({
+        ...payload,
+        available_lots: data.total_lots || 0,
+        reserved_lots: 0,
+        sold_lots: 0,
+      });
+    }
     onComplete();
   };
+
+  const isPending = isEditing ? updateProject?.isPending : createProject.isPending;
 
   const formatNumber = (n: number | null) => {
     if (!n) return '—';
@@ -315,9 +345,9 @@ const CreateProjectWizard = ({ createProject, onComplete, onCancel }: CreateProj
             Siguiente <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         ) : (
-          <Button onClick={handleCreate} disabled={createProject.isPending}>
-            {createProject.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Crear Proyecto
+          <Button onClick={handleSubmit} disabled={!!isPending}>
+            {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {isEditing ? 'Guardar Cambios' : 'Crear Proyecto'}
           </Button>
         )}
       </div>
