@@ -1,144 +1,106 @@
 
 
-# Plan: Compilacion y Mejoras Criticas de la Plataforma
+# Plan: Mejorar Landing Page y Explorar con Mapa Funcional
 
-## Diagnostico Completo
+## Estado Actual
 
-Tras revisar la base de datos, el codigo y la vista en vivo del proyecto, estos son los problemas reales encontrados:
+**Landing Page:**
+- Hero con busqueda funcional pero sin diferenciacion visual fuerte
+- Stats muestran 0 valores (los counts de la DB son correctos pero `totalLots` cuenta todos los lotes, no solo disponibles)
+- Seccion "Terrenos Destacados" + MiniMap funciona bien con 20 listings reales
+- Seccion "Como Funciona" orientada solo a desarrolladores (sube proyecto, configura lotes) - excluye compradores
+- "Proyectos Destacados" solo muestra 1 proyecto activo (datos reales limitados)
+- TrustBadges son genericos y estaticos
+- FloatingCTA dice "47 lotes disponibles" pero usa totalLots sin filtrar por status
 
-### Problema 1: Mapa muestra solo 1 poligono de 47 lotes (CRITICO)
+**Explorar:**
+- Mapa muestra un poligono azul gigante en vez de marcadores de propiedades (posible problema de capa GIS activa)
+- Split view funcional con panel de filtros
+- "Nuevos 0" porque ningun listing tiene menos de 7 dias
+- "Mejor oportunidad" calcula bien el precio/m2 mas bajo ($350/m2 para Aysen de 1M m2)
 
-**Causa raiz**: De 47 lotes, solo el Lote 3 tiene un poligono real (80 puntos). Los otros 46 lotes tienen "poligonos" de 1 solo punto (son centroides, no poligonos). El algoritmo de reconstruccion del KMZ fallo para casi todos los lotes.
+## Problemas Criticos
 
-**Impacto**: El mapa es inutil - solo se ve 1 rectangulo blanco flotando.
+### 1. Mapa de Explorar muestra poligono azul en vez de marcadores
+El mapa muestra lo que parece ser una capa de zonificacion demo (poligono azul grande) sobre los marcadores. Las capas GIS demo (`generateDemoZoningData`) se inicializan automaticamente. Los marcadores de propiedades quedan detras o no se ven.
 
-**Solucion**: Cuando los lotes no tienen poligonos validos (menos de 3 puntos), el mapa debe generar rectangulos de grilla como fallback visual. Actualmente el codigo ya tiene esta logica pero la condicion `lotsWithPolygons.length > 0` se activa con los poligonos de 1 punto, saltandose el fallback de grilla.
+### 2. Stats de landing calculan mal
+`useLandingStats` cuenta `totalLots` sin filtrar por `status = 'available'`, mostrando 47 (incluye vendidos y reservados). `totalReservations` filtra por `status = 'paid'` pero las reservaciones reales usan el enum `reservation_status`.
 
-Cambio en `LotMapView.tsx` (`generateLotGeoJSON`): filtrar poligonos que tengan al menos 3 puntos reales antes de decidir usar "poligonos reales" vs "grilla generada".
+### 3. "Como Funciona" excluye al comprador
+Los 4 pasos (Sube proyecto, Configura lotes, Recibe reservas, Cierra ventas) solo hablan al desarrollador/vendedor. La mayoria de visitantes del landing son compradores.
 
-### Problema 2: Botones de admin visibles para todos los usuarios
+### 4. FloatingCTA usa dato incorrecto
+Muestra "47 lotes disponibles" sin filtrar por status available.
 
-**Causa raiz**: El usuario logueado es el dueno del proyecto, por lo que `readOnly` es `false` y se muestran botones de administracion (Master Plan, Dibujar Lotes, Importar KMZ, Regenerar). Pero estos botones no deberian mostrarse en la vista publica `/proyecto/:id` - solo en el panel de gestion `/asesor/projects`.
+## Solucion
 
-**Solucion**: Pasar una nueva prop `showAdminControls` que sea `false` por defecto en la pagina publica. Los botones de importar KMZ, regenerar y dibujar solo se muestran cuando `showAdminControls` es true.
+### Archivo 1: `src/hooks/useLandingStats.ts`
+- Filtrar `totalLots` por `status = 'available'` para mostrar solo disponibles
+- Calcular `totalReservations` correctamente o reemplazar por metrica mas util (ej: totalSold)
 
-### Problema 3: Rango de area incluye outliers (696 m2)
+### Archivo 2: `src/pages/Index.tsx` - Landing mejorada
+- Reemplazar seccion "Como Funciona" con version dual: para compradores (Explora, Compara, Reserva, Compra) y para vendedores (Sube, Configura, Vende, Cierra)
+- Agregar seccion de regiones populares con cards clickables que lleven a /explorar con filtro
+- Mejorar la seccion de featured listings: mostrar 6 en grid 3x2 sin mini-map (el mapa va en explorar) para mayor impacto visual
 
-**Estado actual**: El filtro usa 500 m2 como minimo, pero algunos lotes con areas como 696 m2 o 956 m2 son probablemente erroneos tambien (para un proyecto de parcelas rurales).
+### Archivo 3: `src/components/landing/HowItWorks.tsx` - Orientado a compradores
+- Cambiar los 4 pasos a la perspectiva del comprador:
+  1. Explora el mapa (Search)
+  2. Compara terrenos (BarChart3)
+  3. Reserva online (CreditCard)
+  4. Cierra tu compra (CheckCircle2)
+- Agregar un toggle o subtexto que mencione "Para desarrolladores" con link a /pricing
 
-**Solucion**: Usar el percentil 10-90 para calcular el rango mostrado, o subir el umbral minimo a 1000 m2 dado que es un proyecto de parcelas rurales. La solucion mas simple: ajustar el filtro a >= 2000 m2 para este tipo de proyecto.
+### Archivo 4: `src/components/landing/RegionCards.tsx` (NUEVO)
+- Grid de cards con las regiones mas populares (basado en datos reales: O'Higgins 3, Metropolitana 3, Valparaiso 2, etc.)
+- Cada card muestra: nombre de region, cantidad de terrenos, rango de precios
+- Click navega a `/explorar?region=X`
 
-Mejor aun: calcular el rango excluyendo outliers usando IQR (rango intercuartilico) para que funcione automaticamente con cualquier proyecto.
+### Archivo 5: `src/components/map/EnhancedMap.tsx` - Fix del mapa de Explorar
+- Revisar la inicializacion de capas info (zoning, risk, etc.) - asegurarse que estan desactivadas por defecto
+- Verificar que los marcadores de propiedades se renderizan SOBRE cualquier capa activa (z-index)
+- El estado inicial `infoLayers` ya tiene todo en `false`, pero hay que verificar que `addInfoLayers` no se ejecuta sin que el usuario lo active
 
-### Problema 4: Tarjetas de lotes vendidos muestran "8 dias en venta"
+### Archivo 6: `src/components/landing/FloatingCTA.tsx`
+- Cambiar de `totalLots` a dato filtrado (lotes available)
 
-**Causa raiz**: El indicador de tiempo muestra "dias en venta" para todos los lotes, incluidos los vendidos. Para lotes vendidos deberia ocultarse o mostrar "Vendido".
-
-**Solucion**: Ocultar el indicador de tiempo para lotes vendidos.
-
-### Problema 5: Boton de contacto flotante tapa contenido
-
-**Estado actual**: El boton "Llamar / WhatsApp" esta fijo en la esquina inferior derecha y tapa contenido del mapa y las tarjetas.
-
-**Solucion**: Mover el contacto flotante a dentro del header como botones inline, eliminando el elemento fijo que tapa contenido. En movil, mantener la barra inferior pero agregar padding-bottom al contenido.
-
-### Problema 6: Lote 3 tiene area de 59.939 m2 pero su poligono real solo ocupa una fraccion
-
-El area reportada no coincide con el poligono visible. Esto es un problema de datos del KMZ que no se puede arreglar con codigo, pero se puede mejorar la experiencia.
-
-## Archivos a Modificar
-
-### 1. `src/components/lots/LotMapView.tsx`
-
-**generateLotGeoJSON** - Corregir la logica de deteccion de poligonos validos:
-- Cambiar `lot.polygon.length > 0` a `lot.polygon.length >= 3` en la verificacion de `lotsWithPolygons`
-- Esto hara que los 46 lotes con 1 punto caigan al fallback de grilla, mostrando rectangulos organizados
-- Mantener el Lote 3 con su poligono real si tiene 3+ puntos, pero generar grilla para los demas (modo mixto)
-
-**Botones de admin** - Agregar prop `showAdminControls`:
-- Mover los botones de Master Plan, Dibujar Lotes, Importar KMZ, Regenerar detras de `showAdminControls`
-- Solo dejar visible el toggle Satelite/Calles para todos los usuarios
-
-### 2. `src/pages/ProjectDetail.tsx`
-
-**Contacto flotante** - Mover a inline en header:
-- Eliminar el card flotante fijo en desktop
-- Agregar botones "Llamar" y "WhatsApp" al lado de la ubicacion en el header
-- En movil: mantener barra inferior pero agregar `pb-20` al contenido principal
-
-**Rango de areas** - Mejorar filtro de outliers:
-- Usar mediana y desviacion como referencia: excluir areas que sean menores al 10% de la mediana
-- Mas simple: filtrar `>= 2000` para excluir lotes claramente erroneos del KMZ
-
-**Pasar showAdminControls=false** al LotMapView en la pagina publica
-
-### 3. `src/components/lots/EnhancedLotCard.tsx`
-
-**Indicador de tiempo** - Ocultar para lotes vendidos:
-- No mostrar "X dias en venta" cuando `status === 'sold'`
-- Para lotes reservados, mantener "Reservado hace X dias"
+### Archivo 7: `src/components/landing/HeroStats.tsx`
+- Cambiar "Lotes disponibles" para usar el count filtrado
+- Reemplazar "Publicaciones activas" (poco util para el visitante) por "Hectareas disponibles" calculando la suma de areas
 
 ## Seccion Tecnica
 
-### Correccion de deteccion de poligonos validos
-
+### Fix de useLandingStats
 ```text
-// ANTES (linea 42):
-const lotsWithPolygons = lots.filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length > 0);
+// Agregar filtro de status a la query de lots
+supabase.from('lots').select('id', { count: 'exact', head: true }).eq('status', 'available')
 
-// DESPUES:
-const lotsWithPolygons = lots.filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3);
+// Agregar query de hectareas totales
+supabase.from('listings').select('area_ha').eq('status', 'active').not('area_ha', 'is', null)
 ```
 
-Esto es el cambio mas critico: con esta correccion, los 46 lotes con poligonos de 1 punto seran tratados como "sin poligono" y se generara una grilla visual funcional.
+### Fix del mapa de Explorar
+El mapa inicializa con `infoLayers` todo en false, pero la funcion `addInfoLayers` podria estar ejecutandose en el evento `style.load`. Hay que verificar que los poligonos demo de zonificacion no se agregan automaticamente.
 
-Para los lotes que SI tienen poligonos validos (como Lote 3), se necesita un enfoque mixto:
-
+### Regiones populares - query
 ```text
-// Generar features mezclando poligonos reales y grilla
-lots.forEach((lot, index) => {
-  const hasValidPolygon = lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3;
-  
-  if (hasValidPolygon) {
-    // Usar poligono real
-    features.push({ ... polygon real ... });
-  } else {
-    // Generar rectangulo en grilla
-    features.push({ ... grilla generada ... });
+// Reutilizar datos existentes de listings para calcular regiones
+const regionData = listings.reduce((acc, l) => {
+  if (l.region) {
+    acc[l.region] = (acc[l.region] || 0) + 1;
   }
-});
-```
-
-### Filtro de outliers mejorado
-
-```text
-// Calcular mediana de areas
-const sortedAreas = [...areas].sort((a, b) => a - b);
-const median = sortedAreas[Math.floor(sortedAreas.length / 2)];
-// Excluir areas menores al 5% de la mediana o mayores a 10x la mediana
-const reasonableAreas = areas.filter(a => a >= median * 0.05 && a <= median * 10);
-```
-
-### Prop showAdminControls
-
-```text
-interface LotMapViewProps {
-  // ... existing props ...
-  showAdminControls?: boolean; // new prop, default false
-}
+  return acc;
+}, {});
 ```
 
 ## Orden de Implementacion
 
-1. **LotMapView.tsx** - Corregir deteccion de poligonos (cambiar `> 0` a `>= 3`), implementar modo mixto (real + grilla), agregar prop `showAdminControls`
-2. **EnhancedLotCard.tsx** - Ocultar "dias en venta" para lotes vendidos
-3. **ProjectDetail.tsx** - Pasar `showAdminControls={false}`, mover contacto a header inline, mejorar filtro de outliers con mediana, agregar padding bottom para movil
-
-## Resultado Esperado
-
-- Mapa muestra 47 lotes en grilla organizada (en vez de 1 poligono solitario)
-- No se muestran botones de admin en la vista publica
-- Rango de areas muestra valores representativos (ej: "10.000 - 71.180 m2")
-- Lotes vendidos no muestran "dias en venta"
-- Botones de contacto no tapan contenido
+1. `useLandingStats.ts` - Fix de conteos (lots available, hectareas)
+2. `EnhancedMap.tsx` - Verificar y corregir renderizado de marcadores vs capas
+3. `HowItWorks.tsx` - Reorientar a compradores
+4. `HeroStats.tsx` - Metricas relevantes para visitantes
+5. `FloatingCTA.tsx` - Dato correcto
+6. `RegionCards.tsx` - Nueva seccion de regiones
+7. `Index.tsx` - Integrar RegionCards, mejorar grid de featured
 
