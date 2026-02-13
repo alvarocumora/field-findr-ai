@@ -32,53 +32,49 @@ interface LotMapViewProps {
   kmzFileUrl?: string | null;
   onLotsUpdated?: () => void;
   readOnly?: boolean;
+  showAdminControls?: boolean;
 }
 
 // Generate GeoJSON from lots - uses real polygons if available, otherwise generates grid
 const generateLotGeoJSON = (lots: Lot[], center: { lat: number; lng: number }) => {
   const features: GeoJSON.Feature[] = [];
   
-  // Check if any lots have real polygon data
-  const lotsWithPolygons = lots.filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length > 0);
-  const useRealPolygons = lotsWithPolygons.length > 0;
+  // Separate lots with valid polygons (>=3 points) from those without
+  const lotsWithValidPolygons = lots.filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3);
+  const lotsWithoutPolygons = lots.filter(lot => !lot.polygon || !Array.isArray(lot.polygon) || lot.polygon.length < 3);
   
-  if (useRealPolygons) {
-    // Use real polygon data
-    lots.forEach((lot) => {
-      if (lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3) {
-        // Ensure polygon is closed (first point = last point)
-        const coords = [...lot.polygon];
-        if (coords.length > 0 && (coords[0][0] !== coords[coords.length - 1][0] || coords[0][1] !== coords[coords.length - 1][1])) {
-          coords.push(coords[0]);
-        }
-        
-        features.push({
-          type: 'Feature',
-          id: lot.id,
-          properties: {
-            id: lot.id,
-            lot_number: lot.lot_number,
-            area: lot.area,
-            price: lot.price,
-            status: lot.status || 'available',
-          },
-          geometry: {
-            type: 'Polygon',
-            coordinates: [coords],
-          },
-        });
-      }
+  // Add real polygon features
+  lotsWithValidPolygons.forEach((lot) => {
+    const coords = [...lot.polygon];
+    if (coords.length > 0 && (coords[0][0] !== coords[coords.length - 1][0] || coords[0][1] !== coords[coords.length - 1][1])) {
+      coords.push(coords[0]);
+    }
+    
+    features.push({
+      type: 'Feature',
+      id: lot.id,
+      properties: {
+        id: lot.id,
+        lot_number: lot.lot_number,
+        area: lot.area,
+        price: lot.price,
+        status: lot.status || 'available',
+      },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [coords],
+      },
     });
-  }
+  });
   
-  // If no real polygons found, generate grid-based ones
-  if (features.length === 0) {
-    const cols = 9;
+  // Generate grid rectangles for lots without valid polygons
+  if (lotsWithoutPolygons.length > 0) {
+    const cols = Math.min(9, Math.ceil(Math.sqrt(lotsWithoutPolygons.length)));
     const lotWidth = 0.0012;
     const lotHeight = 0.0008;
     const gap = 0.0001;
     
-    lots.forEach((lot, index) => {
+    lotsWithoutPolygons.forEach((lot, index) => {
       const row = Math.floor(index / cols);
       const col = index % cols;
       
@@ -138,7 +134,7 @@ const formatPrice = (price: number | null) => {
   }).format(price);
 };
 
-export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, onLotsUpdated, readOnly = false }: LotMapViewProps) => {
+export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, onLotsUpdated, readOnly = false, showAdminControls = false }: LotMapViewProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
@@ -503,7 +499,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
 
   // Calculate actual bounds from lot polygons
   const calculateBounds = useCallback(() => {
-    const lotsWithPolygons = lots.filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length > 0);
+    const lotsWithPolygons = lots.filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3);
     
     if (lotsWithPolygons.length > 0) {
       let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
@@ -726,7 +722,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   }
 
   // Check if lots have real polygons
-  const hasRealPolygons = lots.some(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length > 0);
+  const hasRealPolygons = lots.some(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3);
 
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
@@ -754,8 +750,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           {mapStyle === 'satellite' ? 'Calles' : 'Satélite'}
         </Button>
         
-        {/* Admin-only controls - hidden in readOnly mode */}
-        {!readOnly && (
+        {/* Admin-only controls - only shown when showAdminControls is true */}
+        {showAdminControls && (
           <>
             {/* Master plan overlay toggle */}
             <Button
@@ -813,7 +809,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       </div>
       
       {/* Drawing Tool Panel */}
-      {!readOnly && showDrawingPanel && (
+      {showAdminControls && showDrawingPanel && (
         <div className="absolute top-16 left-3 z-10 w-64">
           <LotDrawingTool
             lots={lots.map(l => ({ 

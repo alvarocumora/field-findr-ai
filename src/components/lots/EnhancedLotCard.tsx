@@ -204,8 +204,8 @@ export const EnhancedLotCard = ({
           </div>
         )}
 
-        {/* Time indicator */}
-        {(daysOnMarket !== null || daysSinceReservation !== null) && (
+        {/* Time indicator - hidden for sold lots */}
+        {lot.status !== 'sold' && (daysOnMarket !== null || daysSinceReservation !== null) && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
             <Clock className="h-3.5 w-3.5" />
             {lot.status === 'reserved' && daysSinceReservation !== null ? (

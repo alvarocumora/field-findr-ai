@@ -105,8 +105,14 @@ const ProjectDetail = () => {
     
     const prices = lots.filter(l => l.price).map(l => l.price!);
     const areas = lots.map(l => Number(l.area)).filter(a => a > 0);
-    // Filter outlier areas for display
-    const reasonableAreas = areas.filter(a => a >= 500 && a <= 100000);
+    
+    // Filter outlier areas using median-based approach
+    let reasonableAreas = areas;
+    if (areas.length > 2) {
+      const sortedAreas = [...areas].sort((a, b) => a - b);
+      const median = sortedAreas[Math.floor(sortedAreas.length / 2)];
+      reasonableAreas = areas.filter(a => a >= median * 0.05 && a <= median * 10);
+    }
     
     return {
       availableLots: available,
@@ -177,7 +183,7 @@ const ProjectDetail = () => {
 
   return (
     <PublicLayout>
-      <div className="min-h-screen bg-background">
+      <div className={`min-h-screen bg-background ${isMobile ? 'pb-20' : ''}`}>
         {/* Header */}
         <div className="border-b border-border bg-card/50">
           <div className="container px-4 py-4">
@@ -190,12 +196,27 @@ const ProjectDetail = () => {
             </Link>
             
             <div className="flex flex-col gap-3">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground">{project.name}</h1>
-                <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                  <MapPin className="h-4 w-4" />
-                  <span>{project.city}, {project.region}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">{project.name}</h1>
+                  <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                    <MapPin className="h-4 w-4" />
+                    <span>{project.city}, {project.region}</span>
+                  </div>
                 </div>
+                {/* Inline contact buttons - desktop */}
+                {!isMobile && (
+                  <div className="flex gap-2 shrink-0">
+                    <Button size="sm" className="gap-2" onClick={handleCall}>
+                      <Phone className="h-4 w-4" />
+                      Llamar
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-2" onClick={handleMessage}>
+                      <MessageCircle className="h-4 w-4" />
+                      WhatsApp
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Horizontal Stats Bar */}
@@ -413,23 +434,7 @@ const ProjectDetail = () => {
           </div>
         )}
 
-        {/* Desktop Contact Floating Card */}
-        {!isMobile && (
-          <div className="fixed bottom-6 right-6 z-40">
-            <Card className="shadow-lg border-primary/20">
-              <CardContent className="p-3 flex gap-2">
-                <Button size="sm" className="gap-2" onClick={handleCall}>
-                  <Phone className="h-4 w-4" />
-                  Llamar
-                </Button>
-                <Button size="sm" variant="outline" className="gap-2" onClick={handleMessage}>
-                  <MessageCircle className="h-4 w-4" />
-                  WhatsApp
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        {/* Desktop floating contact removed - now inline in header */}
 
         {/* Reservation Dialog */}
         <LotReservationDialog
