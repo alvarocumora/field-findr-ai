@@ -1,94 +1,121 @@
 
-# Plan: Hacer la Plataforma de Proyectos Real y Funcional
+# Plan: Reconstruir la Pagina de Detalle de Proyecto
 
-## Problemas Identificados
+## Problemas Detectados
 
-### 1. Mapa Interactivo no carga (CRITICO)
-El tab "Mapa Interactivo" muestra una pantalla de autenticacion de Lovable ("Authenticating... Setting up your access to the project") en lugar del mapa. Esto ocurre porque el proyecto tiene un `embed_map_url` que apunta a otro proyecto Lovable (`5c2c49b8...lovableproject.com`), y la condicion `isOwner && embed_map_url` carga ese iframe en lugar del `LotMapView` interno con Mapbox.
+1. **Tab Master Plan vacio**: Tiene el boton de tab pero no tiene contenido (`TabsContent` faltante)
+2. **Mapa muestra solo 1 poligono**: Los 47 lotes tienen datos de poligono pero solo se ve 1 en el mapa. Probablemente los poligonos son muy pequenos o mal generados por el KMZ
+3. **Leyenda del mapa hardcodeada**: Muestra precios fijos ($15.990.000, $17.990.000, etc.) en lugar de valores dinamicos
+4. **Tarjetas de lotes redundantes**: Muestran "Lote-1" como nombre debajo del numero "1", info excesiva para vista publica
+5. **Rango de areas sin sentido**: "23 - 197.005 m2" refleja datos corruptos del KMZ (lotes de 23 m2 y 58 m2 son claramente erroneos)
+6. **Sidebar ocupa mucho espacio**: En desktop la sidebar 1/4 comprime demasiado las 3 columnas de tarjetas
 
-**Solucion**: Eliminar la logica de embed_map_url y siempre usar `LotMapView` para el mapa interactivo. El mapa embed no es funcional y bloquea al dueño del proyecto de ver sus propios lotes en el mapa.
+## Solucion
 
-### 2. Sidebar con datos hardcodeados (IMPORTANTE)
-La seccion lateral del proyecto muestra valores fijos:
-- "Rango de precios: $15.990.000 - $29.990.000" (hardcodeado)
-- "Area por lote: 5.000 - 12.500 m2" (hardcodeado)
+Reescribir `ProjectDetail.tsx` con una estructura mas limpia y funcional, y corregir los componentes dependientes.
 
-Los datos reales son: precios entre $15.990.000 y $29.990.000 (coincide por casualidad), pero las areas van de 23 m2 a 197.005 m2 (el hardcodeado esta muy lejos de la realidad).
+## Cambios por Archivo
 
-**Solucion**: Calcular rango de precios y areas dinamicamente desde los lotes reales.
+### 1. `src/pages/ProjectDetail.tsx` - Reestructuracion completa
 
-### 3. Galeria de imagenes hardcodeada
-El tab "Galeria" usa `GALLERY_IMAGES` hardcodeadas que apuntan a `/projects/brisas-gallery-*.jpg`. No funciona para otros proyectos.
+**Layout**: Cambiar de grid `lg:grid-cols-4` (3+1) a layout de 2 secciones:
+- Zona principal full-width para mapa y lotes
+- Sidebar solo visible en desktop, mas compacta
 
-**Solucion**: Si el proyecto no tiene imagenes configuradas, mostrar un empty state con opcion de subir imagenes (para el owner). Para visitantes, ocultar el tab si no hay imagenes.
+**Tabs simplificados**: Reducir de 6 tabs a 3 tabs funcionales:
+- **Mapa** (combina Mapa Interactivo + Master Plan en un solo tab con toggle satellite/masterplan)
+- **Lotes** (grid de tarjetas simplificadas)
+- **Info** (combina Legal + Galeria en un solo tab)
+- Eliminar tab "Master Plan" vacio y tab "IA Analisis" (solo confunde al publico)
 
-### 4. Lotes con datos de area incorrectos
-Varios lotes tienen areas absurdas provenientes del KMZ (23 m2, 58 m2, 92 m2 o 197.005 m2). Esto afecta el precio/m2 mostrado (ej: Lote 11 muestra $173.804/m2 porque tiene 92 m2 de area).
+**Resumen movido arriba**: Las stats (disponibles/reservados/vendidos, precio, area) se muestran como barra horizontal compacta debajo del header, no en sidebar
 
-**Solucion**: No se corregiran los datos existentes automaticamente (podrian ser intencionales), pero se agregara un indicador visual de advertencia en lotes con areas fuera de un rango razonable para loteos (< 500 m2 o > 100.000 m2).
+**Contacto sticky**: El card de contacto se muestra como barra fija en la parte inferior en movil, y como sidebar sticky en desktop
 
-### 5. Master Plan tab no es dinamico
-El tab "Master Plan" no se mostro en la vista, pero el `masterPlanImageUrl` en `LotMapView` esta hardcodeado a `brisas-de-caone-masterplan.jpg`.
+### 2. `src/components/lots/LotMapView.tsx` - Leyenda dinamica
 
-**Solucion**: Usar la imagen del proyecto si existe, o mostrar un empty state para subir master plan.
+**Leyenda**: Reemplazar precios hardcodeados ($15.990.000, $17.990.000, etc.) con leyenda simplificada basada en status:
+- Disponible (verde)
+- Reservado (amarillo)
+- Vendido (gris)
 
-### 6. Lotes no se ordenan correctamente
-Los lotes se muestran en orden 1, 10, 11, 12... en vez de 1, 2, 3, 4... porque `lot_number` es texto y el ordenamiento es alfabetico.
+Eliminar la categorizacion por rangos de precio en la leyenda ya que es especifica de un solo proyecto.
 
-**Solucion**: Ordenar los lotes numericamente en el frontend.
+**Altura del mapa**: Aumentar de `h-[500px]` a `h-[600px]` para mejor visualizacion
 
-### 7. Botones de contacto no funcionales
-Los botones "Llamar ahora" y "Enviar mensaje" en la sidebar no hacen nada.
+**MasterPlan hardcodeado**: Linea 157 aun referencia `/projects/brisas-de-caone-masterplan.jpg` cuando hay `kmzFileUrl`. Cambiar a `null` siempre (no hay imagen de master plan guardada en el proyecto).
 
-**Solucion**: Agregar acciones basicas - "Llamar" abre tel: con el telefono del owner (desde perfil), "Enviar mensaje" abre WhatsApp o un formulario de contacto simple.
+### 3. `src/components/lots/EnhancedLotCard.tsx` - Simplificar tarjetas
 
-## Archivos a Modificar
+Reducir las tarjetas para la vista publica:
+- Eliminar campo "name" redundante ("Lote-1") que solo repite el numero
+- Eliminar seccion de servicios (agua, luz, acceso) si no hay datos reales configurados
+- Hacer el precio/m2 mas prominente solo cuando el area esta en rango razonable (500-100.000 m2)
+- Ocultar precio/m2 cuando el area es sospechosa (evitar "$173.804/m2" por area de 92 m2)
+- Reducir padding y espaciado para cards mas compactas
 
-### `src/pages/ProjectDetail.tsx`
-- Eliminar logica de `embed_map_url` - siempre usar `LotMapView`
-- Calcular rango de precios y areas desde los datos reales de `lots`
-- Ordenar lotes numericamente para el tab "Lotes"
-- Reemplazar galeria hardcodeada con empty state dinamico
-- Hacer funcionales los botones de contacto (tel: y mailto:)
-- Agregar query para obtener el perfil del dueño del proyecto (telefono, email)
+### 4. `src/pages/ProjectDetail.tsx` - Barra de stats horizontal
 
-### `src/components/lots/EnhancedLotCard.tsx`
-- Agregar indicador visual de area sospechosa (< 500 m2 o > 100.000 m2)
-- Formatear area con separador de miles
+Reemplazar la sidebar Card "Resumen del Proyecto" con una barra horizontal compacta debajo del header:
 
-### `src/components/lots/LotMapView.tsx`
-- Eliminar hardcode de `masterPlanImageUrl`
-- Recibir URL de master plan como prop desde el proyecto
+```text
+[22 disponibles] [1 reservado] [24 vendidos] | Desde $15.990.000 | 5.000 - 60.000 m2
+```
+
+Filtrar areas atipicas (< 500 m2) del calculo de rango de area para mostrar un rango mas representativo.
+
+### 5. `src/pages/ProjectDetail.tsx` - Contacto mejorado
+
+En movil: barra fija inferior con botones "Llamar" y "WhatsApp" siempre visibles
+En desktop: card de contacto sticky en la parte superior derecha dentro del tab de lotes
 
 ## Seccion Tecnica
 
-### Calculo dinamico de estadisticas
+### Filtro de areas atipicas para estadisticas
 ```text
-const availableLots = lots.filter(l => l.status === 'available');
-const prices = lots.filter(l => l.price).map(l => l.price);
-const areas = lots.map(l => Number(l.area));
-const minPrice = Math.min(...prices);
-const maxPrice = Math.max(...prices);
-const minArea = Math.min(...areas);
-const maxArea = Math.max(...areas);
+// Filtrar areas absurdas del rango mostrado
+const reasonableAreas = areas.filter(a => a >= 500 && a <= 100000);
+const areaRange = reasonableAreas.length > 0
+  ? { min: Math.min(...reasonableAreas), max: Math.max(...reasonableAreas) }
+  : null;
 ```
 
-### Ordenamiento numerico de lotes
+### Leyenda dinamica del mapa
 ```text
-const sortedLots = [...lots].sort((a, b) => {
-  const numA = parseInt(a.lot_number) || 0;
-  const numB = parseInt(b.lot_number) || 0;
-  return numA - numB;
-});
+// Reemplazar leyenda hardcodeada con leyenda por status
+<div className="flex items-center gap-2">
+  <div className="w-4 h-4 rounded bg-emerald-500" />
+  <span>Disponible</span>
+</div>
+<div className="flex items-center gap-2">
+  <div className="w-4 h-4 rounded bg-amber-500" />
+  <span>Reservado</span>
+</div>
+<div className="flex items-center gap-2">
+  <div className="w-4 h-4 rounded bg-gray-400" />
+  <span>Vendido</span>
+</div>
 ```
 
-### Contacto del dueño
-Se agregara una query al perfil del owner del proyecto para obtener telefono y email, usados en los botones de contacto.
+### Correccion del masterPlanImageUrl
+```text
+// Antes (hardcodeado):
+const masterPlanImageUrl = kmzFileUrl ? '/projects/brisas-de-caone-masterplan.jpg' : null;
+// Despues:
+const masterPlanImageUrl = null; // No hay master plan guardado
+```
 
 ## Orden de Implementacion
-1. Arreglar mapa interactivo (eliminar embed_map_url)
-2. Calcular estadisticas dinamicas en sidebar
-3. Ordenar lotes numericamente
-4. Hacer botones de contacto funcionales
-5. Reemplazar galeria hardcodeada
-6. Agregar indicador de area sospechosa en lotes
+
+1. Corregir `LotMapView.tsx` - leyenda dinamica, eliminar hardcode de masterplan, altura 600px
+2. Simplificar `EnhancedLotCard.tsx` - eliminar nombre redundante, ocultar precio/m2 con area sospechosa
+3. Reescribir `ProjectDetail.tsx` - nuevo layout con stats horizontal, tabs simplificados (3 en vez de 6), contacto sticky en movil, filtro de areas atipicas
+
+## Resultado Esperado
+
+- Mapa ocupa todo el ancho disponible con leyenda por status (no por precio)
+- Stats compactas en barra horizontal debajo del header
+- Solo 3 tabs funcionales (Mapa, Lotes, Info)
+- Tarjetas de lotes mas limpias sin info redundante
+- Contacto siempre accesible (sticky en movil)
+- Rango de area filtrado para excluir valores absurdos del KMZ
