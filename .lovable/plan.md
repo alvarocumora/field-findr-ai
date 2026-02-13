@@ -1,87 +1,129 @@
 
-# Plan: Rediseño del Sistema de Exploración - Mapa Profesional
+# Plan: SaaS de Gestion de Loteos - Onboarding y Funcionalidad Real
 
-## Problema Principal
+## Estado Actual del Sistema
 
-El mapa pierde el control cuando se interactúa con el sidebar porque:
+La plataforma ya tiene una base solida con datos reales:
+- 1 proyecto activo ("Brisas de Caone") con 47 lotes (22 disponibles, 24 vendidos, 1 reservado)
+- 20 listings publicados
+- 1 usuario con roles admin + agent
+- Tablas completas: projects, lots, listings, reservations, credits, credit_payments, closing_steps, leads, documents, etc.
+- Sistema de roles (buyer/agent/admin) con RLS
 
-1. **flyTo en cada hover**: Cuando pasas el mouse por una tarjeta del sidebar, el mapa ejecuta `map.flyTo()` con animación de 800ms, moviendo el viewport constantemente. Si mueves el mouse por varias tarjetas rápidamente, se encolan múltiples animaciones y el mapa "salta" sin control.
+## Problemas Criticos Identificados
 
-2. **fitBounds en cada cambio de filtro**: Al filtrar propiedades, el mapa recalcula los bounds y se mueve, perdiendo la vista que el usuario había elegido.
+### 1. No hay onboarding para nuevos loteadores
+Cuando un usuario nuevo se registra, NO se le asigna ningun rol. Queda como "buyer" implicitamente pero sin entrada en `user_roles`. No hay forma de que un loteador se registre y empiece a usar la plataforma sin intervencion manual del admin.
 
-3. **Sin cancelación de animaciones**: No hay mecanismo para cancelar un flyTo previo antes de iniciar uno nuevo.
+### 2. El registro no asigna rol "buyer" automaticamente
+El trigger `handle_new_user` solo crea el perfil, pero no asigna el rol. El usuario queda sin acceso a nada.
 
-## Solución: Interacción Tipo Zillow/Idealista
+### 3. No hay flujo de "Crear mi primer proyecto"
+Un loteador nuevo que llega al dashboard ve pantallas vacias sin guia. No hay wizard de configuracion inicial.
 
-La interacción correcta entre sidebar y mapa es:
-- **Hover en sidebar**: resaltar el marcador en el mapa SIN mover la cámara
-- **Click en sidebar**: centrar el mapa suavemente SOLO en el click, no en el hover
-- **Hover en mapa**: resaltar la tarjeta en el sidebar con scroll automático
-- **Filtrar**: actualizar marcadores sin mover la cámara
+### 4. El formulario de crear proyecto es demasiado basico
+Solo pide nombre, ubicacion, descripcion y total de lotes. Falta: coordenadas, region/ciudad, precio base, superficie total, contacto comercial.
 
-## Cambios Técnicos
+### 5. No hay demo data ni cuentas de prueba
+Solo hay un usuario real. No hay forma de probar el sistema sin datos.
 
-### 1. `src/components/map/EnhancedMap.tsx` - Corregir interacción hover/click
+## Plan de Implementacion
 
-**Hover del sidebar (líneas 1650-1701)**: Eliminar completamente el `flyTo` del efecto de hover. En su lugar:
-- Solo destacar visualmente el marcador (cambiar estilo/escala)
-- Mostrar popup en la posición del marcador SIN mover la cámara
-- Si el marcador no está visible en el viewport, NO hacer nada (el usuario puede hacer click para centrar)
+### Fase 1: Auto-asignacion de Rol al Registrarse
 
-**Click del sidebar**: Agregar nuevo prop `selectedListing` separado de `hoveredListing`. Solo el click dispara `easeTo` (más suave que flyTo) con zoom controlado.
+**Migracion SQL**: Crear trigger que asigne rol "buyer" automaticamente al crear usuario.
 
-**fitBounds**: Cambiar para que solo se ejecute en la carga inicial (primera vez que hay listings), no en cada cambio de filtro. Usar un ref `initialFitDone` para controlarlo.
+Modificar el formulario de registro (`Auth.tsx`) para agregar un selector de tipo de cuenta:
+- "Busco terreno" (buyer)
+- "Soy loteador / vendedor" (agent)
 
-**Cancelar animaciones**: Llamar `map.stop()` antes de iniciar cualquier nueva animación para cancelar la anterior.
+El trigger asignara el rol correspondiente.
 
-### 2. `src/pages/Explorar.tsx` - Separar hover de selección
+### Fase 2: Onboarding Wizard para Loteadores
 
-Pasar tanto `hoveredListing` como `selectedListing` al mapa:
-- `hoveredListing`: solo visual, sin movimiento de cámara
-- `selectedListing` (click): dispara easeTo al marcador
+**Nuevo archivo: `src/components/onboarding/OnboardingWizard.tsx`**
 
-Modificar `handleListingClick` para que setee `selectedListing` y dispare el centrado.
+Wizard de 4 pasos que aparece automaticamente cuando un agent no tiene proyectos:
 
-### 3. `src/components/map/EnhancedMap.tsx` - Marcadores con cluster mejorados
+1. **Bienvenida**: Explicacion de la plataforma, que puede hacer
+2. **Perfil Comercial**: Nombre empresa, telefono, region de operacion
+3. **Primer Proyecto**: Formulario completo para crear el primer loteo (nombre, ubicacion con mapa, superficie, cantidad de lotes, precio base por lote)
+4. **Importar Lotes**: Opciones de importar KMZ o crear lotes manualmente
 
-Cuando se usa clustering, agregar una capa de unclustered-point para que los marcadores individuales sean clickeables y hovereables:
-- Agregar capa `unclustered-point` con evento de click que busca el listing y dispara `onListingClick`
-- Agregar evento de hover que muestra popup y dispara `onListingHover`
+**Nuevo archivo: `src/components/onboarding/ProjectSetupForm.tsx`**
 
-### 4. `src/components/explore/ExploreListPanel.tsx` - Scroll automático bidireccional
+Formulario mejorado de creacion de proyecto con:
+- Mapa interactivo para seleccionar ubicacion (reutilizando LocationPicker)
+- Selector de region/comuna de Chile
+- Campos para superficie total, precio base por m2
+- Upload de master plan (imagen)
 
-Cuando el mapa dispara `onListingHover`, el sidebar debe hacer scroll automático a la tarjeta correspondiente. El `QuickPropertyCard` ya tiene `scrollIntoView` para `isSelected`, extenderlo para `isHovered` también (con comportamiento más suave).
+### Fase 3: Dashboard Inteligente con Estado Vacio Mejorado
 
-### 5. `src/components/map/EnhancedMap.tsx` - Props interface actualizada
+**Modificar: `src/pages/dashboard/DashboardAsesor.tsx`**
 
-Agregar nuevo prop:
-```text
-selectedListing?: Listing | null  -- dispara easeTo al marcador
-hoveredListing?: Listing | null   -- solo resalta visualmente, sin mover cámara
-```
+Detectar si el usuario tiene 0 proyectos y mostrar el OnboardingWizard en lugar del dashboard vacio. Una vez completado, mostrar el dashboard normal con datos reales.
+
+**Modificar: `src/components/ProjectsManagement.tsx`**
+
+Mejorar el empty state con un CTA visual que guie al usuario a crear su primer proyecto paso a paso, en lugar del dialog simple actual.
+
+### Fase 4: Formulario de Proyecto Mejorado
+
+**Modificar: `src/components/ProjectsManagement.tsx`**
+
+Reemplazar el dialog simple de "Crear Proyecto" con un formulario multi-paso:
+- Paso 1: Datos basicos (nombre, descripcion)
+- Paso 2: Ubicacion (mapa con marcador draggable, region, comuna, direccion)
+- Paso 3: Configuracion de lotes (cantidad, superficie promedio, precio base)
+- Paso 4: Documentos (upload master plan, KMZ opcional)
+
+### Fase 5: Seed Data y Demo Mode
+
+**Migracion SQL**: Insertar datos demo en la base de datos:
+- 3 proyectos demo con lotes variados (diferentes regiones de Chile)
+- Listings demo vinculados
+- Leads demo para el CRM
+
+Marcar los datos demo con `is_demo = true` para poder filtrarlos.
+
+**Nuevo archivo: `src/components/onboarding/DemoDataBanner.tsx`**
+
+Banner informativo que aparece cuando hay datos demo, con boton para "Limpiar datos demo y empezar con mi data real".
+
+### Fase 6: Mejoras de Flujo Post-Registro
+
+**Modificar: `src/pages/Auth.tsx`**
+
+Despues del registro exitoso:
+- Buyer: redirigir a `/explorar`
+- Agent: redirigir a `/asesor/dashboard` donde vera el onboarding wizard
+- Mostrar email de verificacion pendiente
+
+**Modificar: `src/hooks/useSmartRedirect.ts`**
+
+Agregar logica para detectar si es la primera vez del usuario (0 proyectos) y redirigir al onboarding.
+
+## Archivos a Crear
+- `src/components/onboarding/OnboardingWizard.tsx` - Wizard principal de 4 pasos
+- `src/components/onboarding/ProjectSetupForm.tsx` - Formulario mejorado de proyecto
+- `src/components/onboarding/WelcomeStep.tsx` - Paso de bienvenida
+- `src/components/onboarding/DemoDataBanner.tsx` - Banner de datos demo
 
 ## Archivos a Modificar
+- `src/pages/Auth.tsx` - Selector de tipo de cuenta en registro
+- `src/pages/dashboard/DashboardAsesor.tsx` - Detectar estado vacio y mostrar onboarding
+- `src/components/ProjectsManagement.tsx` - Mejorar formulario de creacion
+- `src/hooks/useSmartRedirect.ts` - Logica de primera vez
 
-### `src/components/map/EnhancedMap.tsx`
-- Agregar prop `selectedListing` a la interface
-- Reescribir efecto de hover (líneas 1650-1701): eliminar flyTo, solo resaltar marcador + popup estático
-- Nuevo efecto para `selectedListing`: easeTo suave con `map.stop()` previo
-- Agregar ref `initialFitDone` para que fitBounds solo ocurra una vez
-- Agregar capa `unclustered-point` para marcadores individuales en modo cluster
-- Agregar eventos de click/hover en unclustered-point
+## Migraciones SQL
+1. Trigger para auto-asignar rol al registrarse
+2. Seed data con proyectos demo (opcional, se puede omitir si el usuario prefiere empezar desde cero)
 
-### `src/pages/Explorar.tsx`
-- Pasar `selectedListing` como prop al mapa
-- Cambiar `handleListingClick` para centrar mapa via `selectedListing`
-- Cambiar `handleListingPreview` para abrir sheet sin mover mapa
-
-### `src/components/explore/QuickPropertyCard.tsx`
-- Extender scrollIntoView para que también funcione con `isHovered` (scroll suave cuando el mapa hover dispara highlight en sidebar)
-
-## Resultado Esperado
-
-- Hover en sidebar: marcador se resalta pero el mapa NO se mueve
-- Click en tarjeta: mapa centra suavemente en la propiedad
-- Filtrar: marcadores se actualizan sin mover la cámara
-- Hover en marcador del mapa: sidebar hace scroll a la tarjeta
-- Sin saltos, sin animaciones encadenadas, experiencia fluida tipo Zillow
+## Orden de Implementacion
+1. Migracion SQL (trigger de rol automatico)
+2. Modificar Auth.tsx (selector de tipo de cuenta)
+3. Crear componentes de onboarding
+4. Integrar onboarding en DashboardAsesor
+5. Mejorar formulario de creacion de proyecto
+6. Datos demo (opcional)
