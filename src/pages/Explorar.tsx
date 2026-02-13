@@ -102,6 +102,7 @@ const Explorar = () => {
   // Listing interaction handlers
   const handleListingClick = useCallback((listing: Listing) => {
     setSelectedListing(listing);
+    // Map will easeTo this listing via selectedListing prop
   }, []);
 
   const handleListingPreview = useCallback((listing: Listing) => {
@@ -168,6 +169,7 @@ const Explorar = () => {
                 <EnhancedMap
                   listings={filteredListings}
                   hoveredListing={hoveredListing}
+                  selectedListing={selectedListing}
                   onListingHover={setHoveredListing}
                   onListingClick={handleListingPreview}
                   className="w-full h-full"

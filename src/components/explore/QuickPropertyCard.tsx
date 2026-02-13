@@ -39,6 +39,13 @@ const QuickPropertyCard = memo(({
     }
   }, [isSelected]);
 
+  // Scroll into view when hovered from map (bidirectional sync)
+  useEffect(() => {
+    if (isHovered && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [isHovered]);
+
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleFavorite(listing.id);
