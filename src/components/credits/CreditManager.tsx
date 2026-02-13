@@ -9,7 +9,7 @@ import { CreditDetail } from './CreditDetail';
 import { CreateCreditDialog } from './CreateCreditDialog';
 import {
   DollarSign, TrendingUp, AlertTriangle, CreditCard,
-  PlusCircle, ChevronRight,
+  PlusCircle, ChevronRight, FileText,
 } from 'lucide-react';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -99,10 +99,18 @@ const CreditManager = () => {
       {isLoading ? (
         <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
       ) : filtered.length === 0 ? (
-        <Card className="p-12 text-center">
+      <Card className="p-12 text-center">
           <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Sin créditos</h3>
-          <p className="text-muted-foreground">Crea un crédito desde una reserva pagada</p>
+          <h3 className="text-lg font-semibold mb-2">Sin créditos aún</h3>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+            Los créditos se crean desde una reserva pagada. Primero necesitas una reserva confirmada para ofrecer financiamiento directo.
+          </p>
+          <Button variant="outline" className="mt-4 gap-2" asChild>
+            <a href="/asesor/reservations">
+              <FileText className="h-4 w-4" />
+              Ir a Reservas
+            </a>
+          </Button>
         </Card>
       ) : (
         <div className="space-y-3">

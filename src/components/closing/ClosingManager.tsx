@@ -69,7 +69,15 @@ const ClosingManager = () => {
         <Card className="p-12 text-center">
           <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">Sin cierres en curso</h3>
-          <p className="text-muted-foreground">Los cierres se crean automáticamente cuando una reserva es pagada</p>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+            Los cierres legales se crean automáticamente cuando una reserva es pagada. El proceso incluye: Reserva → Promesa → Escritura → Inscripción CBR.
+          </p>
+          <Button variant="outline" className="mt-4 gap-2" asChild>
+            <a href="/asesor/reservations">
+              <FileText className="h-4 w-4" />
+              Ir a Reservas
+            </a>
+          </Button>
         </Card>
       ) : (
         <div className="space-y-6">
