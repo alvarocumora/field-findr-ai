@@ -20,6 +20,9 @@ import {
   ShieldCheck,
   TrendingUp,
   FileText,
+  CreditCard,
+  Scale,
+  ClipboardCheck,
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -40,6 +43,8 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     { name: 'CRM Leads', href: '/asesor/leads', icon: Users },
     { name: 'Ventas', href: '/asesor/sales', icon: Handshake },
     { name: 'Reservas', href: '/asesor/reservations', icon: FileText },
+    { name: 'Créditos', href: '/asesor/credits', icon: CreditCard },
+    { name: 'Cierres', href: '/asesor/closing', icon: Scale },
     { name: 'Analytics', href: '/asesor/analytics', icon: BarChart3 },
   ];
 
@@ -49,6 +54,8 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     { name: 'Usuarios', href: '/admin/users', icon: Users },
     { name: 'Agentes', href: '/admin/agents', icon: ShieldCheck },
     { name: 'Reservas', href: '/admin/reservations', icon: FileText },
+    { name: 'Aprobaciones', href: '/admin/approvals', icon: ClipboardCheck },
+    { name: 'Créditos', href: '/admin/credits', icon: CreditCard },
     { name: 'Analytics', href: '/admin/analytics', icon: TrendingUp },
   ];
 

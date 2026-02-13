@@ -1,5 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useReservations } from '@/hooks/useReservations';
+import { useClosingSteps } from '@/hooks/useClosingSteps';
+import { ClosingTimeline } from '@/components/closing/ClosingTimeline';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +26,7 @@ import {
   Home,
   Shield,
   Loader2,
+  Scale,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -150,6 +153,9 @@ const ReservationCard = ({ reservation }: { reservation: any }) => {
   const status = reservation.status as ReservationStatus;
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.pending_payment;
   const StatusIcon = config.icon;
+  const { data: closingSteps = [] } = useClosingSteps(
+    ['paid', 'converted'].includes(status) ? reservation.id : null
+  );
 
   // Calculate progress
   const completedSteps = STEPS.filter(s => s.statuses.includes(status)).length;
@@ -249,6 +255,19 @@ const ReservationCard = ({ reservation }: { reservation: any }) => {
             })}
           </div>
         </div>
+
+        <Separator />
+
+        {/* Legal Closing Timeline */}
+        {closingSteps.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Scale className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Cierre Legal</span>
+            </div>
+            <ClosingTimeline steps={closingSteps} />
+          </div>
+        )}
 
         <Separator />
 

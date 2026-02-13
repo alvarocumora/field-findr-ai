@@ -14,6 +14,218 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          ip_address: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      closing_steps: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          credit_id: string | null
+          document_url: string | null
+          id: string
+          notes: string | null
+          reservation_id: string | null
+          status: Database["public"]["Enums"]["closing_step_status"]
+          step_type: Database["public"]["Enums"]["closing_step_type"]
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          credit_id?: string | null
+          document_url?: string | null
+          id?: string
+          notes?: string | null
+          reservation_id?: string | null
+          status?: Database["public"]["Enums"]["closing_step_status"]
+          step_type: Database["public"]["Enums"]["closing_step_type"]
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          credit_id?: string | null
+          document_url?: string | null
+          id?: string
+          notes?: string | null
+          reservation_id?: string | null
+          status?: Database["public"]["Enums"]["closing_step_status"]
+          step_type?: Database["public"]["Enums"]["closing_step_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "closing_steps_credit_id_fkey"
+            columns: ["credit_id"]
+            isOneToOne: false
+            referencedRelation: "credits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "closing_steps_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          credit_id: string
+          due_date: string
+          id: string
+          notes: string | null
+          paid_date: string | null
+          payment_method: string | null
+          payment_number: number
+          receipt_url: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          credit_id: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          payment_number: number
+          receipt_url?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          credit_id?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          payment_number?: number
+          receipt_url?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_payments_credit_id_fkey"
+            columns: ["credit_id"]
+            isOneToOne: false
+            referencedRelation: "credits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credits: {
+        Row: {
+          buyer_user_id: string | null
+          contract_url: string | null
+          created_at: string
+          down_payment: number
+          financed_amount: number
+          id: string
+          interest_rate: number
+          lot_id: string
+          monthly_payment: number
+          next_payment_date: string | null
+          reservation_id: string | null
+          started_at: string
+          status: Database["public"]["Enums"]["credit_status"]
+          term_months: number
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          buyer_user_id?: string | null
+          contract_url?: string | null
+          created_at?: string
+          down_payment?: number
+          financed_amount: number
+          id?: string
+          interest_rate?: number
+          lot_id: string
+          monthly_payment: number
+          next_payment_date?: string | null
+          reservation_id?: string | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["credit_status"]
+          term_months: number
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          buyer_user_id?: string | null
+          contract_url?: string | null
+          created_at?: string
+          down_payment?: number
+          financed_amount?: number
+          id?: string
+          interest_rate?: number
+          lot_id?: string
+          monthly_payment?: number
+          next_payment_date?: string | null
+          reservation_id?: string | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["credit_status"]
+          term_months?: number
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credits_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credits_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string | null
@@ -555,6 +767,44 @@ export type Database = {
         }
         Relationships: []
       }
+      property_approvals: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
+          status: Database["public"]["Enums"]["approval_status"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: Database["public"]["Enums"]["approval_status"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: Database["public"]["Enums"]["approval_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_approvals_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reservations: {
         Row: {
           buyer_email: string
@@ -744,6 +994,11 @@ export type Database = {
     }
     Enums: {
       app_role: "buyer" | "agent" | "admin"
+      approval_status: "pending" | "approved" | "rejected"
+      closing_step_status: "pending" | "in_progress" | "completed" | "blocked"
+      closing_step_type: "reserva" | "promesa" | "escritura" | "inscripcion_cbr"
+      credit_status: "active" | "completed" | "defaulted" | "cancelled"
+      payment_status: "pending" | "paid" | "overdue" | "partial"
       reservation_status:
         | "pending_payment"
         | "paid"
@@ -878,6 +1133,11 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["buyer", "agent", "admin"],
+      approval_status: ["pending", "approved", "rejected"],
+      closing_step_status: ["pending", "in_progress", "completed", "blocked"],
+      closing_step_type: ["reserva", "promesa", "escritura", "inscripcion_cbr"],
+      credit_status: ["active", "completed", "defaulted", "cancelled"],
+      payment_status: ["pending", "paid", "overdue", "partial"],
       reservation_status: [
         "pending_payment",
         "paid",
