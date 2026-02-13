@@ -8,13 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { MapPin, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { MapPin, Eye, EyeOff, Loader2, Search, Building2 } from 'lucide-react';
 import { z } from 'zod';
 
 const authSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
 });
+
+type AccountType = 'buyer' | 'agent';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -27,6 +29,7 @@ const Auth = () => {
   const [lastName, setLastName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [accountType, setAccountType] = useState<AccountType>('buyer');
 
   const redirectParam = searchParams.get('redirect');
 
@@ -64,7 +67,11 @@ const Auth = () => {
     setIsSubmitting(true);
     try {
       authSchema.parse({ email, password });
-      const { error } = await signUp(email, password, { first_name: firstName, last_name: lastName });
+      const { error } = await signUp(email, password, { 
+        first_name: firstName, 
+        last_name: lastName,
+        account_type: accountType,
+      });
       if (error) {
         if (error.message.includes('already registered')) {
           toast.error('Este email ya está registrado');
@@ -137,6 +144,37 @@ const Auth = () => {
 
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
+                {/* Account Type Selector */}
+                <div className="space-y-2">
+                  <Label>¿Qué buscas?</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setAccountType('buyer')}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                        accountType === 'buyer' 
+                          ? 'border-primary bg-primary/5 text-primary' 
+                          : 'border-border hover:border-primary/40 text-muted-foreground'
+                      }`}
+                    >
+                      <Search className="h-6 w-6" />
+                      <span className="text-sm font-medium">Busco Terreno</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAccountType('agent')}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                        accountType === 'agent' 
+                          ? 'border-primary bg-primary/5 text-primary' 
+                          : 'border-border hover:border-primary/40 text-muted-foreground'
+                      }`}
+                    >
+                      <Building2 className="h-6 w-6" />
+                      <span className="text-sm font-medium">Soy Loteador</span>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="first-name">Nombre</Label>

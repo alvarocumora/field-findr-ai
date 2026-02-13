@@ -1,14 +1,6 @@
 import { 
-  Users, 
-  Building2, 
-  MessageSquare,
-  Phone,
-  Target,
-  Clock,
-  ChevronRight,
-  Plus,
-  DollarSign,
-  Loader2
+  Users, Building2, MessageSquare, Phone, Target, Clock,
+  ChevronRight, Plus, DollarSign, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,19 +10,40 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { useAgentStats, useAgentLeads, useAgentGoals } from '@/hooks/useDashboardStats';
+import { useProjects } from '@/hooks/useProjects';
 import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
 import { ListingFormDialog } from '@/components/listings/ListingFormDialog';
+import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 
 const DashboardAsesor = () => {
   const { data: stats, isLoading: statsLoading } = useAgentStats();
   const { data: leads, isLoading: leadsLoading } = useAgentLeads();
   const { data: goals, isLoading: goalsLoading } = useAgentGoals();
+  const { projects, isLoading: projectsLoading } = useProjects();
+
+  const hasNoProjects = !projectsLoading && projects.length === 0;
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000000) return `$${(value / 1000000000).toFixed(1)}B`;
     if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
     return `$${value.toLocaleString('es-CL')}`;
   };
+
+  // Show loading while checking projects
+  if (projectsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show onboarding wizard if no projects
+  if (hasNoProjects) {
+    return (
+      <OnboardingWizard onComplete={() => window.location.reload()} />
+    );
+  }
 
   const statsConfig = [
     { label: 'Leads Activos', value: stats?.activeLeads || 0, icon: Users, color: 'text-blue-500' },
