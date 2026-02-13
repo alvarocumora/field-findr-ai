@@ -1576,6 +1576,20 @@ const EnhancedMap = ({
           },
         });
 
+        // Unclustered individual points
+        map.current?.addLayer({
+          id: 'unclustered-point',
+          type: 'circle',
+          source: 'listings-cluster',
+          filter: ['!', ['has', 'point_count']],
+          paint: {
+            'circle-color': '#10b981',
+            'circle-radius': 8,
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#ffffff',
+          },
+        });
+
         // Click on cluster to zoom
         map.current?.on('click', 'clusters', (e) => {
           if (!e.features?.length) return;
@@ -1593,11 +1607,28 @@ const EnhancedMap = ({
           });
         });
 
-        // Change cursor on cluster hover
+        // Click on unclustered point to show popup
+        map.current?.on('click', 'unclustered-point', (e) => {
+          if (!e.features?.length) return;
+          const props = e.features[0].properties;
+          if (!props?.id) return;
+          const listing = listings.find(l => l.id === props.id);
+          if (listing) {
+            onListingClick?.(listing);
+          }
+        });
+
+        // Change cursor on cluster/point hover
         map.current?.on('mouseenter', 'clusters', () => {
           if (map.current) map.current.getCanvas().style.cursor = 'pointer';
         });
         map.current?.on('mouseleave', 'clusters', () => {
+          if (map.current) map.current.getCanvas().style.cursor = '';
+        });
+        map.current?.on('mouseenter', 'unclustered-point', () => {
+          if (map.current) map.current.getCanvas().style.cursor = 'pointer';
+        });
+        map.current?.on('mouseleave', 'unclustered-point', () => {
           if (map.current) map.current.getCanvas().style.cursor = '';
         });
       }
