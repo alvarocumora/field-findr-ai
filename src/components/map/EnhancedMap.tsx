@@ -53,6 +53,7 @@ import {
 interface EnhancedMapProps {
   listings: Listing[];
   hoveredListing?: Listing | null;
+  selectedListing?: Listing | null;
   onListingHover?: (listing: Listing | null) => void;
   onListingClick?: (listing: Listing) => void;
   onPolygonDrawn?: (polygon: number[][], area: number) => void;
@@ -131,6 +132,7 @@ const generateHeatmapData = (listings: Listing[]): GeoJSON.FeatureCollection => 
 const EnhancedMap = ({
   listings,
   hoveredListing,
+  selectedListing,
   onListingHover,
   onListingClick,
   onPolygonDrawn,
@@ -146,6 +148,7 @@ const EnhancedMap = ({
   const addInfoLayersRef = useRef<() => void>(() => {});
   const setupLayerHoverEventsRef = useRef<() => void>(() => {});
   const showDrawToolsRef = useRef(showDrawTools);
+  const initialFitDoneRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawnArea, setDrawnArea] = useState<number | null>(null);
@@ -1483,13 +1486,14 @@ const EnhancedMap = ({
       markersRef.current[listing.id] = marker;
     });
 
-    // Fit bounds
-    if (listings.length > 0) {
+    // Fit bounds only on initial load
+    if (!initialFitDoneRef.current && listings.length > 0) {
       const validListings = listings.filter((l) => l.lat && l.lng);
       if (validListings.length > 1) {
         const bounds = new mapboxgl.LngLatBounds();
         validListings.forEach((l) => bounds.extend([l.lng!, l.lat!]));
         map.current.fitBounds(bounds, { padding: 80, maxZoom: 10 });
+        initialFitDoneRef.current = true;
       }
     }
   }, [listings, isLoading, hoveredListing, showClusters]);
@@ -1598,11 +1602,12 @@ const EnhancedMap = ({
         });
       }
       
-      // Fit bounds if we have listings
-      if (validListings.length > 1) {
+      // Fit bounds only on initial load
+      if (!initialFitDoneRef.current && validListings.length > 1) {
         const bounds = new mapboxgl.LngLatBounds();
         validListings.forEach((l) => bounds.extend([l.lng!, l.lat!]));
         map.current?.fitBounds(bounds, { padding: 80, maxZoom: 10 });
+        initialFitDoneRef.current = true;
       }
     };
     
@@ -1647,12 +1652,12 @@ const EnhancedMap = ({
     });
   };
 
-  // Highlight hovered listing - works with both clusters and markers
+  // Highlight hovered listing - NO camera movement, only visual highlight + popup
   useEffect(() => {
     if (!map.current || isLoading) return;
     if (!map.current.isStyleLoaded()) return;
 
-    // Handle marker-based hover sync
+    // Handle marker-based hover sync (no clusters)
     if (!showClusters) {
       Object.entries(markersRef.current).forEach(([id, marker]) => {
         const el = marker.getElement();
@@ -1665,13 +1670,6 @@ const EnhancedMap = ({
         el.style.zIndex = isHovered ? '1000' : '1';
 
         if (isHovered && listing.lat && listing.lng) {
-          map.current?.flyTo({
-            center: [listing.lng, listing.lat],
-            zoom: Math.max(map.current.getZoom(), 10),
-            duration: 800,
-            essential: true,
-          });
-
           popupRef.current
             ?.setLngLat([listing.lng, listing.lat])
             .setHTML(createPopupHTML(listing))
@@ -1679,15 +1677,8 @@ const EnhancedMap = ({
         }
       });
     } else {
-      // Handle cluster-based hover sync - use feature state for highlighting
+      // Cluster mode: show popup at hovered listing position without moving camera
       if (hoveredListing && hoveredListing.lat && hoveredListing.lng) {
-        map.current?.flyTo({
-          center: [hoveredListing.lng, hoveredListing.lat],
-          zoom: Math.max(map.current.getZoom(), 12),
-          duration: 800,
-          essential: true,
-        });
-
         popupRef.current
           ?.setLngLat([hoveredListing.lng, hoveredListing.lat])
           .setHTML(createPopupHTML(hoveredListing))
@@ -1699,6 +1690,27 @@ const EnhancedMap = ({
       popupRef.current?.remove();
     }
   }, [hoveredListing, listings, isLoading, showClusters]);
+
+  // Selected listing: smooth easeTo camera movement (only on click)
+  useEffect(() => {
+    if (!map.current || isLoading || !selectedListing) return;
+    if (!selectedListing.lat || !selectedListing.lng) return;
+
+    // Cancel any in-progress animation
+    map.current.stop();
+
+    map.current.easeTo({
+      center: [selectedListing.lng, selectedListing.lat],
+      zoom: Math.max(map.current.getZoom(), 13),
+      duration: 600,
+    });
+
+    // Show popup for selected listing
+    popupRef.current
+      ?.setLngLat([selectedListing.lng, selectedListing.lat])
+      .setHTML(createPopupHTML(selectedListing))
+      .addTo(map.current!);
+  }, [selectedListing, isLoading]);
 
   // Render isochrone data on map
   useEffect(() => {

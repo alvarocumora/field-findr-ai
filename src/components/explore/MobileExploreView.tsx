@@ -88,6 +88,7 @@ const MobileExploreView = ({
           <EnhancedMap
             listings={listings}
             hoveredListing={hoveredListing}
+            selectedListing={selectedListing}
             onListingHover={setHoveredListing}
             onListingClick={handleMapListingClick}
             className="h-full w-full"
