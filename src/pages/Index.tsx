@@ -25,6 +25,7 @@ import HowItWorks from '@/components/landing/HowItWorks';
 import FeaturedProjects from '@/components/landing/FeaturedProjects';
 import TrustBadges from '@/components/landing/TrustBadges';
 import FloatingCTA from '@/components/landing/FloatingCTA';
+import RegionCards from '@/components/landing/RegionCards';
 
 const CATEGORIES = [
   { name: 'Parcelas', icon: TreePine, type: 'parcela_rural' },
@@ -121,6 +122,9 @@ const Index = () => {
 
       {/* How It Works */}
       <HowItWorks />
+
+      {/* Region Cards */}
+      <RegionCards />
 
       {/* Featured Projects Section */}
       <FeaturedProjects />

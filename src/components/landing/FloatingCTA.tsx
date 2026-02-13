@@ -17,7 +17,7 @@ const FloatingCTA = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const lotsCount = stats?.totalLots ?? 0;
+  const lotsCount = stats?.totalLots ?? 0; // Now filtered by status='available'
 
   return (
     <div
