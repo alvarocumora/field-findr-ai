@@ -1,26 +1,27 @@
 import { Badge } from '@/components/ui/badge';
-import { Upload, Grid3X3, CreditCard, CheckCircle2, Sparkles } from 'lucide-react';
+import { Search, BarChart3, CreditCard, CheckCircle2, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const STEPS = [
   {
-    icon: Upload,
-    title: 'Sube tu proyecto',
-    description: 'Master plan, KMZ y datos del loteo.',
+    icon: Search,
+    title: 'Explora el mapa',
+    description: 'Busca terrenos por ubicación, precio y tipo con nuestro mapa interactivo.',
   },
   {
-    icon: Grid3X3,
-    title: 'Configura lotes',
-    description: 'Parcelas, precios y disponibilidad.',
+    icon: BarChart3,
+    title: 'Compara opciones',
+    description: 'Analiza precio por m², conectividad y datos verificados.',
   },
   {
     icon: CreditCard,
-    title: 'Recibe reservas',
-    description: 'Seña online de forma segura.',
+    title: 'Reserva online',
+    description: 'Asegura tu terreno con una seña digital al instante.',
   },
   {
     icon: CheckCircle2,
-    title: 'Cierra ventas',
-    description: 'Contratos y pagos en un solo lugar.',
+    title: 'Cierra tu compra',
+    description: 'Contratos, pagos y escritura en un solo lugar.',
   },
 ];
 
@@ -36,11 +37,11 @@ const HowItWorks = () => {
             Cómo Funciona
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            De proyecto a ventas en{' '}
+            Tu terreno ideal en{' '}
             <span className="gradient-text">4 pasos</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Automatiza la comercialización de tu loteo
+            Desde la búsqueda hasta la escritura, todo digital y seguro
           </p>
         </div>
 
@@ -68,6 +69,15 @@ const HowItWorks = () => {
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="text-center mt-10">
+          <p className="text-sm text-muted-foreground">
+            ¿Eres desarrollador inmobiliario?{' '}
+            <Link to="/pricing" className="text-primary hover:underline font-medium">
+              Conoce nuestros planes →
+            </Link>
+          </p>
         </div>
       </div>
     </section>

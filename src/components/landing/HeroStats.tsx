@@ -1,4 +1,4 @@
-import { MapPin, Layers, ShieldCheck, Map } from 'lucide-react';
+import { MapPin, Layers, Map, Mountain } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLandingStats } from '@/hooks/useLandingStats';
 
@@ -42,7 +42,7 @@ const AnimatedCounter = ({
 
   return (
     <span>
-      {prefix}{count}{suffix}
+      {prefix}{count.toLocaleString('es-CL')}{suffix}
     </span>
   );
 };
@@ -54,7 +54,7 @@ const HeroStats = () => {
     { value: stats?.totalProjects ?? 0, suffix: '', label: 'Proyectos activos', icon: MapPin },
     { value: stats?.totalLots ?? 0, suffix: '', label: 'Lotes disponibles', icon: Layers },
     { value: stats?.totalRegions ?? 0, suffix: '', label: 'Regiones cubiertas', icon: Map },
-    { value: stats?.totalListings ?? 0, suffix: '', label: 'Publicaciones activas', icon: ShieldCheck },
+    { value: stats?.totalHectares ?? 0, suffix: ' há', label: 'Hectáreas disponibles', icon: Mountain },
   ];
 
   return (

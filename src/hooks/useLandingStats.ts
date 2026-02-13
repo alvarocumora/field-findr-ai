@@ -7,6 +7,8 @@ interface LandingStats {
   totalLots: number;
   totalReservations: number;
   totalRegions: number;
+  totalHectares: number;
+  regionData: { region: string; count: number; minPrice: number; maxPrice: number }[];
 }
 
 const FALLBACK_STATS: LandingStats = {
@@ -15,23 +17,47 @@ const FALLBACK_STATS: LandingStats = {
   totalLots: 0,
   totalReservations: 0,
   totalRegions: 0,
+  totalHectares: 0,
+  regionData: [],
 };
 
 export const useLandingStats = () => {
   return useQuery({
     queryKey: ['landing-stats'],
     queryFn: async (): Promise<LandingStats> => {
-      const [listings, projects, lots, reservations, regions] = await Promise.all([
+      const [listings, projects, lots, reservations, listingsWithArea] = await Promise.all([
         supabase.from('listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('projects').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('lots').select('id', { count: 'exact', head: true }),
+        supabase.from('lots').select('id', { count: 'exact', head: true }).eq('status', 'available'),
         supabase.from('reservations').select('id', { count: 'exact', head: true }).eq('status', 'paid'),
-        supabase.from('projects').select('region').eq('status', 'active'),
+        supabase.from('listings').select('region, price, area_ha').eq('status', 'active'),
       ]);
 
-      const uniqueRegions = new Set(
-        (regions.data || []).map(p => p.region).filter(Boolean)
-      );
+      const listingsData = listingsWithArea.data || [];
+
+      // Calculate total hectares
+      const totalHectares = listingsData.reduce((acc, l) => acc + (l.area_ha || 0), 0);
+
+      // Calculate region data
+      const regionMap: Record<string, { count: number; prices: number[] }> = {};
+      listingsData.forEach(l => {
+        if (l.region) {
+          if (!regionMap[l.region]) regionMap[l.region] = { count: 0, prices: [] };
+          regionMap[l.region].count++;
+          if (l.price) regionMap[l.region].prices.push(l.price);
+        }
+      });
+
+      const regionData = Object.entries(regionMap)
+        .map(([region, data]) => ({
+          region,
+          count: data.count,
+          minPrice: data.prices.length > 0 ? Math.min(...data.prices) : 0,
+          maxPrice: data.prices.length > 0 ? Math.max(...data.prices) : 0,
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      const uniqueRegions = new Set(regionData.map(r => r.region));
 
       return {
         totalListings: listings.count ?? 0,
@@ -39,6 +65,8 @@ export const useLandingStats = () => {
         totalLots: lots.count ?? 0,
         totalReservations: reservations.count ?? 0,
         totalRegions: uniqueRegions.size,
+        totalHectares: Math.round(totalHectares),
+        regionData,
       };
     },
     staleTime: 5 * 60 * 1000,
