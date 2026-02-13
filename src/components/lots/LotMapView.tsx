@@ -153,8 +153,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [regenerating, setRegenerating] = useState(false);
   const [showDrawingPanel, setShowDrawingPanel] = useState(false);
   
-  // Master plan image URL - no longer hardcoded
-  const masterPlanImageUrl = kmzFileUrl ? '/projects/brisas-de-caone-masterplan.jpg' : null;
+  // Master plan image URL - no hardcoded fallback
+  const masterPlanImageUrl = null;
 
   // Polygon drawing hook
   const {
@@ -565,14 +565,11 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         type: 'fill',
         source: 'lots',
         paint: {
-          'fill-color': [
+      'fill-color': [
             'case',
             ['==', ['get', 'status'], 'sold'], '#6b7280',
             ['==', ['get', 'status'], 'reserved'], '#f59e0b',
-            ['<=', ['get', 'price'], 15990000], '#10b981',
-            ['<=', ['get', 'price'], 17990000], '#0ea5e9',
-            ['<=', ['get', 'price'], 24990000], '#78716c',
-            '#1e293b'
+            '#10b981'
           ],
           'fill-opacity': 0.7,
         },
@@ -714,12 +711,12 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   };
 
   if (tokenLoading) {
-    return <Skeleton className="w-full h-[500px] rounded-xl" />;
+    return <Skeleton className="w-full h-[600px] rounded-xl" />;
   }
 
   if (tokenError) {
     return (
-      <div className="w-full h-[500px] rounded-xl bg-muted flex items-center justify-center">
+      <div className="w-full h-[600px] rounded-xl bg-muted flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-2" />
           <p className="text-muted-foreground">Error al cargar el mapa</p>
@@ -732,7 +729,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const hasRealPolygons = lots.some(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length > 0);
 
   return (
-    <div className="relative w-full h-[500px] rounded-xl overflow-hidden">
+    <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
       <div ref={mapContainer} className="w-full h-full" />
       
       {/* Hidden file input */}
@@ -858,32 +855,19 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         </div>
       )}
 
-      {/* Legend */}
-      <div className="absolute bottom-3 left-3 p-3 glass rounded-lg text-sm space-y-1">
-        <div className="font-semibold mb-2">Leyenda</div>
+      {/* Legend - status based */}
+      <div className="absolute bottom-3 left-3 p-3 glass rounded-lg text-sm space-y-1.5">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-muted-foreground" />
-          <span>Vendido</span>
+          <div className="w-3 h-3 rounded-full bg-emerald-500" />
+          <span>Disponible</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-amber-500" />
+          <div className="w-3 h-3 rounded-full bg-amber-500" />
           <span>Reservado</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-emerald-500" />
-          <span>$15.990.000</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-sky-500" />
-          <span>$17.990.000</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-stone-500" />
-          <span>$24.990.000</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-slate-800" />
-          <span>$29.990.000</span>
+          <div className="w-3 h-3 rounded-full bg-gray-400" />
+          <span>Vendido</span>
         </div>
       </div>
     </div>

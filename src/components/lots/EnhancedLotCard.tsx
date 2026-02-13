@@ -160,7 +160,7 @@ export const EnhancedLotCard = ({
             {getStatusLabel(lot.status)}
           </Badge>
         </div>
-        {lot.name && (
+        {lot.name && lot.name !== `Lote-${lot.lot_number}` && lot.name !== lot.lot_number && (
           <p className="text-sm text-muted-foreground truncate">{lot.name}</p>
         )}
       </CardHeader>
@@ -196,8 +196,8 @@ export const EnhancedLotCard = ({
           </div>
         </div>
 
-        {/* Price per sqm */}
-        {pricePerSqm && (
+        {/* Price per sqm - only show for reasonable areas */}
+        {pricePerSqm && Number(lot.area) >= 500 && Number(lot.area) <= 100000 && (
           <div className="flex items-center justify-between text-sm px-1">
             <span className="text-muted-foreground">Precio/m²</span>
             <span className="font-medium">{formatPricePerSqm(lot.price, Number(lot.area))}</span>
@@ -216,65 +216,51 @@ export const EnhancedLotCard = ({
           </div>
         )}
 
-        {/* Services with Tooltips */}
-        <div className="flex flex-wrap gap-1.5">
-          <TooltipProvider delayDuration={200}>
-            {features.hasWater && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5 cursor-default">
-                    <Droplets className="h-3 w-3 text-blue-500" />
-                    Agua
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>Conexión de agua disponible</TooltipContent>
-              </Tooltip>
-            )}
-            {features.hasElectricity && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5 cursor-default">
-                    <Zap className="h-3 w-3 text-yellow-500" />
-                    Luz
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>Conexión eléctrica disponible</TooltipContent>
-              </Tooltip>
-            )}
-            {features.hasRoad && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5 cursor-default">
-                    <Route className="h-3 w-3 text-muted-foreground" />
-                    Acceso
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>Acceso por camino</TooltipContent>
-              </Tooltip>
-            )}
-            {features.additionalFeatures?.filter(f => f !== 'premium' && f !== 'destacado').slice(0, 2).map((feature, i) => (
-              <Badge key={i} variant="outline" className="text-xs px-2 py-0.5">
-                {feature}
-              </Badge>
-            ))}
-            {(features.additionalFeatures?.filter(f => f !== 'premium' && f !== 'destacado').length || 0) > 2 && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-xs px-2 py-0.5 cursor-default">
-                    +{(features.additionalFeatures?.filter(f => f !== 'premium' && f !== 'destacado').length || 0) - 2}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <ul className="text-xs space-y-1">
-                    {features.additionalFeatures?.filter(f => f !== 'premium' && f !== 'destacado').slice(2).map((f, i) => (
-                      <li key={i}>{f}</li>
-                    ))}
-                  </ul>
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </TooltipProvider>
-        </div>
+        {/* Services with Tooltips - only show if any service is available */}
+        {(features.hasWater || features.hasElectricity || features.hasRoad || (features.additionalFeatures && features.additionalFeatures.length > 0)) && (
+          <div className="flex flex-wrap gap-1.5">
+            <TooltipProvider delayDuration={200}>
+              {features.hasWater && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5 cursor-default">
+                      <Droplets className="h-3 w-3 text-blue-500" />
+                      Agua
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>Conexión de agua disponible</TooltipContent>
+                </Tooltip>
+              )}
+              {features.hasElectricity && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5 cursor-default">
+                      <Zap className="h-3 w-3 text-yellow-500" />
+                      Luz
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>Conexión eléctrica disponible</TooltipContent>
+                </Tooltip>
+              )}
+              {features.hasRoad && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5 cursor-default">
+                      <Route className="h-3 w-3 text-muted-foreground" />
+                      Acceso
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>Acceso por camino</TooltipContent>
+                </Tooltip>
+              )}
+              {features.additionalFeatures?.filter(f => f !== 'premium' && f !== 'destacado').slice(0, 2).map((feature, i) => (
+                <Badge key={i} variant="outline" className="text-xs px-2 py-0.5">
+                  {feature}
+                </Badge>
+              ))}
+            </TooltipProvider>
+          </div>
+        )}
 
         {/* Buyer info if sold/reserved */}
         {(lot.status === 'sold' || lot.status === 'reserved') && lot.buyer_name && (

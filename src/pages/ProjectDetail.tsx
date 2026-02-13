@@ -12,24 +12,20 @@ import { LotMapView } from '@/components/lots/LotMapView';
 import { LegalTab } from '@/components/projects/LegalTab';
 import { FinancingCalculator } from '@/components/projects/FinancingCalculator';
 import { EnhancedLotCard } from '@/components/lots/EnhancedLotCard';
-import { AIMasterplanTab } from '@/components/projects/AIMasterplanTab';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   MapPin,
   ArrowLeft,
   DollarSign,
   Maximize2,
   Phone,
-  Mail,
-  Image as ImageIcon,
   Map,
   List,
-  Navigation,
-  Scale,
   Calculator,
-  Brain,
   ImageOff,
-  MessageCircle
+  MessageCircle,
+  Info
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -46,20 +42,11 @@ const formatArea = (area: number) => {
   return new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 }).format(area);
 };
 
-const getPriceColor = (price: number | null, status: string) => {
-  if (status === 'sold') return { bg: 'bg-gray-400', border: 'border-gray-500', text: 'text-gray-600' };
-  if (status === 'reserved') return { bg: 'bg-amber-400', border: 'border-amber-500', text: 'text-amber-600' };
-  if (!price) return { bg: 'bg-primary', border: 'border-primary', text: 'text-primary' };
-  if (price <= 15990000) return { bg: 'bg-emerald-500', border: 'border-emerald-600', text: 'text-emerald-600' };
-  if (price <= 17990000) return { bg: 'bg-sky-500', border: 'border-sky-600', text: 'text-sky-600' };
-  if (price <= 24990000) return { bg: 'bg-stone-500', border: 'border-stone-600', text: 'text-stone-600' };
-  return { bg: 'bg-slate-800', border: 'border-slate-900', text: 'text-slate-800' };
-};
-
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [selectedLot, setSelectedLot] = useState<string | null>(null);
   const [reservationLot, setReservationLot] = useState<any | null>(null);
   const [financingLot, setFinancingLot] = useState<any | null>(null);
@@ -90,7 +77,6 @@ const ProjectDetail = () => {
     enabled: !!id,
   });
 
-  // Fetch owner profile for contact info
   const { data: ownerProfile } = useQuery({
     queryKey: ['owner-profile', project?.user_id],
     queryFn: async () => {
@@ -104,7 +90,6 @@ const ProjectDetail = () => {
     enabled: !!project?.user_id,
   });
 
-  // Sort lots numerically
   const sortedLots = useMemo(() => {
     return [...lots].sort((a, b) => {
       const numA = parseInt(a.lot_number) || 0;
@@ -113,7 +98,6 @@ const ProjectDetail = () => {
     });
   }, [lots]);
 
-  // Dynamic stats from real lot data
   const { availableLots, soldLots, reservedLots, priceRange, areaRange } = useMemo(() => {
     const available = lots.filter(l => l.status === 'available');
     const sold = lots.filter(l => l.status === 'sold');
@@ -121,6 +105,8 @@ const ProjectDetail = () => {
     
     const prices = lots.filter(l => l.price).map(l => l.price!);
     const areas = lots.map(l => Number(l.area)).filter(a => a > 0);
+    // Filter outlier areas for display
+    const reasonableAreas = areas.filter(a => a >= 500 && a <= 100000);
     
     return {
       availableLots: available,
@@ -129,8 +115,8 @@ const ProjectDetail = () => {
       priceRange: prices.length > 0 
         ? { min: Math.min(...prices), max: Math.max(...prices) } 
         : null,
-      areaRange: areas.length > 0 
-        ? { min: Math.min(...areas), max: Math.max(...areas) } 
+      areaRange: reasonableAreas.length > 0 
+        ? { min: Math.min(...reasonableAreas), max: Math.max(...reasonableAreas) } 
         : null,
     };
   }, [lots]);
@@ -167,13 +153,11 @@ const ProjectDetail = () => {
   const selectedLotData = lots.find(l => l.id === selectedLot);
   const isOwner = !!user && project.user_id === user.id;
 
-  // Contact handlers
   const handleCall = () => {
     const phone = ownerProfile?.phone;
     if (phone) {
       window.open(`tel:${phone}`, '_self');
     } else {
-      // Fallback to WhatsApp with project info
       const message = encodeURIComponent(`Hola, me interesa el proyecto ${project.name} en ${project.city}, ${project.region}.`);
       window.open(`https://wa.me/?text=${message}`, '_blank');
     }
@@ -183,7 +167,6 @@ const ProjectDetail = () => {
     const phone = ownerProfile?.phone;
     const message = encodeURIComponent(`Hola, me interesa el proyecto ${project.name} en ${project.city}, ${project.region}. ¿Podrían darme más información?`);
     if (phone) {
-      // Clean phone number for WhatsApp
       const cleanPhone = phone.replace(/[^0-9+]/g, '');
       window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
     } else if (ownerProfile?.email) {
@@ -200,13 +183,13 @@ const ProjectDetail = () => {
           <div className="container px-4 py-4">
             <Link 
               to="/" 
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3"
             >
               <ArrowLeft className="h-4 w-4" />
-              Volver a proyectos
+              Volver
             </Link>
             
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-col gap-3">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground">{project.name}</h1>
                 <div className="flex items-center gap-2 text-muted-foreground mt-1">
@@ -214,268 +197,239 @@ const ProjectDetail = () => {
                   <span>{project.city}, {project.region}</span>
                 </div>
               </div>
-              
-              <div className="flex flex-wrap gap-3">
-                <Badge variant="outline" className="text-primary border-primary">
+
+              {/* Horizontal Stats Bar */}
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <Badge variant="outline" className="text-emerald-600 border-emerald-500/30 bg-emerald-500/10">
                   {availableLots.length} disponibles
                 </Badge>
+                {reservedLots.length > 0 && (
+                  <Badge variant="outline" className="text-amber-600 border-amber-500/30 bg-amber-500/10">
+                    {reservedLots.length} reservados
+                  </Badge>
+                )}
                 <Badge variant="secondary">
                   {soldLots.length} vendidos
                 </Badge>
-                <Badge variant="outline">
-                  {lots.length} lotes totales
-                </Badge>
+                
+                {priceRange && (
+                  <>
+                    <span className="text-muted-foreground hidden sm:inline">·</span>
+                    <span className="text-foreground font-medium">
+                      Desde {formatPrice(priceRange.min)}
+                      {priceRange.min !== priceRange.max && ` — ${formatPrice(priceRange.max)}`}
+                    </span>
+                  </>
+                )}
+                
+                {areaRange && (
+                  <>
+                    <span className="text-muted-foreground hidden sm:inline">·</span>
+                    <span className="text-muted-foreground">
+                      {formatArea(areaRange.min)}
+                      {areaRange.min !== areaRange.max && ` — ${formatArea(areaRange.max)}`} m²
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </div>
 
+        {/* Main Content - Full Width */}
         <div className="container px-4 py-6">
-          <div className="grid lg:grid-cols-4 gap-6">
-            {/* Main Content */}
-            <div className="lg:col-span-3">
-              <Tabs defaultValue="interactive-map" className="space-y-4">
-                <TabsList className="glass flex-wrap">
-                  <TabsTrigger value="interactive-map" className="gap-2">
-                    <Navigation className="h-4 w-4" />
-                    Mapa Interactivo
-                  </TabsTrigger>
-                  <TabsTrigger value="masterplan" className="gap-2">
-                    <Map className="h-4 w-4" />
-                    Master Plan
-                  </TabsTrigger>
-                  <TabsTrigger value="lots" className="gap-2">
-                    <List className="h-4 w-4" />
-                    Lotes
-                  </TabsTrigger>
-                  <TabsTrigger value="legal" className="gap-2">
-                    <Scale className="h-4 w-4" />
-                    Legal
-                  </TabsTrigger>
-                  <TabsTrigger value="gallery" className="gap-2">
-                    <ImageIcon className="h-4 w-4" />
-                    Galería
-                  </TabsTrigger>
-                  {isOwner && (
-                    <TabsTrigger value="ai-analysis" className="gap-2">
-                      <Brain className="h-4 w-4" />
-                      IA Análisis
-                    </TabsTrigger>
-                  )}
-                </TabsList>
+          <Tabs defaultValue="map" className="space-y-4">
+            <TabsList className="glass">
+              <TabsTrigger value="map" className="gap-2">
+                <Map className="h-4 w-4" />
+                Mapa
+              </TabsTrigger>
+              <TabsTrigger value="lots" className="gap-2">
+                <List className="h-4 w-4" />
+                Lotes ({lots.length})
+              </TabsTrigger>
+              <TabsTrigger value="info" className="gap-2">
+                <Info className="h-4 w-4" />
+                Info
+              </TabsTrigger>
+            </TabsList>
 
-                {/* Interactive Map Tab - Always use LotMapView */}
-                <TabsContent value="interactive-map" className="space-y-4">
-                  <LotMapView
-                    lots={lots}
-                    projectCenter={{
-                      lat: project.latitude || -34.9767,
-                      lng: project.longitude || -71.7856
-                    }}
-                    onLotClick={(lot) => {
+            {/* Map Tab */}
+            <TabsContent value="map">
+              <LotMapView
+                lots={lots}
+                projectCenter={{
+                  lat: project.latitude || -34.9767,
+                  lng: project.longitude || -71.7856
+                }}
+                onLotClick={(lot) => {
+                  setSelectedLot(lot.id);
+                  if (lot.status !== 'sold') {
+                    setReservationLot(lot);
+                  }
+                }}
+                selectedLotId={selectedLot}
+                projectId={project.id}
+                kmzFileUrl={(project as any).kmz_file_url}
+                onLotsUpdated={() => {
+                  queryClient.invalidateQueries({ queryKey: ['project-lots', id] });
+                  queryClient.invalidateQueries({ queryKey: ['project', id] });
+                }}
+                readOnly={!isOwner}
+              />
+              
+              {/* Selected Lot Quick View under map */}
+              {selectedLotData && (
+                <Card className="mt-4 border-primary/30">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <h3 className="font-bold text-lg">Lote {selectedLotData.lot_number}</h3>
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                            <span className="flex items-center gap-1">
+                              <Maximize2 className="h-3.5 w-3.5" />
+                              {formatArea(Number(selectedLotData.area))} m²
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <DollarSign className="h-3.5 w-3.5" />
+                              {formatPrice(selectedLotData.price)}
+                            </span>
+                          </div>
+                        </div>
+                        <Badge className={
+                          selectedLotData.status === 'sold' ? 'bg-gray-400' : 
+                          selectedLotData.status === 'reserved' ? 'bg-amber-500' : 'bg-emerald-500'
+                        }>
+                          {selectedLotData.status === 'sold' ? 'Vendido' : selectedLotData.status === 'reserved' ? 'Reservado' : 'Disponible'}
+                        </Badge>
+                      </div>
+                      
+                      {selectedLotData.status === 'available' && (
+                        <div className="flex gap-2">
+                          <Button size="sm" className="gap-1" onClick={() => setFinancingLot(selectedLotData)}>
+                            <Calculator className="h-3.5 w-3.5" />
+                            Simular
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setReservationLot(selectedLotData)}>
+                            Reservar
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            {/* Lots Tab */}
+            <TabsContent value="lots">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {sortedLots.map((lot, index) => (
+                  <EnhancedLotCard
+                    key={lot.id}
+                    lot={lot}
+                    index={index}
+                    totalAvailable={availableLots.length}
+                    isSelected={selectedLot === lot.id}
+                    onView={(lot) => {
                       setSelectedLot(lot.id);
                       if (lot.status !== 'sold') {
                         setReservationLot(lot);
                       }
                     }}
-                    selectedLotId={selectedLot}
-                    projectId={project.id}
-                    kmzFileUrl={(project as any).kmz_file_url}
-                    onLotsUpdated={() => {
-                      queryClient.invalidateQueries({ queryKey: ['project-lots', id] });
-                      queryClient.invalidateQueries({ queryKey: ['project', id] });
+                    onSimulateFinancing={(lot) => {
+                      setSelectedLot(lot.id);
+                      setFinancingLot(lot);
                     }}
-                    readOnly={!isOwner}
                   />
-                </TabsContent>
+                ))}
+              </div>
+            </TabsContent>
 
-                {/* Lots List Tab - Numerically sorted */}
-                <TabsContent value="lots" className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {sortedLots.map((lot, index) => (
-                      <EnhancedLotCard
-                        key={lot.id}
-                        lot={lot}
-                        index={index}
-                        totalAvailable={availableLots.length}
-                        isSelected={selectedLot === lot.id}
-                        onView={(lot) => {
-                          setSelectedLot(lot.id);
-                          if (lot.status !== 'sold') {
-                            setReservationLot(lot);
-                          }
-                        }}
-                        onSimulateFinancing={(lot) => {
-                          setSelectedLot(lot.id);
-                          setFinancingLot(lot);
-                        }}
-                      />
-                    ))}
-                  </div>
-                </TabsContent>
-
-                {/* Legal Tab */}
-                <TabsContent value="legal" className="space-y-4">
+            {/* Info Tab - Legal + Gallery combined */}
+            <TabsContent value="info">
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* Legal Section */}
+                <div>
                   <LegalTab
                     legalDocuments={legalDocuments}
                     legalStatus={legalStatus}
                     rolNumber={rolNumber}
                     permits={permits}
                   />
-                </TabsContent>
+                </div>
 
-                {/* Gallery Tab - Dynamic */}
-                <TabsContent value="gallery" className="space-y-4">
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <ImageOff className="h-16 w-16 text-muted-foreground/40 mb-4" />
-                    <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-                      Galería no disponible
-                    </h3>
-                    <p className="text-sm text-muted-foreground max-w-md">
-                      {isOwner 
-                        ? 'Aún no has subido imágenes para este proyecto. Pronto podrás agregar fotos desde aquí.'
-                        : 'Este proyecto aún no tiene imágenes disponibles.'}
-                    </p>
-                  </div>
-                </TabsContent>
-
-                {/* AI Analysis Tab - Owner only */}
-                {isOwner && (
-                  <TabsContent value="ai-analysis" className="space-y-4">
-                    <AIMasterplanTab
-                      project={project}
-                      lots={lots}
-                    />
-                  </TabsContent>
-                )}
-              </Tabs>
-            </div>
-
-            {/* Sidebar */}
-            <div className="lg:col-span-1 space-y-4">
-              {/* Financing Calculator */}
-              {financingLot && (
-                <FinancingCalculator
-                  lotPrice={financingLot.price || 0}
-                  lotNumber={financingLot.lot_number}
-                  lotArea={Number(financingLot.area)}
-                  projectName={project.name}
-                  projectLocation={`${project.city}, ${project.region}`}
-                  onClose={() => setFinancingLot(null)}
-                />
-              )}
-
-              {/* Stats Card - Dynamic */}
-              <Card className="glass-strong">
-                <CardContent className="p-4 space-y-4">
-                  <h3 className="font-semibold text-lg">Resumen del Proyecto</h3>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10">
-                      <span className="text-sm">Disponibles</span>
-                      <span className="font-bold text-emerald-600">{availableLots.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/10">
-                      <span className="text-sm">Reservados</span>
-                      <span className="font-bold text-amber-600">{reservedLots.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
-                      <span className="text-sm">Vendidos</span>
-                      <span className="font-bold text-muted-foreground">{soldLots.length}</span>
-                    </div>
-                  </div>
-
-                  {priceRange && (
-                    <div className="pt-4 border-t border-border">
-                      <div className="text-sm text-muted-foreground mb-2">Rango de precios</div>
-                      <div className="text-xl font-bold text-primary">
-                        {formatPrice(priceRange.min)}
-                        {priceRange.min !== priceRange.max && ` - ${formatPrice(priceRange.max)}`}
+                {/* Gallery Section */}
+                <div>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex flex-col items-center justify-center py-8 text-center">
+                        <ImageOff className="h-12 w-12 text-muted-foreground/40 mb-3" />
+                        <h3 className="text-base font-semibold text-muted-foreground mb-1">
+                          Galería
+                        </h3>
+                        <p className="text-sm text-muted-foreground max-w-sm">
+                          {isOwner 
+                            ? 'Aún no has subido imágenes. Pronto podrás agregar fotos desde aquí.'
+                            : 'No hay imágenes disponibles para este proyecto.'}
+                        </p>
                       </div>
-                    </div>
-                  )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
 
-                  {areaRange && (
-                    <div className="pt-4 border-t border-border">
-                      <div className="text-sm text-muted-foreground mb-2">Área por lote</div>
-                      <div className="text-lg font-semibold">
-                        {formatArea(areaRange.min)}
-                        {areaRange.min !== areaRange.max && ` - ${formatArea(areaRange.max)}`} m²
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Contact Card - Functional */}
-              <Card className="glass-strong">
-                <CardContent className="p-4 space-y-4">
-                  <h3 className="font-semibold text-lg">¿Interesado?</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Contáctanos para agendar una visita o recibir más información.
-                  </p>
-                  
-                  <div className="space-y-2">
-                    <Button className="w-full gap-2" onClick={handleCall}>
-                      <Phone className="h-4 w-4" />
-                      Llamar ahora
-                    </Button>
-                    <Button variant="outline" className="w-full gap-2" onClick={handleMessage}>
-                      <MessageCircle className="h-4 w-4" />
-                      Enviar WhatsApp
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Selected Lot Detail */}
-              {selectedLotData && !financingLot && (
-                <Card className="glass-strong border-primary">
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-xl">Lote {selectedLotData.lot_number}</h3>
-                      <Badge className={getPriceColor(selectedLotData.price, selectedLotData.status || 'available').bg}>
-                        {selectedLotData.status === 'sold' ? 'Vendido' : selectedLotData.status === 'reserved' ? 'Reservado' : 'Disponible'}
-                      </Badge>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 rounded-lg bg-muted text-center">
-                        <Maximize2 className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
-                        <div className="text-sm font-semibold">{formatArea(Number(selectedLotData.area))} m²</div>
-                        <div className="text-xs text-muted-foreground">Superficie</div>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted text-center">
-                        <DollarSign className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
-                        <div className="text-sm font-semibold">{formatPrice(selectedLotData.price)}</div>
-                        <div className="text-xs text-muted-foreground">Precio</div>
-                      </div>
-                    </div>
-
-                    {selectedLotData.status === 'available' && (
-                      <div className="space-y-2 pt-2">
-                        <Button 
-                          className="w-full gap-2"
-                          onClick={() => setFinancingLot(selectedLotData)}
-                        >
-                          <Calculator className="h-4 w-4" />
-                          Simular Financiamiento
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => setReservationLot(selectedLotData)}
-                        >
-                          Reservar este lote
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
+        {/* Financing Calculator Modal */}
+        {financingLot && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setFinancingLot(null)}>
+            <div className="max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+              <FinancingCalculator
+                lotPrice={financingLot.price || 0}
+                lotNumber={financingLot.lot_number}
+                lotArea={Number(financingLot.area)}
+                projectName={project.name}
+                projectLocation={`${project.city}, ${project.region}`}
+                onClose={() => setFinancingLot(null)}
+              />
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Sticky Contact Bar - Mobile */}
+        {isMobile && (
+          <div className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border p-3 flex gap-2">
+            <Button className="flex-1 gap-2" onClick={handleCall}>
+              <Phone className="h-4 w-4" />
+              Llamar
+            </Button>
+            <Button variant="outline" className="flex-1 gap-2" onClick={handleMessage}>
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp
+            </Button>
+          </div>
+        )}
+
+        {/* Desktop Contact Floating Card */}
+        {!isMobile && (
+          <div className="fixed bottom-6 right-6 z-40">
+            <Card className="shadow-lg border-primary/20">
+              <CardContent className="p-3 flex gap-2">
+                <Button size="sm" className="gap-2" onClick={handleCall}>
+                  <Phone className="h-4 w-4" />
+                  Llamar
+                </Button>
+                <Button size="sm" variant="outline" className="gap-2" onClick={handleMessage}>
+                  <MessageCircle className="h-4 w-4" />
+                  WhatsApp
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Reservation Dialog */}
         <LotReservationDialog
