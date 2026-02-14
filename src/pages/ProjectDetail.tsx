@@ -25,9 +25,13 @@ import {
   Calculator,
   ImageOff,
   MessageCircle,
-  Info
+  Info,
+  ChevronLeft,
+  ChevronRight,
+  X
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
@@ -40,6 +44,89 @@ const formatPrice = (price: number | null) => {
 
 const formatArea = (area: number) => {
   return new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 }).format(area);
+};
+
+// Gallery component
+const ProjectGallery = ({ images, isOwner }: { images: string[]; isOwner: boolean }) => {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  if (!images || images.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <ImageOff className="h-12 w-12 text-muted-foreground/40 mb-3" />
+            <h3 className="text-base font-semibold text-muted-foreground mb-1">Galería</h3>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              {isOwner
+                ? 'Aún no has subido imágenes. Edita el proyecto para agregar fotos.'
+                : 'No hay imágenes disponibles para este proyecto.'}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      <Card>
+        <CardContent className="p-4">
+          <h3 className="text-base font-semibold mb-3">Galería ({images.length})</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {images.map((img, idx) => (
+              <button
+                key={idx}
+                onClick={() => setLightboxIndex(idx)}
+                className="aspect-square rounded-lg overflow-hidden hover:opacity-90 transition-opacity"
+              >
+                <img src={img} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={lightboxIndex !== null} onOpenChange={() => setLightboxIndex(null)}>
+        <DialogContent className="max-w-4xl p-0 bg-black/95 border-none">
+          {lightboxIndex !== null && (
+            <div className="relative">
+              <img
+                src={images[lightboxIndex]}
+                alt={`Foto ${lightboxIndex + 1}`}
+                className="w-full max-h-[80vh] object-contain"
+              />
+              <button
+                onClick={() => setLightboxIndex(null)}
+                className="absolute top-3 right-3 p-2 rounded-full bg-black/50 text-white hover:bg-black/70"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setLightboxIndex((lightboxIndex - 1 + images.length) % images.length)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => setLightboxIndex((lightboxIndex + 1) % images.length)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-white/80 text-sm">
+                {lightboxIndex + 1} / {images.length}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 };
 
 const ProjectDetail = () => {
@@ -383,21 +470,7 @@ const ProjectDetail = () => {
 
                 {/* Gallery Section */}
                 <div>
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex flex-col items-center justify-center py-8 text-center">
-                        <ImageOff className="h-12 w-12 text-muted-foreground/40 mb-3" />
-                        <h3 className="text-base font-semibold text-muted-foreground mb-1">
-                          Galería
-                        </h3>
-                        <p className="text-sm text-muted-foreground max-w-sm">
-                          {isOwner 
-                            ? 'Aún no has subido imágenes. Pronto podrás agregar fotos desde aquí.'
-                            : 'No hay imágenes disponibles para este proyecto.'}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <ProjectGallery images={(project as any).images || []} isOwner={isOwner} />
                 </div>
               </div>
             </TabsContent>
