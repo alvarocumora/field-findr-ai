@@ -1,106 +1,110 @@
 
+# Plan: Redisenar /explorar - Tarjetas como elemento principal, mapa secundario
 
-# Plan: Mejorar Landing Page y Explorar con Mapa Funcional
+## Problema
+El mapa de Mapbox ha sido inestable y problematico en la pagina /explorar. Los marcadores no se renderizan correctamente, hay problemas con capas GIS, y la experiencia depende de un componente fragil (EnhancedMap con 1400+ lineas). El usuario quiere que las tarjetas de propiedades sean el contenido principal y el mapa pase a ser un elemento secundario opcional.
 
-## Estado Actual
+## Nueva Arquitectura
 
-**Landing Page:**
-- Hero con busqueda funcional pero sin diferenciacion visual fuerte
-- Stats muestran 0 valores (los counts de la DB son correctos pero `totalLots` cuenta todos los lotes, no solo disponibles)
-- Seccion "Terrenos Destacados" + MiniMap funciona bien con 20 listings reales
-- Seccion "Como Funciona" orientada solo a desarrolladores (sube proyecto, configura lotes) - excluye compradores
-- "Proyectos Destacados" solo muestra 1 proyecto activo (datos reales limitados)
-- TrustBadges son genericos y estaticos
-- FloatingCTA dice "47 lotes disponibles" pero usa totalLots sin filtrar por status
+La pagina /explorar se convierte en un layout tipo "catalogo inteligente" con:
 
-**Explorar:**
-- Mapa muestra un poligono azul gigante en vez de marcadores de propiedades (posible problema de capa GIS activa)
-- Split view funcional con panel de filtros
-- "Nuevos 0" porque ningun listing tiene menos de 7 dias
-- "Mejor oportunidad" calcula bien el precio/m2 mas bajo ($350/m2 para Aysen de 1M m2)
+```text
++----------------------------------------------------------+
+| StickyHeader                                             |
++----------------------------------------------------------+
+| SearchBar + FilterBar (tipo, region, pais, precio, area) |
++----------------------------------------------------------+
+| Stats bar: "20 terrenos desde $15M en 5 regiones"       |
+| [Todos] [Destacados] [Mejor precio/m2] | Ordenar: v     |
++----------------------------------------------------------+
+|                                                          |
+|  [Card] [Card] [Card] [Card]    <- Grid responsive       |
+|  [Card] [Card] [Card] [Card]       3-4 columnas desktop  |
+|  [Card] [Card] [Card] [Card]       2 columnas mobile     |
+|                                                          |
+|  [Ver en mapa ->] boton flotante esquina inferior        |
+|                                                          |
++----------------------------------------------------------+
+| PropertyPreviewSheet (side sheet al click)               |
++----------------------------------------------------------+
+```
 
-## Problemas Criticos
+El mapa se accede opcionalmente via un toggle/boton que muestra un mini-mapa colapsable o un dialog de pantalla completa.
 
-### 1. Mapa de Explorar muestra poligono azul en vez de marcadores
-El mapa muestra lo que parece ser una capa de zonificacion demo (poligono azul grande) sobre los marcadores. Las capas GIS demo (`generateDemoZoningData`) se inicializan automaticamente. Los marcadores de propiedades quedan detras o no se ven.
+## Cambios por Archivo
 
-### 2. Stats de landing calculan mal
-`useLandingStats` cuenta `totalLots` sin filtrar por `status = 'available'`, mostrando 47 (incluye vendidos y reservados). `totalReservations` filtra por `status = 'paid'` pero las reservaciones reales usan el enum `reservation_status`.
+### 1. `src/pages/Explorar.tsx` - REESCRIBIR
+- Eliminar ResizablePanelGroup y split-view
+- Eliminar diferenciacion mobile/desktop (un solo layout responsivo)
+- Layout vertical: StickyHeader > FilterBar > Stats/Sort bar > Grid de tarjetas > PropertyPreviewSheet
+- El mapa se muestra como un boton flotante "Ver en mapa" que abre un Dialog con EnhancedMap
+- Mantener toda la logica de filtros, search, sorting existente
+- Mantener PropertyPreviewSheet para la vista previa lateral
 
-### 3. "Como Funciona" excluye al comprador
-Los 4 pasos (Sube proyecto, Configura lotes, Recibe reservas, Cierra ventas) solo hablan al desarrollador/vendedor. La mayoria de visitantes del landing son compradores.
+### 2. `src/components/explore/ExploreGrid.tsx` - NUEVO
+- Grid responsivo de tarjetas: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`
+- Reutiliza `QuickPropertyCard` en layout vertical
+- Incluye "Mejor oportunidad" highlight card al inicio
+- Loading skeletons
+- Empty state
+- Animacion de entrada escalonada
 
-### 4. FloatingCTA usa dato incorrecto
-Muestra "47 lotes disponibles" sin filtrar por status available.
+### 3. `src/components/explore/ExploreToolbar.tsx` - NUEVO
+- Barra compacta con: conteo de resultados, tabs (Todos/Destacados/Mejor precio), selector de ordenamiento, boton "Ver en mapa"
+- Resumen inteligente: "20 terrenos desde $15M en 5 regiones"
 
-## Solucion
+### 4. `src/components/explore/MapDialog.tsx` - NUEVO
+- Dialog de pantalla completa (o lateral) con EnhancedMap
+- Se abre al presionar "Ver en mapa"
+- Pasa los listings filtrados y permite seleccionar una propiedad desde el mapa
+- Al seleccionar, cierra el dialog y abre PropertyPreviewSheet
 
-### Archivo 1: `src/hooks/useLandingStats.ts`
-- Filtrar `totalLots` por `status = 'available'` para mostrar solo disponibles
-- Calcular `totalReservations` correctamente o reemplazar por metrica mas util (ej: totalSold)
+### 5. `src/components/explore/MobileExploreView.tsx` - ELIMINAR
+- Ya no se necesita una vista mobile separada, el nuevo layout es responsivo por defecto
 
-### Archivo 2: `src/pages/Index.tsx` - Landing mejorada
-- Reemplazar seccion "Como Funciona" con version dual: para compradores (Explora, Compara, Reserva, Compra) y para vendedores (Sube, Configura, Vende, Cierra)
-- Agregar seccion de regiones populares con cards clickables que lleven a /explorar con filtro
-- Mejorar la seccion de featured listings: mostrar 6 en grid 3x2 sin mini-map (el mapa va en explorar) para mayor impacto visual
+### 6. `src/components/explore/ExploreBottomSheet.tsx` - Ya no se usa desde Explorar
+- Se puede mantener por si se usa en otro lugar, pero no se importa en Explorar
 
-### Archivo 3: `src/components/landing/HowItWorks.tsx` - Orientado a compradores
-- Cambiar los 4 pasos a la perspectiva del comprador:
-  1. Explora el mapa (Search)
-  2. Compara terrenos (BarChart3)
-  3. Reserva online (CreditCard)
-  4. Cierra tu compra (CheckCircle2)
-- Agregar un toggle o subtexto que mencione "Para desarrolladores" con link a /pricing
-
-### Archivo 4: `src/components/landing/RegionCards.tsx` (NUEVO)
-- Grid de cards con las regiones mas populares (basado en datos reales: O'Higgins 3, Metropolitana 3, Valparaiso 2, etc.)
-- Cada card muestra: nombre de region, cantidad de terrenos, rango de precios
-- Click navega a `/explorar?region=X`
-
-### Archivo 5: `src/components/map/EnhancedMap.tsx` - Fix del mapa de Explorar
-- Revisar la inicializacion de capas info (zoning, risk, etc.) - asegurarse que estan desactivadas por defecto
-- Verificar que los marcadores de propiedades se renderizan SOBRE cualquier capa activa (z-index)
-- El estado inicial `infoLayers` ya tiene todo en `false`, pero hay que verificar que `addInfoLayers` no se ejecuta sin que el usuario lo active
-
-### Archivo 6: `src/components/landing/FloatingCTA.tsx`
-- Cambiar de `totalLots` a dato filtrado (lotes available)
-
-### Archivo 7: `src/components/landing/HeroStats.tsx`
-- Cambiar "Lotes disponibles" para usar el count filtrado
-- Reemplazar "Publicaciones activas" (poco util para el visitante) por "Hectareas disponibles" calculando la suma de areas
+### 7. Archivos que se mantienen sin cambios:
+- `FilterBar.tsx` - se reutiliza tal cual
+- `QuickPropertyCard.tsx` - se reutiliza tal cual (layout vertical)
+- `PropertyPreviewSheet.tsx` - se reutiliza tal cual
+- `useListings.ts` - sin cambios
 
 ## Seccion Tecnica
 
-### Fix de useLandingStats
+### Explorar.tsx - Estructura nueva
 ```text
-// Agregar filtro de status a la query de lots
-supabase.from('lots').select('id', { count: 'exact', head: true }).eq('status', 'available')
-
-// Agregar query de hectareas totales
-supabase.from('listings').select('area_ha').eq('status', 'active').not('area_ha', 'is', null)
+PublicLayout
+  StickyHeader
+  main (max-w-7xl mx-auto px-4 pt-20)
+    FilterBar (search + filtros)
+    ExploreToolbar (stats + tabs + sort + map button)
+    ExploreGrid (grid de QuickPropertyCard vertical)
+    MapDialog (dialog con mapa, abierto via boton)
+    PropertyPreviewSheet (side sheet al click)
 ```
 
-### Fix del mapa de Explorar
-El mapa inicializa con `infoLayers` todo en false, pero la funcion `addInfoLayers` podria estar ejecutandose en el evento `style.load`. Hay que verificar que los poligonos demo de zonificacion no se agregan automaticamente.
-
-### Regiones populares - query
+### ExploreGrid - Responsivo
 ```text
-// Reutilizar datos existentes de listings para calcular regiones
-const regionData = listings.reduce((acc, l) => {
-  if (l.region) {
-    acc[l.region] = (acc[l.region] || 0) + 1;
-  }
-  return acc;
-}, {});
+grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4
 ```
+
+### MapDialog - Dialog fullscreen
+```text
+Dialog con EnhancedMap envuelto en MapErrorBoundary
+- Pasa filteredListings como prop
+- onListingClick cierra dialog y abre PropertyPreviewSheet
+```
+
+### Mobile
+- El mismo layout funciona en mobile: grid 1-2 columnas, FilterBar con scroll horizontal, boton de mapa flotante
+- Sin bottom sheet ni mapa fullscreen por defecto
 
 ## Orden de Implementacion
 
-1. `useLandingStats.ts` - Fix de conteos (lots available, hectareas)
-2. `EnhancedMap.tsx` - Verificar y corregir renderizado de marcadores vs capas
-3. `HowItWorks.tsx` - Reorientar a compradores
-4. `HeroStats.tsx` - Metricas relevantes para visitantes
-5. `FloatingCTA.tsx` - Dato correcto
-6. `RegionCards.tsx` - Nueva seccion de regiones
-7. `Index.tsx` - Integrar RegionCards, mejorar grid de featured
-
+1. Crear `ExploreToolbar.tsx`
+2. Crear `ExploreGrid.tsx`
+3. Crear `MapDialog.tsx`
+4. Reescribir `Explorar.tsx` con el nuevo layout
+5. Eliminar import de `MobileExploreView` (el archivo se puede mantener)
