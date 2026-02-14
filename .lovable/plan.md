@@ -1,110 +1,80 @@
 
-# Plan: Redisenar /explorar - Tarjetas como elemento principal, mapa secundario
 
-## Problema
-El mapa de Mapbox ha sido inestable y problematico en la pagina /explorar. Los marcadores no se renderizan correctamente, hay problemas con capas GIS, y la experiencia depende de un componente fragil (EnhancedMap con 1400+ lineas). El usuario quiere que las tarjetas de propiedades sean el contenido principal y el mapa pase a ser un elemento secundario opcional.
+# Mejorar Landing Page con Imagenes y Animaciones WOW
 
-## Nueva Arquitectura
+## Resumen
+Transformar la landing page de una experiencia mayormente textual a una experiencia visual inmersiva con imagenes de paisajes chilenos, animaciones de scroll con framer-motion, y efectos parallax que generen impacto desde el primer segundo.
 
-La pagina /explorar se convierte en un layout tipo "catalogo inteligente" con:
+## Cambios Principales
 
-```text
-+----------------------------------------------------------+
-| StickyHeader                                             |
-+----------------------------------------------------------+
-| SearchBar + FilterBar (tipo, region, pais, precio, area) |
-+----------------------------------------------------------+
-| Stats bar: "20 terrenos desde $15M en 5 regiones"       |
-| [Todos] [Destacados] [Mejor precio/m2] | Ordenar: v     |
-+----------------------------------------------------------+
-|                                                          |
-|  [Card] [Card] [Card] [Card]    <- Grid responsive       |
-|  [Card] [Card] [Card] [Card]       3-4 columnas desktop  |
-|  [Card] [Card] [Card] [Card]       2 columnas mobile     |
-|                                                          |
-|  [Ver en mapa ->] boton flotante esquina inferior        |
-|                                                          |
-+----------------------------------------------------------+
-| PropertyPreviewSheet (side sheet al click)               |
-+----------------------------------------------------------+
-```
+### 1. Hero Section con Imagen de Fondo y Parallax
+- Agregar imagen de fondo de paisaje chileno (terreno/campo) usando Unsplash
+- Efecto parallax sutil con framer-motion `useScroll` + `useTransform`
+- El texto se mueve a diferente velocidad que el fondo al hacer scroll
+- Animaciones de entrada escalonadas con `motion.div` en vez de CSS classes
 
-El mapa se accede opcionalmente via un toggle/boton que muestra un mini-mapa colapsable o un dialog de pantalla completa.
+### 2. Seccion "Como Funciona" con Animaciones de Scroll
+- Cada paso aparece con `whileInView` de framer-motion
+- Los iconos hacen una animacion de "pop" al entrar en viewport
+- La linea conectora se anima progresivamente de izquierda a derecha
+- Imagenes ilustrativas al lado de cada paso (alternando izquierda/derecha en desktop)
 
-## Cambios por Archivo
+### 3. Seccion de Regiones con Imagenes de Fondo
+- Cada tarjeta de region tiene una imagen de fondo representativa del paisaje de esa region
+- Overlay con gradiente oscuro para legibilidad
+- Efecto hover con zoom sutil en la imagen
+- Animacion staggered al entrar en viewport
 
-### 1. `src/pages/Explorar.tsx` - REESCRIBIR
-- Eliminar ResizablePanelGroup y split-view
-- Eliminar diferenciacion mobile/desktop (un solo layout responsivo)
-- Layout vertical: StickyHeader > FilterBar > Stats/Sort bar > Grid de tarjetas > PropertyPreviewSheet
-- El mapa se muestra como un boton flotante "Ver en mapa" que abre un Dialog con EnhancedMap
-- Mantener toda la logica de filtros, search, sorting existente
-- Mantener PropertyPreviewSheet para la vista previa lateral
+### 4. Seccion "Featured Projects" con Imagenes Hero
+- Las tarjetas de proyecto muestran imagen del masterplan o galeria si existe
+- Layout tipo "bento grid" donde la primera tarjeta es mas grande
+- Animacion de entrada con scale + fade
 
-### 2. `src/components/explore/ExploreGrid.tsx` - NUEVO
-- Grid responsivo de tarjetas: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`
-- Reutiliza `QuickPropertyCard` en layout vertical
-- Incluye "Mejor oportunidad" highlight card al inicio
-- Loading skeletons
-- Empty state
-- Animacion de entrada escalonada
+### 5. Seccion "Terrenos Destacados" con Animaciones
+- Cada ListingCard entra con animacion staggered usando `motion.div`
+- Efecto parallax ligero en el contenedor
 
-### 3. `src/components/explore/ExploreToolbar.tsx` - NUEVO
-- Barra compacta con: conteo de resultados, tabs (Todos/Destacados/Mejor precio), selector de ordenamiento, boton "Ver en mapa"
-- Resumen inteligente: "20 terrenos desde $15M en 5 regiones"
+### 6. Nueva Seccion: Banner Visual con Parallax
+- Entre secciones, agregar un banner a ancho completo con imagen de paisaje
+- Texto superpuesto con estadistica impactante
+- Efecto parallax en la imagen al hacer scroll
 
-### 4. `src/components/explore/MapDialog.tsx` - NUEVO
-- Dialog de pantalla completa (o lateral) con EnhancedMap
-- Se abre al presionar "Ver en mapa"
-- Pasa los listings filtrados y permite seleccionar una propiedad desde el mapa
-- Al seleccionar, cierra el dialog y abre PropertyPreviewSheet
+### 7. Trust Badges con Animacion de Entrada
+- Los badges se animan secuencialmente al entrar en viewport
+- Efecto de "count up" en numeros
 
-### 5. `src/components/explore/MobileExploreView.tsx` - ELIMINAR
-- Ya no se necesita una vista mobile separada, el nuevo layout es responsivo por defecto
+## Archivos a Modificar
 
-### 6. `src/components/explore/ExploreBottomSheet.tsx` - Ya no se usa desde Explorar
-- Se puede mantener por si se usa en otro lugar, pero no se importa en Explorar
-
-### 7. Archivos que se mantienen sin cambios:
-- `FilterBar.tsx` - se reutiliza tal cual
-- `QuickPropertyCard.tsx` - se reutiliza tal cual (layout vertical)
-- `PropertyPreviewSheet.tsx` - se reutiliza tal cual
-- `useListings.ts` - sin cambios
+| Archivo | Cambio |
+|---------|--------|
+| `src/pages/Index.tsx` | Agregar framer-motion, reorganizar secciones, agregar banner parallax |
+| `src/components/landing/HowItWorks.tsx` | Animaciones whileInView con framer-motion, imagenes ilustrativas |
+| `src/components/landing/RegionCards.tsx` | Imagenes de fondo por region, animaciones de entrada |
+| `src/components/landing/FeaturedProjects.tsx` | Animaciones de entrada, layout mejorado con imagenes |
+| `src/components/landing/TrustBadges.tsx` | Animaciones de scroll con framer-motion |
+| `src/components/landing/HeroStats.tsx` | Animaciones mejoradas con motion |
+| `src/components/landing/ParallaxBanner.tsx` | NUEVO - Banner visual con efecto parallax |
 
 ## Seccion Tecnica
 
-### Explorar.tsx - Estructura nueva
-```text
-PublicLayout
-  StickyHeader
-  main (max-w-7xl mx-auto px-4 pt-20)
-    FilterBar (search + filtros)
-    ExploreToolbar (stats + tabs + sort + map button)
-    ExploreGrid (grid de QuickPropertyCard vertical)
-    MapDialog (dialog con mapa, abierto via boton)
-    PropertyPreviewSheet (side sheet al click)
-```
+### Imagenes de Unsplash utilizadas
+- Hero: Paisaje agricola/campo chileno (landscape)
+- Banner parallax: Vista aerea de terrenos
+- Regiones: Imagenes genericas de paisajes naturales (lagos, montanas, costa, campo)
 
-### ExploreGrid - Responsivo
-```text
-grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4
-```
+### Framer Motion - Patrones utilizados
+- `useScroll` + `useTransform` para parallax en Hero y Banner
+- `motion.div` con `whileInView` para animaciones de scroll en todas las secciones
+- `staggerChildren` en variantes para animaciones escalonadas en grids
+- `viewport={{ once: true, margin: '-80px' }}` para trigger optimizado
 
-### MapDialog - Dialog fullscreen
-```text
-Dialog con EnhancedMap envuelto en MapErrorBoundary
-- Pasa filteredListings como prop
-- onListingClick cierra dialog y abre PropertyPreviewSheet
-```
+### ParallaxBanner (nuevo componente)
+- Imagen a ancho completo con `object-cover`
+- `useScroll({ target: ref })` para rastrear posicion del contenedor
+- `useTransform(scrollYProgress, [0, 1], ['0%', '20%'])` para mover imagen
+- Overlay con gradiente y texto/estadistica central
 
-### Mobile
-- El mismo layout funciona en mobile: grid 1-2 columnas, FilterBar con scroll horizontal, boton de mapa flotante
-- Sin bottom sheet ni mapa fullscreen por defecto
+### Respeta prefers-reduced-motion
+- Todas las animaciones verifican `prefers-reduced-motion` mediante `useReducedMotion()` de framer-motion
+- Si el usuario prefiere menos movimiento, las animaciones se desactivan
 
-## Orden de Implementacion
-
-1. Crear `ExploreToolbar.tsx`
-2. Crear `ExploreGrid.tsx`
-3. Crear `MapDialog.tsx`
-4. Reescribir `Explorar.tsx` con el nuevo layout
-5. Eliminar import de `MobileExploreView` (el archivo se puede mantener)
