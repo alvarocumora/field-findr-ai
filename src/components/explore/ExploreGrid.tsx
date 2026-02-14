@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Search } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import QuickPropertyCard from './QuickPropertyCard';
 import { Listing } from '@/hooks/useListings';
@@ -57,10 +58,12 @@ const ExploreGrid = memo(({
   return (
     <div className={cn('grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4', className)}>
       {listings.map((listing, index) => (
-        <div
+        <motion.div
           key={listing.id}
-          className="animate-in fade-in slide-in-from-bottom-2"
-          style={{ animationDelay: `${Math.min(index * 50, 400)}ms`, animationFillMode: 'both' }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.35, delay: Math.min(index % 4 * 0.08, 0.24), ease: 'easeOut' }}
         >
           <QuickPropertyCard
             listing={listing}
@@ -70,7 +73,7 @@ const ExploreGrid = memo(({
             onPreview={onPreview}
             layout="vertical"
           />
-        </div>
+        </motion.div>
       ))}
     </div>
   );
