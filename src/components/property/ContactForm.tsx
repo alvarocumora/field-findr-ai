@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Send, 
   Phone, 
@@ -27,10 +28,11 @@ const contactSchema = z.object({
 interface ContactFormProps {
   listingId: string;
   listingTitle: string;
+  listingOwnerId?: string | null;
   onSuccess?: () => void;
 }
 
-const ContactForm = ({ listingId, listingTitle, onSuccess }: ContactFormProps) => {
+const ContactForm = ({ listingId, listingTitle, listingOwnerId, onSuccess }: ContactFormProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,10 +60,18 @@ const ContactForm = ({ listingId, listingTitle, onSuccess }: ContactFormProps) =
       const validated = contactSchema.parse(formData);
       setIsSubmitting(true);
 
-      // Simulate API call - in production, this would send to backend
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Generate a thread_id for this conversation
+      const threadId = crypto.randomUUID();
+      
+      const { error } = await supabase.from('messages').insert({
+        thread_id: threadId,
+        listing_id: listingId,
+        sender_id: user?.id || '00000000-0000-0000-0000-000000000000',
+        recipient_id: listingOwnerId || '00000000-0000-0000-0000-000000000000',
+        content: `[${validated.name} - ${validated.email}${validated.phone ? ` - ${validated.phone}` : ''}]\n\n${validated.message}`,
+      });
 
-      console.log('Contact form submitted:', { listingId, ...validated });
+      if (error) throw error;
 
       setIsSubmitted(true);
       toast({

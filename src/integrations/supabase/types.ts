@@ -979,6 +979,59 @@ export type Database = {
         }
         Relationships: []
       }
+      visit_requests: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          listing_owner_id: string
+          notes: string | null
+          preferred_date: string
+          preferred_time: string | null
+          requester_email: string
+          requester_name: string
+          requester_phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          listing_owner_id: string
+          notes?: string | null
+          preferred_date: string
+          preferred_time?: string | null
+          requester_email: string
+          requester_name: string
+          requester_phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          listing_owner_id?: string
+          notes?: string | null
+          preferred_date?: string
+          preferred_time?: string | null
+          requester_email?: string
+          requester_name?: string
+          requester_phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

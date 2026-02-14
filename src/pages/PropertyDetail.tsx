@@ -12,7 +12,9 @@ import ListingCard from '@/components/listings/ListingCard';
 import ImageGallery from '@/components/property/ImageGallery';
 import PropertyMap from '@/components/property/PropertyMap';
 import ContactForm from '@/components/property/ContactForm';
+import VisitRequestDialog from '@/components/property/VisitRequestDialog';
 import { AIInvestmentCopilot } from '@/components/ai/AIInvestmentCopilot';
+import { generatePropertyPdf } from '@/lib/propertyPdfGenerator';
 import { cn } from '@/lib/utils';
 import {
   Heart,
@@ -377,12 +379,39 @@ const PropertyDetail = () => {
                   }
                 />
 
-                <Button variant="outline" className="w-full glass border-primary/30 text-primary hover:bg-primary/10 h-11 touch-target mb-3">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Agendar visita
-                </Button>
+                <VisitRequestDialog
+                  listingId={listing.id}
+                  listingOwnerId={listing.user_id}
+                  listingTitle={listing.title}
+                  trigger={
+                    <Button variant="outline" className="w-full glass border-primary/30 text-primary hover:bg-primary/10 h-11 touch-target mb-3">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Agendar visita
+                    </Button>
+                  }
+                />
 
-                <Button variant="ghost" className="w-full glass border-border/50 h-11 touch-target">
+                <Button 
+                  variant="ghost" 
+                  className="w-full glass border-border/50 h-11 touch-target"
+                  onClick={() => generatePropertyPdf({
+                    title: listing.title,
+                    price: listing.price,
+                    currency: listing.currency,
+                    location: listing.location,
+                    region: listing.region,
+                    area_m2: listing.area_m2,
+                    area_ha: listing.area_ha,
+                    description: listing.description,
+                    type: listing.type,
+                    zoning: listing.zoning,
+                    rol: listing.rol,
+                    legal_status: listing.legal_status,
+                    utilities: utilities as { water?: boolean; electricity?: string; road_access?: string },
+                    tags: listing.tags,
+                    created_at: listing.created_at,
+                  })}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Descargar ficha PDF
                 </Button>
@@ -390,7 +419,7 @@ const PropertyDetail = () => {
             </Card>
 
             {/* Contact Form */}
-            <ContactForm listingId={listing.id} listingTitle={listing.title} />
+            <ContactForm listingId={listing.id} listingTitle={listing.title} listingOwnerId={listing.user_id} />
 
             {/* Property Map */}
             <Card className="glass border-border/50">
