@@ -61,6 +61,7 @@ import BusinessIntelligence from "./components/BusinessIntelligence";
 import ReservationsManager from "./components/reservations/ReservationsManager";
 import CreditManager from "./components/credits/CreditManager";
 import ClosingManager from "./components/closing/ClosingManager";
+import Messages from "./pages/dashboard/Messages";
 // ===== Admin Pages =====
 import AdminUsers from "./pages/AdminUsers";
 import AgentManagement from "./components/AgentManagement";
@@ -170,6 +171,11 @@ const App = () => (
               <Route path="/asesor/closing" element={
                 <DashboardLayout requiredRole="agent">
                   <ClosingManager />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/messages" element={
+                <DashboardLayout requiredRole="agent">
+                  <Messages />
                 </DashboardLayout>
               } />
               <Route path="/publish" element={

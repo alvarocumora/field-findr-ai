@@ -24,6 +24,7 @@ import {
   CreditCard,
   Scale,
   ClipboardCheck,
+  MessageSquare,
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -47,6 +48,7 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     { name: 'Reservas', href: '/asesor/reservations', icon: FileText },
     { name: 'Créditos', href: '/asesor/credits', icon: CreditCard },
     { name: 'Cierres', href: '/asesor/closing', icon: Scale },
+    { name: 'Mensajes', href: '/asesor/messages', icon: MessageSquare },
     { name: 'Analytics', href: '/asesor/analytics', icon: BarChart3 },
   ];
 
