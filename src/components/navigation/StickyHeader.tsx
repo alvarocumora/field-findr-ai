@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 const StickyHeader = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -132,6 +133,8 @@ const StickyHeader = () => {
             )}
 
             <ThemeToggle />
+
+            {user && <NotificationBell />}
 
             {(isAgent || isAdmin) && (
               <Button asChild className="btn-glow">
