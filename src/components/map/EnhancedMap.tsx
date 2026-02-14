@@ -149,12 +149,15 @@ const EnhancedMap = ({
   const setupLayerHoverEventsRef = useRef<() => void>(() => {});
   const showDrawToolsRef = useRef(showDrawTools);
   const initialFitDoneRef = useRef(false);
+  const mapStyleLoadedRef = useRef(false);
+  const listingsRef = useRef(listings);
+  useEffect(() => { listingsRef.current = listings; }, [listings]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawnArea, setDrawnArea] = useState<number | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>('streets');
   const mapModeRef = useRef<MapMode>(mapMode);
-  const [showClusters, setShowClusters] = useState(true); // Clustering enabled by default for clean UI
+  const [showClusters, setShowClusters] = useState(false); // Use DOM markers for reliability
   const [showLabels, setShowLabels] = useState(true);
   const [controlsExpanded, setControlsExpanded] = useState(false);
   const [showToolsDrawer, setShowToolsDrawer] = useState(false);
@@ -1384,6 +1387,7 @@ const EnhancedMap = ({
     }
 
     map.current.on('load', () => {
+      mapStyleLoadedRef.current = true;
       if (currentMode === '3d' && map.current) {
         map.current.addSource('mapbox-dem', {
           type: 'raster-dem',
@@ -1401,6 +1405,15 @@ const EnhancedMap = ({
 
       addInfoLayersRef.current();
       setupLayerHoverEventsRef.current();
+
+      // Fit bounds to listings on initial load
+      const currentListings = listingsRef.current.filter(l => l.lat && l.lng);
+      if (currentListings.length > 1 && !initialFitDoneRef.current) {
+        const bounds = new mapboxgl.LngLatBounds();
+        currentListings.forEach(l => bounds.extend([l.lng!, l.lat!]));
+        map.current?.fitBounds(bounds, { padding: 80, maxZoom: 10 });
+        initialFitDoneRef.current = true;
+      }
 
       setTimeout(() => { map.current?.resize(); }, 100);
       setIsLoading(false);
@@ -1434,6 +1447,8 @@ const EnhancedMap = ({
     }
 
     return () => {
+      mapStyleLoadedRef.current = false;
+      initialFitDoneRef.current = false;
       Object.values(markersRef.current).forEach((marker) => marker.remove());
       markersRef.current = {};
       popupRef.current?.remove();
@@ -1502,12 +1517,8 @@ const EnhancedMap = ({
   useEffect(() => {
     if (!map.current || isLoading || !showClusters) return;
     
-    // Wait for style to be loaded
-    const setupClusters = () => {
-      if (!map.current?.isStyleLoaded()) return;
-      
-      const validListings = listings.filter(l => l.lat && l.lng);
-      const geoJsonData: GeoJSON.FeatureCollection = {
+    const validListings = listings.filter(l => l.lat && l.lng);
+    const geoJsonData: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
         features: validListings.map(l => ({
           type: 'Feature' as const,
@@ -1631,23 +1642,18 @@ const EnhancedMap = ({
         map.current?.on('mouseleave', 'unclustered-point', () => {
           if (map.current) map.current.getCanvas().style.cursor = '';
         });
-      }
+    }
       
-      // Fit bounds only on initial load
-      if (!initialFitDoneRef.current && validListings.length > 1) {
-        const bounds = new mapboxgl.LngLatBounds();
-        validListings.forEach((l) => bounds.extend([l.lng!, l.lat!]));
-        map.current?.fitBounds(bounds, { padding: 80, maxZoom: 10 });
-        initialFitDoneRef.current = true;
-      }
-    };
-    
-    // If style is already loaded, setup immediately
-    if (map.current?.isStyleLoaded()) {
-      setupClusters();
-    } else {
-      // Wait for style load
-      map.current?.once('style.load', setupClusters);
+    // Fit bounds only on initial load
+    if (!initialFitDoneRef.current && validListings.length > 1) {
+      const bounds = new mapboxgl.LngLatBounds();
+      validListings.forEach((l) => bounds.extend([l.lng!, l.lat!]));
+      setTimeout(() => {
+        if (map.current) {
+          map.current.fitBounds(bounds, { padding: 80, maxZoom: 10, duration: 0 });
+        }
+      }, 200);
+      initialFitDoneRef.current = true;
     }
   }, [listings, isLoading, showClusters]);
 
