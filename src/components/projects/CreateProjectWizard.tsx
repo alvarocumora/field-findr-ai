@@ -10,8 +10,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   FileText, MapPin, Grid3X3, CheckCircle2,
   ChevronRight, ChevronLeft, Loader2, ArrowRight,
-  FileArchive, Upload, Layers, AlertCircle, SkipForward
+  FileArchive, Upload, Layers, AlertCircle, SkipForward, ImageIcon
 } from 'lucide-react';
+import ImageUploader from '@/components/publish/ImageUploader';
 import { cn } from '@/lib/utils';
 import { LATAM_COUNTRIES } from '@/lib/latam';
 import LocationPicker from '@/components/publish/LocationPicker';
@@ -36,6 +37,7 @@ interface WizardData {
   total_lots: number;
   total_area: number | null;
   price_base: number | null;
+  images: string[];
 }
 
 const STEPS = [
@@ -43,7 +45,8 @@ const STEPS = [
   { id: 1, label: 'Ubicación', icon: MapPin },
   { id: 2, label: 'Lotes', icon: Grid3X3 },
   { id: 3, label: 'Importar KMZ', icon: FileArchive },
-  { id: 4, label: 'Resumen', icon: CheckCircle2 },
+  { id: 4, label: 'Imágenes', icon: ImageIcon },
+  { id: 5, label: 'Resumen', icon: CheckCircle2 },
 ];
 
 const CHILE_REGIONS = LATAM_COUNTRIES.find(c => c.code === 'CL')?.regions || [];
@@ -61,6 +64,7 @@ const projectToWizardData = (project: Project): WizardData => ({
   total_lots: project.total_lots || 0,
   total_area: project.total_area ? Number(project.total_area) : null,
   price_base: null,
+  images: (project as any).images || [],
 });
 
 interface CreateProjectWizardProps {
@@ -79,7 +83,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
     editingProject ? projectToWizardData(editingProject) : {
       name: '', description: '', status: 'active', rol_number: '',
       latitude: null, longitude: null, region: '', city: '', address: '',
-      total_lots: 0, total_area: null, price_base: null,
+      total_lots: 0, total_area: null, price_base: null, images: [],
     }
   );
 
@@ -141,6 +145,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         location: data.address || data.city || data.region || null,
         total_lots: data.total_lots || 0,
         total_area: data.total_area,
+        images: data.images.length > 0 ? data.images : null,
       };
 
       let projectId: string;
@@ -264,6 +269,13 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
           />
         )}
         {step === 4 && (
+          <StepImages
+            images={data.images}
+            onImagesChange={(images) => update({ images })}
+            userId={user?.id}
+          />
+        )}
+        {step === 5 && (
           <StepSummary data={data} formatNumber={formatNumber} parsedKMZ={parsedKMZ} isEditing={isEditing} />
         )}
       </div>
@@ -273,10 +285,15 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         <Button variant="outline" onClick={step === 0 ? onCancel : () => setStep(s => s - 1)}>
           {step === 0 ? 'Cancelar' : <><ChevronLeft className="h-4 w-4 mr-1" />Atrás</>}
         </Button>
-        {step < 4 ? (
+        {step < 5 ? (
           <div className="flex gap-2">
             {step === 3 && !parsedKMZ && (
               <Button variant="ghost" onClick={() => setStep(4)} className="gap-1 text-muted-foreground">
+                <SkipForward className="h-4 w-4" /> Saltar
+              </Button>
+            )}
+            {step === 4 && data.images.length === 0 && (
+              <Button variant="ghost" onClick={() => setStep(5)} className="gap-1 text-muted-foreground">
                 <SkipForward className="h-4 w-4" /> Saltar
               </Button>
             )}
@@ -505,6 +522,27 @@ const StepKMZ = ({ isEditing, parsedKMZ, kmzError, kmzFileName, onUpload, onClea
   );
 };
 
+const StepImages = ({ images, onImagesChange, userId }: {
+  images: string[];
+  onImagesChange: (images: string[]) => void;
+  userId?: string;
+}) => (
+  <div className="space-y-4">
+    <div>
+      <h3 className="text-lg font-semibold mb-1">Galería del Proyecto</h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        Sube fotos del proyecto, terreno, renders o planos. Este paso es opcional.
+      </p>
+    </div>
+    <ImageUploader
+      images={images}
+      onImagesChange={onImagesChange}
+      userId={userId}
+      maxImages={15}
+    />
+  </div>
+);
+
 const StepSummary = ({ data, formatNumber, parsedKMZ, isEditing }: {
   data: WizardData; formatNumber: (n: number | null) => string;
   parsedKMZ: ParsedKMZ | null; isEditing: boolean;
@@ -524,6 +562,19 @@ const StepSummary = ({ data, formatNumber, parsedKMZ, isEditing }: {
       <div>
         <p className="text-xs text-muted-foreground mb-1">Descripción</p>
         <p className="text-sm">{data.description}</p>
+      </div>
+    )}
+    {data.images.length > 0 && (
+      <div>
+        <p className="text-xs text-muted-foreground mb-1">Imágenes</p>
+        <div className="flex gap-2 overflow-x-auto">
+          {data.images.slice(0, 5).map((img, i) => (
+            <img key={i} src={img} alt={`Foto ${i + 1}`} className="h-16 w-16 rounded object-cover shrink-0" />
+          ))}
+          {data.images.length > 5 && (
+            <span className="text-xs text-muted-foreground self-center">+{data.images.length - 5} más</span>
+          )}
+        </div>
       </div>
     )}
     {parsedKMZ && !isEditing ? (

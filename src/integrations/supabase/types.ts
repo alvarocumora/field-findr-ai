@@ -693,6 +693,7 @@ export type Database = {
           description: string | null
           embed_map_url: string | null
           id: string
+          images: string[] | null
           kmz_file_url: string | null
           latitude: number | null
           legal_documents: Json | null
@@ -720,6 +721,7 @@ export type Database = {
           description?: string | null
           embed_map_url?: string | null
           id?: string
+          images?: string[] | null
           kmz_file_url?: string | null
           latitude?: number | null
           legal_documents?: Json | null
@@ -747,6 +749,7 @@ export type Database = {
           description?: string | null
           embed_map_url?: string | null
           id?: string
+          images?: string[] | null
           kmz_file_url?: string | null
           latitude?: number | null
           legal_documents?: Json | null
