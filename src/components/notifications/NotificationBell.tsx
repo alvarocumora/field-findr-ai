@@ -16,6 +16,7 @@ const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   reservation: FileText,
   payment: CreditCard,
   lead: Users,
+  system: Bell,
   info: Bell,
 };
 

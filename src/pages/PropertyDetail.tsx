@@ -34,7 +34,9 @@ import {
   Car,
   Mountain,
   Brain,
-  ChevronLeft
+  ChevronLeft,
+  MessageCircle,
+  Phone,
 } from 'lucide-react';
 
 const PropertyDetail = () => {
@@ -423,6 +425,21 @@ const PropertyDetail = () => {
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Descargar ficha PDF
+                </Button>
+
+                {/* WhatsApp Button */}
+                <Button 
+                  variant="outline" 
+                  className="w-full gap-2 h-11 touch-target border-green-500/30 text-green-600 hover:bg-green-500/10"
+                  onClick={() => {
+                    const message = encodeURIComponent(
+                      `Hola, me interesa la propiedad "${listing.title}" en ${listing.location}, ${listing.region}. Precio: ${formatPrice(listing.price, listing.currency)}. ¿Podrían darme más información? ${window.location.href}`
+                    );
+                    window.open(`https://wa.me/?text=${message}`, '_blank');
+                  }}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Consultar por WhatsApp
                 </Button>
               </CardContent>
             </Card>
