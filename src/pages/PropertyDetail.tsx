@@ -16,6 +16,7 @@ import VisitRequestDialog from '@/components/property/VisitRequestDialog';
 import { AIInvestmentCopilot } from '@/components/ai/AIInvestmentCopilot';
 import { generatePropertyPdf } from '@/lib/propertyPdfGenerator';
 import { cn } from '@/lib/utils';
+import { useSEO } from '@/hooks/useSEO';
 import {
   Heart,
   Share2,
@@ -46,6 +47,14 @@ const PropertyDetail = () => {
 
   const isFavorite = listing ? favoriteIds.includes(listing.id) : false;
   const similarListings = allListings.filter(l => l.id !== id).slice(0, 3);
+
+  useSEO({
+    title: listing?.title || 'Propiedad',
+    description: listing ? `${listing.title} en ${listing.location}, ${listing.region}. ${formatPrice(listing.price, listing.currency)}. ${formatArea(listing.area_m2, listing.area_ha)}.` : undefined,
+    image: listing?.images?.[0] || undefined,
+    url: window.location.href,
+    type: 'article',
+  });
 
   if (isLoading) {
     return (
