@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useSEO } from '@/hooks/useSEO';
 
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
@@ -218,6 +219,13 @@ const ProjectDetail = () => {
   const legalStatus = (project as any)?.legal_status || 'pending';
   const rolNumber = (project as any)?.rol_number;
   const permits = (project as any)?.permits || [];
+
+  useSEO({
+    title: project?.name || 'Proyecto',
+    description: project ? `${project.name} en ${project.city}, ${project.region}. ${lots.length} lotes disponibles.` : undefined,
+    image: (project as any)?.images?.[0] || undefined,
+    url: window.location.href,
+  });
 
   if (projectLoading) {
     return (
