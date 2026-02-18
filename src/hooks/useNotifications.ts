@@ -8,9 +8,10 @@ export interface Notification {
   user_id: string;
   type: string;
   title: string;
-  message: string | null;
+  message: string;
   read: boolean;
   link: string | null;
+  metadata: Record<string, unknown> | null;
   created_at: string;
 }
 
@@ -23,13 +24,13 @@ export const useNotifications = () => {
     queryFn: async () => {
       if (!user) return [];
       const { data, error } = await supabase
-        .from('notifications' as any)
+        .from('notifications')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
       if (error) throw error;
-      return (data || []) as unknown as Notification[];
+      return (data || []) as Notification[];
     },
     enabled: !!user,
   });
@@ -57,7 +58,7 @@ export const useNotifications = () => {
   const markAsRead = useMutation({
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
-        .from('notifications' as any)
+        .from('notifications')
         .update({ read: true })
         .eq('id', notificationId);
       if (error) throw error;
@@ -69,7 +70,7 @@ export const useNotifications = () => {
     mutationFn: async () => {
       if (!user) return;
       const { error } = await supabase
-        .from('notifications' as any)
+        .from('notifications')
         .update({ read: true })
         .eq('user_id', user.id)
         .eq('read', false);
@@ -78,5 +79,16 @@ export const useNotifications = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] }),
   });
 
-  return { ...query, unreadCount, markAsRead, markAllAsRead };
+  const deleteNotification = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] }),
+  });
+
+  return { ...query, unreadCount, markAsRead, markAllAsRead, deleteNotification };
 };
