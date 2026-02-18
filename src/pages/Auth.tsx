@@ -107,9 +107,9 @@ const Auth = () => {
           <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
             <MapPin className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">LoteosPro</CardTitle>
+          <CardTitle className="text-2xl font-bold">Ofertaterrenos</CardTitle>
           <CardDescription>
-            Sistema inteligente de gestión de loteos y parcelas
+            Plataforma inteligente de terrenos rurales e industriales
           </CardDescription>
         </CardHeader>
 

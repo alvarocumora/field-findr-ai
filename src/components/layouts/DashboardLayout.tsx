@@ -82,7 +82,7 @@ const DashboardLayout = ({ children, requiredRole }: DashboardLayoutProps) => {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="ml-3 font-semibold text-foreground">LoteosPro</span>
+          <span className="ml-3 font-semibold text-foreground">Ofertaterrenos</span>
         </div>
 
         <div className="p-4 md:p-6 lg:p-8">
