@@ -8,17 +8,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Users, Search, Phone, Mail, Calendar, 
-  TrendingUp, UserPlus, MessageSquare, Clock, Loader2, Trash2
+  TrendingUp, UserPlus, MessageSquare, Clock, Loader2, Trash2, Flame, Thermometer, Snowflake
 } from 'lucide-react';
 import { useLeads, LEAD_STATUS_CONFIG, LeadStatus } from '@/hooks/useLeads';
 import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
+import { useLeadScoring } from '@/hooks/useLeadScoring';
+import LeadScoreBadge from '@/components/leads/LeadScoreBadge';
 
 const LeadManagement = () => {
   const { leads, isLoading, stats, deleteLead } = useLeads();
+  const { scoredLeads, stats: scoreStats } = useLeadScoring(leads);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortByScore, setSortByScore] = useState(true);
 
-  const filteredLeads = leads.filter(lead => {
+  const sourceLeads = sortByScore ? scoredLeads : leads;
+  const filteredLeads = sourceLeads.filter(lead => {
     const name = `${lead.first_name} ${lead.last_name || ''}`.toLowerCase();
     const matchesSearch = name.includes(searchQuery.toLowerCase()) ||
                           (lead.email || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -60,8 +65,8 @@ const LeadManagement = () => {
         />
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Lead Score Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -73,14 +78,36 @@ const LeadManagement = () => {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-red-200 bg-red-50/50 dark:bg-red-950/20">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Nuevos</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.statusCounts.new || 0}</p>
+                <p className="text-sm text-muted-foreground">🔥 Calientes</p>
+                <p className="text-2xl font-bold text-red-600">{scoreStats.hot}</p>
               </div>
-              <UserPlus className="h-8 w-8 text-blue-500/60" />
+              <Flame className="h-8 w-8 text-red-500/60" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">🌤️ Tibios</p>
+                <p className="text-2xl font-bold text-amber-600">{scoreStats.warm}</p>
+              </div>
+              <Thermometer className="h-8 w-8 text-amber-500/60" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">❄️ Fríos</p>
+                <p className="text-2xl font-bold text-blue-600">{scoreStats.cold}</p>
+              </div>
+              <Snowflake className="h-8 w-8 text-blue-500/60" />
             </div>
           </CardContent>
         </Card>
@@ -88,21 +115,10 @@ const LeadManagement = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Negociando</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.statusCounts.negotiating || 0}</p>
+                <p className="text-sm text-muted-foreground">Score Promedio</p>
+                <p className="text-2xl font-bold">{scoreStats.avgScore}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-yellow-500/60" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Convertidos</p>
-                <p className="text-2xl font-bold text-green-600">{stats.statusCounts.converted || 0}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-green-500/60" />
+              <TrendingUp className="h-8 w-8 text-primary/60" />
             </div>
           </CardContent>
         </Card>
@@ -174,9 +190,12 @@ const LeadManagement = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Badge className={`${config.color} text-white`}>
-                    {config.label}
-                  </Badge>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className={`${config.color} text-white`}>
+                      {config.label}
+                    </Badge>
+                    <LeadScoreBadge lead={lead} />
+                  </div>
                   
                   <div className="space-y-2 text-sm">
                     {lead.email && (

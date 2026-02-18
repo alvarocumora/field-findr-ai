@@ -314,6 +314,8 @@ export type Database = {
           first_name: string
           id: string
           last_name: string | null
+          last_scored_at: string | null
+          lead_score: number | null
           lot_id: string | null
           next_follow_up: string | null
           notes: string | null
@@ -321,6 +323,7 @@ export type Database = {
           preferred_area_max: number | null
           preferred_area_min: number | null
           project_id: string | null
+          score_breakdown: Json | null
           source: string | null
           status: string | null
           updated_at: string
@@ -334,6 +337,8 @@ export type Database = {
           first_name: string
           id?: string
           last_name?: string | null
+          last_scored_at?: string | null
+          lead_score?: number | null
           lot_id?: string | null
           next_follow_up?: string | null
           notes?: string | null
@@ -341,6 +346,7 @@ export type Database = {
           preferred_area_max?: number | null
           preferred_area_min?: number | null
           project_id?: string | null
+          score_breakdown?: Json | null
           source?: string | null
           status?: string | null
           updated_at?: string
@@ -354,6 +360,8 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string | null
+          last_scored_at?: string | null
+          lead_score?: number | null
           lot_id?: string | null
           next_follow_up?: string | null
           notes?: string | null
@@ -361,6 +369,7 @@ export type Database = {
           preferred_area_max?: number | null
           preferred_area_min?: number | null
           project_id?: string | null
+          score_breakdown?: Json | null
           source?: string | null
           status?: string | null
           updated_at?: string
