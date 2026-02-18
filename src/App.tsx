@@ -34,6 +34,7 @@ import PropertyDetail from "./pages/PropertyDetail";
 import ProjectDetail from "./pages/ProjectDetail";
 import Install from "./pages/Install";
 import Pricing from "./pages/Pricing";
+import Referrals from "./pages/Referrals";
 import IntelligentSearch from "./components/IntelligentSearch";
 
 // ===== Buyer Pages =====
@@ -91,6 +92,7 @@ const App = () => (
               <Route path="/tools" element={<Tools />} />
               <Route path="/search" element={<IntelligentSearch />} />
               <Route path="/instalar" element={<Install />} />
+              <Route path="/referidos" element={<Referrals />} />
 
               {/* Subscription result pages */}
               <Route path="/subscription/success" element={<SubscriptionSuccess />} />

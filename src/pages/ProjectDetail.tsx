@@ -12,6 +12,8 @@ import { LotMapView } from '@/components/lots/LotMapView';
 import { LegalTab } from '@/components/projects/LegalTab';
 import { FinancingCalculator } from '@/components/projects/FinancingCalculator';
 import { EnhancedLotCard } from '@/components/lots/EnhancedLotCard';
+import { ProjectReviews } from '@/components/projects/ProjectReviews';
+import { ShareButtons } from '@/components/social/ShareButtons';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -28,11 +30,13 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  Star
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useSEO } from '@/hooks/useSEO';
+import { useReviewStats } from '@/hooks/useReviews';
 
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
@@ -299,9 +303,13 @@ const ProjectDetail = () => {
                     <span>{project.city}, {project.region}</span>
                   </div>
                 </div>
-                {/* Inline contact buttons - desktop */}
+                {/* Inline contact + share buttons - desktop */}
                 {!isMobile && (
                   <div className="flex gap-2 shrink-0">
+                    <ShareButtons 
+                      title={project.name} 
+                      description={`Proyecto de loteo en ${project.city}, ${project.region}. ${availableLots.length} lotes disponibles.`}
+                    />
                     <Button size="sm" className="gap-2" onClick={handleCall}>
                       <Phone className="h-4 w-4" />
                       Llamar
@@ -367,6 +375,10 @@ const ProjectDetail = () => {
               <TabsTrigger value="info" className="gap-2">
                 <Info className="h-4 w-4" />
                 Info
+              </TabsTrigger>
+              <TabsTrigger value="reviews" className="gap-2">
+                <Star className="h-4 w-4" />
+                Reseñas
               </TabsTrigger>
             </TabsList>
 
@@ -480,6 +492,13 @@ const ProjectDetail = () => {
                 <div>
                   <ProjectGallery images={(project as any).images || []} isOwner={isOwner} />
                 </div>
+              </div>
+            </TabsContent>
+
+            {/* Reviews Tab */}
+            <TabsContent value="reviews">
+              <div className="max-w-2xl">
+                <ProjectReviews projectId={project.id} />
               </div>
             </TabsContent>
           </Tabs>
