@@ -123,7 +123,7 @@ const OnboardingWizard = ({ onComplete }: OnboardingWizardProps) => {
                 <Rocket className="h-10 w-10 text-primary" />
               </div>
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold text-foreground">¡Bienvenido a LoteosPro!</h1>
+                <h1 className="text-3xl font-bold text-foreground">¡Bienvenido a Ofertaterrenos!</h1>
                 <p className="text-lg text-muted-foreground max-w-md mx-auto">
                   La plataforma inteligente para gestionar tus proyectos de loteo de principio a fin.
                 </p>
