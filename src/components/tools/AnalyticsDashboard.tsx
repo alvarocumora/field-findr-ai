@@ -3,34 +3,49 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
-import { TrendingUp, DollarSign, Users, MapPin, ArrowUp, ArrowDown, BarChart3 } from 'lucide-react';
+import { TrendingUp, DollarSign, Users, MapPin, ArrowUp, ArrowDown, BarChart3, Download, Filter } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
 import { useLots } from '@/hooks/useLots';
-import { useLeads, LEAD_STATUS_CONFIG, LeadStatus } from '@/hooks/useLeads';
+import { useLeads, LeadStatus } from '@/hooks/useLeads';
+import { generateReportPdf } from '@/lib/reportPdfGenerator';
+import { toast } from 'sonner';
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6'];
 
 export const AnalyticsDashboard = () => {
   const [period, setPeriod] = useState('6m');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('all');
   const { projects, isLoading: projectsLoading, stats: projectStats } = useProjects();
-  const { lots, isLoading: lotsLoading, stats: lotStats } = useLots();
-  const { leads, isLoading: leadsLoading, stats: leadStats } = useLeads();
+  const { lots: allLots, isLoading: lotsLoading, stats: lotStats } = useLots();
+  const { leads: allLeads, isLoading: leadsLoading, stats: leadStats } = useLeads();
 
   const isLoading = projectsLoading || lotsLoading || leadsLoading;
+
+  // Filter lots and leads by selected project
+  const lots = selectedProjectId === 'all'
+    ? allLots
+    : allLots.filter(l => l.project_id === selectedProjectId);
+
+  const leads = selectedProjectId === 'all'
+    ? allLeads
+    : allLeads.filter(l => l.project_id === selectedProjectId);
 
   // Calculate real metrics
   const totalRevenue = lots
     .filter(l => l.status === 'sold')
     .reduce((acc, l) => acc + Number(l.price || 0), 0);
   
-  const avgTicket = lotStats.sold > 0 ? totalRevenue / lotStats.sold : 0;
+  const soldCount = lots.filter(l => l.status === 'sold').length;
+  const avgTicket = soldCount > 0 ? totalRevenue / soldCount : 0;
   
-  const conversionRate = leadStats.total > 0 
-    ? ((leadStats.statusCounts.converted || 0) / leadStats.total * 100).toFixed(1)
+  const convertedLeads = leads.filter(l => l.status === 'converted').length;
+  const conversionRate = leads.length > 0 
+    ? ((convertedLeads) / leads.length * 100).toFixed(1)
     : '0';
 
   // Lead sources breakdown
@@ -46,7 +61,11 @@ export const AnalyticsDashboard = () => {
     .slice(0, 5);
 
   // Project performance data
-  const projectPerformance = projects.map(p => ({
+  const displayProjects = selectedProjectId === 'all'
+    ? projects
+    : projects.filter(p => p.id === selectedProjectId);
+
+  const projectPerformance = displayProjects.map(p => ({
     name: p.name.length > 15 ? p.name.slice(0, 15) + '...' : p.name,
     vendidos: p.sold_lots || 0,
     reservados: p.reserved_lots || 0,
@@ -54,12 +73,18 @@ export const AnalyticsDashboard = () => {
   }));
 
   // Conversion funnel from leads
+  const statusCounts = leads.reduce((acc, l) => {
+    const s = l.status || 'new';
+    acc[s] = (acc[s] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   const conversionFunnel = [
-    { stage: 'Leads', count: leadStats.total },
-    { stage: 'Contactados', count: leadStats.statusCounts.contacted || 0 },
-    { stage: 'Interesados', count: leadStats.statusCounts.interested || 0 },
-    { stage: 'Negociando', count: leadStats.statusCounts.negotiating || 0 },
-    { stage: 'Cerrados', count: leadStats.statusCounts.converted || 0 },
+    { stage: 'Leads', count: leads.length },
+    { stage: 'Contactados', count: statusCounts['contacted'] || 0 },
+    { stage: 'Interesados', count: statusCounts['interested'] || 0 },
+    { stage: 'Negociando', count: statusCounts['negotiating'] || 0 },
+    { stage: 'Cerrados', count: statusCounts['converted'] || 0 },
   ];
 
   // Sales trend (grouped by month from lots with sale_date)
@@ -78,18 +103,35 @@ export const AnalyticsDashboard = () => {
 
   const salesData = Object.values(salesByMonth).slice(-6);
 
+  // Export handler
+  const handleExportPdf = () => {
+    const selectedProject = selectedProjectId !== 'all'
+      ? projects.find(p => p.id === selectedProjectId)
+      : undefined;
+
+    generateReportPdf({
+      projectName: selectedProject?.name,
+      date: new Date().toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' }),
+      kpis: {
+        soldLots: soldCount,
+        totalRevenue,
+        avgTicket,
+        conversionRate,
+        totalLeads: leads.length,
+        totalProjects: displayProjects.length,
+      },
+      projectPerformance,
+      conversionFunnel,
+      leadsBySource: leadsBySourceData,
+    });
+    toast.success('Reporte PDF descargado');
+  };
+
   const StatCard = ({ 
-    title, 
-    value, 
-    subtitle, 
-    icon: Icon, 
-    trend 
+    title, value, subtitle, icon: Icon, trend 
   }: { 
-    title: string; 
-    value: string; 
-    subtitle?: string;
-    icon: React.ElementType;
-    trend?: 'up' | 'down' | 'neutral';
+    title: string; value: string; subtitle?: string;
+    icon: React.ElementType; trend?: 'up' | 'down' | 'neutral';
   }) => (
     <Card>
       <CardContent className="pt-6">
@@ -132,7 +174,7 @@ export const AnalyticsDashboard = () => {
     );
   }
 
-  const hasData = projects.length > 0 || lots.length > 0 || leads.length > 0;
+  const hasData = projects.length > 0 || allLots.length > 0 || allLeads.length > 0;
 
   if (!hasData) {
     return (
@@ -157,30 +199,47 @@ export const AnalyticsDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Dashboard Analítico</h2>
           <p className="text-muted-foreground">Métricas de rendimiento en tiempo real</p>
         </div>
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1m">Último mes</SelectItem>
-            <SelectItem value="3m">3 meses</SelectItem>
-            <SelectItem value="6m">6 meses</SelectItem>
-            <SelectItem value="1y">1 año</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+            <SelectTrigger className="w-48">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filtrar proyecto" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los proyectos</SelectItem>
+              {projects.map(p => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1m">Último mes</SelectItem>
+              <SelectItem value="3m">3 meses</SelectItem>
+              <SelectItem value="6m">6 meses</SelectItem>
+              <SelectItem value="1y">1 año</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="icon" onClick={handleExportPdf} title="Exportar PDF">
+            <Download className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Ventas Totales"
-          value={`${lotStats.sold} lotes`}
-          subtitle={`de ${lotStats.total} totales`}
+          value={`${soldCount} lotes`}
+          subtitle={`de ${lots.length} totales`}
           icon={TrendingUp}
           trend="neutral"
         />
@@ -194,14 +253,14 @@ export const AnalyticsDashboard = () => {
         <StatCard
           title="Ticket Promedio"
           value={avgTicket > 0 ? `$${(avgTicket / 1000000).toFixed(0)}M` : '-'}
-          subtitle={lotStats.sold > 0 ? `${lotStats.sold} ventas` : 'Sin ventas'}
+          subtitle={soldCount > 0 ? `${soldCount} ventas` : 'Sin ventas'}
           icon={MapPin}
           trend="neutral"
         />
         <StatCard
           title="Tasa Conversión"
           value={`${conversionRate}%`}
-          subtitle={`${leadStats.statusCounts.converted || 0} de ${leadStats.total} leads`}
+          subtitle={`${convertedLeads} de ${leads.length} leads`}
           icon={Users}
           trend={Number(conversionRate) > 5 ? 'up' : 'neutral'}
         />
