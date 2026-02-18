@@ -844,6 +844,45 @@ export type Database = {
           },
         ]
       }
+      referrals: {
+        Row: {
+          converted_at: string | null
+          created_at: string
+          id: string
+          referral_code: string
+          referred_user_id: string | null
+          referrer_id: string
+          reward_amount: number | null
+          reward_claimed: boolean
+          reward_type: string | null
+          status: string
+        }
+        Insert: {
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_user_id?: string | null
+          referrer_id: string
+          reward_amount?: number | null
+          reward_claimed?: boolean
+          reward_type?: string | null
+          status?: string
+        }
+        Update: {
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_user_id?: string | null
+          referrer_id?: string
+          reward_amount?: number | null
+          reward_claimed?: boolean
+          reward_type?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       reservations: {
         Row: {
           buyer_email: string
@@ -924,6 +963,47 @@ export type Database = {
             columns: ["lot_id"]
             isOneToOne: false
             referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          project_id: string
+          rating: number
+          updated_at: string
+          user_id: string
+          verified_buyer: boolean
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          project_id: string
+          rating: number
+          updated_at?: string
+          user_id: string
+          verified_buyer?: boolean
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          project_id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+          verified_buyer?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]

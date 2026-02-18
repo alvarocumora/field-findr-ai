@@ -12,6 +12,7 @@ import ListingCard from '@/components/listings/ListingCard';
 import ImageGallery from '@/components/property/ImageGallery';
 import PropertyMap from '@/components/property/PropertyMap';
 import ContactForm from '@/components/property/ContactForm';
+import { ShareButtons } from '@/components/social/ShareButtons';
 import VisitRequestDialog from '@/components/property/VisitRequestDialog';
 import { AIInvestmentCopilot } from '@/components/ai/AIInvestmentCopilot';
 import { generatePropertyPdf } from '@/lib/propertyPdfGenerator';
@@ -156,14 +157,12 @@ const PropertyDetail = () => {
               
               {/* Actions Overlay */}
               <div className="absolute top-3 md:top-4 right-3 md:right-4 flex gap-2 z-10">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 glass hover:bg-white/30 touch-target"
-                  onClick={handleShare}
-                >
-                  <Share2 className="h-5 w-5 text-white" />
-                </Button>
+                <ShareButtons 
+                  title={listing.title}
+                  description={`${listing.title} en ${listing.location}. ${formatPrice(listing.price, listing.currency)}`}
+                  variant="icon"
+                  className="h-10 w-10 glass hover:bg-white/30 touch-target text-white"
+                />
                 {user && (
                   <Button
                     variant="ghost"
