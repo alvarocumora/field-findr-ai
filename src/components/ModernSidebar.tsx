@@ -25,6 +25,8 @@ import {
   Scale,
   ClipboardCheck,
   MessageSquare,
+  Globe,
+  PieChart,
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -50,6 +52,8 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     { name: 'Cierres', href: '/asesor/closing', icon: Scale },
     { name: 'Mensajes', href: '/asesor/messages', icon: MessageSquare },
     { name: 'Analytics', href: '/asesor/analytics', icon: BarChart3 },
+    { name: 'Ejecutivo', href: '/asesor/executive', icon: PieChart },
+    { name: 'Enterprise', href: '/asesor/enterprise', icon: Globe },
   ];
 
   // Admin navigation
