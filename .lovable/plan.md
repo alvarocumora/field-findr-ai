@@ -5,9 +5,9 @@
 
 ## Estado Actual
 
-La plataforma tiene una estructura solida con +50 componentes, base de datos con 19 tablas (incluyendo notifications), autenticacion, roles, y un sistema de rutas por rol.
+La plataforma tiene una estructura solida con +60 componentes, base de datos con 25+ tablas, autenticacion, roles, y un sistema de rutas por rol.
 
-### Lo que YA funciona con datos reales (Fases 1-6 completadas):
+### Lo que YA funciona con datos reales (Fases 1-10 completadas):
 - Autenticacion (signup/login con roles buyer/agent)
 - CRUD de Listings, Projects, Lots, Leads
 - Explorador publico con filtros
@@ -28,31 +28,37 @@ La plataforma tiene una estructura solida con +50 componentes, base de datos con
 - Calculadoras financieras vinculadas a datos reales de lotes
 - SEO dinamico con meta tags OG
 - RLS auditado y seguro
+- Reviews de proyectos con ratings y verificacion de comprador
+- Compartir en redes sociales (Facebook, Twitter, WhatsApp, Email)
+- Programa de referidos con codigos unicos
+- Multi-moneda CLP/UF/USD en creditos y calculadoras
+- Simulador hipotecario con tasas reales de bancos chilenos
+- Alertas de pago y deteccion automatica de morosidad
+- Lead scoring automatico con triggers SQL (Hot/Warm/Cold)
+- Heatmap de demanda en mapa del explorador
+- Alertas inteligentes basadas en busquedas guardadas (edge function)
+- Multi-tenant con organizaciones basicas (tabla organizations + members)
+- API REST publica (listings, projects, lots, stats)
+- Webhooks outbound con HMAC signing y delivery log
+- Dashboard ejecutivo cross-proyecto con KPIs consolidados
 
 ---
 
-## Proximas Fases (v2.0)
+## Proximas Fases (v3.0)
 
-### Fase 7: Marketplace Social & Viralidad
-- Reviews de proyectos con ratings
-- Compartir en redes sociales
-- Programa de referidos
-- Blog/CMS simple
+### Fase 11: Integraciones Avanzadas
+- Firma electronica (DocuSign/similar)
+- WhatsApp Business API
+- Integracion datos catastrales (SII/CBR)
+- Imagenes satelitales (Planet/Maxar)
 
-### Fase 8: Fintech Avanzado
-- Firma electronica
-- Multi-moneda UF/CLP/USD
-- Simulador hipotecario con tasas reales
-- Pagos recurrentes automaticos
+### Fase 12: AI Avanzado
+- Comparables automaticos con ML
+- Prediccion de precios con modelos entrenados
+- Chatbot AI para compradores
+- Generacion automatica de descripciones
 
-### Fase 9: Data Intelligence & AI
-- Lead scoring AI
-- Heatmaps de demanda
-- Alertas inteligentes basadas en saved_searches
-- Comparables automaticos
-
-### Fase 10: Escala Enterprise
-- Multi-tenant / White-label
-- API publica REST
-- Webhooks
-- Dashboard ejecutivo cross-proyecto
+### Fase 13: Mobile & PWA
+- Notificaciones push
+- Modo offline completo
+- Geofencing para alertas de proximidad
