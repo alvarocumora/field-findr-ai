@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Calculator, TrendingUp, PiggyBank, DollarSign, BarChart3, Database } from 'lucide-react';
+import { Calculator, TrendingUp, PiggyBank, DollarSign, BarChart3, Database, Building2 } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
 import { useLots } from '@/hooks/useLots';
+import { MortgageSimulator } from '@/components/fintech/MortgageSimulator';
 
 export const FinancialCalculators = () => {
   const { projects } = useProjects();
@@ -158,21 +159,32 @@ export const FinancialCalculators = () => {
           </div>
         )}
 
-        <Tabs defaultValue="investment">
-          <TabsList className="grid grid-cols-3 mb-6">
+        <Tabs defaultValue="mortgage">
+          <TabsList className="grid grid-cols-4 mb-6">
+            <TabsTrigger value="mortgage" className="gap-2">
+              <Building2 className="h-4 w-4" />
+              Hipoteca
+            </TabsTrigger>
             <TabsTrigger value="investment" className="gap-2">
               <TrendingUp className="h-4 w-4" />
               Inversión
             </TabsTrigger>
-            <TabsTrigger value="mortgage" className="gap-2">
+            <TabsTrigger value="mortgage-simple" className="gap-2">
               <PiggyBank className="h-4 w-4" />
-              Hipoteca
+              Crédito
             </TabsTrigger>
             <TabsTrigger value="subdivision" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               Subdivisión
             </TabsTrigger>
           </TabsList>
+
+          {/* Mortgage Simulator with Real Rates */}
+          <TabsContent value="mortgage">
+            <MortgageSimulator
+              defaultPrice={investmentData.purchasePrice}
+            />
+          </TabsContent>
 
           {/* Investment Calculator */}
           <TabsContent value="investment" className="space-y-6">
@@ -221,8 +233,8 @@ export const FinancialCalculators = () => {
             </div>
           </TabsContent>
 
-          {/* Mortgage Calculator */}
-          <TabsContent value="mortgage" className="space-y-6">
+          {/* Simple Mortgage Calculator */}
+          <TabsContent value="mortgage-simple" className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div className="space-y-2">

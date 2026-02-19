@@ -14,6 +14,7 @@ export interface Credit {
   interest_rate: number;
   term_months: number;
   monthly_payment: number;
+  currency: string;
   status: 'active' | 'completed' | 'defaulted' | 'cancelled';
   contract_url: string | null;
   started_at: string;
@@ -95,6 +96,7 @@ export function useCreateCredit() {
       interest_rate: number;
       term_months: number;
       monthly_payment: number;
+      currency?: string;
       payments: { payment_number: number; amount: number; due_date: string }[];
     }) => {
       const { payments, ...creditData } = credit;
