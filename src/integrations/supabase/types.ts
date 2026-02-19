@@ -156,6 +156,7 @@ export type Database = {
           buyer_user_id: string | null
           contract_url: string | null
           created_at: string
+          currency: string
           down_payment: number
           financed_amount: number
           id: string
@@ -175,6 +176,7 @@ export type Database = {
           buyer_user_id?: string | null
           contract_url?: string | null
           created_at?: string
+          currency?: string
           down_payment?: number
           financed_amount: number
           id?: string
@@ -194,6 +196,7 @@ export type Database = {
           buyer_user_id?: string | null
           contract_url?: string | null
           created_at?: string
+          currency?: string
           down_payment?: number
           financed_amount?: number
           id?: string
@@ -1172,6 +1175,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_overdue_payments: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "buyer" | "agent" | "admin"

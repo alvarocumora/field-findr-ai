@@ -7,6 +7,8 @@ import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, DollarSign } from 'lucid
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { formatPriceLatam } from '@/lib/latam';
+import { PaymentReminders } from '@/components/fintech/PaymentReminders';
 
 const PAYMENT_STATUS: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   paid: { label: 'Pagado', color: 'text-green-600 bg-green-500/10', icon: CheckCircle2 },
@@ -21,6 +23,8 @@ export function CreditDetail({ credit, onBack }: { credit: Credit; onBack: () =>
 
   const paidCount = payments.filter(p => p.status === 'paid').length;
   const totalPaid = payments.filter(p => p.status === 'paid').reduce((s, p) => s + Number(p.amount), 0);
+  const cur = credit.currency || 'CLP';
+  const fmt = (v: number) => formatPriceLatam(v, cur);
 
   const handleRecordPayment = (paymentId: string) => {
     recordPayment.mutate(
@@ -50,10 +54,10 @@ export function CreditDetail({ credit, onBack }: { credit: Credit; onBack: () =>
       {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Total', value: `$${Number(credit.total_amount).toLocaleString('es-CL')}` },
-          { label: 'Pie', value: `$${Number(credit.down_payment).toLocaleString('es-CL')}` },
-          { label: 'Financiado', value: `$${Number(credit.financed_amount).toLocaleString('es-CL')}` },
-          { label: 'Cuota Mensual', value: `$${Number(credit.monthly_payment).toLocaleString('es-CL')}` },
+          { label: 'Total', value: fmt(Number(credit.total_amount)) },
+          { label: 'Pie', value: fmt(Number(credit.down_payment)) },
+          { label: 'Financiado', value: fmt(Number(credit.financed_amount)) },
+          { label: 'Cuota Mensual', value: fmt(Number(credit.monthly_payment)) },
         ].map((s, i) => (
           <Card key={i}><CardContent className="p-3">
             <p className="text-xs text-muted-foreground">{s.label}</p>
@@ -64,8 +68,15 @@ export function CreditDetail({ credit, onBack }: { credit: Credit; onBack: () =>
 
       <Card><CardContent className="p-4 flex items-center justify-between text-sm">
         <span className="text-muted-foreground">Progreso: {paidCount}/{payments.length} cuotas</span>
-        <span className="font-medium text-foreground">Pagado: ${totalPaid.toLocaleString('es-CL')}</span>
+        <span className="font-medium text-foreground">Pagado: {fmt(totalPaid)}</span>
       </CardContent></Card>
+
+      {/* Payment Reminders */}
+      <PaymentReminders
+        payments={payments}
+        onRecordPayment={handleRecordPayment}
+        isRecording={recordPayment.isPending}
+      />
 
       <Separator />
 
@@ -93,7 +104,7 @@ export function CreditDetail({ credit, onBack }: { credit: Credit; onBack: () =>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-semibold text-foreground">
-                      ${Number(p.amount).toLocaleString('es-CL')}
+                      {fmt(Number(p.amount))}
                     </span>
                     {(p.status === 'pending' || p.status === 'overdue') && (
                       <Button

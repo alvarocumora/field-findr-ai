@@ -11,6 +11,8 @@ import { useReservations } from '@/hooks/useReservations';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { CurrencySelector } from '@/components/fintech/CurrencySelector';
+import { formatPriceLatam } from '@/lib/latam';
 
 interface Props {
   trigger?: React.ReactNode;
@@ -29,6 +31,7 @@ export function CreateCreditDialog({ trigger }: Props) {
   const [downPayment, setDownPayment] = useState('');
   const [interestRate, setInterestRate] = useState('12');
   const [termMonths, setTermMonths] = useState('24');
+  const [currency, setCurrency] = useState('CLP');
 
   const financed = Number(totalAmount) - Number(downPayment);
   const preview = financed > 0 && Number(termMonths) > 0
@@ -53,6 +56,7 @@ export function CreateCreditDialog({ trigger }: Props) {
       interest_rate: Number(interestRate),
       term_months: Number(termMonths),
       monthly_payment: preview?.monthlyPayment || 0,
+      currency,
       payments: preview?.schedule || [],
     }, {
       onSuccess: () => {
@@ -87,13 +91,18 @@ export function CreateCreditDialog({ trigger }: Props) {
             </Select>
           </div>
 
+          <div>
+            <Label>Moneda</Label>
+            <CurrencySelector value={currency} onValueChange={setCurrency} className="w-full" />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Precio Total (CLP)</Label>
+              <Label>Precio Total ({currency})</Label>
               <Input type="number" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} placeholder="50000000" />
             </div>
             <div>
-              <Label>Pie (CLP)</Label>
+              <Label>Pie ({currency})</Label>
               <Input type="number" value={downPayment} onChange={e => setDownPayment(e.target.value)} placeholder="10000000" />
             </div>
           </div>
@@ -112,9 +121,9 @@ export function CreateCreditDialog({ trigger }: Props) {
           {preview && (
             <div className="rounded-xl border border-border/40 p-4 bg-muted/30 space-y-1">
               <p className="text-sm font-medium text-foreground">Vista Previa</p>
-              <p className="text-xs text-muted-foreground">Monto financiado: ${financed.toLocaleString('es-CL')}</p>
-              <p className="text-xs text-muted-foreground">Cuota mensual: <span className="font-bold text-foreground">${preview.monthlyPayment.toLocaleString('es-CL')}</span></p>
-              <p className="text-xs text-muted-foreground">Total a pagar: ${(preview.monthlyPayment * Number(termMonths)).toLocaleString('es-CL')}</p>
+              <p className="text-xs text-muted-foreground">Monto financiado: {formatPriceLatam(financed, currency)}</p>
+              <p className="text-xs text-muted-foreground">Cuota mensual: <span className="font-bold text-foreground">{formatPriceLatam(preview.monthlyPayment, currency)}</span></p>
+              <p className="text-xs text-muted-foreground">Total a pagar: {formatPriceLatam(preview.monthlyPayment * Number(termMonths), currency)}</p>
             </div>
           )}
 

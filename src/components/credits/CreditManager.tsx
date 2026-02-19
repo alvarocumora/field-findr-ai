@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useCredits, Credit } from '@/hooks/useCredits';
 import { CreditDetail } from './CreditDetail';
 import { CreateCreditDialog } from './CreateCreditDialog';
+import { formatPriceLatam } from '@/lib/latam';
 import {
   DollarSign, TrendingUp, AlertTriangle, CreditCard,
   PlusCircle, ChevronRight, FileText,
@@ -130,7 +131,7 @@ const CreditManager = () => {
                       {(credit as any).lots?.projects?.name || 'Proyecto'} — Lote {(credit as any).lots?.lot_number}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      ${Number(credit.financed_amount).toLocaleString('es-CL')} · {credit.term_months} cuotas · {credit.interest_rate}%
+                      {formatPriceLatam(Number(credit.financed_amount), credit.currency || 'CLP')} · {credit.term_months} cuotas · {credit.interest_rate}%
                     </p>
                   </div>
                 </div>
