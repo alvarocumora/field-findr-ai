@@ -6,7 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAllClosingSteps, useUpdateClosingStep, STEP_LABELS, ClosingStepStatus } from '@/hooks/useClosingSteps';
 import { ClosingTimeline } from './ClosingTimeline';
-import { FileText, ChevronDown, ArrowRight } from 'lucide-react';
+import ContractSigningDialog from '@/components/signature/ContractSigningDialog';
+import { FileText, ChevronDown, ArrowRight, Pen } from 'lucide-react';
 import { toast } from 'sonner';
 
 const STATUS_NEXT: Record<string, ClosingStepStatus> = {
@@ -18,6 +19,7 @@ const ClosingManager = () => {
   const { data: allSteps = [], isLoading } = useAllClosingSteps();
   const updateStep = useUpdateClosingStep();
   const [filter, setFilter] = useState('all');
+  const [signingData, setSigningData] = useState<{ open: boolean; projectName: string; lotNumber: string; buyerName: string; amount: string } | null>(null);
 
   // Group by reservation
   const grouped = allSteps.reduce((acc, step) => {
@@ -115,12 +117,41 @@ const ClosingManager = () => {
                           Avanzar {STEP_LABELS[s.step_type]}
                         </Button>
                       ))}
+                    {/* Signing button for promesa step */}
+                    {group.steps.some(s => s.step_type === 'promesa' && (s.status === 'in_progress' || s.status === 'pending')) && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="gap-1 text-xs rounded-lg"
+                        onClick={() => setSigningData({
+                          open: true,
+                          projectName: project?.name || 'Proyecto',
+                          lotNumber: lot?.lot_number || 'N/A',
+                          buyerName: res?.buyer_name || 'Comprador',
+                          amount: `$${(res?.reservation_amount || 0).toLocaleString('es-CL')}`,
+                        })}
+                      >
+                        <Pen className="h-3 w-3" />
+                        Firmar contrato
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             );
           })}
         </div>
+      )}
+
+      {signingData && (
+        <ContractSigningDialog
+          open={signingData.open}
+          onOpenChange={(open) => !open && setSigningData(null)}
+          contractData={signingData}
+          onSign={(dataUrl) => {
+            toast.success('Firma registrada exitosamente');
+          }}
+        />
       )}
     </div>
   );

@@ -9,9 +9,10 @@ import { LotComparator } from '@/components/tools/LotComparator';
 import { FinancialCalculators } from '@/components/tools/FinancialCalculators';
 import { AnalyticsDashboard } from '@/components/tools/AnalyticsDashboard';
 import { EnhancedCRM } from '@/components/tools/EnhancedCRM';
+import SIILookupPanel from '@/components/cadastral/SIILookupPanel';
 import { 
   Bot, Calculator, TrendingUp, Search, Wand2, 
-  Scale, BarChart3, Users, Sparkles 
+  Scale, BarChart3, Users, Sparkles, FileText 
 } from 'lucide-react';
 
 const Tools = () => {
@@ -26,6 +27,7 @@ const Tools = () => {
     { id: 'calculators', label: 'Calculadoras', icon: Calculator },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'crm', label: 'CRM', icon: Users },
+    { id: 'sii', label: 'Catastro SII', icon: FileText },
   ];
 
   return (
@@ -44,7 +46,7 @@ const Tools = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 lg:grid-cols-8 mb-6 h-auto">
+          <TabsList className="grid grid-cols-5 lg:grid-cols-9 mb-6 h-auto">
             {tabs.map(tab => (
               <TabsTrigger 
                 key={tab.id} 
@@ -98,6 +100,10 @@ const Tools = () => {
 
           <TabsContent value="crm">
             <EnhancedCRM />
+          </TabsContent>
+
+          <TabsContent value="sii">
+            <SIILookupPanel />
           </TabsContent>
         </Tabs>
       </div>

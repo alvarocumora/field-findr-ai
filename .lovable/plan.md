@@ -1,13 +1,12 @@
 
 
-
 # Plan Completo para Terminar la Plataforma Funcional
 
 ## Estado Actual
 
 La plataforma tiene una estructura solida con +60 componentes, base de datos con 25+ tablas, autenticacion, roles, y un sistema de rutas por rol.
 
-### Lo que YA funciona con datos reales (Fases 1-10 completadas):
+### Lo que YA funciona con datos reales (Fases 1-11 completadas):
 - Autenticacion (signup/login con roles buyer/agent)
 - CRUD de Listings, Projects, Lots, Leads
 - Explorador publico con filtros
@@ -41,16 +40,13 @@ La plataforma tiene una estructura solida con +60 componentes, base de datos con
 - API REST publica (listings, projects, lots, stats)
 - Webhooks outbound con HMAC signing y delivery log
 - Dashboard ejecutivo cross-proyecto con KPIs consolidados
+- WhatsApp mejorado con mensajes contextuales (lote, precio, proyecto, seguimiento leads)
+- Firma electronica simple en canvas HTML5 integrada en cierre legal
+- Consulta catastral SII por numero de rol (edge function con scraping)
 
 ---
 
 ## Proximas Fases (v3.0)
-
-### Fase 11: Integraciones Avanzadas
-- Firma electronica (DocuSign/similar)
-- WhatsApp Business API
-- Integracion datos catastrales (SII/CBR)
-- Imagenes satelitales (Planet/Maxar)
 
 ### Fase 12: AI Avanzado
 - Comparables automaticos con ML
