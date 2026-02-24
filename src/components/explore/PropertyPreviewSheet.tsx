@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Listing, formatPrice, formatArea, getListingTypeLabel, getPricePerM2, formatPriceShort, getCountryFlag } from '@/hooks/useListings';
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
+import { whatsapp } from '@/lib/whatsappUtils';
 import { cn } from '@/lib/utils';
 
 interface PropertyPreviewSheetProps {
@@ -84,8 +85,14 @@ const PropertyPreviewSheet = ({
   };
 
   const handleWhatsApp = () => {
-    const text = encodeURIComponent(`Hola, me interesa la propiedad "${listing.title}" por ${formatPrice(listing.price, listing.currency)}. ¿Podrían darme más información?`);
-    window.open(`https://wa.me/?text=${text}`, '_blank');
+    const url = whatsapp.listingInquiry({
+      title: listing.title,
+      price: listing.price,
+      currency: listing.currency || 'CLP',
+      area: listing.area_m2,
+      location: listing.location,
+    });
+    window.open(url, '_blank');
   };
 
   // Handle touch swipe for gallery
