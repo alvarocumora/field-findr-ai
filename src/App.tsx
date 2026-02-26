@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
+import { CompareProvider } from "./hooks/useCompare";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 
 // Auth Components
@@ -80,6 +81,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark" storageKey="ofertaterrenos-theme">
       <AuthProvider>
+        <CompareProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -267,6 +269,7 @@ const App = () => (
           <OfflineIndicator />
           <InstallPrompt />
         </TooltipProvider>
+        </CompareProvider>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>

@@ -8,6 +8,9 @@ import ExploreGrid from '@/components/explore/ExploreGrid';
 import MapDialog from '@/components/explore/MapDialog';
 import PropertyPreviewSheet from '@/components/explore/PropertyPreviewSheet';
 import EnhancedAISearch from '@/components/ai/EnhancedAISearch';
+import CompareFloatingBar from '@/components/compare/CompareFloatingBar';
+import CompareSheet from '@/components/compare/CompareSheet';
+import OpportunityAlerts from '@/components/explore/OpportunityAlerts';
 import { Input } from '@/components/ui/input';
 import { useListings, Listing, getPricePerM2 } from '@/hooks/useListings';
 
@@ -192,7 +195,7 @@ const Explorar = () => {
           onToggleAISearch={() => setShowAISearch(!showAISearch)}
         />
 
-        {/* Toolbar + Grid */}
+        {/* Toolbar + Opportunities + Grid */}
         <div className="max-w-7xl mx-auto px-4 pb-8">
           <ExploreToolbar
             listings={filteredListings}
@@ -202,6 +205,14 @@ const Explorar = () => {
             onSortChange={setSortBy}
             onOpenMap={() => setShowMap(true)}
           />
+
+          {/* Opportunity Alerts */}
+          <div className="mb-4">
+            <OpportunityAlerts
+              listings={filteredListings}
+              onSelectListing={setPreviewListing}
+            />
+          </div>
 
           <ExploreGrid
             listings={filteredListings}
@@ -230,6 +241,10 @@ const Explorar = () => {
         onViewDetails={handleViewDetails}
         similarListings={similarListings}
       />
+
+      {/* Compare */}
+      <CompareFloatingBar />
+      <CompareSheet />
     </div>
   );
 };
