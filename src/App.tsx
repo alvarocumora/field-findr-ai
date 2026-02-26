@@ -38,6 +38,7 @@ import Pricing from "./pages/Pricing";
 import Referrals from "./pages/Referrals";
 import IntelligentSearch from "./components/IntelligentSearch";
 import RegionLanding from "./pages/RegionLanding";
+import CountryLanding from "./pages/CountryLanding";
 
 // ===== Buyer Pages =====
 import Profile from "./pages/Profile";
@@ -99,6 +100,7 @@ const App = () => (
               <Route path="/instalar" element={<Install />} />
               <Route path="/referidos" element={<Referrals />} />
               <Route path="/region/:slug" element={<RegionLanding />} />
+              <Route path="/pais/:code" element={<CountryLanding />} />
 
               {/* Subscription result pages */}
               <Route path="/subscription/success" element={<SubscriptionSuccess />} />

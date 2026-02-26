@@ -23,6 +23,7 @@ import RegionCards from '@/components/landing/RegionCards';
 import ParallaxBanner from '@/components/landing/ParallaxBanner';
 import LogoCloud from '@/components/landing/LogoCloud';
 import TestimonialMarquee from '@/components/landing/TestimonialMarquee';
+import CountrySelector from '@/components/landing/CountrySelector';
 import heroCinematic from '@/assets/hero-cinematic.jpg';
 
 const CATEGORIES = [
@@ -261,7 +262,7 @@ const Index = () => {
                   <div className="p-2 rounded-lg bg-primary/10">
                     <MapPin className="h-4 w-4 text-primary" />
                   </div>
-                  <span className="text-sm font-medium text-foreground">Ubicaciones en Chile</span>
+                  <span className="text-sm font-medium text-foreground">Ubicaciones en LATAM</span>
                 </div>
                 <MiniMap 
                   listings={featuredListings} 
@@ -273,6 +274,7 @@ const Index = () => {
         </div>
       </section>
 
+      <CountrySelector />
       <TrustBadges />
       <FloatingCTA />
     </PublicLayout>

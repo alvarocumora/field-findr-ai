@@ -56,10 +56,16 @@ const PROPERTY_TYPES = [
   { value: 'inversion', label: 'Inversión' },
 ];
 
-const REGIONS = [
-  'Metropolitana', 'Valparaíso', 'Biobío', 'Araucanía', 
-  'Coquimbo', 'Maule', "O'Higgins", 'Los Lagos'
-];
+// Dynamic regions based on selected countries
+const getAvailableRegions = (selectedCountries: string[]): string[] => {
+  if (selectedCountries.length === 0) {
+    // Show all top regions across all countries
+    return LATAM_COUNTRIES.flatMap(c => c.regions.slice(0, 3));
+  }
+  return LATAM_COUNTRIES
+    .filter(c => selectedCountries.includes(c.name))
+    .flatMap(c => c.regions);
+};
 
 const TAGS = [
   { value: 'agua', label: 'Agua' },
@@ -95,6 +101,7 @@ const FilterBar = ({
   onToggleAISearch,
   className,
 }: FilterBarProps) => {
+  const availableRegions = getAvailableRegions(selectedCountries);
   const [expanded, setExpanded] = useState(false);
 
   const getTypeLabel = () => {
@@ -213,9 +220,9 @@ const FilterBar = ({
                   <ChevronDown className="h-3.5 w-3.5 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-56 p-2" align="start">
+              <PopoverContent className="w-64 p-2" align="start">
                 <div className="space-y-1 max-h-64 overflow-y-auto">
-                  {REGIONS.map((region) => (
+                  {availableRegions.map((region) => (
                     <label
                       key={region}
                       className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-muted"
@@ -227,6 +234,9 @@ const FilterBar = ({
                       <span className="text-sm">{region}</span>
                     </label>
                   ))}
+                  {availableRegions.length === 0 && (
+                    <p className="text-xs text-muted-foreground p-2">Selecciona un país primero</p>
+                  )}
                 </div>
               </PopoverContent>
             </Popover>

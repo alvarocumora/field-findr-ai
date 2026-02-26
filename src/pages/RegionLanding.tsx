@@ -10,26 +10,20 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin, ArrowRight, TrendingUp, Ruler, DollarSign, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Listing, formatPrice, formatArea } from '@/hooks/useListings';
+import { LATAM_COUNTRIES } from '@/lib/latam';
 
-// Map slugs back to region names
-const REGION_MAP: Record<string, string> = {
-  'valparaiso': 'Valparaíso',
-  'biobio': 'Biobío',
-  'los-lagos': 'Los Lagos',
-  'araucania': 'Araucanía',
-  'maule': 'Maule',
-  'ohiggins': "O'Higgins",
-  'coquimbo': 'Coquimbo',
-  'metropolitana': 'Metropolitana',
-  'atacama': 'Atacama',
-  'los-rios': 'Los Ríos',
-  'nuble': 'Ñuble',
-  'tarapaca': 'Tarapacá',
-  'antofagasta': 'Antofagasta',
-  'aysen': 'Aysén',
-  'magallanes': 'Magallanes',
-  'arica-y-parinacota': 'Arica y Parinacota',
-};
+// Build region map from all countries
+const REGION_MAP: Record<string, string> = {};
+LATAM_COUNTRIES.forEach(country => {
+  country.regions.forEach(region => {
+    const slug = region
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    REGION_MAP[slug] = region;
+  });
+});
 
 const slugToRegion = (slug: string): string => {
   return REGION_MAP[slug] || slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
