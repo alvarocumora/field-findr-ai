@@ -1,8 +1,10 @@
 import { memo, useRef, useEffect, useState } from 'react';
-import { Heart, ChevronRight, MapPin, Sparkles, Eye } from 'lucide-react';
+import { Heart, ChevronRight, MapPin, Sparkles, Eye, Scale } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Listing, formatPrice, formatArea, getListingTypeLabel, getPricePerM2, formatPriceShort, getCountryFlag } from '@/hooks/useListings';
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
+import { useCompare } from '@/hooks/useCompare';
+import InvestmentScoreBadge from '@/components/explore/InvestmentScoreBadge';
 import { cn } from '@/lib/utils';
 
 interface QuickPropertyCardProps {
@@ -27,7 +29,9 @@ const QuickPropertyCard = memo(({
   const cardRef = useRef<HTMLDivElement>(null);
   const { data: favoriteIds = [] } = useFavoriteIds();
   const { toggle: toggleFavorite } = useToggleFavorite();
+  const { addToCompare, isInCompare } = useCompare();
   const favorite = favoriteIds.includes(listing.id);
+  const inCompare = isInCompare(listing.id);
   const [showSecondImage, setShowSecondImage] = useState(false);
 
   const pricePerM2 = getPricePerM2(listing.price, listing.area_m2);
@@ -49,6 +53,11 @@ const QuickPropertyCard = memo(({
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleFavorite(listing.id);
+  };
+
+  const handleCompareClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCompare(listing);
   };
 
   const hasSecondImage = listing.images.length > 1;
@@ -87,16 +96,28 @@ const QuickPropertyCard = memo(({
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
           {/* Favorite button */}
-          <button
-            onClick={handleFavoriteClick}
-            className={cn(
-              'absolute top-2 right-2 p-1.5 rounded-full transition-all',
-              'bg-black/30 backdrop-blur-sm hover:bg-black/50',
-              favorite ? 'text-red-400' : 'text-white/80 hover:text-white'
-            )}
-          >
-            <Heart className={cn('h-3.5 w-3.5', favorite && 'fill-current')} />
-          </button>
+          <div className="absolute top-2 right-2 flex flex-col gap-1">
+            <button
+              onClick={handleFavoriteClick}
+              className={cn(
+                'p-1.5 rounded-full transition-all',
+                'bg-black/30 backdrop-blur-sm hover:bg-black/50',
+                favorite ? 'text-red-400' : 'text-white/80 hover:text-white'
+              )}
+            >
+              <Heart className={cn('h-3.5 w-3.5', favorite && 'fill-current')} />
+            </button>
+            <button
+              onClick={handleCompareClick}
+              className={cn(
+                'p-1.5 rounded-full transition-all',
+                'bg-black/30 backdrop-blur-sm hover:bg-black/50',
+                inCompare ? 'text-primary' : 'text-white/80 hover:text-white'
+              )}
+            >
+              <Scale className={cn('h-3.5 w-3.5', inCompare && 'fill-current')} />
+            </button>
+          </div>
 
           {listing.featured && (
             <Badge className="absolute top-2 left-2 h-5 px-1.5 text-[9px] font-semibold bg-amber-500/90 text-white border-0 gap-0.5">
@@ -104,6 +125,9 @@ const QuickPropertyCard = memo(({
               Top
             </Badge>
           )}
+
+          {/* Investment score */}
+          <InvestmentScoreBadge listing={listing} className="absolute bottom-2 right-2" />
 
           {/* Price overlay */}
           <div className="absolute bottom-2 left-2">
