@@ -76,7 +76,10 @@ const RegionCards = () => {
                 key={region.region}
                 variants={prefersReducedMotion ? {} : card}
                 whileHover={{ y: -4 }}
-                onClick={() => navigate(`/explorar?region=${encodeURIComponent(region.region)}`)}
+                onClick={() => {
+                  const slug = region.region.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                  navigate(`/region/${slug}`);
+                }}
                 className="group relative text-left rounded-2xl overflow-hidden border border-border/50 h-36 md:h-44"
               >
                 {/* Background image */}

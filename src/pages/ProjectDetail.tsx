@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { useSEO } from '@/hooks/useSEO';
+import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
 import { useReviewStats } from '@/hooks/useReviews';
 
 const formatPrice = (price: number | null) => {
@@ -224,11 +224,27 @@ const ProjectDetail = () => {
   const rolNumber = (project as any)?.rol_number;
   const permits = (project as any)?.permits || [];
 
+  const projectJsonLd = project ? buildProjectJsonLd({
+    id: project.id,
+    name: project.name,
+    description: project.description,
+    city: project.city,
+    region: project.region,
+    country: project.country,
+    latitude: project.latitude,
+    longitude: project.longitude,
+    images: (project as any)?.images,
+    total_lots: project.total_lots,
+    available_lots: project.available_lots,
+  }) : undefined;
+
   useSEO({
     title: project?.name || 'Proyecto',
     description: project ? `${project.name} en ${project.city}, ${project.region}. ${lots.length} lotes disponibles.` : undefined,
     image: (project as any)?.images?.[0] || undefined,
     url: window.location.href,
+    canonicalUrl: project ? `https://ofertaterrenos.com/proyecto/${project.id}` : undefined,
+    jsonLd: projectJsonLd,
   });
 
   if (projectLoading) {

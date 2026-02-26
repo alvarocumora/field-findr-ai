@@ -17,7 +17,7 @@ import VisitRequestDialog from '@/components/property/VisitRequestDialog';
 import { AIInvestmentCopilot } from '@/components/ai/AIInvestmentCopilot';
 import { generatePropertyPdf } from '@/lib/propertyPdfGenerator';
 import { cn } from '@/lib/utils';
-import { useSEO } from '@/hooks/useSEO';
+import { useSEO, buildPropertyJsonLd } from '@/hooks/useSEO';
 import {
   Heart,
   Share2,
@@ -51,12 +51,31 @@ const PropertyDetail = () => {
   const isFavorite = listing ? favoriteIds.includes(listing.id) : false;
   const similarListings = allListings.filter(l => l.id !== id).slice(0, 3);
 
+  const propertyJsonLd = listing ? buildPropertyJsonLd({
+    id: listing.id,
+    title: listing.title,
+    description: listing.description,
+    price: listing.price,
+    currency: listing.currency,
+    location: listing.location,
+    region: listing.region,
+    city: listing.city,
+    country: listing.country,
+    area_m2: listing.area_m2,
+    images: listing.images,
+    lat: listing.lat,
+    lng: listing.lng,
+    type: listing.type,
+  }) : undefined;
+
   useSEO({
     title: listing?.title || 'Propiedad',
     description: listing ? `${listing.title} en ${listing.location}, ${listing.region}. ${formatPrice(listing.price, listing.currency)}. ${formatArea(listing.area_m2, listing.area_ha)}.` : undefined,
     image: listing?.images?.[0] || undefined,
     url: window.location.href,
+    canonicalUrl: listing ? `https://ofertaterrenos.com/propiedad/${listing.id}` : undefined,
     type: 'article',
+    jsonLd: propertyJsonLd,
   });
 
   if (isLoading) {
