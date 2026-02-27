@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { usePolygonDrawing } from '@/hooks/usePolygonDrawing';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Layers, Upload, Image, PenTool } from 'lucide-react';
+import { AlertCircle, Layers, Upload, Image, PenTool, ArrowLeftRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced, buildPolygonsFromMixedGeometry } from '@/lib/kmz';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,6 +34,7 @@ interface LotMapViewProps {
   onLotsUpdated?: () => void;
   readOnly?: boolean;
   showAdminControls?: boolean;
+  onOpenCompare?: () => void;
 }
 
 // Generate GeoJSON from lots - uses real polygons if available, otherwise generates grid
@@ -135,7 +136,7 @@ const formatPrice = (price: number | null) => {
   }).format(price);
 };
 
-export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, planImages, onLotsUpdated, readOnly = false, showAdminControls = false }: LotMapViewProps) => {
+export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, planImages, onLotsUpdated, readOnly = false, showAdminControls = false, onOpenCompare }: LotMapViewProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
@@ -755,15 +756,28 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         
         {/* Master plan overlay toggle - visible when plan images exist */}
         {masterPlanImagesList.length > 0 && (
-          <Button
-            variant={showMasterPlanOverlay ? "default" : "secondary"}
-            size="sm"
-            className="gap-2 glass"
-            onClick={() => setShowMasterPlanOverlay(!showMasterPlanOverlay)}
-          >
-            <Image className="h-4 w-4" />
-            Plano
-          </Button>
+          <>
+            <Button
+              variant={showMasterPlanOverlay ? "default" : "secondary"}
+              size="sm"
+              className="gap-2 glass"
+              onClick={() => setShowMasterPlanOverlay(!showMasterPlanOverlay)}
+            >
+              <Image className="h-4 w-4" />
+              Plano
+            </Button>
+            {onOpenCompare && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="gap-2 glass"
+                onClick={onOpenCompare}
+              >
+                <ArrowLeftRight className="h-4 w-4" />
+                Comparar
+              </Button>
+            )}
+          </>
         )}
 
         {/* Admin-only controls - only shown when showAdminControls is true */}

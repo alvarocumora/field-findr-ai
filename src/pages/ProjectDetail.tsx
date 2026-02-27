@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LotReservationDialog } from '@/components/lots/LotReservationDialog';
 import { LotMapView } from '@/components/lots/LotMapView';
+import { PlanCompareView } from '@/components/lots/PlanCompareView';
 import { LegalTab } from '@/components/projects/LegalTab';
 import { FinancingCalculator } from '@/components/projects/FinancingCalculator';
 import { EnhancedLotCard } from '@/components/lots/EnhancedLotCard';
@@ -142,6 +143,7 @@ const ProjectDetail = () => {
   const [selectedLot, setSelectedLot] = useState<string | null>(null);
   const [reservationLot, setReservationLot] = useState<any | null>(null);
   const [financingLot, setFinancingLot] = useState<any | null>(null);
+  const [showCompare, setShowCompare] = useState(false);
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
@@ -421,7 +423,32 @@ const ProjectDetail = () => {
                   queryClient.invalidateQueries({ queryKey: ['project', id] });
                 }}
                 readOnly={!isOwner}
+                onOpenCompare={
+                  ((project as any).plan_images?.length > 0)
+                    ? () => setShowCompare(true)
+                    : undefined
+                }
               />
+
+              {/* Compare dialog */}
+              <Dialog open={showCompare} onOpenChange={setShowCompare}>
+                <DialogContent className="max-w-[95vw] w-full max-h-[95vh] overflow-y-auto p-4">
+                  <h2 className="text-lg font-semibold mb-2">Comparación: Polígonos KMZ vs Plano Oficial</h2>
+                  <PlanCompareView
+                    lots={lots}
+                    projectCenter={{
+                      lat: project.latitude || -34.9767,
+                      lng: project.longitude || -71.7856
+                    }}
+                    planImages={
+                      ((project as any).plan_images || []).map((url: string, idx: number) => ({
+                        label: `Lámina ${idx + 1}`,
+                        url,
+                      }))
+                    }
+                  />
+                </DialogContent>
+              </Dialog>
               
               {/* Selected Lot Quick View under map */}
               {selectedLotData && (
