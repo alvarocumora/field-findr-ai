@@ -37,6 +37,7 @@ interface WizardData {
   total_lots: number;
   total_area: number | null;
   price_base: number | null;
+  reservation_deposit: number | null;
   images: string[];
   plan_images: string[];
 }
@@ -66,6 +67,7 @@ const projectToWizardData = (project: Project): WizardData => ({
   total_lots: project.total_lots || 0,
   total_area: project.total_area ? Number(project.total_area) : null,
   price_base: null,
+  reservation_deposit: project.reservation_deposit ? Number(project.reservation_deposit) : 500000,
   images: (project as any).images || [],
   plan_images: (project as any).plan_images || [],
 });
@@ -86,7 +88,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
     editingProject ? projectToWizardData(editingProject) : {
       name: '', description: '', status: 'active', rol_number: '',
       latitude: null, longitude: null, region: '', city: '', address: '',
-      total_lots: 0, total_area: null, price_base: null, images: [], plan_images: [],
+      total_lots: 0, total_area: null, price_base: null, reservation_deposit: 500000, images: [], plan_images: [],
     }
   );
 
@@ -148,6 +150,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         location: data.address || data.city || data.region || null,
         total_lots: data.total_lots || 0,
         total_area: data.total_area,
+        reservation_deposit: data.reservation_deposit || 500000,
         images: data.images.length > 0 ? data.images : null,
         plan_images: data.plan_images.length > 0 ? data.plan_images : null,
       };
@@ -424,6 +427,16 @@ const StepLots = ({ data, update, formatNumber, pricePerM2 }: {
         <Label>Precio por m² (calculado)</Label>
         <Input readOnly value={pricePerM2 ? `$${formatNumber(pricePerM2)}` : '—'} className="bg-muted" />
       </div>
+    </div>
+    <div className="space-y-2">
+      <Label>Monto Depósito de Reserva (CLP)</Label>
+      <Input 
+        type="number" 
+        placeholder="500000" 
+        value={data.reservation_deposit || ''} 
+        onChange={e => update({ reservation_deposit: parseFloat(e.target.value) || null })} 
+      />
+      <p className="text-xs text-muted-foreground">Monto que los compradores deben pagar para reservar un lote. Por defecto $500.000.</p>
     </div>
     {data.total_lots > 0 && data.total_area && (
       <Card className="bg-muted/50">
