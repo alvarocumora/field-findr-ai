@@ -38,6 +38,7 @@ interface WizardData {
   total_area: number | null;
   price_base: number | null;
   images: string[];
+  plan_images: string[];
 }
 
 const STEPS = [
@@ -46,7 +47,8 @@ const STEPS = [
   { id: 2, label: 'Lotes', icon: Grid3X3 },
   { id: 3, label: 'Importar KMZ', icon: FileArchive },
   { id: 4, label: 'Imágenes', icon: ImageIcon },
-  { id: 5, label: 'Resumen', icon: CheckCircle2 },
+  { id: 5, label: 'Planos', icon: Layers },
+  { id: 6, label: 'Resumen', icon: CheckCircle2 },
 ];
 
 const CHILE_REGIONS = LATAM_COUNTRIES.find(c => c.code === 'CL')?.regions || [];
@@ -65,6 +67,7 @@ const projectToWizardData = (project: Project): WizardData => ({
   total_area: project.total_area ? Number(project.total_area) : null,
   price_base: null,
   images: (project as any).images || [],
+  plan_images: (project as any).plan_images || [],
 });
 
 interface CreateProjectWizardProps {
@@ -83,7 +86,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
     editingProject ? projectToWizardData(editingProject) : {
       name: '', description: '', status: 'active', rol_number: '',
       latitude: null, longitude: null, region: '', city: '', address: '',
-      total_lots: 0, total_area: null, price_base: null, images: [],
+      total_lots: 0, total_area: null, price_base: null, images: [], plan_images: [],
     }
   );
 
@@ -146,6 +149,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         total_lots: data.total_lots || 0,
         total_area: data.total_area,
         images: data.images.length > 0 ? data.images : null,
+        plan_images: data.plan_images.length > 0 ? data.plan_images : null,
       };
 
       let projectId: string;
@@ -276,6 +280,13 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
           />
         )}
         {step === 5 && (
+          <StepPlanImages
+            images={data.plan_images}
+            onImagesChange={(plan_images) => update({ plan_images })}
+            userId={user?.id}
+          />
+        )}
+        {step === 6 && (
           <StepSummary data={data} formatNumber={formatNumber} parsedKMZ={parsedKMZ} isEditing={isEditing} />
         )}
       </div>
@@ -285,7 +296,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         <Button variant="outline" onClick={step === 0 ? onCancel : () => setStep(s => s - 1)}>
           {step === 0 ? 'Cancelar' : <><ChevronLeft className="h-4 w-4 mr-1" />Atrás</>}
         </Button>
-        {step < 5 ? (
+        {step < 6 ? (
           <div className="flex gap-2">
             {step === 3 && !parsedKMZ && (
               <Button variant="ghost" onClick={() => setStep(4)} className="gap-1 text-muted-foreground">
@@ -294,6 +305,11 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
             )}
             {step === 4 && data.images.length === 0 && (
               <Button variant="ghost" onClick={() => setStep(5)} className="gap-1 text-muted-foreground">
+                <SkipForward className="h-4 w-4" /> Saltar
+              </Button>
+            )}
+            {step === 5 && data.plan_images.length === 0 && (
+              <Button variant="ghost" onClick={() => setStep(6)} className="gap-1 text-muted-foreground">
                 <SkipForward className="h-4 w-4" /> Saltar
               </Button>
             )}
@@ -539,6 +555,27 @@ const StepImages = ({ images, onImagesChange, userId }: {
       onImagesChange={onImagesChange}
       userId={userId}
       maxImages={15}
+    />
+  </div>
+);
+
+const StepPlanImages = ({ images, onImagesChange, userId }: {
+  images: string[];
+  onImagesChange: (images: string[]) => void;
+  userId?: string;
+}) => (
+  <div className="space-y-4">
+    <div>
+      <h3 className="text-lg font-semibold mb-1">Planos del Proyecto</h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        Sube las imágenes de los planos oficiales (Láminas A, B, etc.) para superponerlos en el mapa y validar los polígonos. Este paso es opcional.
+      </p>
+    </div>
+    <ImageUploader
+      images={images}
+      onImagesChange={onImagesChange}
+      userId={userId}
+      maxImages={10}
     />
   </div>
 );
