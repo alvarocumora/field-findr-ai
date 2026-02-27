@@ -13,7 +13,7 @@ const FooterSection = () => {
     ],
     company: [
       { name: 'Sobre nosotros', href: '#' },
-      { name: 'Contacto', href: '#' },
+      { name: 'Contacto', href: '/contacto' },
     ],
     legal: [
       { name: 'Términos de uso', href: '#' },
