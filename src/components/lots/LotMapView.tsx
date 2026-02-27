@@ -680,7 +680,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
 
   // Update selected lot highlight
   useEffect(() => {
-    if (!map.current || !mapLoaded) return;
+    if (!map.current || !mapLoaded || !map.current.isStyleLoaded()) return;
 
     if (map.current.getLayer('lots-selected')) {
       map.current.removeLayer('lots-selected');
