@@ -1216,6 +1216,65 @@ export type Database = {
         }
         Relationships: []
       }
+      transaction_documents: {
+        Row: {
+          created_at: string
+          deadline: string | null
+          doc_type: Database["public"]["Enums"]["transaction_doc_type"]
+          file_name: string | null
+          file_url: string | null
+          id: string
+          notes: string | null
+          rejection_reason: string | null
+          reservation_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["doc_status"]
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          deadline?: string | null
+          doc_type: Database["public"]["Enums"]["transaction_doc_type"]
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          rejection_reason?: string | null
+          reservation_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["doc_status"]
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          deadline?: string | null
+          doc_type?: Database["public"]["Enums"]["transaction_doc_type"]
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          rejection_reason?: string | null
+          reservation_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["doc_status"]
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_documents_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1390,6 +1449,13 @@ export type Database = {
       closing_step_status: "pending" | "in_progress" | "completed" | "blocked"
       closing_step_type: "reserva" | "promesa" | "escritura" | "inscripcion_cbr"
       credit_status: "active" | "completed" | "defaulted" | "cancelled"
+      doc_status:
+        | "pending"
+        | "uploaded"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "expired"
       payment_status: "pending" | "paid" | "overdue" | "partial"
       reservation_status:
         | "pending_payment"
@@ -1397,6 +1463,19 @@ export type Database = {
         | "expired"
         | "cancelled"
         | "converted"
+      transaction_doc_type:
+        | "cedula_identidad"
+        | "dominio_vigente"
+        | "certificado_hipotecas"
+        | "plano_subdivision"
+        | "certificado_informaciones_previas"
+        | "promesa_compraventa"
+        | "escritura_publica"
+        | "inscripcion_cbr"
+        | "comprobante_pago"
+        | "poder_notarial"
+        | "certificado_deuda"
+        | "otro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1529,6 +1608,14 @@ export const Constants = {
       closing_step_status: ["pending", "in_progress", "completed", "blocked"],
       closing_step_type: ["reserva", "promesa", "escritura", "inscripcion_cbr"],
       credit_status: ["active", "completed", "defaulted", "cancelled"],
+      doc_status: [
+        "pending",
+        "uploaded",
+        "under_review",
+        "approved",
+        "rejected",
+        "expired",
+      ],
       payment_status: ["pending", "paid", "overdue", "partial"],
       reservation_status: [
         "pending_payment",
@@ -1536,6 +1623,20 @@ export const Constants = {
         "expired",
         "cancelled",
         "converted",
+      ],
+      transaction_doc_type: [
+        "cedula_identidad",
+        "dominio_vigente",
+        "certificado_hipotecas",
+        "plano_subdivision",
+        "certificado_informaciones_previas",
+        "promesa_compraventa",
+        "escritura_publica",
+        "inscripcion_cbr",
+        "comprobante_pago",
+        "poder_notarial",
+        "certificado_deuda",
+        "otro",
       ],
     },
   },

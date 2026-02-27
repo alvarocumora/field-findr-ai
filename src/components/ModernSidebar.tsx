@@ -52,6 +52,7 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     { name: 'Cierres', href: '/asesor/closing', icon: Scale },
     { name: 'Mensajes', href: '/asesor/messages', icon: MessageSquare },
     { name: 'Analytics', href: '/asesor/analytics', icon: BarChart3 },
+    { name: 'Financiero', href: '/asesor/financial', icon: TrendingUp },
     { name: 'Ejecutivo', href: '/asesor/executive', icon: PieChart },
     { name: 'Enterprise', href: '/asesor/enterprise', icon: Globe },
   ];
@@ -59,12 +60,13 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
   // Admin navigation
   const adminNavigation = [
     { name: 'Panel Admin', href: '/admin/dashboard', icon: LayoutDashboard },
+    { name: 'Financiero', href: '/admin/financial', icon: TrendingUp },
     { name: 'Usuarios', href: '/admin/users', icon: Users },
     { name: 'Agentes', href: '/admin/agents', icon: ShieldCheck },
     { name: 'Reservas', href: '/admin/reservations', icon: FileText },
     { name: 'Aprobaciones', href: '/admin/approvals', icon: ClipboardCheck },
     { name: 'Créditos', href: '/admin/credits', icon: CreditCard },
-    { name: 'Analytics', href: '/admin/analytics', icon: TrendingUp },
+    { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   ];
 
   const commonNavigation = [
