@@ -863,6 +863,7 @@ export type Database = {
           permits: Json | null
           plan_images: string[] | null
           region: string | null
+          reservation_deposit: number | null
           reserved_lots: number | null
           rol_number: string | null
           sold_lots: number | null
@@ -893,6 +894,7 @@ export type Database = {
           permits?: Json | null
           plan_images?: string[] | null
           region?: string | null
+          reservation_deposit?: number | null
           reserved_lots?: number | null
           rol_number?: string | null
           sold_lots?: number | null
@@ -923,6 +925,7 @@ export type Database = {
           permits?: Json | null
           plan_images?: string[] | null
           region?: string | null
+          reservation_deposit?: number | null
           reserved_lots?: number | null
           rol_number?: string | null
           sold_lots?: number | null

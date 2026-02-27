@@ -1,0 +1,1 @@
+ALTER TABLE public.projects ADD COLUMN reservation_deposit numeric DEFAULT 500000;

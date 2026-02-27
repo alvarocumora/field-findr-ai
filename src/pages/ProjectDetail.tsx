@@ -586,6 +586,7 @@ const ProjectDetail = () => {
           projectName={project.name}
           open={!!reservationLot}
           onOpenChange={(open) => !open && setReservationLot(null)}
+          reservationAmount={(project as any).reservation_deposit || 500000}
         />
       </div>
     </PublicLayout>
