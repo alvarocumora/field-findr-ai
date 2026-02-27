@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAllClosingSteps, useUpdateClosingStep, STEP_LABELS, ClosingStepStatus } from '@/hooks/useClosingSteps';
 import { ClosingTimeline } from './ClosingTimeline';
 import ContractSigningDialog from '@/components/signature/ContractSigningDialog';
+import { TransactionDocuments } from './TransactionDocuments';
 import { FileText, ChevronDown, ArrowRight, Pen } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -100,6 +101,9 @@ const ClosingManager = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <ClosingTimeline steps={group.steps} />
+
+                  {/* Transaction Documents */}
+                  <TransactionDocuments reservationId={rId} />
 
                   <div className="flex flex-wrap gap-2">
                     {group.steps

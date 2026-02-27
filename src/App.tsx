@@ -69,6 +69,7 @@ import CreditManager from "./components/credits/CreditManager";
 import ClosingManager from "./components/closing/ClosingManager";
 import EnterpriseSettings from "./components/enterprise/EnterpriseSettings";
 import ExecutiveDashboard from "./pages/dashboard/ExecutiveDashboard";
+import FinancialDashboard from "./pages/dashboard/FinancialDashboard";
 import Messages from "./pages/dashboard/Messages";
 // ===== Admin Pages =====
 import AdminUsers from "./pages/AdminUsers";
@@ -202,6 +203,11 @@ const App = () => (
                   <ExecutiveDashboard />
                 </DashboardLayout>
               } />
+              <Route path="/asesor/financial" element={
+                <DashboardLayout requiredRole="agent">
+                  <FinancialDashboard />
+                </DashboardLayout>
+              } />
               <Route path="/publish" element={
                 <ProtectedRoute requireAuth requireRole="agent">
                   <PublishProperty />
@@ -244,6 +250,11 @@ const App = () => (
               <Route path="/admin/analytics" element={
                 <DashboardLayout requiredRole="admin">
                   <BusinessIntelligence />
+                </DashboardLayout>
+              } />
+              <Route path="/admin/financial" element={
+                <DashboardLayout requiredRole="admin">
+                  <FinancialDashboard />
                 </DashboardLayout>
               } />
 

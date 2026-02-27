@@ -2,6 +2,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useReservations } from '@/hooks/useReservations';
 import { useClosingSteps } from '@/hooks/useClosingSteps';
 import { ClosingTimeline } from '@/components/closing/ClosingTimeline';
+import { TransactionDocuments } from '@/components/closing/TransactionDocuments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -267,6 +268,11 @@ const ReservationCard = ({ reservation }: { reservation: any }) => {
             </div>
             <ClosingTimeline steps={closingSteps} />
           </div>
+        )}
+
+        {/* Transaction Documents */}
+        {['paid', 'converted'].includes(status) && (
+          <TransactionDocuments reservationId={reservation.id} readOnly />
         )}
 
         <Separator />
