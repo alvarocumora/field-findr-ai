@@ -76,15 +76,15 @@ const FooterSection = () => {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4 text-primary" />
-                hola@ofertaterrenos.cl
+                <a href="mailto:ventas@ofertaterrenos.com" className="hover:text-primary transition-colors">ventas@ofertaterrenos.com</a>
               </li>
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Phone className="h-4 w-4 text-primary" />
-                +56 2 2345 6789
+                <a href="tel:+56983823005" className="hover:text-primary transition-colors">+56 9 8382 3005</a>
               </li>
-              <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4 text-primary" />
-                Santiago, Chile
+              <li className="flex items-start gap-2 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4 text-primary mt-0.5" />
+                Cerro El Plomo 5420, Las Condes, Santiago
               </li>
             </ul>
           </div>
