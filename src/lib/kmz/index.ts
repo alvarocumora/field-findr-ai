@@ -1,9 +1,7 @@
 // KMZ Parser - Main entry point
-// Enhanced with @mapbox/togeojson + @turf/turf for robust polygon detection
-// v5: Improved with buffer/unbuffer hole extraction from Land Plotter Pro
+// v6: Enhanced with @tmcw/togeojson + improved tolerances from Land Plotter Pro
 
 import JSZip from 'jszip';
-import * as toGeoJSON from '@mapbox/togeojson';
 import * as turf from '@turf/turf';
 import type { Feature, Geometry, GeoJsonProperties, LineString, Polygon, MultiLineString, Position } from 'geojson';
 import { KMLPlacemark, ParsedKMZ, LotInfo } from './types';
@@ -38,11 +36,17 @@ export {
 
 // ============= CONSTANTS =============
 const COORD_PRECISION = 7;
-const SNAP_TOLERANCE = 0.0001; // ~10m for endpoint snapping
+const SNAP_TOLERANCE_TIGHT = 0.00001;  // ~1m
+const SNAP_TOLERANCE_MEDIUM = 0.0001;  // ~11m
+const SNAP_TOLERANCE_LOOSE = 0.0005;   // ~55m
+const CLOSE_TOLERANCE = 0.0002;        // ~22m for closing LineStrings
 
 // ============= COORDINATE HELPERS =============
 
-function snapLinesToNetwork(lineFeatures: Feature<LineString, GeoJsonProperties>[]): Feature<LineString, GeoJsonProperties>[] {
+function snapLinesToNetwork(
+  lineFeatures: Feature<LineString, GeoJsonProperties>[],
+  tolerance = SNAP_TOLERANCE_MEDIUM
+): Feature<LineString, GeoJsonProperties>[] {
   if (lineFeatures.length === 0) return [];
 
   // Build vertex grid
@@ -82,7 +86,7 @@ function snapLinesToNetwork(lineFeatures: Feature<LineString, GeoJsonProperties>
       const p2 = endpoints[j].coord;
       const dist = Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
 
-      if (dist < SNAP_TOLERANCE && dist > 0) {
+      if (dist < tolerance && dist > 0) {
         const midpoint = truncateCoord([(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2] as [number, number]);
 
         const f1 = snapped[endpoints[i].featureIndex];
@@ -109,24 +113,36 @@ function snapLinesToNetwork(lineFeatures: Feature<LineString, GeoJsonProperties>
   return snapped as Feature<LineString, GeoJsonProperties>[];
 }
 
-// ============= ENHANCED PARSING WITH toGeoJSON =============
+// ============= PARSING WITH toGeoJSON =============
 
-const parseKMLWithToGeoJSON = (kmlContent: string) => {
+const parseKMLWithToGeoJSON = async (kmlContent: string) => {
   const parser = new DOMParser();
   const kmlDoc = parser.parseFromString(kmlContent, 'text/xml');
 
   const parseError = kmlDoc.querySelector('parsererror');
   if (parseError) {
-    console.warn('⚠️ KML parse error, falling back to direct parser');
+    console.warn('⚠️ KML parse error');
     return null;
   }
 
+  // Try @tmcw/togeojson first (modern fork, better support)
   try {
-    const geojson = toGeoJSON.kml(kmlDoc);
-    console.log(`✅ toGeoJSON extracted ${geojson.features.length} features`);
+    const tmcw = await import('@tmcw/togeojson');
+    const geojson = tmcw.kml(kmlDoc);
+    console.log(`✅ @tmcw/togeojson extracted ${geojson.features.length} features`);
     return geojson;
   } catch (err) {
-    console.warn('⚠️ toGeoJSON failed:', err);
+    console.warn('⚠️ @tmcw/togeojson failed, trying @mapbox/togeojson...');
+  }
+
+  // Fallback to @mapbox/togeojson
+  try {
+    const mapbox = await import('@mapbox/togeojson');
+    const geojson = mapbox.kml(kmlDoc);
+    console.log(`✅ @mapbox/togeojson extracted ${geojson.features.length} features`);
+    return geojson;
+  } catch (err) {
+    console.warn('⚠️ Both toGeoJSON parsers failed:', err);
     return null;
   }
 };
@@ -185,8 +201,8 @@ const closeAlmostClosedLines = (lineFeatures: Feature<LineString, GeoJsonPropert
     const last = coords[coords.length - 1];
     const d = Math.sqrt(Math.pow(first[0] - last[0], 2) + Math.pow(first[1] - last[1], 2));
 
-    // Increased tolerance: ~11m for closing
-    if (d < 0.0001) {
+    // Use CLOSE_TOLERANCE (~22m) - generous enough for most KML exports
+    if (d < CLOSE_TOLERANCE) {
       const polygon = lineStringToPolygonGeom(feature.geometry);
       if (polygon) {
         try {
@@ -218,42 +234,49 @@ const closeAlmostClosedLines = (lineFeatures: Feature<LineString, GeoJsonPropert
 const polygonizeLines = (lineFeatures: Feature<LineString, GeoJsonProperties>[]): Feature<Polygon, GeoJsonProperties>[] => {
   try {
     console.log(`🔧 Polygonizing ${lineFeatures.length} lines...`);
-    const snapped = snapLinesToNetwork(lineFeatures);
-    const lineCollection = turf.featureCollection(snapped);
+    
+    // Try multiple snap tolerances
+    const tolerances = [SNAP_TOLERANCE_MEDIUM, SNAP_TOLERANCE_LOOSE];
+    
+    for (const tol of tolerances) {
+      console.log(`🔧 Trying snap tolerance: ${tol} (~${Math.round(tol * 111320)}m)...`);
+      const snapped = snapLinesToNetwork(lineFeatures, tol);
+      const lineCollection = turf.featureCollection(snapped);
 
-    try {
-      const polygonized = turf.polygonize(lineCollection as any);
+      try {
+        const polygonized = turf.polygonize(lineCollection as any);
 
-      if (polygonized && polygonized.features && polygonized.features.length > 0) {
-        const validPolygons = polygonized.features
-          .filter(f => {
-            try {
-              const area = turf.area(f);
-              return area > 10;
-            } catch {
-              return false;
-            }
-          })
-          .map((f, i) => ({
-            ...f,
-            properties: {
-              ...f.properties,
-              reconstructedFrom: 'polygonize',
-              lotNumber: `Lote ${i + 1}`,
-            },
-          })) as Feature<Polygon, GeoJsonProperties>[];
+        if (polygonized && polygonized.features && polygonized.features.length > 0) {
+          const validPolygons = polygonized.features
+            .filter(f => {
+              try {
+                const area = turf.area(f);
+                return area > 10;
+              } catch {
+                return false;
+              }
+            })
+            .map((f, i) => ({
+              ...f,
+              properties: {
+                ...f.properties,
+                reconstructedFrom: 'polygonize',
+                lotNumber: `Lote ${i + 1}`,
+              },
+            })) as Feature<Polygon, GeoJsonProperties>[];
 
-        if (validPolygons.length > 0) {
-          console.log(`✅ Polygonize created ${validPolygons.length} polygons`);
-          return validPolygons;
+          if (validPolygons.length > 0) {
+            console.log(`✅ Polygonize created ${validPolygons.length} polygons (tolerance: ${tol})`);
+            return validPolygons;
+          }
         }
+      } catch (e) {
+        console.log(`⚠️ Polygonize failed at tolerance ${tol}:`, e);
       }
-    } catch (e) {
-      console.log('⚠️ Direct polygonize failed, trying buffer/hole extraction...');
     }
 
-    // Buffer/hole extraction technique (from Land Plotter Pro)
-    return tryBufferHoleExtraction(snapped);
+    // Buffer/hole extraction technique
+    return tryBufferHoleExtraction(snapLinesToNetwork(lineFeatures, SNAP_TOLERANCE_MEDIUM));
   } catch (err) {
     console.warn('⚠️ Polygonize failed:', err);
     return [];
@@ -277,8 +300,8 @@ const tryBufferHoleExtraction = (lineFeatures: Feature<LineString, GeoJsonProper
 
     const multiLine = turf.multiLineString(allCoords);
 
-    // Try multiple buffer sizes (5m, 10m, 20m)
-    const bufferSizes = [0.005, 0.01, 0.02]; // in kilometers
+    // Try multiple buffer sizes
+    const bufferSizes = [0.005, 0.01, 0.02, 0.05]; // in kilometers
 
     for (const bufferSize of bufferSizes) {
       console.log(`🔧 Trying buffer of ${bufferSize * 1000}m...`);
@@ -288,16 +311,13 @@ const tryBufferHoleExtraction = (lineFeatures: Feature<LineString, GeoJsonProper
 
       const polygons: Feature<Polygon, GeoJsonProperties>[] = [];
 
-      // Extract holes from the buffered polygon as lots
       const extractHoles = (coords: Position[][][]) => {
         for (const polyCoords of coords) {
           if (polyCoords.length > 1) {
-            // Each hole (index > 0) is a potential lot
             for (let i = 1; i < polyCoords.length; i++) {
               const holeCoords = polyCoords[i];
               if (holeCoords.length < 4) continue;
 
-              // Reverse to get clockwise orientation for polygon
               const reversedCoords = [...holeCoords].reverse();
               const holePoly: Feature<Polygon, GeoJsonProperties> = {
                 type: 'Feature',
@@ -311,7 +331,6 @@ const tryBufferHoleExtraction = (lineFeatures: Feature<LineString, GeoJsonProper
                 }
               };
 
-              // Validate area (at least 50m² to filter noise)
               try {
                 const area = turf.area(holePoly);
                 if (area > 50) {
@@ -435,7 +454,14 @@ function postProcessPolygons(features: Feature<Polygon, GeoJsonProperties>[]): F
 // ============= LOT NUMBER EXTRACTION =============
 
 const extractLotNumber = (name: string, description?: string): string | null => {
-  const patterns = [/Lote[:\s]*(\d+)/i, /Lot[:\s]*(\d+)/i, /^(\d+)$/, /^\s*(\d+)\s*$/];
+  const patterns = [
+    /Lote[:\-\s]*(\d+)/i, 
+    /Lot[:\-\s]*(\d+)/i, 
+    /^(\d+)$/, 
+    /^\s*(\d+)\s*$/,
+    /Parcela[:\-\s]*(\d+)/i,
+    /Sitio[:\-\s]*(\d+)/i,
+  ];
 
   for (const pattern of patterns) {
     const match = name.match(pattern) || description?.match(pattern);
@@ -488,15 +514,47 @@ const calculateBoundsAndCenter = (placemarks: KMLPlacemark[]) => {
   };
 };
 
-// ============= DIRECT KML PARSING =============
+// ============= DIRECT KML PARSING (ENHANCED v6) =============
 
 function parseKMLDirectlyForPolygons(kmlContent: string): Feature<Polygon, GeoJsonProperties>[] {
   const parser = new DOMParser();
   const kmlDoc = parser.parseFromString(kmlContent, 'text/xml');
   const polygons: Feature<Polygon, GeoJsonProperties>[] = [];
 
-  const placemarks = kmlDoc.getElementsByTagName('Placemark');
-  console.log(`🔍 Direct KML: ${placemarks.length} Placemarks found`);
+  // Try multiple strategies for finding Placemarks
+  let placemarks: Element[] = [];
+  
+  // Strategy 1: getElementsByTagName (handles namespaces)
+  const byTagName = kmlDoc.getElementsByTagName('Placemark');
+  if (byTagName.length > 0) {
+    placemarks = Array.from(byTagName);
+  }
+  
+  // Strategy 2: querySelector
+  if (placemarks.length === 0) {
+    const byQuerySelector = kmlDoc.querySelectorAll('Placemark');
+    if (byQuerySelector.length > 0) {
+      placemarks = Array.from(byQuerySelector);
+    }
+  }
+  
+  // Strategy 3: KML namespace
+  if (placemarks.length === 0) {
+    const byNS = kmlDoc.getElementsByTagNameNS('http://www.opengis.net/kml/2.2', 'Placemark');
+    if (byNS.length > 0) {
+      placemarks = Array.from(byNS);
+    }
+  }
+  
+  // Strategy 4: Google Earth namespace
+  if (placemarks.length === 0) {
+    const byGE = kmlDoc.getElementsByTagNameNS('http://earth.google.com/kml/2.2', 'Placemark');
+    if (byGE.length > 0) {
+      placemarks = Array.from(byGE);
+    }
+  }
+  
+  console.log(`🔍 Direct KML v6: ${placemarks.length} Placemarks found`);
 
   for (let index = 0; index < placemarks.length; index++) {
     const placemark = placemarks[index];
@@ -505,67 +563,67 @@ function parseKMLDirectlyForPolygons(kmlContent: string): Feature<Polygon, GeoJs
       const descEl = placemark.getElementsByTagName('description')[0];
       const name = nameEl?.textContent?.trim() || '';
       const description = descEl?.textContent?.trim() || '';
+      const lotNumber = extractLotNumber(name, description) || name || `Lote ${index + 1}`;
+
+      // Check for MultiGeometry first
+      const multiGeomEl = placemark.getElementsByTagName('MultiGeometry')[0];
+      if (multiGeomEl) {
+        // Extract all geometries inside MultiGeometry
+        const innerPolygons = multiGeomEl.getElementsByTagName('Polygon');
+        for (let p = 0; p < innerPolygons.length; p++) {
+          const coords = extractPolygonCoords(innerPolygons[p]);
+          if (coords && coords.length >= 4) {
+            polygons.push(makePolygonFeature(coords, lotNumber + (innerPolygons.length > 1 ? ` (${p + 1})` : ''), description, 'Polygon'));
+          }
+        }
+        
+        // Also check LineStrings inside MultiGeometry
+        const innerLines = multiGeomEl.getElementsByTagName('LineString');
+        for (let l = 0; l < innerLines.length; l++) {
+          const coordsEl = innerLines[l].getElementsByTagName('coordinates')[0];
+          if (coordsEl) {
+            const coords = parseKMLCoordinateString(coordsEl.textContent?.trim() || '');
+            if (coords.length >= 4 && isAlmostClosedCoords(coords)) {
+              ensureClosed(coords);
+              polygons.push(makePolygonFeature(coords, lotNumber + (innerLines.length > 1 ? ` (${l + 1})` : ''), description, 'closedLineString'));
+            }
+          }
+        }
+        continue; // Already processed MultiGeometry
+      }
 
       // Check for Polygon
       const polygonEl = placemark.getElementsByTagName('Polygon')[0];
       if (polygonEl) {
-        let coordsText = '';
-
-        const outerBoundaryEl = polygonEl.getElementsByTagName('outerBoundaryIs')[0];
-        if (outerBoundaryEl) {
-          const linearRingEl = outerBoundaryEl.getElementsByTagName('LinearRing')[0];
-          if (linearRingEl) {
-            const coordsEl = linearRingEl.getElementsByTagName('coordinates')[0];
-            if (coordsEl) coordsText = coordsEl.textContent?.trim() || '';
-          }
+        const coords = extractPolygonCoords(polygonEl);
+        if (coords && coords.length >= 4) {
+          polygons.push(makePolygonFeature(coords, lotNumber, description, 'Polygon'));
         }
-
-        if (!coordsText) {
-          const directCoords = polygonEl.getElementsByTagName('coordinates')[0];
-          if (directCoords) coordsText = directCoords.textContent?.trim() || '';
-        }
-
-        if (coordsText) {
-          const coords = parseKMLCoordinateString(coordsText);
-          if (coords.length >= 4) {
-            polygons.push({
-              type: 'Feature',
-              geometry: { type: 'Polygon', coordinates: [coords] },
-              properties: {
-                name,
-                description,
-                lotNumber: extractLotNumber(name, description) || `Lote ${index + 1}`,
-              }
-            });
-          }
-        }
+        continue;
       }
 
-      // Check for closed LineString
-      if (!polygonEl) {
-        const lsEl = placemark.getElementsByTagName('LineString')[0];
-        if (lsEl) {
-          const coordsEl = lsEl.getElementsByTagName('coordinates')[0];
-          if (coordsEl) {
-            const coords = parseKMLCoordinateString(coordsEl.textContent?.trim() || '');
-            if (coords.length >= 4) {
-              const first = coords[0];
-              const last = coords[coords.length - 1];
-              const d = Math.sqrt(Math.pow(first[0] - last[0], 2) + Math.pow(first[1] - last[1], 2));
-              if (d < 0.00001 || d === 0) {
-                if (d > 0) coords.push([...first]);
-                polygons.push({
-                  type: 'Feature',
-                  geometry: { type: 'Polygon', coordinates: [coords] },
-                  properties: {
-                    name,
-                    description,
-                    lotNumber: extractLotNumber(name, description) || `Lote ${index + 1}`,
-                    reconstructedFrom: 'closedLineString'
-                  }
-                });
-              }
-            }
+      // Check for LinearRing (some KMLs use this directly)
+      const linearRingEl = placemark.getElementsByTagName('LinearRing')[0];
+      if (linearRingEl && !placemark.getElementsByTagName('Polygon')[0]) {
+        const coordsEl = linearRingEl.getElementsByTagName('coordinates')[0];
+        if (coordsEl) {
+          const coords = parseKMLCoordinateString(coordsEl.textContent?.trim() || '');
+          if (coords.length >= 4) {
+            polygons.push(makePolygonFeature(coords, lotNumber, description, 'LinearRing'));
+          }
+        }
+        continue;
+      }
+
+      // Check for LineString - try to close it
+      const lsEl = placemark.getElementsByTagName('LineString')[0];
+      if (lsEl) {
+        const coordsEl = lsEl.getElementsByTagName('coordinates')[0];
+        if (coordsEl) {
+          const coords = parseKMLCoordinateString(coordsEl.textContent?.trim() || '');
+          if (coords.length >= 4 && isAlmostClosedCoords(coords)) {
+            ensureClosed(coords);
+            polygons.push(makePolygonFeature(coords, lotNumber, description, 'closedLineString'));
           }
         }
       }
@@ -574,8 +632,76 @@ function parseKMLDirectlyForPolygons(kmlContent: string): Feature<Polygon, GeoJs
     }
   }
 
-  console.log(`✅ Direct KML parsing: ${polygons.length} polygons extracted`);
+  console.log(`✅ Direct KML parsing v6: ${polygons.length} polygons extracted`);
   return polygons;
+}
+
+function extractPolygonCoords(polygonEl: Element): Position[] | null {
+  let coordsText = '';
+
+  // Strategy 1: outerBoundaryIs > LinearRing > coordinates
+  const outerBoundaryEl = polygonEl.getElementsByTagName('outerBoundaryIs')[0];
+  if (outerBoundaryEl) {
+    const linearRingEl = outerBoundaryEl.getElementsByTagName('LinearRing')[0];
+    if (linearRingEl) {
+      const coordsEl = linearRingEl.getElementsByTagName('coordinates')[0];
+      if (coordsEl) coordsText = coordsEl.textContent?.trim() || '';
+    }
+  }
+
+  // Strategy 2: CSS selector
+  if (!coordsText) {
+    const outerBoundary = polygonEl.querySelector('outerBoundaryIs LinearRing coordinates');
+    if (outerBoundary) {
+      coordsText = outerBoundary.textContent?.trim() || '';
+    }
+  }
+
+  // Strategy 3: Direct coordinates
+  if (!coordsText) {
+    const directCoords = polygonEl.getElementsByTagName('coordinates')[0];
+    if (directCoords) coordsText = directCoords.textContent?.trim() || '';
+  }
+
+  if (!coordsText) return null;
+  
+  const coords = parseKMLCoordinateString(coordsText);
+  return coords.length >= 4 ? coords : null;
+}
+
+function isAlmostClosedCoords(coords: Position[]): boolean {
+  if (coords.length < 3) return false;
+  const first = coords[0];
+  const last = coords[coords.length - 1];
+  const d = Math.sqrt(Math.pow(first[0] - last[0], 2) + Math.pow(first[1] - last[1], 2));
+  return d < CLOSE_TOLERANCE; // ~22m tolerance
+}
+
+function ensureClosed(coords: Position[]): void {
+  if (coords.length < 3) return;
+  const first = coords[0];
+  const last = coords[coords.length - 1];
+  if (first[0] !== last[0] || first[1] !== last[1]) {
+    coords.push([...first]);
+  }
+}
+
+function makePolygonFeature(
+  coords: Position[], 
+  lotNumber: string, 
+  description: string, 
+  reconstructedFrom: string
+): Feature<Polygon, GeoJsonProperties> {
+  return {
+    type: 'Feature',
+    geometry: { type: 'Polygon', coordinates: [coords] },
+    properties: {
+      name: lotNumber,
+      description,
+      lotNumber,
+      reconstructedFrom,
+    }
+  };
 }
 
 function parseKMLCoordinateString(coordsText: string): Position[] {
@@ -584,7 +710,7 @@ function parseKMLCoordinateString(coordsText: string): Position[] {
 
   for (const part of parts) {
     const [lng, lat] = part.split(',').map(Number);
-    if (!isNaN(lng) && !isNaN(lat)) {
+    if (!isNaN(lng) && !isNaN(lat) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
       coords.push([lng, lat]);
     }
   }
@@ -595,7 +721,7 @@ function parseKMLCoordinateString(coordsText: string): Position[] {
 // ============= MAIN PARSER =============
 
 export const parseKMZFile = async (file: File): Promise<ParsedKMZ> => {
-  console.log('=== ENHANCED KMZ PARSER v5 ===');
+  console.log('=== ENHANCED KMZ PARSER v6 ===');
   console.log('File name:', file.name, 'Size:', file.size);
 
   try {
@@ -618,19 +744,19 @@ export const parseKMZFile = async (file: File): Promise<ParsedKMZ> => {
     }
 
     // ===== STRATEGY 0: Direct KML parsing (most reliable for Google Earth) =====
-    console.log('🔍 Trying direct KML parsing first...');
+    console.log('🔍 Strategy 0: Direct KML parsing...');
     let polygonFeatures = parseKMLDirectlyForPolygons(kmlContent);
     let reconstructionMethod = 'direct';
 
     if (polygonFeatures.length > 0) {
       console.log(`✅ Direct parsing found ${polygonFeatures.length} polygons`);
     } else {
-      // ===== STRATEGY 1: Parse with toGeoJSON =====
+      // ===== STRATEGY 1: Parse with toGeoJSON (async, tries @tmcw then @mapbox) =====
       console.log('⚠️ Direct parsing found no polygons. Using toGeoJSON...');
-      const geojson = parseKMLWithToGeoJSON(kmlContent);
+      const geojson = await parseKMLWithToGeoJSON(kmlContent);
 
       if (geojson && geojson.features.length > 0) {
-        const flatFeatures = flattenGeometryCollections(geojson.features);
+        const flatFeatures = flattenGeometryCollections(geojson.features as Feature<Geometry, GeoJsonProperties>[]);
 
         // Analyze geometry types
         const byType: Record<string, number> = {};
@@ -671,13 +797,13 @@ export const parseKMZFile = async (file: File): Promise<ParsedKMZ> => {
 
           console.log(`⚠️ No direct polygons. ${lineFeatures.length} LineStrings found. Trying reconstruction...`);
 
-          // Strategy 2: Close almost-closed LineStrings
+          // Strategy 2: Close almost-closed LineStrings (wider tolerance)
           polygonFeatures = closeAlmostClosedLines(lineFeatures);
           if (polygonFeatures.length > 0) {
             reconstructionMethod = 'closedLineString';
           }
 
-          // Strategy 3: turf.polygonize + buffer/hole extraction
+          // Strategy 3: turf.polygonize with multiple tolerances + buffer/hole extraction
           if (polygonFeatures.length === 0 && lineFeatures.length > 3) {
             polygonFeatures = polygonizeLines(lineFeatures);
             if (polygonFeatures.length > 0) {
