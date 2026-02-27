@@ -126,10 +126,10 @@ export const LotReservationDialog = ({
             <Badge className="bg-primary text-primary-foreground">
               Lote {lot.lot_number}
             </Badge>
-            Reservar con Seña
+            Reservar con Depósito
           </DialogTitle>
           <DialogDescription>
-            Reserva este lote en {projectName} con una seña de {formatPrice(reservationAmount)}
+            Reserva este lote en {projectName} con un depósito de {formatPrice(reservationAmount)}
           </DialogDescription>
         </DialogHeader>
 
@@ -162,7 +162,7 @@ export const LotReservationDialog = ({
         <Alert className="border-primary/50 bg-primary/5">
           <CreditCard className="h-4 w-4" />
           <AlertDescription className="text-sm">
-            <strong>Seña de reserva: {formatPrice(reservationAmount)}</strong>
+            <strong>Depósito de reserva: {formatPrice(reservationAmount)}</strong>
             <br />
             <span className="text-muted-foreground">
               Este monto se descontará del precio total al firmar la promesa de compraventa.
@@ -278,7 +278,7 @@ export const LotReservationDialog = ({
                 ) : (
                   <>
                     <CreditCard className="h-4 w-4" />
-                    Pagar Seña {formatPrice(reservationAmount)}
+                    Pagar Depósito {formatPrice(reservationAmount)}
                   </>
                 )}
               </Button>

@@ -6,7 +6,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 const STEPS = [
   { icon: Search, title: 'Explora el mapa', description: 'Busca terrenos por ubicación, precio y tipo con nuestro mapa interactivo.' },
   { icon: BarChart3, title: 'Compara opciones', description: 'Analiza precio por m², conectividad y datos verificados.' },
-  { icon: CreditCard, title: 'Reserva online', description: 'Asegura tu terreno con una seña digital al instante.' },
+  { icon: CreditCard, title: 'Reserva online', description: 'Asegura tu terreno con un depósito digital al instante.' },
   { icon: CheckCircle2, title: 'Cierra tu compra', description: 'Contratos, pagos y escritura en un solo lugar.' },
 ];
 
