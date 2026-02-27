@@ -415,6 +415,7 @@ const ProjectDetail = () => {
                 selectedLotId={selectedLot}
                 projectId={project.id}
                 kmzFileUrl={(project as any).kmz_file_url}
+                planImages={(project as any).plan_images || []}
                 onLotsUpdated={() => {
                   queryClient.invalidateQueries({ queryKey: ['project-lots', id] });
                   queryClient.invalidateQueries({ queryKey: ['project', id] });

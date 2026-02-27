@@ -861,6 +861,7 @@ export type Database = {
           name: string
           organization_id: string | null
           permits: Json | null
+          plan_images: string[] | null
           region: string | null
           reserved_lots: number | null
           rol_number: string | null
@@ -890,6 +891,7 @@ export type Database = {
           name: string
           organization_id?: string | null
           permits?: Json | null
+          plan_images?: string[] | null
           region?: string | null
           reserved_lots?: number | null
           rol_number?: string | null
@@ -919,6 +921,7 @@ export type Database = {
           name?: string
           organization_id?: string | null
           permits?: Json | null
+          plan_images?: string[] | null
           region?: string | null
           reserved_lots?: number | null
           rol_number?: string | null

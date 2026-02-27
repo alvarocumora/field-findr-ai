@@ -30,6 +30,7 @@ interface LotMapViewProps {
   selectedLotId?: string | null;
   projectId?: string;
   kmzFileUrl?: string | null;
+  planImages?: string[];
   onLotsUpdated?: () => void;
   readOnly?: boolean;
   showAdminControls?: boolean;
@@ -134,7 +135,7 @@ const formatPrice = (price: number | null) => {
   }).format(price);
 };
 
-export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, onLotsUpdated, readOnly = false, showAdminControls = false }: LotMapViewProps) => {
+export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, planImages, onLotsUpdated, readOnly = false, showAdminControls = false }: LotMapViewProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
@@ -149,11 +150,10 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [regenerating, setRegenerating] = useState(false);
   const [showDrawingPanel, setShowDrawingPanel] = useState(false);
   
-  // Master plan images from PDF plans
-  const masterPlanImages = [
-    { label: 'Lámina A - Situación Propuesta', url: '/projects/168-915_A_plan.jpg' },
-    { label: 'Lámina B - Detalle', url: '/projects/168-915_B_plan.jpg' },
-  ];
+  // Build master plan images from project's plan_images
+  const masterPlanImagesList = (planImages && planImages.length > 0)
+    ? planImages.map((url, idx) => ({ label: `Lámina ${idx + 1}`, url }))
+    : [];
 
   // Polygon drawing hook
   const {
@@ -753,16 +753,18 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           {mapStyle === 'satellite' ? 'Calles' : 'Satélite'}
         </Button>
         
-        {/* Master plan overlay toggle - visible to all users */}
-        <Button
-          variant={showMasterPlanOverlay ? "default" : "secondary"}
-          size="sm"
-          className="gap-2 glass"
-          onClick={() => setShowMasterPlanOverlay(!showMasterPlanOverlay)}
-        >
-          <Image className="h-4 w-4" />
-          Plano
-        </Button>
+        {/* Master plan overlay toggle - visible when plan images exist */}
+        {masterPlanImagesList.length > 0 && (
+          <Button
+            variant={showMasterPlanOverlay ? "default" : "secondary"}
+            size="sm"
+            className="gap-2 glass"
+            onClick={() => setShowMasterPlanOverlay(!showMasterPlanOverlay)}
+          >
+            <Image className="h-4 w-4" />
+            Plano
+          </Button>
+        )}
 
         {/* Admin-only controls - only shown when showAdminControls is true */}
         {showAdminControls && (
@@ -841,7 +843,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       {/* Master plan overlay controls */}
       <MasterPlanOverlay
         map={map.current}
-        images={masterPlanImages}
+        images={masterPlanImagesList}
         isVisible={showMasterPlanOverlay}
         onClose={() => setShowMasterPlanOverlay(false)}
         projectCenter={projectCenter}
