@@ -45,7 +45,7 @@ const STATUS_CONFIG: Record<ReservationStatus, { label: string; icon: typeof Clo
 
 const STEPS = [
   { key: 'reservation', label: 'Reserva', statuses: ['pending_payment', 'paid', 'expired', 'cancelled', 'converted'] },
-  { key: 'payment', label: 'Pago Seña', statuses: ['paid', 'converted'] },
+  { key: 'payment', label: 'Pago Depósito', statuses: ['paid', 'converted'] },
   { key: 'contract', label: 'Contrato', statuses: ['converted'] },
   { key: 'delivery', label: 'Entrega', statuses: [] as string[] },
 ];
@@ -207,7 +207,7 @@ const ReservationCard = ({ reservation }: { reservation: any }) => {
           {/* Payment Summary */}
           <div className="space-y-3">
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Seña Pagada</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Depósito Pagado</p>
               <p className="text-2xl font-bold text-foreground">
                 ${reservation.reservation_amount?.toLocaleString('es-CL')}
                 <span className="text-sm font-normal text-muted-foreground ml-1">{reservation.currency}</span>
@@ -300,7 +300,7 @@ const ReservationCard = ({ reservation }: { reservation: any }) => {
               <p className="text-xs text-muted-foreground">
                 {['paid', 'converted'].includes(status)
                   ? 'Descarga tu documento preliminar de compraventa'
-                  : 'Disponible una vez confirmado el pago de la seña'}
+                  : 'Disponible una vez confirmado el pago del depósito'}
               </p>
             </div>
             <Button

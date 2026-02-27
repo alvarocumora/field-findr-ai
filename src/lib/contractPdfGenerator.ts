@@ -226,7 +226,7 @@ export const generateContractPDF = (data: ContractPDFData): void => {
   doc.setTextColor(...WHITE);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.text('Seña abonada', pw / 2, y + 8, { align: 'center' });
+  doc.text('Depósito abonado', pw / 2, y + 8, { align: 'center' });
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.text(formatCurrency(data.reservationAmount, data.currency), pw / 2, y + 19, { align: 'center' });
@@ -246,7 +246,7 @@ export const generateContractPDF = (data: ContractPDFData): void => {
     },
     {
       title: 'Precio y Forma de Pago',
-      text: `El precio total del inmueble es de ${data.lotPrice ? formatCurrency(data.lotPrice, data.currency) : '[por definir]'}. A cuenta de dicho precio, el promitente comprador ha entregado en este acto la suma de ${formatCurrency(data.reservationAmount, data.currency)} a título de seña o arras, la cual será imputada al precio de venta al momento de la escrituración definitiva. El saldo restante deberá ser pagado en la forma y plazos que las partes convengan en el contrato definitivo.`
+      text: `El precio total del inmueble es de ${data.lotPrice ? formatCurrency(data.lotPrice, data.currency) : '[por definir]'}. A cuenta de dicho precio, el promitente comprador ha entregado en este acto la suma de ${formatCurrency(data.reservationAmount, data.currency)} a título de depósito de reserva, la cual será imputada al precio de venta al momento de la escrituración definitiva. El saldo restante deberá ser pagado en la forma y plazos que las partes convengan en el contrato definitivo.`
     },
     {
       title: 'Plazo para Escritura Definitiva',
@@ -262,11 +262,11 @@ export const generateContractPDF = (data: ContractPDFData): void => {
     },
     {
       title: 'Cláusula Penal por Incumplimiento',
-      text: 'Si el promitente comprador no cumpliere con la obligación de celebrar el contrato definitivo dentro del plazo señalado, perderá la seña entregada, la que quedará en beneficio del vendedor a título de indemnización de perjuicios convencional. Si el incumplimiento fuere del promitente vendedor, éste deberá restituir el doble de la seña recibida al comprador, sin perjuicio de las demás acciones legales que correspondan.'
+      text: 'Si el promitente comprador no cumpliere con la obligación de celebrar el contrato definitivo dentro del plazo señalado, perderá el depósito entregado, el que quedará en beneficio del vendedor a título de indemnización de perjuicios convencional. Si el incumplimiento fuere del promitente vendedor, éste deberá restituir el doble del depósito recibido al comprador, sin perjuicio de las demás acciones legales que correspondan.'
     },
     {
       title: 'Arras (Arts. 1803–1805 Código Civil)',
-      text: 'La suma entregada como seña tendrá el carácter de arras confirmatorias en los términos del artículo 1803 del Código Civil chileno, constituyendo parte del precio y prueba de la celebración del contrato. Las partes renuncian expresamente al derecho de retractación contemplado en el artículo 1804 del mismo cuerpo legal.'
+      text: 'La suma entregada como depósito tendrá el carácter de arras confirmatorias en los términos del artículo 1803 del Código Civil chileno, constituyendo parte del precio y prueba de la celebración del contrato. Las partes renuncian expresamente al derecho de retractación contemplado en el artículo 1804 del mismo cuerpo legal.'
     },
     {
       title: 'Gastos e Impuestos',
