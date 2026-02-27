@@ -149,8 +149,11 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [regenerating, setRegenerating] = useState(false);
   const [showDrawingPanel, setShowDrawingPanel] = useState(false);
   
-  // Master plan image URL - no hardcoded fallback
-  const masterPlanImageUrl = null;
+  // Master plan images from PDF plans
+  const masterPlanImages = [
+    { label: 'Lámina A - Situación Propuesta', url: '/projects/168-915_A_plan.jpg' },
+    { label: 'Lámina B - Detalle', url: '/projects/168-915_B_plan.jpg' },
+  ];
 
   // Polygon drawing hook
   const {
@@ -750,21 +753,20 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           {mapStyle === 'satellite' ? 'Calles' : 'Satélite'}
         </Button>
         
+        {/* Master plan overlay toggle - visible to all users */}
+        <Button
+          variant={showMasterPlanOverlay ? "default" : "secondary"}
+          size="sm"
+          className="gap-2 glass"
+          onClick={() => setShowMasterPlanOverlay(!showMasterPlanOverlay)}
+        >
+          <Image className="h-4 w-4" />
+          Plano
+        </Button>
+
         {/* Admin-only controls - only shown when showAdminControls is true */}
         {showAdminControls && (
           <>
-            {/* Master plan overlay toggle */}
-            <Button
-              variant={showMasterPlanOverlay ? "default" : "secondary"}
-              size="sm"
-              className="gap-2 glass"
-              onClick={() => setShowMasterPlanOverlay(!showMasterPlanOverlay)}
-            >
-              <Image className="h-4 w-4" />
-              Master Plan
-            </Button>
-            
-            {/* Drawing mode toggle */}
             {projectId && (
               <Button
                 variant={showDrawingPanel ? "default" : "secondary"}
@@ -839,9 +841,10 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       {/* Master plan overlay controls */}
       <MasterPlanOverlay
         map={map.current}
-        imageUrl={masterPlanImageUrl}
+        images={masterPlanImages}
         isVisible={showMasterPlanOverlay}
         onClose={() => setShowMasterPlanOverlay(false)}
+        projectCenter={projectCenter}
       />
       
       {/* Status indicator */}
