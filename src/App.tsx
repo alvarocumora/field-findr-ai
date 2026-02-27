@@ -40,6 +40,7 @@ import IntelligentSearch from "./components/IntelligentSearch";
 import RegionLanding from "./pages/RegionLanding";
 import CountryLanding from "./pages/CountryLanding";
 import CityLanding from "./pages/CityLanding";
+import Contact from "./pages/Contact";
 
 // ===== Buyer Pages =====
 import Profile from "./pages/Profile";
@@ -103,6 +104,7 @@ const App = () => (
               <Route path="/region/:slug" element={<RegionLanding />} />
               <Route path="/pais/:code" element={<CountryLanding />} />
               <Route path="/ciudad/:slug" element={<CityLanding />} />
+              <Route path="/contacto" element={<Contact />} />
 
               {/* Subscription result pages */}
               <Route path="/subscription/success" element={<SubscriptionSuccess />} />
