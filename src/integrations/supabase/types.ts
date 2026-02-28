@@ -14,6 +14,133 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_commissions: {
+        Row: {
+          agent_id: string
+          commission_amount: number
+          commission_rate: number
+          created_at: string
+          id: string
+          lot_id: string | null
+          notes: string | null
+          paid_at: string | null
+          project_id: string | null
+          reservation_id: string | null
+          sale_amount: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          lot_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          project_id?: string | null
+          reservation_id?: string | null
+          sale_amount?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          lot_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          project_id?: string | null
+          reservation_id?: string | null
+          sale_amount?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_commissions_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_commissions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_commissions_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_goals: {
+        Row: {
+          agent_id: string
+          commission_achieved: number
+          commission_target: number
+          created_at: string
+          id: string
+          leads_achieved: number
+          leads_target: number
+          notes: string | null
+          period: string
+          period_end: string
+          period_start: string
+          sales_achieved: number
+          sales_target: number
+          units_achieved: number
+          units_target: number
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          commission_achieved?: number
+          commission_target?: number
+          created_at?: string
+          id?: string
+          leads_achieved?: number
+          leads_target?: number
+          notes?: string | null
+          period?: string
+          period_end: string
+          period_start: string
+          sales_achieved?: number
+          sales_target?: number
+          units_achieved?: number
+          units_target?: number
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          commission_achieved?: number
+          commission_target?: number
+          created_at?: string
+          id?: string
+          leads_achieved?: number
+          leads_target?: number
+          notes?: string | null
+          period?: string
+          period_end?: string
+          period_start?: string
+          sales_achieved?: number
+          sales_target?: number
+          units_achieved?: number
+          units_target?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       api_keys: {
         Row: {
           created_at: string
