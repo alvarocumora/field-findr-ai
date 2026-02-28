@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StickyHeader from '@/components/navigation/StickyHeader';
 import ExploreListPanel from '@/components/explore/ExploreListPanel';
-import ExploreMapPanel from '@/components/explore/ExploreMapPanel';
+import ExploreMapPanel, { MapBounds } from '@/components/explore/ExploreMapPanel';
 import MobileExploreView from '@/components/explore/MobileExploreView';
 import PropertyPreviewSheet from '@/components/explore/PropertyPreviewSheet';
 import EnhancedAISearch from '@/components/ai/EnhancedAISearch';
@@ -27,12 +27,15 @@ const Explorar = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000000]);
   const [areaRange, setAreaRange] = useState<[number, number]>([0, 1000000]);
 
+  // Map bounds for spatial filtering
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
+
   // Listing interaction
   const [hoveredListing, setHoveredListing] = useState<Listing | null>(null);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [previewListing, setPreviewListing] = useState<Listing | null>(null);
 
-  // Data
+  // Data — includes bounds filter for server-side spatial filtering
   const { data: listings = [], isLoading } = useListings({
     type: selectedTypes.length > 0 ? selectedTypes : undefined,
     region: selectedRegions.length > 0 ? selectedRegions : undefined,
@@ -41,6 +44,7 @@ const Explorar = () => {
     priceMax: priceRange[1] < 5000000000 ? priceRange[1] : undefined,
     areaMin: areaRange[0] > 0 ? areaRange[0] : undefined,
     areaMax: areaRange[1] < 1000000 ? areaRange[1] : undefined,
+    bounds: mapBounds ?? undefined,
   });
 
   // Client-side search + tag filter
@@ -69,7 +73,7 @@ const Explorar = () => {
   const clearFilters = useCallback(() => {
     setSelectedTypes([]); setSelectedRegions([]); setSelectedCountries([]);
     setSelectedTags([]); setPriceRange([0, 5000000000]); setAreaRange([0, 1000000]);
-    setSearchQuery('');
+    setSearchQuery(''); setMapBounds(null);
   }, []);
 
   const toggleType = useCallback((type: string) => {
@@ -103,6 +107,10 @@ const Explorar = () => {
   const handleListingClick = useCallback((listing: Listing) => {
     setSelectedListing(listing);
     setPreviewListing(listing);
+  }, []);
+
+  const handleBoundsSearch = useCallback((bounds: MapBounds) => {
+    setMapBounds(bounds);
   }, []);
 
   const similarListings = useMemo(() => {
@@ -160,10 +168,10 @@ const Explorar = () => {
         </div>
       )}
 
-      {/* Split view: List (40%) + Map (60%) */}
+      {/* Split view: List (380px fixed) + Map (rest) */}
       <div className="flex-1 flex pt-16 min-h-0">
-        {/* Left panel – scrollable list with built-in search/filters */}
-        <div className="w-[40%] min-w-[360px] max-w-[540px] border-r border-border/30">
+        {/* Left panel – scrollable list */}
+        <div className="w-[420px] min-w-[380px] flex-shrink-0 border-r border-border/20">
           <ExploreListPanel
             listings={filteredListings}
             isLoading={isLoading}
@@ -193,14 +201,15 @@ const Explorar = () => {
           />
         </div>
 
-        {/* Right panel – map */}
-        <div className="flex-1">
+        {/* Right panel – map fills remaining space */}
+        <div className="flex-1 relative">
           <ExploreMapPanel
             listings={filteredListings}
             hoveredListing={hoveredListing}
             selectedListing={selectedListing}
             onListingHover={setHoveredListing}
             onListingClick={handleListingClick}
+            onBoundsSearch={handleBoundsSearch}
           />
         </div>
       </div>
