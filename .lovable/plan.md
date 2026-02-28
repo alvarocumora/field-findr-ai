@@ -1,60 +1,91 @@
 
 
-# Plan Completo para Terminar la Plataforma Funcional
+# Explorador Unificado Mapa + Lista (Split-View)
 
-## Estado Actual
+## Problema Actual
+- El explorador actual muestra solo un grid de tarjetas. El mapa es un popup secundario (dialog) que se abre aparte.
+- La vista mobile (`MobileExploreView`) existe pero no se usa en ninguna parte.
+- No hay sincronizacion bidireccional real entre mapa y lista porque viven en contextos separados.
 
-La plataforma tiene una estructura solida con +60 componentes, base de datos con 25+ tablas, autenticacion, roles, y un sistema de rutas por rol.
+## Solucion: Vista Split Integrada (estilo Airbnb/Idealista)
 
-### Lo que YA funciona con datos reales (Fases 1-11 completadas):
-- Autenticacion (signup/login con roles buyer/agent)
-- CRUD de Listings, Projects, Lots, Leads
-- Explorador publico con filtros
-- Reservas con MercadoPago
-- Portal del comprador (Mi Terreno)
-- Dashboard del agente con stats reales
-- Onboarding wizard para nuevos agentes
-- Generacion de PDF de contrato, ficha de propiedad, reportes ejecutivos
-- Sistema de creditos/pagos a cuotas
-- Cierre legal con timeline
-- Formulario de contacto conectado a DB
-- Agendar visita con modal y tabla visit_requests
-- Sistema de mensajeria con realtime
-- Notificaciones automaticas (reservas, pagos, leads, visitas) con triggers SQL
-- Campanita de notificaciones con realtime y panel dropdown
-- Botones de WhatsApp en PropertyDetail y ProjectDetail
-- Analytics con filtro por proyecto y exportacion PDF
-- Calculadoras financieras vinculadas a datos reales de lotes
-- SEO dinamico con meta tags OG
-- RLS auditado y seguro
-- Reviews de proyectos con ratings y verificacion de comprador
-- Compartir en redes sociales (Facebook, Twitter, WhatsApp, Email)
-- Programa de referidos con codigos unicos
-- Multi-moneda CLP/UF/USD en creditos y calculadoras
-- Simulador hipotecario con tasas reales de bancos chilenos
-- Alertas de pago y deteccion automatica de morosidad
-- Lead scoring automatico con triggers SQL (Hot/Warm/Cold)
-- Heatmap de demanda en mapa del explorador
-- Alertas inteligentes basadas en busquedas guardadas (edge function)
-- Multi-tenant con organizaciones basicas (tabla organizations + members)
-- API REST publica (listings, projects, lots, stats)
-- Webhooks outbound con HMAC signing y delivery log
-- Dashboard ejecutivo cross-proyecto con KPIs consolidados
-- WhatsApp mejorado con mensajes contextuales (lote, precio, proyecto, seguimiento leads)
-- Firma electronica simple en canvas HTML5 integrada en cierre legal
-- Consulta catastral SII por numero de rol (edge function con scraping)
+Redisenar `/explorar` con un layout split-view donde mapa y lista conviven permanentemente:
 
----
+```text
++------------------------------------------------------------+
+| StickyHeader                                                |
++------------------------------------------------------------+
+| SearchBar + FilterChips (horizontal scroll)                 |
++------------------------------------------------------------+
+|                    |                                        |
+|   Lista de         |          Mapa Mapbox                   |
+|   Propiedades      |          (fullscreen right)             |
+|   (scroll vertical)|                                        |
+|                    |    [markers con precio]                 |
+|   - Card           |    [hover sync bidireccional]           |
+|   - Card           |    [cluster auto]                       |
+|   - Card           |                                        |
+|                    |    Boton: "Buscar en esta area"         |
+|                    |                                        |
++------------------------------------------------------------+
+```
 
-## Proximas Fases (v3.0)
+**Mobile**: Mapa fullscreen + bottom sheet con resultados (usa MobileExploreView existente).
 
-### Fase 12: AI Avanzado
-- Comparables automaticos con ML
-- Prediccion de precios con modelos entrenados
-- Chatbot AI para compradores
-- Generacion automatica de descripciones
+## Cambios por Archivo
 
-### Fase 13: Mobile & PWA
-- Notificaciones push
-- Modo offline completo
-- Geofencing para alertas de proximidad
+### 1. `src/pages/Explorar.tsx` (reescribir layout principal)
+- Detectar mobile con `useIsMobile()`
+- **Desktop**: Layout flex con 2 columnas: lista (40%) + mapa sticky (60%)
+- **Mobile**: Renderizar `MobileExploreView` directamente
+- Eliminar `MapDialog` (el mapa ahora es inline permanente)
+- Agregar estado `mapBounds` para filtrar "Buscar en esta area"
+- Mantener todos los filtros, sort, tabs existentes
+
+### 2. `src/components/explore/ExploreListPanel.tsx` (nuevo - panel izquierdo)
+- Scroll area vertical con las property cards
+- Contiene: toolbar (count + sort + tabs) + grid vertical de 1-2 columnas
+- Hover en card resalta marker en mapa (ya existe esta logica)
+- Click en card centra mapa con flyTo
+
+### 3. `src/components/explore/ExploreMapPanel.tsx` (nuevo - panel derecho)
+- Wrapper sticky de `EnhancedMap` con position sticky
+- Boton flotante "Buscar en esta area" que aparece al mover el mapa
+- Usa `useMapViewport` (ya existe) para detectar movimiento
+- Al hacer click en marker, scroll automatico a la card correspondiente
+
+### 4. `src/components/explore/MobileExploreView.tsx` (activar)
+- Conectar las props faltantes (countries, sort, tabs)
+- Importar y usar en `Explorar.tsx` cuando `isMobile`
+
+### 5. `src/components/explore/SearchAreaButton.tsx` (ya existe, verificar/integrar)
+- Boton flotante "Buscar en esta area" sobre el mapa
+- Se muestra cuando el usuario mueve el mapa manualmente
+- Click actualiza los bounds del query de listings
+
+### 6. `src/hooks/useListings.ts` (agregar filtro por bounds)
+- Agregar parametros opcionales `bounds: { north, south, east, west }`
+- Filtrar server-side con `lat/lng` dentro del viewport del mapa
+
+## Interacciones Clave
+
+1. **Hover bidireccional**: Hover en card destaca marker, hover en marker destaca card (ya funciona con props existentes)
+2. **Click en marker**: Scroll suave a la card en el panel izquierdo + resalta
+3. **Click en card**: `flyTo` en el mapa al marker correspondiente
+4. **Mover mapa**: Muestra boton "Buscar en esta area", click re-filtra listings por bounds
+5. **Filtros**: Afectan tanto lista como markers simultaneamente (ya funciona)
+
+## Secuencia de Implementacion
+
+1. Crear `ExploreListPanel` y `ExploreMapPanel` como wrappers
+2. Reescribir layout de `Explorar.tsx` con split-view desktop + mobile branch
+3. Conectar `MobileExploreView` con todas las props
+4. Agregar "Buscar en esta area" con filtrado por bounds
+5. Verificar sincronizacion bidireccional hover/click
+
+## Detalles Tecnicos
+
+- El mapa derecho usa `position: sticky; top: 64px; height: calc(100vh - 64px)` para quedarse fijo mientras la lista scrollea
+- `react-resizable-panels` (ya instalado) se puede usar opcionalmente para resize del split, pero un layout fijo 40/60 es mas estable
+- No se necesitan cambios de base de datos
+- No se necesitan edge functions nuevas
