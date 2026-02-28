@@ -1417,10 +1417,14 @@ const EnhancedMap = ({
 
       // Fit bounds to listings on initial load
       const currentListings = listingsRef.current.filter(l => l.lat && l.lng);
-      if (currentListings.length > 1 && !initialFitDoneRef.current) {
+      if (currentListings.length > 0 && !initialFitDoneRef.current) {
         const bounds = new mapboxgl.LngLatBounds();
         currentListings.forEach(l => bounds.extend([l.lng!, l.lat!]));
-        map.current?.fitBounds(bounds, { padding: 80, maxZoom: 10 });
+        map.current?.fitBounds(bounds, {
+          padding: { top: 60, bottom: 60, left: 60, right: 60 },
+          maxZoom: currentListings.length === 1 ? 13 : 11,
+          duration: 800,
+        });
         initialFitDoneRef.current = true;
       }
 
@@ -1876,7 +1880,11 @@ const EnhancedMap = ({
     if (validListings.length > 0) {
       const bounds = new mapboxgl.LngLatBounds();
       validListings.forEach((l) => bounds.extend([l.lng!, l.lat!]));
-      map.current?.fitBounds(bounds, { padding: 80, maxZoom: 10 });
+      map.current?.fitBounds(bounds, {
+        padding: { top: 60, bottom: 60, left: 60, right: 60 },
+        maxZoom: validListings.length === 1 ? 13 : 11,
+        duration: 800,
+      });
     }
   };
 
@@ -1973,6 +1981,10 @@ const EnhancedMap = ({
             mapMode={mapMode}
             onZoomIn={handleZoomIn}
             onZoomOut={handleZoomOut}
+            onLocate={handleLocate}
+            onFitAll={handleFitAll}
+            onResetNorth={handleResetNorth}
+            onResetView={handleResetView}
             onChangeMapMode={changeMapMode}
             onOpenTools={() => setShowToolsDrawer(!showToolsDrawer)}
             activeLayersCount={Object.values(infoLayers).filter(Boolean).length}
