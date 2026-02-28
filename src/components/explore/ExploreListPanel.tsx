@@ -140,7 +140,7 @@ const ExploreListPanel = ({
   }).length;
 
   return (
-    <div className="h-full flex flex-col bg-background border-l border-border/30">
+    <div className="h-full flex flex-col bg-background">
       {/* Search Header */}
       <div className="p-4 pb-2 space-y-3 border-b border-border/20">
         <div className="relative">
@@ -242,12 +242,12 @@ const ExploreListPanel = ({
       {/* Best Opportunity */}
       {bestOpportunity && activeTab === 'all' && !isLoading && (
         <div
-          className="mx-3 mt-2 p-2.5 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 cursor-pointer hover:border-emerald-500/40 transition-colors"
+          className="mx-3 mt-2 p-2.5 rounded-xl bg-primary/5 border border-primary/20 cursor-pointer hover:border-primary/40 transition-colors"
           onClick={() => onListingPreview?.(bestOpportunity)}
         >
           <div className="flex items-center gap-2 mb-0.5">
-            <TrendingDown className="h-3.5 w-3.5 text-emerald-500" />
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Mejor oportunidad</span>
+            <TrendingDown className="h-3.5 w-3.5 text-primary" />
+            <span className="text-[11px] font-semibold text-primary">Mejor oportunidad</span>
           </div>
           <p className="text-xs text-foreground font-medium truncate">{bestOpportunity.title}</p>
           <p className="text-[11px] text-muted-foreground">
@@ -260,12 +260,15 @@ const ExploreListPanel = ({
       <ScrollArea className="flex-1">
         <div className="p-3">
           {isLoading ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="animate-pulse space-y-2">
-                  <Skeleton className="w-full aspect-[16/10] rounded-xl" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-3 w-1/2" />
+                <div key={i} className="flex gap-3 p-3 animate-pulse">
+                  <Skeleton className="w-[120px] h-[88px] rounded-xl flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-3 w-3/4" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
                 </div>
               ))}
             </div>
@@ -280,12 +283,12 @@ const ExploreListPanel = ({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
               {sortedListings.map((listing, index) => (
                 <div
                   key={listing.id}
                   className="animate-fade-in"
-                  style={{ animationDelay: `${Math.min(index * 40, 200)}ms` }}
+                  style={{ animationDelay: `${Math.min(index * 30, 150)}ms` }}
                 >
                   <QuickPropertyCard
                     listing={listing}
@@ -294,7 +297,7 @@ const ExploreListPanel = ({
                     onHover={onListingHover}
                     onClick={onListingClick}
                     onPreview={onListingPreview}
-                    layout="vertical"
+                    layout="horizontal"
                   />
                 </div>
               ))}
