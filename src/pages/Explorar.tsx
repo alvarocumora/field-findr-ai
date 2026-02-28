@@ -171,7 +171,7 @@ const Explorar = () => {
       {/* Split view: List (380px fixed) + Map (rest) */}
       <div className="flex-1 flex pt-16 min-h-0">
         {/* Left panel – scrollable list */}
-        <div className="w-[420px] min-w-[380px] flex-shrink-0 border-r border-border/20">
+        <div className="w-[440px] min-w-[400px] flex-shrink-0 border-r border-border/30">
           <ExploreListPanel
             listings={filteredListings}
             isLoading={isLoading}
