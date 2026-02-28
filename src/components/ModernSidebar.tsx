@@ -27,6 +27,7 @@ import {
   MessageSquare,
   Globe,
   PieChart,
+  Target,
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -53,6 +54,7 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     { name: 'Mensajes', href: '/asesor/messages', icon: MessageSquare },
     { name: 'Analytics', href: '/asesor/analytics', icon: BarChart3 },
     { name: 'Financiero', href: '/asesor/financial', icon: TrendingUp },
+    { name: 'Rendimiento', href: '/asesor/performance', icon: Target },
     { name: 'Ejecutivo', href: '/asesor/executive', icon: PieChart },
     { name: 'Enterprise', href: '/asesor/enterprise', icon: Globe },
   ];
