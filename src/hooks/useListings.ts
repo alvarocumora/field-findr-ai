@@ -46,6 +46,12 @@ export interface ListingFilters {
   tags?: string[];
   featured?: boolean;
   status?: string;
+  bounds?: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  };
 }
 
 export const useListings = (filters?: ListingFilters) => {
@@ -85,6 +91,14 @@ export const useListings = (filters?: ListingFilters) => {
 
       if (filters?.areaMax) {
         query = query.lte('area_m2', filters.areaMax);
+      }
+
+      if (filters?.bounds) {
+        query = query
+          .gte('lat', filters.bounds.south)
+          .lte('lat', filters.bounds.north)
+          .gte('lng', filters.bounds.west)
+          .lte('lng', filters.bounds.east);
       }
 
       if (filters?.featured !== undefined) {

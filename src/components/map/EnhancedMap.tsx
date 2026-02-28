@@ -50,6 +50,13 @@ import {
   generateRoadsData,
 } from './demoGeoData';
 
+export interface MapBoundsData {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+
 interface EnhancedMapProps {
   listings: Listing[];
   hoveredListing?: Listing | null;
@@ -57,6 +64,7 @@ interface EnhancedMapProps {
   onListingHover?: (listing: Listing | null) => void;
   onListingClick?: (listing: Listing) => void;
   onPolygonDrawn?: (polygon: number[][], area: number) => void;
+  onBoundsChange?: (bounds: MapBoundsData) => void;
   className?: string;
   showDrawTools?: boolean;
 }
@@ -136,6 +144,7 @@ const EnhancedMap = ({
   onListingHover,
   onListingClick,
   onPolygonDrawn,
+  onBoundsChange,
   className = '',
   showDrawTools = true,
 }: EnhancedMapProps) => {
@@ -1417,6 +1426,24 @@ const EnhancedMap = ({
 
       setTimeout(() => { map.current?.resize(); }, 100);
       setIsLoading(false);
+    });
+
+    // Emit bounds on moveend for search-in-area
+    let boundsDebounce: ReturnType<typeof setTimeout>;
+    map.current.on('moveend', () => {
+      clearTimeout(boundsDebounce);
+      boundsDebounce = setTimeout(() => {
+        if (!map.current) return;
+        const b = map.current.getBounds();
+        if (b) {
+          onBoundsChange?.({
+            north: b.getNorth(),
+            south: b.getSouth(),
+            east: b.getEast(),
+            west: b.getWest(),
+          });
+        }
+      }, 200);
     });
 
     if (showDrawToolsRef.current) {

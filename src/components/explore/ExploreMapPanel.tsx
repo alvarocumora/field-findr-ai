@@ -1,16 +1,11 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import EnhancedMap from '@/components/map/EnhancedMap';
+import { useState, useCallback } from 'react';
+import EnhancedMap, { MapBoundsData } from '@/components/map/EnhancedMap';
 import MapErrorBoundary from '@/components/map/MapErrorBoundary';
 import SearchAreaButton from './SearchAreaButton';
 import { Listing } from '@/hooks/useListings';
 import { cn } from '@/lib/utils';
 
-export interface MapBounds {
-  north: number;
-  south: number;
-  east: number;
-  west: number;
-}
+export type { MapBoundsData as MapBounds };
 
 interface ExploreMapPanelProps {
   listings: Listing[];
@@ -18,7 +13,7 @@ interface ExploreMapPanelProps {
   selectedListing: Listing | null;
   onListingHover: (listing: Listing | null) => void;
   onListingClick: (listing: Listing) => void;
-  onBoundsSearch?: (bounds: MapBounds) => void;
+  onBoundsSearch?: (bounds: MapBoundsData) => void;
   className?: string;
 }
 
@@ -31,19 +26,16 @@ const ExploreMapPanel = ({
   onBoundsSearch,
   className,
 }: ExploreMapPanelProps) => {
-  const [currentBounds, setCurrentBounds] = useState<MapBounds | null>(null);
+  const [currentBounds, setCurrentBounds] = useState<MapBoundsData | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const boundsTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Listen for map move events to update bounds
-  // We'll detect bounds changes via a MutationObserver on the map container
-  // For now, use a polling approach on the map instance
-  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const handleBoundsChange = useCallback((bounds: MapBoundsData) => {
+    setCurrentBounds(bounds);
+  }, []);
 
-  const handleSearchArea = useCallback((bounds: MapBounds) => {
+  const handleSearchArea = useCallback((bounds: MapBoundsData) => {
     setIsSearching(true);
     onBoundsSearch?.(bounds);
-    // Reset searching state after a brief delay
     setTimeout(() => setIsSearching(false), 500);
   }, [onBoundsSearch]);
 
@@ -56,6 +48,7 @@ const ExploreMapPanel = ({
           selectedListing={selectedListing}
           onListingHover={onListingHover}
           onListingClick={onListingClick}
+          onBoundsChange={handleBoundsChange}
           className="h-full w-full"
           showDrawTools={false}
         />
