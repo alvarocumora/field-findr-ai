@@ -1353,8 +1353,9 @@ const EnhancedMap = ({
     popupRef.current = new mapboxgl.Popup({
       closeButton: true,
       closeOnClick: false,
-      offset: 30,
-      maxWidth: '300px',
+      anchor: 'bottom',
+      offset: 15,
+      maxWidth: '260px',
       className: 'enhanced-map-popup-container',
     });
 
@@ -2007,6 +2008,9 @@ const EnhancedMap = ({
             drawnArea={drawnArea}
             onStartDrawing={startDrawing}
             onClearDrawing={clearDrawing}
+            onFitAll={handleFitAll}
+            onResetNorth={handleResetNorth}
+            onResetView={handleResetView}
           />
         )}
 

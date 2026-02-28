@@ -9,9 +9,6 @@ import {
   ZoomIn,
   ZoomOut,
   Locate,
-  Compass,
-  Maximize2,
-  RotateCcw,
   Map as MapIcon,
   Satellite,
   Mountain,
@@ -41,9 +38,6 @@ const CompactMapControls = ({
   onZoomIn,
   onZoomOut,
   onLocate,
-  onFitAll,
-  onResetNorth,
-  onResetView,
   onChangeMapMode,
   onOpenTools,
   activeLayersCount,
@@ -84,8 +78,17 @@ const CompactMapControls = ({
 
   return (
     <>
-      {/* Property count badge - top left to avoid SearchAreaButton overlap */}
-      <div className="absolute top-3 left-3 z-10">
+      {/* Navigation controls - right side, vertically centered */}
+      <div className="absolute top-1/2 -translate-y-1/2 right-3 z-10 flex flex-col items-end">
+        <div className="flex flex-col bg-background/90 backdrop-blur-sm rounded-xl border border-border/50 shadow-lg overflow-hidden divide-y divide-border/30">
+          <ControlBtn onClick={onZoomIn} icon={ZoomIn} tooltip="Acercar" />
+          <ControlBtn onClick={onZoomOut} icon={ZoomOut} tooltip="Alejar" />
+          <ControlBtn onClick={onLocate} icon={Locate} tooltip="Mi ubicación" />
+        </div>
+      </div>
+
+      {/* Bottom left - property count badge */}
+      <div className="absolute bottom-6 left-3 z-10">
         <div className="bg-background/90 backdrop-blur-sm rounded-lg border border-border/50 px-2.5 py-1.5 shadow-sm">
           <p className="text-xs font-medium text-foreground">
             {listingsCount} propiedades
@@ -101,21 +104,8 @@ const CompactMapControls = ({
         </div>
       </div>
 
-      {/* Navigation controls - right side, vertically centered */}
-      <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 items-end">
-        {/* Zoom + Navigation */}
-        <div className="flex flex-col bg-background/90 backdrop-blur-sm rounded-xl border border-border/50 shadow-lg overflow-hidden divide-y divide-border/30">
-          <ControlBtn onClick={onZoomIn} icon={ZoomIn} tooltip="Acercar" />
-          <ControlBtn onClick={onZoomOut} icon={ZoomOut} tooltip="Alejar" />
-          <ControlBtn onClick={onLocate} icon={Locate} tooltip="Mi ubicación" />
-          <ControlBtn onClick={onFitAll} icon={Maximize2} tooltip="Ver todas las propiedades" />
-          <ControlBtn onClick={onResetNorth} icon={Compass} tooltip="Orientar al norte" />
-          <ControlBtn onClick={onResetView} icon={RotateCcw} tooltip="Restablecer vista" />
-        </div>
-      </div>
-
-      {/* Bottom controls - style toggle + tools */}
-      <div className="absolute bottom-8 right-3 z-10 flex flex-col gap-2 items-end">
+      {/* Bottom right - style toggle + tools */}
+      <div className="absolute bottom-6 right-3 z-10 flex items-end gap-2">
         {/* Style toggle */}
         <div className="flex bg-background/90 backdrop-blur-sm rounded-xl border border-border/50 shadow-lg overflow-hidden">
           {styles.map(({ mode, icon: Icon, label }) => (
@@ -130,7 +120,7 @@ const CompactMapControls = ({
                   <Icon className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="left" className="text-xs">{label}</TooltipContent>
+              <TooltipContent side="top" className="text-xs">{label}</TooltipContent>
             </Tooltip>
           ))}
         </div>
@@ -155,7 +145,7 @@ const CompactMapControls = ({
               )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="left" className="text-xs">Capas y herramientas</TooltipContent>
+          <TooltipContent side="top" className="text-xs">Capas y herramientas</TooltipContent>
         </Tooltip>
       </div>
     </>
