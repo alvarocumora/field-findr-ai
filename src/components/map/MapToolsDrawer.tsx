@@ -3,7 +3,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, PenTool, Trash2 } from 'lucide-react';
+import { X, PenTool, Trash2, Maximize2, Compass, RotateCcw } from 'lucide-react';
 import type { InfoLayerState, InfoLayerConfig } from './MapInfoLayers';
 
 interface MapToolsDrawerProps {
@@ -18,6 +18,9 @@ interface MapToolsDrawerProps {
   drawnArea: number | null;
   onStartDrawing: () => void;
   onClearDrawing: () => void;
+  onFitAll?: () => void;
+  onResetNorth?: () => void;
+  onResetView?: () => void;
 }
 
 const layerItems: { key: keyof InfoLayerState; label: string; desc: string; icon: string }[] = [
@@ -46,6 +49,9 @@ const MapToolsDrawer = ({
   drawnArea,
   onStartDrawing,
   onClearDrawing,
+  onFitAll,
+  onResetNorth,
+  onResetView,
 }: MapToolsDrawerProps) => {
   if (!open) return null;
 
@@ -146,6 +152,35 @@ const MapToolsDrawer = ({
                   checked={layerConfig.useRealData}
                   onCheckedChange={(v) => onConfigChange({ useRealData: v })}
                 />
+              </div>
+            </div>
+          )}
+
+          {/* Navigation shortcuts */}
+          {(onFitAll || onResetNorth || onResetView) && (
+            <div className="space-y-2 pt-2 border-t border-border/30">
+              <Label className="text-[11px] text-muted-foreground uppercase tracking-wider">
+                Navegación
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {onFitAll && (
+                  <Button size="sm" variant="outline" onClick={onFitAll} className="h-8 text-xs gap-1.5">
+                    <Maximize2 className="h-3.5 w-3.5" />
+                    Ver todas
+                  </Button>
+                )}
+                {onResetNorth && (
+                  <Button size="sm" variant="outline" onClick={onResetNorth} className="h-8 text-xs gap-1.5">
+                    <Compass className="h-3.5 w-3.5" />
+                    Norte
+                  </Button>
+                )}
+                {onResetView && (
+                  <Button size="sm" variant="outline" onClick={onResetView} className="h-8 text-xs gap-1.5">
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Restablecer
+                  </Button>
+                )}
               </div>
             </div>
           )}
