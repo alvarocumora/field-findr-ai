@@ -1,26 +1,23 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
 import StickyHeader from '@/components/navigation/StickyHeader';
-import FilterBar from '@/components/explore/FilterBar';
-import ExploreToolbar, { SortOption, TabFilter } from '@/components/explore/ExploreToolbar';
-import ExploreGrid from '@/components/explore/ExploreGrid';
-import MapDialog from '@/components/explore/MapDialog';
+import ExploreListPanel from '@/components/explore/ExploreListPanel';
+import ExploreMapPanel from '@/components/explore/ExploreMapPanel';
+import MobileExploreView from '@/components/explore/MobileExploreView';
 import PropertyPreviewSheet from '@/components/explore/PropertyPreviewSheet';
 import EnhancedAISearch from '@/components/ai/EnhancedAISearch';
 import CompareFloatingBar from '@/components/compare/CompareFloatingBar';
 import CompareSheet from '@/components/compare/CompareSheet';
-import OpportunityAlerts from '@/components/explore/OpportunityAlerts';
-import { Input } from '@/components/ui/input';
 import { useListings, Listing, getPricePerM2 } from '@/hooks/useListings';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Explorar = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [showAISearch, setShowAISearch] = useState(false);
-  const [showMap, setShowMap] = useState(false);
 
   // Filters
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -29,10 +26,6 @@ const Explorar = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000000]);
   const [areaRange, setAreaRange] = useState<[number, number]>([0, 1000000]);
-
-  // Toolbar state
-  const [activeTab, setActiveTab] = useState<TabFilter>('all');
-  const [sortBy, setSortBy] = useState<SortOption>('recent');
 
   // Listing interaction
   const [hoveredListing, setHoveredListing] = useState<Listing | null>(null);
@@ -50,11 +43,9 @@ const Explorar = () => {
     areaMax: areaRange[1] < 1000000 ? areaRange[1] : undefined,
   });
 
-  // Filter, tab, and sort
+  // Client-side search + tag filter
   const filteredListings = useMemo(() => {
     let result = [...listings];
-
-    // Search
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -64,43 +55,11 @@ const Explorar = () => {
              l.city?.toLowerCase().includes(q)
       );
     }
-
-    // Tags
     if (selectedTags.length > 0) {
       result = result.filter(l => selectedTags.some(tag => l.tags.includes(tag)));
     }
-
-    // Tab filter
-    if (activeTab === 'featured') {
-      result = result.filter(l => l.featured);
-    } else if (activeTab === 'best_price') {
-      result = result.filter(l => l.area_m2 && l.area_m2 > 0);
-    }
-
-    // Sort
-    switch (sortBy) {
-      case 'price_asc':
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case 'price_desc':
-        result.sort((a, b) => b.price - a.price);
-        break;
-      case 'area_desc':
-        result.sort((a, b) => (b.area_m2 || 0) - (a.area_m2 || 0));
-        break;
-      case 'price_m2':
-        result.sort((a, b) => {
-          const aP = getPricePerM2(a.price, a.area_m2) ?? Infinity;
-          const bP = getPricePerM2(b.price, b.area_m2) ?? Infinity;
-          return aP - bP;
-        });
-        break;
-      default: // recent — already sorted by API
-        break;
-    }
-
     return result;
-  }, [listings, searchQuery, selectedTags, activeTab, sortBy]);
+  }, [listings, searchQuery, selectedTags]);
 
   const activeFiltersCount = selectedTypes.length + selectedRegions.length + selectedCountries.length + selectedTags.length +
     (priceRange[0] > 0 || priceRange[1] < 5000000000 ? 1 : 0) +
@@ -141,13 +100,55 @@ const Explorar = () => {
     navigate(`/propiedad/${listing.id}`);
   }, [navigate]);
 
+  const handleListingClick = useCallback((listing: Listing) => {
+    setSelectedListing(listing);
+    setPreviewListing(listing);
+  }, []);
+
   const similarListings = useMemo(() => {
     if (!previewListing) return [];
     return filteredListings.filter(l => l.id !== previewListing.id && l.type === previewListing.type).slice(0, 3);
   }, [previewListing, filteredListings]);
 
+  // ── MOBILE VIEW ──
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <StickyHeader />
+        <MobileExploreView
+          listings={filteredListings}
+          isLoading={isLoading}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedTypes={selectedTypes}
+          selectedRegions={selectedRegions}
+          selectedTags={selectedTags}
+          priceRange={priceRange}
+          areaRange={areaRange}
+          onToggleType={toggleType}
+          onToggleRegion={toggleRegion}
+          onToggleTag={toggleTag}
+          onPriceRangeChange={setPriceRange}
+          onAreaRangeChange={setAreaRange}
+          onClearFilters={clearFilters}
+          activeFiltersCount={activeFiltersCount}
+        />
+        <PropertyPreviewSheet
+          listing={previewListing}
+          open={!!previewListing}
+          onOpenChange={(open) => !open && setPreviewListing(null)}
+          onViewDetails={handleViewDetails}
+          similarListings={similarListings}
+        />
+        <CompareFloatingBar />
+        <CompareSheet />
+      </div>
+    );
+  }
+
+  // ── DESKTOP SPLIT-VIEW ──
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen flex flex-col bg-background">
       <StickyHeader />
 
       {/* AI Search overlay */}
@@ -159,79 +160,50 @@ const Explorar = () => {
         </div>
       )}
 
-      <main className="flex-1 pt-16">
-        {/* Search bar */}
-        <div className="border-b border-border/30 bg-background/80 backdrop-blur-xl">
-          <div className="max-w-7xl mx-auto px-4 py-3">
-            <div className="relative max-w-xl">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar por ubicación, nombre o región..."
-                className="pl-10 h-10 rounded-xl bg-muted/30 border-border/50"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <FilterBar
-          selectedTypes={selectedTypes}
-          onToggleType={toggleType}
-          selectedRegions={selectedRegions}
-          onToggleRegion={toggleRegion}
-          selectedCountries={selectedCountries}
-          onToggleCountry={toggleCountry}
-          selectedTags={selectedTags}
-          onToggleTag={toggleTag}
-          priceRange={priceRange}
-          onPriceRangeChange={setPriceRange}
-          areaRange={areaRange}
-          onAreaRangeChange={setAreaRange}
-          onClearFilters={clearFilters}
-          activeFiltersCount={activeFiltersCount}
-          showAISearch={showAISearch}
-          onToggleAISearch={() => setShowAISearch(!showAISearch)}
-        />
-
-        {/* Toolbar + Opportunities + Grid */}
-        <div className="max-w-7xl mx-auto px-4 pb-8">
-          <ExploreToolbar
-            listings={filteredListings}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-            onOpenMap={() => setShowMap(true)}
-          />
-
-          {/* Opportunity Alerts */}
-          <div className="mb-4">
-            <OpportunityAlerts
-              listings={filteredListings}
-              onSelectListing={setPreviewListing}
-            />
-          </div>
-
-          <ExploreGrid
+      {/* Split view: List (40%) + Map (60%) */}
+      <div className="flex-1 flex pt-16 min-h-0">
+        {/* Left panel – scrollable list with built-in search/filters */}
+        <div className="w-[40%] min-w-[360px] max-w-[540px] border-r border-border/30">
+          <ExploreListPanel
             listings={filteredListings}
             isLoading={isLoading}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
             hoveredListing={hoveredListing}
             selectedListing={selectedListing}
-            onHover={setHoveredListing}
-            onPreview={setPreviewListing}
+            onListingHover={setHoveredListing}
+            onListingClick={handleListingClick}
+            onListingPreview={setPreviewListing}
+            selectedTypes={selectedTypes}
+            onToggleType={toggleType}
+            selectedRegions={selectedRegions}
+            onToggleRegion={toggleRegion}
+            selectedCountries={selectedCountries}
+            onToggleCountry={toggleCountry}
+            selectedTags={selectedTags}
+            onToggleTag={toggleTag}
+            priceRange={priceRange}
+            onPriceRangeChange={setPriceRange}
+            areaRange={areaRange}
+            onAreaRangeChange={setAreaRange}
+            onClearFilters={clearFilters}
+            activeFiltersCount={activeFiltersCount}
+            showAISearch={showAISearch}
+            onToggleAISearch={() => setShowAISearch(!showAISearch)}
           />
         </div>
-      </main>
 
-      {/* Map Dialog */}
-      <MapDialog
-        open={showMap}
-        onOpenChange={setShowMap}
-        listings={filteredListings}
-        onListingClick={setPreviewListing}
-      />
+        {/* Right panel – map */}
+        <div className="flex-1">
+          <ExploreMapPanel
+            listings={filteredListings}
+            hoveredListing={hoveredListing}
+            selectedListing={selectedListing}
+            onListingHover={setHoveredListing}
+            onListingClick={handleListingClick}
+          />
+        </div>
+      </div>
 
       {/* Property Preview Sheet */}
       <PropertyPreviewSheet
