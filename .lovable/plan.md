@@ -1,75 +1,98 @@
 
 
-# Plan Definitivo: Mapa Funcional y Limpio
+# Plan de Remake: Sistema de Mapa y Exploracion
 
-## Problemas Identificados (del screenshot)
+## Diagnostico del Problema Raiz
 
-1. El badge "20 propiedades" en la esquina superior izquierda se superpone con el boton "Buscar en esta area" centrado arriba
-2. Los controles de navegacion (zoom, GPS, etc.) en la derecha son demasiados y ocupan mucho espacio vertical
-3. El popup de propiedad al hacer hover se superpone con los botones de estilo de mapa (abajo derecha)
-4. Los controles de estilo de mapa (Calles/Satelite/3D) y el boton de Capas estan demasiado cerca de la atribucion de Mapbox
-5. No hay separacion visual clara entre zonas de controles
+El archivo `EnhancedMap.tsx` es un **monolito de 2,141 lineas** que maneja todo: inicializacion de Mapbox, marcadores DOM, popups, capas GIS (zonificacion, riesgos, infraestructura, heatmap, isocronas), controles de dibujo, clusters, cambio de estilo, geolocalizacion, y sincronizacion bidireccional. Cada intento de arreglar controles superpuestos falla porque todo esta acoplado y los efectos secundarios se interfieren entre si.
 
-## Solucion: Rediseno de Controles del Mapa
-
-### Principio: Zonas de control sin superposicion
+## Arquitectura Propuesta: Descomponer en Modulos
 
 ```text
-+--------------------------------------------------+
-|  [Buscar en esta area]  (centro, solo si se mueve)|
-|                                                    |
-|                                    [+]             |
-|                                    [-]             |
-|                                    [GPS]           |
-|                                                    |
-|                                                    |
-|                                                    |
-|                                                    |
-|  20 propiedades                                    |
-|  [Calles] [Sat] [3D]              [Capas]         |
-+--------------------------------------------------+
+EnhancedMap.tsx (2141 lineas)
+        |
+        v  DESCOMPONER EN:
++-------+-------+-------+-------+
+|       |       |       |       |
+v       v       v       v       v
+useMap  Markers Layers  Controls Popup
+Hook    Manager Manager (limpio) System
+(~200)  (~150)  (~400)  (~80)   (~100)
 ```
 
-- **Top center**: Solo el boton "Buscar en esta area" (aparece/desaparece)
-- **Right center**: Solo 3 botones esenciales: Zoom+, Zoom-, GPS
-- **Bottom left**: Badge de conteo de propiedades
-- **Bottom right**: Toggle de estilo (Calles/Sat/3D) + boton Capas
-- **Eliminados del mapa**: Fit All, Reset North, Reset View (se mueven al drawer de herramientas)
+### Fase 1: Extraer hook `useMapInstance`
+Nuevo archivo `src/hooks/useMapInstance.ts` (~200 lineas)
+- Gestiona la creacion/destruccion de la instancia de Mapbox
+- Maneja el token, estilo inicial, resize
+- Expone `mapRef`, `isLoaded`, `changeStyle(mode)`
+- Toda la logica de inicializacion (lineas 1330-1498 actuales) se mueve aqui
+- Previene re-creaciones innecesarias del mapa
 
-### Cambios por Archivo
+### Fase 2: Extraer `useMapMarkers`
+Nuevo archivo `src/hooks/useMapMarkers.ts` (~200 lineas)
+- Gestiona creacion/actualizacion/limpieza de marcadores DOM
+- `createMarkerElement()` y `attachMarkerEvents()` se mueven aqui
+- Maneja la sincronizacion hover (visual highlight sin mover camara)
+- Maneja la sincronizacion selected (easeTo + popup)
+- Recibe `mapRef`, `listings`, `hoveredListing`, `selectedListing`
 
-#### 1. `src/components/map/CompactMapControls.tsx` (simplificar drasticamente)
+### Fase 3: Extraer `useMapLayers`
+Nuevo archivo `src/hooks/useMapLayers.ts` (~400 lineas)
+- Toda la logica de capas GIS: zoning, risk, infrastructure, water, green, roads, heatmap
+- Capas WMS (IDE Chile, MINVU, DGA, etc.)
+- Toggle demo/real data
+- Opacity management
+- Layer hover tooltips (`generateLayerTooltipHTML`)
+- Isochrone rendering
 
-Reducir de 6 botones de navegacion a solo 3 (Zoom In, Zoom Out, Locate). Los botones de Fit All, Reset North, Reset View se mueven al MapToolsDrawer.
+### Fase 4: Reescribir `CompactMapControls.tsx`
+Simplificar radicalmente (~80 lineas):
+- **Derecha (centrado vertical)**: Solo 3 botones apilados: Zoom+, Zoom-, GPS
+- **Abajo-izquierda**: Badge "N propiedades" (fuera de la zona del logo Mapbox)
+- **Abajo-derecha**: 3 botones de estilo (Calles/Sat/3D) + boton Capas, posicionados en `bottom-14` para no tapar la atribucion de Mapbox
+- **Sin badge de area** en el mapa principal (solo visible en el drawer)
+- Quitar las props `onFitAll`, `onResetNorth`, `onResetView` del componente - esas acciones viven solo en el drawer
 
-Reorganizar zonas:
-- **Bottom-left**: Badge "N propiedades" + area dibujada
-- **Right (centrado vertical)**: Solo Zoom+, Zoom-, GPS (3 botones)
-- **Bottom-right**: Estilo toggle (3 botones) + Capas (1 boton), con `bottom-12` para evitar la atribucion de Mapbox
+### Fase 5: Reescribir `EnhancedMap.tsx`
+Reducir a ~300 lineas de orquestacion:
+- Importa y usa los 3 hooks nuevos
+- Renderiza `mapContainer` + `CompactMapControls` + `MapToolsDrawer`
+- Ya no tiene logica de capas, marcadores ni inicializacion inline
+- Mantiene la misma interfaz publica (props) para no romper consumidores
 
-#### 2. `src/components/explore/SearchAreaButton.tsx` (ajustar posicion)
+### Fase 6: Ajustar `ExploreMapPanel.tsx`
+- El `SearchAreaButton` se renderiza con `z-10` (menor que controles) y `pointer-events-auto`
+- Posicion: `top-3 left-1/2 -translate-x-1/2` (centrado arriba, no interfiere con controles de la derecha)
 
-Mover a `top-4` con z-index 20 (menor que controles), y asegurar que no colisione con nada.
-
-#### 3. `src/components/map/EnhancedMap.tsx` (ajustes del popup)
-
-- Cambiar el offset del popup para que aparezca arriba del marker (no a la derecha), evitando superposicion con controles
-- Ajustar `popupRef` con `anchor: 'bottom'` y offset vertical de 15px
-- Reducir `maxWidth` del popup a 260px para que no tape controles
-
-#### 4. `src/components/map/MapToolsDrawer.tsx` (agregar botones movidos)
-
-Agregar seccion "Navegacion" al drawer con los botones que se eliminaron del mapa:
-- Fit All (ver todas las propiedades)
-- Reset North (orientar al norte)
-- Reset View (restablecer vista)
-
-Esto mantiene la funcionalidad accesible pero fuera del mapa principal.
+### Fase 7: Ajustar `Explorar.tsx`
+- Asegurar que el panel izquierdo es exactamente `w-[420px]` (reducir de 440px para dar mas espacio al mapa)
+- El mapa usa `flex-1` con `min-w-0` para evitar overflow
+- Verificar que `pt-16` coincide con la altura real del StickyHeader
 
 ## Resultado Esperado
 
-- Mapa limpio con solo 3 controles visibles (zoom + GPS)
-- Sin superposiciones entre badge, buscar, popup y controles
-- Todas las funciones avanzadas accesibles desde el drawer de Capas/Herramientas
-- Popup de propiedad siempre visible arriba del marker, sin tapar botones
+- **EnhancedMap.tsx**: De 2,141 lineas a ~300 lineas
+- **Sin superposiciones**: Cada zona de control tiene su espacio asignado sin colisiones
+- **Mantenible**: Cada hook tiene una responsabilidad unica
+- **Mismo comportamiento**: La interfaz publica no cambia, los consumidores (ExploreMapPanel, LotMapView, etc.) no se tocan
+- **Rendimiento**: Los hooks usan refs y dependencias estables, evitando re-renders del mapa
+
+## Seccion Tecnica: Archivos Afectados
+
+| Archivo | Accion |
+|---------|--------|
+| `src/hooks/useMapInstance.ts` | NUEVO - Ciclo de vida del mapa |
+| `src/hooks/useMapMarkers.ts` | NUEVO - Gestion de marcadores |
+| `src/hooks/useMapLayers.ts` | NUEVO - Capas GIS y WMS |
+| `src/components/map/EnhancedMap.tsx` | REESCRIBIR - Orquestador ligero |
+| `src/components/map/CompactMapControls.tsx` | REESCRIBIR - Controles minimos |
+| `src/components/explore/ExploreMapPanel.tsx` | AJUSTAR - z-index del SearchAreaButton |
+| `src/pages/Explorar.tsx` | AJUSTAR - Ancho del panel |
+
+## Riesgos y Mitigacion
+
+- **Riesgo**: Romper la inicializacion del mapa durante la refactorizacion
+- **Mitigacion**: Los hooks nuevos se prueban individualmente; el mapRef compartido asegura que todos los hooks operan sobre la misma instancia
+- **Riesgo**: Perder funcionalidad de capas GIS al mover codigo
+- **Mitigacion**: Se mueve codigo existente sin modificar logica, solo cambia la ubicacion
 
