@@ -41,6 +41,8 @@ import RegionLanding from "./pages/RegionLanding";
 import CountryLanding from "./pages/CountryLanding";
 import CityLanding from "./pages/CityLanding";
 import Contact from "./pages/Contact";
+import Comparar from "./pages/Comparar";
+import Alertas from "./pages/Alertas";
 
 // ===== Buyer Pages =====
 import Profile from "./pages/Profile";
@@ -107,6 +109,8 @@ const App = () => (
               <Route path="/pais/:code" element={<CountryLanding />} />
               <Route path="/ciudad/:slug" element={<CityLanding />} />
               <Route path="/contacto" element={<Contact />} />
+              <Route path="/comparar" element={<Comparar />} />
+              <Route path="/alertas" element={<Alertas />} />
 
               {/* Subscription result pages */}
               <Route path="/subscription/success" element={<SubscriptionSuccess />} />
@@ -275,8 +279,7 @@ const App = () => (
               <Route path="/crm" element={<Navigate to="/asesor/crm" replace />} />
               <Route path="/sales" element={<Navigate to="/asesor/sales" replace />} />
               <Route path="/agents" element={<Navigate to="/admin/agents" replace />} />
-              <Route path="/compare" element={<Navigate to="/tools" replace />} />
-              <Route path="/comparar" element={<Navigate to="/tools" replace />} />
+              <Route path="/compare" element={<Navigate to="/comparar" replace />} />
               <Route path="/calculators" element={<Navigate to="/tools" replace />} />
               <Route path="/price-predictor" element={<Navigate to="/tools" replace />} />
               <Route path="/risk-analysis" element={<Navigate to="/tools" replace />} />

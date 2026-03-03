@@ -35,45 +35,86 @@ const ImageGallery = ({ images, title }: ImageGalleryProps) => {
     if (e.key === 'Escape') setIsFullscreen(false);
   }, [nextImage, prevImage]);
 
+  const sideImages = displayImages.slice(1, 5);
+
   return (
     <>
-      {/* Main Gallery */}
-      <div className="space-y-3">
-        {/* Main Image */}
-        <div 
-          className="relative aspect-[16/10] rounded-2xl overflow-hidden glass cursor-pointer group"
-          onClick={() => setIsFullscreen(true)}
-        >
-          <img
-            src={displayImages[currentIndex]}
-            alt={`${title} - Imagen ${currentIndex + 1}`}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          
-          {/* Navigation Arrows */}
-          {displayImages.length > 1 && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute left-4 top-1/2 -translate-y-1/2 glass hover:bg-white/30 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={(e) => { e.stopPropagation(); prevImage(); }}
-              >
-                <ChevronLeft className="h-6 w-6 text-white" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-4 top-1/2 -translate-y-1/2 glass hover:bg-white/30 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={(e) => { e.stopPropagation(); nextImage(); }}
-              >
-                <ChevronRight className="h-6 w-6 text-white" />
-              </Button>
-            </>
-          )}
+      {/* Airbnb-style Grid */}
+      <div
+        className="rounded-2xl overflow-hidden cursor-pointer group"
+        onClick={() => setIsFullscreen(true)}
+      >
+        {displayImages.length >= 5 ? (
+          /* 5+ images: main + 2x2 grid */
+          <div className="grid grid-cols-2 gap-1.5 aspect-[16/9]">
+            <div className="relative row-span-2 overflow-hidden">
+              <img
+                src={displayImages[0]}
+                alt={`${title} - Imagen 1`}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div className="grid grid-rows-2 gap-1.5">
+              {sideImages.slice(0, 2).map((img, idx) => (
+                <div key={idx} className="relative overflow-hidden">
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : displayImages.length >= 3 ? (
+          /* 3-4 images: main + column */
+          <div className="grid grid-cols-3 gap-1.5 aspect-[16/9]">
+            <div className="relative col-span-2 overflow-hidden">
+              <img
+                src={displayImages[0]}
+                alt={`${title} - Imagen 1`}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div className="grid grid-rows-2 gap-1.5">
+              {sideImages.slice(0, 2).map((img, idx) => (
+                <div key={idx} className="relative overflow-hidden">
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* 1-2 images: single hero */
+          <div className="relative aspect-[16/10] overflow-hidden">
+            <img
+              src={displayImages[currentIndex]}
+              alt={`${title} - Imagen ${currentIndex + 1}`}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            {/* Navigation Arrows for single image mode */}
+            {displayImages.length > 1 && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 glass hover:bg-white/30 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                >
+                  <ChevronLeft className="h-6 w-6 text-white" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 glass hover:bg-white/30 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                >
+                  <ChevronRight className="h-6 w-6 text-white" />
+                </Button>
+              </>
+            )}
+          </div>
+        )}
 
-          {/* Zoom Indicator */}
-          <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Overlay controls */}
+        <div className="relative">
+          <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ marginTop: '-48px' }}>
             <Button
               variant="ghost"
               size="sm"
@@ -81,57 +122,32 @@ const ImageGallery = ({ images, title }: ImageGalleryProps) => {
               onClick={(e) => { e.stopPropagation(); setIsFullscreen(true); }}
             >
               <ZoomIn className="h-4 w-4 mr-2" />
-              Ver galería
+              Ver {displayImages.length} fotos
             </Button>
           </div>
-
-          {/* Image Counter */}
-          <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-full glass text-white text-sm">
-            {currentIndex + 1} / {displayImages.length}
-          </div>
+          {displayImages.length > 5 && (
+            <div className="absolute bottom-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity z-10" style={{ marginTop: '-48px' }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="glass hover:bg-white/30 text-white"
+                onClick={(e) => { e.stopPropagation(); setShowGrid(true); }}
+              >
+                <Grid3X3 className="h-4 w-4 mr-2" />
+                Todas las fotos
+              </Button>
+            </div>
+          )}
         </div>
-
-        {/* Thumbnails */}
-        {displayImages.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {displayImages.slice(0, 5).map((img, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentIndex(idx)}
-                className={`
-                  flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 transition-all
-                  ${idx === currentIndex 
-                    ? 'border-primary ring-2 ring-primary/30' 
-                    : 'border-transparent hover:border-white/30'
-                  }
-                `}
-              >
-                <img src={img} alt="" className="w-full h-full object-cover" />
-              </button>
-            ))}
-            {displayImages.length > 5 && (
-              <button
-                onClick={() => setShowGrid(true)}
-                className="flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 border-transparent hover:border-white/30 bg-muted/50 flex items-center justify-center"
-              >
-                <div className="text-center">
-                  <Grid3X3 className="h-4 w-4 mx-auto text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">+{displayImages.length - 5}</span>
-                </div>
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Fullscreen Modal */}
+      {/* Fullscreen Lightbox */}
       <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
         <DialogContent 
           className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none"
           onKeyDown={handleKeyDown}
         >
           <div className="relative w-full h-[90vh] flex items-center justify-center">
-            {/* Close Button */}
             <Button
               variant="ghost"
               size="icon"
@@ -141,14 +157,12 @@ const ImageGallery = ({ images, title }: ImageGalleryProps) => {
               <X className="h-6 w-6" />
             </Button>
 
-            {/* Main Image */}
             <img
               src={displayImages[currentIndex]}
               alt={`${title} - Imagen ${currentIndex + 1}`}
               className="max-w-full max-h-full object-contain"
             />
 
-            {/* Navigation */}
             {displayImages.length > 1 && (
               <>
                 <Button
@@ -169,6 +183,11 @@ const ImageGallery = ({ images, title }: ImageGalleryProps) => {
                 </Button>
               </>
             )}
+
+            {/* Counter */}
+            <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full glass text-white text-sm">
+              {currentIndex + 1} / {displayImages.length}
+            </div>
 
             {/* Thumbnails Strip */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 max-w-[90vw] overflow-x-auto p-2 rounded-lg glass">

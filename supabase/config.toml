@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.sii-lookup]
 verify_jwt = false
+
+[functions.search-autocomplete]
+verify_jwt = false

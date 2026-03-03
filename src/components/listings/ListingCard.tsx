@@ -8,8 +8,10 @@ import {
   Ruler, 
   CheckCircle,
   Sparkles,
-  Share2
+  Share2,
+  TrendingDown
 } from 'lucide-react';
+import { usePriceReduced } from '@/components/property/PriceHistoryChart';
 import { 
   Listing, 
   formatPrice, 
@@ -36,6 +38,7 @@ const ListingCard = ({ listing, onHover, matchResult, className }: ListingCardPr
   const { data: favoriteIds = [] } = useFavoriteIds();
   const isFavorite = favoriteIds.includes(listing.id);
   const legalStatus = getLegalStatusLabel(listing.legal_status);
+  const { data: priceReduced } = usePriceReduced(listing.id);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -100,6 +103,12 @@ const ListingCard = ({ listing, onHover, matchResult, className }: ListingCardPr
                 criteria={matchResult.criteria.map(c => ({ label: c.label, matched: c.matched }))}
                 size="sm"
               />
+            )}
+            {priceReduced && (
+              <Badge className="bg-green-500/90 text-white flex items-center gap-1 text-xs shadow-lg">
+                <TrendingDown className="h-3 w-3" />
+                -{priceReduced.pct}%
+              </Badge>
             )}
           </div>
 

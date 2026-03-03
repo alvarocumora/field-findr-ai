@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Search, Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown, X, Sparkles } from 'lucide-react';
+import SearchAutocomplete from '@/components/search/SearchAutocomplete';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -143,23 +144,10 @@ const ExploreListPanel = ({
     <div className="h-full flex flex-col bg-background">
       {/* Search Header */}
       <div className="p-4 pb-2 space-y-3 border-b border-border/20">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por ubicación, nombre..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9 pr-10 h-10 rounded-xl bg-muted/40 border-border/40 focus:bg-background"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => onSearchChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+        <SearchAutocomplete
+          onSearchChange={onSearchChange}
+          placeholder="Buscar terrenos, ubicaciones..."
+        />
 
         {/* Compact Filters */}
         <FilterBar
