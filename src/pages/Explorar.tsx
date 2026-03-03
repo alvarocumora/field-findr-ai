@@ -8,7 +8,8 @@ import PropertyPreviewSheet from '@/components/explore/PropertyPreviewSheet';
 import EnhancedAISearch from '@/components/ai/EnhancedAISearch';
 import CompareFloatingBar from '@/components/compare/CompareFloatingBar';
 import CompareSheet from '@/components/compare/CompareSheet';
-import { useListings, Listing, getPricePerM2 } from '@/hooks/useListings';
+import { Listing, getPricePerM2 } from '@/hooks/useListings';
+import { useFlattenedListings } from '@/hooks/useInfiniteListings';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Explorar = () => {
@@ -35,8 +36,15 @@ const Explorar = () => {
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [previewListing, setPreviewListing] = useState<Listing | null>(null);
 
-  // Data — includes bounds filter for server-side spatial filtering
-  const { data: listings = [], isLoading } = useListings({
+  // Data — infinite pagination with cursor
+  const {
+    listings,
+    totalCount,
+    isLoading,
+    hasMore,
+    loadMore,
+    isLoadingMore,
+  } = useFlattenedListings({
     type: selectedTypes.length > 0 ? selectedTypes : undefined,
     region: selectedRegions.length > 0 ? selectedRegions : undefined,
     country: selectedCountries.length > 0 ? selectedCountries : undefined,
@@ -174,7 +182,11 @@ const Explorar = () => {
         <div className="w-[420px] min-w-[380px] flex-shrink-0 border-r border-border/30">
           <ExploreListPanel
             listings={filteredListings}
+            totalCount={totalCount}
             isLoading={isLoading}
+            hasMore={!!hasMore}
+            isLoadingMore={!!isLoadingMore}
+            onLoadMore={() => loadMore()}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             hoveredListing={hoveredListing}
