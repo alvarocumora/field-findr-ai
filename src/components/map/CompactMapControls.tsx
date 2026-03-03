@@ -88,7 +88,7 @@ const CompactMapControls = ({
       </div>
 
       {/* Bottom left - property count badge */}
-      <div className="absolute bottom-6 left-3 z-10">
+      <div className="absolute bottom-12 left-3 z-10">
         <div className="bg-background/90 backdrop-blur-sm rounded-lg border border-border/50 px-2.5 py-1.5 shadow-sm">
           <p className="text-xs font-medium text-foreground">
             {listingsCount} propiedades
@@ -105,7 +105,7 @@ const CompactMapControls = ({
       </div>
 
       {/* Bottom right - style toggle + tools */}
-      <div className="absolute bottom-6 right-3 z-10 flex items-end gap-2">
+      <div className="absolute bottom-12 right-3 z-10 flex items-end gap-2">
         {/* Style toggle */}
         <div className="flex bg-background/90 backdrop-blur-sm rounded-xl border border-border/50 shadow-lg overflow-hidden">
           {styles.map(({ mode, icon: Icon, label }) => (
