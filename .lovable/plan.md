@@ -1,98 +1,76 @@
 
 
-# Plan de Remake: Sistema de Mapa y Exploracion
+# Plan: Sistema de Mapa Estable
 
-## Diagnostico del Problema Raiz
+## Problemas Identificados
 
-El archivo `EnhancedMap.tsx` es un **monolito de 2,141 lineas** que maneja todo: inicializacion de Mapbox, marcadores DOM, popups, capas GIS (zonificacion, riesgos, infraestructura, heatmap, isocronas), controles de dibujo, clusters, cambio de estilo, geolocalizacion, y sincronizacion bidireccional. Cada intento de arreglar controles superpuestos falla porque todo esta acoplado y los efectos secundarios se interfieren entre si.
+1. **Dependencia circular entre hooks**: `useMapInstance` recibe `onStyleLoaded` que llama a `layersHook.addInfoLayers()`, pero `layersHook` se define despues de `useMapInstance`. Esto causa que la referencia sea stale o undefined en el primer render.
 
-## Arquitectura Propuesta: Descomponer en Modulos
+2. **Recreacion excesiva de marcadores**: En `useMapMarkers`, cada cambio de hover ejecuta `replaceWith()` en el DOM, creando/destruyendo elementos continuamente en lugar de actualizar estilos CSS.
+
+3. **Falta de guardas de ciclo de vida**: Operaciones sobre capas se ejecutan sin verificar consistentemente `map.current?.isStyleLoaded()`, causando errores silenciosos durante cambios de estilo.
+
+4. **Controles superpuestos**: El `SearchAreaButton` (z-20, top-4) puede colisionar con controles mobiles. Los controles touch (z-20) y desktop (z-10) tienen z-index inconsistentes.
+
+## Solucion
+
+### 1. Eliminar dependencia circular en EnhancedMap.tsx
+
+Cambiar la arquitectura para que `useMapInstance` emita un evento `style.load` que los otros hooks escuchen directamente del `mapRef`, en lugar de recibir un callback.
+
+- `useMapInstance`: Ya no recibe `onStyleLoaded`. Internamente solo marca `styleLoadedRef = true` y hace `resize()`.
+- `useMapLayers`: Escucha `map.current.on('style.load', ...)` internamente para re-agregar capas.
+- `useMapMarkers`: Ya escucha `isLoading` correctamente, no necesita cambio aqui.
+
+Esto rompe la dependencia circular y cada hook es autosuficiente.
+
+### 2. Optimizar actualizacion de marcadores en useMapMarkers.ts
+
+En lugar de `replaceWith()` que destruye y recrea el DOM:
+
+- Guardar referencia al elemento actual de cada marcador
+- En hover, solo actualizar `el.style.transform`, `el.style.zIndex` y `el.style.filter`
+- Actualizar el contenido del pill (background, color, border) via `el.querySelector` y `style` updates
+- Solo recrear el marcador completo cuando cambia el listing (precio, tipo, etc.)
+
+### 3. Agregar guardas de ciclo de vida consistentes en useMapLayers.ts
+
+- Cada `useEffect` y cada funcion (`addInfoLayers`, `addRealWMSLayers`, `setupLayerHoverEvents`) debe verificar `map.current && map.current.isStyleLoaded()` antes de operar.
+- Envolver operaciones de `addLayer`/`addSource` en try-catch para evitar errores cuando la fuente ya existe despues de un cambio de estilo rapido.
+- Registrar el listener `style.load` dentro del hook para re-agregar capas automaticamente.
+
+### 4. Unificar z-index y posiciones de controles
+
+Establecer una jerarquia clara:
 
 ```text
-EnhancedMap.tsx (2141 lineas)
-        |
-        v  DESCOMPONER EN:
-+-------+-------+-------+-------+
-|       |       |       |       |
-v       v       v       v       v
-useMap  Markers Layers  Controls Popup
-Hook    Manager Manager (limpio) System
-(~200)  (~150)  (~400)  (~80)   (~100)
+z-30: Paneles overlay (mobile layers panel)
+z-20: SearchAreaButton, Drawing indicator
+z-10: CompactMapControls (zoom, style, badge)
+z-10: TouchMapControls (mobile)
 ```
 
-### Fase 1: Extraer hook `useMapInstance`
-Nuevo archivo `src/hooks/useMapInstance.ts` (~200 lineas)
-- Gestiona la creacion/destruccion de la instancia de Mapbox
-- Maneja el token, estilo inicial, resize
-- Expone `mapRef`, `isLoaded`, `changeStyle(mode)`
-- Toda la logica de inicializacion (lineas 1330-1498 actuales) se mueve aqui
-- Previene re-creaciones innecesarias del mapa
+- `SearchAreaButton`: `top-3` centrado, `z-20`
+- `CompactMapControls` (derecha): `z-10`
+- Badge propiedades (bottom-left): `bottom-14`, `z-10`
+- Style toggles (bottom-right): `bottom-14`, `z-10`
+- `TouchMapControls`: `bottom-24`, `z-20` (por encima de posibles tabs)
 
-### Fase 2: Extraer `useMapMarkers`
-Nuevo archivo `src/hooks/useMapMarkers.ts` (~200 lineas)
-- Gestiona creacion/actualizacion/limpieza de marcadores DOM
-- `createMarkerElement()` y `attachMarkerEvents()` se mueven aqui
-- Maneja la sincronizacion hover (visual highlight sin mover camara)
-- Maneja la sincronizacion selected (easeTo + popup)
-- Recibe `mapRef`, `listings`, `hoveredListing`, `selectedListing`
+## Archivos a Modificar
 
-### Fase 3: Extraer `useMapLayers`
-Nuevo archivo `src/hooks/useMapLayers.ts` (~400 lineas)
-- Toda la logica de capas GIS: zoning, risk, infrastructure, water, green, roads, heatmap
-- Capas WMS (IDE Chile, MINVU, DGA, etc.)
-- Toggle demo/real data
-- Opacity management
-- Layer hover tooltips (`generateLayerTooltipHTML`)
-- Isochrone rendering
-
-### Fase 4: Reescribir `CompactMapControls.tsx`
-Simplificar radicalmente (~80 lineas):
-- **Derecha (centrado vertical)**: Solo 3 botones apilados: Zoom+, Zoom-, GPS
-- **Abajo-izquierda**: Badge "N propiedades" (fuera de la zona del logo Mapbox)
-- **Abajo-derecha**: 3 botones de estilo (Calles/Sat/3D) + boton Capas, posicionados en `bottom-14` para no tapar la atribucion de Mapbox
-- **Sin badge de area** en el mapa principal (solo visible en el drawer)
-- Quitar las props `onFitAll`, `onResetNorth`, `onResetView` del componente - esas acciones viven solo en el drawer
-
-### Fase 5: Reescribir `EnhancedMap.tsx`
-Reducir a ~300 lineas de orquestacion:
-- Importa y usa los 3 hooks nuevos
-- Renderiza `mapContainer` + `CompactMapControls` + `MapToolsDrawer`
-- Ya no tiene logica de capas, marcadores ni inicializacion inline
-- Mantiene la misma interfaz publica (props) para no romper consumidores
-
-### Fase 6: Ajustar `ExploreMapPanel.tsx`
-- El `SearchAreaButton` se renderiza con `z-10` (menor que controles) y `pointer-events-auto`
-- Posicion: `top-3 left-1/2 -translate-x-1/2` (centrado arriba, no interfiere con controles de la derecha)
-
-### Fase 7: Ajustar `Explorar.tsx`
-- Asegurar que el panel izquierdo es exactamente `w-[420px]` (reducir de 440px para dar mas espacio al mapa)
-- El mapa usa `flex-1` con `min-w-0` para evitar overflow
-- Verificar que `pt-16` coincide con la altura real del StickyHeader
+| Archivo | Cambio |
+|---------|--------|
+| `src/hooks/useMapInstance.ts` | Eliminar prop `onStyleLoaded`, simplificar |
+| `src/hooks/useMapMarkers.ts` | Optimizar hover (CSS-only, sin recrear DOM) |
+| `src/hooks/useMapLayers.ts` | Agregar listener `style.load` interno, try-catch en add operations |
+| `src/components/map/EnhancedMap.tsx` | Quitar `onStyleLoaded` callback, simplificar orquestacion |
+| `src/components/map/CompactMapControls.tsx` | Ajustar bottom a `bottom-14` para consistencia |
+| `src/components/explore/SearchAreaButton.tsx` | Confirmar `z-20 top-3` |
 
 ## Resultado Esperado
 
-- **EnhancedMap.tsx**: De 2,141 lineas a ~300 lineas
-- **Sin superposiciones**: Cada zona de control tiene su espacio asignado sin colisiones
-- **Mantenible**: Cada hook tiene una responsabilidad unica
-- **Mismo comportamiento**: La interfaz publica no cambia, los consumidores (ExploreMapPanel, LotMapView, etc.) no se tocan
-- **Rendimiento**: Los hooks usan refs y dependencias estables, evitando re-renders del mapa
-
-## Seccion Tecnica: Archivos Afectados
-
-| Archivo | Accion |
-|---------|--------|
-| `src/hooks/useMapInstance.ts` | NUEVO - Ciclo de vida del mapa |
-| `src/hooks/useMapMarkers.ts` | NUEVO - Gestion de marcadores |
-| `src/hooks/useMapLayers.ts` | NUEVO - Capas GIS y WMS |
-| `src/components/map/EnhancedMap.tsx` | REESCRIBIR - Orquestador ligero |
-| `src/components/map/CompactMapControls.tsx` | REESCRIBIR - Controles minimos |
-| `src/components/explore/ExploreMapPanel.tsx` | AJUSTAR - z-index del SearchAreaButton |
-| `src/pages/Explorar.tsx` | AJUSTAR - Ancho del panel |
-
-## Riesgos y Mitigacion
-
-- **Riesgo**: Romper la inicializacion del mapa durante la refactorizacion
-- **Mitigacion**: Los hooks nuevos se prueban individualmente; el mapRef compartido asegura que todos los hooks operan sobre la misma instancia
-- **Riesgo**: Perder funcionalidad de capas GIS al mover codigo
-- **Mitigacion**: Se mueve codigo existente sin modificar logica, solo cambia la ubicacion
+- Mapa no pierde capas al cambiar estilo (satellite/3d/streets)
+- Hover sobre marcadores es instantaneo (sin flicker DOM)
+- No hay errores de consola por operaciones sobre mapa no listo
+- Controles nunca se superponen entre si ni con atribucion Mapbox
 
