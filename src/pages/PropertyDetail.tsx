@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import GeoEnrichmentPanel from '@/components/map/GeoEnrichmentPanel';
 import { useParams, Link } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import { useListing, useListings, formatPrice, formatArea, getListingTypeLabel, getLegalStatusLabel } from '@/hooks/useListings';
@@ -484,6 +485,9 @@ const PropertyDetail = () => {
                 </p>
               </CardContent>
             </Card>
+
+            {/* GIS Enrichment Data */}
+            <GeoEnrichmentPanel lat={listing.lat} lng={listing.lng} />
           </div>
         </div>
 
