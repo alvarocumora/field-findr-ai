@@ -188,10 +188,18 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
       const isHovered = hoveredListing?.id === listing.id;
 
       if (markersRef.current[listing.id]) {
-        const existingEl = markersRef.current[listing.id].getElement();
-        const newEl = createMarkerElement(listing, isHovered);
-        existingEl.replaceWith(newEl);
-        attachMarkerEvents(newEl, listing);
+        // CSS-only hover update — no DOM recreation
+        const el = markersRef.current[listing.id].getElement();
+        const color = typeColors[listing.type] || '#10b981';
+        el.style.transform = isHovered ? 'scale(1.15) translateY(-8px)' : 'scale(1)';
+        el.style.zIndex = isHovered ? '1000' : '1';
+        el.style.filter = isHovered ? 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))' : 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))';
+        const pill = el.querySelector('div > div:first-child') as HTMLElement | null;
+        if (pill) {
+          pill.style.background = isHovered ? color : 'white';
+          pill.style.color = isHovered ? 'white' : '#1e293b';
+          pill.style.boxShadow = isHovered ? `0 0 0 3px ${color}40` : 'none';
+        }
         return;
       }
 
@@ -215,7 +223,7 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
     }
   }, [listings, isLoading, hoveredListing, attachMarkerEvents, map]);
 
-  // Hover highlight (visual only, no camera)
+  // Hover highlight (visual only, no camera) — CSS-only updates
   useEffect(() => {
     if (!map.current || isLoading) return;
     if (!map.current.isStyleLoaded()) return;
@@ -225,8 +233,18 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
       const listing = listings.find(l => l.id === id);
       if (!listing) return;
       const isHov = hoveredListing?.id === id;
+      const color = typeColors[listing.type] || '#10b981';
+
       el.style.transform = isHov ? 'scale(1.15) translateY(-10px)' : 'scale(1)';
       el.style.zIndex = isHov ? '1000' : '1';
+      el.style.filter = isHov ? 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))' : 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))';
+      const pill = el.querySelector('div > div:first-child') as HTMLElement | null;
+      if (pill) {
+        pill.style.background = isHov ? color : 'white';
+        pill.style.color = isHov ? 'white' : '#1e293b';
+        pill.style.boxShadow = isHov ? `0 0 0 3px ${color}40` : 'none';
+      }
+
       if (isHov && listing.lat && listing.lng) {
         popupRef.current
           ?.setLngLat([listing.lng, listing.lat])

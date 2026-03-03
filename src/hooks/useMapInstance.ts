@@ -17,8 +17,6 @@ interface UseMapInstanceOptions {
   showDrawTools?: boolean;
   onBoundsChange?: (bounds: MapBoundsData) => void;
   onPolygonDrawn?: (polygon: number[][], area: number) => void;
-  /** Called once after map 'load' fires */
-  onStyleLoaded?: () => void;
 }
 
 // Calculate polygon area in m²
@@ -41,15 +39,13 @@ export function useMapInstance(
   containerRef: MutableRefObject<HTMLDivElement | null>,
   options: UseMapInstanceOptions = {}
 ) {
-  const { showDrawTools = true, onBoundsChange, onPolygonDrawn, onStyleLoaded } = options;
+  const { showDrawTools = true, onBoundsChange, onPolygonDrawn } = options;
 
   const map = useRef<mapboxgl.Map | null>(null);
   const draw = useRef<MapboxDraw | null>(null);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const layerTooltipRef = useRef<mapboxgl.Popup | null>(null);
   const styleLoadedRef = useRef(false);
-  const onStyleLoadedRef = useRef(onStyleLoaded);
-  useEffect(() => { onStyleLoadedRef.current = onStyleLoaded; }, [onStyleLoaded]);
 
   const showDrawToolsRef = useRef(showDrawTools);
   useEffect(() => { showDrawToolsRef.current = showDrawTools; });
@@ -149,7 +145,6 @@ export function useMapInstance(
         });
       }
 
-      onStyleLoadedRef.current?.();
       setTimeout(() => { map.current?.resize(); }, 100);
       setIsLoading(false);
     });
@@ -236,7 +231,6 @@ export function useMapInstance(
         map.current?.setTerrain(null);
         map.current?.easeTo({ pitch: 0, bearing: 0, duration: 500 });
       }
-      onStyleLoadedRef.current?.();
     });
   }, []);
 
