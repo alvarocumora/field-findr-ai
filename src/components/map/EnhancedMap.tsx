@@ -53,6 +53,7 @@ const EnhancedMap = ({
     map,
     popupRef,
     layerTooltipRef,
+    styleLoadedRef,
     isLoading,
     isDrawing,
     drawnArea,
@@ -72,17 +73,13 @@ const EnhancedMap = ({
     showDrawTools,
     onBoundsChange,
     onPolygonDrawn,
-    onStyleLoaded: () => {
-      // Re-add layers after style loads
-      layersHook.addInfoLayers();
-      layersHook.setupLayerHoverEvents();
-    },
   });
 
   // ── 2. GIS Layers ──
   const layersHook = useMapLayers({
     map,
     layerTooltipRef,
+    styleLoadedRef,
     listings,
     isLoading,
   });

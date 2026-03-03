@@ -103,12 +103,13 @@ const generateLayerTooltipHTML = (layerType: string, properties: Record<string, 
 interface UseMapLayersOptions {
   map: MutableRefObject<mapboxgl.Map | null>;
   layerTooltipRef: MutableRefObject<mapboxgl.Popup | null>;
+  styleLoadedRef: MutableRefObject<boolean>;
   listings: Listing[];
   isLoading: boolean;
 }
 
 export function useMapLayers(options: UseMapLayersOptions) {
-  const { map, layerTooltipRef, listings, isLoading } = options;
+  const { map, layerTooltipRef, styleLoadedRef, listings, isLoading } = options;
 
   const [infoLayers, setInfoLayers] = useState<InfoLayerState>({
     zoning: false, heatmap: false, infrastructure: false, riskZones: false,
@@ -138,7 +139,7 @@ export function useMapLayers(options: UseMapLayersOptions) {
     const riskColors: Record<string, string> = { flood: '#0ea5e9', landslide: '#f59e0b', seismic: '#ef4444', tsunami: '#6366f1' };
     const infraColors: Record<string, string> = { full: '#22c55e', partial: '#f59e0b', limited: '#ef4444' };
 
-    // Sources
+    // Sources — wrapped in try-catch for rapid style switches
     const sources: { id: string; data: GeoJSON.FeatureCollection }[] = [
       { id: 'zoning-source', data: generateDemoZoningData() },
       { id: 'risk-source', data: generateRiskZonesData() },
@@ -149,19 +150,25 @@ export function useMapLayers(options: UseMapLayersOptions) {
       { id: 'heatmap-source', data: generateHeatmapData(listings) },
     ];
     sources.forEach(({ id, data }) => {
-      if (!map.current!.getSource(id)) map.current!.addSource(id, { type: 'geojson', data });
+      try {
+        if (!map.current!.getSource(id)) map.current!.addSource(id, { type: 'geojson', data });
+      } catch { /* source already exists after rapid style switch */ }
     });
 
     // Layers (only add if not present)
     const addFill = (id: string, source: string, colorExpr: any, opBase: number, vis: boolean) => {
-      if (!map.current!.getLayer(id)) {
-        map.current!.addLayer({ id, type: 'fill', source, paint: { 'fill-color': colorExpr, 'fill-opacity': layerConfig.opacity * opBase }, layout: { visibility: vis ? 'visible' : 'none' } });
-      }
+      try {
+        if (!map.current!.getLayer(id)) {
+          map.current!.addLayer({ id, type: 'fill', source, paint: { 'fill-color': colorExpr, 'fill-opacity': layerConfig.opacity * opBase }, layout: { visibility: vis ? 'visible' : 'none' } });
+        }
+      } catch { /* layer already exists */ }
     };
     const addLine = (id: string, source: string, colorExpr: any, width: any, opBase: number, vis: boolean, extra?: object) => {
-      if (!map.current!.getLayer(id)) {
-        map.current!.addLayer({ id, type: 'line', source, paint: { 'line-color': colorExpr, 'line-width': width, 'line-opacity': layerConfig.opacity * opBase, ...extra } as any, layout: { visibility: vis ? 'visible' : 'none' } });
-      }
+      try {
+        if (!map.current!.getLayer(id)) {
+          map.current!.addLayer({ id, type: 'line', source, paint: { 'line-color': colorExpr, 'line-width': width, 'line-opacity': layerConfig.opacity * opBase, ...extra } as any, layout: { visibility: vis ? 'visible' : 'none' } });
+        }
+      } catch { /* layer already exists */ }
     };
 
     const matchZoning = ['match', ['get', 'type'], 'residential', zoningColors.residential, 'commercial', zoningColors.commercial, 'industrial', zoningColors.industrial, 'agricultural', zoningColors.agricultural, 'mixed', zoningColors.mixed, 'protected', zoningColors.protected, '#888888'];
@@ -334,7 +341,21 @@ export function useMapLayers(options: UseMapLayersOptions) {
     if (isochroneCenter) map.current.flyTo({ center: isochroneCenter, zoom: 12, duration: 1000 });
   }, [isochroneData, isochroneCenter, infoLayers.isochrone]);
 
-  useEffect(() => { if (!infoLayers.isochrone) clearIsochrone(); }, [infoLayers.isochrone, clearIsochrone]);
+  // ── Internal style.load listener — re-add layers after style changes ──
+  useEffect(() => {
+    if (!map.current) return;
+    const onStyleLoad = () => {
+      addInfoLayers();
+      setupLayerHoverEvents();
+      if (layerConfig.useRealData) addRealWMSLayers();
+    };
+    map.current.on('style.load', onStyleLoad);
+    // If style already loaded, run immediately
+    if (map.current.isStyleLoaded()) onStyleLoad();
+    const m = map.current;
+    return () => { m?.off('style.load', onStyleLoad); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map.current, addInfoLayers, setupLayerHoverEvents, addRealWMSLayers, layerConfig.useRealData]);
 
   return {
     infoLayers,

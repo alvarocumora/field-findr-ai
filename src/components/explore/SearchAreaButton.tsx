@@ -56,7 +56,7 @@ const SearchAreaButton = ({
   if (!visible || !bounds) return null;
 
   return (
-    <div className={cn('absolute top-4 left-1/2 -translate-x-1/2 z-20', className)}>
+    <div className={cn('absolute top-3 left-1/2 -translate-x-1/2 z-20', className)}>
       <Button
         onClick={handleSearch}
         disabled={isSearching}
