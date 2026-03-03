@@ -1,76 +1,118 @@
 
+# Plan: Mejoras para ser el Mejor Portal de Terrenos y Loteos
 
-# Plan: Sistema de Mapa Estable
+## Estado Actual
 
-## Problemas Identificados
+La plataforma ya cuenta con una base solida: explorador split-view estilo Airbnb, mapa interactivo con capas GIS, sistema transaccional completo (reservas, cierre legal, creditos), IA integrada, SEO dinamico y soporte multi-pais LATAM. Sin embargo, hay areas criticas donde puede mejorar para diferenciarse como lider absoluto del mercado.
 
-1. **Dependencia circular entre hooks**: `useMapInstance` recibe `onStyleLoaded` que llama a `layersHook.addInfoLayers()`, pero `layersHook` se define despues de `useMapInstance`. Esto causa que la referencia sea stale o undefined en el primer render.
+---
 
-2. **Recreacion excesiva de marcadores**: En `useMapMarkers`, cada cambio de hover ejecuta `replaceWith()` en el DOM, creando/destruyendo elementos continuamente en lugar de actualizar estilos CSS.
+## Mejoras Propuestas (por prioridad)
 
-3. **Falta de guardas de ciclo de vida**: Operaciones sobre capas se ejecutan sin verificar consistentemente `map.current?.isStyleLoaded()`, causando errores silenciosos durante cambios de estilo.
+### 1. Busqueda Full-Text con Autocompletado Inteligente
 
-4. **Controles superpuestos**: El `SearchAreaButton` (z-20, top-4) puede colisionar con controles mobiles. Los controles touch (z-20) y desktop (z-10) tienen z-index inconsistentes.
+**Problema**: La busqueda actual es un filtro basico por `includes()` en el cliente. No soporta busqueda fuzzy, sugerencias ni historial.
 
-## Solucion
+**Solucion**:
+- Crear una Edge Function `search-autocomplete` que use Postgres `ts_vector` + `ts_query` para busqueda full-text en listings (titulo, ubicacion, region, tags)
+- Agregar un componente `SearchAutocomplete` con debounce de 300ms que muestre sugerencias agrupadas por tipo (ubicaciones, propiedades, proyectos)
+- Integrar historial de busquedas recientes (localStorage)
 
-### 1. Eliminar dependencia circular en EnhancedMap.tsx
+### 2. Vista de Galeria Mejorada en PropertyDetail
 
-Cambiar la arquitectura para que `useMapInstance` emita un evento `style.load` que los otros hooks escuchen directamente del `mapRef`, en lugar de recibir un callback.
+**Problema**: La galeria actual es basica. Los portales lideres usan galerías inmersivas con lightbox, thumbnails y navegacion por teclado.
 
-- `useMapInstance`: Ya no recibe `onStyleLoaded`. Internamente solo marca `styleLoadedRef = true` y hace `resize()`.
-- `useMapLayers`: Escucha `map.current.on('style.load', ...)` internamente para re-agregar capas.
-- `useMapMarkers`: Ya escucha `isLoading` correctamente, no necesita cambio aqui.
+**Solucion**:
+- Redisenar `ImageGallery` con layout estilo Airbnb: imagen principal grande + grid de 4 thumbnails
+- Agregar lightbox fullscreen con navegacion por flechas del teclado y gestos swipe en movil
+- Incluir contador de imagenes y boton "Ver todas las fotos"
 
-Esto rompe la dependencia circular y cada hook es autosuficiente.
+### 3. Pagina de Comparacion Dedicada
 
-### 2. Optimizar actualizacion de marcadores en useMapMarkers.ts
+**Problema**: El comparador actual usa un Sheet (panel lateral). No permite comparacion detallada lado a lado.
 
-En lugar de `replaceWith()` que destruye y recrea el DOM:
+**Solucion**:
+- Crear ruta `/comparar` con vista de tabla comparativa full-page
+- Columnas lado a lado (max 4 propiedades) con metricas: precio, area, precio/m2, servicios, legal status, investment score, datos GIS
+- Boton "Agregar al comparador" visible en ListingCard y PropertyDetail
+- Exportar comparacion a PDF
 
-- Guardar referencia al elemento actual de cada marcador
-- En hover, solo actualizar `el.style.transform`, `el.style.zIndex` y `el.style.filter`
-- Actualizar el contenido del pill (background, color, border) via `el.querySelector` y `style` updates
-- Solo recrear el marcador completo cuando cambia el listing (precio, tipo, etc.)
+### 4. Alertas de Precio y Busquedas Guardadas Mejoradas
 
-### 3. Agregar guardas de ciclo de vida consistentes en useMapLayers.ts
+**Problema**: Existe `saved_searches` en la DB pero no hay UI para que el usuario configure alertas de nuevas propiedades que coincidan con sus criterios.
 
-- Cada `useEffect` y cada funcion (`addInfoLayers`, `addRealWMSLayers`, `setupLayerHoverEvents`) debe verificar `map.current && map.current.isStyleLoaded()` antes de operar.
-- Envolver operaciones de `addLayer`/`addSource` en try-catch para evitar errores cuando la fuente ya existe despues de un cambio de estilo rapido.
-- Registrar el listener `style.load` dentro del hook para re-agregar capas automaticamente.
+**Solucion**:
+- Agregar boton "Guardar busqueda" en el explorador con los filtros activos
+- Crear pagina `/alertas` donde el usuario vea sus busquedas guardadas y active/desactive notificaciones
+- Mejorar la Edge Function `check-saved-searches` existente para enviar notificaciones in-app cuando hay nuevos matches
 
-### 4. Unificar z-index y posiciones de controles
+### 5. Reviews y Ratings en Listings (no solo en Proyectos)
 
-Establecer una jerarquia clara:
+**Problema**: El sistema de reviews solo funciona para proyectos. Los compradores no pueden calificar propiedades individuales.
 
-```text
-z-30: Paneles overlay (mobile layers panel)
-z-20: SearchAreaButton, Drawing indicator
-z-10: CompactMapControls (zoom, style, badge)
-z-10: TouchMapControls (mobile)
-```
+**Solucion**:
+- Extender la tabla `reviews` para soportar `listing_id` (nullable) ademas de `project_id`
+- Agregar seccion de resenas en PropertyDetail con rating promedio, distribucion de estrellas y formulario de resena
+- Mostrar rating promedio en ListingCard como badge
 
-- `SearchAreaButton`: `top-3` centrado, `z-20`
-- `CompactMapControls` (derecha): `z-10`
-- Badge propiedades (bottom-left): `bottom-14`, `z-10`
-- Style toggles (bottom-right): `bottom-14`, `z-10`
-- `TouchMapControls`: `bottom-24`, `z-20` (por encima de posibles tabs)
+### 6. Historial de Precios y Market Insights
 
-## Archivos a Modificar
+**Problema**: No hay tracking de cambios de precio en las propiedades. Los compradores no saben si un precio bajo o subio.
 
+**Solucion**:
+- Crear tabla `price_history` (listing_id, price, currency, recorded_at) con trigger que inserte un registro cada vez que se actualiza el precio en listings
+- Mostrar grafico de historial de precios (Recharts) en PropertyDetail
+- Badge "Precio reducido" en ListingCard cuando el precio actual es menor que el anterior
+
+### 7. Optimizacion de Performance y UX
+
+**Problemas identificados**:
+- Las listings no usan paginacion real (limit 1000 de Supabase)
+- No hay skeleton loading en el panel lateral del explorador
+- El mapa re-renderiza marcadores innecesariamente al filtrar
+
+**Soluciones**:
+- Implementar paginacion con cursor en `useListings` (limit 50, load more)
+- Agregar skeleton cards en `ExploreListPanel` durante carga
+- Virtualizar la lista con scroll infinito para manejar cientos de resultados
+
+---
+
+## Detalle Tecnico de Implementacion
+
+### Archivos a Crear
+| Archivo | Descripcion |
+|---------|-------------|
+| `supabase/functions/search-autocomplete/index.ts` | Edge function para busqueda full-text |
+| `src/components/search/SearchAutocomplete.tsx` | Componente de autocompletado |
+| `src/pages/Comparar.tsx` | Pagina de comparacion dedicada |
+| `src/pages/Alertas.tsx` | Gestion de busquedas guardadas |
+| `src/components/property/PriceHistoryChart.tsx` | Grafico de historial de precios |
+
+### Archivos a Modificar
 | Archivo | Cambio |
 |---------|--------|
-| `src/hooks/useMapInstance.ts` | Eliminar prop `onStyleLoaded`, simplificar |
-| `src/hooks/useMapMarkers.ts` | Optimizar hover (CSS-only, sin recrear DOM) |
-| `src/hooks/useMapLayers.ts` | Agregar listener `style.load` interno, try-catch en add operations |
-| `src/components/map/EnhancedMap.tsx` | Quitar `onStyleLoaded` callback, simplificar orquestacion |
-| `src/components/map/CompactMapControls.tsx` | Ajustar bottom a `bottom-14` para consistencia |
-| `src/components/explore/SearchAreaButton.tsx` | Confirmar `z-20 top-3` |
+| `src/hooks/useListings.ts` | Agregar paginacion con cursor |
+| `src/pages/PropertyDetail.tsx` | Integrar galeria mejorada, historial de precios, reviews |
+| `src/components/listings/ListingCard.tsx` | Badge de precio reducido, rating |
+| `src/components/property/ImageGallery.tsx` | Rediseno con lightbox y grid |
+| `src/pages/Explorar.tsx` | Integrar SearchAutocomplete |
+| `src/components/explore/ExploreListPanel.tsx` | Skeleton loading, scroll infinito |
+| `src/App.tsx` | Agregar rutas /comparar y /alertas |
 
-## Resultado Esperado
+### Migraciones SQL
+1. Tabla `price_history` con trigger en listings UPDATE
+2. Agregar columna `listing_id` (nullable) a `reviews`
+3. Indice GIN para busqueda full-text en listings
 
-- Mapa no pierde capas al cambiar estilo (satellite/3d/streets)
-- Hover sobre marcadores es instantaneo (sin flicker DOM)
-- No hay errores de consola por operaciones sobre mapa no listo
-- Controles nunca se superponen entre si ni con atribucion Mapbox
+---
 
+## Orden de Implementacion Sugerido
+
+1. Busqueda full-text con autocompletado (impacto alto en UX de descubrimiento)
+2. Galeria mejorada (impacto visual inmediato)
+3. Historial de precios + badge "precio reducido" (diferenciador competitivo)
+4. Paginacion y scroll infinito (estabilidad con volumen de datos)
+5. Pagina de comparacion dedicada
+6. Alertas de busquedas guardadas
+7. Reviews en listings individuales
