@@ -2,7 +2,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Listing, ListingFilters } from './useListings';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 30;
 
 interface InfiniteListingsResult {
   listings: Listing[];
@@ -30,6 +30,10 @@ export const useInfiniteListings = (filters?: ListingFilters) => {
         query = query.in('region', filters.region);
       }
 
+      if (filters?.country && filters.country.length > 0) {
+        query = query.in('country', filters.country);
+      }
+
       if (filters?.priceMin) {
         query = query.gte('price', filters.priceMin);
       }
@@ -44,6 +48,14 @@ export const useInfiniteListings = (filters?: ListingFilters) => {
 
       if (filters?.areaMax) {
         query = query.lte('area_m2', filters.areaMax);
+      }
+
+      if (filters?.bounds) {
+        query = query
+          .gte('lat', filters.bounds.south)
+          .lte('lat', filters.bounds.north)
+          .gte('lng', filters.bounds.west)
+          .lte('lng', filters.bounds.east);
       }
 
       if (filters?.featured !== undefined) {

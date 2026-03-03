@@ -1,11 +1,8 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { Search, Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown, X, Sparkles } from 'lucide-react';
+import { Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown } from 'lucide-react';
 import SearchAutocomplete from '@/components/search/SearchAutocomplete';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -42,9 +39,28 @@ const sortListings = (listings: Listing[], sort: SortOption): Listing[] => {
   }
 };
 
+/* ── Skeleton Card ── */
+const ListingSkeleton = () => (
+  <div className="flex gap-3 p-3 rounded-xl">
+    <Skeleton className="w-[120px] h-[88px] rounded-xl flex-shrink-0" />
+    <div className="flex-1 space-y-2.5 py-1">
+      <Skeleton className="h-4 w-3/5" />
+      <Skeleton className="h-3 w-4/5" />
+      <div className="flex gap-2">
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="h-3 w-12" />
+      </div>
+    </div>
+  </div>
+);
+
 interface ExploreListPanelProps {
   listings: Listing[];
+  totalCount?: number;
   isLoading?: boolean;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   hoveredListing?: Listing | null;
@@ -73,7 +89,11 @@ interface ExploreListPanelProps {
 
 const ExploreListPanel = ({
   listings,
+  totalCount,
   isLoading = false,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
   searchQuery,
   onSearchChange,
   hoveredListing,
@@ -100,6 +120,25 @@ const ExploreListPanel = ({
 }: ExploreListPanelProps) => {
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll via IntersectionObserver
+  useEffect(() => {
+    if (!sentinelRef.current || !hasMore || isLoadingMore || isLoading) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasMore && !isLoadingMore) {
+          onLoadMore?.();
+        }
+      },
+      { root: scrollContainerRef.current, rootMargin: '200px' }
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, isLoading, onLoadMore]);
 
   // Filter by tab
   const tabFilteredListings = useMemo(() => {
@@ -115,6 +154,7 @@ const ExploreListPanel = ({
   const sortedListings = sortListings(tabFilteredListings, sortBy);
 
   // Smart summary
+  const displayCount = totalCount ?? listings.length;
   const summary = useMemo(() => {
     if (listings.length === 0) return null;
     const prices = listings.map(l => l.price).sort((a, b) => a - b);
@@ -176,7 +216,7 @@ const ExploreListPanel = ({
         {/* Summary */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-foreground">{listings.length}</span>
+            <span className="text-lg font-bold text-foreground">{displayCount}</span>
             <span className="text-sm text-muted-foreground">
               terrenos{summary ? ` desde ${formatPriceShort(summary.minPrice)}` : ''}
               {summary && summary.regionCount > 1 ? ` en ${summary.regionCount} regiones` : ''}
@@ -244,20 +284,13 @@ const ExploreListPanel = ({
         </div>
       )}
 
-      {/* Listings Grid */}
-      <ScrollArea className="flex-1">
+      {/* Listings Scroll Container */}
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         <div className="p-3">
           {isLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="flex gap-3 p-3 animate-pulse">
-                  <Skeleton className="w-[120px] h-[88px] rounded-xl flex-shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-1/2" />
-                    <Skeleton className="h-3 w-3/4" />
-                    <Skeleton className="h-3 w-1/3" />
-                  </div>
-                </div>
+            <div className="space-y-1">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ListingSkeleton key={i} />
               ))}
             </div>
           ) : sortedListings.length === 0 ? (
@@ -276,7 +309,7 @@ const ExploreListPanel = ({
                 <div
                   key={listing.id}
                   className="animate-fade-in"
-                  style={{ animationDelay: `${Math.min(index * 30, 150)}ms` }}
+                  style={{ animationDelay: `${Math.min(index * 20, 100)}ms` }}
                 >
                   <QuickPropertyCard
                     listing={listing}
@@ -289,10 +322,29 @@ const ExploreListPanel = ({
                   />
                 </div>
               ))}
+
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="py-1" />
+
+              {/* Loading more indicator */}
+              {isLoadingMore && (
+                <div className="space-y-1">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <ListingSkeleton key={`more-${i}`} />
+                  ))}
+                </div>
+              )}
+
+              {/* End of results */}
+              {!hasMore && sortedListings.length > 0 && (
+                <p className="text-center text-xs text-muted-foreground py-4">
+                  Mostrando {sortedListings.length} de {displayCount} resultados
+                </p>
+              )}
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Footer CTA */}
       <div className="px-4 py-3 border-t border-border/20">
