@@ -582,6 +582,7 @@ export type Database = {
           price: number
           region: string | null
           rol: string | null
+          search_vector: unknown
           status: string | null
           subdivision_eligible: boolean | null
           tags: string[] | null
@@ -613,6 +614,7 @@ export type Database = {
           price: number
           region?: string | null
           rol?: string | null
+          search_vector?: unknown
           status?: string | null
           subdivision_eligible?: boolean | null
           tags?: string[] | null
@@ -644,6 +646,7 @@ export type Database = {
           price?: number
           region?: string | null
           rol?: string | null
+          search_vector?: unknown
           status?: string | null
           subdivision_eligible?: boolean | null
           tags?: string[] | null
@@ -928,6 +931,38 @@ export type Database = {
             columns: ["subscription_id"]
             isOneToOne: false
             referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_history: {
+        Row: {
+          currency: string
+          id: string
+          listing_id: string
+          price: number
+          recorded_at: string
+        }
+        Insert: {
+          currency?: string
+          id?: string
+          listing_id: string
+          price: number
+          recorded_at?: string
+        }
+        Update: {
+          currency?: string
+          id?: string
+          listing_id?: string
+          price?: number
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_history_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
             referencedColumns: ["id"]
           },
         ]
@@ -1238,7 +1273,8 @@ export type Database = {
           comment: string | null
           created_at: string
           id: string
-          project_id: string
+          listing_id: string | null
+          project_id: string | null
           rating: number
           updated_at: string
           user_id: string
@@ -1248,7 +1284,8 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
-          project_id: string
+          listing_id?: string | null
+          project_id?: string | null
           rating: number
           updated_at?: string
           user_id: string
@@ -1258,13 +1295,21 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
-          project_id?: string
+          listing_id?: string | null
+          project_id?: string | null
           rating?: number
           updated_at?: string
           user_id?: string
           verified_buyer?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "reviews_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reviews_project_id_fkey"
             columns: ["project_id"]

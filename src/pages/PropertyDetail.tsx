@@ -3,6 +3,7 @@ import GeoEnrichmentPanel from '@/components/map/GeoEnrichmentPanel';
 import { useParams, Link } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import { useListing, useListings, formatPrice, formatArea, getListingTypeLabel, getLegalStatusLabel } from '@/hooks/useListings';
+import PriceHistoryChart from '@/components/property/PriceHistoryChart';
 import { useToggleFavorite, useFavoriteIds } from '@/hooks/useFavorites';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -488,6 +489,9 @@ const PropertyDetail = () => {
 
             {/* GIS Enrichment Data */}
             <GeoEnrichmentPanel lat={listing.lat} lng={listing.lng} />
+
+            {/* Price History */}
+            <PriceHistoryChart listingId={listing.id} currency={listing.currency} />
           </div>
         </div>
 
