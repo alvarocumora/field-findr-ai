@@ -12,6 +12,7 @@ import { LotMapView } from '@/components/lots/LotMapView';
 import { PlanCompareView } from '@/components/lots/PlanCompareView';
 import { LegalTab } from '@/components/projects/LegalTab';
 import { FinancingCalculator } from '@/components/projects/FinancingCalculator';
+import { PublicLotQuoter } from '@/components/projects/PublicLotQuoter';
 import { EnhancedLotCard } from '@/components/lots/EnhancedLotCard';
 import { ProjectReviews } from '@/components/projects/ProjectReviews';
 import { ShareButtons } from '@/components/social/ShareButtons';
