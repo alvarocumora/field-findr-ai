@@ -1,118 +1,99 @@
 
-# Plan: Mejoras para ser el Mejor Portal de Terrenos y Loteos
+
+# Plan: Nuevo Sistema de Listado, Explorador y Herramientas para Operadores
 
 ## Estado Actual
 
-La plataforma ya cuenta con una base solida: explorador split-view estilo Airbnb, mapa interactivo con capas GIS, sistema transaccional completo (reservas, cierre legal, creditos), IA integrada, SEO dinamico y soporte multi-pais LATAM. Sin embargo, hay areas criticas donde puede mejorar para diferenciarse como lider absoluto del mercado.
+La plataforma tiene una base solida: landing cinematic con hero parallax, explorador split-view con mapa Mapbox, sistema de listings con CRUD basico, dashboards para agentes/admin, y herramientas IA. Sin embargo hay areas criticas que mejorar:
+
+1. **Listing Form incompleto**: `ListingFormDialog` usa tipos incorrectos (`parcela`, `terreno`) que no coinciden con los tipos reales del sistema (`parcela_rural`, `sitio_industrial`, etc.). No incluye subida de imagenes, ubicacion en mapa, tags ni servicios.
+2. **PropertyInventory basico**: Vista de tabla simple sin metricas de rendimiento por propiedad, sin acciones en lote, sin vista de kanban.
+3. **ExploreListPanel**: Las tarjetas `QuickPropertyCard` son compactas pero falta un modo grid alternativo y filtros visuales mas intuitivos.
+4. **Herramientas para operadores**: Faltan herramientas especificas para desarrolladores de loteos como: analisis de factibilidad, generador de fichas de venta, pipeline visual de ventas, y tablero de avance de proyecto.
 
 ---
 
-## Mejoras Propuestas (por prioridad)
+## Mejoras a Implementar
 
-### 1. Busqueda Full-Text con Autocompletado Inteligente
+### 1. Nuevo Formulario de Publicacion Mejorado (ListingFormDialog v2)
 
-**Problema**: La busqueda actual es un filtro basico por `includes()` en el cliente. No soporta busqueda fuzzy, sugerencias ni historial.
+Reescribir `ListingFormDialog` como un wizard multi-paso:
+- **Paso 1**: Datos basicos (titulo, tipo correcto `parcela_rural`/etc, descripcion con generador IA)
+- **Paso 2**: Ubicacion con mapa picker (reutilizar `LocationPicker` existente)
+- **Paso 3**: Precio, area, moneda, servicios (agua, luz, camino), tags
+- **Paso 4**: Imagenes (reutilizar `ImageUploader` existente) + preview
 
-**Solucion**:
-- Crear una Edge Function `search-autocomplete` que use Postgres `ts_vector` + `ts_query` para busqueda full-text en listings (titulo, ubicacion, region, tags)
-- Agregar un componente `SearchAutocomplete` con debounce de 300ms que muestre sugerencias agrupadas por tipo (ubicaciones, propiedades, proyectos)
-- Integrar historial de busquedas recientes (localStorage)
+**Archivo**: `src/components/listings/ListingFormDialog.tsx` (reescribir)
 
-### 2. Vista de Galeria Mejorada en PropertyDetail
+### 2. PropertyInventory Mejorado con Vista Kanban
 
-**Problema**: La galeria actual es basica. Los portales lideres usan galerías inmersivas con lightbox, thumbnails y navegacion por teclado.
+Redisenar `PropertyInventory` con:
+- **Vista tabla** mejorada con columnas: imagen thumbnail, titulo, precio, area, status, vistas, fecha, acciones
+- **Vista kanban** con columnas por status (Activa, Reservada, Vendida, Inactiva)
+- Acciones en lote: cambiar status, eliminar multiples
+- Metricas rapidas: total activas, reservadas, vendidas, vistas totales
 
-**Solucion**:
-- Redisenar `ImageGallery` con layout estilo Airbnb: imagen principal grande + grid de 4 thumbnails
-- Agregar lightbox fullscreen con navegacion por flechas del teclado y gestos swipe en movil
-- Incluir contador de imagenes y boton "Ver todas las fotos"
+**Archivo**: `src/components/PropertyInventory.tsx` (reescribir)
 
-### 3. Pagina de Comparacion Dedicada
+### 3. Explorador con Modo Grid/Lista Toggle
 
-**Problema**: El comparador actual usa un Sheet (panel lateral). No permite comparacion detallada lado a lado.
+Agregar toggle en `ExploreListPanel` para alternar entre:
+- **Vista compacta** (actual - tarjetas horizontales)
+- **Vista grid** (tarjetas verticales tipo ListingCard en 2 columnas)
 
-**Solucion**:
-- Crear ruta `/comparar` con vista de tabla comparativa full-page
-- Columnas lado a lado (max 4 propiedades) con metricas: precio, area, precio/m2, servicios, legal status, investment score, datos GIS
-- Boton "Agregar al comparador" visible en ListingCard y PropertyDetail
-- Exportar comparacion a PDF
+**Archivo**: `src/components/explore/ExploreListPanel.tsx` (modificar)
 
-### 4. Alertas de Precio y Busquedas Guardadas Mejoradas
+### 4. Panel de Herramientas para Operadores/Desarrolladores
 
-**Problema**: Existe `saved_searches` en la DB pero no hay UI para que el usuario configure alertas de nuevas propiedades que coincidan con sus criterios.
+Crear nueva seccion en el sidebar del asesor con herramientas especializadas:
 
-**Solucion**:
-- Agregar boton "Guardar busqueda" en el explorador con los filtros activos
-- Crear pagina `/alertas` donde el usuario vea sus busquedas guardadas y active/desactive notificaciones
-- Mejorar la Edge Function `check-saved-searches` existente para enviar notificaciones in-app cuando hay nuevos matches
+- **Pipeline de Ventas** (`/asesor/pipeline`): Vista kanban del embudo de ventas (Lead > Contactado > Interesado > Negociando > Reserva > Cierre) con drag conceptual
+- **Fichas de Venta PDF** (`/asesor/listings` mejorado): Boton "Generar ficha" en cada propiedad que use `propertyPdfGenerator` existente
+- **Tablero de Avance** (`/asesor/projects` mejorado): Progress bars por proyecto (lotes disponibles vs vendidos vs reservados)
+- **Calculadora de Rentabilidad** en Tools: ROI estimado, TIR, costo por m2 de desarrollo
 
-### 5. Reviews y Ratings en Listings (no solo en Proyectos)
+**Archivos nuevos**:
+- `src/pages/dashboard/SalesPipeline.tsx` - Pipeline visual de ventas
 
-**Problema**: El sistema de reviews solo funciona para proyectos. Los compradores no pueden calificar propiedades individuales.
-
-**Solucion**:
-- Extender la tabla `reviews` para soportar `listing_id` (nullable) ademas de `project_id`
-- Agregar seccion de resenas en PropertyDetail con rating promedio, distribucion de estrellas y formulario de resena
-- Mostrar rating promedio en ListingCard como badge
-
-### 6. Historial de Precios y Market Insights
-
-**Problema**: No hay tracking de cambios de precio en las propiedades. Los compradores no saben si un precio bajo o subio.
-
-**Solucion**:
-- Crear tabla `price_history` (listing_id, price, currency, recorded_at) con trigger que inserte un registro cada vez que se actualiza el precio en listings
-- Mostrar grafico de historial de precios (Recharts) en PropertyDetail
-- Badge "Precio reducido" en ListingCard cuando el precio actual es menor que el anterior
-
-### 7. Optimizacion de Performance y UX
-
-**Problemas identificados**:
-- Las listings no usan paginacion real (limit 1000 de Supabase)
-- No hay skeleton loading en el panel lateral del explorador
-- El mapa re-renderiza marcadores innecesariamente al filtrar
-
-**Soluciones**:
-- Implementar paginacion con cursor en `useListings` (limit 50, load more)
-- Agregar skeleton cards en `ExploreListPanel` durante carga
-- Virtualizar la lista con scroll infinito para manejar cientos de resultados
+**Archivos a modificar**:
+- `src/components/ModernSidebar.tsx` - Agregar link a Pipeline
+- `src/App.tsx` - Agregar ruta `/asesor/pipeline`
+- `src/components/ProjectsManagement.tsx` - Agregar barra de progreso por proyecto
 
 ---
 
-## Detalle Tecnico de Implementacion
+## Detalle Tecnico
 
-### Archivos a Crear
-| Archivo | Descripcion |
-|---------|-------------|
-| `supabase/functions/search-autocomplete/index.ts` | Edge function para busqueda full-text |
-| `src/components/search/SearchAutocomplete.tsx` | Componente de autocompletado |
-| `src/pages/Comparar.tsx` | Pagina de comparacion dedicada |
-| `src/pages/Alertas.tsx` | Gestion de busquedas guardadas |
-| `src/components/property/PriceHistoryChart.tsx` | Grafico de historial de precios |
+### ListingFormDialog v2 - Cambios Clave
+- Corregir tipos: usar `parcela_rural`, `sitio_industrial`, `campo_agricola`, `terreno_urbano`, `terreno_costero`, `terreno_montana`
+- Integrar `ImageUploader` para subida a storage bucket `property-images`
+- Integrar `LocationPicker` para lat/lng
+- Agregar campo de tags con checkboxes (agua, luz, camino, riego, bosque, vista, playa, lago)
+- Agregar campo utilities (JSON)
+- Wizard de 4 pasos con Tabs o stepper
 
-### Archivos a Modificar
-| Archivo | Cambio |
+### PropertyInventory v2
+- Agregar toggle vista tabla/kanban
+- En kanban: columnas `active`, `reserved`, `sold`, `inactive` con cards draggables (visual, sin dnd-kit)
+- Stats bar: 4 KPI cards (total, activas, reservadas, vendidas)
+- Boton "Generar Ficha PDF" por propiedad
+
+### SalesPipeline
+- Query leads del usuario agrupados por status
+- Columnas visuales: new > contacted > interested > negotiating > converted
+- Cada card muestra: nombre, telefono, proyecto, lead score badge
+- Click abre lead detail
+
+### Archivos a Crear/Modificar
+
+| Archivo | Accion |
 |---------|--------|
-| `src/hooks/useListings.ts` | Agregar paginacion con cursor |
-| `src/pages/PropertyDetail.tsx` | Integrar galeria mejorada, historial de precios, reviews |
-| `src/components/listings/ListingCard.tsx` | Badge de precio reducido, rating |
-| `src/components/property/ImageGallery.tsx` | Rediseno con lightbox y grid |
-| `src/pages/Explorar.tsx` | Integrar SearchAutocomplete |
-| `src/components/explore/ExploreListPanel.tsx` | Skeleton loading, scroll infinito |
-| `src/App.tsx` | Agregar rutas /comparar y /alertas |
+| `src/components/listings/ListingFormDialog.tsx` | Reescribir como wizard 4 pasos |
+| `src/components/PropertyInventory.tsx` | Agregar vista kanban + stats + PDF |
+| `src/components/explore/ExploreListPanel.tsx` | Agregar toggle grid/lista |
+| `src/pages/dashboard/SalesPipeline.tsx` | Crear pipeline visual de leads |
+| `src/components/ModernSidebar.tsx` | Agregar enlace Pipeline |
+| `src/App.tsx` | Agregar ruta /asesor/pipeline |
 
-### Migraciones SQL
-1. Tabla `price_history` con trigger en listings UPDATE
-2. Agregar columna `listing_id` (nullable) a `reviews`
-3. Indice GIN para busqueda full-text en listings
+No se requieren migraciones SQL - toda la data ya existe en las tablas `listings`, `leads`, `projects`, `lots`.
 
----
-
-## Orden de Implementacion Sugerido
-
-1. Busqueda full-text con autocompletado (impacto alto en UX de descubrimiento)
-2. Galeria mejorada (impacto visual inmediato)
-3. Historial de precios + badge "precio reducido" (diferenciador competitivo)
-4. Paginacion y scroll infinito (estabilidad con volumen de datos)
-5. Pagina de comparacion dedicada
-6. Alertas de busquedas guardadas
-7. Reviews en listings individuales
