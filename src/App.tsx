@@ -74,6 +74,7 @@ import ExecutiveDashboard from "./pages/dashboard/ExecutiveDashboard";
 import FinancialDashboard from "./pages/dashboard/FinancialDashboard";
 import AgentPerformance from "./pages/dashboard/AgentPerformance";
 import Messages from "./pages/dashboard/Messages";
+import SalesPipeline from "./pages/dashboard/SalesPipeline";
 // ===== Admin Pages =====
 import AdminUsers from "./pages/AdminUsers";
 import AgentManagement from "./components/AgentManagement";
