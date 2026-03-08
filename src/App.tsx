@@ -227,6 +227,21 @@ const App = () => (
                   <SalesPipeline />
                 </DashboardLayout>
               } />
+              <Route path="/asesor/multi-project" element={
+                <DashboardLayout requiredRole="agent">
+                  <MultiProjectDashboard />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/payments" element={
+                <DashboardLayout requiredRole="agent">
+                  <PaymentManagement />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/reports" element={
+                <DashboardLayout requiredRole="agent">
+                  <Reports />
+                </DashboardLayout>
+              } />
               <Route path="/publish" element={
                 <ProtectedRoute requireAuth requireRole="agent">
                   <PublishProperty />
