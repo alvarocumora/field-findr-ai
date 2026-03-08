@@ -499,6 +499,17 @@ const ProjectDetail = () => {
               )}
             </TabsContent>
 
+            {/* Cotizador Tab */}
+            <TabsContent value="quoter">
+              <PublicLotQuoter
+                lots={lots}
+                projectName={project.name}
+                projectId={project.id}
+                projectOwnerId={project.user_id}
+                projectLocation={`${project.city}, ${project.region}`}
+              />
+            </TabsContent>
+
             {/* Lots Tab */}
             <TabsContent value="lots">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
