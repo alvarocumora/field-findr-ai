@@ -387,6 +387,10 @@ const ProjectDetail = () => {
                 <Map className="h-4 w-4" />
                 Mapa
               </TabsTrigger>
+              <TabsTrigger value="quoter" className="gap-2">
+                <Calculator className="h-4 w-4" />
+                Cotizador
+              </TabsTrigger>
               <TabsTrigger value="lots" className="gap-2">
                 <List className="h-4 w-4" />
                 Lotes ({lots.length})
