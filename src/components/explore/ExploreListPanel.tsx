@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown } from 'lucide-react';
+import { Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown, LayoutGrid, List } from 'lucide-react';
 import SearchAutocomplete from '@/components/search/SearchAutocomplete';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -120,6 +121,7 @@ const ExploreListPanel = ({
 }: ExploreListPanelProps) => {
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
+  const [viewLayout, setViewLayout] = useState<'compact' | 'grid'>('compact');
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -222,19 +224,25 @@ const ExploreListPanel = ({
               {summary && summary.regionCount > 1 ? ` en ${summary.regionCount} regiones` : ''}
             </span>
           </div>
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-            <SelectTrigger className="h-7 w-auto text-[11px] rounded-lg border-border/40 gap-1 px-2">
-              <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SORT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <ToggleGroup type="single" value={viewLayout} onValueChange={(v) => v && setViewLayout(v as 'compact' | 'grid')} size="sm">
+              <ToggleGroupItem value="compact" aria-label="Lista"><List className="h-3 w-3" /></ToggleGroupItem>
+              <ToggleGroupItem value="grid" aria-label="Grid"><LayoutGrid className="h-3 w-3" /></ToggleGroupItem>
+            </ToggleGroup>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+              <SelectTrigger className="h-7 w-auto text-[11px] rounded-lg border-border/40 gap-1 px-2">
+                <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -304,7 +312,7 @@ const ExploreListPanel = ({
               </p>
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className={viewLayout === 'grid' ? 'grid grid-cols-2 gap-2' : 'space-y-1'}>
               {sortedListings.map((listing, index) => (
                 <div
                   key={listing.id}
@@ -318,7 +326,7 @@ const ExploreListPanel = ({
                     onHover={onListingHover}
                     onClick={onListingClick}
                     onPreview={onListingPreview}
-                    layout="horizontal"
+                    layout={viewLayout === 'grid' ? 'vertical' : 'horizontal'}
                   />
                 </div>
               ))}

@@ -28,6 +28,7 @@ import {
   Globe,
   PieChart,
   Target,
+  Workflow,
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -48,6 +49,7 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     { name: 'Lotes', href: '/asesor/lots', icon: Grid3X3 },
     { name: 'CRM Leads', href: '/asesor/leads', icon: Users },
     { name: 'Ventas', href: '/asesor/sales', icon: Handshake },
+    { name: 'Pipeline', href: '/asesor/pipeline', icon: Workflow },
     { name: 'Reservas', href: '/asesor/reservations', icon: FileText },
     { name: 'Créditos', href: '/asesor/credits', icon: CreditCard },
     { name: 'Cierres', href: '/asesor/closing', icon: Scale },
