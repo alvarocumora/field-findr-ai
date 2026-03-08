@@ -28,6 +28,7 @@ import {
   Globe,
   PieChart,
   Target,
+  Workflow,
 } from 'lucide-react';
 
 interface ModernSidebarProps {
