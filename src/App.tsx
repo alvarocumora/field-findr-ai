@@ -219,6 +219,11 @@ const App = () => (
                   <AgentPerformance />
                 </DashboardLayout>
               } />
+              <Route path="/asesor/pipeline" element={
+                <DashboardLayout requiredRole="agent">
+                  <SalesPipeline />
+                </DashboardLayout>
+              } />
               <Route path="/publish" element={
                 <ProtectedRoute requireAuth requireRole="agent">
                   <PublishProperty />

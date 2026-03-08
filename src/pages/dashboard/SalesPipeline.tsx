@@ -39,7 +39,7 @@ const SalesPipeline = () => {
   }, [leads]);
 
   const handleStatusChange = (leadId: string, newStatus: string) => {
-    updateLead.mutate({ id: leadId, updates: { status: newStatus } });
+    updateLead.mutate({ id: leadId, status: newStatus });
   };
 
   if (isLoading) {

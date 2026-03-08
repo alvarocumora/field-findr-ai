@@ -312,7 +312,7 @@ const ExploreListPanel = ({
               </p>
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className={viewLayout === 'grid' ? 'grid grid-cols-2 gap-2' : 'space-y-1'}>
               {sortedListings.map((listing, index) => (
                 <div
                   key={listing.id}
@@ -326,7 +326,7 @@ const ExploreListPanel = ({
                     onHover={onListingHover}
                     onClick={onListingClick}
                     onPreview={onListingPreview}
-                    layout="horizontal"
+                    layout={viewLayout === 'grid' ? 'vertical' : 'horizontal'}
                   />
                 </div>
               ))}
