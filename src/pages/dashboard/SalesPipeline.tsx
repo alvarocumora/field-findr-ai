@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLeads } from '@/hooks/useLeads';
-import { LeadScoreBadge } from '@/components/leads/LeadScoreBadge';
+import LeadScoreBadge from '@/components/leads/LeadScoreBadge';
 import { Search, Phone, Mail, FolderKanban, Users, TrendingUp, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
