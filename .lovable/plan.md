@@ -18,10 +18,10 @@
 - Botón directo de WhatsApp al asesor
 - Descarga de Promesa de Compraventa PDF
 
-## Sprint 2 (Pendiente)
+## Sprint 2 ✅ COMPLETADO
 3. Multi-proyecto Dashboard consolidado
 4. Gestión de Pagos de Cuotas mejorada
-5. Reportes Automáticos PDF/Excel
+5. Reportes Automáticos PDF/CSV
 
 ## Sprint 3 (Pendiente)
 6. Contratos Digitales con Firma
