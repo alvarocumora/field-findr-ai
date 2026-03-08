@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Send, Ruler, DollarSign, MapPin } from 'lucide-react';
+import { Loader2, Send, Ruler, DollarSign } from 'lucide-react';
 
 interface InterestFormDialogProps {
   open: boolean;
@@ -51,28 +51,30 @@ export const InterestFormDialog = ({
 
     setSubmitting(true);
     try {
-      // Create lead for the project owner
-      const { error } = await supabase.from('leads').insert({
-        user_id: projectOwnerId,
-        first_name: name.split(' ')[0],
-        last_name: name.split(' ').slice(1).join(' ') || null,
-        email: email.trim(),
-        phone: phone.trim() || null,
-        project_id: projectId,
-        lot_id: lot.id,
-        source: 'cotizador_publico',
-        status: 'new',
-        notes: [
-          `Interesado en Lote ${lot.lot_number} (${Number(lot.area).toLocaleString()} m²)`,
-          lot.price ? `Precio: ${formatPrice(lot.price)}` : '',
-          simulationSummary ? `Simulación: ${simulationSummary}` : '',
-          message ? `Mensaje: ${message}` : '',
-        ].filter(Boolean).join('\n'),
-        budget_min: lot.price ? lot.price * 0.8 : null,
-        budget_max: lot.price ? lot.price * 1.2 : null,
-        preferred_area_min: Number(lot.area) * 0.8,
-        preferred_area_max: Number(lot.area) * 1.2,
-      } as any);
+      const notes = [
+        `Interesado en Lote ${lot.lot_number} (${Number(lot.area).toLocaleString()} m²)`,
+        lot.price ? `Precio: ${formatPrice(lot.price)}` : '',
+        simulationSummary ? `Simulación: ${simulationSummary}` : '',
+        message ? `Mensaje: ${message}` : '',
+      ].filter(Boolean).join('\n');
+
+      const { data, error } = await supabase.functions.invoke('submit-interest', {
+        body: {
+          projectOwnerId,
+          firstName: name.split(' ')[0],
+          lastName: name.split(' ').slice(1).join(' ') || null,
+          email: email.trim(),
+          phone: phone.trim() || null,
+          projectId,
+          lotId: lot.id,
+          source: 'cotizador_publico',
+          notes,
+          budgetMin: lot.price ? lot.price * 0.8 : null,
+          budgetMax: lot.price ? lot.price * 1.2 : null,
+          preferredAreaMin: Number(lot.area) * 0.8,
+          preferredAreaMax: Number(lot.area) * 1.2,
+        },
+      });
 
       if (error) throw error;
 
