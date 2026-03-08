@@ -224,19 +224,25 @@ const ExploreListPanel = ({
               {summary && summary.regionCount > 1 ? ` en ${summary.regionCount} regiones` : ''}
             </span>
           </div>
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-            <SelectTrigger className="h-7 w-auto text-[11px] rounded-lg border-border/40 gap-1 px-2">
-              <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SORT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <ToggleGroup type="single" value={viewLayout} onValueChange={(v) => v && setViewLayout(v as 'compact' | 'grid')} size="sm">
+              <ToggleGroupItem value="compact" aria-label="Lista"><List className="h-3 w-3" /></ToggleGroupItem>
+              <ToggleGroupItem value="grid" aria-label="Grid"><LayoutGrid className="h-3 w-3" /></ToggleGroupItem>
+            </ToggleGroup>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+              <SelectTrigger className="h-7 w-auto text-[11px] rounded-lg border-border/40 gap-1 px-2">
+                <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Tabs */}
