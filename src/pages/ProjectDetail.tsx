@@ -12,6 +12,7 @@ import { LotMapView } from '@/components/lots/LotMapView';
 import { PlanCompareView } from '@/components/lots/PlanCompareView';
 import { LegalTab } from '@/components/projects/LegalTab';
 import { FinancingCalculator } from '@/components/projects/FinancingCalculator';
+import { PublicLotQuoter } from '@/components/projects/PublicLotQuoter';
 import { EnhancedLotCard } from '@/components/lots/EnhancedLotCard';
 import { ProjectReviews } from '@/components/projects/ProjectReviews';
 import { ShareButtons } from '@/components/social/ShareButtons';
@@ -386,6 +387,10 @@ const ProjectDetail = () => {
                 <Map className="h-4 w-4" />
                 Mapa
               </TabsTrigger>
+              <TabsTrigger value="quoter" className="gap-2">
+                <Calculator className="h-4 w-4" />
+                Cotizador
+              </TabsTrigger>
               <TabsTrigger value="lots" className="gap-2">
                 <List className="h-4 w-4" />
                 Lotes ({lots.length})
@@ -492,6 +497,17 @@ const ProjectDetail = () => {
                   </CardContent>
                 </Card>
               )}
+            </TabsContent>
+
+            {/* Cotizador Tab */}
+            <TabsContent value="quoter">
+              <PublicLotQuoter
+                lots={lots}
+                projectName={project.name}
+                projectId={project.id}
+                projectOwnerId={project.user_id}
+                projectLocation={`${project.city}, ${project.region}`}
+              />
             </TabsContent>
 
             {/* Lots Tab */}
