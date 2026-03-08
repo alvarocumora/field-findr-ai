@@ -121,6 +121,7 @@ const ExploreListPanel = ({
 }: ExploreListPanelProps) => {
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
+  const [viewLayout, setViewLayout] = useState<'compact' | 'grid'>('compact');
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
