@@ -75,6 +75,9 @@ import FinancialDashboard from "./pages/dashboard/FinancialDashboard";
 import AgentPerformance from "./pages/dashboard/AgentPerformance";
 import Messages from "./pages/dashboard/Messages";
 import SalesPipeline from "./pages/dashboard/SalesPipeline";
+import MultiProjectDashboard from "./pages/dashboard/MultiProjectDashboard";
+import PaymentManagement from "./pages/dashboard/PaymentManagement";
+import Reports from "./pages/dashboard/Reports";
 // ===== Admin Pages =====
 import AdminUsers from "./pages/AdminUsers";
 import AgentManagement from "./components/AgentManagement";
@@ -222,6 +225,21 @@ const App = () => (
               <Route path="/asesor/pipeline" element={
                 <DashboardLayout requiredRole="agent">
                   <SalesPipeline />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/multi-project" element={
+                <DashboardLayout requiredRole="agent">
+                  <MultiProjectDashboard />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/payments" element={
+                <DashboardLayout requiredRole="agent">
+                  <PaymentManagement />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/reports" element={
+                <DashboardLayout requiredRole="agent">
+                  <Reports />
                 </DashboardLayout>
               } />
               <Route path="/publish" element={

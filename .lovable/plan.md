@@ -18,10 +18,10 @@
 - Botón directo de WhatsApp al asesor
 - Descarga de Promesa de Compraventa PDF
 
-## Sprint 2 (Pendiente)
+## Sprint 2 ✅ COMPLETADO
 3. Multi-proyecto Dashboard consolidado
 4. Gestión de Pagos de Cuotas mejorada
-5. Reportes Automáticos PDF/Excel
+5. Reportes Automáticos PDF/CSV
 
 ## Sprint 3 (Pendiente)
 6. Contratos Digitales con Firma
@@ -43,3 +43,16 @@
 | `supabase/functions/submit-interest/index.ts` | Nuevo - Edge Function para leads públicos |
 | `src/pages/ProjectDetail.tsx` | Modificado - Tab Cotizador agregado |
 | `src/pages/MiTerreno.tsx` | Reescrito - Portal mejorado con tabs, pagos, timeline |
+
+## Archivos Creados/Modificados en Sprint 2
+
+| Archivo | Acción |
+|---------|--------|
+| `src/pages/dashboard/MultiProjectDashboard.tsx` | Nuevo - Dashboard multi-proyecto |
+| `src/hooks/useMultiProjectMetrics.ts` | Nuevo - Hook de métricas consolidadas |
+| `src/pages/dashboard/PaymentManagement.tsx` | Nuevo - Gestión centralizada de pagos |
+| `src/hooks/useAllCreditPayments.ts` | Nuevo - Hook de pagos enriquecidos |
+| `src/pages/dashboard/Reports.tsx` | Nuevo - Centro de reportes |
+| `src/lib/financialReportPdfGenerator.ts` | Nuevo - Generador PDF financiero |
+| `src/App.tsx` | Modificado - Rutas Sprint 2 |
+| `src/components/ModernSidebar.tsx` | Modificado - Navegación Sprint 2 |

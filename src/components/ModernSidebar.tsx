@@ -29,6 +29,7 @@ import {
   PieChart,
   Target,
   Workflow,
+  DollarSign,
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -52,10 +53,13 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     { name: 'Pipeline', href: '/asesor/pipeline', icon: Workflow },
     { name: 'Reservas', href: '/asesor/reservations', icon: FileText },
     { name: 'Créditos', href: '/asesor/credits', icon: CreditCard },
+    { name: 'Pagos', href: '/asesor/payments', icon: DollarSign },
     { name: 'Cierres', href: '/asesor/closing', icon: Scale },
     { name: 'Mensajes', href: '/asesor/messages', icon: MessageSquare },
+    { name: 'Multi-Proyecto', href: '/asesor/multi-project', icon: BarChart3 },
     { name: 'Analytics', href: '/asesor/analytics', icon: BarChart3 },
     { name: 'Financiero', href: '/asesor/financial', icon: TrendingUp },
+    { name: 'Reportes', href: '/asesor/reports', icon: FileText },
     { name: 'Rendimiento', href: '/asesor/performance', icon: Target },
     { name: 'Ejecutivo', href: '/asesor/executive', icon: PieChart },
     { name: 'Enterprise', href: '/asesor/enterprise', icon: Globe },
