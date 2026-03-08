@@ -29,6 +29,7 @@ import {
   PieChart,
   Target,
   Workflow,
+  DollarSign,
 } from 'lucide-react';
 
 interface ModernSidebarProps {
