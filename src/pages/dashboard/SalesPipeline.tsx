@@ -106,7 +106,7 @@ const SalesPipeline = () => {
                         <p className="font-medium text-sm truncate">
                           {lead.first_name} {lead.last_name || ''}
                         </p>
-                        <LeadScoreBadge score={lead.lead_score || 0} />
+                        <LeadScoreBadge lead={lead} showBreakdown={false} />
                       </div>
 
                       {lead.email && (
