@@ -31,6 +31,8 @@ import {
   Workflow,
   DollarSign,
   Bell,
+  Flame,
+  Code,
 } from 'lucide-react';
 
 interface ModernSidebarProps {
