@@ -79,6 +79,8 @@ import MultiProjectDashboard from "./pages/dashboard/MultiProjectDashboard";
 import PaymentManagement from "./pages/dashboard/PaymentManagement";
 import Reports from "./pages/dashboard/Reports";
 import NotificationCenter from "./pages/NotificationCenter";
+import DemandHeatmapDashboard from "./pages/dashboard/DemandHeatmapDashboard";
+import APIPortal from "./pages/dashboard/APIPortal";
 // ===== Admin Pages =====
 import AdminUsers from "./pages/AdminUsers";
 import AgentManagement from "./components/AgentManagement";
