@@ -32,7 +32,11 @@
 9. Mapa de Calor de Demanda (/asesor/demand) — Dashboard analítico con leads por proyecto, región, fuente y embudo
 10. Portal de API (/asesor/api) — Documentación interactiva, gestión de API Keys y referencia de webhooks
 
----
+## Sprint 5 ✅ COMPLETADO
+11. Panel Admin mejorado — Tabs funcionales: Analíticas (Recharts), Seguridad (audit_logs), Documentos (transaction_documents)
+12. Gestión de Usuarios mejorada — Filtros por rol/plan, bulk actions, dialog detalle, export CSV
+13. Centro de Documentos Global (/admin/documents) — Vista unificada con filtros, bulk review, stats
+14. Navegación admin ampliada — Rutas /admin/documents y /admin/projects con sidebar actualizado
 
 ## Archivos Creados/Modificados en Sprint 1
 
