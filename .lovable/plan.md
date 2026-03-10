@@ -23,10 +23,10 @@
 4. Gestión de Pagos de Cuotas mejorada
 5. Reportes Automáticos PDF/CSV
 
-## Sprint 3 (Pendiente)
-6. Contratos Digitales con Firma
-7. Comparador de Lotes intra-proyecto
-8. Notificaciones Push/Email
+## Sprint 3 ✅ COMPLETADO
+6. Contratos Digitales con Firma (integrado en MiTerreno + ClosingManager)
+7. Comparador de Lotes intra-proyecto (nueva tab "Comparar" en ProjectDetail)
+8. Centro de Notificaciones completo (/asesor/notifications)
 
 ## Sprint 4 (Pendiente)
 9. Mapa de Calor de Demanda
