@@ -1,104 +1,58 @@
 
+# Plan: Plataforma Integral de Loteos y Administración
 
-# Rediseño Completo: Explorar + Mapa Satellite Hybrid
+## Sprint 1 ✅ COMPLETADO
 
-## Visión
-Transformar `/explorar` en una experiencia tipo **Redfin/Zillow premium** con mapa satellite-streets como base, clusters animados, transiciones suaves, y un panel de lista rediseñado con glassmorphism.
+### 1. Cotizador Público de Lotes
+- Widget público en ProjectDetail (pestaña "Cotizador")
+- Selector visual de lotes disponibles con precio y área
+- Simulador de financiamiento integrado (pie, plazo, tasa, cuota mensual)
+- Formulario de interés sin login (crea lead vía Edge Function `submit-interest`)
+- Descarga de cotización PDF
 
-## Cambios Principales
+### 2. Portal del Comprador Mejorado (MiTerreno)
+- Dashboard con KPIs (reservas activas, total depositado, créditos, valor total)
+- Tabs por reserva: Resumen, Cierre Legal, Documentos, Pagos
+- Timeline visual de 4 hitos (Reserva → Promesa → Escritura → Inscripción CBR)
+- Vista de créditos activos con historial de pagos y alertas de mora
+- Botón directo de WhatsApp al asesor
+- Descarga de Promesa de Compraventa PDF
 
-### 1. Nuevo estilo base del mapa — Satellite Hybrid
-**Archivos:** `useMapInstance.ts`, `PropertyMap.tsx`
+## Sprint 2 ✅ COMPLETADO
+3. Multi-proyecto Dashboard consolidado
+4. Gestión de Pagos de Cuotas mejorada
+5. Reportes Automáticos PDF/CSV
 
-- Cambiar estilo por defecto de `light-v11` → `satellite-streets-v12`
-- Actualizar `changeMapMode` con 4 opciones: `satellite` (default), `streets` (light-v11), `dark` (dark-v11), `3d` (outdoors + terrain)
-- Actualizar `MapModeSelector.tsx` con los 4 modos y nuevos iconos
+## Sprint 3 ✅ COMPLETADO
+6. Contratos Digitales con Firma (integrado en MiTerreno + ClosingManager)
+7. Comparador de Lotes intra-proyecto (nueva tab "Comparar" en ProjectDetail)
+8. Centro de Notificaciones completo (/asesor/notifications)
 
-### 2. Marcadores rediseñados para satellite
-**Archivo:** `useMapMarkers.ts`
+## Sprint 4 ✅ COMPLETADO
+9. Mapa de Calor de Demanda (/asesor/demand) — Dashboard analítico con leads por proyecto, región, fuente y embudo
+10. Portal de API (/asesor/api) — Documentación interactiva, gestión de API Keys y referencia de webhooks
 
-- Píldoras de precio con fondo oscuro semi-transparente (glass) para contraste sobre satélite
-- Hover: glow animado con sombra coloreada por tipo
-- Selected: anillo pulsante + popup mejorado
-- Popup rediseñado con glass dark background, bordes sutiles, mejor legibilidad sobre satélite
+---
 
-### 3. Clustering de propiedades
-**Archivo:** `useMapMarkers.ts`
+## Archivos Creados/Modificados en Sprint 1
 
-- Implementar clustering nativo de Mapbox con GeoJSON source + circle/symbol layers
-- Clusters muestran conteo con escala de tamaño (small/medium/large)
-- Click en cluster → zoom animado al extent del cluster
-- Transición suave entre clusters y marcadores individuales
-
-### 4. Controles rediseñados
-**Archivos:** `CompactMapControls.tsx`, `TouchMapControls.tsx`
-
-- Estilo glassmorphism oscuro para visibilidad sobre satélite
-- Añadir botón de toggle clusters on/off
-- 4 modos de mapa en selector visual con thumbnails
-
-### 5. Panel de lista rediseñado
-**Archivo:** `ExploreListPanel.tsx`
-
-- Header con resumen de resultados más visual (mini-mapa, stats)
-- Cards con efecto hover que destaca el marcador correspondiente en mapa
-- Animación de entrada con framer-motion (staggered fade-in)
-- Badge de "mejor oportunidad" en la card con menor precio/m²
-
-### 6. Transiciones y animaciones
-**Archivos:** `ExploreMapPanel.tsx`, `Explorar.tsx`
-
-- Transición suave al cambiar entre estilos de mapa (fade)
-- Animación easeTo mejorada al seleccionar propiedad (zoom + pitch ligero)
-- SearchAreaButton con animación de entrada/salida (scale + fade)
-
-### 7. Mobile: Bottom sheet + mapa satellite
-**Archivo:** `MobileExploreView.tsx`
-
-- Mapa satellite como fondo
-- Bottom sheet con glassmorphism
-- Carrusel horizontal de cards en snap colapsado
-- Swipe up para lista completa
-
-### 8. Street View preview
-**Archivo:** Nuevo `StreetViewPreview.tsx`
-
-- Botón en popup que abre un mini iframe de Google Street View
-- Se muestra en el PropertyPreviewSheet
-
-## Archivos a Modificar
-| Archivo | Cambio |
+| Archivo | Acción |
 |---------|--------|
-| `useMapInstance.ts` | Estilo default satellite, 4 modos |
-| `useMapMarkers.ts` | Marcadores glass, clustering, popups dark |
-| `MapModeSelector.tsx` | 4 modos con dark option |
-| `CompactMapControls.tsx` | Glass dark, toggle clusters |
-| `TouchMapControls.tsx` | Glass dark mobile |
-| `ExploreMapPanel.tsx` | Transiciones, clustering toggle |
-| `ExploreListPanel.tsx` | Cards animadas, staggered entry |
-| `MobileExploreView.tsx` | Glass bottom sheet |
-| `SearchAreaButton.tsx` | Animación mejorada |
-| `PropertyMap.tsx` | Satellite default |
-| `Explorar.tsx` | Integración nuevas props |
-| Nuevo: `StreetViewPreview.tsx` | Mini street view |
+| `src/components/projects/PublicLotQuoter.tsx` | Nuevo - Cotizador público |
+| `src/components/projects/InterestFormDialog.tsx` | Nuevo - Formulario de interés |
+| `supabase/functions/submit-interest/index.ts` | Nuevo - Edge Function para leads públicos |
+| `src/pages/ProjectDetail.tsx` | Modificado - Tab Cotizador agregado |
+| `src/pages/MiTerreno.tsx` | Reescrito - Portal mejorado con tabs, pagos, timeline |
 
-## Resultado Esperado
-```text
-┌──────────────────────────────────────────────────────┐
-│  StickyHeader                                         │
-├──────────────┬───────────────────────────────────────┤
-│ 🔍 Search    │                                       │
-│ Filters bar  │   🛰️ SATELLITE MAP                   │
-│──────────────│                                       │
-│ ┌──────────┐ │   [Clustered markers]                 │
-│ │ Card 1 ▸ │ │      ●15    ●8                       │
-│ └──────────┘ │           $45M  $120M                 │
-│ ┌──────────┐ │                                       │
-│ │ Card 2 ▸ │ │   [🔍 Buscar en esta área]           │
-│ └──────────┘ │                                       │
-│ ┌──────────┐ │            [Satellite│Dark│3D│Streets]│
-│ │ Card 3 ▸ │ │                      [+][-][📍]      │
-│ └──────────┘ │                                       │
-└──────────────┴───────────────────────────────────────┘
-```
+## Archivos Creados/Modificados en Sprint 2
 
+| Archivo | Acción |
+|---------|--------|
+| `src/pages/dashboard/MultiProjectDashboard.tsx` | Nuevo - Dashboard multi-proyecto |
+| `src/hooks/useMultiProjectMetrics.ts` | Nuevo - Hook de métricas consolidadas |
+| `src/pages/dashboard/PaymentManagement.tsx` | Nuevo - Gestión centralizada de pagos |
+| `src/hooks/useAllCreditPayments.ts` | Nuevo - Hook de pagos enriquecidos |
+| `src/pages/dashboard/Reports.tsx` | Nuevo - Centro de reportes |
+| `src/lib/financialReportPdfGenerator.ts` | Nuevo - Generador PDF financiero |
+| `src/App.tsx` | Modificado - Rutas Sprint 2 |
+| `src/components/ModernSidebar.tsx` | Modificado - Navegación Sprint 2 |

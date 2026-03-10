@@ -852,3 +852,68 @@ html {
 .font-heading {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
 }
+
+/* ========================================
+   SATELLITE MAP STYLES
+   ======================================== */
+
+@keyframes marker-pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+/* Satellite-optimized popup */
+.satellite-popup .mapboxgl-popup-content {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+.satellite-popup .mapboxgl-popup-tip {
+  border-top-color: rgba(15, 23, 42, 0.92) !important;
+}
+
+.satellite-popup .mapboxgl-popup-close-button {
+  color: white;
+  font-size: 18px;
+  right: 6px;
+  top: 4px;
+  z-index: 10;
+}
+
+.enhanced-map-popup-container .mapboxgl-popup-content {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 16px !important;
+}
+
+.enhanced-map-popup-container .mapboxgl-popup-tip {
+  border-top-color: rgba(15, 23, 42, 0.92) !important;
+}
+
+.enhanced-map-popup-container .mapboxgl-popup-close-button {
+  color: white;
+  font-size: 18px;
+  right: 8px;
+  top: 6px;
+  z-index: 10;
+  background: rgba(0,0,0,0.4);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

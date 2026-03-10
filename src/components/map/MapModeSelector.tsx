@@ -4,10 +4,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Map as MapIcon, Satellite, Mountain } from 'lucide-react';
+import { Map as MapIcon, Satellite, Mountain, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type MapMode = 'streets' | 'satellite' | '3d';
+export type MapMode = 'satellite' | 'streets' | 'dark' | '3d';
 
 interface MapModeSelectorProps {
   mode: MapMode;
@@ -17,15 +17,16 @@ interface MapModeSelectorProps {
 
 const MapModeSelector = ({ mode, onChange, className }: MapModeSelectorProps) => {
   const modes: { value: MapMode; label: string; icon: React.ElementType; description: string }[] = [
-    { value: 'streets', label: 'Calles', icon: MapIcon, description: 'Vista de calles' },
     { value: 'satellite', label: 'Satélite', icon: Satellite, description: 'Vista satelital' },
+    { value: 'streets', label: 'Calles', icon: MapIcon, description: 'Vista de calles' },
+    { value: 'dark', label: 'Oscuro', icon: Moon, description: 'Vista oscura' },
     { value: '3d', label: '3D', icon: Mountain, description: 'Terreno 3D' },
   ];
 
   return (
     <div
       className={cn(
-        'flex flex-col gap-1 p-1.5 rounded-xl bg-background/90 backdrop-blur-xl border border-border/50 shadow-lg shadow-black/5',
+        'flex flex-col gap-1 p-1.5 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-lg shadow-black/20',
         className
       )}
     >
@@ -34,17 +35,17 @@ const MapModeSelector = ({ mode, onChange, className }: MapModeSelectorProps) =>
           <TooltipTrigger asChild>
             <Button
               size="icon"
-              variant={mode === value ? 'secondary' : 'ghost'}
+              variant="ghost"
               onClick={() => onChange(value)}
               className={cn(
-                'h-10 w-10 transition-all duration-200',
-                mode === value && 'bg-primary/20 text-primary ring-1 ring-primary/30'
+                'h-10 w-10 transition-all duration-200 text-white/70 hover:text-white hover:bg-white/10',
+                mode === value && 'bg-white/20 text-white ring-1 ring-white/30'
               )}
             >
               <Icon className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="right" className="font-medium">
+          <TooltipContent side="right" className="font-medium bg-black/80 text-white border-white/10">
             <div className="text-sm">{description}</div>
           </TooltipContent>
         </Tooltip>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface MapBounds {
@@ -26,14 +27,12 @@ const SearchAreaButton = ({
   const [visible, setVisible] = useState(false);
   const [lastSearchedBounds, setLastSearchedBounds] = useState<MapBounds | null>(null);
 
-  // Show button when bounds change significantly
   useEffect(() => {
     if (!bounds || !lastSearchedBounds) {
       if (bounds) setVisible(true);
       return;
     }
 
-    // Calculate if viewport has moved significantly (>20% of previous view)
     const latDiff = Math.abs(bounds.north - bounds.south);
     const lngDiff = Math.abs(bounds.east - bounds.west);
     const threshold = 0.2;
@@ -53,35 +52,43 @@ const SearchAreaButton = ({
     setVisible(false);
   };
 
-  if (!visible || !bounds) return null;
-
   return (
-    <div className={cn('absolute top-3 left-1/2 -translate-x-1/2 z-20', className)}>
-      <Button
-        onClick={handleSearch}
-        disabled={isSearching}
-        size="sm"
-        className={cn(
-          'h-9 px-4 rounded-full shadow-lg',
-          'bg-background/95 backdrop-blur-xl text-foreground',
-          'border border-border/50 hover:bg-background hover:border-primary/50',
-          'transition-all duration-300 gap-2 text-xs font-medium',
-          isSearching && 'opacity-80'
-        )}
-      >
-        {isSearching ? (
-          <>
-            <RefreshCw className="h-4 w-4 animate-spin" />
-            <span>Buscando...</span>
-          </>
-        ) : (
-          <>
-            <Search className="h-4 w-4" />
-            <span>Buscar en esta área</span>
-          </>
-        )}
-      </Button>
-    </div>
+    <AnimatePresence>
+      {visible && bounds && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85, y: -10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.85, y: -10 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+          className={cn('absolute top-3 left-1/2 -translate-x-1/2 z-20', className)}
+        >
+          <Button
+            onClick={handleSearch}
+            disabled={isSearching}
+            size="sm"
+            className={cn(
+              'h-9 px-5 rounded-full shadow-2xl shadow-black/30',
+              'bg-black/70 backdrop-blur-xl text-white',
+              'border border-white/15 hover:bg-black/80 hover:border-white/25',
+              'transition-all duration-300 gap-2 text-xs font-semibold',
+              isSearching && 'opacity-80'
+            )}
+          >
+            {isSearching ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                <span>Buscando...</span>
+              </>
+            ) : (
+              <>
+                <Search className="h-4 w-4" />
+                <span>Buscar en esta área</span>
+              </>
+            )}
+          </Button>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

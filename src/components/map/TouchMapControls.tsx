@@ -8,6 +8,7 @@ import {
   Compass,
   Mountain,
   Satellite,
+  Moon,
   Map as MapIcon,
   RotateCcw,
   PenTool,
@@ -19,9 +20,10 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import type { MapMode } from './MapModeSelector';
 
 interface TouchMapControlsProps {
-  mapMode: 'streets' | 'satellite' | '3d';
+  mapMode: MapMode;
   isDrawing: boolean;
   drawnArea: number | null;
   showDrawTools: boolean;
@@ -31,7 +33,7 @@ interface TouchMapControlsProps {
   onFitAll: () => void;
   onResetNorth: () => void;
   onResetView: () => void;
-  onChangeMapMode: (mode: 'streets' | 'satellite' | '3d') => void;
+  onChangeMapMode: (mode: MapMode) => void;
   onStartDrawing: () => void;
   onClearDrawing: () => void;
   onOpenLayers: () => void;
@@ -57,70 +59,57 @@ const TouchMapControls = ({
 }: TouchMapControlsProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Common button classes for touch-friendly sizing (56px for better touch targets)
-  const touchButtonClass = "h-14 w-14 min-h-[56px] min-w-[56px] touch-manipulation active:scale-95 transition-all duration-200 hover:bg-accent/80";
+  const touchButtonClass = "h-14 w-14 min-h-[56px] min-w-[56px] touch-manipulation active:scale-95 transition-all duration-200 text-white/80 hover:text-white hover:bg-white/10";
   const touchIconClass = "h-6 w-6";
+
+  const modeIcons: Record<MapMode, typeof MapIcon> = {
+    satellite: Satellite,
+    streets: MapIcon,
+    dark: Moon,
+    '3d': Mountain,
+  };
+
+  const nextMode = (): MapMode => {
+    const order: MapMode[] = ['satellite', 'streets', 'dark', '3d'];
+    const idx = order.indexOf(mapMode);
+    return order[(idx + 1) % order.length];
+  };
+
+  const NextIcon = modeIcons[nextMode()];
 
   return (
     <>
-      {/* Main Controls - Bottom Center (Mobile-optimized) */}
+      {/* Main Controls - Bottom Center */}
       <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 md:hidden">
-        <Card className="bg-background/95 backdrop-blur-md border border-white/10 p-2 shadow-lg">
+        <Card className="bg-black/60 backdrop-blur-xl border border-white/10 p-2 shadow-2xl shadow-black/30">
           <div className="flex items-center gap-1">
-            {/* Zoom Controls */}
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              onClick={onZoomOut} 
-              className={touchButtonClass}
-              aria-label="Alejar"
-            >
+            <Button size="icon" variant="ghost" onClick={onZoomOut} className={touchButtonClass} aria-label="Alejar">
               <ZoomOut className={touchIconClass} />
             </Button>
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              onClick={onZoomIn} 
-              className={touchButtonClass}
-              aria-label="Acercar"
-            >
+            <Button size="icon" variant="ghost" onClick={onZoomIn} className={touchButtonClass} aria-label="Acercar">
               <ZoomIn className={touchIconClass} />
             </Button>
 
-            {/* Separator */}
-            <div className="w-px h-8 bg-border mx-1" />
+            <div className="w-px h-8 bg-white/10 mx-1" />
 
-            {/* Location */}
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              onClick={onLocate} 
-              className={touchButtonClass}
-              aria-label="Mi ubicación"
-            >
+            <Button size="icon" variant="ghost" onClick={onLocate} className={touchButtonClass} aria-label="Mi ubicación">
               <Target className={touchIconClass} />
             </Button>
 
-            {/* Map Style Toggle */}
-            <Button 
-              size="icon" 
-              variant={mapMode === 'satellite' ? 'secondary' : 'ghost'} 
-              onClick={() => onChangeMapMode(mapMode === 'satellite' ? 'streets' : 'satellite')} 
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => onChangeMapMode(nextMode())}
               className={touchButtonClass}
               aria-label="Cambiar estilo de mapa"
             >
-              {mapMode === 'satellite' ? (
-                <MapIcon className={touchIconClass} />
-              ) : (
-                <Satellite className={touchIconClass} />
-              )}
+              <NextIcon className={touchIconClass} />
             </Button>
 
-            {/* Layers */}
-            <Button 
-              size="icon" 
-              variant={activeLayersCount > 0 ? 'secondary' : 'ghost'} 
-              onClick={onOpenLayers} 
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={onOpenLayers}
               className={cn(touchButtonClass, "relative")}
               aria-label="Capas de información"
             >
@@ -132,93 +121,53 @@ const TouchMapControls = ({
               )}
             </Button>
 
-            {/* Expand/Collapse More Options */}
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              onClick={() => setIsExpanded(!isExpanded)} 
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setIsExpanded(!isExpanded)}
               className={touchButtonClass}
               aria-label={isExpanded ? "Menos opciones" : "Más opciones"}
             >
-              {isExpanded ? (
-                <ChevronDown className={touchIconClass} />
-              ) : (
-                <ChevronUp className={touchIconClass} />
-              )}
+              {isExpanded ? <ChevronDown className={touchIconClass} /> : <ChevronUp className={touchIconClass} />}
             </Button>
           </div>
         </Card>
       </div>
 
-      {/* Expanded Controls - Above main controls */}
+      {/* Expanded Controls */}
       {isExpanded && (
         <div className="absolute bottom-36 left-1/2 -translate-x-1/2 z-20 md:hidden animate-in slide-in-from-bottom-4 duration-200">
-          <Card className="bg-background/95 backdrop-blur-md border border-white/10 p-2 shadow-lg">
+          <Card className="bg-black/60 backdrop-blur-xl border border-white/10 p-2 shadow-2xl shadow-black/30">
             <div className="flex items-center gap-1">
-              {/* 3D Mode */}
-              <Button 
-                size="icon" 
-                variant={mapMode === '3d' ? 'secondary' : 'ghost'} 
-                onClick={() => onChangeMapMode(mapMode === '3d' ? 'streets' : '3d')} 
-                className={touchButtonClass}
-                aria-label="Vista 3D"
-              >
-                <Mountain className={touchIconClass} />
-              </Button>
-
-              {/* Fit All */}
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                onClick={onFitAll} 
-                className={touchButtonClass}
-                aria-label="Ver todas las propiedades"
-              >
+              <Button size="icon" variant="ghost" onClick={onFitAll} className={touchButtonClass} aria-label="Ver todas">
                 <Maximize2 className={touchIconClass} />
               </Button>
-
-              {/* Reset North */}
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                onClick={onResetNorth} 
-                className={touchButtonClass}
-                aria-label="Orientar al norte"
-              >
+              <Button size="icon" variant="ghost" onClick={onResetNorth} className={touchButtonClass} aria-label="Norte">
                 <Compass className={touchIconClass} />
               </Button>
-
-              {/* Reset View */}
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                onClick={onResetView} 
-                className={touchButtonClass}
-                aria-label="Restablecer vista"
-              >
+              <Button size="icon" variant="ghost" onClick={onResetView} className={touchButtonClass} aria-label="Restablecer">
                 <RotateCcw className={touchIconClass} />
               </Button>
 
-              {/* Drawing Tools */}
               {showDrawTools && (
                 <>
-                  <div className="w-px h-8 bg-border mx-1" />
-                  <Button 
-                    size="icon" 
-                    variant={isDrawing ? 'default' : 'ghost'} 
-                    onClick={onStartDrawing} 
+                  <div className="w-px h-8 bg-white/10 mx-1" />
+                  <Button
+                    size="icon"
+                    variant={isDrawing ? 'default' : 'ghost'}
+                    onClick={onStartDrawing}
                     className={touchButtonClass}
                     aria-label="Dibujar área"
                   >
                     <PenTool className={touchIconClass} />
                   </Button>
                   {drawnArea !== null && (
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      onClick={onClearDrawing} 
-                      className={cn(touchButtonClass, "text-destructive")}
-                      aria-label="Borrar área dibujada"
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={onClearDrawing}
+                      className={cn(touchButtonClass, "text-red-400")}
+                      aria-label="Borrar área"
                     >
                       <Trash2 className={touchIconClass} />
                     </Button>
@@ -229,11 +178,6 @@ const TouchMapControls = ({
           </Card>
         </div>
       )}
-
-      {/* Touch Gesture Hints - Only show briefly on first load */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none md:hidden">
-        {/* This could show gesture hints on first visit */}
-      </div>
     </>
   );
 };

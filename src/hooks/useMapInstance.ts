@@ -19,7 +19,6 @@ interface UseMapInstanceOptions {
   onPolygonDrawn?: (polygon: number[][], area: number) => void;
 }
 
-// Calculate polygon area in m²
 const calculatePolygonArea = (coordinates: number[][]): number => {
   if (coordinates.length < 3) return 0;
   let area = 0;
@@ -33,6 +32,13 @@ const calculatePolygonArea = (coordinates: number[][]): number => {
     area += x1 * y2 - x2 * y1;
   }
   return Math.abs(area / 2);
+};
+
+const MAP_STYLES: Record<MapMode, string> = {
+  satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
+  streets: 'mapbox://styles/mapbox/light-v11',
+  dark: 'mapbox://styles/mapbox/dark-v11',
+  '3d': 'mapbox://styles/mapbox/outdoors-v12',
 };
 
 export function useMapInstance(
@@ -53,8 +59,8 @@ export function useMapInstance(
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawnArea, setDrawnArea] = useState<number | null>(null);
-  const [mapMode, setMapMode] = useState<MapMode>('streets');
-  const mapModeRef = useRef<MapMode>('streets');
+  const [mapMode, setMapMode] = useState<MapMode>('satellite');
+  const mapModeRef = useRef<MapMode>('satellite');
   useEffect(() => { mapModeRef.current = mapMode; }, [mapMode]);
 
   const { token: mapboxToken, loading: tokenLoading, error: tokenError } = useMapboxToken();
@@ -66,10 +72,7 @@ export function useMapInstance(
     mapboxgl.accessToken = mapboxToken;
 
     const currentMode = mapModeRef.current;
-    const styleUrl =
-      currentMode === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12'
-      : currentMode === '3d' ? 'mapbox://styles/mapbox/outdoors-v12'
-      : 'mapbox://styles/mapbox/light-v11';
+    const styleUrl = MAP_STYLES[currentMode];
 
     map.current = new mapboxgl.Map({
       container: containerRef.current,
@@ -86,8 +89,8 @@ export function useMapInstance(
       closeOnClick: false,
       anchor: 'bottom',
       offset: 15,
-      maxWidth: '260px',
-      className: 'enhanced-map-popup-container',
+      maxWidth: '280px',
+      className: 'enhanced-map-popup-container satellite-popup',
     });
 
     layerTooltipRef.current = new mapboxgl.Popup({
@@ -149,7 +152,6 @@ export function useMapInstance(
       setIsLoading(false);
     });
 
-    // Emit bounds on moveend
     let boundsDebounce: ReturnType<typeof setTimeout>;
     map.current.on('moveend', () => {
       clearTimeout(boundsDebounce);
@@ -167,7 +169,6 @@ export function useMapInstance(
       }, 200);
     });
 
-    // Drawing events
     if (showDrawToolsRef.current) {
       map.current.on('draw.create', (e: { features: GeoJSON.Feature[] }) => {
         const polygon = e.features[0];
@@ -211,11 +212,7 @@ export function useMapInstance(
     setMapMode(mode);
     if (!map.current) return;
 
-    map.current.setStyle(
-      mode === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12'
-      : mode === '3d' ? 'mapbox://styles/mapbox/outdoors-v12'
-      : 'mapbox://styles/mapbox/light-v11'
-    );
+    map.current.setStyle(MAP_STYLES[mode]);
 
     map.current.once('style.load', () => {
       if (mode === '3d') {
@@ -306,7 +303,6 @@ export function useMapInstance(
     mapMode,
     tokenLoading,
     tokenError,
-    // Actions
     changeMapMode,
     handleZoomIn,
     handleZoomOut,
