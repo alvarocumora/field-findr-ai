@@ -89,7 +89,7 @@ export function useMapInstance(
       closeOnClick: false,
       anchor: 'bottom',
       offset: 15,
-      maxWidth: '280px',
+      maxWidth: '230px',
       className: 'enhanced-map-popup-container satellite-popup',
     });
 
