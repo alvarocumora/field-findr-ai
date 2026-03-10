@@ -401,6 +401,10 @@ const ProjectDetail = () => {
                 <Info className="h-4 w-4" />
                 Info
               </TabsTrigger>
+              <TabsTrigger value="compare" className="gap-2">
+                <Scale className="h-4 w-4" />
+                Comparar
+              </TabsTrigger>
               <TabsTrigger value="reviews" className="gap-2">
                 <Star className="h-4 w-4" />
                 Reseñas
