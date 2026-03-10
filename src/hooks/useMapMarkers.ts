@@ -3,7 +3,6 @@ import mapboxgl from 'mapbox-gl';
 import { Listing, formatPrice, formatArea, getListingTypeLabel } from '@/hooks/useListings';
 import { useNavigate } from 'react-router-dom';
 import { InfoLayerState } from '@/components/map/MapInfoLayers';
-import { IsochroneProfile } from '@/hooks/useIsochrone';
 
 interface UseMapMarkersOptions {
   map: MutableRefObject<mapboxgl.Map | null>;
@@ -48,46 +47,49 @@ const formatCompactPrice = (price: number): string => {
 };
 
 const createPopupHTML = (listing: Listing) => `
-  <div class="enhanced-map-popup" style="font-family: system-ui, -apple-system, sans-serif; min-width: 260px;">
-    <div style="position: relative; height: 120px; border-radius: 12px 12px 0 0; overflow: hidden;">
+  <div class="satellite-popup-content" style="font-family: system-ui, -apple-system, sans-serif; min-width: 260px; background: rgba(15,23,42,0.92); backdrop-filter: blur(16px); border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden;">
+    <div style="position: relative; height: 120px; overflow: hidden;">
       <img src="${listing.images[0] || '/placeholder.svg'}" alt="${listing.title}" style="width: 100%; height: 100%; object-fit: cover;" />
-      <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);"></div>
-      <div style="position: absolute; bottom: 8px; left: 8px; right: 8px;">
-        <span style="font-size: 10px; padding: 3px 8px; border-radius: 20px; background: ${statusColors[listing.status] || statusColors.active}; color: white; font-weight: 500;">
+      <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,0.9), transparent 60%);"></div>
+      <div style="position: absolute; bottom: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 10px; padding: 3px 10px; border-radius: 20px; background: ${statusColors[listing.status] || statusColors.active}; color: white; font-weight: 600; letter-spacing: 0.3px;">
           ${statusLabels[listing.status] || 'Disponible'}
         </span>
       </div>
     </div>
-    <div style="padding: 12px;">
-      <h4 style="font-weight: 600; font-size: 14px; margin-bottom: 6px; color: #1e293b; line-height: 1.3;">${listing.title}</h4>
+    <div style="padding: 14px;">
+      <h4 style="font-weight: 600; font-size: 14px; margin-bottom: 6px; color: #f1f5f9; line-height: 1.3;">${listing.title}</h4>
       <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-        <span style="font-size: 10px; padding: 2px 8px; border-radius: 12px; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); color: #0284c7; font-weight: 500;">
+        <span style="font-size: 10px; padding: 2px 8px; border-radius: 12px; background: rgba(59,130,246,0.2); color: #93c5fd; font-weight: 500; border: 1px solid rgba(59,130,246,0.2);">
           ${getListingTypeLabel(listing.type)}
         </span>
       </div>
-      <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
+      <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px;">
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 12px;">📍</span>
-          <span style="font-size: 12px; color: #64748b;">${listing.location}</span>
+          <span style="font-size: 12px; color: #94a3b8;">${listing.location}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 12px;">📐</span>
-          <span style="font-size: 12px; color: #64748b;">${formatArea(listing.area_m2, listing.area_ha)}</span>
+          <span style="font-size: 12px; color: #94a3b8;">${formatArea(listing.area_m2, listing.area_ha)}</span>
         </div>
       </div>
-      <div style="padding: 8px; background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-radius: 8px; text-align: center;">
-        <span style="font-weight: 700; color: #16a34a; font-size: 16px;">${formatPrice(listing.price, listing.currency)}</span>
+      <div style="padding: 10px; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2); border-radius: 10px; text-align: center;">
+        <span style="font-weight: 700; color: #34d399; font-size: 17px; letter-spacing: -0.3px;">${formatPrice(listing.price, listing.currency)}</span>
       </div>
     </div>
   </div>
 `;
 
-const createMarkerElement = (listing: Listing, isHovered: boolean = false) => {
+/** Dark glass marker for satellite imagery contrast */
+const createMarkerElement = (listing: Listing, isHovered: boolean = false, isSelected: boolean = false) => {
   const el = document.createElement('div');
   el.className = 'enhanced-map-marker';
   el.setAttribute('data-listing-id', listing.id);
   const color = typeColors[listing.type] || '#10b981';
   const priceLabel = formatCompactPrice(listing.price);
+
+  const active = isHovered || isSelected;
 
   el.style.cssText = `
     cursor: pointer;
@@ -95,34 +97,44 @@ const createMarkerElement = (listing: Listing, isHovered: boolean = false) => {
     flex-direction: column;
     align-items: center;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transform: ${isHovered ? 'scale(1.15) translateY(-8px)' : 'scale(1)'};
-    z-index: ${isHovered ? 1000 : 1};
-    filter: ${isHovered ? 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))' : 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))'};
+    transform: ${active ? 'scale(1.2) translateY(-10px)' : 'scale(1)'};
+    z-index: ${active ? 1000 : 1};
+    filter: ${active ? `drop-shadow(0 0 12px ${color}80) drop-shadow(0 8px 20px rgba(0,0,0,0.5))` : 'drop-shadow(0 4px 10px rgba(0,0,0,0.4))'};
   `;
 
   el.innerHTML = `
     <div style="
       position: relative;
-      background: ${isHovered ? color : 'white'};
-      color: ${isHovered ? 'white' : '#1e293b'};
-      padding: 4px 10px;
-      border-radius: 20px;
+      background: ${active ? color : 'rgba(15,23,42,0.85)'};
+      backdrop-filter: blur(12px);
+      color: ${active ? 'white' : '#e2e8f0'};
+      padding: 5px 12px;
+      border-radius: 22px;
       font-size: 12px;
       font-weight: 700;
       font-family: system-ui, -apple-system, sans-serif;
       white-space: nowrap;
-      border: 2.5px solid ${color};
-      box-shadow: ${isHovered ? `0 0 0 3px ${color}40` : 'none'};
-      transition: all 0.2s ease;
+      border: 2px solid ${active ? color : 'rgba(255,255,255,0.2)'};
+      box-shadow: ${isSelected ? `0 0 0 4px ${color}50, 0 0 20px ${color}40` : active ? `0 0 0 3px ${color}40` : 'none'};
+      transition: all 0.25s ease;
+      letter-spacing: -0.2px;
     ">
       ${priceLabel}
+      ${isSelected ? `<span style="
+        position: absolute;
+        inset: -4px;
+        border-radius: 26px;
+        border: 2px solid ${color};
+        opacity: 0.5;
+        animation: marker-pulse 1.5s ease-out infinite;
+      "></span>` : ''}
     </div>
     <div style="
       width: 0;
       height: 0;
-      border-left: 6px solid transparent;
-      border-right: 6px solid transparent;
-      border-top: 7px solid ${color};
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 8px solid ${active ? color : 'rgba(15,23,42,0.85)'};
       margin-top: -1px;
     "></div>
   `;
@@ -139,21 +151,10 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
   const attachMarkerEvents = useCallback((el: HTMLElement, listing: Listing) => {
     el.addEventListener('mouseenter', () => {
       onListingHover?.(listing);
-      el.style.transform = 'scale(1.15) translateY(-10px)';
-      el.style.zIndex = '1000';
-      if (listing.lng && listing.lat) {
-        popupRef.current
-          ?.setLngLat([listing.lng, listing.lat])
-          .setHTML(createPopupHTML(listing))
-          .addTo(map.current!);
-      }
     });
 
     el.addEventListener('mouseleave', () => {
       onListingHover?.(null);
-      el.style.transform = 'scale(1)';
-      el.style.zIndex = '1';
-      popupRef.current?.remove();
     });
 
     el.addEventListener('click', () => {
@@ -166,7 +167,7 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
         navigate(`/propiedad/${listing.id}`);
       }
     });
-  }, [onListingHover, onListingClick, popupRef, map, navigate, infoLayers.isochrone, fetchIsochrone]);
+  }, [onListingHover, onListingClick, map, navigate, infoLayers.isochrone, fetchIsochrone]);
 
   // Sync markers with listings
   useEffect(() => {
@@ -186,24 +187,29 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
     listings.forEach(listing => {
       if (!listing.lat || !listing.lng) return;
       const isHovered = hoveredListing?.id === listing.id;
+      const isSelected = selectedListing?.id === listing.id;
 
       if (markersRef.current[listing.id]) {
-        // CSS-only hover update — no DOM recreation
+        // CSS-only hover/select update
         const el = markersRef.current[listing.id].getElement();
         const color = typeColors[listing.type] || '#10b981';
-        el.style.transform = isHovered ? 'scale(1.15) translateY(-8px)' : 'scale(1)';
-        el.style.zIndex = isHovered ? '1000' : '1';
-        el.style.filter = isHovered ? 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))' : 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))';
+        const active = isHovered || isSelected;
+        el.style.transform = active ? 'scale(1.2) translateY(-10px)' : 'scale(1)';
+        el.style.zIndex = active ? '1000' : '1';
+        el.style.filter = active
+          ? `drop-shadow(0 0 12px ${color}80) drop-shadow(0 8px 20px rgba(0,0,0,0.5))`
+          : 'drop-shadow(0 4px 10px rgba(0,0,0,0.4))';
         const pill = el.querySelector('div > div:first-child') as HTMLElement | null;
         if (pill) {
-          pill.style.background = isHovered ? color : 'white';
-          pill.style.color = isHovered ? 'white' : '#1e293b';
-          pill.style.boxShadow = isHovered ? `0 0 0 3px ${color}40` : 'none';
+          pill.style.background = active ? color : 'rgba(15,23,42,0.85)';
+          pill.style.color = active ? 'white' : '#e2e8f0';
+          pill.style.border = `2px solid ${active ? color : 'rgba(255,255,255,0.2)'}`;
+          pill.style.boxShadow = isSelected ? `0 0 0 4px ${color}50, 0 0 20px ${color}40` : active ? `0 0 0 3px ${color}40` : 'none';
         }
         return;
       }
 
-      const el = createMarkerElement(listing, isHovered);
+      const el = createMarkerElement(listing, isHovered, isSelected);
       attachMarkerEvents(el, listing);
       const marker = new mapboxgl.Marker(el)
         .setLngLat([listing.lng, listing.lat])
@@ -221,9 +227,9 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
         initialFitDoneRef.current = true;
       }
     }
-  }, [listings, isLoading, hoveredListing, attachMarkerEvents, map]);
+  }, [listings, isLoading, hoveredListing, selectedListing, attachMarkerEvents, map]);
 
-  // Hover highlight (visual only, no camera) — CSS-only updates
+  // Hover highlight — CSS-only updates + popup
   useEffect(() => {
     if (!map.current || isLoading) return;
     if (!map.current.isStyleLoaded()) return;
@@ -233,16 +239,21 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
       const listing = listings.find(l => l.id === id);
       if (!listing) return;
       const isHov = hoveredListing?.id === id;
+      const isSel = selectedListing?.id === id;
+      const active = isHov || isSel;
       const color = typeColors[listing.type] || '#10b981';
 
-      el.style.transform = isHov ? 'scale(1.15) translateY(-10px)' : 'scale(1)';
-      el.style.zIndex = isHov ? '1000' : '1';
-      el.style.filter = isHov ? 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))' : 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))';
+      el.style.transform = active ? 'scale(1.2) translateY(-10px)' : 'scale(1)';
+      el.style.zIndex = active ? '1000' : '1';
+      el.style.filter = active
+        ? `drop-shadow(0 0 12px ${color}80) drop-shadow(0 8px 20px rgba(0,0,0,0.5))`
+        : 'drop-shadow(0 4px 10px rgba(0,0,0,0.4))';
       const pill = el.querySelector('div > div:first-child') as HTMLElement | null;
       if (pill) {
-        pill.style.background = isHov ? color : 'white';
-        pill.style.color = isHov ? 'white' : '#1e293b';
-        pill.style.boxShadow = isHov ? `0 0 0 3px ${color}40` : 'none';
+        pill.style.background = active ? color : 'rgba(15,23,42,0.85)';
+        pill.style.color = active ? 'white' : '#e2e8f0';
+        pill.style.border = `2px solid ${active ? color : 'rgba(255,255,255,0.2)'}`;
+        pill.style.boxShadow = isSel ? `0 0 0 4px ${color}50, 0 0 20px ${color}40` : active ? `0 0 0 3px ${color}40` : 'none';
       }
 
       if (isHov && listing.lat && listing.lng) {
@@ -256,17 +267,19 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
     if (!hoveredListing) {
       popupRef.current?.remove();
     }
-  }, [hoveredListing, listings, isLoading, popupRef, map]);
+  }, [hoveredListing, selectedListing, listings, isLoading, popupRef, map]);
 
-  // Selected listing: easeTo
+  // Selected listing: easeTo with pitch
   useEffect(() => {
     if (!map.current || isLoading || !selectedListing) return;
     if (!selectedListing.lat || !selectedListing.lng) return;
     map.current.stop();
     map.current.easeTo({
       center: [selectedListing.lng, selectedListing.lat],
-      zoom: Math.max(map.current.getZoom(), 13),
-      duration: 600,
+      zoom: Math.max(map.current.getZoom(), 14),
+      pitch: 30,
+      duration: 800,
+      easing: (t) => t * (2 - t), // ease-out quad
     });
     popupRef.current
       ?.setLngLat([selectedListing.lng, selectedListing.lat])
