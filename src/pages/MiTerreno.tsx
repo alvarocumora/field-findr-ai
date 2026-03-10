@@ -425,11 +425,30 @@ const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buye
             <TabsContent value="legal" className="p-6 mt-0">
               {closingSteps.length > 0 ? (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Scale className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-foreground">Cierre Legal</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Scale className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-foreground">Cierre Legal</h3>
+                    </div>
+                    {closingSteps.some((s: any) => s.step_type === 'promesa' && (s.status === 'in_progress' || s.status === 'pending')) && (
+                      <Button size="sm" className="gap-2" onClick={() => setSigningOpen(true)}>
+                        <FileText className="h-4 w-4" />
+                        Firmar Contrato
+                      </Button>
+                    )}
                   </div>
                   <ClosingTimeline steps={closingSteps} />
+
+                  <ContractSigningDialog
+                    open={signingOpen}
+                    onOpenChange={setSigningOpen}
+                    contractData={{
+                      projectName: project?.name || 'Proyecto',
+                      lotNumber: lot?.lot_number || 'N/A',
+                      buyerName: reservation.buyer_name,
+                      amount: `$${(reservation.reservation_amount || 0).toLocaleString('es-CL')}`,
+                    }}
+                  />
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
