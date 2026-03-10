@@ -18,6 +18,7 @@ import { ProjectReviews } from '@/components/projects/ProjectReviews';
 import { ShareButtons } from '@/components/social/ShareButtons';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { LotComparatorInProject } from '@/components/projects/LotComparatorInProject';
 import {
   MapPin,
   ArrowLeft,
@@ -33,7 +34,8 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Star
+  Star,
+  Scale,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
