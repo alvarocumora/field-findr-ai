@@ -85,6 +85,7 @@ import APIPortal from "./pages/dashboard/APIPortal";
 import AdminUsers from "./pages/AdminUsers";
 import AgentManagement from "./components/AgentManagement";
 import PropertyApprovalQueue from "./components/admin/PropertyApprovalQueue";
+import DocumentCenter from "./components/admin/DocumentCenter";
 
 // ===== Dashboard Pages (lazy) =====
 import { DashboardAdmin, DashboardAsesor, DashboardInmobiliaria } from "./pages/dashboard";
