@@ -561,6 +561,11 @@ const ProjectDetail = () => {
               </div>
             </TabsContent>
 
+            {/* Compare Tab */}
+            <TabsContent value="compare">
+              <LotComparatorInProject lots={lots} />
+            </TabsContent>
+
             {/* Reviews Tab */}
             <TabsContent value="reviews">
               <div className="max-w-2xl">

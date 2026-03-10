@@ -243,6 +243,11 @@ const App = () => (
                   <Reports />
                 </DashboardLayout>
               } />
+              <Route path="/asesor/notifications" element={
+                <DashboardLayout requiredRole="agent">
+                  <NotificationCenter />
+                </DashboardLayout>
+              } />
               <Route path="/publish" element={
                 <ProtectedRoute requireAuth requireRole="agent">
                   <PublishProperty />
