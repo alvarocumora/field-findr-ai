@@ -18,6 +18,7 @@ import {
   Mail, User, Home, Shield, Scale, MessageCircle, CreditCard,
   Receipt, ChevronRight, ExternalLink, TrendingUp,
 } from 'lucide-react';
+import ContractSigningDialog from '@/components/signature/ContractSigningDialog';
 import { format, differenceInDays, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
