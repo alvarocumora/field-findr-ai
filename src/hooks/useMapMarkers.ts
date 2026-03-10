@@ -47,35 +47,24 @@ const formatCompactPrice = (price: number): string => {
 };
 
 const createPopupHTML = (listing: Listing) => `
-  <div class="satellite-popup-content" style="font-family: system-ui, -apple-system, sans-serif; min-width: 260px; background: rgba(15,23,42,0.92); backdrop-filter: blur(16px); border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden;">
-    <div style="position: relative; height: 120px; overflow: hidden;">
+  <div style="font-family: system-ui, -apple-system, sans-serif; width: 220px; background: rgba(15,23,42,0.92); backdrop-filter: blur(16px); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+    <div style="position: relative; height: 90px; overflow: hidden;">
       <img src="${listing.images[0] || '/placeholder.svg'}" alt="${listing.title}" style="width: 100%; height: 100%; object-fit: cover;" />
-      <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,0.9), transparent 60%);"></div>
-      <div style="position: absolute; bottom: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 10px; padding: 3px 10px; border-radius: 20px; background: ${statusColors[listing.status] || statusColors.active}; color: white; font-weight: 600; letter-spacing: 0.3px;">
-          ${statusLabels[listing.status] || 'Disponible'}
-        </span>
-      </div>
+      <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,0.85), transparent 50%);"></div>
+      <span style="position: absolute; bottom: 6px; left: 6px; font-size: 9px; padding: 2px 7px; border-radius: 10px; background: ${statusColors[listing.status] || statusColors.active}; color: white; font-weight: 600;">
+        ${statusLabels[listing.status] || 'Disponible'}
+      </span>
     </div>
-    <div style="padding: 14px;">
-      <h4 style="font-weight: 600; font-size: 14px; margin-bottom: 6px; color: #f1f5f9; line-height: 1.3;">${listing.title}</h4>
-      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-        <span style="font-size: 10px; padding: 2px 8px; border-radius: 12px; background: rgba(59,130,246,0.2); color: #93c5fd; font-weight: 500; border: 1px solid rgba(59,130,246,0.2);">
-          ${getListingTypeLabel(listing.type)}
-        </span>
+    <div style="padding: 8px 10px;">
+      <h4 style="font-weight: 600; font-size: 12px; color: #f1f5f9; line-height: 1.3; margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${listing.title}</h4>
+      <div style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: #94a3b8; margin-bottom: 6px;">
+        <span>📍</span><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${listing.location}</span>
+        <span style="margin: 0 2px;">·</span>
+        <span style="flex-shrink: 0;">${formatArea(listing.area_m2, listing.area_ha)}</span>
       </div>
-      <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px;">
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 12px;">📍</span>
-          <span style="font-size: 12px; color: #94a3b8;">${listing.location}</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 12px;">📐</span>
-          <span style="font-size: 12px; color: #94a3b8;">${formatArea(listing.area_m2, listing.area_ha)}</span>
-        </div>
-      </div>
-      <div style="padding: 10px; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2); border-radius: 10px; text-align: center;">
-        <span style="font-weight: 700; color: #34d399; font-size: 17px; letter-spacing: -0.3px;">${formatPrice(listing.price, listing.currency)}</span>
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-weight: 700; color: #34d399; font-size: 14px;">${formatPrice(listing.price, listing.currency)}</span>
+        <span style="font-size: 9px; padding: 2px 6px; border-radius: 8px; background: rgba(59,130,246,0.15); color: #93c5fd; font-weight: 500;">${getListingTypeLabel(listing.type)}</span>
       </div>
     </div>
   </div>
