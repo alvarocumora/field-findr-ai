@@ -85,6 +85,7 @@ import APIPortal from "./pages/dashboard/APIPortal";
 import AdminUsers from "./pages/AdminUsers";
 import AgentManagement from "./components/AgentManagement";
 import PropertyApprovalQueue from "./components/admin/PropertyApprovalQueue";
+import DocumentCenter from "./components/admin/DocumentCenter";
 
 // ===== Dashboard Pages (lazy) =====
 import { DashboardAdmin, DashboardAsesor, DashboardInmobiliaria } from "./pages/dashboard";
@@ -307,6 +308,16 @@ const App = () => (
               <Route path="/admin/financial" element={
                 <DashboardLayout requiredRole="admin">
                   <FinancialDashboard />
+                </DashboardLayout>
+              } />
+              <Route path="/admin/documents" element={
+                <DashboardLayout requiredRole="admin">
+                  <DocumentCenter />
+                </DashboardLayout>
+              } />
+              <Route path="/admin/projects" element={
+                <DashboardLayout requiredRole="admin">
+                  <ProjectsManagement />
                 </DashboardLayout>
               } />
 

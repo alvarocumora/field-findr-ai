@@ -1,91 +1,62 @@
 
+# Plan: Plataforma Integral de Loteos y Administración
 
-# Mejora del Sistema de Administración: Proyectos, Usuarios, Roles y Documentos
+## Sprint 1 ✅ COMPLETADO
 
-## Diagnóstico
+### 1. Cotizador Público de Lotes
+- Widget público en ProjectDetail (pestaña "Cotizador")
+- Selector visual de lotes disponibles con precio y área
+- Simulador de financiamiento integrado (pie, plazo, tasa, cuota mensual)
+- Formulario de interés sin login (crea lead vía Edge Function `submit-interest`)
+- Descarga de cotización PDF
 
-El sistema actual tiene varias limitaciones:
-1. **DashboardAdmin**: Tabs de "Analíticas" y "Seguridad" son placeholders vacíos. La tabla de usuarios es básica sin acciones inline.
-2. **AdminUsers**: Funcional pero sin filtros por rol, sin bulk actions, sin vista de actividad reciente.
-3. **ProjectsManagement**: Usa datos reales de DB pero no tiene vista de documentos legales ni estado de cumplimiento integrado.
-4. **TransactionDocuments**: Funciona bien pero está aislado solo en el flujo de cierre.
-5. **Sidebar Admin**: Solo 7 items, falta acceso a documentos y proyectos globales.
+### 2. Portal del Comprador Mejorado (MiTerreno)
+- Dashboard con KPIs (reservas activas, total depositado, créditos, valor total)
+- Tabs por reserva: Resumen, Cierre Legal, Documentos, Pagos
+- Timeline visual de 4 hitos (Reserva → Promesa → Escritura → Inscripción CBR)
+- Vista de créditos activos con historial de pagos y alertas de mora
+- Botón directo de WhatsApp al asesor
+- Descarga de Promesa de Compraventa PDF
 
-## Plan de Implementación
+## Sprint 2 ✅ COMPLETADO
+3. Multi-proyecto Dashboard consolidado
+4. Gestión de Pagos de Cuotas mejorada
+5. Reportes Automáticos PDF/CSV
 
-### 1. Rediseño del Panel Admin Principal (`DashboardAdmin.tsx`)
-- Agregar stats de proyectos activos, documentos pendientes de revisión, roles asignados
-- Tab "Seguridad" → mostrar `audit_logs` reales con filtros por acción/usuario/fecha
-- Tab "Analíticas" → gráficos con Recharts: registros por semana, distribución de roles, propiedades por estado
-- Tab "Documentos" → nueva tab que muestra todos los `transaction_documents` y `documents` del sistema con filtros por estado/tipo
+## Sprint 3 ✅ COMPLETADO
+6. Contratos Digitales con Firma (integrado en MiTerreno + ClosingManager)
+7. Comparador de Lotes intra-proyecto (nueva tab "Comparar" en ProjectDetail)
+8. Centro de Notificaciones completo (/asesor/notifications)
 
-### 2. Mejora de Gestión de Usuarios (`AdminUsers.tsx`)
-- Agregar filtros por rol (buyer/agent/admin) y por plan (free/pro/enterprise)
-- Columna de "último acceso" (usar `updated_at` de profiles)
-- Acciones en bulk: asignar rol a múltiples usuarios
-- Indicador visual de usuarios sin rol asignado
-- Dialog de detalle de usuario con: roles, suscripción, propiedades, documentos, actividad reciente
-- Botón de exportar lista a CSV
+## Sprint 4 ✅ COMPLETADO
+9. Mapa de Calor de Demanda (/asesor/demand) — Dashboard analítico con leads por proyecto, región, fuente y embudo
+10. Portal de API (/asesor/api) — Documentación interactiva, gestión de API Keys y referencia de webhooks
 
-### 3. Gestión de Proyectos con Documentos Integrados (`ProjectsManagement.tsx`)
-- Agregar columna/badge de "Documentos" que muestra conteo de docs pendientes vs aprobados por proyecto
-- Vista expandible por proyecto que muestra sus documentos legales inline
-- Indicador de cumplimiento legal (% documentos aprobados)
-- Filtros por estado de cumplimiento: completo, parcial, sin documentos
+## Sprint 5 ✅ COMPLETADO
+11. Panel Admin mejorado — Tabs funcionales: Analíticas (Recharts), Seguridad (audit_logs), Documentos (transaction_documents)
+12. Gestión de Usuarios mejorada — Filtros por rol/plan, bulk actions, dialog detalle, export CSV
+13. Centro de Documentos Global (/admin/documents) — Vista unificada con filtros, bulk review, stats
+14. Navegación admin ampliada — Rutas /admin/documents y /admin/projects con sidebar actualizado
 
-### 4. Centro de Documentos Global (nuevo componente)
-**Archivo:** `src/components/admin/DocumentCenter.tsx`
-- Vista unificada de todos los documentos del sistema (transaction_documents + documents)
-- Filtros por: tipo de documento, estado, proyecto, fecha límite
-- Bulk review: aprobar/rechazar múltiples documentos
-- Alertas de documentos vencidos o próximos a vencer
-- Estadísticas: docs por estado, tiempo promedio de revisión
+## Archivos Creados/Modificados en Sprint 1
 
-### 5. Nuevas rutas y sidebar
-- Agregar `/admin/documents` → DocumentCenter
-- Agregar `/admin/projects` → vista admin de todos los proyectos
-- Actualizar `ModernSidebar.tsx` con nuevos items: "Documentos" y "Proyectos" en sección admin
-
-## Archivos a Modificar/Crear
-
-| Archivo | Cambio |
+| Archivo | Acción |
 |---------|--------|
-| `src/pages/dashboard/DashboardAdmin.tsx` | Tabs funcionales: Analíticas con Recharts, Seguridad con audit_logs, nueva tab Documentos |
-| `src/pages/AdminUsers.tsx` | Filtros por rol/plan, bulk actions, dialog detalle, export CSV |
-| `src/components/admin/DocumentCenter.tsx` | **Nuevo** — Centro global de documentos |
-| `src/components/ModernSidebar.tsx` | Agregar items Documentos y Proyectos en admin nav |
-| `src/App.tsx` | Agregar rutas `/admin/documents` y `/admin/projects` |
-| `src/hooks/useDashboardStats.ts` | Agregar queries para audit_logs y document stats |
+| `src/components/projects/PublicLotQuoter.tsx` | Nuevo - Cotizador público |
+| `src/components/projects/InterestFormDialog.tsx` | Nuevo - Formulario de interés |
+| `supabase/functions/submit-interest/index.ts` | Nuevo - Edge Function para leads públicos |
+| `src/pages/ProjectDetail.tsx` | Modificado - Tab Cotizador agregado |
+| `src/pages/MiTerreno.tsx` | Reescrito - Portal mejorado con tabs, pagos, timeline |
 
-## Resultado Visual
+## Archivos Creados/Modificados en Sprint 2
 
-```text
-Admin Dashboard
-┌─────────────────────────────────────────────────┐
-│  Stats: Usuarios │ Proyectos │ Docs Pend │ Roles│
-├─────────────────────────────────────────────────┤
-│ [Usuarios] [Propiedades] [Reservas] [Docs]      │
-│ [Analíticas] [Seguridad]                        │
-│                                                 │
-│ Tab Usuarios:                                   │
-│  [Filter: Rol ▼] [Plan ▼] [Buscar...]          │
-│  ┌─ User ─── Roles ─── Plan ─── Acciones ────┐ │
-│  │ Juan P.   [admin]    Pro      [⋮ Editar]   │ │
-│  │ María S.  [agent]    Free     [⋮ Editar]   │ │
-│  └────────────────────────────────────────────┘ │
-│                                                 │
-│ Tab Documentos:                                 │
-│  [Tipo ▼] [Estado ▼] [Proyecto ▼]              │
-│  ┌─ Doc ──── Estado ── Proyecto ── Vence ─────┐│
-│  │ Cédula    ⏳Pend    Las Palmas  15/03/26   ││
-│  │ Escritura ✅Aprob   El Roble    -          ││
-│  └────────────────────────────────────────────┘│
-│                                                 │
-│ Tab Seguridad:                                  │
-│  Audit logs reales con filtros                  │
-│                                                 │
-│ Tab Analíticas:                                 │
-│  Charts: Registros/sem, Roles pie, Props bar    │
-└─────────────────────────────────────────────────┘
-```
-
+| Archivo | Acción |
+|---------|--------|
+| `src/pages/dashboard/MultiProjectDashboard.tsx` | Nuevo - Dashboard multi-proyecto |
+| `src/hooks/useMultiProjectMetrics.ts` | Nuevo - Hook de métricas consolidadas |
+| `src/pages/dashboard/PaymentManagement.tsx` | Nuevo - Gestión centralizada de pagos |
+| `src/hooks/useAllCreditPayments.ts` | Nuevo - Hook de pagos enriquecidos |
+| `src/pages/dashboard/Reports.tsx` | Nuevo - Centro de reportes |
+| `src/lib/financialReportPdfGenerator.ts` | Nuevo - Generador PDF financiero |
+| `src/App.tsx` | Modificado - Rutas Sprint 2 |
+| `src/components/ModernSidebar.tsx` | Modificado - Navegación Sprint 2 |

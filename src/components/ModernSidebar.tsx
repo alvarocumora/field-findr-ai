@@ -77,6 +77,8 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     { name: 'Financiero', href: '/admin/financial', icon: TrendingUp },
     { name: 'Usuarios', href: '/admin/users', icon: Users },
     { name: 'Agentes', href: '/admin/agents', icon: ShieldCheck },
+    { name: 'Proyectos', href: '/admin/projects', icon: FolderKanban },
+    { name: 'Documentos', href: '/admin/documents', icon: FileText },
     { name: 'Reservas', href: '/admin/reservations', icon: FileText },
     { name: 'Aprobaciones', href: '/admin/approvals', icon: ClipboardCheck },
     { name: 'Créditos', href: '/admin/credits', icon: CreditCard },

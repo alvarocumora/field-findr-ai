@@ -1,39 +1,74 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { differenceInDays } from 'date-fns';
 
 // Admin Dashboard Stats
 export const useAdminStats = () => {
   return useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      // Get total users count
       const { count: totalUsers } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-
-      // Get active listings count
+        .from('profiles').select('*', { count: 'exact', head: true });
       const { count: activeListings } = await supabase
-        .from('listings')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active');
-
-      // Get total listings count
+        .from('listings').select('*', { count: 'exact', head: true }).eq('status', 'active');
       const { count: totalListings } = await supabase
-        .from('listings')
-        .select('*', { count: 'exact', head: true });
-
-      // Get pending documents (alerts)
+        .from('listings').select('*', { count: 'exact', head: true });
+      const { count: activeProjects } = await supabase
+        .from('projects').select('*', { count: 'exact', head: true }).eq('status', 'active');
       const { count: pendingAlerts } = await supabase
-        .from('documents')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
+        .from('documents').select('*', { count: 'exact', head: true }).eq('status', 'pending');
 
       return {
         totalUsers: totalUsers || 0,
         activeListings: activeListings || 0,
         totalListings: totalListings || 0,
+        activeProjects: activeProjects || 0,
         pendingAlerts: pendingAlerts || 0,
+      };
+    },
+  });
+};
+
+// Audit Logs for admin
+export const useAdminAuditLogs = (actionFilter: string = 'all') => {
+  return useQuery({
+    queryKey: ['admin-audit-logs', actionFilter],
+    queryFn: async () => {
+      let query = supabase
+        .from('audit_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (actionFilter !== 'all') {
+        query = query.ilike('action', `%${actionFilter}%`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+  });
+};
+
+// Document stats for admin
+export const useAdminDocumentStats = () => {
+  return useQuery({
+    queryKey: ['admin-document-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transaction_documents')
+        .select('status, deadline');
+      if (error) throw error;
+
+      const now = new Date();
+      return {
+        total: data?.length || 0,
+        pending: data?.filter(d => d.status === 'pending' || d.status === 'uploaded').length || 0,
+        approved: data?.filter(d => d.status === 'approved').length || 0,
+        rejected: data?.filter(d => d.status === 'rejected').length || 0,
+        expiringSoon: data?.filter(d => d.deadline && differenceInDays(new Date(d.deadline), now) <= 3 && differenceInDays(new Date(d.deadline), now) >= 0).length || 0,
       };
     },
   });
