@@ -18,6 +18,7 @@ import { ProjectReviews } from '@/components/projects/ProjectReviews';
 import { ShareButtons } from '@/components/social/ShareButtons';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { LotComparatorInProject } from '@/components/projects/LotComparatorInProject';
 import {
   MapPin,
   ArrowLeft,
@@ -33,7 +34,8 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Star
+  Star,
+  Scale,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -399,6 +401,10 @@ const ProjectDetail = () => {
                 <Info className="h-4 w-4" />
                 Info
               </TabsTrigger>
+              <TabsTrigger value="compare" className="gap-2">
+                <Scale className="h-4 w-4" />
+                Comparar
+              </TabsTrigger>
               <TabsTrigger value="reviews" className="gap-2">
                 <Star className="h-4 w-4" />
                 Reseñas
@@ -553,6 +559,11 @@ const ProjectDetail = () => {
                   <ProjectGallery images={(project as any).images || []} isOwner={isOwner} />
                 </div>
               </div>
+            </TabsContent>
+
+            {/* Compare Tab */}
+            <TabsContent value="compare">
+              <LotComparatorInProject lots={lots} />
             </TabsContent>
 
             {/* Reviews Tab */}
