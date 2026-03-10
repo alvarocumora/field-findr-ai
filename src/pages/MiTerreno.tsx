@@ -230,6 +230,7 @@ const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buye
   const status = reservation.status as ReservationStatus;
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.pending_payment;
   const StatusIcon = config.icon;
+  const [signingOpen, setSigningOpen] = useState(false);
   const { data: closingSteps = [] } = useClosingSteps(
     ['paid', 'converted'].includes(status) ? reservation.id : null
   );
