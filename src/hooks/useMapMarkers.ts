@@ -81,65 +81,87 @@ const createPopupHTML = (listing: Listing) => `
   </div>
 `;
 
-/** Dark glass marker for satellite imagery contrast */
-const createMarkerElement = (listing: Listing, isHovered: boolean = false, isSelected: boolean = false) => {
+/**
+ * CRITICAL: Never set `transform` on the marker root element — Mapbox uses it
+ * internally for geo-positioning. All visual effects go on `.marker-inner`.
+ */
+const createMarkerElement = (listing: Listing) => {
   const el = document.createElement('div');
   el.className = 'enhanced-map-marker';
   el.setAttribute('data-listing-id', listing.id);
   const color = typeColors[listing.type] || '#10b981';
   const priceLabel = formatCompactPrice(listing.price);
 
-  const active = isHovered || isSelected;
-
-  el.style.cssText = `
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transform: ${active ? 'scale(1.2) translateY(-10px)' : 'scale(1)'};
-    z-index: ${active ? 1000 : 1};
-    filter: ${active ? `drop-shadow(0 0 12px ${color}80) drop-shadow(0 8px 20px rgba(0,0,0,0.5))` : 'drop-shadow(0 4px 10px rgba(0,0,0,0.4))'};
-  `;
+  // Root: only pointer-events / cursor. NO transform here.
+  el.style.cssText = `cursor: pointer; z-index: 1;`;
 
   el.innerHTML = `
-    <div style="
-      position: relative;
-      background: ${active ? color : 'rgba(15,23,42,0.85)'};
-      backdrop-filter: blur(12px);
-      color: ${active ? 'white' : '#e2e8f0'};
-      padding: 5px 12px;
-      border-radius: 22px;
-      font-size: 12px;
-      font-weight: 700;
-      font-family: system-ui, -apple-system, sans-serif;
-      white-space: nowrap;
-      border: 2px solid ${active ? color : 'rgba(255,255,255,0.2)'};
-      box-shadow: ${isSelected ? `0 0 0 4px ${color}50, 0 0 20px ${color}40` : active ? `0 0 0 3px ${color}40` : 'none'};
-      transition: all 0.25s ease;
-      letter-spacing: -0.2px;
+    <div class="marker-inner" style="
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), filter 0.3s ease;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4));
+      will-change: transform, filter;
     ">
-      ${priceLabel}
-      ${isSelected ? `<span style="
-        position: absolute;
-        inset: -4px;
-        border-radius: 26px;
-        border: 2px solid ${color};
-        opacity: 0.5;
-        animation: marker-pulse 1.5s ease-out infinite;
-      "></span>` : ''}
+      <div class="marker-pill" data-color="${color}" style="
+        position: relative;
+        background: rgba(15,23,42,0.85);
+        backdrop-filter: blur(12px);
+        color: #e2e8f0;
+        padding: 5px 12px;
+        border-radius: 22px;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: system-ui, -apple-system, sans-serif;
+        white-space: nowrap;
+        border: 2px solid rgba(255,255,255,0.2);
+        transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+        letter-spacing: -0.2px;
+      ">
+        ${priceLabel}
+      </div>
+      <div class="marker-arrow" style="
+        width: 0; height: 0;
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        border-top: 8px solid rgba(15,23,42,0.85);
+        margin-top: -1px;
+        transition: border-top-color 0.2s;
+      "></div>
     </div>
-    <div style="
-      width: 0;
-      height: 0;
-      border-left: 7px solid transparent;
-      border-right: 7px solid transparent;
-      border-top: 8px solid ${active ? color : 'rgba(15,23,42,0.85)'};
-      margin-top: -1px;
-    "></div>
   `;
 
   return el;
+};
+
+/** Apply hover/select visual styles (CSS only, no DOM recreation) */
+const applyMarkerStyle = (el: HTMLElement, color: string, isActive: boolean, isSelected: boolean) => {
+  // z-index on root is safe
+  el.style.zIndex = isActive ? '1000' : '1';
+
+  const inner = el.querySelector('.marker-inner') as HTMLElement | null;
+  if (inner) {
+    inner.style.transform = isActive ? 'scale(1.2) translateY(-8px)' : 'scale(1)';
+    inner.style.filter = isActive
+      ? `drop-shadow(0 0 12px ${color}80) drop-shadow(0 8px 20px rgba(0,0,0,0.5))`
+      : 'drop-shadow(0 4px 10px rgba(0,0,0,0.4))';
+  }
+
+  const pill = el.querySelector('.marker-pill') as HTMLElement | null;
+  if (pill) {
+    pill.style.background = isActive ? color : 'rgba(15,23,42,0.85)';
+    pill.style.color = isActive ? 'white' : '#e2e8f0';
+    pill.style.borderColor = isActive ? color : 'rgba(255,255,255,0.2)';
+    pill.style.boxShadow = isSelected
+      ? `0 0 0 4px ${color}50, 0 0 20px ${color}40`
+      : isActive ? `0 0 0 3px ${color}40` : 'none';
+  }
+
+  const arrow = el.querySelector('.marker-arrow') as HTMLElement | null;
+  if (arrow) {
+    arrow.style.borderTopColor = isActive ? color : 'rgba(15,23,42,0.85)';
+  }
 };
 
 export function useMapMarkers(options: UseMapMarkersOptions) {
@@ -148,34 +170,42 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
   const initialFitDoneRef = useRef(false);
   const navigate = useNavigate();
 
+  // Store callbacks in refs to keep attachMarkerEvents stable
+  const onListingHoverRef = useRef(onListingHover);
+  const onListingClickRef = useRef(onListingClick);
+  const infoLayersRef = useRef(infoLayers);
+  const fetchIsochroneRef = useRef(fetchIsochrone);
+  useEffect(() => { onListingHoverRef.current = onListingHover; }, [onListingHover]);
+  useEffect(() => { onListingClickRef.current = onListingClick; }, [onListingClick]);
+  useEffect(() => { infoLayersRef.current = infoLayers; }, [infoLayers]);
+  useEffect(() => { fetchIsochroneRef.current = fetchIsochrone; }, [fetchIsochrone]);
+
   const attachMarkerEvents = useCallback((el: HTMLElement, listing: Listing) => {
     el.addEventListener('mouseenter', () => {
-      onListingHover?.(listing);
+      onListingHoverRef.current?.(listing);
     });
-
     el.addEventListener('mouseleave', () => {
-      onListingHover?.(null);
+      onListingHoverRef.current?.(null);
     });
-
     el.addEventListener('click', () => {
-      if (infoLayers.isochrone && listing.lat && listing.lng) {
-        fetchIsochrone(listing.lng, listing.lat);
+      if (infoLayersRef.current.isochrone && listing.lat && listing.lng) {
+        fetchIsochroneRef.current(listing.lng, listing.lat);
       }
-      if (onListingClick) {
-        onListingClick(listing);
+      if (onListingClickRef.current) {
+        onListingClickRef.current(listing);
       } else {
         navigate(`/propiedad/${listing.id}`);
       }
     });
-  }, [onListingHover, onListingClick, map, navigate, infoLayers.isochrone, fetchIsochrone]);
+  }, [navigate]);
 
-  // Sync markers with listings
+  // Sync markers with listings — only add/remove, don't style here
   useEffect(() => {
     if (!map.current || isLoading) return;
 
     const currentIds = new Set(listings.map(l => l.id));
 
-    // Remove stale markers
+    // Remove stale
     Object.keys(markersRef.current).forEach(id => {
       if (!currentIds.has(id)) {
         markersRef.current[id].remove();
@@ -183,35 +213,14 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
       }
     });
 
-    // Add/update markers
+    // Add new markers only
     listings.forEach(listing => {
       if (!listing.lat || !listing.lng) return;
-      const isHovered = hoveredListing?.id === listing.id;
-      const isSelected = selectedListing?.id === listing.id;
+      if (markersRef.current[listing.id]) return; // already exists
 
-      if (markersRef.current[listing.id]) {
-        // CSS-only hover/select update
-        const el = markersRef.current[listing.id].getElement();
-        const color = typeColors[listing.type] || '#10b981';
-        const active = isHovered || isSelected;
-        el.style.transform = active ? 'scale(1.2) translateY(-10px)' : 'scale(1)';
-        el.style.zIndex = active ? '1000' : '1';
-        el.style.filter = active
-          ? `drop-shadow(0 0 12px ${color}80) drop-shadow(0 8px 20px rgba(0,0,0,0.5))`
-          : 'drop-shadow(0 4px 10px rgba(0,0,0,0.4))';
-        const pill = el.querySelector('div > div:first-child') as HTMLElement | null;
-        if (pill) {
-          pill.style.background = active ? color : 'rgba(15,23,42,0.85)';
-          pill.style.color = active ? 'white' : '#e2e8f0';
-          pill.style.border = `2px solid ${active ? color : 'rgba(255,255,255,0.2)'}`;
-          pill.style.boxShadow = isSelected ? `0 0 0 4px ${color}50, 0 0 20px ${color}40` : active ? `0 0 0 3px ${color}40` : 'none';
-        }
-        return;
-      }
-
-      const el = createMarkerElement(listing, isHovered, isSelected);
+      const el = createMarkerElement(listing);
       attachMarkerEvents(el, listing);
-      const marker = new mapboxgl.Marker(el)
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([listing.lng, listing.lat])
         .addTo(map.current!);
       markersRef.current[listing.id] = marker;
@@ -227,12 +236,11 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
         initialFitDoneRef.current = true;
       }
     }
-  }, [listings, isLoading, hoveredListing, selectedListing, attachMarkerEvents, map]);
+  }, [listings, isLoading, attachMarkerEvents, map]);
 
-  // Hover highlight — CSS-only updates + popup
+  // Hover/select highlight — separate effect, CSS-only
   useEffect(() => {
     if (!map.current || isLoading) return;
-    if (!map.current.isStyleLoaded()) return;
 
     Object.entries(markersRef.current).forEach(([id, marker]) => {
       const el = marker.getElement();
@@ -243,20 +251,9 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
       const active = isHov || isSel;
       const color = typeColors[listing.type] || '#10b981';
 
-      el.style.transform = active ? 'scale(1.2) translateY(-10px)' : 'scale(1)';
-      el.style.zIndex = active ? '1000' : '1';
-      el.style.filter = active
-        ? `drop-shadow(0 0 12px ${color}80) drop-shadow(0 8px 20px rgba(0,0,0,0.5))`
-        : 'drop-shadow(0 4px 10px rgba(0,0,0,0.4))';
-      const pill = el.querySelector('div > div:first-child') as HTMLElement | null;
-      if (pill) {
-        pill.style.background = active ? color : 'rgba(15,23,42,0.85)';
-        pill.style.color = active ? 'white' : '#e2e8f0';
-        pill.style.border = `2px solid ${active ? color : 'rgba(255,255,255,0.2)'}`;
-        pill.style.boxShadow = isSel ? `0 0 0 4px ${color}50, 0 0 20px ${color}40` : active ? `0 0 0 3px ${color}40` : 'none';
-      }
+      applyMarkerStyle(el, color, active, isSel);
 
-      if (isHov && listing.lat && listing.lng) {
+      if (isHov && listing.lat && listing.lng && map.current) {
         popupRef.current
           ?.setLngLat([listing.lng, listing.lat])
           .setHTML(createPopupHTML(listing))
@@ -279,7 +276,7 @@ export function useMapMarkers(options: UseMapMarkersOptions) {
       zoom: Math.max(map.current.getZoom(), 14),
       pitch: 30,
       duration: 800,
-      easing: (t) => t * (2 - t), // ease-out quad
+      easing: (t) => t * (2 - t),
     });
     popupRef.current
       ?.setLngLat([selectedListing.lng, selectedListing.lat])
