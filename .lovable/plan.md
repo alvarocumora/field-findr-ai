@@ -28,9 +28,9 @@
 7. Comparador de Lotes intra-proyecto (nueva tab "Comparar" en ProjectDetail)
 8. Centro de Notificaciones completo (/asesor/notifications)
 
-## Sprint 4 (Pendiente)
-9. Mapa de Calor de Demanda
-10. API de Integración con Portales
+## Sprint 4 ✅ COMPLETADO
+9. Mapa de Calor de Demanda (/asesor/demand) — Dashboard analítico con leads por proyecto, región, fuente y embudo
+10. Portal de API (/asesor/api) — Documentación interactiva, gestión de API Keys y referencia de webhooks
 
 ---
 

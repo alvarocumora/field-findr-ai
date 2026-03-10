@@ -31,6 +31,8 @@ import {
   Workflow,
   DollarSign,
   Bell,
+  Flame,
+  Code,
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -63,6 +65,8 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     { name: 'Reportes', href: '/asesor/reports', icon: FileText },
     { name: 'Rendimiento', href: '/asesor/performance', icon: Target },
     { name: 'Ejecutivo', href: '/asesor/executive', icon: PieChart },
+    { name: 'Demanda', href: '/asesor/demand', icon: Flame },
+    { name: 'API Portal', href: '/asesor/api', icon: Code },
     { name: 'Notificaciones', href: '/asesor/notifications', icon: Bell },
     { name: 'Enterprise', href: '/asesor/enterprise', icon: Globe },
   ];
