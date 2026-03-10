@@ -78,6 +78,7 @@ import SalesPipeline from "./pages/dashboard/SalesPipeline";
 import MultiProjectDashboard from "./pages/dashboard/MultiProjectDashboard";
 import PaymentManagement from "./pages/dashboard/PaymentManagement";
 import Reports from "./pages/dashboard/Reports";
+import NotificationCenter from "./pages/NotificationCenter";
 // ===== Admin Pages =====
 import AdminUsers from "./pages/AdminUsers";
 import AgentManagement from "./components/AgentManagement";
