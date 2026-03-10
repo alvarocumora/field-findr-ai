@@ -30,6 +30,7 @@ import {
   Target,
   Workflow,
   DollarSign,
+  Bell,
 } from 'lucide-react';
 
 interface ModernSidebarProps {
