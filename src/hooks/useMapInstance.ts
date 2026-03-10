@@ -74,6 +74,7 @@ export function useMapInstance(
     const currentMode = mapModeRef.current;
     const styleUrl = MAP_STYLES[currentMode];
 
+    // Default center (Santiago, Chile) — will be overridden by geolocation
     map.current = new mapboxgl.Map({
       container: containerRef.current,
       style: styleUrl,
@@ -83,6 +84,22 @@ export function useMapInstance(
       bearing: currentMode === '3d' ? -17 : 0,
       antialias: true,
     });
+
+    // Fly to user's location on init
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          map.current?.flyTo({
+            center: [pos.coords.longitude, pos.coords.latitude],
+            zoom: 10,
+            duration: 1500,
+            pitch: currentMode === '3d' ? 50 : 0,
+          });
+        },
+        () => { /* silently fall back to default center */ },
+        { timeout: 5000, maximumAge: 300000 }
+      );
+    }
 
     popupRef.current = new mapboxgl.Popup({
       closeButton: true,
