@@ -26,7 +26,7 @@ const StreetViewPreview = ({ lat, lng, className }: StreetViewPreviewProps) => {
           className
         )}
       >
-        <StreetView className="h-3.5 w-3.5" />
+        <Navigation className="h-3.5 w-3.5" />
         Street View
       </Button>
     );
