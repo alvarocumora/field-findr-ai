@@ -16,7 +16,7 @@ import {
   MapPin, Ruler, DollarSign, CheckCircle2, Clock, AlertTriangle,
   XCircle, ArrowUpRight, FileText, Download, Calendar, Phone,
   Mail, User, Home, Shield, Scale, MessageCircle, CreditCard,
-  Receipt, ChevronRight, ExternalLink, TrendingUp,
+  Receipt, ChevronRight, ExternalLink, TrendingUp, Palette,
 } from 'lucide-react';
 import ContractSigningDialog from '@/components/signature/ContractSigningDialog';
 import { format, differenceInDays, isPast } from 'date-fns';
