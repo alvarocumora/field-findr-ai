@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useReservations } from '@/hooks/useReservations';
 import { useClosingSteps } from '@/hooks/useClosingSteps';
@@ -16,13 +16,17 @@ import {
   MapPin, Ruler, DollarSign, CheckCircle2, Clock, AlertTriangle,
   XCircle, ArrowUpRight, FileText, Download, Calendar, Phone,
   Mail, User, Home, Shield, Scale, MessageCircle, CreditCard,
-  Receipt, ChevronRight, ExternalLink, TrendingUp,
+  Receipt, ChevronRight, ExternalLink, TrendingUp, Palette,
 } from 'lucide-react';
 import ContractSigningDialog from '@/components/signature/ContractSigningDialog';
 import { format, differenceInDays, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { generateContractPDF } from '@/lib/contractPdfGenerator';
+
+const ParcelaDesigner3D = lazy(() =>
+  import('@/components/parcela/ParcelaDesigner3D').then(m => ({ default: m.ParcelaDesigner3D }))
+);
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -279,6 +283,12 @@ const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buye
                 Pagos
               </TabsTrigger>
             )}
+            {['paid', 'converted'].includes(status) && lot?.polygon && (
+              <TabsTrigger value="designer" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-sm px-4 py-2.5 gap-1">
+                <Palette className="h-3.5 w-3.5" />
+                Diseñar
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Overview Tab */}
@@ -470,6 +480,35 @@ const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buye
           {linkedCredit && (
             <TabsContent value="payments" className="p-6 mt-0">
               <CreditPaymentsView creditId={linkedCredit.id} credit={linkedCredit} />
+            </TabsContent>
+          )}
+
+          {/* 3D Designer Tab */}
+          {['paid', 'converted'].includes(status) && lot?.polygon && (
+            <TabsContent value="designer" className="p-4 mt-0">
+              <Suspense fallback={<div className="h-[600px] flex items-center justify-center text-muted-foreground">Cargando diseñador 3D...</div>}>
+                <ParcelaDesigner3D
+                  polygon={
+                    Array.isArray(lot.polygon)
+                      ? lot.polygon as number[][]
+                      : (lot.polygon as any)?.coordinates?.[0] || null
+                  }
+                  lotNumber={lot.lot_number}
+                  lotArea={lot.area}
+                  lotPrice={lot.price}
+                  savedDesign={reservation.parcel_design ? JSON.stringify(reservation.parcel_design) : null}
+                  onSave={async (json) => {
+                    try {
+                      await supabase
+                        .from('reservations')
+                        .update({ parcel_design: JSON.parse(json) } as any)
+                        .eq('id', reservation.id);
+                    } catch (e) {
+                      console.error('Error saving design:', e);
+                    }
+                  }}
+                />
+              </Suspense>
             </TabsContent>
           )}
         </Tabs>
