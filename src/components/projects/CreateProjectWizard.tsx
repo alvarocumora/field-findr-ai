@@ -41,6 +41,7 @@ interface WizardData {
   reservation_deposit: number | null;
   images: string[];
   plan_images: string[];
+  commercial_conditions: CommercialConditions;
 }
 
 const STEPS = [
