@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   FileText, MapPin, Grid3X3, CheckCircle2,
   ChevronRight, ChevronLeft, Loader2, ArrowRight,
-  FileArchive, Upload, Layers, AlertCircle, SkipForward, ImageIcon
+  FileArchive, Upload, Layers, AlertCircle, SkipForward, ImageIcon, Banknote
 } from 'lucide-react';
 import ImageUploader from '@/components/publish/ImageUploader';
 import { cn } from '@/lib/utils';
