@@ -482,6 +482,35 @@ const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buye
               <CreditPaymentsView creditId={linkedCredit.id} credit={linkedCredit} />
             </TabsContent>
           )}
+
+          {/* 3D Designer Tab */}
+          {['paid', 'converted'].includes(status) && lot?.polygon && (
+            <TabsContent value="designer" className="p-4 mt-0">
+              <Suspense fallback={<div className="h-[600px] flex items-center justify-center text-muted-foreground">Cargando diseñador 3D...</div>}>
+                <ParcelaDesigner3D
+                  polygon={
+                    Array.isArray(lot.polygon)
+                      ? lot.polygon as number[][]
+                      : (lot.polygon as any)?.coordinates?.[0] || null
+                  }
+                  lotNumber={lot.lot_number}
+                  lotArea={lot.area}
+                  lotPrice={lot.price}
+                  savedDesign={reservation.parcel_design ? JSON.stringify(reservation.parcel_design) : null}
+                  onSave={async (json) => {
+                    try {
+                      await supabase
+                        .from('reservations')
+                        .update({ parcel_design: JSON.parse(json) } as any)
+                        .eq('id', reservation.id);
+                    } catch (e) {
+                      console.error('Error saving design:', e);
+                    }
+                  }}
+                />
+              </Suspense>
+            </TabsContent>
+          )}
         </Tabs>
       </CardContent>
     </Card>
