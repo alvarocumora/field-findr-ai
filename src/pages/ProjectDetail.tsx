@@ -411,6 +411,10 @@ const ProjectDetail = () => {
                 <Star className="h-4 w-4" />
                 Reseñas
               </TabsTrigger>
+              <TabsTrigger value="brochure" className="gap-2">
+                <FileText className="h-4 w-4" />
+                Brochure
+              </TabsTrigger>
             </TabsList>
 
             {/* Map Tab */}
