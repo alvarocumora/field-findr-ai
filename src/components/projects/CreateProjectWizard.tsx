@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   FileText, MapPin, Grid3X3, CheckCircle2,
   ChevronRight, ChevronLeft, Loader2, ArrowRight,
-  FileArchive, Upload, Layers, AlertCircle, SkipForward, ImageIcon
+  FileArchive, Upload, Layers, AlertCircle, SkipForward, ImageIcon, Banknote
 } from 'lucide-react';
 import ImageUploader from '@/components/publish/ImageUploader';
 import { cn } from '@/lib/utils';
@@ -23,6 +23,7 @@ import type { ParsedKMZ } from '@/lib/kmz/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { CommercialConditionsForm, type CommercialConditions, DEFAULT_CONDITIONS } from './CommercialConditionsForm';
 
 interface WizardData {
   name: string;
@@ -40,16 +41,18 @@ interface WizardData {
   reservation_deposit: number | null;
   images: string[];
   plan_images: string[];
+  commercial_conditions: CommercialConditions;
 }
 
 const STEPS = [
   { id: 0, label: 'Datos Básicos', icon: FileText },
   { id: 1, label: 'Ubicación', icon: MapPin },
   { id: 2, label: 'Lotes', icon: Grid3X3 },
-  { id: 3, label: 'Importar KMZ', icon: FileArchive },
-  { id: 4, label: 'Imágenes', icon: ImageIcon },
-  { id: 5, label: 'Planos', icon: Layers },
-  { id: 6, label: 'Resumen', icon: CheckCircle2 },
+  { id: 3, label: 'Condiciones', icon: Banknote },
+  { id: 4, label: 'Importar KMZ', icon: FileArchive },
+  { id: 5, label: 'Imágenes', icon: ImageIcon },
+  { id: 6, label: 'Planos', icon: Layers },
+  { id: 7, label: 'Resumen', icon: CheckCircle2 },
 ];
 
 const CHILE_REGIONS = LATAM_COUNTRIES.find(c => c.code === 'CL')?.regions || [];
@@ -70,6 +73,7 @@ const projectToWizardData = (project: Project): WizardData => ({
   reservation_deposit: project.reservation_deposit ? Number(project.reservation_deposit) : 500000,
   images: (project as any).images || [],
   plan_images: (project as any).plan_images || [],
+  commercial_conditions: ((project as any).commercial_conditions as CommercialConditions) || { ...DEFAULT_CONDITIONS },
 });
 
 interface CreateProjectWizardProps {
@@ -89,6 +93,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
       name: '', description: '', status: 'active', rol_number: '',
       latitude: null, longitude: null, region: '', city: '', address: '',
       total_lots: 0, total_area: null, price_base: null, reservation_deposit: 500000, images: [], plan_images: [],
+      commercial_conditions: { ...DEFAULT_CONDITIONS },
     }
   );
 
@@ -152,8 +157,9 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         total_area: data.total_area,
         reservation_deposit: data.reservation_deposit || 500000,
         images: data.images.length > 0 ? data.images : null,
-        plan_images: data.plan_images.length > 0 ? data.plan_images : null,
-      };
+         plan_images: data.plan_images.length > 0 ? data.plan_images : null,
+         commercial_conditions: data.commercial_conditions as any,
+       };
 
       let projectId: string;
 
@@ -266,6 +272,15 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         {step === 1 && <StepLocation data={data} update={update} />}
         {step === 2 && <StepLots data={data} update={update} formatNumber={formatNumber} pricePerM2={pricePerM2} />}
         {step === 3 && (
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">Condiciones Comerciales</h3>
+            <CommercialConditionsForm
+              value={data.commercial_conditions}
+              onChange={(commercial_conditions) => update({ commercial_conditions })}
+            />
+          </div>
+        )}
+        {step === 4 && (
           <StepKMZ
             isEditing={isEditing}
             parsedKMZ={parsedKMZ}
@@ -275,21 +290,21 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
             onClear={() => { setParsedKMZ(null); setKmzFileName(null); setKmzError(null); }}
           />
         )}
-        {step === 4 && (
+        {step === 5 && (
           <StepImages
             images={data.images}
             onImagesChange={(images) => update({ images })}
             userId={user?.id}
           />
         )}
-        {step === 5 && (
+        {step === 6 && (
           <StepPlanImages
             images={data.plan_images}
             onImagesChange={(plan_images) => update({ plan_images })}
             userId={user?.id}
           />
         )}
-        {step === 6 && (
+        {step === 7 && (
           <StepSummary data={data} formatNumber={formatNumber} parsedKMZ={parsedKMZ} isEditing={isEditing} />
         )}
       </div>
@@ -299,20 +314,20 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         <Button variant="outline" onClick={step === 0 ? onCancel : () => setStep(s => s - 1)}>
           {step === 0 ? 'Cancelar' : <><ChevronLeft className="h-4 w-4 mr-1" />Atrás</>}
         </Button>
-        {step < 6 ? (
+        {step < 7 ? (
           <div className="flex gap-2">
-            {step === 3 && !parsedKMZ && (
-              <Button variant="ghost" onClick={() => setStep(4)} className="gap-1 text-muted-foreground">
-                <SkipForward className="h-4 w-4" /> Saltar
-              </Button>
-            )}
-            {step === 4 && data.images.length === 0 && (
+            {step === 4 && !parsedKMZ && (
               <Button variant="ghost" onClick={() => setStep(5)} className="gap-1 text-muted-foreground">
                 <SkipForward className="h-4 w-4" /> Saltar
               </Button>
             )}
-            {step === 5 && data.plan_images.length === 0 && (
+            {step === 5 && data.images.length === 0 && (
               <Button variant="ghost" onClick={() => setStep(6)} className="gap-1 text-muted-foreground">
+                <SkipForward className="h-4 w-4" /> Saltar
+              </Button>
+            )}
+            {step === 6 && data.plan_images.length === 0 && (
+              <Button variant="ghost" onClick={() => setStep(7)} className="gap-1 text-muted-foreground">
                 <SkipForward className="h-4 w-4" /> Saltar
               </Button>
             )}

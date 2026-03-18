@@ -1008,6 +1008,7 @@ export type Database = {
           address: string | null
           available_lots: number | null
           city: string | null
+          commercial_conditions: Json | null
           country: string | null
           created_at: string
           description: string | null
@@ -1039,6 +1040,7 @@ export type Database = {
           address?: string | null
           available_lots?: number | null
           city?: string | null
+          commercial_conditions?: Json | null
           country?: string | null
           created_at?: string
           description?: string | null
@@ -1070,6 +1072,7 @@ export type Database = {
           address?: string | null
           available_lots?: number | null
           city?: string | null
+          commercial_conditions?: Json | null
           country?: string | null
           created_at?: string
           description?: string | null

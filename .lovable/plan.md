@@ -1,113 +1,62 @@
 
+# Plan: Plataforma Integral de Loteos y Administración
 
-# Plan: Módulo de Brochure de Proyecto + Revisión UX
+## Sprint 1 ✅ COMPLETADO
 
-## Diagnóstico
+### 1. Cotizador Público de Lotes
+- Widget público en ProjectDetail (pestaña "Cotizador")
+- Selector visual de lotes disponibles con precio y área
+- Simulador de financiamiento integrado (pie, plazo, tasa, cuota mensual)
+- Formulario de interés sin login (crea lead vía Edge Function `submit-interest`)
+- Descarga de cotización PDF
 
-### Flujo actual de creación de proyectos
-El wizard de 7 pasos (CreateProjectWizard) funciona bien: datos básicos → ubicación → lotes → KMZ → imágenes → planos → resumen. Los datos se guardan en la tabla `projects` con campos como `images`, `plan_images`, `description`, `total_area`, `reservation_deposit`, coordenadas, etc.
+### 2. Portal del Comprador Mejorado (MiTerreno)
+- Dashboard con KPIs (reservas activas, total depositado, créditos, valor total)
+- Tabs por reserva: Resumen, Cierre Legal, Documentos, Pagos
+- Timeline visual de 4 hitos (Reserva → Promesa → Escritura → Inscripción CBR)
+- Vista de créditos activos con historial de pagos y alertas de mora
+- Botón directo de WhatsApp al asesor
+- Descarga de Promesa de Compraventa PDF
 
-### Lo que ve el público (ProjectDetail)
-La página `/proyecto/:id` muestra 6 tabs: Mapa, Cotizador, Lotes, Info, Comparar, Reseñas. Tiene header con stats (disponibles/reservados/vendidos), rango de precios y áreas. Las cards de lotes (EnhancedLotCard) muestran precio, área, estado, precio/m² y acciones.
+## Sprint 2 ✅ COMPLETADO
+3. Multi-proyecto Dashboard consolidado
+4. Gestión de Pagos de Cuotas mejorada
+5. Reportes Automáticos PDF/CSV
 
-### Problemas detectados
-1. **No existe un brochure/ficha descargable del proyecto** — solo hay PDF de cotización individual por lote
-2. **No hay sección de condiciones comerciales** visibles para el público (financiamiento, pie mínimo, plazo, etc.)
-3. **La tabla `projects` no tiene campos** para condiciones comerciales (pie mínimo %, plazo máximo, tasa, etc.)
-4. **Las cards de lote** funcionan pero podrían incluir un mini-mapa o thumbnail del polígono
+## Sprint 3 ✅ COMPLETADO
+6. Contratos Digitales con Firma (integrado en MiTerreno + ClosingManager)
+7. Comparador de Lotes intra-proyecto (nueva tab "Comparar" en ProjectDetail)
+8. Centro de Notificaciones completo (/asesor/notifications)
 
-## Plan de Implementación
+## Sprint 4 ✅ COMPLETADO
+9. Mapa de Calor de Demanda (/asesor/demand) — Dashboard analítico con leads por proyecto, región, fuente y embudo
+10. Portal de API (/asesor/api) — Documentación interactiva, gestión de API Keys y referencia de webhooks
 
-### 1. Migración DB: Campos de condiciones comerciales en `projects`
-Agregar columnas para almacenar las condiciones de venta del proyecto:
-```sql
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS
-  commercial_conditions jsonb DEFAULT '{}'::jsonb;
-```
-Estructura del JSON:
-```json
-{
-  "min_down_payment_pct": 20,
-  "max_term_months": 120,
-  "interest_rate": 0.8,
-  "payment_methods": ["transferencia", "cheque", "financiamiento"],
-  "currency": "CLP",
-  "includes_urbanization": true,
-  "delivery_date": "2026-06-01",
-  "notes": "Precio incluye IVA..."
-}
-```
+## Sprint 5 ✅ COMPLETADO
+11. Panel Admin mejorado — Tabs funcionales: Analíticas (Recharts), Seguridad (audit_logs), Documentos (transaction_documents)
+12. Gestión de Usuarios mejorada — Filtros por rol/plan, bulk actions, dialog detalle, export CSV
+13. Centro de Documentos Global (/admin/documents) — Vista unificada con filtros, bulk review, stats
+14. Navegación admin ampliada — Rutas /admin/documents y /admin/projects con sidebar actualizado
 
-### 2. Paso "Condiciones Comerciales" en CreateProjectWizard
-Agregar un nuevo paso al wizard (entre "Lotes" y "KMZ") donde el desarrollador configura:
-- Pie mínimo (%)
-- Plazo máximo de financiamiento (meses)
-- Tasa de interés mensual (%)
-- Métodos de pago aceptados
-- Si incluye urbanización
-- Fecha estimada de entrega
-- Notas comerciales libres
+## Archivos Creados/Modificados en Sprint 1
 
-### 3. Nuevo componente: `ProjectBrochure.tsx`
-Generador de brochure PDF profesional con jsPDF que incluye:
-- **Página 1**: Header con nombre del proyecto, logo, ubicación con mapa estático (Mapbox Static API)
-- **Página 2**: Descripción del proyecto, galería de imágenes (thumbnails), datos generales (superficie total, total lotes, disponibles)
-- **Página 3**: Condiciones comerciales (tabla con pie, plazo, tasa, métodos de pago, fecha entrega)
-- **Página 4**: Tabla resumen de lotes disponibles (número, área, precio, precio/m²)
-- **Página 5**: Plano del proyecto (plan_images si existe)
-- **Footer**: Datos de contacto del asesor, fecha de generación, disclaimer legal
-
-### 4. Tab "Brochure" en ProjectDetail
-Nueva tab en la vista pública del proyecto con:
-- Preview de las condiciones comerciales (sin descargar PDF)
-- Sección de condiciones de venta con iconos
-- Botón "Descargar Brochure PDF" prominente
-- Datos del proyecto resumidos visualmente
-
-### 5. Mejora de cards: sección condiciones en vista pública
-En la tab "Info" de ProjectDetail, agregar una sección visual de condiciones comerciales:
-- Pie mínimo, plazo máximo, tasa
-- Métodos de pago como badges
-- Fecha de entrega estimada
-
-## Archivos a Crear/Modificar
-
-| Archivo | Cambio |
+| Archivo | Acción |
 |---------|--------|
-| **Migración SQL** | Agregar `commercial_conditions jsonb` a `projects` |
-| `src/lib/brochurePdfGenerator.ts` | **Nuevo** — Generador de brochure PDF profesional |
-| `src/components/projects/ProjectBrochureTab.tsx` | **Nuevo** — Tab con condiciones comerciales + botón descarga |
-| `src/components/projects/CommercialConditionsForm.tsx` | **Nuevo** — Formulario de condiciones para el wizard |
-| `src/components/projects/CreateProjectWizard.tsx` | Agregar paso de condiciones comerciales |
-| `src/pages/ProjectDetail.tsx` | Agregar tab "Brochure" con condiciones y descarga PDF |
-| `src/hooks/useProjects.ts` | Actualizar tipo Project (ya viene automático del schema) |
+| `src/components/projects/PublicLotQuoter.tsx` | Nuevo - Cotizador público |
+| `src/components/projects/InterestFormDialog.tsx` | Nuevo - Formulario de interés |
+| `supabase/functions/submit-interest/index.ts` | Nuevo - Edge Function para leads públicos |
+| `src/pages/ProjectDetail.tsx` | Modificado - Tab Cotizador agregado |
+| `src/pages/MiTerreno.tsx` | Reescrito - Portal mejorado con tabs, pagos, timeline |
 
-## Resultado Visual
+## Archivos Creados/Modificados en Sprint 2
 
-```text
-ProjectDetail — Tab Brochure
-┌─────────────────────────────────────────────────┐
-│  📋 Condiciones Comerciales                     │
-│                                                 │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐        │
-│  │ Pie: 20% │ │Plazo:120m│ │Tasa:0.8% │        │
-│  └──────────┘ └──────────┘ └──────────┘        │
-│                                                 │
-│  Métodos: [Transferencia] [Cheque] [Financ.]    │
-│  Entrega: Junio 2026                            │
-│  Urbanización incluida: ✅                       │
-│                                                 │
-│  Notas: "Precios + IVA. Escrituración..."       │
-│                                                 │
-│  ┌─────────────────────────────────────┐        │
-│  │  📥 Descargar Brochure PDF          │        │
-│  └─────────────────────────────────────┘        │
-│                                                 │
-│  Resumen del Proyecto                           │
-│  • 45 lotes totales (38 disponibles)            │
-│  • Desde $18.500.000 — $32.000.000              │
-│  • 350 m² — 1.200 m²                            │
-│  • Ubicación: Hualañé, O'Higgins               │
-└─────────────────────────────────────────────────┘
-```
-
+| Archivo | Acción |
+|---------|--------|
+| `src/pages/dashboard/MultiProjectDashboard.tsx` | Nuevo - Dashboard multi-proyecto |
+| `src/hooks/useMultiProjectMetrics.ts` | Nuevo - Hook de métricas consolidadas |
+| `src/pages/dashboard/PaymentManagement.tsx` | Nuevo - Gestión centralizada de pagos |
+| `src/hooks/useAllCreditPayments.ts` | Nuevo - Hook de pagos enriquecidos |
+| `src/pages/dashboard/Reports.tsx` | Nuevo - Centro de reportes |
+| `src/lib/financialReportPdfGenerator.ts` | Nuevo - Generador PDF financiero |
+| `src/App.tsx` | Modificado - Rutas Sprint 2 |
+| `src/components/ModernSidebar.tsx` | Modificado - Navegación Sprint 2 |

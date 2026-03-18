@@ -16,6 +16,7 @@ import { PublicLotQuoter } from '@/components/projects/PublicLotQuoter';
 import { EnhancedLotCard } from '@/components/lots/EnhancedLotCard';
 import { ProjectReviews } from '@/components/projects/ProjectReviews';
 import { ShareButtons } from '@/components/social/ShareButtons';
+import { ProjectBrochureTab } from '@/components/projects/ProjectBrochureTab';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LotComparatorInProject } from '@/components/projects/LotComparatorInProject';
@@ -36,6 +37,7 @@ import {
   X,
   Star,
   Scale,
+  FileText,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -409,6 +411,10 @@ const ProjectDetail = () => {
                 <Star className="h-4 w-4" />
                 Reseñas
               </TabsTrigger>
+              <TabsTrigger value="brochure" className="gap-2">
+                <FileText className="h-4 w-4" />
+                Brochure
+              </TabsTrigger>
             </TabsList>
 
             {/* Map Tab */}
@@ -570,6 +576,13 @@ const ProjectDetail = () => {
             <TabsContent value="reviews">
               <div className="max-w-2xl">
                 <ProjectReviews projectId={project.id} />
+              </div>
+            </TabsContent>
+
+            {/* Brochure Tab */}
+            <TabsContent value="brochure">
+              <div className="max-w-2xl">
+                <ProjectBrochureTab project={project} lots={lots} />
               </div>
             </TabsContent>
           </Tabs>

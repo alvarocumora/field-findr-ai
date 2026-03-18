@@ -1,0 +1,1 @@
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS commercial_conditions jsonb DEFAULT '{}'::jsonb;
