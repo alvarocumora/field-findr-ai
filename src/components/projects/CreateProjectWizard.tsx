@@ -73,6 +73,7 @@ const projectToWizardData = (project: Project): WizardData => ({
   reservation_deposit: project.reservation_deposit ? Number(project.reservation_deposit) : 500000,
   images: (project as any).images || [],
   plan_images: (project as any).plan_images || [],
+  commercial_conditions: ((project as any).commercial_conditions as CommercialConditions) || { ...DEFAULT_CONDITIONS },
 });
 
 interface CreateProjectWizardProps {
