@@ -1,62 +1,83 @@
 
-# Plan: Plataforma Integral de Loteos y Administración
 
-## Sprint 1 ✅ COMPLETADO
+# Plan: Diseñador 3D de Parcelas — "Mi Parcela en 3D"
 
-### 1. Cotizador Público de Lotes
-- Widget público en ProjectDetail (pestaña "Cotizador")
-- Selector visual de lotes disponibles con precio y área
-- Simulador de financiamiento integrado (pie, plazo, tasa, cuota mensual)
-- Formulario de interés sin login (crea lead vía Edge Function `submit-interest`)
-- Descarga de cotización PDF
+## Vision
 
-### 2. Portal del Comprador Mejorado (MiTerreno)
-- Dashboard con KPIs (reservas activas, total depositado, créditos, valor total)
-- Tabs por reserva: Resumen, Cierre Legal, Documentos, Pagos
-- Timeline visual de 4 hitos (Reserva → Promesa → Escritura → Inscripción CBR)
-- Vista de créditos activos con historial de pagos y alertas de mora
-- Botón directo de WhatsApp al asesor
-- Descarga de Promesa de Compraventa PDF
+Crear un módulo interactivo de diseño 3D donde el comprador puede tomar el polígono de su lote reservado y diseñar un layout visual con modelos predefinidos: casas, piscinas, cercos, entradas, huertos, arboles, etc. Esto posiciona la plataforma como la primera en LATAM que permite visualizar tu futuro terreno antes de construir.
 
-## Sprint 2 ✅ COMPLETADO
-3. Multi-proyecto Dashboard consolidado
-4. Gestión de Pagos de Cuotas mejorada
-5. Reportes Automáticos PDF/CSV
+## Implementacion Tecnica
 
-## Sprint 3 ✅ COMPLETADO
-6. Contratos Digitales con Firma (integrado en MiTerreno + ClosingManager)
-7. Comparador de Lotes intra-proyecto (nueva tab "Comparar" en ProjectDetail)
-8. Centro de Notificaciones completo (/asesor/notifications)
+### Dependencias
+- `@react-three/fiber@^8.18` + `three@^0.170` + `@react-three/drei@^9.122.0` (3D rendering en React)
+- Los modelos 3D seran primitivas geometricas estilizadas (no archivos .glb externos) para mantener el bundle ligero
 
-## Sprint 4 ✅ COMPLETADO
-9. Mapa de Calor de Demanda (/asesor/demand) — Dashboard analítico con leads por proyecto, región, fuente y embudo
-10. Portal de API (/asesor/api) — Documentación interactiva, gestión de API Keys y referencia de webhooks
+### 1. Nuevo componente: `src/components/parcela/ParcelaDesigner3D.tsx`
+Componente principal que:
+- Recibe el `polygon` (jsonb del lote) y lo convierte en un Shape plano 3D (el terreno)
+- Canvas de React Three Fiber con OrbitControls para rotar/zoom
+- Terreno verde generado desde las coordenadas del poligono
+- Grid helper para referencia visual de metros
+- Iluminacion ambiental + direccional con sombras
 
-## Sprint 5 ✅ COMPLETADO
-11. Panel Admin mejorado — Tabs funcionales: Analíticas (Recharts), Seguridad (audit_logs), Documentos (transaction_documents)
-12. Gestión de Usuarios mejorada — Filtros por rol/plan, bulk actions, dialog detalle, export CSV
-13. Centro de Documentos Global (/admin/documents) — Vista unificada con filtros, bulk review, stats
-14. Navegación admin ampliada — Rutas /admin/documents y /admin/projects con sidebar actualizado
+### 2. Sistema de objetos arrastrables: `src/components/parcela/ParcelaObjects.tsx`
+Catalogo de elementos 3D predefinidos usando primitivas Three.js:
+- **Casas**: Box geometries con techos (ConeGeometry) en 3 tamaños (50m², 80m², 120m²)
+- **Piscina**: Box con material azul semitransparente
+- **Cercos**: Thin boxes a lo largo de los bordes del terreno
+- **Entrada/Portón**: Arch geometry con pilares
+- **Huerto**: Grid de cilindros verdes pequeños
+- **Árboles**: Cone + Cylinder (pino) o Sphere + Cylinder (frutal)
+- **Quincho/Terraza**: Box plano con techo abierto
+- **Estacionamiento**: Plane con textura de gravilla
 
-## Archivos Creados/Modificados en Sprint 1
+### 3. Panel lateral de herramientas: `src/components/parcela/ParcelaToolbar.tsx`
+- Catalogo visual con iconos de cada elemento
+- Drag & drop o click-to-place sobre el terreno
+- Controles de: rotación del objeto, escala, eliminar
+- Botón "Captura de pantalla" para guardar el diseño como imagen
+- Info del lote: numero, area, precio
 
-| Archivo | Acción |
+### 4. Pagina/Tab en MiTerreno: `src/pages/MiTerreno.tsx`
+- Nueva tab "Diseñar Mi Parcela" en cada reserva activa (status paid/converted)
+- Solo disponible si el lote tiene polygon definido
+- Pasa el polygon y datos del lote al ParcelaDesigner3D
+
+### 5. Persistencia (opcional v1 — guardar diseño)
+- Guardar el layout como JSON en una nueva columna `parcel_design jsonb` en la tabla `reservations`
+- Migración SQL simple: `ALTER TABLE reservations ADD COLUMN parcel_design jsonb DEFAULT NULL`
+
+## Archivos a Crear/Modificar
+
+| Archivo | Cambio |
 |---------|--------|
-| `src/components/projects/PublicLotQuoter.tsx` | Nuevo - Cotizador público |
-| `src/components/projects/InterestFormDialog.tsx` | Nuevo - Formulario de interés |
-| `supabase/functions/submit-interest/index.ts` | Nuevo - Edge Function para leads públicos |
-| `src/pages/ProjectDetail.tsx` | Modificado - Tab Cotizador agregado |
-| `src/pages/MiTerreno.tsx` | Reescrito - Portal mejorado con tabs, pagos, timeline |
+| `src/components/parcela/ParcelaDesigner3D.tsx` | **Nuevo** — Canvas 3D principal con terreno desde poligono |
+| `src/components/parcela/ParcelaObjects.tsx` | **Nuevo** — Modelos 3D (casas, arboles, piscinas, etc.) |
+| `src/components/parcela/ParcelaToolbar.tsx` | **Nuevo** — Panel lateral con catalogo y controles |
+| `src/components/parcela/useParcelaState.ts` | **Nuevo** — Hook para gestionar objetos colocados, seleccion, transformaciones |
+| `src/pages/MiTerreno.tsx` | Agregar tab "Diseñar" con ParcelaDesigner3D |
+| **Migración SQL** | Agregar `parcel_design jsonb` a `reservations` |
 
-## Archivos Creados/Modificados en Sprint 2
+## Resultado Visual
 
-| Archivo | Acción |
-|---------|--------|
-| `src/pages/dashboard/MultiProjectDashboard.tsx` | Nuevo - Dashboard multi-proyecto |
-| `src/hooks/useMultiProjectMetrics.ts` | Nuevo - Hook de métricas consolidadas |
-| `src/pages/dashboard/PaymentManagement.tsx` | Nuevo - Gestión centralizada de pagos |
-| `src/hooks/useAllCreditPayments.ts` | Nuevo - Hook de pagos enriquecidos |
-| `src/pages/dashboard/Reports.tsx` | Nuevo - Centro de reportes |
-| `src/lib/financialReportPdfGenerator.ts` | Nuevo - Generador PDF financiero |
-| `src/App.tsx` | Modificado - Rutas Sprint 2 |
-| `src/components/ModernSidebar.tsx` | Modificado - Navegación Sprint 2 |
+```text
+┌─────────────────────────────────────────────────────────┐
+│  Mi Terreno > Lote #12 — Brisas de Caone               │
+│  [Resumen] [Cierre] [Docs] [Pagos] [🎨 Diseñar]       │
+├──────────┬──────────────────────────────────────────────┤
+│ Catalogo │                                              │
+│          │         ┌─ Vista 3D ──────────────┐          │
+│ 🏠 Casa  │         │    🏠      🌳           │          │
+│ 🏊 Pisci │         │  ┌────┐   /|\           │          │
+│ 🌳 Árbol │         │  │    │  / | \          │          │
+│ 🌿 Huert │         │  └────┘    |            │          │
+│ 🚗 Estac │         │         🏊──────        │          │
+│ 🏗 Quinch│         │  ═══════════════        │          │
+│ 🚪 Entra │         │    [Terreno verde]      │          │
+│ 🔲 Cerco │         └────────────────────────┘          │
+│          │                                              │
+│ [Rotar]  │  [📸 Captura]  [💾 Guardar]  [🔄 Reset]    │
+│ [Escala] │                                              │
+└──────────┴──────────────────────────────────────────────┘
+```
+
