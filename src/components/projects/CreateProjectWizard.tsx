@@ -157,8 +157,9 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         total_area: data.total_area,
         reservation_deposit: data.reservation_deposit || 500000,
         images: data.images.length > 0 ? data.images : null,
-        plan_images: data.plan_images.length > 0 ? data.plan_images : null,
-      };
+         plan_images: data.plan_images.length > 0 ? data.plan_images : null,
+         commercial_conditions: data.commercial_conditions,
+       };
 
       let projectId: string;
 
