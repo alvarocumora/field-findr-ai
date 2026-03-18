@@ -578,6 +578,13 @@ const ProjectDetail = () => {
                 <ProjectReviews projectId={project.id} />
               </div>
             </TabsContent>
+
+            {/* Brochure Tab */}
+            <TabsContent value="brochure">
+              <div className="max-w-2xl">
+                <ProjectBrochureTab project={project} lots={lots} />
+              </div>
+            </TabsContent>
           </Tabs>
         </div>
 
