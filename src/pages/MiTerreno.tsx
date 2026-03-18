@@ -23,6 +23,10 @@ import { format, differenceInDays, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { generateContractPDF } from '@/lib/contractPdfGenerator';
+
+const ParcelaDesigner3D = lazy(() =>
+  import('@/components/parcela/ParcelaDesigner3D').then(m => ({ default: m.ParcelaDesigner3D }))
+);
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
