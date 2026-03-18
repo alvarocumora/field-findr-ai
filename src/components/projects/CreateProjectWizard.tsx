@@ -93,6 +93,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
       name: '', description: '', status: 'active', rol_number: '',
       latitude: null, longitude: null, region: '', city: '', address: '',
       total_lots: 0, total_area: null, price_base: null, reservation_deposit: 500000, images: [], plan_images: [],
+      commercial_conditions: { ...DEFAULT_CONDITIONS },
     }
   );
 
