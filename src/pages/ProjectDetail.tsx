@@ -37,6 +37,7 @@ import {
   X,
   Star,
   Scale,
+  FileText,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
