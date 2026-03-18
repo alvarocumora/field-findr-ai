@@ -16,6 +16,7 @@ import { PublicLotQuoter } from '@/components/projects/PublicLotQuoter';
 import { EnhancedLotCard } from '@/components/lots/EnhancedLotCard';
 import { ProjectReviews } from '@/components/projects/ProjectReviews';
 import { ShareButtons } from '@/components/social/ShareButtons';
+import { ProjectBrochureTab } from '@/components/projects/ProjectBrochureTab';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LotComparatorInProject } from '@/components/projects/LotComparatorInProject';
