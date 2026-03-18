@@ -1205,6 +1205,7 @@ export type Database = {
           mercadopago_preference_id: string | null
           notes: string | null
           paid_at: string | null
+          parcel_design: Json | null
           reservation_amount: number
           status: Database["public"]["Enums"]["reservation_status"]
           updated_at: string
@@ -1227,6 +1228,7 @@ export type Database = {
           mercadopago_preference_id?: string | null
           notes?: string | null
           paid_at?: string | null
+          parcel_design?: Json | null
           reservation_amount?: number
           status?: Database["public"]["Enums"]["reservation_status"]
           updated_at?: string
@@ -1249,6 +1251,7 @@ export type Database = {
           mercadopago_preference_id?: string | null
           notes?: string | null
           paid_at?: string | null
+          parcel_design?: Json | null
           reservation_amount?: number
           status?: Database["public"]["Enums"]["reservation_status"]
           updated_at?: string
