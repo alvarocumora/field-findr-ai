@@ -272,6 +272,15 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         {step === 1 && <StepLocation data={data} update={update} />}
         {step === 2 && <StepLots data={data} update={update} formatNumber={formatNumber} pricePerM2={pricePerM2} />}
         {step === 3 && (
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">Condiciones Comerciales</h3>
+            <CommercialConditionsForm
+              value={data.commercial_conditions}
+              onChange={(commercial_conditions) => update({ commercial_conditions })}
+            />
+          </div>
+        )}
+        {step === 4 && (
           <StepKMZ
             isEditing={isEditing}
             parsedKMZ={parsedKMZ}
@@ -281,21 +290,21 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
             onClear={() => { setParsedKMZ(null); setKmzFileName(null); setKmzError(null); }}
           />
         )}
-        {step === 4 && (
+        {step === 5 && (
           <StepImages
             images={data.images}
             onImagesChange={(images) => update({ images })}
             userId={user?.id}
           />
         )}
-        {step === 5 && (
+        {step === 6 && (
           <StepPlanImages
             images={data.plan_images}
             onImagesChange={(plan_images) => update({ plan_images })}
             userId={user?.id}
           />
         )}
-        {step === 6 && (
+        {step === 7 && (
           <StepSummary data={data} formatNumber={formatNumber} parsedKMZ={parsedKMZ} isEditing={isEditing} />
         )}
       </div>
@@ -305,20 +314,20 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         <Button variant="outline" onClick={step === 0 ? onCancel : () => setStep(s => s - 1)}>
           {step === 0 ? 'Cancelar' : <><ChevronLeft className="h-4 w-4 mr-1" />Atrás</>}
         </Button>
-        {step < 6 ? (
+        {step < 7 ? (
           <div className="flex gap-2">
-            {step === 3 && !parsedKMZ && (
-              <Button variant="ghost" onClick={() => setStep(4)} className="gap-1 text-muted-foreground">
-                <SkipForward className="h-4 w-4" /> Saltar
-              </Button>
-            )}
-            {step === 4 && data.images.length === 0 && (
+            {step === 4 && !parsedKMZ && (
               <Button variant="ghost" onClick={() => setStep(5)} className="gap-1 text-muted-foreground">
                 <SkipForward className="h-4 w-4" /> Saltar
               </Button>
             )}
-            {step === 5 && data.plan_images.length === 0 && (
+            {step === 5 && data.images.length === 0 && (
               <Button variant="ghost" onClick={() => setStep(6)} className="gap-1 text-muted-foreground">
+                <SkipForward className="h-4 w-4" /> Saltar
+              </Button>
+            )}
+            {step === 6 && data.plan_images.length === 0 && (
+              <Button variant="ghost" onClick={() => setStep(7)} className="gap-1 text-muted-foreground">
                 <SkipForward className="h-4 w-4" /> Saltar
               </Button>
             )}
