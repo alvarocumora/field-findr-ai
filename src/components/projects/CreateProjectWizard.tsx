@@ -23,6 +23,7 @@ import type { ParsedKMZ } from '@/lib/kmz/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { CommercialConditionsForm, type CommercialConditions, DEFAULT_CONDITIONS } from './CommercialConditionsForm';
 
 interface WizardData {
   name: string;
