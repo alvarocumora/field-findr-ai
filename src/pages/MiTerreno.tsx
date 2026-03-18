@@ -283,6 +283,12 @@ const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buye
                 Pagos
               </TabsTrigger>
             )}
+            {['paid', 'converted'].includes(status) && lot?.polygon && (
+              <TabsTrigger value="designer" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-sm px-4 py-2.5 gap-1">
+                <Palette className="h-3.5 w-3.5" />
+                Diseñar
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Overview Tab */}
