@@ -48,10 +48,11 @@ const STEPS = [
   { id: 0, label: 'Datos Básicos', icon: FileText },
   { id: 1, label: 'Ubicación', icon: MapPin },
   { id: 2, label: 'Lotes', icon: Grid3X3 },
-  { id: 3, label: 'Importar KMZ', icon: FileArchive },
-  { id: 4, label: 'Imágenes', icon: ImageIcon },
-  { id: 5, label: 'Planos', icon: Layers },
-  { id: 6, label: 'Resumen', icon: CheckCircle2 },
+  { id: 3, label: 'Condiciones', icon: Banknote },
+  { id: 4, label: 'Importar KMZ', icon: FileArchive },
+  { id: 5, label: 'Imágenes', icon: ImageIcon },
+  { id: 6, label: 'Planos', icon: Layers },
+  { id: 7, label: 'Resumen', icon: CheckCircle2 },
 ];
 
 const CHILE_REGIONS = LATAM_COUNTRIES.find(c => c.code === 'CL')?.regions || [];
