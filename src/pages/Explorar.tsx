@@ -93,6 +93,14 @@ const Explorar = () => {
     setSelectedTypes([]); setSelectedRegions([]); setSelectedCountries([]);
     setSelectedTags([]); setPriceRange([0, 5000000000]); setAreaRange([0, 1000000]);
     setSearchQuery(''); setMapBounds(null);
+    setSelectedSlopes([]); setSelectedValuation([]);
+  }, []);
+
+  const toggleSlope = useCallback((slope: string) => {
+    setSelectedSlopes(prev => prev.includes(slope) ? prev.filter(s => s !== slope) : [...prev, slope]);
+  }, []);
+  const toggleValuation = useCallback((val: string) => {
+    setSelectedValuation(prev => prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]);
   }, []);
 
   const toggleType = useCallback((type: string) => {
