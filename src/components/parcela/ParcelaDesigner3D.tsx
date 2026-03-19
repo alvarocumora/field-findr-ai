@@ -280,7 +280,11 @@ export const ParcelaDesigner3D = ({
             />
 
             {/* Terrain */}
-            <Terrain polygon={polygon} />
+            {useRealisticTerrain ? (
+              <RealisticTerrain polygon={polygon} latitude={latitude} longitude={longitude} />
+            ) : (
+              <Terrain polygon={polygon} />
+            )}
 
             {/* Grid */}
             <Grid
