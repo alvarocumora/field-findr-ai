@@ -18,13 +18,13 @@ interface UpgradePromptProps {
 }
 
 const UpgradePrompt = ({ currentPath }: UpgradePromptProps) => {
-  const professionalPlan = PLAN_DETAILS.professional;
+  const recommendedPlan = PLAN_DETAILS.growth;
 
   const premiumFeatures = [
-    { icon: Building2, label: 'Hasta 50 publicaciones activas' },
-    { icon: Sparkles, label: 'LandScore AI completo' },
-    { icon: Users, label: 'CRM integrado para leads' },
-    { icon: BarChart3, label: 'Analytics y reportes avanzados' },
+    { icon: Building2, label: 'Hasta 150 lotes gestionados' },
+    { icon: Sparkles, label: 'CRM completo + Lead Scoring AI' },
+    { icon: Users, label: 'Reservas online con pasarela de pago' },
+    { icon: BarChart3, label: 'Analytics avanzados + Dashboard multi-proyecto' },
   ];
 
   return (
