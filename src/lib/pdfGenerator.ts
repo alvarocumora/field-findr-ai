@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { drawPdfHeaderLogo } from './pdfBrandHeader';
 
 interface QuotePDFData {
   // Project info
