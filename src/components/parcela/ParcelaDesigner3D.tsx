@@ -1,4 +1,4 @@
-import { useRef, useMemo, useCallback, useEffect, Suspense } from 'react';
+import { useRef, useMemo, useCallback, useEffect, useState, Suspense } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid, Sky, TransformControls as DreiTransformControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -7,6 +7,7 @@ import { ParcelaToolbar } from './ParcelaToolbar';
 import { SolarLight } from './SolarLight';
 import { MeasurementLine } from './MeasurementLine';
 import { PedestrianCamera } from './PedestrianCamera';
+import { RealisticTerrain } from './RealisticTerrain';
 import { useParcelaState, type ParcelaObjectType } from './useParcelaState';
 import { toast } from 'sonner';
 
