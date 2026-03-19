@@ -1,4 +1,4 @@
-import { useRef, useMemo, useCallback, useEffect, Suspense } from 'react';
+import { useRef, useMemo, useCallback, useEffect, useState, Suspense } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid, Sky, TransformControls as DreiTransformControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -7,6 +7,7 @@ import { ParcelaToolbar } from './ParcelaToolbar';
 import { SolarLight } from './SolarLight';
 import { MeasurementLine } from './MeasurementLine';
 import { PedestrianCamera } from './PedestrianCamera';
+import { RealisticTerrain } from './RealisticTerrain';
 import { useParcelaState, type ParcelaObjectType } from './useParcelaState';
 import { toast } from 'sonner';
 
@@ -168,6 +169,7 @@ export const ParcelaDesigner3D = ({
   const captureRef = useRef<(() => void) | null>(null);
   const pendingPlaceRef = useRef<ParcelaObjectType | null>(null);
   const controlsRef = useRef<any>(null);
+  const [useRealisticTerrain, setUseRealisticTerrain] = useState(false);
 
   // Load saved design on mount
   useMemo(() => {
@@ -278,7 +280,11 @@ export const ParcelaDesigner3D = ({
             />
 
             {/* Terrain */}
-            <Terrain polygon={polygon} />
+            {useRealisticTerrain ? (
+              <RealisticTerrain polygon={polygon} latitude={latitude} longitude={longitude} />
+            ) : (
+              <Terrain polygon={polygon} />
+            )}
 
             {/* Grid */}
             <Grid
@@ -328,6 +334,18 @@ export const ParcelaDesigner3D = ({
             <PedestrianCamera active={ps.viewMode === 'pedestrian'} />
           </Suspense>
         </Canvas>
+
+        {/* Terrain toggle */}
+        <button
+          onClick={() => setUseRealisticTerrain(!useRealisticTerrain)}
+          className={`absolute top-3 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-lg text-[10px] font-medium border transition-all backdrop-blur-sm ${
+            useRealisticTerrain
+              ? 'bg-primary/20 text-primary border-primary/30'
+              : 'bg-background/60 text-muted-foreground border-border/30 hover:bg-background/80'
+          }`}
+        >
+          ⛰ {useRealisticTerrain ? 'Relieve Real' : 'Terreno Plano'}
+        </button>
 
         {/* Overlay info */}
         <div className="absolute bottom-3 left-3 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs text-muted-foreground border border-border/40">

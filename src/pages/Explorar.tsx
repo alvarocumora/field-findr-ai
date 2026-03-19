@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StickyHeader from '@/components/navigation/StickyHeader';
 import ExploreListPanel from '@/components/explore/ExploreListPanel';
@@ -8,9 +8,12 @@ import PropertyPreviewSheet from '@/components/explore/PropertyPreviewSheet';
 import EnhancedAISearch from '@/components/ai/EnhancedAISearch';
 import CompareFloatingBar from '@/components/compare/CompareFloatingBar';
 import CompareSheet from '@/components/compare/CompareSheet';
+import CinematicTransition from '@/components/map/CinematicTransition';
 import { Listing, getPricePerM2 } from '@/hooks/useListings';
 import { useFlattenedListings } from '@/hooks/useInfiniteListings';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+const ParcelaDesigner3D = lazy(() => import('@/components/parcela/ParcelaDesigner3D').then(m => ({ default: m.ParcelaDesigner3D })));
 
 const Explorar = () => {
   const navigate = useNavigate();
@@ -35,6 +38,14 @@ const Explorar = () => {
   const [hoveredListing, setHoveredListing] = useState<Listing | null>(null);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [previewListing, setPreviewListing] = useState<Listing | null>(null);
+
+  // Valuation & topography filters
+  const [selectedSlopes, setSelectedSlopes] = useState<string[]>([]);
+  const [selectedValuation, setSelectedValuation] = useState<string[]>([]);
+
+  // Cinematic 3D transition
+  const [cinematicLot, setCinematicLot] = useState<any>(null);
+  const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
 
   // Data — infinite pagination with cursor
   const {
@@ -82,6 +93,14 @@ const Explorar = () => {
     setSelectedTypes([]); setSelectedRegions([]); setSelectedCountries([]);
     setSelectedTags([]); setPriceRange([0, 5000000000]); setAreaRange([0, 1000000]);
     setSearchQuery(''); setMapBounds(null);
+    setSelectedSlopes([]); setSelectedValuation([]);
+  }, []);
+
+  const toggleSlope = useCallback((slope: string) => {
+    setSelectedSlopes(prev => prev.includes(slope) ? prev.filter(s => s !== slope) : [...prev, slope]);
+  }, []);
+  const toggleValuation = useCallback((val: string) => {
+    setSelectedValuation(prev => prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]);
   }, []);
 
   const toggleType = useCallback((type: string) => {
@@ -210,6 +229,10 @@ const Explorar = () => {
             activeFiltersCount={activeFiltersCount}
             showAISearch={showAISearch}
             onToggleAISearch={() => setShowAISearch(!showAISearch)}
+            selectedSlopes={selectedSlopes}
+            onToggleSlope={toggleSlope}
+            selectedValuation={selectedValuation}
+            onToggleValuation={toggleValuation}
           />
         </div>
 

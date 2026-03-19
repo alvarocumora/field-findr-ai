@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import QuickPropertyCard from './QuickPropertyCard';
 import FilterBar from './FilterBar';
+import ValuationFilters from './ValuationFilters';
 import { Listing, formatPriceShort, getPricePerM2 } from '@/hooks/useListings';
 import { cn } from '@/lib/utils';
 
@@ -86,6 +87,10 @@ interface ExploreListPanelProps {
   activeFiltersCount: number;
   showAISearch?: boolean;
   onToggleAISearch?: () => void;
+  selectedSlopes?: string[];
+  onToggleSlope?: (slope: string) => void;
+  selectedValuation?: string[];
+  onToggleValuation?: (val: string) => void;
 }
 
 const ExploreListPanel = ({
@@ -118,6 +123,10 @@ const ExploreListPanel = ({
   activeFiltersCount,
   showAISearch,
   onToggleAISearch,
+  selectedSlopes = [],
+  onToggleSlope,
+  selectedValuation = [],
+  onToggleValuation,
 }: ExploreListPanelProps) => {
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
@@ -211,6 +220,16 @@ const ExploreListPanel = ({
           onToggleAISearch={onToggleAISearch}
           className="!bg-transparent !border-0 !backdrop-blur-0"
         />
+
+        {/* Valuation & Topography Filters */}
+        {onToggleSlope && onToggleValuation && (
+          <ValuationFilters
+            selectedSlopes={selectedSlopes}
+            onToggleSlope={onToggleSlope}
+            selectedValuation={selectedValuation}
+            onToggleValuation={onToggleValuation}
+          />
+        )}
       </div>
 
       {/* Summary + Tabs + Sort */}
