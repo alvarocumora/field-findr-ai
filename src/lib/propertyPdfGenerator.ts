@@ -173,7 +173,7 @@ export const generatePropertyPdf = (property: PropertyPdfData) => {
   doc.setFontSize(8);
   doc.setTextColor(150, 150, 150);
   doc.text(
-    `Generado el ${new Date().toLocaleDateString('es-CL')} desde Ofertaterrenos.com`,
+    `Generado el ${new Date().toLocaleDateString('es-CL')} desde ofertaterrenos.com`,
     margin,
     footerY
   );
