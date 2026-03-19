@@ -39,6 +39,14 @@ const Explorar = () => {
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [previewListing, setPreviewListing] = useState<Listing | null>(null);
 
+  // Valuation & topography filters
+  const [selectedSlopes, setSelectedSlopes] = useState<string[]>([]);
+  const [selectedValuation, setSelectedValuation] = useState<string[]>([]);
+
+  // Cinematic 3D transition
+  const [cinematicLot, setCinematicLot] = useState<any>(null);
+  const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
+
   // Data — infinite pagination with cursor
   const {
     listings,
