@@ -229,6 +229,10 @@ const Explorar = () => {
             activeFiltersCount={activeFiltersCount}
             showAISearch={showAISearch}
             onToggleAISearch={() => setShowAISearch(!showAISearch)}
+            selectedSlopes={selectedSlopes}
+            onToggleSlope={toggleSlope}
+            selectedValuation={selectedValuation}
+            onToggleValuation={toggleValuation}
           />
         </div>
 
