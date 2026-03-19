@@ -917,3 +917,91 @@ html {
   align-items: center;
   justify-content: center;
 }
+
+/* ========================================
+   CARTOGRAPHIC LUXURY SYSTEM
+   ======================================== */
+
+/* Topographic contour background pattern */
+.grid-topo {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 50%, transparent 40%, hsla(142, 76%, 36%, 0.02) 60%, transparent 80%),
+    repeating-conic-gradient(
+      hsla(142, 76%, 36%, 0.03) 0deg 1deg,
+      transparent 1deg 90deg
+    );
+  background-size: 100% 100%, 60px 60px;
+}
+
+/* Swiss monospace style */
+.font-swiss {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Map pin pulse glow */
+@keyframes pin-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsla(142, 76%, 36%, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 12px hsla(142, 76%, 36%, 0);
+  }
+}
+
+.glow-pin {
+  animation: pin-pulse 2s ease-in-out infinite;
+}
+
+/* Contour line draw animation */
+@keyframes contour-draw {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-contour {
+  stroke-dasharray: 1000;
+  animation: contour-draw 3s ease-out forwards;
+}
+
+/* Coordinate fade-in */
+@keyframes coordinate-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.animate-coordinate {
+  animation: coordinate-fade 0.6s ease-out forwards;
+}
+
+/* Ultra-thin cartographic border */
+.border-cartographic {
+  border: 0.5px solid hsla(142, 76%, 36%, 0.12);
+}
+
+/* Section divider with coordinates */
+.divider-cartographic {
+  @apply relative flex items-center gap-4 py-8;
+}
+
+.divider-cartographic::before,
+.divider-cartographic::after {
+  content: '';
+  flex: 1;
+  height: 0.5px;
+  background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
+}
