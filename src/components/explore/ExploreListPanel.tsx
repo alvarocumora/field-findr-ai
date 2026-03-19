@@ -87,6 +87,10 @@ interface ExploreListPanelProps {
   activeFiltersCount: number;
   showAISearch?: boolean;
   onToggleAISearch?: () => void;
+  selectedSlopes?: string[];
+  onToggleSlope?: (slope: string) => void;
+  selectedValuation?: string[];
+  onToggleValuation?: (val: string) => void;
 }
 
 const ExploreListPanel = ({
