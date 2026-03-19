@@ -53,7 +53,7 @@ const UpgradePrompt = ({ currentPath }: UpgradePromptProps) => {
               </Badge>
             </div>
             <div className="text-2xl font-bold text-foreground mb-1">
-              ${professionalPlan.price.toLocaleString('es-CL')}
+              ${recommendedPlan.price.toLocaleString('es-CL')}
               <span className="text-sm font-normal text-muted-foreground">/mes</span>
             </div>
           </div>
