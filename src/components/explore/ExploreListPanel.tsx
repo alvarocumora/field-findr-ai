@@ -123,6 +123,10 @@ const ExploreListPanel = ({
   activeFiltersCount,
   showAISearch,
   onToggleAISearch,
+  selectedSlopes = [],
+  onToggleSlope,
+  selectedValuation = [],
+  onToggleValuation,
 }: ExploreListPanelProps) => {
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
