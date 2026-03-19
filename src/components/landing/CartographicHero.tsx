@@ -57,9 +57,9 @@ function Globe({ scrollProgress }: { scrollProgress: number }) {
         />
       </mesh>
       {/* Chile highlight */}
-      <line geometry={chileGeom}>
+      <lineLoop geometry={chileGeom}>
         <lineBasicMaterial color="#22c55e" linewidth={2} transparent opacity={0.8} />
-      </line>
+      </lineLoop>
     </group>
   );
 }
