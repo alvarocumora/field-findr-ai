@@ -46,7 +46,7 @@ const UpgradePrompt = ({ currentPath }: UpgradePromptProps) => {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Crown className="h-5 w-5 text-primary" />
-                <span className="font-semibold text-foreground">{professionalPlan.name}</span>
+                <span className="font-semibold text-foreground">{recommendedPlan.name}</span>
               </div>
               <Badge variant="secondary" className="bg-primary/20 text-primary">
                 Recomendado
