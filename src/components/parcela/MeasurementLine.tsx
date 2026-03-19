@@ -7,22 +7,21 @@ interface MeasurementLineProps {
 }
 
 export const MeasurementLine = ({ points }: MeasurementLineProps) => {
-  if (points.length < 2) return null;
-
-  const p1 = points[0];
-  const p2 = points[1];
+  const p1 = points.length >= 1 ? points[0] : [0, 0, 0] as [number, number, number];
+  const p2 = points.length >= 2 ? points[1] : p1;
 
   const distance = useMemo(() => {
+    if (points.length < 2) return 0;
     const dx = p2[0] - p1[0];
     const dz = p2[2] - p1[2];
     return Math.sqrt(dx * dx + dz * dz);
-  }, [p1, p2]);
+  }, [p1, p2, points.length]);
 
-  const midpoint: [number, number, number] = [
+  const midpoint: [number, number, number] = useMemo(() => [
     (p1[0] + p2[0]) / 2,
     Math.max(p1[1], p2[1]) + 0.8,
     (p1[2] + p2[2]) / 2,
-  ];
+  ], [p1, p2]);
 
   const linePoints = useMemo(() => {
     return new Float32Array([
@@ -30,6 +29,8 @@ export const MeasurementLine = ({ points }: MeasurementLineProps) => {
       p2[0], p2[1] + 0.1, p2[2],
     ]);
   }, [p1, p2]);
+
+  if (points.length < 2) return null;
 
   return (
     <group>

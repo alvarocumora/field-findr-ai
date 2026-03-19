@@ -106,6 +106,19 @@ export function generateScaledPdf(
     }
   }
 
+  // Helper to draw polygon path
+  const drawPolygon = (pts: number[][], mode: 'S' | 'F' | 'FD') => {
+    if (pts.length < 3) return;
+    doc.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) {
+      doc.lineTo(pts[i][0], pts[i][1]);
+    }
+    doc.lineTo(pts[0][0], pts[0][1]);
+    if (mode === 'F') doc.fill();
+    else if (mode === 'FD') doc.fillStroke();
+    else doc.stroke();
+  };
+
   // Roads
   if (roads) {
     doc.setDrawColor(180, 180, 180);
@@ -113,13 +126,7 @@ export function generateScaledPdf(
     doc.setLineWidth(0.3);
     for (const road of roads) {
       const pts = road.map(p => [tx(p[0]), ty(p[1])]);
-      if (pts.length >= 3) {
-        doc.setFillColor(220, 220, 220);
-        // Draw as filled polygon
-        const lines: number[][] = [];
-        pts.forEach(p => lines.push(p));
-        doc.polygon(lines as any, 'FD');
-      }
+      drawPolygon(pts, 'FD');
     }
   }
 
@@ -127,17 +134,17 @@ export function generateScaledPdf(
   for (const lot of lots) {
     const color = STATUS_COLORS[lot.status || 'available'];
     doc.setDrawColor(color[0], color[1], color[2]);
-    doc.setFillColor(color[0], color[1], color[2]);
     doc.setLineWidth(0.4);
 
     const pts = lot.polygon.map(p => [tx(p[0]), ty(p[1])]);
     if (pts.length >= 3) {
-      // Fill with transparency simulation (lighter color)
-      doc.setFillColor(color[0], color[1], color[2]);
-      doc.setGState(new (doc as any).GState({ opacity: 0.15 }));
-      doc.polygon(pts as any, 'F');
-      doc.setGState(new (doc as any).GState({ opacity: 1 }));
-      doc.polygon(pts as any, 'S');
+      // Light fill
+      doc.setFillColor(
+        Math.min(255, color[0] + 180),
+        Math.min(255, color[1] + 180),
+        Math.min(255, color[2] + 180)
+      );
+      drawPolygon(pts, 'FD');
     }
 
     // Label
