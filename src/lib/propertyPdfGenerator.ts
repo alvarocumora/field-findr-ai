@@ -38,15 +38,7 @@ export const generatePropertyPdf = (property: PropertyPdfData) => {
   let y = margin;
 
   // Header bar
-  doc.setFillColor(34, 34, 34);
-  doc.rect(0, 0, pageWidth, 40, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(20);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Ofertaterrenos.com', margin, 26);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Ficha de Propiedad', pageWidth - margin, 26, { align: 'right' });
+  drawPdfHeaderLogo(doc, { subtitle: 'Ficha de Propiedad' });
 
   y = 55;
 
