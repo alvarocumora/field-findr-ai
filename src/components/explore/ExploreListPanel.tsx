@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import QuickPropertyCard from './QuickPropertyCard';
 import FilterBar from './FilterBar';
+import ValuationFilters from './ValuationFilters';
 import { Listing, formatPriceShort, getPricePerM2 } from '@/hooks/useListings';
 import { cn } from '@/lib/utils';
 
