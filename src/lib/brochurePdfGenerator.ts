@@ -44,7 +44,6 @@ export const generateProjectBrochurePDF = ({ project, lots, conditions }: Brochu
   y += 12;
 
   // Description
-  let y = 65;
   if (project.description) {
     doc.setTextColor(...DARK);
     doc.setFontSize(11);
