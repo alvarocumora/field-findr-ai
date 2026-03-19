@@ -7,7 +7,7 @@ interface LogoIconProps {
   animated?: boolean;
 }
 
-const textSizeClasses = {
+const sizeClasses = {
   sm: 'text-sm',
   md: 'text-base',
   lg: 'text-lg',
@@ -22,8 +22,8 @@ const LogoIcon = ({
   return (
     <span 
       className={cn(
-        'font-bold tracking-tight font-heading',
-        textSizeClasses[size],
+        'font-bold tracking-tight font-heading uppercase',
+        sizeClasses[size],
         variant === 'monochrome' ? 'text-foreground/80' : 'text-foreground',
         className
       )}
@@ -31,8 +31,8 @@ const LogoIcon = ({
       aria-label="Ofertaterrenos"
     >
       O<span className={cn(
-        variant === 'monochrome' ? 'text-foreground/60' : 'text-primary'
-      )}>t</span>
+        variant === 'monochrome' ? 'text-foreground/60' : 'gradient-text-hero'
+      )}>T</span>
     </span>
   );
 };
