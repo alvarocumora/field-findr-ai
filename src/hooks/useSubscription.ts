@@ -147,13 +147,71 @@ export const PLAN_DETAILS: Record<PlanType, Plan & { id: PlanType }> = {
   },
 };
 
-// Multi-currency pricing for LATAM
+// Multi-currency pricing for LATAM — aligned to Chilean market benchmark (UF base)
 export const LATAM_PRICES: Record<string, Record<PlanType, number>> = {
-  CLP: { free: 0, starter: 29990, growth: 79990, scale: 199990, enterprise: 499990 },
-  USD: { free: 0, starter: 35, growth: 95, scale: 240, enterprise: 599 },
-  ARS: { free: 0, starter: 29900, growth: 79900, scale: 199900, enterprise: 499900 },
-  COP: { free: 0, starter: 139900, growth: 379900, scale: 959900, enterprise: 2399900 },
-  MXN: { free: 0, starter: 599, growth: 1599, scale: 3999, enterprise: 9999 },
+  UF:  { free: 0, starter: 2.0, growth: 4.5, scale: 8.0, enterprise: 15.0 },
+  CLP: { free: 0, starter: 75000, growth: 168750, scale: 300000, enterprise: 562500 },
+  USD: { free: 0, starter: 75, growth: 165, scale: 295, enterprise: 599 },
+  ARS: { free: 0, starter: 67500, growth: 148500, scale: 265500, enterprise: 539100 },
+  COP: { free: 0, starter: 299900, growth: 659900, scale: 1179900, enterprise: 2399900 },
+  MXN: { free: 0, starter: 1299, growth: 2899, scale: 4999, enterprise: 9999 },
+};
+
+// Featured listing add-on pricing (per listing, per month)
+export type AddOnType = 'basic' | 'featured' | 'super_featured';
+
+export interface ListingAddOn {
+  id: AddOnType;
+  name: string;
+  description: string;
+  multiplier: string;
+  features: string[];
+}
+
+export const LISTING_ADDONS: ListingAddOn[] = [
+  {
+    id: 'basic',
+    name: 'Publicación Básica',
+    description: 'Listado estándar en el marketplace',
+    multiplier: 'Incluido en plan',
+    features: ['Ficha estándar', 'Fotos (hasta 5)', 'Mapa de ubicación'],
+  },
+  {
+    id: 'featured',
+    name: 'Publicación Destacada',
+    description: 'Mayor visibilidad y posicionamiento premium',
+    multiplier: '3x visibilidad',
+    features: [
+      'Badge "Destacado" visible',
+      'Prioridad en resultados de búsqueda',
+      'Fotos ilimitadas + galería HD',
+      'Estadísticas de visitas detalladas',
+      'Aparece en sección "Destacados"',
+    ],
+  },
+  {
+    id: 'super_featured',
+    name: 'Super Destacada',
+    description: 'Máxima exposición + herramientas de conversión',
+    multiplier: '10x visibilidad',
+    features: [
+      'Todo de Destacada +',
+      'Banner premium en landing y explorar',
+      'Video/tour 360° integrado',
+      'Botón WhatsApp directo',
+      'Reporte semanal de rendimiento',
+      'Posición fija top en resultados',
+    ],
+  },
+];
+
+export const ADDON_PRICES: Record<string, Record<AddOnType, number>> = {
+  UF:  { basic: 0, featured: 0.5, super_featured: 1.5 },
+  CLP: { basic: 0, featured: 18750, super_featured: 56250 },
+  USD: { basic: 0, featured: 19, super_featured: 55 },
+  MXN: { basic: 0, featured: 329, super_featured: 949 },
+  COP: { basic: 0, featured: 75900, super_featured: 219900 },
+  ARS: { basic: 0, featured: 17100, super_featured: 49500 },
 };
 
 export const useSubscription = () => {
