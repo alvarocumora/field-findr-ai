@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { drawPdfHeaderLogo, drawPdfFooter } from './pdfBrandHeader';
 
 interface PropertyPdfData {
   title: string;
