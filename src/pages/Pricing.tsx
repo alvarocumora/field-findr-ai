@@ -1,15 +1,20 @@
 import { useState } from 'react';
-import { Check, Sparkles, Building2, Rocket, Loader2, TrendingUp, Zap, Globe, Users } from 'lucide-react';
+import { Check, Sparkles, Building2, Rocket, Loader2, TrendingUp, Zap, Globe, Users, Star, Crown, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { useCurrentPlan, useCreateCheckout, PLAN_DETAILS, LATAM_PRICES, PlanType } from '@/hooks/useSubscription';
+import {
+  useCurrentPlan, useCreateCheckout,
+  PLAN_DETAILS, LATAM_PRICES, LISTING_ADDONS, ADDON_PRICES,
+  PlanType, AddOnType,
+} from '@/hooks/useSubscription';
 import PublicLayout from '@/components/layouts/PublicLayout';
 
 const CURRENCIES = [
+  { code: 'UF', label: 'UF', country: 'Chile (UF)', flag: '🇨🇱' },
   { code: 'CLP', label: 'CLP $', country: 'Chile', flag: '🇨🇱' },
   { code: 'USD', label: 'USD $', country: 'Internacional', flag: '🌎' },
   { code: 'MXN', label: 'MXN $', country: 'México', flag: '🇲🇽' },
@@ -25,12 +30,18 @@ const PLAN_ICONS: Record<PlanType, React.ElementType> = {
   enterprise: Rocket,
 };
 
+const ADDON_ICONS: Record<AddOnType, React.ElementType> = {
+  basic: Eye,
+  featured: Star,
+  super_featured: Crown,
+};
+
 const Pricing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { plan: currentPlan, isLoading: planLoading } = useCurrentPlan();
   const { mutate: createCheckout, isPending } = useCreateCheckout();
-  const [currency, setCurrency] = useState('CLP');
+  const [currency, setCurrency] = useState('UF');
 
   const handleSelectPlan = (planId: PlanType) => {
     if (!user) {
@@ -43,7 +54,8 @@ const Pricing = () => {
 
   const formatPrice = (price: number, curr: string) => {
     if (price === 0) return 'Gratis';
-    if (curr === 'USD') return `$${price}`;
+    if (curr === 'UF') return `UF ${price.toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+    if (curr === 'USD') return `US$${price}`;
     return new Intl.NumberFormat('es-CL', { style: 'currency', currency: curr, maximumFractionDigits: 0 }).format(price);
   };
 
@@ -164,7 +176,6 @@ const Pricing = () => {
                       Más Popular
                     </Badge>
                   )}
-
                   <CardHeader className="text-center pb-3">
                     <div className={`mx-auto p-3 rounded-full mb-3 ${plan.highlighted ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
                       <plan.icon className="h-5 w-5" />
@@ -182,7 +193,6 @@ const Pricing = () => {
                       </p>
                     )}
                   </CardHeader>
-
                   <CardContent className="flex-1">
                     <ul className="space-y-2.5">
                       {plan.features.map((feature, i) => (
@@ -193,7 +203,6 @@ const Pricing = () => {
                       ))}
                     </ul>
                   </CardContent>
-
                   <CardFooter>
                     <Button
                       className="w-full"
@@ -247,7 +256,6 @@ const Pricing = () => {
                       </p>
                     )}
                   </CardHeader>
-
                   <CardContent className="flex-1">
                     <ul className="space-y-3">
                       {plan.features.map((feature, i) => (
@@ -258,7 +266,6 @@ const Pricing = () => {
                       ))}
                     </ul>
                   </CardContent>
-
                   <CardFooter>
                     <Button
                       className="w-full"
@@ -280,6 +287,88 @@ const Pricing = () => {
           </TabsContent>
         </Tabs>
 
+        {/* ── Featured Listings Add-On Section ── */}
+        <div className="mt-20 max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <Badge variant="outline" className="mb-3 border-primary/40 text-primary">
+              <Star className="h-3 w-3 mr-1" /> ADD-ON DE VISIBILIDAD
+            </Badge>
+            <h2 className="text-3xl font-bold mb-3 text-foreground">
+              Publicaciones Destacadas
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Aumenta la exposición de tus terrenos con visibilidad premium. Precio por publicación, por mes — compatible con cualquier plan.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {LISTING_ADDONS.map((addon) => {
+              const Icon = ADDON_ICONS[addon.id];
+              const price = ADDON_PRICES[currency]?.[addon.id] ?? 0;
+              const isSuper = addon.id === 'super_featured';
+              const isFeatured = addon.id === 'featured';
+
+              return (
+                <Card
+                  key={addon.id}
+                  className={`relative flex flex-col transition-all ${
+                    isSuper
+                      ? 'border-primary shadow-xl ring-2 ring-primary/20'
+                      : isFeatured
+                        ? 'border-primary/40 shadow-md'
+                        : 'border-border'
+                  }`}
+                >
+                  {isSuper && (
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+                      Máx. Conversión
+                    </Badge>
+                  )}
+                  <CardHeader className="text-center pb-3">
+                    <div className={`mx-auto p-3 rounded-full mb-3 ${
+                      isSuper ? 'bg-primary/10 text-primary' : isFeatured ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-lg">{addon.name}</CardTitle>
+                    <CardDescription className="text-xs">{addon.description}</CardDescription>
+                    <div className="mt-2">
+                      <span className="text-2xl font-bold text-foreground">
+                        {price === 0 ? 'Incluido' : formatPrice(price, currency)}
+                      </span>
+                      {price > 0 && <span className="text-muted-foreground text-sm"> /pub/mes</span>}
+                    </div>
+                    <Badge variant="secondary" className="mt-2 text-xs">
+                      {addon.multiplier}
+                    </Badge>
+                  </CardHeader>
+                  <CardContent className="flex-1">
+                    <ul className="space-y-2">
+                      {addon.features.map((f, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          <span className="text-xs">{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      className="w-full"
+                      variant={isSuper ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => price === 0 ? undefined : (user ? navigate('/dashboard') : navigate('/auth?redirect=/pricing'))}
+                      disabled={price === 0}
+                    >
+                      {price === 0 ? 'Ya incluido' : 'Activar Add-on'}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Feature comparison */}
         <div className="mt-20 max-w-5xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-8">Comparación de funcionalidades</h2>
@@ -297,6 +386,7 @@ const Pricing = () => {
               </thead>
               <tbody>
                 {[
+                  { label: 'Precio mensual', values: ['Gratis', formatPrice(LATAM_PRICES[currency].starter, currency), formatPrice(LATAM_PRICES[currency].growth, currency), formatPrice(LATAM_PRICES[currency].scale, currency), formatPrice(LATAM_PRICES[currency].enterprise, currency)] },
                   { label: 'Lotes máx.', values: ['5', '30', '150', '500', '∞'] },
                   { label: 'Proyectos activos', values: ['1', '3', '10', '50', '∞'] },
                   { label: 'Publicaciones marketplace', values: ['3', '20', '100', '500', '∞'] },
