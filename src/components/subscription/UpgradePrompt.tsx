@@ -18,13 +18,13 @@ interface UpgradePromptProps {
 }
 
 const UpgradePrompt = ({ currentPath }: UpgradePromptProps) => {
-  const professionalPlan = PLAN_DETAILS.professional;
+  const recommendedPlan = PLAN_DETAILS.growth;
 
   const premiumFeatures = [
-    { icon: Building2, label: 'Hasta 50 publicaciones activas' },
-    { icon: Sparkles, label: 'LandScore AI completo' },
-    { icon: Users, label: 'CRM integrado para leads' },
-    { icon: BarChart3, label: 'Analytics y reportes avanzados' },
+    { icon: Building2, label: 'Hasta 150 lotes gestionados' },
+    { icon: Sparkles, label: 'CRM completo + Lead Scoring AI' },
+    { icon: Users, label: 'Reservas online con pasarela de pago' },
+    { icon: BarChart3, label: 'Analytics avanzados + Dashboard multi-proyecto' },
   ];
 
   return (
@@ -46,14 +46,14 @@ const UpgradePrompt = ({ currentPath }: UpgradePromptProps) => {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Crown className="h-5 w-5 text-primary" />
-                <span className="font-semibold text-foreground">{professionalPlan.name}</span>
+                <span className="font-semibold text-foreground">{recommendedPlan.name}</span>
               </div>
               <Badge variant="secondary" className="bg-primary/20 text-primary">
                 Recomendado
               </Badge>
             </div>
             <div className="text-2xl font-bold text-foreground mb-1">
-              ${professionalPlan.price.toLocaleString('es-CL')}
+              ${recommendedPlan.price.toLocaleString('es-CL')}
               <span className="text-sm font-normal text-muted-foreground">/mes</span>
             </div>
           </div>

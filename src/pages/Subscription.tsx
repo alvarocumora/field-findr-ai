@@ -140,15 +140,15 @@ const Subscription = () => {
             {/* Actions */}
             <div className="flex flex-wrap gap-3 pt-4 border-t">
               {currentPlan === 'free' && (
-                <Button onClick={() => handleUpgrade('professional')} disabled={checkoutLoading}>
+                <Button onClick={() => handleUpgrade('starter')} disabled={checkoutLoading}>
                   <Crown className="h-4 w-4 mr-2" />
-                  Mejorar a Profesional
+                  Mejorar a Starter
                 </Button>
               )}
-              {currentPlan === 'professional' && (
-                <Button onClick={() => handleUpgrade('enterprise')} disabled={checkoutLoading}>
+              {(currentPlan === 'starter' || currentPlan === 'free') && (
+                <Button onClick={() => handleUpgrade('growth')} disabled={checkoutLoading} variant={currentPlan === 'free' ? 'outline' : 'default'}>
                   <ArrowUpRight className="h-4 w-4 mr-2" />
-                  Mejorar a Empresa
+                  {currentPlan === 'free' ? 'Ver Growth' : 'Mejorar a Growth'}
                 </Button>
               )}
               <Button variant="outline" asChild>
