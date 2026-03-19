@@ -1,35 +1,32 @@
-import { useRef, useMemo, useCallback, Suspense } from 'react';
+import { useRef, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls, Grid, Sky, Environment, Text } from '@react-three/drei';
+import { OrbitControls, Grid, Sky, TransformControls as DreiTransformControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { ParcelaObject3D } from './ParcelaObjects';
 import { ParcelaToolbar } from './ParcelaToolbar';
+import { SolarLight } from './SolarLight';
+import { MeasurementLine } from './MeasurementLine';
+import { PedestrianCamera } from './PedestrianCamera';
 import { useParcelaState, type ParcelaObjectType } from './useParcelaState';
 import { toast } from 'sonner';
 
 interface ParcelaDesigner3DProps {
-  polygon: number[][] | null; // [[lng, lat], ...] from lot.polygon
+  polygon: number[][] | null;
   lotNumber: string;
   lotArea: number;
   lotPrice?: number;
+  latitude?: number;
+  longitude?: number;
   savedDesign?: string | null;
   onSave?: (designJson: string) => void;
 }
 
-/**
- * Convert geo polygon coordinates to local meter-based coordinates.
- * Centers the polygon and projects lat/lng to approximate meters.
- */
 function polygonToLocalCoords(polygon: number[][]): [number, number][] {
   if (!polygon || polygon.length === 0) return [];
-
-  // Find centroid
   const cx = polygon.reduce((s, p) => s + p[0], 0) / polygon.length;
   const cy = polygon.reduce((s, p) => s + p[1], 0) / polygon.length;
-
   const metersPerDegLng = 111320 * Math.cos((cy * Math.PI) / 180);
   const metersPerDegLat = 110540;
-
   return polygon.map(([lng, lat]) => [
     (lng - cx) * metersPerDegLng,
     (lat - cy) * metersPerDegLat,
@@ -39,7 +36,6 @@ function polygonToLocalCoords(polygon: number[][]): [number, number][] {
 function createTerrainShape(coords: [number, number][]): THREE.Shape {
   const shape = new THREE.Shape();
   if (coords.length === 0) {
-    // Default 20x30 rectangle
     shape.moveTo(-10, -15);
     shape.lineTo(10, -15);
     shape.lineTo(10, 15);
@@ -63,9 +59,8 @@ const Terrain = ({ polygon }: { polygon: number[][] | null }) => {
     <group rotation={[-Math.PI / 2, 0, 0]}>
       <mesh receiveShadow>
         <shapeGeometry args={[shape]} />
-        <meshStandardMaterial color="#7CB342" side={THREE.DoubleSide} />
+        <meshStandardMaterial color="#7CB342" side={THREE.DoubleSide} roughness={0.9} />
       </mesh>
-      {/* Border */}
       <lineLoop>
         <bufferGeometry>
           <bufferAttribute
@@ -85,15 +80,12 @@ const Terrain = ({ polygon }: { polygon: number[][] | null }) => {
   );
 };
 
-const ClickPlane = ({ onClickGround }: { onClickGround: (point: THREE.Vector3) => void }) => (
+const ClickPlane = ({ onClick }: { onClick: (point: THREE.Vector3) => void }) => (
   <mesh
     rotation={[-Math.PI / 2, 0, 0]}
     position={[0, 0, 0]}
     visible={false}
-    onClick={(e) => {
-      e.stopPropagation();
-      onClickGround(e.point);
-    }}
+    onClick={(e) => { e.stopPropagation(); onClick(e.point); }}
   >
     <planeGeometry args={[200, 200]} />
     <meshBasicMaterial transparent opacity={0} />
@@ -114,19 +106,85 @@ const SceneCapture = ({ captureRef }: { captureRef: React.MutableRefObject<(() =
   return null;
 };
 
+/** Camera controller that switches between orbit and top-down views */
+const CameraController = ({ viewMode, controlsRef }: { viewMode: string; controlsRef: React.MutableRefObject<any> }) => {
+  const { camera } = useThree();
+
+  useEffect(() => {
+    if (viewMode === 'top') {
+      camera.position.set(0, 60, 0.01);
+      camera.lookAt(0, 0, 0);
+      if (controlsRef.current) {
+        controlsRef.current.target.set(0, 0, 0);
+        controlsRef.current.update();
+      }
+    } else if (viewMode === 'orbit') {
+      camera.position.set(25, 20, 25);
+      camera.lookAt(0, 0, 0);
+      if (controlsRef.current) {
+        controlsRef.current.target.set(0, 0, 0);
+        controlsRef.current.update();
+      }
+    }
+  }, [viewMode, camera, controlsRef]);
+
+  return null;
+};
+
+/** Wrapper for TransformControls on selected object */
+const ObjectTransformControls = ({
+  obj,
+  mode,
+  onTransformEnd,
+}: {
+  obj: { id: string; position: [number, number, number]; rotation: number; scale: number };
+  mode: 'translate' | 'rotate' | 'scale';
+  onTransformEnd: (id: string, updates: any) => void;
+}) => {
+  const groupRef = useRef<THREE.Group>(null);
+
+  return (
+    <group ref={groupRef} position={obj.position}>
+      <DreiTransformControls
+        mode={mode}
+        size={0.6}
+        onMouseUp={() => {
+          if (groupRef.current) {
+            const pos = groupRef.current.position;
+            onTransformEnd(obj.id, {
+              position: [pos.x, pos.y, pos.z] as [number, number, number],
+            });
+          }
+        }}
+      />
+    </group>
+  );
+};
+
 export const ParcelaDesigner3D = ({
-  polygon, lotNumber, lotArea, lotPrice, savedDesign, onSave,
+  polygon, lotNumber, lotArea, lotPrice, latitude, longitude, savedDesign, onSave,
 }: ParcelaDesigner3DProps) => {
-  const parcelaState = useParcelaState();
+  const ps = useParcelaState();
   const captureRef = useRef<(() => void) | null>(null);
   const pendingPlaceRef = useRef<ParcelaObjectType | null>(null);
+  const controlsRef = useRef<any>(null);
 
   // Load saved design on mount
   useMemo(() => {
-    if (savedDesign) {
-      parcelaState.loadFromJSON(savedDesign);
-    }
+    if (savedDesign) ps.loadFromJSON(savedDesign);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'z') { e.preventDefault(); ps.undo(); }
+      if (e.ctrlKey && e.key === 'y') { e.preventDefault(); ps.redo(); }
+      if (e.key === 'Delete' && ps.selectedId) ps.removeObject(ps.selectedId);
+      if (e.key === 'Escape') ps.selectObject(null);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [ps]);
 
   const handleAddObject = useCallback((type: ParcelaObjectType) => {
     pendingPlaceRef.current = type;
@@ -134,46 +192,69 @@ export const ParcelaDesigner3D = ({
   }, []);
 
   const handleGroundClick = useCallback((point: THREE.Vector3) => {
+    if (ps.measureMode) {
+      ps.addMeasurePoint([point.x, point.y, point.z]);
+      return;
+    }
     if (pendingPlaceRef.current) {
-      parcelaState.addObject(pendingPlaceRef.current, [point.x, 0.01, point.z]);
+      ps.addObject(pendingPlaceRef.current, [point.x, 0.01, point.z]);
       pendingPlaceRef.current = null;
     } else {
-      parcelaState.selectObject(null);
+      ps.selectObject(null);
     }
-  }, [parcelaState]);
+  }, [ps]);
 
   const handleSave = useCallback(() => {
-    const json = parcelaState.toJSON();
+    const json = ps.toJSON();
     onSave?.(json);
     toast.success('Diseño guardado');
-  }, [parcelaState, onSave]);
+  }, [ps, onSave]);
 
-  const handleCapture = useCallback(() => {
-    captureRef.current?.();
-  }, []);
+  const handleCapture = useCallback(() => { captureRef.current?.(); }, []);
 
   const handleRemoveSelected = useCallback(() => {
-    if (parcelaState.selectedId) {
-      parcelaState.removeObject(parcelaState.selectedId);
+    if (ps.selectedId) ps.removeObject(ps.selectedId);
+  }, [ps]);
+
+  const handleTransformEnd = useCallback((id: string, updates: any) => {
+    if (updates.position) {
+      ps.moveObject(id, updates.position);
     }
-  }, [parcelaState]);
+  }, [ps]);
+
+  const selectedObj = ps.objects.find(o => o.id === ps.selectedId);
 
   return (
     <div className="flex h-[600px] sm:h-[700px] rounded-xl overflow-hidden border border-border/40 bg-card">
-      {/* Sidebar */}
       <ParcelaToolbar
         onAddObject={handleAddObject}
-        onRotate={parcelaState.rotateSelected}
-        onScale={parcelaState.scaleSelected}
+        onRotate={ps.rotateSelected}
+        onScale={ps.scaleSelected}
         onRemoveSelected={handleRemoveSelected}
         onCapture={handleCapture}
         onSave={handleSave}
-        onReset={parcelaState.resetAll}
-        selectedId={parcelaState.selectedId}
+        onReset={ps.resetAll}
+        selectedId={ps.selectedId}
         lotInfo={{ lotNumber, area: lotArea, price: lotPrice }}
+        onUndo={ps.undo}
+        onRedo={ps.redo}
+        canUndo={ps.canUndo}
+        canRedo={ps.canRedo}
+        snapEnabled={ps.snapEnabled}
+        onToggleSnap={() => ps.setSnapEnabled(!ps.snapEnabled)}
+        viewMode={ps.viewMode}
+        onSetViewMode={ps.setViewMode}
+        transformMode={ps.transformMode}
+        onSetTransformMode={ps.setTransformMode}
+        solarHour={ps.solarHour}
+        onSetSolarHour={ps.setSolarHour}
+        measureMode={ps.measureMode}
+        onToggleMeasure={() => {
+          ps.setMeasureMode(!ps.measureMode);
+          ps.clearMeasure();
+        }}
       />
 
-      {/* 3D Canvas */}
       <div className="flex-1 relative">
         <Canvas
           shadows
@@ -182,24 +263,19 @@ export const ParcelaDesigner3D = ({
         >
           <Suspense fallback={null}>
             <SceneCapture captureRef={captureRef} />
+            <CameraController viewMode={ps.viewMode} controlsRef={controlsRef} />
 
-            {/* Lighting */}
-            <ambientLight intensity={0.5} />
-            <directionalLight
-              position={[20, 30, 10]}
-              intensity={1.2}
-              castShadow
-              shadow-mapSize-width={2048}
-              shadow-mapSize-height={2048}
-              shadow-camera-far={100}
-              shadow-camera-left={-40}
-              shadow-camera-right={40}
-              shadow-camera-top={40}
-              shadow-camera-bottom={-40}
-            />
+            {/* Solar simulation */}
+            <SolarLight hour={ps.solarHour} latitude={latitude} longitude={longitude} />
 
             {/* Sky */}
-            <Sky sunPosition={[50, 30, 20]} />
+            <Sky
+              sunPosition={[
+                50 * Math.cos((ps.solarHour - 12) * Math.PI / 12),
+                50 * Math.sin(Math.max(0, (ps.solarHour - 6) * Math.PI / 15)),
+                20,
+              ]}
+            />
 
             {/* Terrain */}
             <Terrain polygon={polygon} />
@@ -207,7 +283,7 @@ export const ParcelaDesigner3D = ({
             {/* Grid */}
             <Grid
               infiniteGrid
-              cellSize={1}
+              cellSize={ps.snapEnabled ? 0.5 : 1}
               sectionSize={5}
               fadeDistance={60}
               cellColor="#A5D6A7"
@@ -217,37 +293,66 @@ export const ParcelaDesigner3D = ({
               position={[0, -0.01, 0]}
             />
 
-            {/* Invisible click plane */}
-            <ClickPlane onClickGround={handleGroundClick} />
+            {/* Click plane */}
+            <ClickPlane onClick={handleGroundClick} />
 
             {/* Placed objects */}
-            {parcelaState.objects.map(obj => (
+            {ps.objects.map(obj => (
               <ParcelaObject3D
                 key={obj.id}
                 obj={obj}
-                isSelected={obj.id === parcelaState.selectedId}
-                onClick={() => parcelaState.selectObject(obj.id)}
+                isSelected={obj.id === ps.selectedId}
+                onClick={() => ps.selectObject(obj.id)}
               />
             ))}
 
-            {/* Controls */}
-            <OrbitControls
-              maxPolarAngle={Math.PI / 2.2}
-              minDistance={5}
-              maxDistance={80}
-              enableDamping
-              dampingFactor={0.1}
-            />
+            {/* Measurement line */}
+            {ps.measureMode && ps.measurePoints.length > 0 && (
+              <MeasurementLine points={ps.measurePoints} />
+            )}
+
+            {/* Orbit controls (disabled in pedestrian mode) */}
+            {ps.viewMode !== 'pedestrian' && (
+              <OrbitControls
+                ref={controlsRef}
+                maxPolarAngle={ps.viewMode === 'top' ? 0.01 : Math.PI / 2.2}
+                minDistance={5}
+                maxDistance={ps.viewMode === 'top' ? 120 : 80}
+                enableDamping
+                dampingFactor={0.1}
+                enableRotate={ps.viewMode !== 'top'}
+              />
+            )}
+
+            {/* Pedestrian camera */}
+            <PedestrianCamera active={ps.viewMode === 'pedestrian'} />
           </Suspense>
         </Canvas>
 
         {/* Overlay info */}
         <div className="absolute bottom-3 left-3 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs text-muted-foreground border border-border/40">
-          Click en terreno para colocar · Arrastra para rotar vista · Scroll para zoom
+          {ps.viewMode === 'pedestrian'
+            ? 'Click para activar · WASD moverse · Mouse mirar · ESC salir'
+            : ps.measureMode
+              ? 'Click en 2 puntos para medir distancia'
+              : 'Click en terreno para colocar · Arrastra para rotar vista · Scroll para zoom'}
         </div>
         <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-medium text-foreground border border-border/40">
-          {parcelaState.objects.length} objetos
+          {ps.objects.length} objetos
         </div>
+        {ps.measureMode && ps.measurePoints.length === 2 && (
+          <div className="absolute top-3 left-3 bg-primary/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-bold text-primary-foreground border border-primary/40">
+            📏 {Math.sqrt(
+              Math.pow(ps.measurePoints[1][0] - ps.measurePoints[0][0], 2) +
+              Math.pow(ps.measurePoints[1][2] - ps.measurePoints[0][2], 2)
+            ).toFixed(1)}m
+          </div>
+        )}
+        {ps.snapEnabled && (
+          <div className="absolute bottom-3 right-3 bg-background/60 backdrop-blur-sm rounded px-2 py-0.5 text-[9px] text-muted-foreground border border-border/30">
+            ⊞ Snap 50cm
+          </div>
+        )}
       </div>
     </div>
   );
