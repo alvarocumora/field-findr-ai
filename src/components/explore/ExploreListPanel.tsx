@@ -220,6 +220,16 @@ const ExploreListPanel = ({
           onToggleAISearch={onToggleAISearch}
           className="!bg-transparent !border-0 !backdrop-blur-0"
         />
+
+        {/* Valuation & Topography Filters */}
+        {onToggleSlope && onToggleValuation && (
+          <ValuationFilters
+            selectedSlopes={selectedSlopes}
+            onToggleSlope={onToggleSlope}
+            selectedValuation={selectedValuation}
+            onToggleValuation={onToggleValuation}
+          />
+        )}
       </div>
 
       {/* Summary + Tabs + Sort */}
