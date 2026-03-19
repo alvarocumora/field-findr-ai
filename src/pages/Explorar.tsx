@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StickyHeader from '@/components/navigation/StickyHeader';
 import ExploreListPanel from '@/components/explore/ExploreListPanel';
@@ -8,9 +8,12 @@ import PropertyPreviewSheet from '@/components/explore/PropertyPreviewSheet';
 import EnhancedAISearch from '@/components/ai/EnhancedAISearch';
 import CompareFloatingBar from '@/components/compare/CompareFloatingBar';
 import CompareSheet from '@/components/compare/CompareSheet';
+import CinematicTransition from '@/components/map/CinematicTransition';
 import { Listing, getPricePerM2 } from '@/hooks/useListings';
 import { useFlattenedListings } from '@/hooks/useInfiniteListings';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+const ParcelaDesigner3D = lazy(() => import('@/components/parcela/ParcelaDesigner3D').then(m => ({ default: m.ParcelaDesigner3D })));
 
 const Explorar = () => {
   const navigate = useNavigate();
