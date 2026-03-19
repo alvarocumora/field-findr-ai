@@ -169,6 +169,7 @@ export const ParcelaDesigner3D = ({
   const captureRef = useRef<(() => void) | null>(null);
   const pendingPlaceRef = useRef<ParcelaObjectType | null>(null);
   const controlsRef = useRef<any>(null);
+  const [useRealisticTerrain, setUseRealisticTerrain] = useState(false);
 
   // Load saved design on mount
   useMemo(() => {
