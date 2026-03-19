@@ -28,23 +28,20 @@ export const generateProjectBrochurePDF = ({ project, lots, conditions }: Brochu
   const ph = doc.internal.pageSize.getHeight();
 
   // ====== PAGE 1: Cover ======
-  // Header bar
-  doc.setFillColor(...PRIMARY);
-  doc.rect(0, 0, pw, 50, 'F');
-
-  doc.setTextColor(...WHITE);
-  doc.setFontSize(28);
-  doc.setFont('helvetica', 'bold');
-  doc.text(project.name || 'Proyecto', 20, 30);
-
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
   const location = [project.city, project.region, project.country].filter(Boolean).join(', ');
-  doc.text(location, 20, 42);
+  drawPdfHeaderLogo(doc, {
+    headerHeight: 50,
+    subtitle: location,
+    rightText: new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }),
+  });
 
-  // Date
-  doc.setFontSize(9);
-  doc.text(new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }), pw - 20, 42, { align: 'right' });
+  // Project name below header
+  let y = 60;
+  doc.setTextColor(...DARK);
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  doc.text(project.name || 'Proyecto', 20, y);
+  y += 12;
 
   // Description
   let y = 65;
