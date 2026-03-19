@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { drawPdfHeaderLogo } from './pdfBrandHeader';
 
 interface QuotePDFData {
   // Project info
@@ -56,17 +57,7 @@ export const generateQuotePDF = (data: QuotePDFData): void => {
   let yPos = 20;
   
   // Header with brand
-  doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, pageWidth, 35, 'F');
-  
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  doc.text('FIELD FINDR', 20, 22);
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Cotización de Financiamiento', 20, 30);
+  drawPdfHeaderLogo(doc, { headerHeight: 35, subtitle: 'Cotización de Financiamiento' });
   
   // Quote number and date
   const quoteNumber = `COT-${Date.now().toString(36).toUpperCase()}`;

@@ -38,10 +38,10 @@ const drawTextLogo = (doc: jsPDF, x: number, y: number) => {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(22);
   doc.setTextColor(...WHITE);
-  doc.text('Oferta', x, y);
-  const ofertaWidth = doc.getTextWidth('Oferta');
+  doc.text('OFERTA ', x, y);
+  const ofertaWidth = doc.getTextWidth('OFERTA ');
   doc.setFont('helvetica', 'normal');
-  doc.text('terrenos', x + ofertaWidth, y);
+  doc.text('TERRENOS', x + ofertaWidth, y);
 };
 
 const addHeaderToPage = (doc: jsPDF, contractNum: string, isFirstPage: boolean) => {

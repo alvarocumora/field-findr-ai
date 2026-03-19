@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { drawPdfHeaderLogo } from './pdfBrandHeader';
 
 interface FinancialReportData {
   projectName?: string;
@@ -24,14 +25,10 @@ export const generateFinancialReportPdf = (data: FinancialReportData) => {
   let y = 20;
 
   // Header
-  doc.setFillColor(22, 78, 99);
-  doc.rect(0, 0, pageWidth, 40, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(22);
-  doc.text('Reporte Financiero', 14, 20);
-  doc.setFontSize(11);
-  doc.text(data.projectName ? `Proyecto: ${data.projectName}` : 'Consolidado — Todos los Proyectos', 14, 30);
-  doc.text(data.date, pageWidth - 14, 30, { align: 'right' });
+  drawPdfHeaderLogo(doc, {
+    subtitle: data.projectName ? `Proyecto: ${data.projectName}` : 'Consolidado — Todos los Proyectos',
+    rightText: data.date,
+  });
 
   y = 55;
   doc.setTextColor(0, 0, 0);

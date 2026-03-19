@@ -8,7 +8,7 @@ interface LogoProps {
   animated?: boolean;
 }
 
-const textSizeClasses = {
+const sizeClasses = {
   sm: 'text-lg',
   md: 'text-xl',
   lg: 'text-2xl',
@@ -22,6 +22,9 @@ const Logo = ({
   variant = 'default',
   animated: _animated = false
 }: LogoProps) => {
+  const isLight = variant === 'light';
+  const isMono = variant === 'monochrome';
+
   return (
     <div 
       className={cn('flex items-center', className)}
@@ -29,13 +32,18 @@ const Logo = ({
       aria-label="Ofertaterrenos logo"
     >
       <span className={cn(
-        'font-bold tracking-tight leading-none font-heading',
-        textSizeClasses[size],
-        variant === 'light' ? 'text-white' : 'text-foreground'
+        'font-bold tracking-tight leading-none font-heading uppercase',
+        sizeClasses[size],
+        isLight ? 'text-white' : 'text-foreground'
       )}>
-        Oferta<span className={cn(
-          variant === 'monochrome' ? 'text-foreground/60 font-medium' : 'text-primary font-medium'
-        )}>terrenos</span>
+        OFERTA
+      </span>
+      <span className={cn(
+        'font-bold tracking-tight leading-none font-heading uppercase ml-[0.15em]',
+        sizeClasses[size],
+        isMono ? 'text-foreground/60' : 'gradient-text-hero'
+      )}>
+        TERRENOS
       </span>
     </div>
   );
