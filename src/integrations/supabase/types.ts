@@ -668,6 +668,7 @@ export type Database = {
           buyer_phone: string | null
           created_at: string
           description: string | null
+          elevation_avg: number | null
           features: Json | null
           id: string
           latitude: number | null
@@ -680,6 +681,7 @@ export type Database = {
           project_id: string
           reservation_date: string | null
           sale_date: string | null
+          slope_category: string | null
           status: string | null
           updated_at: string
           user_id: string
@@ -691,6 +693,7 @@ export type Database = {
           buyer_phone?: string | null
           created_at?: string
           description?: string | null
+          elevation_avg?: number | null
           features?: Json | null
           id?: string
           latitude?: number | null
@@ -703,6 +706,7 @@ export type Database = {
           project_id: string
           reservation_date?: string | null
           sale_date?: string | null
+          slope_category?: string | null
           status?: string | null
           updated_at?: string
           user_id: string
@@ -714,6 +718,7 @@ export type Database = {
           buyer_phone?: string | null
           created_at?: string
           description?: string | null
+          elevation_avg?: number | null
           features?: Json | null
           id?: string
           latitude?: number | null
@@ -726,6 +731,7 @@ export type Database = {
           project_id?: string
           reservation_date?: string | null
           sale_date?: string | null
+          slope_category?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string
