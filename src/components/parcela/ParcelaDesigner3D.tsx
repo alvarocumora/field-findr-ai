@@ -335,6 +335,18 @@ export const ParcelaDesigner3D = ({
           </Suspense>
         </Canvas>
 
+        {/* Terrain toggle */}
+        <button
+          onClick={() => setUseRealisticTerrain(!useRealisticTerrain)}
+          className={`absolute top-3 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-lg text-[10px] font-medium border transition-all backdrop-blur-sm ${
+            useRealisticTerrain
+              ? 'bg-primary/20 text-primary border-primary/30'
+              : 'bg-background/60 text-muted-foreground border-border/30 hover:bg-background/80'
+          }`}
+        >
+          ⛰ {useRealisticTerrain ? 'Relieve Real' : 'Terreno Plano'}
+        </button>
+
         {/* Overlay info */}
         <div className="absolute bottom-3 left-3 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs text-muted-foreground border border-border/40">
           {ps.viewMode === 'pedestrian'
