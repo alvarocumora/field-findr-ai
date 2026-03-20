@@ -42,9 +42,13 @@ import {
   Phone,
 } from 'lucide-react';
 
+const isValidUUID = (val?: string) =>
+  !!val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
 const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: listing, isLoading } = useListing(id || '');
+  const validId = isValidUUID(id) ? id! : '';
+  const { data: listing, isLoading } = useListing(validId);
   const { data: allListings = [] } = useListings({ featured: true });
   const { user } = useAuth();
   const { toggle, isLoading: isFavoriteLoading } = useToggleFavorite();

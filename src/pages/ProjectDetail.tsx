@@ -181,7 +181,7 @@ const ProjectDetail = () => {
         .order('lot_number', { ascending: true });
       return data || [];
     },
-    enabled: !!id,
+    enabled: validId,
   });
 
   const { data: ownerProfile } = useQuery({
