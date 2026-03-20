@@ -12,6 +12,7 @@ import {
   Settings, FileArchive, Trash2, Rocket
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import {
   AlertDialog,
