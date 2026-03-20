@@ -1,99 +1,110 @@
 
 
-# Plan de Mejoras Reales de la Plataforma
+# Plan: Estabilización de Plataforma para Producción
 
 ## Diagnóstico
 
-Tras revisar la plataforma completa, identifico mejoras en 5 áreas concretas que impactan la experiencia real del usuario y la operación del negocio.
+Tras auditar rutas, sidebar, layouts y flujos completos, se identifican estos problemas concretos que impiden el uso real en producción:
 
 ---
 
-## Mejora 1: Onboarding Post-Registro con Asignación de Rol
+## 1. Rutas rotas en Sidebar
 
-**Problema:** Al registrarse, el usuario selecciona "buyer" o "agent" en el form pero no se crea el registro en `user_roles`. El rol solo está en `user_metadata` y `useUserRoles` consulta la tabla `user_roles`, lo que significa que el redirect post-login no funciona correctamente.
+**Problema:** El sidebar tiene `/asesor/ventas` pero la ruta en App.tsx es `/asesor/sales`. Al hacer clic en "Ventas", se muestra 404.
 
-**Solución:**
-- Crear un trigger de base de datos `on_auth_user_created` que inserte automáticamente en `user_roles` basándose en `raw_user_meta_data->account_type`
-- Agregar un OnboardingWizard compacto (ya existe el archivo pero verificar que esté conectado) que se muestre al primer login para completar perfil y confirmar rol
+**Fix:** Cambiar el href en `ModernSidebar.tsx` de `/asesor/ventas` a `/asesor/sales`.
 
-**Archivos:**
-- Migración SQL: trigger `handle_new_user_role`
-- `src/pages/Auth.tsx`: verificar flujo post-signup
+**Archivo:** `src/components/ModernSidebar.tsx` (línea 73)
 
 ---
 
-## Mejora 2: Dashboard Asesor con KPIs Reales y Acciones Rápidas
+## 2. `LotManagement` usa `Layout` duplicado en lugar de `DashboardLayout`
 
-**Problema:** El dashboard del asesor (`DashboardAsesor`) carga datos pero las acciones rápidas no tienen rutas conectadas y los KPIs no reflejan datos del mes actual de forma precisa (el `conversionRate` divide ventas del mes entre total de lotes, no es representativo).
+**Problema:** `LotManagement.tsx` importa `Layout` (que incluye su propio sidebar + mobile header), pero ya está envuelto en `DashboardLayout` vía App.tsx. Resultado: **sidebar duplicado** y padding inconsistente. Lo mismo ocurre en la screenshot del usuario — el contenido de lotes se ve recortado.
 
-**Solución:**
-- Corregir cálculo de conversión: `(vendidos + reservados) / total * 100`
-- Conectar QuickActions con rutas reales (`/asesor/projects`, `/asesor/leads`, etc.)
-- Agregar widget de "Próximos seguimientos" mostrando leads con `next_follow_up` cercano
+**Fix:** Eliminar el wrapper `<Layout>` de `LotManagement.tsx` y devolver el contenido directamente, ya que `DashboardLayout` proporciona el sidebar y la estructura.
 
-**Archivos:**
-- `src/hooks/useDashboardData.ts`: corregir fórmula KPI
-- `src/components/dashboard/QuickActions.tsx`: conectar navegación
-- `src/components/Dashboard.tsx`: agregar sección de seguimientos pendientes
+**Archivo:** `src/components/LotManagement.tsx`
 
 ---
 
-## Mejora 3: Flujo Completo de Creación de Proyecto → Publicación
+## 3. Sidebar móvil no funciona en DashboardLayout
 
-**Problema:** El wizard de 8 pasos funciona pero al crear un proyecto el `status` default es `'active'` y los lotes se crean sin `price` ni `polygon`. El proyecto aparece en la vista pública sin lotes configurados, dando mala impresión.
+**Problema:** En `DashboardLayout.tsx`, el botón mobile hamburger toggle solo cambia `sidebarCollapsed` pero el sidebar está dentro de `hidden md:block`. En móvil el sidebar nunca aparece.
 
-**Solución:**
-- Cambiar default a `status: 'draft'` hasta que el usuario confirme que el proyecto está listo
-- Agregar validación: no permitir cambiar a `'active'` si no hay al menos 1 lote con precio
-- En `ProjectsManagement`, mostrar badge "Borrador" y botón "Publicar" que valide requisitos mínimos
-- Actualizar la query pública de `ProjectDetail` para solo mostrar proyectos `active`
+**Fix:** Agregar un Sheet/Drawer para la sidebar en móvil, similar a lo que hace `Layout.tsx`, que usa `Sheet` para el menú mobile.
 
-**Archivos:**
-- Migración SQL: cambiar default de `projects.status` a `'draft'`
-- `src/components/ProjectsManagement.tsx`: agregar flujo de publicación
-- `src/components/projects/CreateProjectWizard.tsx`: ajustar status inicial
-- `src/pages/ProjectDetail.tsx`: ya filtra por active en RLS, verificar
+**Archivo:** `src/components/layouts/DashboardLayout.tsx`
 
 ---
 
-## Mejora 4: Sidebar Colapsable con Categorías y Contadores Reales
+## 4. Reducir navegación para agentes nuevos
 
-**Problema:** El sidebar tiene 22 items de navegación para agentes, todos al mismo nivel. Es abrumador y difícil de navegar. Los contadores de `useSidebarCounts` solo muestran 3 métricas.
+**Problema:** Un agente nuevo ve 22 items en 5 categorías. Muchos son features avanzadas (Enterprise, API Portal, Multi-Proyecto, Demanda) que solo confunden a un usuario que empieza. La plataforma se siente "desordenada" por exceso de opciones visibles.
 
-**Solución:**
-- Agrupar items en categorías colapsables: Operaciones (Dashboard, Proyectos, Lotes), Comercial (Leads, Ventas, Pipeline, Reservas), Finanzas (Créditos, Pagos, Financiero), Analytics (Multi-Proyecto, Reportes, Rendimiento, Ejecutivo), Configuración (Enterprise, API, Notificaciones)
-- Agregar contadores dinámicos a Leads (nuevos), Reservas (pendientes), Pagos (vencidos)
-- Highlight visual del grupo activo
+**Fix:** Crear dos niveles de visibilidad:
+- **Core** (siempre visible): Dashboard, Proyectos, Lotes, CRM Leads, Reservas, Pagos, Reportes
+- **Avanzado** (colapsado por defecto bajo "Más herramientas"): Pipeline, Ventas, Cierres, Financiero, Multi-Proyecto, Rendimiento, Ejecutivo, Demanda, Enterprise, API, Notificaciones, Mensajes, Propiedades, Créditos
 
-**Archivos:**
-- `src/components/ModernSidebar.tsx`: reestructurar con grupos colapsables
+**Archivo:** `src/components/ModernSidebar.tsx`
 
 ---
 
-## Mejora 5: Página de Proyecto Público con Descripción y Galería Prominente
+## 5. Consistencia de iconos duplicados en Sidebar
 
-**Problema:** La página `ProjectDetail` abre directamente en la tab "Mapa" pero no muestra la descripción del proyecto ni fotos en un lugar visible. Un comprador llega y no entiende qué es el proyecto.
+**Problema:** `FileText` se usa para Reservas, Reportes y Documentos. Dificulta la diferenciación visual.
 
-**Solución:**
-- Agregar sección hero bajo el header con: descripción del proyecto (si existe), galería de imágenes (carousel compacto), y highlights (total área, servicios, ubicación)
-- Mover la galería fuera de la tab "Info" a una posición visible antes de las tabs
-- Si no hay descripción ni imágenes, no mostrar la sección (graceful degradation)
+**Fix:** Asignar iconos únicos: Reservas → `CalendarCheck`, Reportes → `FileBarChart`.
 
-**Archivos:**
-- `src/pages/ProjectDetail.tsx`: agregar sección hero con descripción + galería antes de tabs
+**Archivo:** `src/components/ModernSidebar.tsx`
 
 ---
 
-## Resumen de Cambios
+## 6. Dashboard: período selector no hace nada
 
-| Archivo | Acción |
+**Problema:** El selector de período (Semana/Mes/Año) en `DashboardHeader` cambia el state `selectedPeriod` pero ninguna query lo consume. Es UI muerta.
+
+**Fix:** Pasar `selectedPeriod` a `useDashboardKPIs` para filtrar los datos por rango de fecha real, o remover el selector hasta que esté implementado.
+
+**Decisión:** Remover el selector por ahora para no confundir. Agregar un label "Este mes" estático.
+
+**Archivo:** `src/components/Dashboard.tsx`, `src/components/dashboard/DashboardHeader.tsx`
+
+---
+
+## 7. QuickActions duplicado
+
+**Problema:** Existen dos componentes `QuickActions`: `src/components/QuickActions.tsx` (landing page) y `src/components/dashboard/QuickActions.tsx` (dashboard). No es un bug funcional, pero genera confusión en mantenimiento.
+
+**Fix:** Renombrar el de landing a `LandingQuickActions.tsx` para claridad.
+
+**Archivos:** `src/components/QuickActions.tsx` → renombrar y actualizar imports.
+
+---
+
+## 8. ProjectDetail público no filtra proyectos draft
+
+**Problema:** Un proyecto en estado `draft` es visible públicamente vía `/proyecto/:id`. Cualquier persona con el URL puede verlo, incluso si está incompleto.
+
+**Fix:** Agregar validación en la query de `ProjectDetail.tsx`: si el proyecto es `draft` y el usuario actual no es el dueño, mostrar "Proyecto no disponible".
+
+**Archivo:** `src/pages/ProjectDetail.tsx`
+
+---
+
+## Resumen de Archivos a Modificar
+
+| Archivo | Cambio |
 |---------|--------|
-| Migración SQL | Trigger `handle_new_user_role`, default status `draft` |
-| `src/components/ModernSidebar.tsx` | Grupos colapsables |
-| `src/hooks/useDashboardData.ts` | Fix KPI conversión |
-| `src/components/Dashboard.tsx` | Seguimientos pendientes |
-| `src/components/dashboard/QuickActions.tsx` | Conectar rutas |
-| `src/components/ProjectsManagement.tsx` | Flujo borrador/publicar |
-| `src/components/projects/CreateProjectWizard.tsx` | Status draft |
-| `src/pages/ProjectDetail.tsx` | Hero con descripción + galería |
+| `src/components/ModernSidebar.tsx` | Fix ruta ventas, iconos únicos, navegación simplificada core/avanzado |
+| `src/components/LotManagement.tsx` | Quitar wrapper `Layout` duplicado |
+| `src/components/layouts/DashboardLayout.tsx` | Agregar Sheet mobile para sidebar |
+| `src/components/Dashboard.tsx` | Remover período selector no funcional |
+| `src/components/dashboard/DashboardHeader.tsx` | Simplificar header sin selector |
+| `src/components/QuickActions.tsx` | Renombrar a `LandingQuickActions.tsx` |
+| `src/pages/ProjectDetail.tsx` | Filtrar proyectos draft para visitantes |
+
+## Impacto
+
+Estos 8 cambios eliminan las rutas rotas, la UI duplicada, la sobrecarga visual del sidebar, y la exposición de datos incompletos. La plataforma queda limpia y funcional para uso real.
 
