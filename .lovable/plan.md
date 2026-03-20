@@ -1,51 +1,99 @@
 
 
-# Plan: Revisión y Corrección de la Plataforma
+# Plan de Mejoras Reales de la Plataforma
 
-## Problema Principal Detectado
+## Diagnóstico
 
-El error visible en las network requests es que la URL `/proyecto/:id` se carga con el literal `:id` en vez de un UUID real. Esto causa errores 400 en todas las queries a la base de datos:
-```
-"invalid input syntax for type uuid: \":id\""
-```
+Tras revisar la plataforma completa, identifico mejoras en 5 áreas concretas que impactan la experiencia real del usuario y la operación del negocio.
 
-Esto ocurre porque `useParams()` devuelve la cadena literal `:id` y las queries tienen `enabled: !!id` que pasa como `true` para cualquier string no vacío. Sin embargo, este no es un bug de código sino una navegación directa a la URL literal. La corrección debe ser defensiva: validar que `id` sea un UUID válido antes de ejecutar queries.
+---
 
-## Cambios
+## Mejora 1: Onboarding Post-Registro con Asignación de Rol
 
-### 1. Validar UUID en ProjectDetail.tsx
+**Problema:** Al registrarse, el usuario selecciona "buyer" o "agent" en el form pero no se crea el registro en `user_roles`. El rol solo está en `user_metadata` y `useUserRoles` consulta la tabla `user_roles`, lo que significa que el redirect post-login no funciona correctamente.
 
-En `src/pages/ProjectDetail.tsx`, agregar validación del parámetro `id` antes de las queries:
+**Solución:**
+- Crear un trigger de base de datos `on_auth_user_created` que inserte automáticamente en `user_roles` basándose en `raw_user_meta_data->account_type`
+- Agregar un OnboardingWizard compacto (ya existe el archivo pero verificar que esté conectado) que se muestre al primer login para completar perfil y confirmar rol
 
-```typescript
-const isValidUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-```
+**Archivos:**
+- Migración SQL: trigger `handle_new_user_role`
+- `src/pages/Auth.tsx`: verificar flujo post-signup
 
-- Cambiar `enabled: !!id` a `enabled: !!isValidUUID` en ambas queries (project y lots)
-- Mostrar un mensaje de error amigable si `id` no es válido (redirigir a explorar o mostrar "Proyecto no encontrado")
+---
 
-### 2. Aplicar la misma protección en PropertyDetail.tsx
+## Mejora 2: Dashboard Asesor con KPIs Reales y Acciones Rápidas
 
-Mismo patrón defensivo para evitar queries con IDs inválidos.
+**Problema:** El dashboard del asesor (`DashboardAsesor`) carga datos pero las acciones rápidas no tienen rutas conectadas y los KPIs no reflejan datos del mes actual de forma precisa (el `conversionRate` divide ventas del mes entre total de lotes, no es representativo).
 
-### 3. Revisar Leads (LeadManagement.tsx)
+**Solución:**
+- Corregir cálculo de conversión: `(vendidos + reservados) / total * 100`
+- Conectar QuickActions con rutas reales (`/asesor/projects`, `/asesor/leads`, etc.)
+- Agregar widget de "Próximos seguimientos" mostrando leads con `next_follow_up` cercano
 
-El componente y hook `useLeads` se ven correctos. Las queries están protegidas con `enabled: !!user?.id` y filtran por `user_id`. Sin problemas detectados.
+**Archivos:**
+- `src/hooks/useDashboardData.ts`: corregir fórmula KPI
+- `src/components/dashboard/QuickActions.tsx`: conectar navegación
+- `src/components/Dashboard.tsx`: agregar sección de seguimientos pendientes
 
-### 4. Revisar Executive Dashboard
+---
 
-El `ExecutiveDashboard.tsx` funciona correctamente. Usa `useProjects`, `useLots`, `useLeads`, `useCredits` -- todos protegidos con `enabled: !!user?.id`. Sin problemas detectados.
+## Mejora 3: Flujo Completo de Creación de Proyecto → Publicación
 
-### 5. Revisar flujo de carga de proyecto (CreateProjectWizard)
+**Problema:** El wizard de 8 pasos funciona pero al crear un proyecto el `status` default es `'active'` y los lotes se crean sin `price` ni `polygon`. El proyecto aparece en la vista pública sin lotes configurados, dando mala impresión.
 
-El wizard se ve bien estructurado con 8 pasos. Sin errores detectados en el código.
+**Solución:**
+- Cambiar default a `status: 'draft'` hasta que el usuario confirme que el proyecto está listo
+- Agregar validación: no permitir cambiar a `'active'` si no hay al menos 1 lote con precio
+- En `ProjectsManagement`, mostrar badge "Borrador" y botón "Publicar" que valide requisitos mínimos
+- Actualizar la query pública de `ProjectDetail` para solo mostrar proyectos `active`
 
-## Resumen de Archivos a Modificar
+**Archivos:**
+- Migración SQL: cambiar default de `projects.status` a `'draft'`
+- `src/components/ProjectsManagement.tsx`: agregar flujo de publicación
+- `src/components/projects/CreateProjectWizard.tsx`: ajustar status inicial
+- `src/pages/ProjectDetail.tsx`: ya filtra por active en RLS, verificar
 
-1. `src/pages/ProjectDetail.tsx` -- Agregar validación UUID y fallback UI
-2. `src/pages/PropertyDetail.tsx` -- Misma protección UUID
+---
 
-## Alcance
+## Mejora 4: Sidebar Colapsable con Categorías y Contadores Reales
 
-Corrección defensiva menor. Los demás flujos (leads, ejecutivo, creación de proyecto) funcionan correctamente.
+**Problema:** El sidebar tiene 22 items de navegación para agentes, todos al mismo nivel. Es abrumador y difícil de navegar. Los contadores de `useSidebarCounts` solo muestran 3 métricas.
+
+**Solución:**
+- Agrupar items en categorías colapsables: Operaciones (Dashboard, Proyectos, Lotes), Comercial (Leads, Ventas, Pipeline, Reservas), Finanzas (Créditos, Pagos, Financiero), Analytics (Multi-Proyecto, Reportes, Rendimiento, Ejecutivo), Configuración (Enterprise, API, Notificaciones)
+- Agregar contadores dinámicos a Leads (nuevos), Reservas (pendientes), Pagos (vencidos)
+- Highlight visual del grupo activo
+
+**Archivos:**
+- `src/components/ModernSidebar.tsx`: reestructurar con grupos colapsables
+
+---
+
+## Mejora 5: Página de Proyecto Público con Descripción y Galería Prominente
+
+**Problema:** La página `ProjectDetail` abre directamente en la tab "Mapa" pero no muestra la descripción del proyecto ni fotos en un lugar visible. Un comprador llega y no entiende qué es el proyecto.
+
+**Solución:**
+- Agregar sección hero bajo el header con: descripción del proyecto (si existe), galería de imágenes (carousel compacto), y highlights (total área, servicios, ubicación)
+- Mover la galería fuera de la tab "Info" a una posición visible antes de las tabs
+- Si no hay descripción ni imágenes, no mostrar la sección (graceful degradation)
+
+**Archivos:**
+- `src/pages/ProjectDetail.tsx`: agregar sección hero con descripción + galería antes de tabs
+
+---
+
+## Resumen de Cambios
+
+| Archivo | Acción |
+|---------|--------|
+| Migración SQL | Trigger `handle_new_user_role`, default status `draft` |
+| `src/components/ModernSidebar.tsx` | Grupos colapsables |
+| `src/hooks/useDashboardData.ts` | Fix KPI conversión |
+| `src/components/Dashboard.tsx` | Seguimientos pendientes |
+| `src/components/dashboard/QuickActions.tsx` | Conectar rutas |
+| `src/components/ProjectsManagement.tsx` | Flujo borrador/publicar |
+| `src/components/projects/CreateProjectWizard.tsx` | Status draft |
+| `src/pages/ProjectDetail.tsx` | Hero con descripción + galería |
 
