@@ -616,6 +616,34 @@ const ProjectDetail = () => {
           onOpenChange={(open) => !open && setReservationLot(null)}
           reservationAmount={(project as any).reservation_deposit || 500000}
         />
+
+        {/* Lot Detail Sheet */}
+        <LotDetailSheet
+          lot={detailLot}
+          open={!!detailLot}
+          onOpenChange={(open) => !open && setDetailLot(null)}
+          projectName={project.name}
+          legalDocuments={legalDocuments}
+          onReserve={(lot) => {
+            setDetailLot(null);
+            setReservationLot(lot);
+          }}
+          onDesign={(lot) => {
+            setDetailLot(null);
+            setDesignerLot(lot);
+          }}
+          onFinance={(lot) => {
+            setDetailLot(null);
+            setFinancingLot(lot);
+          }}
+        />
+
+        {/* 3D Designer Dialog */}
+        <LotDesigner3DDialog
+          lot={designerLot}
+          open={!!designerLot}
+          onOpenChange={(open) => !open && setDesignerLot(null)}
+        />
       </div>
     </PublicLayout>
   );
