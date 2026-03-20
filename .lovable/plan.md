@@ -1,134 +1,85 @@
 
 
-# Plan: Sistema de Gestión de Terrenos con PostGIS + Visualizador 3D Cinematográfico
+# Plan: Sistema Mejorado de Visualización de Lotes con Vista 3D y Reserva
 
 ## Resumen
 
-Evolucionar la plataforma existente integrando tres capacidades principales: filtros avanzados de plusvalía/topografía, simulación 3D sobre relieve real, y sincronización en tiempo real del inventario con transiciones cinematográficas dark-mode.
+Rediseñar la experiencia de ProjectDetail para que al seleccionar un lote, el usuario vea una ficha expandida con vista 3D del terreno real (usando la georeferencia/polígono existente), documentos del proyecto, y botones prominentes de "Reservar" y "Diseñar Parcela". Mejorar las cards de lotes con miniatura 3D y mejor jerarquía visual.
 
 ---
 
-## Alcance
+## Cambios
 
-La plataforma ya cuenta con:
-- **Mapa Mapbox** con marcadores, capas GIS, y clustering (`EnhancedMap`, `useMapInstance`)
-- **Diseñador 3D de parcelas** con React Three Fiber (`ParcelaDesigner3D`)
-- **Sistema de lotes** con estados (available/reserved/sold) y Realtime
-- **Dark mode** via ThemeProvider
+### 1. Nuevo componente: `LotDetailSheet` (Sheet/Drawer lateral)
 
-Lo que falta construir se divide en 3 módulos:
+**Archivo:** `src/components/lots/LotDetailSheet.tsx`
 
----
+Cuando el usuario hace clic en un lote (desde el mapa o la grilla de cards), se abre un Sheet lateral con:
 
-## Módulo 1: Filtros de Plusvalía y Topografía
+- **Header**: Número de lote, estado (badge), precio, superficie, precio/m2
+- **Vista 3D embebida**: `ParcelaDesigner3D` (ya existe) con el polígono del lote, usando `RealisticTerrain` si tiene lat/lng. Tamaño compacto (~350px alto)
+- **Sección de servicios**: Agua, luz, acceso (badges existentes)
+- **Sección de documentos**: Lista de documentos legales del proyecto (reutilizando datos de `LegalTab`)
+- **Topografía**: Elevación promedio y categoría de pendiente (datos de `elevation_avg` y `slope_category`)
+- **Botones de acción prominentes**:
+  - "Reservar este Lote" → abre `LotReservationDialog`
+  - "Diseñar Mi Parcela" → navega a vista 3D completa o abre `ParcelaDesigner3D` en fullscreen
+  - "Simular Financiamiento" → abre `FinancingCalculator`
 
-**Archivo:** `src/components/explore/ValuationFilters.tsx`
+### 2. Cards de lotes mejoradas
 
-- Agregar filtros de plusvalía estimada (bajo/medio/alto) basados en precio/m2 relativo a la zona
-- Agregar filtro de topografía (plano/pendiente suave/pendiente fuerte) — dato calculado desde elevación Mapbox Terrain DEM
-- Integrar estos filtros en `ExploreListPanel` y `Explorar.tsx`
+**Archivo:** `src/components/lots/EnhancedLotCard.tsx` (modificar)
 
-**Archivo:** `src/hooks/useTerrainElevation.ts`
+- Agregar indicador visual de pendiente/topografía (ícono montaña + slope_category)
+- Botón "Ver en 3D" que abre el `LotDetailSheet`
+- Miniatura del polígono del lote como SVG inline (si tiene polygon data)
+- Reorganizar acciones: "Ver 3D" prominente para disponibles, "Reservar" como CTA primario
 
-- Hook que consulta Mapbox Terrain-DEM v1 para obtener elevación promedio y pendiente de un lote dado su polígono
-- Cache de resultados por lot_id
+### 3. Integración en ProjectDetail
 
-**Base de datos:** Agregar columnas `elevation_avg` y `slope_category` a tabla `lots` via migración, para persistir datos calculados.
+**Archivo:** `src/pages/ProjectDetail.tsx` (modificar)
 
----
+- Reemplazar el "Selected Lot Quick View" actual (card bajo el mapa, líneas 470-511) por el nuevo `LotDetailSheet`
+- Cuando se clickea un lote en el mapa o en la grilla, abrir el Sheet con la data completa
+- Conectar el botón "Diseñar Parcela" con `ParcelaDesigner3D` en un Dialog fullscreen
+- Pasar documentos legales del proyecto al Sheet
 
-## Módulo 2: Simulación 3D sobre Relieve Real
+### 4. Vista 3D fullscreen para diseño
 
-**Archivo:** `src/components/parcela/RealisticTerrain.tsx`
+**Archivo:** `src/components/lots/LotDesigner3DDialog.tsx` (crear)
 
-- Reemplazar el terreno plano actual (`Terrain` component) con un mesh generado desde datos de elevación Mapbox Terrain RGB tiles
-- Descargar tile de elevación para las coordenadas del lote, convertir a heightmap, y generar `PlaneGeometry` con desplazamiento vertical por vértice
-- Textura satelital del mismo tile para el material
-
-**Archivo:** `src/components/parcela/HouseSimulator.tsx`
-
-- Componente que permite al usuario colocar modelos de casa (los existentes en `ParcelaObjects`) sobre el terreno real
-- Snap automático a la altura del terreno en cada punto
-- Indicador visual de pendiente bajo la casa
-
-**Modificar:** `src/components/parcela/ParcelaDesigner3D.tsx`
-- Integrar `RealisticTerrain` como opción (toggle entre terreno plano y relieve real)
-- Agregar botón "Vista Relieve Real" en la toolbar
-
----
-
-## Módulo 3: Panel Admin con Inventario en Tiempo Real + Transiciones Cinematográficas
-
-**Archivo:** `src/components/lots/RealtimeInventoryPanel.tsx`
-
-- Panel que muestra grid de lotes con estado visual (verde/amarillo/rojo)
-- Suscripción a Supabase Realtime en tabla `lots` para reflejar cambios instantáneos
-- Botones de cambio rápido de estado (Disponible → Reservado → Vendido)
-
-**Migración:** Habilitar Realtime en tabla `lots`:
-```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE public.lots;
-```
-
-**Archivo:** `src/components/map/CinematicTransition.tsx`
-
-- Componente wrapper que ejecuta transiciones cinematográficas entre vista global del mapa y vista individual de parcela
-- Usa `map.flyTo()` con pitch progresivo (0° → 60°), bearing rotativo, y zoom de 6 → 18
-- Al llegar al lote, fade-out del mapa 2D y fade-in del canvas 3D (`ParcelaDesigner3D`)
-- Animación de salida inversa al volver al mapa global
-
-**Modificar:** `src/pages/Explorar.tsx` y/o `ProjectDetail.tsx`
-- Integrar `CinematicTransition` cuando el usuario selecciona un lote
-- Dark mode enforced en estas vistas con clase `dark` en el container
-
-**Estética Dark Mode:**
-- Forzar Mapbox style `dark-v11` en contexto de exploración de terrenos
-- Ajustar colores de marcadores: verde neon (#22C55E) para disponible, amber para reservado, rojo para vendido
-- Glassmorphism oscuro en paneles flotantes con `backdrop-blur-xl` y bordes `border-white/5`
+- Dialog fullscreen que envuelve `ParcelaDesigner3D`
+- Recibe el polígono, lat/lng, y datos del lote
+- Botón de guardar diseño (ya soportado via `onSave` → `parcel_design` en reservations)
+- Incluye `HouseSimulator` integrado para colocar casa sobre terreno real
 
 ---
 
 ## Archivos a Crear
-1. `src/components/explore/ValuationFilters.tsx` — Filtros plusvalía/topografía
-2. `src/hooks/useTerrainElevation.ts` — Elevación desde Mapbox DEM
-3. `src/components/parcela/RealisticTerrain.tsx` — Terreno 3D con heightmap real
-4. `src/components/parcela/HouseSimulator.tsx` — Snap de casa al terreno
-5. `src/components/lots/RealtimeInventoryPanel.tsx` — Panel admin realtime
-6. `src/components/map/CinematicTransition.tsx` — Transiciones cinematográficas
+1. `src/components/lots/LotDetailSheet.tsx` — Sheet lateral con vista 3D + acciones
+2. `src/components/lots/LotDesigner3DDialog.tsx` — Dialog fullscreen para diseño 3D
 
 ## Archivos a Modificar
-1. `src/components/parcela/ParcelaDesigner3D.tsx` — Toggle terreno real
-2. `src/pages/Explorar.tsx` — Integrar filtros y transición cinematográfica
-3. `src/components/explore/ExploreListPanel.tsx` — Agregar filtros de plusvalía
+1. `src/components/lots/EnhancedLotCard.tsx` — Miniatura SVG del polígono, botón "Ver 3D", topografía
+2. `src/pages/ProjectDetail.tsx` — Integrar LotDetailSheet, reemplazar quick view
 
-## Migración de Base de Datos
-1. Agregar `elevation_avg NUMERIC`, `slope_category TEXT` a tabla `lots`
-2. `ALTER PUBLICATION supabase_realtime ADD TABLE public.lots;`
+## Sin cambios de base de datos
+Todos los datos necesarios (polygon, lat/lng, elevation_avg, slope_category) ya existen en la tabla `lots`.
 
 ---
 
-## Detalle Técnico
+## Flujo del Usuario
 
-### Terrain Elevation Pipeline
 ```text
-Mapbox Terrain RGB Tile → Decode (R*256² + G*256 + B) * 0.1 - 10000
-→ PlaneGeometry vertices.y = elevation
-→ Satellite tile as texture
-```
-
-### Cinematic Transition Flow
-```text
-[Map Global z=6] 
-  → flyTo(lot, z=18, pitch=60°, bearing=-30°, duration=3s)
-  → opacity crossfade (map → 3D canvas)
-  → [ParcelaDesigner3D with RealisticTerrain]
-  → Back: reverse animation
-```
-
-### Realtime Subscription
-```typescript
-supabase.channel('lots-changes')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'lots' }, handler)
-  .subscribe()
+[Grilla de Lotes] o [Mapa] 
+  → Click en lote
+  → LotDetailSheet se abre (lateral)
+     ├── Vista 3D compacta del terreno real
+     ├── Info: precio, área, servicios, topografía
+     ├── Documentos del proyecto
+     └── Botones:
+         ├── [Reservar] → LotReservationDialog
+         ├── [Diseñar Parcela] → LotDesigner3DDialog (fullscreen)
+         └── [Simular] → FinancingCalculator
 ```
 
