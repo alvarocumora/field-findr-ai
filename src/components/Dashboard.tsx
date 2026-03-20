@@ -12,6 +12,7 @@ import { DashboardHeader } from './dashboard/DashboardHeader';
 import { KPICard } from './dashboard/KPICard';
 import { ActivityFeed } from './dashboard/ActivityFeed';
 import { QuickActions } from './dashboard/QuickActions';
+import { UpcomingFollowUps } from './dashboard/UpcomingFollowUps';
 import { PropertyInsights } from './dashboard/PropertyInsights';
 import { useAuth } from '@/hooks/useAuth';
 import {
