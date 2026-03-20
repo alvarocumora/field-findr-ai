@@ -3,77 +3,75 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Plus, 
   Users, 
-  FileText, 
+  FolderKanban,
   Map, 
   Calculator,
   BarChart3,
   LucideIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 interface QuickAction {
   id: string;
   label: string;
   icon: LucideIcon;
-  onClick: () => void;
+  route: string;
   variant?: 'default' | 'secondary' | 'outline';
-  color?: string;
 }
 
 interface QuickActionsProps {
-  actions?: QuickAction[];
   className?: string;
 }
 
-const defaultActions: QuickAction[] = [
+const actions: QuickAction[] = [
   {
-    id: 'new-property',
-    label: 'Nueva Propiedad',
+    id: 'new-project',
+    label: 'Nuevo Proyecto',
     icon: Plus,
-    onClick: () => {},
+    route: '/asesor/projects',
     variant: 'default',
   },
   {
-    id: 'new-lead',
-    label: 'Nuevo Lead',
+    id: 'leads',
+    label: 'CRM Leads',
     icon: Users,
-    onClick: () => {},
+    route: '/asesor/leads',
     variant: 'outline',
   },
   {
-    id: 'new-document',
-    label: 'Subir Documento',
-    icon: FileText,
-    onClick: () => {},
+    id: 'projects',
+    label: 'Mis Proyectos',
+    icon: FolderKanban,
+    route: '/asesor/projects',
     variant: 'outline',
   },
   {
     id: 'view-map',
-    label: 'Ver Mapa',
+    label: 'Explorar Mapa',
     icon: Map,
-    onClick: () => {},
+    route: '/explorar',
     variant: 'outline',
   },
   {
     id: 'calculator',
     label: 'Calculadoras',
     icon: Calculator,
-    onClick: () => {},
+    route: '/asesor/analytics',
     variant: 'outline',
   },
   {
     id: 'reports',
     label: 'Reportes',
     icon: BarChart3,
-    onClick: () => {},
+    route: '/asesor/reports',
     variant: 'outline',
   },
 ];
 
-export const QuickActions = ({ 
-  actions = defaultActions,
-  className 
-}: QuickActionsProps) => {
+export const QuickActions = ({ className }: QuickActionsProps) => {
+  const navigate = useNavigate();
+
   return (
     <Card className={cn('overflow-hidden', className)}>
       <CardHeader className="pb-3">
@@ -97,7 +95,7 @@ export const QuickActions = ({
                   animationDelay: `${index * 0.05}s`,
                   animationFillMode: 'forwards'
                 }}
-                onClick={action.onClick}
+                onClick={() => navigate(action.route)}
               >
                 <Icon className={cn(
                   'h-5 w-5',
