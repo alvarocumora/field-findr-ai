@@ -244,6 +244,24 @@ const ProjectsManagement = () => {
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-2">
+                  {(project.status === 'draft' || project.status === 'planning') && (
+                    <Button
+                      variant="default"
+                      className="flex-1 gap-1"
+                      onClick={() => {
+                        const lotsWithPrice = (project.total_lots || 0) > 0;
+                        if (!lotsWithPrice) {
+                          toast.error('Agrega al menos 1 lote con precio antes de publicar');
+                          return;
+                        }
+                        updateProject.mutate({ id: project.id, status: 'active' });
+                        toast.success('Proyecto publicado exitosamente');
+                      }}
+                    >
+                      <Rocket className="h-4 w-4" />
+                      Publicar
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     className="flex-1 gap-1"
@@ -253,12 +271,11 @@ const ProjectsManagement = () => {
                     }}
                   >
                     <FileArchive className="h-4 w-4" />
-                    Importar KMZ
+                    KMZ
                   </Button>
-                  <Button variant="outline" className="flex-1 gap-1" asChild>
+                  <Button variant="outline" size="icon" asChild>
                     <Link to={`/proyecto/${project.id}`}>
                       <Eye className="h-4 w-4" />
-                      Ver
                     </Link>
                   </Button>
                   <Button
