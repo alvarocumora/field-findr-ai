@@ -9,9 +9,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { 
   FolderOpen, Plus, Search, MapPin, 
   TrendingUp, Building2, Eye, Edit,
-  Settings, FileArchive, Trash2
+  Settings, FileArchive, Trash2, Rocket
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import {
   AlertDialog,
@@ -29,6 +30,7 @@ import { KMZImportDialog } from './projects/KMZImportDialog';
 import CreateProjectWizard from './projects/CreateProjectWizard';
 
 const statusConfig: Record<string, { label: string; color: string }> = {
+  draft: { label: 'Borrador', color: 'bg-muted text-muted-foreground border-border' },
   planning: { label: 'En Planificación', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
   active: { label: 'Activo', color: 'bg-green-500/10 text-green-600 border-green-500/20' },
   sold_out: { label: 'Agotado', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' },
@@ -194,8 +196,8 @@ const ProjectsManagement = () => {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Building2 className="h-16 w-16 text-primary/30" />
                 </div>
-                <Badge className={`absolute top-4 right-4 ${statusConfig[project.status || 'active']?.color || statusConfig.active.color}`}>
-                  {statusConfig[project.status || 'active']?.label || 'Activo'}
+                <Badge className={`absolute top-4 right-4 ${statusConfig[project.status || 'draft']?.color || statusConfig.draft.color}`}>
+                  {statusConfig[project.status || 'draft']?.label || 'Borrador'}
                 </Badge>
               </div>
               
@@ -243,6 +245,24 @@ const ProjectsManagement = () => {
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-2">
+                  {(project.status === 'draft' || project.status === 'planning') && (
+                    <Button
+                      variant="default"
+                      className="flex-1 gap-1"
+                      onClick={() => {
+                        const lotsWithPrice = (project.total_lots || 0) > 0;
+                        if (!lotsWithPrice) {
+                          toast.error('Agrega al menos 1 lote con precio antes de publicar');
+                          return;
+                        }
+                        updateProject.mutate({ id: project.id, status: 'active' });
+                        toast.success('Proyecto publicado exitosamente');
+                      }}
+                    >
+                      <Rocket className="h-4 w-4" />
+                      Publicar
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     className="flex-1 gap-1"
@@ -252,12 +272,11 @@ const ProjectsManagement = () => {
                     }}
                   >
                     <FileArchive className="h-4 w-4" />
-                    Importar KMZ
+                    KMZ
                   </Button>
-                  <Button variant="outline" className="flex-1 gap-1" asChild>
+                  <Button variant="outline" size="icon" asChild>
                     <Link to={`/proyecto/${project.id}`}>
                       <Eye className="h-4 w-4" />
-                      Ver
                     </Link>
                   </Button>
                   <Button

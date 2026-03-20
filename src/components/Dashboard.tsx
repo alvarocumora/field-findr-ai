@@ -12,6 +12,7 @@ import { DashboardHeader } from './dashboard/DashboardHeader';
 import { KPICard } from './dashboard/KPICard';
 import { ActivityFeed } from './dashboard/ActivityFeed';
 import { QuickActions } from './dashboard/QuickActions';
+import { UpcomingFollowUps } from './dashboard/UpcomingFollowUps';
 import { PropertyInsights } from './dashboard/PropertyInsights';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -99,9 +100,12 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Quick Actions + Activity Feed */}
+      {/* Quick Actions + Follow-ups + Activity Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <QuickActions className="lg:col-span-1" />
+        <div className="space-y-6">
+          <QuickActions />
+          <UpcomingFollowUps />
+        </div>
         <ActivityFeed 
           activities={activities} 
           maxItems={5}

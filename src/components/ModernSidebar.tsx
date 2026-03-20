@@ -6,12 +6,13 @@ import Logo from '@/components/brand/Logo';
 import LogoIcon from '@/components/brand/LogoIcon';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
 import { useSidebarCounts } from '@/hooks/useSidebarCounts';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   MapPin,
   LayoutDashboard,
-  Building2,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Users,
   BarChart3,
   UserCircle,
@@ -33,66 +34,108 @@ import {
   Bell,
   Flame,
   Code,
+  Building2,
+  LucideIcon,
 } from 'lucide-react';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
+
+interface NavItem {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
 
 interface ModernSidebarProps {
   collapsed?: boolean;
   onToggle?: () => void;
 }
 
+const agentGroups: NavGroup[] = [
+  {
+    label: 'Operaciones',
+    items: [
+      { name: 'Dashboard', href: '/asesor/dashboard', icon: LayoutDashboard },
+      { name: 'Proyectos', href: '/asesor/projects', icon: FolderKanban },
+      { name: 'Lotes', href: '/asesor/lots', icon: Grid3X3 },
+      { name: 'Propiedades', href: '/asesor/listings', icon: Building2 },
+    ],
+  },
+  {
+    label: 'Comercial',
+    items: [
+      { name: 'CRM Leads', href: '/asesor/leads', icon: Users },
+      { name: 'Ventas', href: '/asesor/ventas', icon: Handshake },
+      { name: 'Pipeline', href: '/asesor/pipeline', icon: Workflow },
+      { name: 'Reservas', href: '/asesor/reservations', icon: FileText },
+      { name: 'Mensajes', href: '/asesor/messages', icon: MessageSquare },
+    ],
+  },
+  {
+    label: 'Finanzas',
+    items: [
+      { name: 'Créditos', href: '/asesor/credits', icon: CreditCard },
+      { name: 'Pagos', href: '/asesor/payments', icon: DollarSign },
+      { name: 'Cierres', href: '/asesor/closing', icon: Scale },
+      { name: 'Financiero', href: '/asesor/financial', icon: TrendingUp },
+    ],
+  },
+  {
+    label: 'Analytics',
+    items: [
+      { name: 'Multi-Proyecto', href: '/asesor/multi-project', icon: BarChart3 },
+      { name: 'Reportes', href: '/asesor/reports', icon: FileText },
+      { name: 'Rendimiento', href: '/asesor/performance', icon: Target },
+      { name: 'Ejecutivo', href: '/asesor/executive', icon: PieChart },
+      { name: 'Demanda', href: '/asesor/demand', icon: Flame },
+    ],
+  },
+  {
+    label: 'Configuración',
+    items: [
+      { name: 'Enterprise', href: '/asesor/enterprise', icon: Globe },
+      { name: 'API Portal', href: '/asesor/api', icon: Code },
+      { name: 'Notificaciones', href: '/asesor/notifications', icon: Bell },
+    ],
+  },
+];
+
+const adminGroups: NavGroup[] = [
+  {
+    label: 'Administración',
+    items: [
+      { name: 'Panel Admin', href: '/admin/dashboard', icon: LayoutDashboard },
+      { name: 'Financiero', href: '/admin/financial', icon: TrendingUp },
+      { name: 'Usuarios', href: '/admin/users', icon: Users },
+      { name: 'Agentes', href: '/admin/agents', icon: ShieldCheck },
+      { name: 'Proyectos', href: '/admin/projects', icon: FolderKanban },
+      { name: 'Documentos', href: '/admin/documents', icon: FileText },
+      { name: 'Reservas', href: '/admin/reservations', icon: FileText },
+      { name: 'Aprobaciones', href: '/admin/approvals', icon: ClipboardCheck },
+      { name: 'Créditos', href: '/admin/credits', icon: CreditCard },
+      { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+    ],
+  },
+];
+
+const commonNavigation: NavItem[] = [
+  { name: 'Explorar Mapa', href: '/explorar', icon: MapPin },
+  { name: 'Mi Perfil', href: '/profile', icon: UserCircle },
+];
+
 const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
   const location = useLocation();
   const { isAdmin, isAgent } = useSmartRedirect();
   const counts = useSidebarCounts();
 
-  // Agent navigation
-  const agentNavigation = [
-    { name: 'Dashboard', href: '/asesor/dashboard', icon: LayoutDashboard },
-    { name: 'Mis Propiedades', href: '/asesor/listings', icon: Building2 },
-    { name: 'Proyectos', href: '/asesor/projects', icon: FolderKanban },
-    { name: 'Lotes', href: '/asesor/lots', icon: Grid3X3 },
-    { name: 'CRM Leads', href: '/asesor/leads', icon: Users },
-    { name: 'Ventas', href: '/asesor/sales', icon: Handshake },
-    { name: 'Pipeline', href: '/asesor/pipeline', icon: Workflow },
-    { name: 'Reservas', href: '/asesor/reservations', icon: FileText },
-    { name: 'Créditos', href: '/asesor/credits', icon: CreditCard },
-    { name: 'Pagos', href: '/asesor/payments', icon: DollarSign },
-    { name: 'Cierres', href: '/asesor/closing', icon: Scale },
-    { name: 'Mensajes', href: '/asesor/messages', icon: MessageSquare },
-    { name: 'Multi-Proyecto', href: '/asesor/multi-project', icon: BarChart3 },
-    { name: 'Analytics', href: '/asesor/analytics', icon: BarChart3 },
-    { name: 'Financiero', href: '/asesor/financial', icon: TrendingUp },
-    { name: 'Reportes', href: '/asesor/reports', icon: FileText },
-    { name: 'Rendimiento', href: '/asesor/performance', icon: Target },
-    { name: 'Ejecutivo', href: '/asesor/executive', icon: PieChart },
-    { name: 'Demanda', href: '/asesor/demand', icon: Flame },
-    { name: 'API Portal', href: '/asesor/api', icon: Code },
-    { name: 'Notificaciones', href: '/asesor/notifications', icon: Bell },
-    { name: 'Enterprise', href: '/asesor/enterprise', icon: Globe },
-  ];
-
-  // Admin navigation
-  const adminNavigation = [
-    { name: 'Panel Admin', href: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Financiero', href: '/admin/financial', icon: TrendingUp },
-    { name: 'Usuarios', href: '/admin/users', icon: Users },
-    { name: 'Agentes', href: '/admin/agents', icon: ShieldCheck },
-    { name: 'Proyectos', href: '/admin/projects', icon: FolderKanban },
-    { name: 'Documentos', href: '/admin/documents', icon: FileText },
-    { name: 'Reservas', href: '/admin/reservations', icon: FileText },
-    { name: 'Aprobaciones', href: '/admin/approvals', icon: ClipboardCheck },
-    { name: 'Créditos', href: '/admin/credits', icon: CreditCard },
-    { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-  ];
-
-  const commonNavigation = [
-    { name: 'Explorar Mapa', href: '/explorar', icon: MapPin },
-    { name: 'Mi Perfil', href: '/profile', icon: UserCircle },
-  ];
-
   const isActive = (path: string) => location.pathname === path;
+  const groupHasActive = (group: NavGroup) => group.items.some(i => isActive(i.href));
 
-  // Map nav items to badge counts
   const badgeMap: Record<string, number> = {
     '/asesor/reservations': counts.pendingReservations,
     '/asesor/leads': counts.newLeads,
@@ -100,23 +143,22 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     '/admin/reservations': counts.pendingReservations,
   };
 
-  const NavItem = ({ item }: { item: { name: string; href: string; icon: React.ComponentType<{ className?: string }> } }) => {
+  const NavItemRow = ({ item }: { item: NavItem }) => {
     const badgeCount = badgeMap[item.href] || 0;
     return (
       <Link
         to={item.href}
-        className={`
-          flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150
-          ${isActive(item.href)
+        className={cn(
+          'flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150',
+          isActive(item.href)
             ? 'bg-primary/10 text-primary'
-            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-          }
-          ${collapsed ? 'justify-center' : 'justify-start'}
-        `}
+            : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+          collapsed ? 'justify-center' : 'justify-start'
+        )}
         title={collapsed ? item.name : undefined}
       >
-        <item.icon className={`h-5 w-5 flex-shrink-0 ${collapsed ? '' : 'mr-3'}`} />
-        {!collapsed && <span className="flex-1">{item.name}</span>}
+        <item.icon className={cn('h-4.5 w-4.5 flex-shrink-0', !collapsed && 'mr-3')} />
+        {!collapsed && <span className="flex-1 truncate">{item.name}</span>}
         {!collapsed && badgeCount > 0 && (
           <Badge variant="destructive" className="ml-auto text-[10px] h-5 min-w-[20px] px-1.5 flex items-center justify-center">
             {badgeCount}
@@ -129,16 +171,47 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     );
   };
 
-  const primaryNav = isAdmin ? adminNavigation : isAgent ? agentNavigation : [];
+  const NavGroupSection = ({ group }: { group: NavGroup }) => {
+    const hasActive = groupHasActive(group);
+    const [open, setOpen] = useState(hasActive);
+
+    if (collapsed) {
+      return (
+        <div className="space-y-0.5">
+          {group.items.map((item) => (
+            <div key={item.href} className="relative">
+              <NavItemRow item={item} />
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors">
+          <span>{group.label}</span>
+          <ChevronDown className={cn('h-3 w-3 transition-transform', open && 'rotate-180')} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-0.5 mt-0.5">
+          {group.items.map((item) => (
+            <NavItemRow key={item.href} item={item} />
+          ))}
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  };
+
+  const primaryGroups = isAdmin ? adminGroups : isAgent ? agentGroups : [];
 
   return (
-    <aside className={`
-      fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border transition-all duration-200 z-40
-      ${collapsed ? 'w-16' : 'w-60'}
-    `}>
-      <div className="flex flex-col h-full p-3">
+    <aside className={cn(
+      'fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border transition-all duration-200 z-40',
+      collapsed ? 'w-16' : 'w-60'
+    )}>
+      <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 px-1">
+        <div className="flex items-center justify-between p-3 mb-2">
           {!collapsed ? (
             <Link to="/">
               <Logo size="sm" />
@@ -150,67 +223,52 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
           )}
         </div>
 
-        {/* Toggle Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggle}
-          className={`mb-4 ${collapsed ? 'mx-auto' : 'ml-auto'} h-8 w-8 p-0`}
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
+        {/* Toggle */}
+        <div className="px-3 mb-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggle}
+            className={cn('h-8 w-8 p-0', collapsed ? 'mx-auto' : 'ml-auto')}
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
+        </div>
 
-        {/* Role Section Label */}
-        {!collapsed && primaryNav.length > 0 && (
-          <div className="flex items-center justify-between px-3 mb-2">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              {isAdmin ? 'Administración' : 'Gestión'}
-            </span>
+        {/* Role Badge */}
+        {!collapsed && primaryGroups.length > 0 && (
+          <div className="flex items-center justify-between px-4 mb-2">
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
               {isAdmin ? 'ADMIN' : 'PRO'}
             </Badge>
           </div>
         )}
 
-        {/* Primary Navigation */}
-        <nav className="space-y-1">
-          {primaryNav.map((item) => (
-            <div key={item.href} className="relative">
-              <NavItem item={item} />
-            </div>
+        {/* Scrollable Navigation */}
+        <div className="flex-1 overflow-y-auto px-3 space-y-3">
+          {primaryGroups.map((group) => (
+            <NavGroupSection key={group.label} group={group} />
           ))}
-        </nav>
 
-        {/* Agent extras: if admin, also show agent section */}
-        {isAdmin && (
-          <>
-            <Separator className="my-4" />
-            {!collapsed && (
-              <div className="px-3 mb-2">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Gestión Asesor
-                </span>
-              </div>
-            )}
-            <nav className="space-y-1">
-              {agentNavigation.map((item) => (
-                <NavItem key={item.href} item={item} />
+          {/* Admin also sees agent groups */}
+          {isAdmin && (
+            <>
+              <Separator className="my-2" />
+              {agentGroups.map((group) => (
+                <NavGroupSection key={group.label} group={group} />
               ))}
-            </nav>
-          </>
-        )}
+            </>
+          )}
 
-        <Separator className="my-4" />
+          <Separator className="my-2" />
 
-        {/* Common Navigation */}
-        <nav className="space-y-1">
-          {commonNavigation.map((item) => (
-            <NavItem key={item.href} item={item} />
-          ))}
-        </nav>
-
-        {/* Spacer */}
-        <div className="flex-1" />
+          {/* Common */}
+          <div className="space-y-0.5">
+            {commonNavigation.map((item) => (
+              <NavItemRow key={item.href} item={item} />
+            ))}
+          </div>
+        </div>
       </div>
     </aside>
   );

@@ -48,8 +48,9 @@ export const useDashboardKPIs = () => {
       const totalLots = allLots?.length || 0;
       const availableLots = allLots?.filter(l => l.status === 'available').length || 0;
       const reservedLots = allLots?.filter(l => l.status === 'reserved').length || 0;
+      const allSold = allLots?.filter(l => l.status === 'sold').length || 0;
       const conversionRate = totalLots > 0 
-        ? Math.round((soldCount / totalLots) * 100) 
+        ? Math.round(((allSold + reservedLots) / totalLots) * 100) 
         : 0;
 
       return {
@@ -62,6 +63,33 @@ export const useDashboardKPIs = () => {
         reservedLots,
         conversionRate,
       };
+    },
+    enabled: !!user,
+  });
+};
+
+export const useUpcomingFollowUps = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['upcoming-followups', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      const now = new Date().toISOString();
+      const inThreeDays = new Date();
+      inThreeDays.setDate(inThreeDays.getDate() + 3);
+
+      const { data } = await supabase
+        .from('leads')
+        .select('id, first_name, last_name, next_follow_up, status, phone, email, project_id')
+        .eq('user_id', user.id)
+        .not('next_follow_up', 'is', null)
+        .lte('next_follow_up', inThreeDays.toISOString())
+        .order('next_follow_up', { ascending: true })
+        .limit(5);
+
+      return data || [];
     },
     enabled: !!user,
   });
