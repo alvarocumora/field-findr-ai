@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { 
   FolderOpen, Plus, Search, MapPin, 
   TrendingUp, Building2, Eye, Edit,
-  Settings, FileArchive, Trash2
+  Settings, FileArchive, Trash2, Rocket
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
