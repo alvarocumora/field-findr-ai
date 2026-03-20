@@ -433,6 +433,7 @@ const ProjectDetail = () => {
                   setSelectedLot(lot.id);
                   setDetailLot(lot);
                 }}
+                selectedLotId={selectedLot}
                 projectId={project.id}
                 kmzFileUrl={(project as any).kmz_file_url}
                 planImages={(project as any).plan_images || []}
