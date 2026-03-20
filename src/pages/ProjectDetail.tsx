@@ -150,6 +150,8 @@ const ProjectDetail = () => {
   const [selectedLot, setSelectedLot] = useState<string | null>(null);
   const [reservationLot, setReservationLot] = useState<any | null>(null);
   const [financingLot, setFinancingLot] = useState<any | null>(null);
+  const [detailLot, setDetailLot] = useState<any | null>(null);
+  const [designerLot, setDesignerLot] = useState<any | null>(null);
   const [showCompare, setShowCompare] = useState(false);
 
   const { data: project, isLoading: projectLoading } = useQuery({
