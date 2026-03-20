@@ -282,7 +282,7 @@ const ProjectDetail = () => {
     );
   }
 
-  const selectedLotData = lots.find(l => l.id === selectedLot);
+  // selectedLotData removed - now using LotDetailSheet
   const isOwner = !!user && project.user_id === user.id;
 
   const handleCall = () => {
