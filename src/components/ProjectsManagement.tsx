@@ -195,8 +195,8 @@ const ProjectsManagement = () => {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Building2 className="h-16 w-16 text-primary/30" />
                 </div>
-                <Badge className={`absolute top-4 right-4 ${statusConfig[project.status || 'active']?.color || statusConfig.active.color}`}>
-                  {statusConfig[project.status || 'active']?.label || 'Activo'}
+                <Badge className={`absolute top-4 right-4 ${statusConfig[project.status || 'draft']?.color || statusConfig.draft.color}`}>
+                  {statusConfig[project.status || 'draft']?.label || 'Borrador'}
                 </Badge>
               </div>
               
