@@ -431,11 +431,8 @@ const ProjectDetail = () => {
                 }}
                 onLotClick={(lot) => {
                   setSelectedLot(lot.id);
-                  if (lot.status !== 'sold') {
-                    setReservationLot(lot);
-                  }
+                  setDetailLot(lot);
                 }}
-                selectedLotId={selectedLot}
                 projectId={project.id}
                 kmzFileUrl={(project as any).kmz_file_url}
                 planImages={(project as any).plan_images || []}
