@@ -1,85 +1,51 @@
 
 
-# Plan: Sistema Mejorado de Visualización de Lotes con Vista 3D y Reserva
+# Plan: Revisión y Corrección de la Plataforma
 
-## Resumen
+## Problema Principal Detectado
 
-Rediseñar la experiencia de ProjectDetail para que al seleccionar un lote, el usuario vea una ficha expandida con vista 3D del terreno real (usando la georeferencia/polígono existente), documentos del proyecto, y botones prominentes de "Reservar" y "Diseñar Parcela". Mejorar las cards de lotes con miniatura 3D y mejor jerarquía visual.
+El error visible en las network requests es que la URL `/proyecto/:id` se carga con el literal `:id` en vez de un UUID real. Esto causa errores 400 en todas las queries a la base de datos:
+```
+"invalid input syntax for type uuid: \":id\""
+```
 
----
+Esto ocurre porque `useParams()` devuelve la cadena literal `:id` y las queries tienen `enabled: !!id` que pasa como `true` para cualquier string no vacío. Sin embargo, este no es un bug de código sino una navegación directa a la URL literal. La corrección debe ser defensiva: validar que `id` sea un UUID válido antes de ejecutar queries.
 
 ## Cambios
 
-### 1. Nuevo componente: `LotDetailSheet` (Sheet/Drawer lateral)
+### 1. Validar UUID en ProjectDetail.tsx
 
-**Archivo:** `src/components/lots/LotDetailSheet.tsx`
+En `src/pages/ProjectDetail.tsx`, agregar validación del parámetro `id` antes de las queries:
 
-Cuando el usuario hace clic en un lote (desde el mapa o la grilla de cards), se abre un Sheet lateral con:
-
-- **Header**: Número de lote, estado (badge), precio, superficie, precio/m2
-- **Vista 3D embebida**: `ParcelaDesigner3D` (ya existe) con el polígono del lote, usando `RealisticTerrain` si tiene lat/lng. Tamaño compacto (~350px alto)
-- **Sección de servicios**: Agua, luz, acceso (badges existentes)
-- **Sección de documentos**: Lista de documentos legales del proyecto (reutilizando datos de `LegalTab`)
-- **Topografía**: Elevación promedio y categoría de pendiente (datos de `elevation_avg` y `slope_category`)
-- **Botones de acción prominentes**:
-  - "Reservar este Lote" → abre `LotReservationDialog`
-  - "Diseñar Mi Parcela" → navega a vista 3D completa o abre `ParcelaDesigner3D` en fullscreen
-  - "Simular Financiamiento" → abre `FinancingCalculator`
-
-### 2. Cards de lotes mejoradas
-
-**Archivo:** `src/components/lots/EnhancedLotCard.tsx` (modificar)
-
-- Agregar indicador visual de pendiente/topografía (ícono montaña + slope_category)
-- Botón "Ver en 3D" que abre el `LotDetailSheet`
-- Miniatura del polígono del lote como SVG inline (si tiene polygon data)
-- Reorganizar acciones: "Ver 3D" prominente para disponibles, "Reservar" como CTA primario
-
-### 3. Integración en ProjectDetail
-
-**Archivo:** `src/pages/ProjectDetail.tsx` (modificar)
-
-- Reemplazar el "Selected Lot Quick View" actual (card bajo el mapa, líneas 470-511) por el nuevo `LotDetailSheet`
-- Cuando se clickea un lote en el mapa o en la grilla, abrir el Sheet con la data completa
-- Conectar el botón "Diseñar Parcela" con `ParcelaDesigner3D` en un Dialog fullscreen
-- Pasar documentos legales del proyecto al Sheet
-
-### 4. Vista 3D fullscreen para diseño
-
-**Archivo:** `src/components/lots/LotDesigner3DDialog.tsx` (crear)
-
-- Dialog fullscreen que envuelve `ParcelaDesigner3D`
-- Recibe el polígono, lat/lng, y datos del lote
-- Botón de guardar diseño (ya soportado via `onSave` → `parcel_design` en reservations)
-- Incluye `HouseSimulator` integrado para colocar casa sobre terreno real
-
----
-
-## Archivos a Crear
-1. `src/components/lots/LotDetailSheet.tsx` — Sheet lateral con vista 3D + acciones
-2. `src/components/lots/LotDesigner3DDialog.tsx` — Dialog fullscreen para diseño 3D
-
-## Archivos a Modificar
-1. `src/components/lots/EnhancedLotCard.tsx` — Miniatura SVG del polígono, botón "Ver 3D", topografía
-2. `src/pages/ProjectDetail.tsx` — Integrar LotDetailSheet, reemplazar quick view
-
-## Sin cambios de base de datos
-Todos los datos necesarios (polygon, lat/lng, elevation_avg, slope_category) ya existen en la tabla `lots`.
-
----
-
-## Flujo del Usuario
-
-```text
-[Grilla de Lotes] o [Mapa] 
-  → Click en lote
-  → LotDetailSheet se abre (lateral)
-     ├── Vista 3D compacta del terreno real
-     ├── Info: precio, área, servicios, topografía
-     ├── Documentos del proyecto
-     └── Botones:
-         ├── [Reservar] → LotReservationDialog
-         ├── [Diseñar Parcela] → LotDesigner3DDialog (fullscreen)
-         └── [Simular] → FinancingCalculator
+```typescript
+const isValidUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 ```
+
+- Cambiar `enabled: !!id` a `enabled: !!isValidUUID` en ambas queries (project y lots)
+- Mostrar un mensaje de error amigable si `id` no es válido (redirigir a explorar o mostrar "Proyecto no encontrado")
+
+### 2. Aplicar la misma protección en PropertyDetail.tsx
+
+Mismo patrón defensivo para evitar queries con IDs inválidos.
+
+### 3. Revisar Leads (LeadManagement.tsx)
+
+El componente y hook `useLeads` se ven correctos. Las queries están protegidas con `enabled: !!user?.id` y filtran por `user_id`. Sin problemas detectados.
+
+### 4. Revisar Executive Dashboard
+
+El `ExecutiveDashboard.tsx` funciona correctamente. Usa `useProjects`, `useLots`, `useLeads`, `useCredits` -- todos protegidos con `enabled: !!user?.id`. Sin problemas detectados.
+
+### 5. Revisar flujo de carga de proyecto (CreateProjectWizard)
+
+El wizard se ve bien estructurado con 8 pasos. Sin errores detectados en el código.
+
+## Resumen de Archivos a Modificar
+
+1. `src/pages/ProjectDetail.tsx` -- Agregar validación UUID y fallback UI
+2. `src/pages/PropertyDetail.tsx` -- Misma protección UUID
+
+## Alcance
+
+Corrección defensiva menor. Los demás flujos (leads, ejecutivo, creación de proyecto) funcionan correctamente.
 
