@@ -48,8 +48,9 @@ export const useDashboardKPIs = () => {
       const totalLots = allLots?.length || 0;
       const availableLots = allLots?.filter(l => l.status === 'available').length || 0;
       const reservedLots = allLots?.filter(l => l.status === 'reserved').length || 0;
+      const allSold = allLots?.filter(l => l.status === 'sold').length || 0;
       const conversionRate = totalLots > 0 
-        ? Math.round((soldCount / totalLots) * 100) 
+        ? Math.round(((allSold + reservedLots) / totalLots) * 100) 
         : 0;
 
       return {
