@@ -286,6 +286,23 @@ const ProjectDetail = () => {
     );
   }
 
+  // Block draft projects for non-owners
+  const isDraft = project.status === 'draft';
+  const isProjectOwner = !!user && project.user_id === user.id;
+  if (isDraft && !isProjectOwner) {
+    return (
+      <PublicLayout>
+        <div className="container px-4 py-16 text-center">
+          <h1 className="text-2xl font-bold mb-4">Proyecto no disponible</h1>
+          <p className="text-muted-foreground mb-6">Este proyecto aún no ha sido publicado.</p>
+          <Button asChild>
+            <Link to="/">Volver al inicio</Link>
+          </Button>
+        </div>
+      </PublicLayout>
+    );
+  }
+
   // selectedLotData removed - now using LotDetailSheet
   const isOwner = !!user && project.user_id === user.id;
 
