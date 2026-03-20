@@ -491,11 +491,13 @@ const ProjectDetail = () => {
                     index={index}
                     totalAvailable={availableLots.length}
                     isSelected={selectedLot === lot.id}
+                    onView3D={(lot) => {
+                      setSelectedLot(lot.id);
+                      setDetailLot(lot);
+                    }}
                     onView={(lot) => {
                       setSelectedLot(lot.id);
-                      if (lot.status !== 'sold') {
-                        setReservationLot(lot);
-                      }
+                      setDetailLot(lot);
                     }}
                     onSimulateFinancing={(lot) => {
                       setSelectedLot(lot.id);
