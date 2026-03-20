@@ -21,7 +21,7 @@ import {
   Handshake,
   ShieldCheck,
   TrendingUp,
-  FileText,
+  FileBarChart,
   CreditCard,
   Scale,
   ClipboardCheck,
@@ -35,6 +35,8 @@ import {
   Flame,
   Code,
   Building2,
+  CalendarCheck,
+  MoreHorizontal,
   LucideIcon,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -46,81 +48,51 @@ interface NavItem {
   icon: LucideIcon;
 }
 
-interface NavGroup {
-  label: string;
-  items: NavItem[];
-}
-
 interface ModernSidebarProps {
   collapsed?: boolean;
   onToggle?: () => void;
 }
 
-const agentGroups: NavGroup[] = [
-  {
-    label: 'Operaciones',
-    items: [
-      { name: 'Dashboard', href: '/asesor/dashboard', icon: LayoutDashboard },
-      { name: 'Proyectos', href: '/asesor/projects', icon: FolderKanban },
-      { name: 'Lotes', href: '/asesor/lots', icon: Grid3X3 },
-      { name: 'Propiedades', href: '/asesor/listings', icon: Building2 },
-    ],
-  },
-  {
-    label: 'Comercial',
-    items: [
-      { name: 'CRM Leads', href: '/asesor/leads', icon: Users },
-      { name: 'Ventas', href: '/asesor/ventas', icon: Handshake },
-      { name: 'Pipeline', href: '/asesor/pipeline', icon: Workflow },
-      { name: 'Reservas', href: '/asesor/reservations', icon: FileText },
-      { name: 'Mensajes', href: '/asesor/messages', icon: MessageSquare },
-    ],
-  },
-  {
-    label: 'Finanzas',
-    items: [
-      { name: 'Créditos', href: '/asesor/credits', icon: CreditCard },
-      { name: 'Pagos', href: '/asesor/payments', icon: DollarSign },
-      { name: 'Cierres', href: '/asesor/closing', icon: Scale },
-      { name: 'Financiero', href: '/asesor/financial', icon: TrendingUp },
-    ],
-  },
-  {
-    label: 'Analytics',
-    items: [
-      { name: 'Multi-Proyecto', href: '/asesor/multi-project', icon: BarChart3 },
-      { name: 'Reportes', href: '/asesor/reports', icon: FileText },
-      { name: 'Rendimiento', href: '/asesor/performance', icon: Target },
-      { name: 'Ejecutivo', href: '/asesor/executive', icon: PieChart },
-      { name: 'Demanda', href: '/asesor/demand', icon: Flame },
-    ],
-  },
-  {
-    label: 'Configuración',
-    items: [
-      { name: 'Enterprise', href: '/asesor/enterprise', icon: Globe },
-      { name: 'API Portal', href: '/asesor/api', icon: Code },
-      { name: 'Notificaciones', href: '/asesor/notifications', icon: Bell },
-    ],
-  },
+// Core items always visible
+const coreItems: NavItem[] = [
+  { name: 'Dashboard', href: '/asesor/dashboard', icon: LayoutDashboard },
+  { name: 'Proyectos', href: '/asesor/projects', icon: FolderKanban },
+  { name: 'Lotes', href: '/asesor/lots', icon: Grid3X3 },
+  { name: 'CRM Leads', href: '/asesor/leads', icon: Users },
+  { name: 'Reservas', href: '/asesor/reservations', icon: CalendarCheck },
+  { name: 'Pagos', href: '/asesor/payments', icon: DollarSign },
+  { name: 'Reportes', href: '/asesor/reports', icon: FileBarChart },
 ];
 
-const adminGroups: NavGroup[] = [
-  {
-    label: 'Administración',
-    items: [
-      { name: 'Panel Admin', href: '/admin/dashboard', icon: LayoutDashboard },
-      { name: 'Financiero', href: '/admin/financial', icon: TrendingUp },
-      { name: 'Usuarios', href: '/admin/users', icon: Users },
-      { name: 'Agentes', href: '/admin/agents', icon: ShieldCheck },
-      { name: 'Proyectos', href: '/admin/projects', icon: FolderKanban },
-      { name: 'Documentos', href: '/admin/documents', icon: FileText },
-      { name: 'Reservas', href: '/admin/reservations', icon: FileText },
-      { name: 'Aprobaciones', href: '/admin/approvals', icon: ClipboardCheck },
-      { name: 'Créditos', href: '/admin/credits', icon: CreditCard },
-      { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-    ],
-  },
+// Advanced items collapsed by default
+const advancedItems: NavItem[] = [
+  { name: 'Ventas', href: '/asesor/sales', icon: Handshake },
+  { name: 'Pipeline', href: '/asesor/pipeline', icon: Workflow },
+  { name: 'Créditos', href: '/asesor/credits', icon: CreditCard },
+  { name: 'Cierres', href: '/asesor/closing', icon: Scale },
+  { name: 'Financiero', href: '/asesor/financial', icon: TrendingUp },
+  { name: 'Multi-Proyecto', href: '/asesor/multi-project', icon: BarChart3 },
+  { name: 'Rendimiento', href: '/asesor/performance', icon: Target },
+  { name: 'Ejecutivo', href: '/asesor/executive', icon: PieChart },
+  { name: 'Demanda', href: '/asesor/demand', icon: Flame },
+  { name: 'Propiedades', href: '/asesor/listings', icon: Building2 },
+  { name: 'Mensajes', href: '/asesor/messages', icon: MessageSquare },
+  { name: 'Enterprise', href: '/asesor/enterprise', icon: Globe },
+  { name: 'API Portal', href: '/asesor/api', icon: Code },
+  { name: 'Notificaciones', href: '/asesor/notifications', icon: Bell },
+];
+
+const adminItems: NavItem[] = [
+  { name: 'Panel Admin', href: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'Financiero', href: '/admin/financial', icon: TrendingUp },
+  { name: 'Usuarios', href: '/admin/users', icon: Users },
+  { name: 'Agentes', href: '/admin/agents', icon: ShieldCheck },
+  { name: 'Proyectos', href: '/admin/projects', icon: FolderKanban },
+  { name: 'Documentos', href: '/admin/documents', icon: ClipboardCheck },
+  { name: 'Reservas', href: '/admin/reservations', icon: CalendarCheck },
+  { name: 'Aprobaciones', href: '/admin/approvals', icon: ClipboardCheck },
+  { name: 'Créditos', href: '/admin/credits', icon: CreditCard },
+  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
 ];
 
 const commonNavigation: NavItem[] = [
@@ -134,7 +106,8 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
   const counts = useSidebarCounts();
 
   const isActive = (path: string) => location.pathname === path;
-  const groupHasActive = (group: NavGroup) => group.items.some(i => isActive(i.href));
+  const advancedHasActive = advancedItems.some(i => isActive(i.href));
+  const [advancedOpen, setAdvancedOpen] = useState(advancedHasActive);
 
   const badgeMap: Record<string, number> = {
     '/asesor/reservations': counts.pendingReservations,
@@ -171,39 +144,6 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     );
   };
 
-  const NavGroupSection = ({ group }: { group: NavGroup }) => {
-    const hasActive = groupHasActive(group);
-    const [open, setOpen] = useState(hasActive);
-
-    if (collapsed) {
-      return (
-        <div className="space-y-0.5">
-          {group.items.map((item) => (
-            <div key={item.href} className="relative">
-              <NavItemRow item={item} />
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    return (
-      <Collapsible open={open} onOpenChange={setOpen}>
-        <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors">
-          <span>{group.label}</span>
-          <ChevronDown className={cn('h-3 w-3 transition-transform', open && 'rotate-180')} />
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-0.5 mt-0.5">
-          {group.items.map((item) => (
-            <NavItemRow key={item.href} item={item} />
-          ))}
-        </CollapsibleContent>
-      </Collapsible>
-    );
-  };
-
-  const primaryGroups = isAdmin ? adminGroups : isAgent ? agentGroups : [];
-
   return (
     <aside className={cn(
       'fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border transition-all duration-200 z-40',
@@ -236,7 +176,7 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
         </div>
 
         {/* Role Badge */}
-        {!collapsed && primaryGroups.length > 0 && (
+        {!collapsed && (isAdmin || isAgent) && (
           <div className="flex items-center justify-between px-4 mb-2">
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
               {isAdmin ? 'ADMIN' : 'PRO'}
@@ -245,18 +185,63 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
         )}
 
         {/* Scrollable Navigation */}
-        <div className="flex-1 overflow-y-auto px-3 space-y-3">
-          {primaryGroups.map((group) => (
-            <NavGroupSection key={group.label} group={group} />
-          ))}
-
-          {/* Admin also sees agent groups */}
+        <div className="flex-1 overflow-y-auto px-3 space-y-1">
+          {/* Admin section */}
           {isAdmin && (
             <>
+              {!collapsed && (
+                <span className="block px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Admin
+                </span>
+              )}
+              <div className="space-y-0.5">
+                {adminItems.map((item) => (
+                  <NavItemRow key={item.href} item={item} />
+                ))}
+              </div>
               <Separator className="my-2" />
-              {agentGroups.map((group) => (
-                <NavGroupSection key={group.label} group={group} />
-              ))}
+            </>
+          )}
+
+          {/* Agent Core */}
+          {(isAgent || isAdmin) && (
+            <>
+              {!collapsed && (
+                <span className="block px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Principal
+                </span>
+              )}
+              <div className="space-y-0.5">
+                {coreItems.map((item) => (
+                  <NavItemRow key={item.href} item={item} />
+                ))}
+              </div>
+
+              {/* Advanced - collapsed by default */}
+              {!collapsed ? (
+                <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-1.5 mt-2 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors">
+                    <span className="flex items-center gap-1.5">
+                      <MoreHorizontal className="h-3 w-3" />
+                      Más herramientas
+                    </span>
+                    <ChevronDown className={cn('h-3 w-3 transition-transform', advancedOpen && 'rotate-180')} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-0.5 mt-0.5">
+                    {advancedItems.map((item) => (
+                      <NavItemRow key={item.href} item={item} />
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              ) : (
+                <div className="space-y-0.5">
+                  {advancedItems.map((item) => (
+                    <div key={item.href} className="relative">
+                      <NavItemRow item={item} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           )}
 

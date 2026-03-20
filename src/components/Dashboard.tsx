@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
@@ -30,7 +29,6 @@ const formatCurrency = (value: number) => {
 };
 
 const Dashboard = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
   const { user } = useAuth();
   
   const { data: kpiData, isLoading: kpiLoading } = useDashboardKPIs();
@@ -76,13 +74,7 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      <DashboardHeader
-        userName={userName}
-        selectedPeriod={selectedPeriod}
-        onPeriodChange={setSelectedPeriod}
-        notificationCount={kpiData?.activeReservations || 0}
-        onExport={() => console.log('Export')}
-      />
+      <DashboardHeader userName={userName} />
 
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

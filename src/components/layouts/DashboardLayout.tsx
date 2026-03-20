@@ -6,6 +6,7 @@ import ModernSidebar from '@/components/ModernSidebar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children, requiredRole }: DashboardLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, isAgent, isLoading: rolesLoading } = useSmartRedirect();
 
@@ -71,6 +73,13 @@ const DashboardLayout = ({ children, requiredRole }: DashboardLayoutProps) => {
         />
       </div>
 
+      {/* Mobile Sidebar via Sheet */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="left" className="p-0 w-60">
+          <ModernSidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
+        </SheetContent>
+      </Sheet>
+
       {/* Main Content */}
       <main className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-60'}`}>
         {/* Mobile Header */}
@@ -78,7 +87,7 @@ const DashboardLayout = ({ children, requiredRole }: DashboardLayoutProps) => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            onClick={() => setMobileOpen(true)}
           >
             <Menu className="h-5 w-5" />
           </Button>
