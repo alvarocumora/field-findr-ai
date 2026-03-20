@@ -391,6 +391,43 @@ const ProjectDetail = () => {
           </div>
         </div>
 
+        {/* Hero Section - Description + Gallery */}
+        {(project.description || ((project as any)?.images?.length > 0)) && (
+          <div className="container px-4 py-6 border-b border-border">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Description */}
+              {project.description && (
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground mb-2">Sobre el Proyecto</h2>
+                  <p className="text-muted-foreground leading-relaxed">{project.description}</p>
+                  {project.total_area && (
+                    <div className="flex items-center gap-4 mt-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Maximize2 className="h-4 w-4 text-primary" />
+                        <span className="text-foreground font-medium">{formatArea(Number(project.total_area))} m² totales</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-primary" />
+                        <span className="text-foreground font-medium">{lots.length} lotes</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Compact Gallery */}
+              {(project as any)?.images?.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {((project as any).images as string[]).slice(0, 3).map((img, idx) => (
+                    <div key={idx} className="aspect-[4/3] rounded-lg overflow-hidden">
+                      <img src={img} alt={`${project.name} ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Main Content - Full Width */}
         <div className="container px-4 py-6">
           <Tabs defaultValue="map" className="space-y-4">
