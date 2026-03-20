@@ -142,8 +142,12 @@ const ProjectGallery = ({ images, isOwner }: { images: string[]; isOwner: boolea
   );
 };
 
+const isValidUUID = (val?: string) =>
+  !!val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const validId = isValidUUID(id);
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -164,7 +168,7 @@ const ProjectDetail = () => {
         .single();
       return data;
     },
-    enabled: !!id,
+    enabled: validId,
   });
 
   const { data: lots = [], isLoading: lotsLoading } = useQuery({
@@ -177,7 +181,7 @@ const ProjectDetail = () => {
         .order('lot_number', { ascending: true });
       return data || [];
     },
-    enabled: !!id,
+    enabled: validId,
   });
 
   const { data: ownerProfile } = useQuery({
