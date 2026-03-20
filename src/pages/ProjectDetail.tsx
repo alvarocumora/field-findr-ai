@@ -8,6 +8,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LotReservationDialog } from '@/components/lots/LotReservationDialog';
+import { LotDetailSheet } from '@/components/lots/LotDetailSheet';
+import { LotDesigner3DDialog } from '@/components/lots/LotDesigner3DDialog';
 import { LotMapView } from '@/components/lots/LotMapView';
 import { PlanCompareView } from '@/components/lots/PlanCompareView';
 import { LegalTab } from '@/components/projects/LegalTab';
@@ -148,6 +150,8 @@ const ProjectDetail = () => {
   const [selectedLot, setSelectedLot] = useState<string | null>(null);
   const [reservationLot, setReservationLot] = useState<any | null>(null);
   const [financingLot, setFinancingLot] = useState<any | null>(null);
+  const [detailLot, setDetailLot] = useState<any | null>(null);
+  const [designerLot, setDesignerLot] = useState<any | null>(null);
   const [showCompare, setShowCompare] = useState(false);
 
   const { data: project, isLoading: projectLoading } = useQuery({
@@ -278,7 +282,7 @@ const ProjectDetail = () => {
     );
   }
 
-  const selectedLotData = lots.find(l => l.id === selectedLot);
+  // selectedLotData removed - now using LotDetailSheet
   const isOwner = !!user && project.user_id === user.id;
 
   const handleCall = () => {
@@ -427,9 +431,7 @@ const ProjectDetail = () => {
                 }}
                 onLotClick={(lot) => {
                   setSelectedLot(lot.id);
-                  if (lot.status !== 'sold') {
-                    setReservationLot(lot);
-                  }
+                  setDetailLot(lot);
                 }}
                 selectedLotId={selectedLot}
                 projectId={project.id}
@@ -447,7 +449,7 @@ const ProjectDetail = () => {
                 }
               />
 
-              {/* Compare dialog */}
+
               <Dialog open={showCompare} onOpenChange={setShowCompare}>
                 <DialogContent className="max-w-[95vw] w-full max-h-[95vh] overflow-y-auto p-4">
                   <h2 className="text-lg font-semibold mb-2">Comparación: Polígonos KMZ vs Plano Oficial</h2>
@@ -467,48 +469,6 @@ const ProjectDetail = () => {
                 </DialogContent>
               </Dialog>
               
-              {/* Selected Lot Quick View under map */}
-              {selectedLotData && (
-                <Card className="mt-4 border-primary/30">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div>
-                          <h3 className="font-bold text-lg">Lote {selectedLotData.lot_number}</h3>
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                            <span className="flex items-center gap-1">
-                              <Maximize2 className="h-3.5 w-3.5" />
-                              {formatArea(Number(selectedLotData.area))} m²
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <DollarSign className="h-3.5 w-3.5" />
-                              {formatPrice(selectedLotData.price)}
-                            </span>
-                          </div>
-                        </div>
-                        <Badge className={
-                          selectedLotData.status === 'sold' ? 'bg-gray-400' : 
-                          selectedLotData.status === 'reserved' ? 'bg-amber-500' : 'bg-emerald-500'
-                        }>
-                          {selectedLotData.status === 'sold' ? 'Vendido' : selectedLotData.status === 'reserved' ? 'Reservado' : 'Disponible'}
-                        </Badge>
-                      </div>
-                      
-                      {selectedLotData.status === 'available' && (
-                        <div className="flex gap-2">
-                          <Button size="sm" className="gap-1" onClick={() => setFinancingLot(selectedLotData)}>
-                            <Calculator className="h-3.5 w-3.5" />
-                            Simular
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => setReservationLot(selectedLotData)}>
-                            Reservar
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </TabsContent>
 
             {/* Cotizador Tab */}
@@ -532,11 +492,13 @@ const ProjectDetail = () => {
                     index={index}
                     totalAvailable={availableLots.length}
                     isSelected={selectedLot === lot.id}
+                    onView3D={(lot) => {
+                      setSelectedLot(lot.id);
+                      setDetailLot(lot);
+                    }}
                     onView={(lot) => {
                       setSelectedLot(lot.id);
-                      if (lot.status !== 'sold') {
-                        setReservationLot(lot);
-                      }
+                      setDetailLot(lot);
                     }}
                     onSimulateFinancing={(lot) => {
                       setSelectedLot(lot.id);
@@ -627,6 +589,34 @@ const ProjectDetail = () => {
           open={!!reservationLot}
           onOpenChange={(open) => !open && setReservationLot(null)}
           reservationAmount={(project as any).reservation_deposit || 500000}
+        />
+
+        {/* Lot Detail Sheet */}
+        <LotDetailSheet
+          lot={detailLot}
+          open={!!detailLot}
+          onOpenChange={(open) => !open && setDetailLot(null)}
+          projectName={project.name}
+          legalDocuments={legalDocuments}
+          onReserve={(lot) => {
+            setDetailLot(null);
+            setReservationLot(lot);
+          }}
+          onDesign={(lot) => {
+            setDetailLot(null);
+            setDesignerLot(lot);
+          }}
+          onFinance={(lot) => {
+            setDetailLot(null);
+            setFinancingLot(lot);
+          }}
+        />
+
+        {/* 3D Designer Dialog */}
+        <LotDesigner3DDialog
+          lot={designerLot}
+          open={!!designerLot}
+          onOpenChange={(open) => !open && setDesignerLot(null)}
         />
       </div>
     </PublicLayout>
