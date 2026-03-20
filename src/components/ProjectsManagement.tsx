@@ -29,6 +29,7 @@ import { KMZImportDialog } from './projects/KMZImportDialog';
 import CreateProjectWizard from './projects/CreateProjectWizard';
 
 const statusConfig: Record<string, { label: string; color: string }> = {
+  draft: { label: 'Borrador', color: 'bg-muted text-muted-foreground border-border' },
   planning: { label: 'En Planificación', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
   active: { label: 'Activo', color: 'bg-green-500/10 text-green-600 border-green-500/20' },
   sold_out: { label: 'Agotado', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' },
