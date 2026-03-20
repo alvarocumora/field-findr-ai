@@ -468,48 +468,6 @@ const ProjectDetail = () => {
                 </DialogContent>
               </Dialog>
               
-              {/* Selected Lot Quick View under map */}
-              {selectedLotData && (
-                <Card className="mt-4 border-primary/30">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div>
-                          <h3 className="font-bold text-lg">Lote {selectedLotData.lot_number}</h3>
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                            <span className="flex items-center gap-1">
-                              <Maximize2 className="h-3.5 w-3.5" />
-                              {formatArea(Number(selectedLotData.area))} m²
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <DollarSign className="h-3.5 w-3.5" />
-                              {formatPrice(selectedLotData.price)}
-                            </span>
-                          </div>
-                        </div>
-                        <Badge className={
-                          selectedLotData.status === 'sold' ? 'bg-gray-400' : 
-                          selectedLotData.status === 'reserved' ? 'bg-amber-500' : 'bg-emerald-500'
-                        }>
-                          {selectedLotData.status === 'sold' ? 'Vendido' : selectedLotData.status === 'reserved' ? 'Reservado' : 'Disponible'}
-                        </Badge>
-                      </div>
-                      
-                      {selectedLotData.status === 'available' && (
-                        <div className="flex gap-2">
-                          <Button size="sm" className="gap-1" onClick={() => setFinancingLot(selectedLotData)}>
-                            <Calculator className="h-3.5 w-3.5" />
-                            Simular
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => setReservationLot(selectedLotData)}>
-                            Reservar
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </TabsContent>
 
             {/* Cotizador Tab */}
