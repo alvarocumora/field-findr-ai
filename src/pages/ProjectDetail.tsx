@@ -8,6 +8,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LotReservationDialog } from '@/components/lots/LotReservationDialog';
+import { LotDetailSheet } from '@/components/lots/LotDetailSheet';
+import { LotDesigner3DDialog } from '@/components/lots/LotDesigner3DDialog';
 import { LotMapView } from '@/components/lots/LotMapView';
 import { PlanCompareView } from '@/components/lots/PlanCompareView';
 import { LegalTab } from '@/components/projects/LegalTab';
