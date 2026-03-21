@@ -1,11 +1,15 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Download, Percent, Calendar, CreditCard, Landmark,
-  CheckCircle2, MapPin, Layers, DollarSign, Maximize2, Truck
+  CheckCircle2, MapPin, Layers, DollarSign, Maximize2, Truck,
+  Sparkles, FileText, Eye
 } from 'lucide-react';
-import { generateProjectBrochurePDF } from '@/lib/brochurePdfGenerator';
+import { generateProjectBrochurePDF, type BrochureAIContent } from '@/lib/brochurePdfGenerator';
+import { useBrochureGenerator } from '@/hooks/useBrochureGenerator';
 
 interface CommercialConditions {
   min_down_payment_pct?: number;
@@ -32,6 +36,8 @@ const formatArea = (area: number) => new Intl.NumberFormat('es-CL', { maximumFra
 export const ProjectBrochureTab = ({ project, lots }: Props) => {
   const conditions: CommercialConditions = (project.commercial_conditions as CommercialConditions) || {};
   const hasConditions = conditions.min_down_payment_pct || conditions.max_term_months || conditions.interest_rate;
+  const { aiContent, isLoading, generateBrochureContent, clearContent } = useBrochureGenerator();
+  const [showPreview, setShowPreview] = useState(false);
 
   const available = lots.filter(l => l.status === 'available');
   const prices = lots.filter(l => l.price).map(l => l.price!);
@@ -41,7 +47,34 @@ export const ProjectBrochureTab = ({ project, lots }: Props) => {
   const areaMin = areas.length > 0 ? Math.min(...areas) : null;
   const areaMax = areas.length > 0 ? Math.max(...areas) : null;
 
-  const handleDownload = () => {
+  const handleGenerateAI = async () => {
+    const result = await generateBrochureContent({
+      name: project.name,
+      description: project.description,
+      location: [project.city, project.region].filter(Boolean).join(', '),
+      region: project.region || '',
+      city: project.city,
+      totalLots: lots.length,
+      availableLots: available.length,
+      priceMin: priceMin ?? undefined,
+      priceMax: priceMax ?? undefined,
+      areaMin: areaMin ?? undefined,
+      areaMax: areaMax ?? undefined,
+      conditions: hasConditions ? conditions : undefined,
+    });
+    if (result) setShowPreview(true);
+  };
+
+  const handleDownloadPremium = () => {
+    generateProjectBrochurePDF({
+      project,
+      lots,
+      conditions,
+      aiContent: aiContent || undefined,
+    });
+  };
+
+  const handleDownloadBasic = () => {
     generateProjectBrochurePDF({
       project,
       lots,
@@ -181,11 +214,98 @@ export const ProjectBrochureTab = ({ project, lots }: Props) => {
         </CardContent>
       </Card>
 
-      {/* Download Button */}
-      <Button size="lg" className="w-full gap-2" onClick={handleDownload}>
-        <Download className="h-5 w-5" />
-        Descargar Brochure PDF
-      </Button>
+      {/* AI Content Preview */}
+      {isLoading && (
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center gap-2 text-primary">
+              <Sparkles className="h-5 w-5 animate-pulse" />
+              <span className="text-sm font-medium">Generando contenido con IA...</span>
+            </div>
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-16 w-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {aiContent && showPreview && !isLoading && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Eye className="h-5 w-5 text-primary" />
+                Preview del Contenido IA
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => { clearContent(); setShowPreview(false); }}>
+                Descartar
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Titular</p>
+                <p className="text-lg font-bold text-foreground">{aiContent.headline}</p>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Elevator Pitch</p>
+                <p className="text-sm text-muted-foreground">{aiContent.elevatorPitch}</p>
+              </div>
+
+              {aiContent.pillars.map((p, i) => (
+                <div key={i} className="border-l-2 border-primary/40 pl-3">
+                  <p className="text-sm font-semibold">{p.title}</p>
+                  <p className="text-xs text-muted-foreground">{p.text}</p>
+                </div>
+              ))}
+
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Proyección de Inversión</p>
+                <p className="text-sm text-muted-foreground">{aiContent.investmentProjection}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Action Buttons */}
+      <div className="space-y-3">
+        {!aiContent ? (
+          <Button
+            size="lg"
+            className="w-full gap-2"
+            onClick={handleGenerateAI}
+            disabled={isLoading}
+          >
+            <Sparkles className="h-5 w-5" />
+            {isLoading ? 'Generando...' : 'Generar Brochure Premium con IA'}
+          </Button>
+        ) : (
+          <Button
+            size="lg"
+            className="w-full gap-2"
+            onClick={handleDownloadPremium}
+          >
+            <Download className="h-5 w-5" />
+            Descargar Brochure Premium PDF
+          </Button>
+        )}
+
+        <Button
+          variant="outline"
+          size="lg"
+          className="w-full gap-2"
+          onClick={handleDownloadBasic}
+        >
+          <FileText className="h-5 w-5" />
+          Descargar Brochure Básico
+        </Button>
+      </div>
     </div>
   );
 };

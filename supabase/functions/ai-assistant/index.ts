@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-type RequestType = "chat" | "predict-price" | "search" | "generate-content" | "generate-listing";
+type RequestType = "chat" | "predict-price" | "search" | "generate-content" | "generate-listing" | "generate-brochure";
 
 interface AIRequest {
   type: RequestType;
@@ -39,13 +39,34 @@ interface AIRequest {
     price?: string;
     currency?: string;
   };
+  projectData?: {
+    name: string;
+    description?: string;
+    location: string;
+    region: string;
+    city?: string;
+    totalLots: number;
+    availableLots: number;
+    priceMin?: number;
+    priceMax?: number;
+    areaMin?: number;
+    areaMax?: number;
+    conditions?: {
+      min_down_payment_pct?: number;
+      max_term_months?: number;
+      interest_rate?: number;
+      payment_methods?: string[];
+      includes_urbanization?: boolean;
+      delivery_date?: string;
+    };
+    features?: string[];
+  };
 }
 
 async function getListingsContext(supabaseUrl: string, supabaseKey: string, userQuery: string): Promise<string> {
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Get aggregate stats
     const { data: listings, error } = await supabase
       .from("listings")
       .select("id, title, price, currency, area_m2, area_ha, location, region, city, type, tags, legal_status, subdivision_eligible, featured")
@@ -55,7 +76,6 @@ async function getListingsContext(supabaseUrl: string, supabaseKey: string, user
 
     if (error || !listings?.length) return "";
 
-    // Build context summary
     const totalListings = listings.length;
     const regions = [...new Set(listings.map(l => l.region).filter(Boolean))];
     const types = [...new Set(listings.map(l => l.type))];
@@ -68,7 +88,6 @@ async function getListingsContext(supabaseUrl: string, supabaseKey: string, user
       .reduce((sum, l) => sum + l.price / l.area_m2!, 0) / 
       listings.filter(l => l.area_m2 && l.area_m2 > 0).length;
 
-    // Find relevant listings based on query keywords
     const queryLower = userQuery.toLowerCase();
     const relevantListings = listings
       .filter(l => {
@@ -96,7 +115,6 @@ Precio promedio por m²: $${Math.round(avgPricePerM2).toLocaleString()} CLP`;
       });
     }
 
-    // Top 5 cheapest per m² for recommendations
     const cheapest = listings
       .filter(l => l.area_m2 && l.area_m2 > 0)
       .sort((a, b) => (a.price / a.area_m2!) - (b.price / b.area_m2!))
@@ -139,10 +157,8 @@ serve(async (req) => {
           throw new Error("Messages are required for chat");
         }
 
-        // Get the latest user message for context search
         const lastUserMsg = [...body.messages].reverse().find(m => m.role === "user")?.content || "";
         
-        // Fetch real DB context
         const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
         const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
         const dbContext = await getListingsContext(supabaseUrl, supabaseKey, lastUserMsg);
@@ -272,6 +288,44 @@ ${ld.price ? `Precio: $${parseInt(ld.price).toLocaleString()} ${ld.currency || "
         break;
       }
 
+      case "generate-brochure": {
+        if (!body.projectData) throw new Error("Project data is required for brochure generation");
+        const pd = body.projectData;
+
+        systemPrompt = `Actúa como un Director de Marketing Inmobiliario experto en el mercado de parcelas en Chile. Tu objetivo es generar el contenido completo para un brochure PDF de ventas de alta conversión.
+
+REGLAS:
+- Tono profesional, aspiracional y transparente
+- Evita el lenguaje de ventas agresivo
+- Enfócate en la oportunidad patrimonial y la libertad de vivir en el campo
+- Usa datos reales proporcionados, no inventes números
+- Responde SIEMPRE en español de Chile`;
+
+        const condText = pd.conditions ? `
+Condiciones comerciales:
+- Pie mínimo: ${pd.conditions.min_down_payment_pct ?? 'No definido'}%
+- Plazo máximo: ${pd.conditions.max_term_months ?? 'No definido'} meses
+- Tasa: ${pd.conditions.interest_rate ?? 'No definida'}%
+- Métodos de pago: ${pd.conditions.payment_methods?.join(', ') ?? 'No definidos'}
+- Urbanización incluida: ${pd.conditions.includes_urbanization ? 'Sí' : 'No'}
+- Fecha entrega: ${pd.conditions.delivery_date ?? 'No definida'}` : '';
+
+        userMessage = `Genera contenido de brochure para este proyecto inmobiliario:
+
+Nombre: ${pd.name}
+Descripción: ${pd.description || 'No disponible'}
+Ubicación: ${[pd.city, pd.region].filter(Boolean).join(', ')}
+Total de lotes: ${pd.totalLots}
+Lotes disponibles: ${pd.availableLots}
+Rango de precios: ${pd.priceMin ? `$${pd.priceMin.toLocaleString()}` : 'N/A'} - ${pd.priceMax ? `$${pd.priceMax.toLocaleString()}` : 'N/A'}
+Superficies: ${pd.areaMin ? `${pd.areaMin.toLocaleString()} m²` : 'N/A'} - ${pd.areaMax ? `${pd.areaMax.toLocaleString()} m²` : 'N/A'}
+${condText}
+${pd.features?.length ? `Características: ${pd.features.join(', ')}` : ''}
+
+Genera el contenido estructurado para el brochure.`;
+        break;
+      }
+
       default:
         throw new Error(`Unknown request type: ${type}`);
     }
@@ -290,9 +344,73 @@ ${ld.price ? `Precio: $${parseInt(ld.price).toLocaleString()} ${ld.currency || "
       stream: useStream,
     };
 
-    // Use tool calling for structured output
     if (type === "generate-listing") {
       aiBody.stream = false;
+    }
+
+    // Use tool calling for brochure generation
+    if (type === "generate-brochure") {
+      aiBody.stream = false;
+      aiBody.tools = [
+        {
+          type: "function",
+          function: {
+            name: "generate_brochure_content",
+            description: "Generate structured marketing content for a real estate project brochure PDF",
+            parameters: {
+              type: "object",
+              properties: {
+                headline: {
+                  type: "string",
+                  description: "Titular magnético que mezcle inversión inteligente y estilo de vida rural. Máximo 15 palabras."
+                },
+                elevatorPitch: {
+                  type: "string",
+                  description: "Párrafo de 4 líneas explicando por qué este sector es una joya oculta de inversión."
+                },
+                pillars: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string", description: "Título del pilar (ej: Naturaleza, Ubicación, Seguridad Jurídica)" },
+                      text: { type: "string", description: "Texto descriptivo del pilar, 2-3 oraciones persuasivas." }
+                    },
+                    required: ["title", "text"]
+                  },
+                  description: "3 pilares de valor del proyecto"
+                },
+                investmentProjection: {
+                  type: "string",
+                  description: "Nota breve sobre plusvalía de la zona y potencial de reventa. 2-3 oraciones."
+                },
+                technicalSpecs: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      label: { type: "string" },
+                      value: { type: "string" }
+                    },
+                    required: ["label", "value"]
+                  },
+                  description: "Especificaciones técnicas: m², tipo de terreno, acceso, servicios"
+                },
+                ctaVisit: {
+                  type: "string",
+                  description: "Frase CTA potente para agendar visita por WhatsApp"
+                },
+                ctaMasterPlan: {
+                  type: "string",
+                  description: "Frase CTA para solicitar el Master Plan 3D"
+                }
+              },
+              required: ["headline", "elevatorPitch", "pillars", "investmentProjection", "technicalSpecs", "ctaVisit", "ctaMasterPlan"]
+            }
+          }
+        }
+      ];
+      aiBody.tool_choice = { type: "function", function: { name: "generate_brochure_content" } };
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -329,6 +447,22 @@ ${ld.price ? `Precio: $${parseInt(ld.price).toLocaleString()} ${ld.currency || "
     }
 
     const data = await response.json();
+
+    // Handle tool calling response for brochure
+    if (type === "generate-brochure") {
+      const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+      if (toolCall?.function?.arguments) {
+        try {
+          const parsed = JSON.parse(toolCall.function.arguments);
+          return new Response(JSON.stringify(parsed), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } catch {
+          // Fallback to content parsing
+        }
+      }
+    }
+
     const content = data.choices?.[0]?.message?.content;
 
     // For structured responses, try to parse JSON
