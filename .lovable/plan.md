@@ -1,78 +1,89 @@
 
 
-# Plan: Brochure Premium con IA para Brisas de Caone
+# Plan: Data Cards Profesionales con Imágenes, Enlace y Ubicación
 
-## Objetivo
+## Problema Actual
 
-Crear un sistema de brochure PDF profesional que use IA para generar contenido de marketing persuasivo y lo renderice en un PDF con diseño editorial premium usando la paleta "Terroir Sereno" (Forest Green #2C5F2D, Sand #E8DCC8, Terracotta #B85042).
-
-## Arquitectura
-
-```text
-ProjectBrochureTab → [Botón "Generar con IA"] → ai-assistant (type: generate-brochure)
-                                                       ↓
-                                              Contenido estructurado
-                                                       ↓
-                                        brochurePdfGenerator.ts (rediseñado)
-                                                       ↓
-                                              PDF premium multi-página
-```
+1. **Lotes sin imágenes**: La tabla `lots` no tiene columna de imágenes. Las cards y el LotDetailSheet son 100% texto + 3D
+2. **Sin enlace compartible**: No hay botón para copiar link o compartir por WhatsApp un lote específico
+3. **Ubicación poco visible**: Solo muestra coordenadas crudas (lat/lng) sin mapa estático ni dirección legible
+4. **Brochure PDF sin fotos**: El generador jsPDF no incluye imágenes del lote ni mapa estático
 
 ## Cambios
 
-### 1. Nuevo tipo `generate-brochure` en Edge Function
+### 1. Migración: Agregar `images` a tabla `lots`
 
-**Archivo:** `supabase/functions/ai-assistant/index.ts`
-
-Agregar caso `generate-brochure` con el mega-prompt del usuario como system prompt. Recibe datos del proyecto (nombre, precio, ubicación, lotes, condiciones) y devuelve JSON estructurado:
-
-```json
-{
-  "headline": "...",
-  "elevatorPitch": "...",
-  "pillars": [{ "title": "Naturaleza", "text": "..." }, ...],
-  "investmentProjection": "...",
-  "ctaVisit": "...",
-  "ctaMasterPlan": "..."
-}
+```sql
+ALTER TABLE public.lots ADD COLUMN images text[] DEFAULT '{}';
 ```
 
-Usa tool calling para garantizar JSON válido.
+Esto permite subir fotos por lote (terreno, vista, acceso).
 
-### 2. Rediseño de `brochurePdfGenerator.ts`
+### 2. Rediseñar `EnhancedLotCard.tsx` — Card Profesional
 
-**Archivo:** `src/lib/brochurePdfGenerator.ts`
+- **Imagen hero**: Si el lote tiene imágenes, mostrar la primera como fondo con aspect-ratio 16/9. Si no, mostrar el polígono SVG actual sobre fondo con gradiente
+- **Overlay de precio**: Precio sobre la imagen con fondo gradient (estilo Airbnb)
+- **Mapa estático mini**: Badge con ícono de ubicación que al hover muestra ciudad/región del proyecto (pasado como prop)
+- **Botón compartir**: Ícono `Share2` que copia `https://ofertaterrenos.com/proyecto/{projectId}?lote={lotNumber}` al clipboard
+- **WhatsApp CTA**: Para lotes disponibles, botón verde de WhatsApp con mensaje pre-formateado
 
-PDF de 3 páginas con diseño editorial:
+### 3. Rediseñar `LotDetailSheet.tsx` — Ficha Profesional
 
-- **Página 1 — Portada**: Header con color Forest Green, nombre del proyecto grande, headline generado por IA, precio destacado en Terracotta, ubicación
-- **Página 2 — Contenido**: Elevator pitch, 3 pilares de valor con iconos (Naturaleza, Ubicación, Seguridad Jurídica), proyección de inversión, cuadro técnico (m², tipo, acceso, servicios)
-- **Página 3 — Inventario + CTA**: Tabla de lotes disponibles, condiciones comerciales, CTAs de WhatsApp y Master Plan, footer con disclaimer
+- **Galería de imágenes**: Carousel horizontal sobre la vista 3D (si tiene imágenes). Si no tiene, mantener 3D como está
+- **Mapa estático embed**: Iframe de Mapbox Static Image API o mini mapa Mapbox GL con el pin del lote (debajo de la sección de coordenadas)
+- **Sección de compartir**: Botones de WhatsApp, copiar enlace, y descargar ficha PDF individual del lote
+- **Ficha PDF individual**: Botón "Descargar Ficha" que genera un PDF de 1 página con foto, datos, mapa y QR del enlace
 
-Paleta: Forest Green (#2C5F2D), Sand (#E8DCC8), Terracotta (#B85042), blanco y dark gray.
+### 4. Subida de imágenes en `LotForm.tsx`
 
-### 3. Actualizar `ProjectBrochureTab.tsx`
+- Agregar sección de upload de hasta 5 imágenes por lote
+- Usar storage bucket `lot-images` (crear via migración)
+- Preview de imágenes subidas con opción de eliminar
 
-**Archivo:** `src/components/projects/ProjectBrochureTab.tsx`
+### 5. Brochure PDF mejorado — `brochurePdfGenerator.ts`
 
-- Agregar botón "Generar Brochure con IA" que primero llama a la edge function para obtener el contenido de marketing
-- Mostrar preview del contenido generado antes de descargar
-- Estado de loading mientras la IA genera
-- Botón "Descargar PDF" que combina datos reales del proyecto + contenido IA en el PDF premium
-- Mantener opción de descarga rápida sin IA (brochure básico actual)
+- Para cada lote en la tabla de inventario, si tiene imagen, cargarla como base64 y mostrar thumbnail junto a la fila
+- Agregar columna "Imagen" en la tabla de lotes disponibles (mini thumbnail 15x10mm)
+- Nuevo generador: `lotDataCardPdf.ts` — PDF de 1 página por lote individual con:
+  - Foto principal (si existe)
+  - Datos: número, área, precio, precio/m2, servicios, topografía
+  - Mapa estático (Mapbox Static Image como base64)
+  - QR code del enlace al proyecto
+  - Branding ofertaterrenos.com
 
-### 4. Hook `useBrochureGenerator`
+### 6. Storage bucket para imágenes
 
-**Archivo:** `src/hooks/useAI.ts`
+Migración SQL:
+```sql
+INSERT INTO storage.buckets (id, name, public) VALUES ('lot-images', 'lot-images', true);
+-- RLS: authenticated users can upload to their lots
+```
 
-Agregar nuevo hook que invoca `ai-assistant` con `type: 'generate-brochure'` y retorna el contenido estructurado.
+## Archivos a Crear
+1. `src/lib/lotDataCardPdf.ts` — Generador PDF de ficha individual del lote
+2. Migración SQL — columna `images`, bucket `lot-images`
 
 ## Archivos a Modificar
+1. `src/components/lots/EnhancedLotCard.tsx` — Imagen hero, share, WhatsApp
+2. `src/components/lots/LotDetailSheet.tsx` — Galería, mapa estático, compartir, descargar ficha
+3. `src/components/lots/LotForm.tsx` — Upload de imágenes
+4. `src/lib/brochurePdfGenerator.ts` — Thumbnails en tabla de lotes
+5. `src/hooks/useLots.ts` — Incluir `images` en el tipo
 
-| Archivo | Cambio |
-|---------|--------|
-| `supabase/functions/ai-assistant/index.ts` | Nuevo tipo `generate-brochure` con prompt especializado |
-| `src/lib/brochurePdfGenerator.ts` | Rediseño completo con paleta Terroir Sereno y layout editorial |
-| `src/components/projects/ProjectBrochureTab.tsx` | UI para generar con IA + preview + descarga |
-| `src/hooks/useAI.ts` | Hook `useBrochureGenerator` |
+## Flujo del Usuario
+
+```text
+[Admin sube proyecto]
+  → Agrega lotes con fotos (LotForm + ImageUploader)
+  → Cada lote tiene hasta 5 fotos
+
+[Comprador ve proyecto]
+  → Cards con foto hero, precio, ubicación
+  → Click → LotDetailSheet con galería + mapa + 3D
+  → Botones: Reservar, Compartir (WhatsApp/Link), Descargar Ficha PDF
+
+[Asesor genera brochure]
+  → PDF incluye thumbnails de lotes con foto
+  → Ficha individual por lote con QR
+```
 
