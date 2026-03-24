@@ -10,6 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Lot, LotInsert, LotFeatures } from '@/hooks/useLots';
 import { Project } from '@/hooks/useProjects';
+import { LotImageUploader } from './LotImageUploader';
+import { useState } from 'react';
 
 const lotSchema = z.object({
   lot_number: z.string().min(1, 'El número de lote es requerido').max(50),
@@ -42,6 +44,9 @@ interface LotFormProps {
 
 export const LotForm = ({ projects, initialData, onSubmit, onCancel, isLoading }: LotFormProps) => {
   const features = initialData?.features as LotFeatures | null;
+  const [lotImages, setLotImages] = useState<string[]>(
+    ((initialData as any)?.images as string[]) || []
+  );
   
   const {
     register,
@@ -99,7 +104,8 @@ export const LotForm = ({ projects, initialData, onSubmit, onCancel, isLoading }
       buyer_name: data.buyer_name?.trim() || null,
       buyer_email: data.buyer_email?.trim() || null,
       buyer_phone: data.buyer_phone?.trim() || null,
-    };
+      images: lotImages,
+    } as any;
     onSubmit(lotData);
   };
 
@@ -270,6 +276,11 @@ export const LotForm = ({ projects, initialData, onSubmit, onCancel, isLoading }
           />
         </div>
       </div>
+
+      {/* Buyer Info (shown when reserved/sold) */}
+
+      {/* Lot Images */}
+      <LotImageUploader images={lotImages} onChange={setLotImages} />
 
       {/* Buyer Info (shown when reserved/sold) */}
       {(status === 'reserved' || status === 'sold') && (

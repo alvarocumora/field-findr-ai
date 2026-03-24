@@ -671,6 +671,7 @@ export type Database = {
           elevation_avg: number | null
           features: Json | null
           id: string
+          images: string[] | null
           latitude: number | null
           longitude: number | null
           lot_number: string
@@ -696,6 +697,7 @@ export type Database = {
           elevation_avg?: number | null
           features?: Json | null
           id?: string
+          images?: string[] | null
           latitude?: number | null
           longitude?: number | null
           lot_number: string
@@ -721,6 +723,7 @@ export type Database = {
           elevation_avg?: number | null
           features?: Json | null
           id?: string
+          images?: string[] | null
           latitude?: number | null
           longitude?: number | null
           lot_number?: string
