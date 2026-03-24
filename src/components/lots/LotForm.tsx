@@ -10,6 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Lot, LotInsert, LotFeatures } from '@/hooks/useLots';
 import { Project } from '@/hooks/useProjects';
+import { LotImageUploader } from './LotImageUploader';
+import { useState } from 'react';
 
 const lotSchema = z.object({
   lot_number: z.string().min(1, 'El número de lote es requerido').max(50),
