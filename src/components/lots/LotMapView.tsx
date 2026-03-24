@@ -649,14 +649,22 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         popup.current?.remove();
       });
 
-      // Click handler
+      // Click handler — stored as ref so renumberMode can be read dynamically
       map.current.on('click', 'lots-fill', (e) => {
         if (e.features && e.features[0]) {
           const props = e.features[0].properties;
           if (!props) return;
           
           const lot = lots.find(l => l.id === props.id);
-          if (lot && lot.status !== 'sold') {
+          if (!lot) return;
+
+          // Check renumber mode via ref
+          if (renumberModeRef.current) {
+            setRenumberSelectedLot({ id: lot.id, lot_number: lot.lot_number });
+            return;
+          }
+
+          if (lot.status !== 'sold') {
             onLotClick(lot);
           }
         }
