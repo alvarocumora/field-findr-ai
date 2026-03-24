@@ -798,22 +798,38 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         )}
 
         {/* Admin-only controls - only shown when showAdminControls is true */}
-        {showAdminControls && (
+        {showAdminControls && !showDrawingPanel && !renumberMode && (
           <>
             {projectId && (
               <Button
-                variant={showDrawingPanel ? "default" : "secondary"}
+                variant="secondary"
                 size="sm"
                 className="gap-2 glass"
                 onClick={showDrawingPanel ? handleDisableDrawingMode : handleEnableDrawingMode}
               >
                 <PenTool className="h-4 w-4" />
-                {showDrawingPanel ? 'Salir Edición' : 'Dibujar Lotes'}
+                Dibujar Lotes
+              </Button>
+            )}
+
+            {/* Renumber button */}
+            {projectId && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="gap-2 glass"
+                onClick={() => {
+                  setRenumberMode(true);
+                  setShowMasterPlanOverlay(true);
+                }}
+              >
+                <Hash className="h-4 w-4" />
+                Renumerar
               </Button>
             )}
             
-            {/* Import KMZ button - hide when drawing */}
-            {projectId && !showDrawingPanel && (
+            {/* Import KMZ button */}
+            {projectId && (
               <Button
                 variant="secondary"
                 size="sm"
@@ -826,8 +842,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
               </Button>
             )}
             
-            {/* Regenerate polygons button - hide when drawing */}
-            {projectId && kmzFileUrl && !showDrawingPanel && (
+            {/* Regenerate polygons button */}
+            {projectId && kmzFileUrl && (
               <Button
                 variant="outline"
                 size="sm"
@@ -840,6 +856,35 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
               </Button>
             )}
           </>
+        )}
+
+        {/* Active drawing mode button */}
+        {showAdminControls && showDrawingPanel && (
+          <Button
+            variant="default"
+            size="sm"
+            className="gap-2 glass"
+            onClick={handleDisableDrawingMode}
+          >
+            <PenTool className="h-4 w-4" />
+            Salir Edición
+          </Button>
+        )}
+
+        {/* Active renumber mode button */}
+        {showAdminControls && renumberMode && (
+          <Button
+            variant="default"
+            size="sm"
+            className="gap-2 glass"
+            onClick={() => {
+              setRenumberMode(false);
+              setRenumberSelectedLot(null);
+            }}
+          >
+            <Hash className="h-4 w-4" />
+            Salir Renumerar
+          </Button>
         )}
       </div>
       
