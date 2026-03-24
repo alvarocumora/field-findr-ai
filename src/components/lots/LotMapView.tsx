@@ -951,7 +951,20 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
                 {importing ? 'Importando...' : 'Importar KMZ'}
               </Button>
             )}
-            
+
+            {/* Reimport KMZ by placemark name */}
+            {projectId && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="gap-2 glass"
+                onClick={() => reimportFileInputRef.current?.click()}
+                disabled={importing}
+              >
+                <RefreshCw className="h-4 w-4" />
+                {importing ? 'Reimportando...' : 'Reimportar KMZ'}
+              </Button>
+            )}
             {/* Regenerate polygons button */}
             {projectId && kmzFileUrl && (
               <Button
