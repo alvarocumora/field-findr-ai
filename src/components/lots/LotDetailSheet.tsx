@@ -30,8 +30,16 @@ import {
   Calculator,
   TrendingUp,
   TriangleAlert,
+  Share2,
+  MessageCircle,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
 
 const ParcelaDesigner3D = lazy(() =>
   import('@/components/parcela/ParcelaDesigner3D').then((m) => ({
@@ -62,11 +70,11 @@ const formatPrice = (price: number | null) => {
 const getStatusConfig = (status: string | null) => {
   switch (status) {
     case 'available':
-      return { label: 'Disponible', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
+      return { label: 'Disponible', className: 'bg-emerald-500 text-white' };
     case 'reserved':
-      return { label: 'Reservado', className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
+      return { label: 'Reservado', className: 'bg-amber-500 text-white' };
     case 'sold':
-      return { label: 'Vendido', className: 'bg-muted text-muted-foreground border-muted' };
+      return { label: 'Vendido', className: 'bg-muted text-muted-foreground' };
     default:
       return { label: status || 'Sin estado', className: 'bg-muted text-muted-foreground' };
   }
@@ -81,6 +89,74 @@ const getSlopeLabel = (slope: string | null) => {
   }
 };
 
+const handleShare = (lot: Lot) => {
+  const url = `${window.location.origin}/proyecto/${lot.project_id}?lote=${lot.lot_number}`;
+  navigator.clipboard.writeText(url).then(() => {
+    toast.success('Enlace copiado al portapapeles');
+  });
+};
+
+const handleWhatsApp = (lot: Lot, projectName: string) => {
+  const price = lot.price ? formatPrice(lot.price) : 'Consultar';
+  const msg = `Hola, me interesa el Lote ${lot.lot_number} del proyecto ${projectName}.\n\nSuperficie: ${Number(lot.area).toLocaleString('es-CL')} m²\nPrecio: ${price}\n\n${window.location.origin}/proyecto/${lot.project_id}?lote=${lot.lot_number}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+};
+
+/** Image Gallery Carousel */
+const ImageGallery = ({ images }: { images: string[] }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  if (images.length === 0) return null;
+
+  return (
+    <div className="relative rounded-xl overflow-hidden">
+      <div className="aspect-[16/9] bg-muted">
+        <img
+          src={images[currentIndex]}
+          alt={`Foto ${currentIndex + 1}`}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      {images.length > 1 && (
+        <>
+          <Button
+            size="icon"
+            variant="secondary"
+            className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 hover:bg-white shadow-md"
+            onClick={() => setCurrentIndex((i) => (i === 0 ? images.length - 1 : i - 1))}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="secondary"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 hover:bg-white shadow-md"
+            onClick={() => setCurrentIndex((i) => (i === images.length - 1 ? 0 : i + 1))}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                className={cn(
+                  'h-1.5 rounded-full transition-all',
+                  i === currentIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/50'
+                )}
+                onClick={() => setCurrentIndex(i)}
+              />
+            ))}
+          </div>
+          <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[10px]">
+            <ImageIcon className="h-3 w-3 mr-1" />
+            {currentIndex + 1}/{images.length}
+          </Badge>
+        </>
+      )}
+    </div>
+  );
+};
+
 export const LotDetailSheet = ({
   lot,
   open,
@@ -91,6 +167,8 @@ export const LotDetailSheet = ({
   onFinance,
   legalDocuments = [],
 }: LotDetailSheetProps) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+
   if (!lot) return null;
 
   const features = parseLotFeatures(lot.features);
@@ -99,6 +177,19 @@ export const LotDetailSheet = ({
   const pricePerSqm =
     lot.price_per_sqm || (lot.price && lot.area ? lot.price / Number(lot.area) : null);
   const slopeLabel = getSlopeLabel(lot.slope_category);
+  const images = ((lot as any).images as string[] | null) || [];
+
+  const handleDownloadFicha = async () => {
+    setIsDownloading(true);
+    try {
+      await generateLotDataCardPdf(lot, projectName, features);
+      toast.success('Ficha del lote descargada');
+    } catch (err) {
+      toast.error('Error al generar ficha PDF');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -118,8 +209,11 @@ export const LotDetailSheet = ({
         </div>
 
         <div className="px-6 pb-6 space-y-5 pt-4">
+          {/* Image Gallery (if images exist) */}
+          {images.length > 0 && <ImageGallery images={images} />}
+
           {/* 3D Preview */}
-          <div className="rounded-xl overflow-hidden border border-border/40 h-[320px] bg-muted/30">
+          <div className="rounded-xl overflow-hidden border border-border/40 h-[280px] bg-muted/30">
             <Suspense
               fallback={
                 <div className="flex items-center justify-center h-full">
@@ -244,14 +338,27 @@ export const LotDetailSheet = ({
             </>
           )}
 
-          {/* Location */}
+          {/* Location with map hint */}
           {lot.latitude && lot.longitude && (
             <>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5 text-primary" />
-                <span>
-                  {lot.latitude.toFixed(5)}, {lot.longitude.toFixed(5)}
-                </span>
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  Ubicación
+                </h4>
+                <div className="rounded-lg bg-muted/50 border border-border/30 p-3">
+                  <p className="text-xs text-muted-foreground">
+                    {Number(lot.latitude).toFixed(5)}, {Number(lot.longitude).toFixed(5)}
+                  </p>
+                  <a
+                    href={`https://www.google.com/maps?q=${lot.latitude},${lot.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline mt-1 inline-block"
+                  >
+                    Ver en Google Maps →
+                  </a>
+                </div>
               </div>
               <Separator />
             </>
@@ -276,6 +383,38 @@ export const LotDetailSheet = ({
               </div>
             </div>
           )}
+
+          {/* Share & Download Section */}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5 text-xs"
+              onClick={() => handleShare(lot)}
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              Copiar Enlace
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5 text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 border-emerald-500/20"
+              onClick={() => handleWhatsApp(lot, projectName)}
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              WhatsApp
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              onClick={handleDownloadFicha}
+              disabled={isDownloading}
+            >
+              <Download className="h-3.5 w-3.5" />
+              {isDownloading ? '...' : 'Ficha'}
+            </Button>
+          </div>
 
           {/* Action Buttons */}
           {lot.status === 'available' && (

@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Tooltip,
   TooltipContent,
@@ -12,7 +12,6 @@ import {
   Eye,
   Edit,
   Trash2,
-  DollarSign,
   Ruler,
   Droplets,
   Zap,
@@ -21,14 +20,16 @@ import {
   User,
   Calculator,
   Star,
-  Clock,
   AlertTriangle,
   Mountain,
   Box,
+  Share2,
+  MessageCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { differenceInDays } from 'date-fns';
 import { useMemo } from 'react';
+import { toast } from 'sonner';
 
 interface EnhancedLotCardProps {
   lot: Lot;
@@ -40,6 +41,7 @@ interface EnhancedLotCardProps {
   onSimulateFinancing?: (lot: Lot) => void;
   onView3D?: (lot: Lot) => void;
   isSelected?: boolean;
+  projectName?: string;
 }
 
 const formatPrice = (price: number | null) => {
@@ -65,8 +67,8 @@ const formatPricePerSqm = (price: number | null, area: number) => {
 
 const getStatusColor = (status: string | null) => {
   switch (status) {
-    case 'available': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
-    case 'reserved': return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
+    case 'available': return 'bg-emerald-500 text-white border-emerald-600';
+    case 'reserved': return 'bg-amber-500 text-white border-amber-600';
     case 'sold': return 'bg-muted text-muted-foreground border-muted';
     default: return 'bg-muted text-muted-foreground';
   }
@@ -81,15 +83,6 @@ const getStatusLabel = (status: string | null) => {
   }
 };
 
-const getSlopeIcon = (slope: string | null) => {
-  switch (slope) {
-    case 'flat': return '▬';
-    case 'gentle': return '⟋';
-    case 'steep': return '⟰';
-    default: return null;
-  }
-};
-
 const getSlopeLabel = (slope: string | null) => {
   switch (slope) {
     case 'flat': return 'Plano';
@@ -100,7 +93,7 @@ const getSlopeLabel = (slope: string | null) => {
 };
 
 /** Renders an inline SVG miniature of the lot polygon */
-const PolygonMiniature = ({ polygon }: { polygon: number[][] }) => {
+const PolygonMiniature = ({ polygon, className }: { polygon: number[][]; className?: string }) => {
   const pathD = useMemo(() => {
     if (!polygon || polygon.length < 3) return null;
     const lngs = polygon.map((p) => p[0]);
@@ -111,13 +104,13 @@ const PolygonMiniature = ({ polygon }: { polygon: number[][] }) => {
     const maxLat = Math.max(...lats);
     const w = maxLng - minLng || 1;
     const h = maxLat - minLat || 1;
-    const pad = 4;
-    const size = 40;
+    const pad = 8;
+    const size = 120;
     const scale = (size - pad * 2) / Math.max(w, h);
 
     const points = polygon.map(([lng, lat]) => {
       const x = pad + (lng - minLng) * scale;
-      const y = pad + (maxLat - lat) * scale; // flip Y
+      const y = pad + (maxLat - lat) * scale;
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     });
     return `M${points.join('L')}Z`;
@@ -126,16 +119,29 @@ const PolygonMiniature = ({ polygon }: { polygon: number[][] }) => {
   if (!pathD) return null;
 
   return (
-    <svg viewBox="0 0 40 40" className="w-10 h-10 shrink-0">
+    <svg viewBox="0 0 120 120" className={cn('w-full h-full', className)}>
       <path
         d={pathD}
         fill="hsl(var(--primary) / 0.15)"
         stroke="hsl(var(--primary))"
-        strokeWidth="1.5"
+        strokeWidth="2"
         strokeLinejoin="round"
       />
     </svg>
   );
+};
+
+const handleShare = (lot: Lot) => {
+  const url = `${window.location.origin}/proyecto/${lot.project_id}?lote=${lot.lot_number}`;
+  navigator.clipboard.writeText(url).then(() => {
+    toast.success('Enlace copiado al portapapeles');
+  });
+};
+
+const handleWhatsApp = (lot: Lot, projectName?: string) => {
+  const price = lot.price ? formatPrice(lot.price) : 'Consultar';
+  const msg = `Hola, me interesa el Lote ${lot.lot_number}${projectName ? ` del proyecto ${projectName}` : ''}.\n\nSuperficie: ${Number(lot.area).toLocaleString('es-CL')} m²\nPrecio: ${price}\n\n${window.location.origin}/proyecto/${lot.project_id}?lote=${lot.lot_number}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 };
 
 export const EnhancedLotCard = ({
@@ -148,19 +154,14 @@ export const EnhancedLotCard = ({
   onSimulateFinancing,
   onView3D,
   isSelected = false,
+  projectName,
 }: EnhancedLotCardProps) => {
   const features = parseLotFeatures(lot.features);
-  const hasCoordinates = lot.latitude && lot.longitude;
   const polygon = lot.polygon as number[][] | null;
   const pricePerSqm =
     lot.price_per_sqm || (lot.price && lot.area ? lot.price / Number(lot.area) : null);
-
-  const daysOnMarket = lot.created_at
-    ? differenceInDays(new Date(), new Date(lot.created_at))
-    : null;
-  const daysSinceReservation = lot.reservation_date
-    ? differenceInDays(new Date(), new Date(lot.reservation_date))
-    : null;
+  const images = (lot as any).images as string[] | null;
+  const heroImage = images && images.length > 0 ? images[0] : null;
 
   const isLastAvailable =
     lot.status === 'available' && totalAvailable <= 3 && totalAvailable > 0;
@@ -170,13 +171,12 @@ export const EnhancedLotCard = ({
     features.additionalFeatures?.includes('destacado');
 
   const slopeLabel = getSlopeLabel(lot.slope_category);
-  const slopeIcon = getSlopeIcon(lot.slope_category);
 
   return (
     <Card
       className={cn(
-        'group relative overflow-hidden transition-all duration-300',
-        'hover:shadow-lg hover:border-primary/30',
+        'group relative overflow-hidden transition-all duration-300 cursor-pointer',
+        'hover:shadow-xl hover:border-primary/30 hover:-translate-y-1',
         'opacity-0 animate-slide-in-up',
         isSelected && 'ring-2 ring-primary shadow-lg',
         lot.status === 'sold' && 'opacity-60'
@@ -185,183 +185,169 @@ export const EnhancedLotCard = ({
         animationDelay: `${index * 0.05}s`,
         animationFillMode: 'forwards',
       }}
+      onClick={() => onView?.(lot)}
     >
-      {isPremium && (
-        <div className="absolute top-2 right-2 z-10">
-          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white gap-1">
-            <Star className="h-3 w-3 fill-current" />
-            Destacado
-          </Badge>
-        </div>
-      )}
-
-      {isLastAvailable && (
-        <div className="absolute top-2 left-2 z-10">
-          <Badge className="bg-destructive/90 text-destructive-foreground gap-1 animate-pulse">
-            <AlertTriangle className="h-3 w-3" />
-            ¡Últimos!
-          </Badge>
-        </div>
-      )}
-
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            {/* Polygon miniature */}
-            {polygon && polygon.length >= 3 && <PolygonMiniature polygon={polygon} />}
-            <div className="min-w-0">
-              <CardTitle className="text-lg truncate">{lot.lot_number}</CardTitle>
-              {lot.name && lot.name !== `Lote-${lot.lot_number}` && lot.name !== lot.lot_number && (
-                <p className="text-xs text-muted-foreground truncate">{lot.name}</p>
-              )}
-            </div>
-            {hasCoordinates && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <MapPin className="h-4 w-4 text-primary shrink-0" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      {lot.latitude?.toFixed(4)}, {lot.longitude?.toFixed(4)}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+      {/* Hero Image / Polygon / Gradient */}
+      <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-primary/10 via-muted to-primary/5">
+        {heroImage ? (
+          <img
+            src={heroImage}
+            alt={`Lote ${lot.lot_number}`}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : polygon && polygon.length >= 3 ? (
+          <div className="flex items-center justify-center h-full p-4">
+            <PolygonMiniature polygon={polygon} className="opacity-60" />
           </div>
-          <Badge className={cn('shrink-0', getStatusColor(lot.status))}>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <MapPin className="h-12 w-12 text-muted-foreground/30" />
+          </div>
+        )}
+
+        {/* Overlay: Status badge */}
+        <div className="absolute top-2 left-2 z-10">
+          <Badge className={cn('text-xs shadow-md', getStatusColor(lot.status))}>
             {getStatusLabel(lot.status)}
           </Badge>
         </div>
-      </CardHeader>
 
-      <CardContent className="space-y-3">
-        {/* Main Stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-2.5 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1">
-              <Ruler className="h-3.5 w-3.5" />
-              Superficie
+        {/* Overlay: Premium / Last available */}
+        <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
+          {isPremium && (
+            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white gap-1 shadow-md">
+              <Star className="h-3 w-3 fill-current" />
+              Destacado
+            </Badge>
+          )}
+          {isLastAvailable && (
+            <Badge className="bg-destructive text-destructive-foreground gap-1 animate-pulse shadow-md">
+              <AlertTriangle className="h-3 w-3" />
+              ¡Últimos!
+            </Badge>
+          )}
+        </div>
+
+        {/* Overlay: Price */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3 pt-8">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-white font-bold text-lg leading-tight drop-shadow-md">
+                {formatPrice(lot.price)}
+              </p>
+              {pricePerSqm && (
+                <p className="text-white/70 text-xs">
+                  {formatPricePerSqm(lot.price, Number(lot.area))}
+                </p>
+              )}
             </div>
-            <p className="font-semibold">{Number(lot.area).toLocaleString('es-CL')} m²</p>
-          </div>
-          <div className="p-2.5 rounded-lg bg-primary/5">
-            <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1">
-              <DollarSign className="h-3.5 w-3.5" />
-              Precio
+            <div className="text-white/90 text-right">
+              <p className="font-semibold text-sm">Lote {lot.lot_number}</p>
+              <p className="text-xs text-white/70">
+                {Number(lot.area).toLocaleString('es-CL')} m²
+              </p>
             </div>
-            <p className="font-bold text-primary">{formatPrice(lot.price)}</p>
           </div>
         </div>
 
-        {/* Price per sqm */}
-        {pricePerSqm && Number(lot.area) >= 500 && Number(lot.area) <= 100000 && (
-          <div className="flex items-center justify-between text-sm px-1">
-            <span className="text-muted-foreground">Precio/m²</span>
-            <span className="font-medium">
-              {formatPricePerSqm(lot.price, Number(lot.area))}
-            </span>
-          </div>
-        )}
-
-        {/* Topography indicator */}
-        {(slopeLabel || lot.elevation_avg) && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
-            <Mountain className="h-3.5 w-3.5" />
-            {slopeLabel && (
-              <span>
-                {slopeIcon} {slopeLabel}
-              </span>
-            )}
-            {lot.elevation_avg && (
-              <span className="ml-auto">{Math.round(Number(lot.elevation_avg))}m snm</span>
-            )}
-          </div>
-        )}
-
-        {/* Time indicator */}
-        {lot.status !== 'sold' &&
-          (daysOnMarket !== null || daysSinceReservation !== null) && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
-              <Clock className="h-3.5 w-3.5" />
-              {lot.status === 'reserved' && daysSinceReservation !== null ? (
-                <span>Reservado hace {daysSinceReservation} días</span>
-              ) : daysOnMarket !== null ? (
-                <span>{daysOnMarket} días en venta</span>
-              ) : null}
-            </div>
+        {/* Share buttons on hover */}
+        <div className="absolute top-2 right-2 z-20 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {!isPremium && !isLastAvailable && (
+            <>
+              <Button
+                size="icon"
+                variant="secondary"
+                className="h-7 w-7 rounded-full bg-white/90 hover:bg-white shadow-md"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleShare(lot);
+                }}
+              >
+                <Share2 className="h-3.5 w-3.5 text-foreground" />
+              </Button>
+              {lot.status === 'available' && (
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="h-7 w-7 rounded-full bg-emerald-500 hover:bg-emerald-600 shadow-md"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleWhatsApp(lot, projectName);
+                  }}
+                >
+                  <MessageCircle className="h-3.5 w-3.5 text-white" />
+                </Button>
+              )}
+            </>
           )}
+        </div>
+      </div>
 
-        {/* Services */}
-        {(features.hasWater ||
-          features.hasElectricity ||
-          features.hasRoad ||
-          (features.additionalFeatures && features.additionalFeatures.length > 0)) && (
-          <div className="flex flex-wrap gap-1.5">
-            <TooltipProvider delayDuration={200}>
-              {features.hasWater && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5 cursor-default">
-                      <Droplets className="h-3 w-3 text-blue-500" />
-                      Agua
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>Conexión de agua disponible</TooltipContent>
-                </Tooltip>
-              )}
-              {features.hasElectricity && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5 cursor-default">
-                      <Zap className="h-3 w-3 text-yellow-500" />
-                      Luz
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>Conexión eléctrica disponible</TooltipContent>
-                </Tooltip>
-              )}
-              {features.hasRoad && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge variant="outline" className="text-xs gap-1 px-2 py-0.5 cursor-default">
-                      <Route className="h-3 w-3 text-muted-foreground" />
-                      Acceso
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>Acceso por camino</TooltipContent>
-                </Tooltip>
-              )}
-              {features.additionalFeatures
-                ?.filter((f) => f !== 'premium' && f !== 'destacado')
-                .slice(0, 2)
-                .map((feature, i) => (
-                  <Badge key={i} variant="outline" className="text-xs px-2 py-0.5">
-                    {feature}
+      <CardContent className="p-3 space-y-2">
+        {/* Topography + Services compact row */}
+        <div className="flex flex-wrap gap-1.5">
+          {slopeLabel && (
+            <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
+              <Mountain className="h-3 w-3" />
+              {slopeLabel}
+            </Badge>
+          )}
+          <TooltipProvider delayDuration={200}>
+            {features.hasWater && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
+                    <Droplets className="h-3 w-3 text-blue-500" />
                   </Badge>
-                ))}
-            </TooltipProvider>
-          </div>
-        )}
+                </TooltipTrigger>
+                <TooltipContent>Agua potable</TooltipContent>
+              </Tooltip>
+            )}
+            {features.hasElectricity && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
+                    <Zap className="h-3 w-3 text-yellow-500" />
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>Electricidad</TooltipContent>
+              </Tooltip>
+            )}
+            {features.hasRoad && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
+                    <Route className="h-3 w-3" />
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>Acceso pavimentado</TooltipContent>
+              </Tooltip>
+            )}
+          </TooltipProvider>
+          {lot.latitude && lot.longitude && (
+            <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0 ml-auto">
+              <MapPin className="h-3 w-3 text-primary" />
+              GPS
+            </Badge>
+          )}
+        </div>
 
         {/* Buyer info */}
         {(lot.status === 'sold' || lot.status === 'reserved') && lot.buyer_name && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground border-t border-border pt-3">
-            <User className="h-3.5 w-3.5" />
-            <span className="font-medium">Comprador:</span>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground border-t border-border pt-2">
+            <User className="h-3 w-3" />
             <span className="truncate">{lot.buyer_name}</span>
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex gap-2 pt-1">
-          {/* Primary CTA: Ver 3D for available lots */}
+        <div className="flex gap-1.5 pt-1">
           {lot.status === 'available' && onView3D && (
             <Button
               size="sm"
               variant="default"
-              className="flex-1 gap-1 h-8"
+              className="flex-1 gap-1 h-8 text-xs"
               onClick={(e) => {
                 e.stopPropagation();
                 onView3D(lot);
@@ -375,7 +361,7 @@ export const EnhancedLotCard = ({
             <Button
               size="sm"
               variant="default"
-              className="flex-1 gap-1 h-8"
+              className="flex-1 gap-1 h-8 text-xs"
               onClick={(e) => {
                 e.stopPropagation();
                 onSimulateFinancing(lot);
@@ -389,14 +375,13 @@ export const EnhancedLotCard = ({
             <Button
               size="sm"
               variant="outline"
-              className={cn('gap-1 h-8', !onView3D && !onSimulateFinancing && 'flex-1')}
+              className="gap-1 h-8 text-xs"
               onClick={(e) => {
                 e.stopPropagation();
                 onView(lot);
               }}
             >
               <Eye className="h-3 w-3" />
-              {!onView3D && !onSimulateFinancing && 'Ver'}
             </Button>
           )}
           {onEdit && (
