@@ -4,13 +4,14 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { usePolygonDrawing } from '@/hooks/usePolygonDrawing';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Layers, Upload, Image, PenTool, ArrowLeftRight } from 'lucide-react';
+import { AlertCircle, Layers, Upload, Image, PenTool, ArrowLeftRight, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced, buildPolygonsFromMixedGeometry } from '@/lib/kmz';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MasterPlanOverlay } from './MasterPlanOverlay';
 import { LotDrawingTool } from './LotDrawingTool';
+import { LotRenumberTool } from './LotRenumberTool';
 
 interface Lot {
   id: string;
@@ -141,6 +142,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const renumberModeRef = useRef(false);
   const { token, loading: tokenLoading, error: tokenError } = useMapboxToken();
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapStyle, setMapStyle] = useState<'satellite' | 'streets'>('satellite');
@@ -150,6 +152,13 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [showMasterPlanOverlay, setShowMasterPlanOverlay] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [showDrawingPanel, setShowDrawingPanel] = useState(false);
+  const [renumberMode, setRenumberMode] = useState(false);
+  const [renumberSelectedLot, setRenumberSelectedLot] = useState<{ id: string; lot_number: string } | null>(null);
+
+  // Keep ref in sync with state for use inside map event handlers
+  useEffect(() => {
+    renumberModeRef.current = renumberMode;
+  }, [renumberMode]);
   
   // Build master plan images from project's plan_images
   const masterPlanImagesList = (planImages && planImages.length > 0)
@@ -646,14 +655,22 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         popup.current?.remove();
       });
 
-      // Click handler
+      // Click handler — stored as ref so renumberMode can be read dynamically
       map.current.on('click', 'lots-fill', (e) => {
         if (e.features && e.features[0]) {
           const props = e.features[0].properties;
           if (!props) return;
           
           const lot = lots.find(l => l.id === props.id);
-          if (lot && lot.status !== 'sold') {
+          if (!lot) return;
+
+          // Check renumber mode via ref
+          if (renumberModeRef.current) {
+            setRenumberSelectedLot({ id: lot.id, lot_number: lot.lot_number });
+            return;
+          }
+
+          if (lot.status !== 'sold') {
             onLotClick(lot);
           }
         }
@@ -781,22 +798,38 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         )}
 
         {/* Admin-only controls - only shown when showAdminControls is true */}
-        {showAdminControls && (
+        {showAdminControls && !showDrawingPanel && !renumberMode && (
           <>
             {projectId && (
               <Button
-                variant={showDrawingPanel ? "default" : "secondary"}
+                variant="secondary"
                 size="sm"
                 className="gap-2 glass"
                 onClick={showDrawingPanel ? handleDisableDrawingMode : handleEnableDrawingMode}
               >
                 <PenTool className="h-4 w-4" />
-                {showDrawingPanel ? 'Salir Edición' : 'Dibujar Lotes'}
+                Dibujar Lotes
+              </Button>
+            )}
+
+            {/* Renumber button */}
+            {projectId && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="gap-2 glass"
+                onClick={() => {
+                  setRenumberMode(true);
+                  setShowMasterPlanOverlay(true);
+                }}
+              >
+                <Hash className="h-4 w-4" />
+                Renumerar
               </Button>
             )}
             
-            {/* Import KMZ button - hide when drawing */}
-            {projectId && !showDrawingPanel && (
+            {/* Import KMZ button */}
+            {projectId && (
               <Button
                 variant="secondary"
                 size="sm"
@@ -809,8 +842,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
               </Button>
             )}
             
-            {/* Regenerate polygons button - hide when drawing */}
-            {projectId && kmzFileUrl && !showDrawingPanel && (
+            {/* Regenerate polygons button */}
+            {projectId && kmzFileUrl && (
               <Button
                 variant="outline"
                 size="sm"
@@ -823,6 +856,35 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
               </Button>
             )}
           </>
+        )}
+
+        {/* Active drawing mode button */}
+        {showAdminControls && showDrawingPanel && (
+          <Button
+            variant="default"
+            size="sm"
+            className="gap-2 glass"
+            onClick={handleDisableDrawingMode}
+          >
+            <PenTool className="h-4 w-4" />
+            Salir Edición
+          </Button>
+        )}
+
+        {/* Active renumber mode button */}
+        {showAdminControls && renumberMode && (
+          <Button
+            variant="default"
+            size="sm"
+            className="gap-2 glass"
+            onClick={() => {
+              setRenumberMode(false);
+              setRenumberSelectedLot(null);
+            }}
+          >
+            <Hash className="h-4 w-4" />
+            Salir Renumerar
+          </Button>
         )}
       </div>
       
@@ -850,6 +912,25 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             onSelectLot={setDrawingSelectedLotId}
             onSavePolygon={savePolygonToLot}
             onDeletePolygon={deletePolygonFromLot}
+          />
+        </div>
+      )}
+
+      {/* Renumber Tool Panel */}
+      {showAdminControls && renumberMode && (
+        <div className="absolute top-16 left-3 z-10">
+          <LotRenumberTool
+            lots={lots.map(l => ({ id: l.id, lot_number: l.lot_number, area: l.area, status: l.status }))}
+            selectedLot={renumberSelectedLot}
+            onLotUpdated={() => {
+              setRenumberSelectedLot(null);
+              onLotsUpdated?.();
+            }}
+            onFinish={() => {
+              setRenumberMode(false);
+              setRenumberSelectedLot(null);
+              onLotsUpdated?.();
+            }}
           />
         </div>
       )}
