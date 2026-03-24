@@ -614,6 +614,146 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     }
   };
 
+  // === SNAP ALGORITHM: Compact lots by merging nearby vertices ===
+  const handleCompactLots = async () => {
+    const lotsWithPolygons = lots.filter(l => l.polygon && Array.isArray(l.polygon) && l.polygon.length >= 3);
+    if (lotsWithPolygons.length < 2) {
+      toast.error('Se necesitan al menos 2 lotes con polígonos');
+      return;
+    }
+
+    setCompacting(true);
+    toast.info('Compactando lotes — eliminando gaps...');
+
+    try {
+      // Deep copy all polygons
+      const polys: { id: string; coords: [number, number][] }[] = lotsWithPolygons.map(l => ({
+        id: l.id,
+        coords: l.polygon.map((c: [number, number]) => [...c] as [number, number]),
+      }));
+
+      const TOLERANCE_DEG = 15 / 111320; // ~15m in degrees
+
+      // Helper: distance from point P to segment AB, returns projection point
+      const pointToSegment = (p: [number, number], a: [number, number], b: [number, number]) => {
+        const dx = b[0] - a[0], dy = b[1] - a[1];
+        const lenSq = dx * dx + dy * dy;
+        if (lenSq === 0) return { dist: Math.sqrt((p[0] - a[0]) ** 2 + (p[1] - a[1]) ** 2), proj: [...a] as [number, number] };
+        let t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / lenSq;
+        t = Math.max(0, Math.min(1, t));
+        const proj: [number, number] = [a[0] + t * dx, a[1] + t * dy];
+        const dist = Math.sqrt((p[0] - proj[0]) ** 2 + (p[1] - proj[1]) ** 2);
+        return { dist, proj, t };
+      };
+
+      let snappedCount = 0;
+
+      // For each pair of lots
+      for (let i = 0; i < polys.length; i++) {
+        for (let j = i + 1; j < polys.length; j++) {
+          const polyA = polys[i].coords;
+          const polyB = polys[j].coords;
+
+          // Check each vertex in A against segments in B
+          for (let vi = 0; vi < polyA.length; vi++) {
+            const v = polyA[vi];
+            for (let si = 0; si < polyB.length - 1; si++) {
+              const a = polyB[si], b = polyB[si + 1];
+              const { dist, proj, t } = pointToSegment(v, a, b);
+              if (dist < TOLERANCE_DEG && dist > 1e-10 && t !== undefined && t > 0.01 && t < 0.99) {
+                // Snap vertex to projection on segment
+                const midPt: [number, number] = [(v[0] + proj[0]) / 2, (v[1] + proj[1]) / 2];
+                polyA[vi] = midPt;
+                // Insert midpoint into polyB's segment
+                polyB.splice(si + 1, 0, [...midPt]);
+                snappedCount++;
+                break; // move to next vertex
+              }
+            }
+          }
+
+          // Check each vertex in B against segments in A
+          for (let vi = 0; vi < polyB.length; vi++) {
+            const v = polyB[vi];
+            for (let si = 0; si < polyA.length - 1; si++) {
+              const a = polyA[si], b = polyA[si + 1];
+              const { dist, proj, t } = pointToSegment(v, a, b);
+              if (dist < TOLERANCE_DEG && dist > 1e-10 && t !== undefined && t > 0.01 && t < 0.99) {
+                const midPt: [number, number] = [(v[0] + proj[0]) / 2, (v[1] + proj[1]) / 2];
+                polyB[vi] = midPt;
+                polyA.splice(si + 1, 0, [...midPt]);
+                snappedCount++;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // Also snap nearby vertices directly (vertex-to-vertex)
+      const SNAP_V2V = 10 / 111320; // ~10m
+      for (let i = 0; i < polys.length; i++) {
+        for (let j = i + 1; j < polys.length; j++) {
+          for (let vi = 0; vi < polys[i].coords.length; vi++) {
+            for (let vj = 0; vj < polys[j].coords.length; vj++) {
+              const a = polys[i].coords[vi], b = polys[j].coords[vj];
+              const d = Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2);
+              if (d < SNAP_V2V && d > 1e-10) {
+                const mid: [number, number] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+                polys[i].coords[vi] = mid;
+                polys[j].coords[vj] = [...mid];
+                snappedCount++;
+              }
+            }
+          }
+        }
+      }
+
+      console.log(`Snapped ${snappedCount} vertices`);
+
+      // Update all polygons in DB
+      let updatedCount = 0;
+      for (const poly of polys) {
+        // Ensure closed
+        const coords = poly.coords;
+        if (coords.length >= 3) {
+          const first = coords[0], last = coords[coords.length - 1];
+          if (first[0] !== last[0] || first[1] !== last[1]) {
+            coords.push([...first]);
+          }
+        }
+
+        // Calculate centroid
+        const validCoords = coords.filter((_, idx) => idx < coords.length - 1);
+        const centroid = validCoords.reduce(
+          (acc, [lng, lat]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }),
+          { lat: 0, lng: 0 }
+        );
+        centroid.lat /= validCoords.length;
+        centroid.lng /= validCoords.length;
+
+        const { error } = await supabase
+          .from('lots')
+          .update({
+            polygon: coords,
+            latitude: centroid.lat,
+            longitude: centroid.lng,
+          })
+          .eq('id', poly.id);
+
+        if (!error) updatedCount++;
+      }
+
+      toast.success(`${updatedCount} lotes compactados (${snappedCount} vértices fusionados)`);
+      onLotsUpdated?.();
+    } catch (error) {
+      console.error('Error compacting lots:', error);
+      toast.error('Error al compactar lotes');
+    } finally {
+      setCompacting(false);
+    }
+  };
+
   const calculateBounds = useCallback(() => {
     const lotsWithPolygons = lots.filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3);
     
