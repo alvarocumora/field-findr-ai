@@ -1,89 +1,42 @@
 
 
-# Plan: Data Cards Profesionales con Imágenes, Enlace y Ubicación
+# Plan: Actualización de Superficies Reales — Brisas de Caone
 
-## Problema Actual
+## Diagnóstico
 
-1. **Lotes sin imágenes**: La tabla `lots` no tiene columna de imágenes. Las cards y el LotDetailSheet son 100% texto + 3D
-2. **Sin enlace compartible**: No hay botón para copiar link o compartir por WhatsApp un lote específico
-3. **Ubicación poco visible**: Solo muestra coordenadas crudas (lat/lng) sin mapa estático ni dirección legible
-4. **Brochure PDF sin fotos**: El generador jsPDF no incluye imágenes del lote ni mapa estático
+Al comparar el "Cuadro de Superficies" del plano oficial (Láminas A1 y B2, ROL 168-915) con la base de datos, se detectan **discrepancias significativas en las áreas de los 79 lotes**. Ejemplos críticos:
 
-## Cambios
+| Lote | BD actual (m²) | Plano oficial (m²) | Diferencia |
+|------|---------------|-------------------|------------|
+| 1 | 4,499 | 5,000 | -501 |
+| 19 | 5,233 | 9,600 | -4,367 |
+| 41 | 7,972 | 11,700 | -3,728 |
+| 44 | 3,757 | 21,000 | -17,243 |
+| 60 | 18,166 | 6,000 | +12,166 |
+| 78 | 3,703 | 9,200 | -5,497 |
 
-### 1. Migración: Agregar `images` a tabla `lots`
+Las áreas actuales provienen probablemente del cálculo automático de polígonos KMZ (Shoelace), que no coincide con las superficies oficiales del topógrafo.
 
-```sql
-ALTER TABLE public.lots ADD COLUMN images text[] DEFAULT '{}';
-```
+## Cambio
 
-Esto permite subir fotos por lote (terreno, vista, acceso).
+### Actualización masiva de áreas vía INSERT tool
 
-### 2. Rediseñar `EnhancedLotCard.tsx` — Card Profesional
+Ejecutar 79 sentencias UPDATE sobre la tabla `lots` usando el `project_id = e0d83d66-c7be-4c94-a017-3ad331d74699`, actualizando `area` y recalculando `price_per_sqm` (= price / area) para cada lote con la superficie total oficial del Cuadro de Superficies.
 
-- **Imagen hero**: Si el lote tiene imágenes, mostrar la primera como fondo con aspect-ratio 16/9. Si no, mostrar el polígono SVG actual sobre fondo con gradiente
-- **Overlay de precio**: Precio sobre la imagen con fondo gradient (estilo Airbnb)
-- **Mapa estático mini**: Badge con ícono de ubicación que al hover muestra ciudad/región del proyecto (pasado como prop)
-- **Botón compartir**: Ícono `Share2` que copia `https://ofertaterrenos.com/proyecto/{projectId}?lote={lotNumber}` al clipboard
-- **WhatsApp CTA**: Para lotes disponibles, botón verde de WhatsApp con mensaje pre-formateado
+También normalizar los nombres a formato consistente `Lote-N`.
 
-### 3. Rediseñar `LotDetailSheet.tsx` — Ficha Profesional
+### Datos del Cuadro de Superficies (Superficie Total en m²)
 
-- **Galería de imágenes**: Carousel horizontal sobre la vista 3D (si tiene imágenes). Si no tiene, mantener 3D como está
-- **Mapa estático embed**: Iframe de Mapbox Static Image API o mini mapa Mapbox GL con el pin del lote (debajo de la sección de coordenadas)
-- **Sección de compartir**: Botones de WhatsApp, copiar enlace, y descargar ficha PDF individual del lote
-- **Ficha PDF individual**: Botón "Descargar Ficha" que genera un PDF de 1 página con foto, datos, mapa y QR del enlace
-
-### 4. Subida de imágenes en `LotForm.tsx`
-
-- Agregar sección de upload de hasta 5 imágenes por lote
-- Usar storage bucket `lot-images` (crear via migración)
-- Preview de imágenes subidas con opción de eliminar
-
-### 5. Brochure PDF mejorado — `brochurePdfGenerator.ts`
-
-- Para cada lote en la tabla de inventario, si tiene imagen, cargarla como base64 y mostrar thumbnail junto a la fila
-- Agregar columna "Imagen" en la tabla de lotes disponibles (mini thumbnail 15x10mm)
-- Nuevo generador: `lotDataCardPdf.ts` — PDF de 1 página por lote individual con:
-  - Foto principal (si existe)
-  - Datos: número, área, precio, precio/m2, servicios, topografía
-  - Mapa estático (Mapbox Static Image como base64)
-  - QR code del enlace al proyecto
-  - Branding ofertaterrenos.com
-
-### 6. Storage bucket para imágenes
-
-Migración SQL:
-```sql
-INSERT INTO storage.buckets (id, name, public) VALUES ('lot-images', 'lot-images', true);
--- RLS: authenticated users can upload to their lots
-```
-
-## Archivos a Crear
-1. `src/lib/lotDataCardPdf.ts` — Generador PDF de ficha individual del lote
-2. Migración SQL — columna `images`, bucket `lot-images`
+Lotes 1-18: 5000 cada uno | Lote 19: 9600 | Lote 20-21: 5000 | Lote 22: 6300 | Lote 23: 5000 | Lote 24: 8000 | Lote 25: 10500 | Lotes 26-34: 5000 | Lote 35: 5100 | Lotes 36-39: 5000 | Lote 40: 10000 | Lote 41: 11700 | Lote 42-43: 10000 | Lote 44: 21000 | Lotes 45-51: 5000 | Lotes 52-53: 5500 | Lotes 54-55: 5000 | Lote 56: 5200 | Lote 57: 5500 | Lote 58: 6500 | Lote 59: 5300 | Lotes 60-64: 6000 | Lotes 65-66: 6500 | Lote 67: 7000 | Lotes 68-69: 5000 | Lote 70: 6200 | Lote 71: 6800 | Lote 72: 5900 | Lote 73: 4800 | Lote 74: 4200 | Lote 75: 4700 | Lote 76: 5100 | Lote 77: 4600 | Lote 78: 9200 | Lote 79: 8600
 
 ## Archivos a Modificar
-1. `src/components/lots/EnhancedLotCard.tsx` — Imagen hero, share, WhatsApp
-2. `src/components/lots/LotDetailSheet.tsx` — Galería, mapa estático, compartir, descargar ficha
-3. `src/components/lots/LotForm.tsx` — Upload de imágenes
-4. `src/lib/brochurePdfGenerator.ts` — Thumbnails en tabla de lotes
-5. `src/hooks/useLots.ts` — Incluir `images` en el tipo
 
-## Flujo del Usuario
+Ninguno. Este cambio es exclusivamente de datos en la base de datos (79 UPDATEs).
 
-```text
-[Admin sube proyecto]
-  → Agrega lotes con fotos (LotForm + ImageUploader)
-  → Cada lote tiene hasta 5 fotos
+## Impacto
 
-[Comprador ve proyecto]
-  → Cards con foto hero, precio, ubicación
-  → Click → LotDetailSheet con galería + mapa + 3D
-  → Botones: Reservar, Compartir (WhatsApp/Link), Descargar Ficha PDF
-
-[Asesor genera brochure]
-  → PDF incluye thumbnails de lotes con foto
-  → Ficha individual por lote con QR
-```
+- Las cards de lotes mostrarán las superficies reales del plano topográfico oficial
+- El precio/m² se recalculará correctamente
+- El brochure PDF generará datos precisos
+- La coherencia con el master plan queda garantizada
 
