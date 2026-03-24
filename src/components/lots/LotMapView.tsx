@@ -151,6 +151,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [showMasterPlanOverlay, setShowMasterPlanOverlay] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [showDrawingPanel, setShowDrawingPanel] = useState(false);
+  const [renumberMode, setRenumberMode] = useState(false);
+  const [renumberSelectedLot, setRenumberSelectedLot] = useState<{ id: string; lot_number: string } | null>(null);
   
   // Build master plan images from project's plan_images
   const masterPlanImagesList = (planImages && planImages.length > 0)
