@@ -1,61 +1,42 @@
 
 
-# Plan: Eliminar Gaps entre Polígonos de Lotes
+# Plan: Restaurar Polígonos Originales del KMZ y Mejorar Compactación
 
 ## Problema
 
-Los polígonos actuales fueron reconstruidos independientemente desde puntos/lineas del KMZ, resultando en que lotes adyacentes **no comparten bordes**. Hay gaps de ~10m entre lotes vecinos que visualmente parecen caminos falsos. En el plano real, los lotes son contiguos.
+La compactación con tolerancia de 15m fusionó bordes de lotes con bordes de caminos, eliminando visualmente las vialidades y deformando los polígonos. El resultado no se parece al KMZ original ni al plano.
 
-## Diagnóstico (datos reales)
+## Solución en 2 pasos
 
-- Lote 1 borde sur: (-71.6353042, -34.9820384) → (-71.6344936, -34.9820122)
-- Lote 2 borde norte: (-71.6353068, -34.9821285) → (-71.6345039, -34.9821026)
-- Gap: ~10m entre bordes que deberían ser el mismo
+### Paso 1: Botón "Restaurar KMZ Original"
 
-## Solución: Snap de Bordes Compartidos (post-procesamiento en BD)
+Agregar un botón que re-descargue el KMZ almacenado del proyecto y restaure los polígonos originales por nombre de placemark, sin ninguna modificación/snap. Esto deshace la compactación.
 
-Crear una función que recorra todos los polígonos del proyecto y **fusione vértices cercanos** entre lotes adyacentes, eliminando los gaps.
+- Usa la URL del KMZ ya guardada en el proyecto (`kmzFileUrl`)
+- Parsea placemarks y asigna por nombre (`Lote:N` → lot_number N)
+- Restaura coordenadas originales del archivo KMZ sin alteraciones
 
-### 1. Nuevo botón "Compactar Lotes" en `LotMapView.tsx`
+### Paso 2: Reemplazar algoritmo de compactación
 
-- Botón en toolbar admin con ícono `Minimize2`
-- Al hacer clic, ejecuta el algoritmo de snap en el cliente
+Reducir la tolerancia de snap drásticamente:
+- **Vertex-to-segment**: de 15m → **3m** (solo bordes que realmente se tocan)
+- **Vertex-to-vertex**: de 10m → **2m**
+- Agregar filtro: NO snapear si el borde está en el perímetro exterior del proyecto (donde están los caminos)
 
-### 2. Algoritmo de snap de vértices compartidos
-
-```text
-Para cada par de lotes (i, j):
-  Para cada vértice V del lote i:
-    Para cada arista (A→B) del lote j:
-      Si distancia(V, segmento A-B) < TOLERANCIA (15m):
-        Proyectar V sobre A-B → punto P
-        Insertar P en la arista de lote j
-        Mover V a P (ambos lotes comparten el punto)
-```
-
-Esto garantiza que lotes adyacentes compartan exactamente los mismos vértices en su borde común, eliminando los gaps visibles.
-
-### 3. Actualización masiva en BD
-
-Después del snap, actualizar los 79 polígonos con un batch de UPDATEs via Supabase.
-
-### 4. Ajuste visual complementario
-
-En el estilo del mapa, reducir `line-width` de 2 a 1 y cambiar `fill-opacity` de 0.7 a 0.8 para que los bordes sean más sutiles y el relleno más sólido.
+Esto preserva los caminos y solo fusiona los micro-gaps entre lotes verdaderamente adyacentes.
 
 ## Archivos a Modificar
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/lots/LotMapView.tsx` | Botón "Compactar", función de snap de vértices, estilo visual |
+| `src/components/lots/LotMapView.tsx` | Nuevo botón "Restaurar KMZ", reducir tolerancias de compactación |
 
 ## Flujo
 
 ```text
-Admin → Tab Mapa → Botón "Compactar Lotes"
-  → Algoritmo calcula bordes compartidos
-  → Fusiona vértices cercanos entre vecinos
-  → Actualiza 79 polígonos en BD
-  → Mapa se refresca sin gaps
+1. Admin presiona "Restaurar KMZ" → polígonos vuelven al estado original
+2. Verifica visualmente que caminos y lotes se ven como en Google Earth
+3. Opcionalmente presiona "Compactar" con tolerancia conservadora (3m)
+   → solo cierra micro-gaps sin tocar caminos
 ```
 
