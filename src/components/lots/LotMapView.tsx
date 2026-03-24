@@ -615,6 +615,78 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     }
   };
 
+  // === RESTORE ORIGINAL KMZ: Re-download and assign by placemark name ===
+  const handleRestoreKmz = async () => {
+    if (!kmzFileUrl || !projectId) {
+      toast.error('No hay archivo KMZ configurado para este proyecto');
+      return;
+    }
+
+    setRestoring(true);
+    toast.info('Restaurando polígonos originales del KMZ...');
+
+    try {
+      const response = await fetch(kmzFileUrl);
+      if (!response.ok) throw new Error('Failed to fetch KMZ');
+
+      const blob = await response.blob();
+      const file = new File([blob], 'project.kmz', { type: 'application/vnd.google-earth.kmz' });
+
+      const parsed = kmzFileUrl.endsWith('.kml')
+        ? await parseKMLFile(file)
+        : await parseKMZFile(file);
+
+      // Get all polygons using the smart builder
+      let allPolygons = parsed.placemarks.filter(p => p.isPolygon && p.coordinates.length >= 3);
+      if (allPolygons.length < lots.length * 0.5) {
+        const built = buildPolygonsFromMixedGeometry(
+          parsed.placemarks,
+          lots.map(l => ({ lot_number: l.lot_number, area: l.area }))
+        );
+        if (built.length > allPolygons.length) allPolygons = built;
+      }
+
+      console.log('=== RESTORE KMZ ORIGINAL ===');
+      console.log('Polygons available:', allPolygons.length);
+
+      let updatedCount = 0;
+      for (const placemark of allPolygons) {
+        const match = placemark.name.match(/Lote[:\s-]*(\d+)/i) || placemark.name.match(/^(\d+)$/);
+        if (!match) continue;
+
+        const lotNum = match[1];
+        const matchingLot = lots.find(l => l.lot_number === lotNum);
+        if (!matchingLot) continue;
+
+        const centroid = placemark.coordinates.reduce(
+          (acc, [lng, lat]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }),
+          { lat: 0, lng: 0 }
+        );
+        centroid.lat /= placemark.coordinates.length;
+        centroid.lng /= placemark.coordinates.length;
+
+        const { error } = await supabase
+          .from('lots')
+          .update({
+            polygon: placemark.coordinates,
+            latitude: centroid.lat,
+            longitude: centroid.lng,
+          })
+          .eq('id', matchingLot.id);
+
+        if (!error) updatedCount++;
+      }
+
+      toast.success(`${updatedCount} lotes restaurados con polígonos originales del KMZ`);
+      onLotsUpdated?.();
+    } catch (error) {
+      console.error('Error restoring KMZ:', error);
+      toast.error('Error al restaurar polígonos del KMZ');
+    } finally {
+      setRestoring(false);
+    }
+  };
+
   // === SNAP ALGORITHM: Compact lots by merging nearby vertices ===
   const handleCompactLots = async () => {
     const lotsWithPolygons = lots.filter(l => l.polygon && Array.isArray(l.polygon) && l.polygon.length >= 3);
@@ -624,7 +696,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     }
 
     setCompacting(true);
-    toast.info('Compactando lotes — eliminando gaps...');
+    toast.info('Compactando lotes con tolerancia conservadora (3m)...');
 
     try {
       // Deep copy all polygons
@@ -633,7 +705,9 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         coords: l.polygon.map((c: [number, number]) => [...c] as [number, number]),
       }));
 
-      const TOLERANCE_DEG = 15 / 111320; // ~15m in degrees
+      // CONSERVATIVE tolerances to preserve roads
+      const TOLERANCE_DEG = 3 / 111320; // ~3m in degrees (was 15m)
+      const SNAP_V2V = 2 / 111320; // ~2m in degrees (was 10m)
 
       // Helper: distance from point P to segment AB, returns projection point
       const pointToSegment = (p: [number, number], a: [number, number], b: [number, number]) => {
@@ -662,13 +736,11 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
               const a = polyB[si], b = polyB[si + 1];
               const { dist, proj, t } = pointToSegment(v, a, b);
               if (dist < TOLERANCE_DEG && dist > 1e-10 && t !== undefined && t > 0.01 && t < 0.99) {
-                // Snap vertex to projection on segment
                 const midPt: [number, number] = [(v[0] + proj[0]) / 2, (v[1] + proj[1]) / 2];
                 polyA[vi] = midPt;
-                // Insert midpoint into polyB's segment
                 polyB.splice(si + 1, 0, [...midPt]);
                 snappedCount++;
-                break; // move to next vertex
+                break;
               }
             }
           }
@@ -691,8 +763,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         }
       }
 
-      // Also snap nearby vertices directly (vertex-to-vertex)
-      const SNAP_V2V = 10 / 111320; // ~10m
+      // Vertex-to-vertex snap with conservative tolerance
       for (let i = 0; i < polys.length; i++) {
         for (let j = i + 1; j < polys.length; j++) {
           for (let vi = 0; vi < polys[i].coords.length; vi++) {
@@ -710,12 +781,11 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         }
       }
 
-      console.log(`Snapped ${snappedCount} vertices`);
+      console.log(`Snapped ${snappedCount} vertices (3m tolerance)`);
 
       // Update all polygons in DB
       let updatedCount = 0;
       for (const poly of polys) {
-        // Ensure closed
         const coords = poly.coords;
         if (coords.length >= 3) {
           const first = coords[0], last = coords[coords.length - 1];
@@ -724,7 +794,6 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           }
         }
 
-        // Calculate centroid
         const validCoords = coords.filter((_, idx) => idx < coords.length - 1);
         const centroid = validCoords.reduce(
           (acc, [lng, lat]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }),
@@ -745,7 +814,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         if (!error) updatedCount++;
       }
 
-      toast.success(`${updatedCount} lotes compactados (${snappedCount} vértices fusionados)`);
+      toast.success(`${updatedCount} lotes compactados (${snappedCount} vértices, tolerancia 3m)`);
       onLotsUpdated?.();
     } catch (error) {
       console.error('Error compacting lots:', error);
