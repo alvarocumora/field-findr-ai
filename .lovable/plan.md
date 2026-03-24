@@ -1,72 +1,61 @@
 
 
-# Plan: Re-importar KMZ Respetando Nombres de Placemarks
+# Plan: Eliminar Gaps entre Polígonos de Lotes
 
 ## Problema
 
-Los polígonos fueron asignados secuencialmente durante la importación KMZ (primer polígono → Lote 1, segundo → Lote 2, etc.), pero el KMZ tiene los placemarks nombrados correctamente ("Lote:1", "Lote:18", "Lote:20"...). El resultado: el polígono geográfico del "Lote:48" en Google Earth está asignado al "Lote 1" en la base de datos, y así sucesivamente.
+Los polígonos actuales fueron reconstruidos independientemente desde puntos/lineas del KMZ, resultando en que lotes adyacentes **no comparten bordes**. Hay gaps de ~10m entre lotes vecinos que visualmente parecen caminos falsos. En el plano real, los lotes son contiguos.
 
-La segunda captura (Google Earth) muestra los nombres reales del KMZ — eso es lo que necesitamos usar.
+## Diagnóstico (datos reales)
 
-## Solución
+- Lote 1 borde sur: (-71.6353042, -34.9820384) → (-71.6344936, -34.9820122)
+- Lote 2 borde norte: (-71.6353068, -34.9821285) → (-71.6345039, -34.9821026)
+- Gap: ~10m entre bordes que deberían ser el mismo
 
-Agregar una función **"Re-importar KMZ por Nombre"** en `LotMapView.tsx` que:
+## Solución: Snap de Bordes Compartidos (post-procesamiento en BD)
 
-1. Parsea el KMZ subido (168-915_1-7.kmz)
-2. Para cada placemark, extrae el número del nombre (ej: "Lote:1" → 1, "Lote:48" → 48)
-3. Busca el lote con `lot_number = "1"` en la BD y le asigna **ese** polígono específico
-4. Actualiza `polygon`, `latitude`, `longitude` en cada lote
+Crear una función que recorra todos los polígonos del proyecto y **fusione vértices cercanos** entre lotes adyacentes, eliminando los gaps.
 
-Esto reemplaza la lógica actual de asignación secuencial por una asignación **por nombre**.
+### 1. Nuevo botón "Compactar Lotes" en `LotMapView.tsx`
 
-## Cambios
+- Botón en toolbar admin con ícono `Minimize2`
+- Al hacer clic, ejecuta el algoritmo de snap en el cliente
 
-### 1. Nueva función `handleReimportByName` en `LotMapView.tsx`
+### 2. Algoritmo de snap de vértices compartidos
 
 ```text
-handleReimportByName(file):
-  parsed = parseKMZ(file)
-  for each placemark in parsed.placemarks:
-    lotNum = extractNumber(placemark.name)  // "Lote:1" → "1"
-    matchingLot = lots.find(l => l.lot_number === lotNum)
-    if matchingLot:
-      UPDATE lots SET polygon = placemark.coordinates,
-                      latitude = centroid.lat,
-                      longitude = centroid.lng
-      WHERE id = matchingLot.id
+Para cada par de lotes (i, j):
+  Para cada vértice V del lote i:
+    Para cada arista (A→B) del lote j:
+      Si distancia(V, segmento A-B) < TOLERANCIA (15m):
+        Proyectar V sobre A-B → punto P
+        Insertar P en la arista de lote j
+        Mover V a P (ambos lotes comparten el punto)
 ```
 
-- Nuevo botón en la toolbar admin: "Reimportar KMZ" con ícono `RefreshCw`
-- Input file oculto que acepta `.kmz/.kml`
-- Regex flexible para extraer número: `/Lote[:\s-]*(\d+)/i` (soporta "Lote:1", "Lote 1", "Lote-1")
-- No toca `lot_number`, `area`, ni `price` — solo reasigna los polígonos geográficos
+Esto garantiza que lotes adyacentes compartan exactamente los mismos vértices en su borde común, eliminando los gaps visibles.
 
-### 2. Modificar el label del mapa
+### 3. Actualización masiva en BD
 
-Actualmente en línea 604:
-```js
-'text-field': ['get', 'lot_number']
-```
+Después del snap, actualizar los 79 polígonos con un batch de UPDATEs via Supabase.
 
-Cambiar a formato con prefijo para consistencia con el plano:
-```js
-'text-field': ['concat', 'Lote:', ['get', 'lot_number']]
-```
+### 4. Ajuste visual complementario
+
+En el estilo del mapa, reducir `line-width` de 2 a 1 y cambiar `fill-opacity` de 0.7 a 0.8 para que los bordes sean más sutiles y el relleno más sólido.
 
 ## Archivos a Modificar
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/lots/LotMapView.tsx` | Nueva función `handleReimportByName`, botón en toolbar, label format |
+| `src/components/lots/LotMapView.tsx` | Botón "Compactar", función de snap de vértices, estilo visual |
 
 ## Flujo
 
 ```text
-Admin → Tab Mapa → Botón "Reimportar KMZ"
-  → Selecciona 168-915_1-7.kmz
-  → Sistema parsea placemarks por nombre
-  → Asigna polígono de "Lote:48" al lote con lot_number="48"
-  → Mapa se refresca con polígonos correctos
-  → Labels muestran "Lote:1", "Lote:2"... en posiciones correctas
+Admin → Tab Mapa → Botón "Compactar Lotes"
+  → Algoritmo calcula bordes compartidos
+  → Fusiona vértices cercanos entre vecinos
+  → Actualiza 79 polígonos en BD
+  → Mapa se refresca sin gaps
 ```
 
