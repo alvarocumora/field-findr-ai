@@ -1,65 +1,72 @@
 
 
-# Plan: Herramienta de Renumeración de Lotes en el Mapa
+# Plan: Re-importar KMZ Respetando Nombres de Placemarks
 
 ## Problema
 
-Los polígonos importados del KMZ tienen numeración secuencial por orden de importación, no por la numeración real del plano oficial. El polígono geográfico es correcto, pero el `lot_number` asignado no corresponde al master plan. Esto no se puede corregir automáticamente — requiere validación visual contra el plano.
+Los polígonos fueron asignados secuencialmente durante la importación KMZ (primer polígono → Lote 1, segundo → Lote 2, etc.), pero el KMZ tiene los placemarks nombrados correctamente ("Lote:1", "Lote:18", "Lote:20"...). El resultado: el polígono geográfico del "Lote:48" en Google Earth está asignado al "Lote 1" en la base de datos, y así sucesivamente.
+
+La segunda captura (Google Earth) muestra los nombres reales del KMZ — eso es lo que necesitamos usar.
 
 ## Solución
 
-Crear una **herramienta de renumeración interactiva** en el mapa admin que permita al usuario:
+Agregar una función **"Re-importar KMZ por Nombre"** en `LotMapView.tsx` que:
 
-1. Activar "Modo Renumerar" (botón en toolbar admin)
-2. Hacer clic en un polígono → aparece un input para escribir el número correcto
-3. Al confirmar, se actualiza `lot_number` y `name` en la BD
-4. El mapa se refresca con el número nuevo
+1. Parsea el KMZ subido (168-915_1-7.kmz)
+2. Para cada placemark, extrae el número del nombre (ej: "Lote:1" → 1, "Lote:48" → 48)
+3. Busca el lote con `lot_number = "1"` en la BD y le asigna **ese** polígono específico
+4. Actualiza `polygon`, `latitude`, `longitude` en cada lote
 
-Además, superponer la imagen del plano oficial (ya soportado via `MasterPlanOverlay`) para que el admin vea lado a lado el plano real y los polígonos, y corrija los números visualmente.
+Esto reemplaza la lógica actual de asignación secuencial por una asignación **por nombre**.
 
 ## Cambios
 
-### 1. Componente `LotRenumberTool.tsx` (nuevo)
+### 1. Nueva función `handleReimportByName` en `LotMapView.tsx`
 
-**Archivo:** `src/components/lots/LotRenumberTool.tsx`
+```text
+handleReimportByName(file):
+  parsed = parseKMZ(file)
+  for each placemark in parsed.placemarks:
+    lotNum = extractNumber(placemark.name)  // "Lote:1" → "1"
+    matchingLot = lots.find(l => l.lot_number === lotNum)
+    if matchingLot:
+      UPDATE lots SET polygon = placemark.coordinates,
+                      latitude = centroid.lat,
+                      longitude = centroid.lng
+      WHERE id = matchingLot.id
+```
 
-- Panel flotante que aparece al activar modo renumerar
-- Al hacer clic en un polígono, muestra: número actual, input para nuevo número, botón confirmar
-- Valida que el nuevo número no esté duplicado en el proyecto
-- Ejecuta `UPDATE lots SET lot_number = $new, name = 'Lote-$new' WHERE id = $lotId`
-- Mantiene un log visual de cambios realizados en la sesión (ej: "Lote 29 → Lote 1")
-- Botón "Finalizar" que recarga todos los lotes
+- Nuevo botón en la toolbar admin: "Reimportar KMZ" con ícono `RefreshCw`
+- Input file oculto que acepta `.kmz/.kml`
+- Regex flexible para extraer número: `/Lote[:\s-]*(\d+)/i` (soporta "Lote:1", "Lote 1", "Lote-1")
+- No toca `lot_number`, `area`, ni `price` — solo reasigna los polígonos geográficos
 
-### 2. Integrar en `LotMapView.tsx`
+### 2. Modificar el label del mapa
 
-**Archivo:** `src/components/lots/LotMapView.tsx`
+Actualmente en línea 604:
+```js
+'text-field': ['get', 'lot_number']
+```
 
-- Agregar botón "Renumerar" en la toolbar admin (junto a los existentes: Calles, Plano, Comparar)
-- Cuando está activo, el click en polígono abre el panel de renumeración en vez del LotDetailSheet
-- Activar automáticamente el `MasterPlanOverlay` al entrar en modo renumerar para referencia visual
+Cambiar a formato con prefijo para consistencia con el plano:
+```js
+'text-field': ['concat', 'Lote:', ['get', 'lot_number']]
+```
 
-### 3. Integrar en `ProjectDetail.tsx`
+## Archivos a Modificar
 
-**Archivo:** `src/pages/ProjectDetail.tsx`
-
-- Pasar callback `onLotsUpdated` al `LotMapView` para refrescar la query de lotes después de renumerar
-
-## Archivos
-
-| Archivo | Acción |
+| Archivo | Cambio |
 |---------|--------|
-| `src/components/lots/LotRenumberTool.tsx` | Crear — UI de renumeración interactiva |
-| `src/components/lots/LotMapView.tsx` | Modificar — botón + modo renumerar |
-| `src/pages/ProjectDetail.tsx` | Modificar — conectar refresh de lotes |
+| `src/components/lots/LotMapView.tsx` | Nueva función `handleReimportByName`, botón en toolbar, label format |
 
 ## Flujo
 
 ```text
-Admin abre proyecto → Tab Mapa → Activa "Renumerar"
-  → Se muestra overlay del plano oficial
-  → Click en polígono → Input "Número correcto: ___"
-  → Confirmar → BD actualizada → Label del mapa cambia
-  → Repetir para cada lote incorrecto
-  → "Finalizar" → Refresca todo
+Admin → Tab Mapa → Botón "Reimportar KMZ"
+  → Selecciona 168-915_1-7.kmz
+  → Sistema parsea placemarks por nombre
+  → Asigna polígono de "Lote:48" al lote con lot_number="48"
+  → Mapa se refresca con polígonos correctos
+  → Labels muestran "Lote:1", "Lote:2"... en posiciones correctas
 ```
 
