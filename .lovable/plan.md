@@ -1,42 +1,65 @@
 
 
-# Plan: Actualización de Superficies Reales — Brisas de Caone
+# Plan: Herramienta de Renumeración de Lotes en el Mapa
 
-## Diagnóstico
+## Problema
 
-Al comparar el "Cuadro de Superficies" del plano oficial (Láminas A1 y B2, ROL 168-915) con la base de datos, se detectan **discrepancias significativas en las áreas de los 79 lotes**. Ejemplos críticos:
+Los polígonos importados del KMZ tienen numeración secuencial por orden de importación, no por la numeración real del plano oficial. El polígono geográfico es correcto, pero el `lot_number` asignado no corresponde al master plan. Esto no se puede corregir automáticamente — requiere validación visual contra el plano.
 
-| Lote | BD actual (m²) | Plano oficial (m²) | Diferencia |
-|------|---------------|-------------------|------------|
-| 1 | 4,499 | 5,000 | -501 |
-| 19 | 5,233 | 9,600 | -4,367 |
-| 41 | 7,972 | 11,700 | -3,728 |
-| 44 | 3,757 | 21,000 | -17,243 |
-| 60 | 18,166 | 6,000 | +12,166 |
-| 78 | 3,703 | 9,200 | -5,497 |
+## Solución
 
-Las áreas actuales provienen probablemente del cálculo automático de polígonos KMZ (Shoelace), que no coincide con las superficies oficiales del topógrafo.
+Crear una **herramienta de renumeración interactiva** en el mapa admin que permita al usuario:
 
-## Cambio
+1. Activar "Modo Renumerar" (botón en toolbar admin)
+2. Hacer clic en un polígono → aparece un input para escribir el número correcto
+3. Al confirmar, se actualiza `lot_number` y `name` en la BD
+4. El mapa se refresca con el número nuevo
 
-### Actualización masiva de áreas vía INSERT tool
+Además, superponer la imagen del plano oficial (ya soportado via `MasterPlanOverlay`) para que el admin vea lado a lado el plano real y los polígonos, y corrija los números visualmente.
 
-Ejecutar 79 sentencias UPDATE sobre la tabla `lots` usando el `project_id = e0d83d66-c7be-4c94-a017-3ad331d74699`, actualizando `area` y recalculando `price_per_sqm` (= price / area) para cada lote con la superficie total oficial del Cuadro de Superficies.
+## Cambios
 
-También normalizar los nombres a formato consistente `Lote-N`.
+### 1. Componente `LotRenumberTool.tsx` (nuevo)
 
-### Datos del Cuadro de Superficies (Superficie Total en m²)
+**Archivo:** `src/components/lots/LotRenumberTool.tsx`
 
-Lotes 1-18: 5000 cada uno | Lote 19: 9600 | Lote 20-21: 5000 | Lote 22: 6300 | Lote 23: 5000 | Lote 24: 8000 | Lote 25: 10500 | Lotes 26-34: 5000 | Lote 35: 5100 | Lotes 36-39: 5000 | Lote 40: 10000 | Lote 41: 11700 | Lote 42-43: 10000 | Lote 44: 21000 | Lotes 45-51: 5000 | Lotes 52-53: 5500 | Lotes 54-55: 5000 | Lote 56: 5200 | Lote 57: 5500 | Lote 58: 6500 | Lote 59: 5300 | Lotes 60-64: 6000 | Lotes 65-66: 6500 | Lote 67: 7000 | Lotes 68-69: 5000 | Lote 70: 6200 | Lote 71: 6800 | Lote 72: 5900 | Lote 73: 4800 | Lote 74: 4200 | Lote 75: 4700 | Lote 76: 5100 | Lote 77: 4600 | Lote 78: 9200 | Lote 79: 8600
+- Panel flotante que aparece al activar modo renumerar
+- Al hacer clic en un polígono, muestra: número actual, input para nuevo número, botón confirmar
+- Valida que el nuevo número no esté duplicado en el proyecto
+- Ejecuta `UPDATE lots SET lot_number = $new, name = 'Lote-$new' WHERE id = $lotId`
+- Mantiene un log visual de cambios realizados en la sesión (ej: "Lote 29 → Lote 1")
+- Botón "Finalizar" que recarga todos los lotes
 
-## Archivos a Modificar
+### 2. Integrar en `LotMapView.tsx`
 
-Ninguno. Este cambio es exclusivamente de datos en la base de datos (79 UPDATEs).
+**Archivo:** `src/components/lots/LotMapView.tsx`
 
-## Impacto
+- Agregar botón "Renumerar" en la toolbar admin (junto a los existentes: Calles, Plano, Comparar)
+- Cuando está activo, el click en polígono abre el panel de renumeración en vez del LotDetailSheet
+- Activar automáticamente el `MasterPlanOverlay` al entrar en modo renumerar para referencia visual
 
-- Las cards de lotes mostrarán las superficies reales del plano topográfico oficial
-- El precio/m² se recalculará correctamente
-- El brochure PDF generará datos precisos
-- La coherencia con el master plan queda garantizada
+### 3. Integrar en `ProjectDetail.tsx`
+
+**Archivo:** `src/pages/ProjectDetail.tsx`
+
+- Pasar callback `onLotsUpdated` al `LotMapView` para refrescar la query de lotes después de renumerar
+
+## Archivos
+
+| Archivo | Acción |
+|---------|--------|
+| `src/components/lots/LotRenumberTool.tsx` | Crear — UI de renumeración interactiva |
+| `src/components/lots/LotMapView.tsx` | Modificar — botón + modo renumerar |
+| `src/pages/ProjectDetail.tsx` | Modificar — conectar refresh de lotes |
+
+## Flujo
+
+```text
+Admin abre proyecto → Tab Mapa → Activa "Renumerar"
+  → Se muestra overlay del plano oficial
+  → Click en polígono → Input "Número correcto: ___"
+  → Confirmar → BD actualizada → Label del mapa cambia
+  → Repetir para cada lote incorrecto
+  → "Finalizar" → Refresca todo
+```
 
