@@ -823,7 +823,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             ['==', ['get', 'status'], 'reserved'], '#f59e0b',
             '#10b981'
           ],
-          'fill-opacity': 0.7,
+          'fill-opacity': 0.8,
         },
       });
 
