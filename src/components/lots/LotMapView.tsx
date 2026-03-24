@@ -155,6 +155,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [showDrawingPanel, setShowDrawingPanel] = useState(false);
   const [renumberMode, setRenumberMode] = useState(false);
   const [renumberSelectedLot, setRenumberSelectedLot] = useState<{ id: string; lot_number: string } | null>(null);
+  const [compacting, setCompacting] = useState(false);
 
   // Keep ref in sync with state for use inside map event handlers
   useEffect(() => {
