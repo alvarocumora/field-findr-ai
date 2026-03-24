@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MasterPlanOverlay } from './MasterPlanOverlay';
 import { LotDrawingTool } from './LotDrawingTool';
+import { LotRenumberTool } from './LotRenumberTool';
 
 interface Lot {
   id: string;
