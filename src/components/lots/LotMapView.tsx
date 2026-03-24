@@ -915,6 +915,25 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           />
         </div>
       )}
+
+      {/* Renumber Tool Panel */}
+      {showAdminControls && renumberMode && (
+        <div className="absolute top-16 left-3 z-10">
+          <LotRenumberTool
+            lots={lots.map(l => ({ id: l.id, lot_number: l.lot_number, area: l.area, status: l.status }))}
+            selectedLot={renumberSelectedLot}
+            onLotUpdated={() => {
+              setRenumberSelectedLot(null);
+              onLotsUpdated?.();
+            }}
+            onFinish={() => {
+              setRenumberMode(false);
+              setRenumberSelectedLot(null);
+              onLotsUpdated?.();
+            }}
+          />
+        </div>
+      )}
       
       {/* Master plan overlay controls */}
       <MasterPlanOverlay
