@@ -154,6 +154,11 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [showDrawingPanel, setShowDrawingPanel] = useState(false);
   const [renumberMode, setRenumberMode] = useState(false);
   const [renumberSelectedLot, setRenumberSelectedLot] = useState<{ id: string; lot_number: string } | null>(null);
+
+  // Keep ref in sync with state for use inside map event handlers
+  useEffect(() => {
+    renumberModeRef.current = renumberMode;
+  }, [renumberMode]);
   
   // Build master plan images from project's plan_images
   const masterPlanImagesList = (planImages && planImages.length > 0)
