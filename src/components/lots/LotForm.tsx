@@ -44,6 +44,9 @@ interface LotFormProps {
 
 export const LotForm = ({ projects, initialData, onSubmit, onCancel, isLoading }: LotFormProps) => {
   const features = initialData?.features as LotFeatures | null;
+  const [lotImages, setLotImages] = useState<string[]>(
+    ((initialData as any)?.images as string[]) || []
+  );
   
   const {
     register,
