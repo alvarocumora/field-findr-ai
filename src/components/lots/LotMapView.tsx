@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { usePolygonDrawing } from '@/hooks/usePolygonDrawing';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Layers, Upload, Image, PenTool, ArrowLeftRight, Hash } from 'lucide-react';
+import { AlertCircle, Layers, Upload, Image, PenTool, ArrowLeftRight, Hash, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced, buildPolygonsFromMixedGeometry } from '@/lib/kmz';
 import { supabase } from '@/integrations/supabase/client';
@@ -142,6 +142,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const reimportFileInputRef = useRef<HTMLInputElement>(null);
   const renumberModeRef = useRef(false);
   const { token, loading: tokenLoading, error: tokenError } = useMapboxToken();
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -510,7 +511,108 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     }
   };
 
-  // Calculate actual bounds from lot polygons
+  // Re-import KMZ matching placemarks by name instead of sequential order
+  const handleReimportByName = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !projectId) return;
+
+    setImporting(true);
+    try {
+      const parsed = file.name.endsWith('.kml')
+        ? await parseKMLFile(file)
+        : await parseKMZFile(file);
+
+      console.log('=== REIMPORT BY NAME ===');
+      console.log('Parsed placemarks:', parsed.placemarks.length);
+
+      if (parsed.placemarks.length === 0) {
+        toast.error('No se encontraron polígonos en el archivo');
+        return;
+      }
+
+      // Also try the smart builder to get real polygons from LineStrings
+      let allPolygons = parsed.placemarks.filter(p => p.isPolygon && p.coordinates.length >= 3);
+
+      // If not enough direct polygons, use the smart builder
+      if (allPolygons.length < lots.length * 0.5) {
+        const built = buildPolygonsFromMixedGeometry(
+          parsed.placemarks,
+          lots.map(l => ({ lot_number: l.lot_number, area: l.area }))
+        );
+        if (built.length > allPolygons.length) {
+          allPolygons = built;
+        }
+      }
+
+      console.log('Polygons available for matching:', allPolygons.length);
+
+      let updatedCount = 0;
+      let unmatchedNames: string[] = [];
+
+      for (const placemark of allPolygons) {
+        // Extract lot number from placemark name using flexible regex
+        const match = placemark.name.match(/Lote[:\s-]*(\d+)/i) || placemark.name.match(/^(\d+)$/);
+        if (!match) {
+          unmatchedNames.push(placemark.name);
+          continue;
+        }
+
+        const lotNum = match[1];
+        const matchingLot = lots.find(l => l.lot_number === lotNum);
+        if (!matchingLot) {
+          unmatchedNames.push(`${placemark.name} (no lot #${lotNum})`);
+          continue;
+        }
+
+        // Calculate centroid
+        const centroid = placemark.coordinates.reduce(
+          (acc, [lng, lat]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }),
+          { lat: 0, lng: 0 }
+        );
+        centroid.lat /= placemark.coordinates.length;
+        centroid.lng /= placemark.coordinates.length;
+
+        const { error } = await supabase
+          .from('lots')
+          .update({
+            polygon: placemark.coordinates,
+            latitude: centroid.lat,
+            longitude: centroid.lng,
+          })
+          .eq('id', matchingLot.id);
+
+        if (!error) {
+          updatedCount++;
+          console.log(`✓ Lote ${lotNum} → polígono asignado (${placemark.coordinates.length} pts)`);
+        }
+      }
+
+      if (unmatchedNames.length > 0) {
+        console.warn('Unmatched placemarks:', unmatchedNames);
+      }
+
+      // Update project center
+      await supabase
+        .from('projects')
+        .update({ latitude: parsed.center.lat, longitude: parsed.center.lng })
+        .eq('id', projectId);
+
+      toast.success(`${updatedCount} lotes re-asignados por nombre del KMZ`);
+      if (unmatchedNames.length > 0) {
+        toast.info(`${unmatchedNames.length} placemarks sin coincidencia`);
+      }
+      onLotsUpdated?.();
+    } catch (error) {
+      console.error('Error reimporting KMZ by name:', error);
+      toast.error('Error al reimportar el archivo');
+    } finally {
+      setImporting(false);
+      if (reimportFileInputRef.current) {
+        reimportFileInputRef.current.value = '';
+      }
+    }
+  };
+
   const calculateBounds = useCallback(() => {
     const lotsWithPolygons = lots.filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3);
     
@@ -601,7 +703,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         type: 'symbol',
         source: 'lots',
         layout: {
-          'text-field': ['get', 'lot_number'],
+          'text-field': ['concat', 'Lote:', ['get', 'lot_number']],
           'text-size': 14,
           'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
         },
@@ -757,6 +859,14 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         onChange={handleFileImport}
         className="hidden"
       />
+      {/* Hidden file input for reimport by name */}
+      <input
+        ref={reimportFileInputRef}
+        type="file"
+        accept=".kmz,.kml"
+        onChange={handleReimportByName}
+        className="hidden"
+      />
       
       {/* Controls row */}
       <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
@@ -841,7 +951,20 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
                 {importing ? 'Importando...' : 'Importar KMZ'}
               </Button>
             )}
-            
+
+            {/* Reimport KMZ by placemark name */}
+            {projectId && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="gap-2 glass"
+                onClick={() => reimportFileInputRef.current?.click()}
+                disabled={importing}
+              >
+                <RefreshCw className="h-4 w-4" />
+                {importing ? 'Reimportando...' : 'Reimportar KMZ'}
+              </Button>
+            )}
             {/* Regenerate polygons button */}
             {projectId && kmzFileUrl && (
               <Button
