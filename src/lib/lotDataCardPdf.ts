@@ -65,8 +65,13 @@ export const generateLotDataCardPdf = async (
   doc.text(`Lote ${lot.lot_number}`, margin, y + 8);
 
   const statusLabel = lot.status === 'available' ? 'DISPONIBLE' : lot.status === 'reserved' ? 'RESERVADO' : 'VENDIDO';
-  const statusColor = lot.status === 'available' ? FOREST_GREEN : lot.status === 'reserved' ? [200, 150, 30] as const : GRAY;
-  doc.setFillColor(...statusColor);
+  if (lot.status === 'available') {
+    doc.setFillColor(44, 95, 45);
+  } else if (lot.status === 'reserved') {
+    doc.setFillColor(200, 150, 30);
+  } else {
+    doc.setFillColor(120, 120, 120);
+  }
   const statusW = doc.getTextWidth(statusLabel) * 0.5 + 8;
   doc.roundedRect(W - margin - statusW, y, statusW, 8, 2, 2, 'F');
   doc.setTextColor(255, 255, 255);
