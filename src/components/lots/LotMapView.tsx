@@ -142,6 +142,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const renumberModeRef = useRef(false);
   const { token, loading: tokenLoading, error: tokenError } = useMapboxToken();
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapStyle, setMapStyle] = useState<'satellite' | 'streets'>('satellite');
