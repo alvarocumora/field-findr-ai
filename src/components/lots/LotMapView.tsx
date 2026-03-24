@@ -1189,6 +1189,19 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
                 {compacting ? 'Compactando...' : 'Compactar'}
               </Button>
             )}
+            {/* Restore original KMZ polygons */}
+            {projectId && kmzFileUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 glass text-orange-600 border-orange-400"
+                onClick={handleRestoreKmz}
+                disabled={restoring}
+              >
+                <RotateCcw className="h-4 w-4" />
+                {restoring ? 'Restaurando...' : 'Restaurar KMZ'}
+              </Button>
+            )}
             {/* Regenerate polygons button */}
             {projectId && kmzFileUrl && (
               <Button
