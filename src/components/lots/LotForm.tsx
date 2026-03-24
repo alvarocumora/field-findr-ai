@@ -107,6 +107,7 @@ export const LotForm = ({ projects, initialData, onSubmit, onCancel, isLoading }
       images: lotImages,
     } as any;
     onSubmit(lotData);
+  };
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
