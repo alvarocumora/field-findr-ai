@@ -500,6 +500,7 @@ const ProjectDetail = () => {
                   queryClient.invalidateQueries({ queryKey: ['project', id] });
                 }}
                 readOnly={!isOwner}
+                showAdminControls={isOwner}
                 onOpenCompare={
                   ((project as any).plan_images?.length > 0)
                     ? () => setShowCompare(true)
