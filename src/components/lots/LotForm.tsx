@@ -104,9 +104,9 @@ export const LotForm = ({ projects, initialData, onSubmit, onCancel, isLoading }
       buyer_name: data.buyer_name?.trim() || null,
       buyer_email: data.buyer_email?.trim() || null,
       buyer_phone: data.buyer_phone?.trim() || null,
-    };
+      images: lotImages,
+    } as any;
     onSubmit(lotData);
-  };
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
