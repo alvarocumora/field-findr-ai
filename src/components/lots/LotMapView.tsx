@@ -859,6 +859,14 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         onChange={handleFileImport}
         className="hidden"
       />
+      {/* Hidden file input for reimport by name */}
+      <input
+        ref={reimportFileInputRef}
+        type="file"
+        accept=".kmz,.kml"
+        onChange={handleReimportByName}
+        className="hidden"
+      />
       
       {/* Controls row */}
       <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
