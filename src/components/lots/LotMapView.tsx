@@ -834,7 +834,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         source: 'lots',
         paint: {
           'line-color': '#ffffff',
-          'line-width': 2,
+          'line-width': 1,
         },
       });
 
