@@ -277,6 +277,11 @@ export const LotForm = ({ projects, initialData, onSubmit, onCancel, isLoading }
       </div>
 
       {/* Buyer Info (shown when reserved/sold) */}
+
+      {/* Lot Images */}
+      <LotImageUploader images={lotImages} onChange={setLotImages} />
+
+      {/* Buyer Info (shown when reserved/sold) */}
       {(status === 'reserved' || status === 'sold') && (
         <div className="space-y-4 border-t pt-4">
           <Label className="text-base font-semibold">Información del Comprador</Label>
