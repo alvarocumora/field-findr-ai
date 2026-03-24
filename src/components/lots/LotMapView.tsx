@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { usePolygonDrawing } from '@/hooks/usePolygonDrawing';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Layers, Upload, Image, PenTool, ArrowLeftRight, Hash } from 'lucide-react';
+import { AlertCircle, Layers, Upload, Image, PenTool, ArrowLeftRight, Hash, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced, buildPolygonsFromMixedGeometry } from '@/lib/kmz';
 import { supabase } from '@/integrations/supabase/client';
