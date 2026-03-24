@@ -1106,6 +1106,19 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
                 {importing ? 'Reimportando...' : 'Reimportar KMZ'}
               </Button>
             )}
+            {/* Compact lots button */}
+            {projectId && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="gap-2 glass"
+                onClick={handleCompactLots}
+                disabled={compacting}
+              >
+                <Minimize2 className="h-4 w-4" />
+                {compacting ? 'Compactando...' : 'Compactar'}
+              </Button>
+            )}
             {/* Regenerate polygons button */}
             {projectId && kmzFileUrl && (
               <Button
