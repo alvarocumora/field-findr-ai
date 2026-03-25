@@ -638,6 +638,14 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         ? await parseKMLFile(file)
         : await parseKMZFile(file);
 
+      // Extract road geometries at the same time
+      const roadFile = new File([blob], 'project.kmz', { type: 'application/vnd.google-earth.kmz' });
+      const roads = await extractRoadGeometries(roadFile);
+      if (roads.features.length > 0) {
+        setRoadGeojson(roads);
+        console.log(`Extracted ${roads.features.length} road geometries`);
+      }
+
       // Get all polygons using the smart builder
       let allPolygons = parsed.placemarks.filter(p => p.isPolygon && p.coordinates.length >= 3);
       if (allPolygons.length < lots.length * 0.5) {
@@ -673,6 +681,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             polygon: placemark.coordinates,
             latitude: centroid.lat,
             longitude: centroid.lng,
+            name: `Lote ${lotNum}`,
           })
           .eq('id', matchingLot.id);
 
