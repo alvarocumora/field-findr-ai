@@ -100,30 +100,48 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
     const size = sizeProp ?? computeSizeFromPolygon(localCoords);
 
     useEffect(() => {
-      if (!mapboxToken) return;
+      if (!mapboxToken) {
+        console.warn('RealisticTerrain: no mapboxToken, showing flat green terrain');
+        // Show a flat terrain even without token
+        const flat = new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0);
+        setHeightData(flat);
+        return;
+      }
+      console.log('RealisticTerrain: loading tile at', lat, lng, 'token prefix:', mapboxToken.substring(0, 10));
       loadTerrainTile(lat, lng, mapboxToken).then(({ heights, satellite }) => {
         const min = Math.min(...Array.from(heights));
         setBaseElevation(min);
         onElevationLoaded?.(min);
-        // Nearly flat terrain (0.02 factor) so satellite image is usable as a design base
         const normalized = new Float32Array(heights.length);
         for (let i = 0; i < heights.length; i++) {
           normalized[i] = (heights[i] - min) * 0.02;
         }
         setHeightData(normalized);
+        console.log('RealisticTerrain: elevation loaded, min=', min, 'loading satellite:', satellite ? 'yes' : 'no');
 
         if (satellite) {
           const loader = new THREE.TextureLoader();
           loader.crossOrigin = 'anonymous';
-          loader.load(satellite, (tex) => {
-            tex.wrapS = THREE.ClampToEdgeWrapping;
-            tex.wrapT = THREE.ClampToEdgeWrapping;
-            tex.minFilter = THREE.LinearMipMapLinearFilter;
-            tex.magFilter = THREE.LinearFilter;
-            setTexture(tex);
-          });
+          loader.load(
+            satellite,
+            (tex) => {
+              tex.wrapS = THREE.ClampToEdgeWrapping;
+              tex.wrapT = THREE.ClampToEdgeWrapping;
+              tex.minFilter = THREE.LinearMipMapLinearFilter;
+              tex.magFilter = THREE.LinearFilter;
+              setTexture(tex);
+              console.log('RealisticTerrain: satellite texture loaded successfully');
+            },
+            undefined,
+            (err) => console.error('RealisticTerrain: satellite texture failed', err)
+          );
         }
-      }).catch(console.error);
+      }).catch((err) => {
+        console.error('RealisticTerrain: tile load failed', err);
+        // Fallback to flat green
+        const flat = new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0);
+        setHeightData(flat);
+      });
     }, [lat, lng, mapboxToken]);
 
     const geometry = useMemo(() => {
