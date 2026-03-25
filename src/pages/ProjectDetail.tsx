@@ -619,6 +619,54 @@ const ProjectDetail = () => {
                 <ProjectBrochureTab project={project} lots={lots} />
               </div>
             </TabsContent>
+
+            {/* Tour 360 Tab */}
+            <TabsContent value="tour360">
+              <div className="space-y-6">
+                {tourScenes.length > 0 && editingSceneIdx === null && (
+                  <TourViewer360
+                    scenes={tourScenes}
+                    onLotClick={(lotId) => {
+                      const lot = lots.find(l => l.id === lotId);
+                      if (lot) {
+                        setSelectedLot(lot.id);
+                        setDetailLot(lot);
+                      }
+                    }}
+                  />
+                )}
+
+                {isOwner && editingSceneIdx !== null && tourScenes[editingSceneIdx] && (
+                  <div>
+                    <Button variant="ghost" size="sm" className="mb-2" onClick={() => setEditingSceneIdx(null)}>
+                      ← Volver al visor
+                    </Button>
+                    <TourEditor
+                      scene={tourScenes[editingSceneIdx]}
+                      allScenes={tourScenes}
+                      lots={lots}
+                      projectId={project.id}
+                    />
+                  </div>
+                )}
+
+                {isOwner && (
+                  <TourSceneManager
+                    projectId={project.id}
+                    onPreviewScene={(idx) => setEditingSceneIdx(idx)}
+                  />
+                )}
+
+                {!isOwner && tourScenes.length === 0 && (
+                  <Card>
+                    <CardContent className="py-12 text-center">
+                      <Camera className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                      <p className="text-muted-foreground">Este proyecto aún no tiene tour virtual 360°.</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
           </Tabs>
         </div>
 
