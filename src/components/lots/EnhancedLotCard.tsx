@@ -175,10 +175,11 @@ export const EnhancedLotCard = ({
   return (
     <Card
       className={cn(
-        'group relative overflow-hidden transition-all duration-300 cursor-pointer',
-        'hover:shadow-xl hover:border-primary/30 hover:-translate-y-1',
+        'group relative overflow-hidden transition-all duration-300 cursor-pointer border-0',
+        'bg-card shadow-md hover:shadow-2xl hover:-translate-y-1.5',
+        'rounded-2xl',
         'opacity-0 animate-slide-in-up',
-        isSelected && 'ring-2 ring-primary shadow-lg',
+        isSelected && 'ring-2 ring-primary shadow-xl',
         lot.status === 'sold' && 'opacity-60'
       )}
       style={{
@@ -187,82 +188,79 @@ export const EnhancedLotCard = ({
       }}
       onClick={() => onView?.(lot)}
     >
-      {/* Hero Image / Polygon / Gradient */}
-      <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-primary/10 via-muted to-primary/5">
+      {/* Hero section */}
+      <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-emerald-50 via-muted to-emerald-50 dark:from-emerald-950/20 dark:via-muted dark:to-emerald-950/10">
         {heroImage ? (
           <img
             src={heroImage}
             alt={`Lote ${lot.lot_number}`}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             loading="lazy"
           />
         ) : polygon && polygon.length >= 3 ? (
-          <div className="flex items-center justify-center h-full p-4">
-            <PolygonMiniature polygon={polygon} className="opacity-60" />
+          <div className="flex items-center justify-center h-full p-6">
+            <PolygonMiniature polygon={polygon} className="opacity-70 group-hover:opacity-90 transition-opacity" />
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">
-            <MapPin className="h-12 w-12 text-muted-foreground/30" />
+            <MapPin className="h-14 w-14 text-emerald-300/40" />
           </div>
         )}
 
-        {/* Overlay: Status badge */}
-        <div className="absolute top-2 left-2 z-10">
-          <Badge className={cn('text-xs shadow-md', getStatusColor(lot.status))}>
+        {/* Status badge - top left */}
+        <div className="absolute top-3 left-3 z-10">
+          <Badge className={cn('text-[11px] shadow-lg font-semibold tracking-wide', getStatusColor(lot.status))}>
             {getStatusLabel(lot.status)}
           </Badge>
         </div>
 
-        {/* Overlay: Premium / Last available */}
-        <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
+        {/* Premium / Last available - top right */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1">
           {isPremium && (
-            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white gap-1 shadow-md">
+            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white gap-1 shadow-lg text-[10px]">
               <Star className="h-3 w-3 fill-current" />
               Destacado
             </Badge>
           )}
           {isLastAvailable && (
-            <Badge className="bg-destructive text-destructive-foreground gap-1 animate-pulse shadow-md">
+            <Badge className="bg-destructive text-destructive-foreground gap-1 animate-pulse shadow-lg text-[10px]">
               <AlertTriangle className="h-3 w-3" />
               ¡Últimos!
             </Badge>
           )}
         </div>
 
-        {/* Overlay: Price */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3 pt-8">
+        {/* Bottom gradient with lot info */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-10">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-white font-bold text-lg leading-tight drop-shadow-md">
+              <p className="text-white font-bold text-xl leading-tight drop-shadow-lg">
                 {formatPrice(lot.price)}
               </p>
               {pricePerSqm && (
-                <p className="text-white/70 text-xs">
+                <p className="text-white/60 text-[11px] mt-0.5">
                   {formatPricePerSqm(lot.price, Number(lot.area))}
                 </p>
               )}
             </div>
             <div className="text-white/90 text-right">
-              <p className="font-semibold text-sm">Lote {lot.lot_number}</p>
-              <p className="text-xs text-white/70">
+              <p className="font-bold text-sm tracking-wide">Lote {lot.lot_number}</p>
+              <p className="text-[11px] text-white/60">
                 {Number(lot.area).toLocaleString('es-CL')} m²
               </p>
             </div>
           </div>
         </div>
 
-        {/* Share buttons on hover */}
-        <div className="absolute top-2 right-2 z-20 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Hover share actions */}
+        <div className="absolute top-3 right-3 z-20 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           {!isPremium && !isLastAvailable && (
             <>
               <Button
                 size="icon"
                 variant="secondary"
-                className="h-7 w-7 rounded-full bg-white/90 hover:bg-white shadow-md"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleShare(lot);
-                }}
+                className="h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-lg"
+                onClick={(e) => { e.stopPropagation(); handleShare(lot); }}
               >
                 <Share2 className="h-3.5 w-3.5 text-foreground" />
               </Button>
@@ -270,11 +268,8 @@ export const EnhancedLotCard = ({
                 <Button
                   size="icon"
                   variant="secondary"
-                  className="h-7 w-7 rounded-full bg-emerald-500 hover:bg-emerald-600 shadow-md"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleWhatsApp(lot, projectName);
-                  }}
+                  className="h-8 w-8 rounded-full bg-emerald-500 hover:bg-emerald-600 shadow-lg"
+                  onClick={(e) => { e.stopPropagation(); handleWhatsApp(lot, projectName); }}
                 >
                   <MessageCircle className="h-3.5 w-3.5 text-white" />
                 </Button>
@@ -284,11 +279,11 @@ export const EnhancedLotCard = ({
         </div>
       </div>
 
-      <CardContent className="p-3 space-y-2">
+      <CardContent className="p-3.5 space-y-2.5">
         {/* Topography + Services compact row */}
         <div className="flex flex-wrap gap-1.5">
           {slopeLabel && (
-            <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
+            <Badge variant="outline" className="text-[10px] gap-0.5 px-2 py-0.5 rounded-full">
               <Mountain className="h-3 w-3" />
               {slopeLabel}
             </Badge>
@@ -297,7 +292,7 @@ export const EnhancedLotCard = ({
             {features.hasWater && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
+                  <Badge variant="outline" className="text-[10px] gap-0.5 px-2 py-0.5 rounded-full">
                     <Droplets className="h-3 w-3 text-blue-500" />
                   </Badge>
                 </TooltipTrigger>
@@ -307,7 +302,7 @@ export const EnhancedLotCard = ({
             {features.hasElectricity && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
+                  <Badge variant="outline" className="text-[10px] gap-0.5 px-2 py-0.5 rounded-full">
                     <Zap className="h-3 w-3 text-yellow-500" />
                   </Badge>
                 </TooltipTrigger>
@@ -317,7 +312,7 @@ export const EnhancedLotCard = ({
             {features.hasRoad && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
+                  <Badge variant="outline" className="text-[10px] gap-0.5 px-2 py-0.5 rounded-full">
                     <Route className="h-3 w-3" />
                   </Badge>
                 </TooltipTrigger>
@@ -326,8 +321,8 @@ export const EnhancedLotCard = ({
             )}
           </TooltipProvider>
           {lot.latitude && lot.longitude && (
-            <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0 ml-auto">
-              <MapPin className="h-3 w-3 text-primary" />
+            <Badge variant="outline" className="text-[10px] gap-0.5 px-2 py-0.5 rounded-full ml-auto">
+              <MapPin className="h-3 w-3 text-emerald-600" />
               GPS
             </Badge>
           )}
@@ -347,67 +342,52 @@ export const EnhancedLotCard = ({
             <Button
               size="sm"
               variant="default"
-              className="flex-1 gap-1 h-8 text-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                onView3D(lot);
-              }}
+              className="flex-1 gap-1.5 h-9 text-xs rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              onClick={(e) => { e.stopPropagation(); onView3D(lot); }}
             >
-              <Box className="h-3 w-3" />
-              Ver 3D
+              <Box className="h-3.5 w-3.5" />
+              Ver en 3D
             </Button>
           )}
           {lot.status === 'available' && onSimulateFinancing && !onView3D && (
             <Button
               size="sm"
               variant="default"
-              className="flex-1 gap-1 h-8 text-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSimulateFinancing(lot);
-              }}
+              className="flex-1 gap-1.5 h-9 text-xs rounded-xl"
+              onClick={(e) => { e.stopPropagation(); onSimulateFinancing(lot); }}
             >
-              <Calculator className="h-3 w-3" />
-              Simular
+              <Calculator className="h-3.5 w-3.5" />
+              Simular Crédito
             </Button>
           )}
           {onView && (
             <Button
               size="sm"
               variant="outline"
-              className="gap-1 h-8 text-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                onView(lot);
-              }}
+              className="gap-1 h-9 text-xs rounded-xl"
+              onClick={(e) => { e.stopPropagation(); onView(lot); }}
             >
-              <Eye className="h-3 w-3" />
+              <Eye className="h-3.5 w-3.5" />
             </Button>
           )}
           {onEdit && (
             <Button
               size="sm"
               variant="outline"
-              className="gap-1 h-8 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(lot);
-              }}
+              className="gap-1 h-9 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"
+              onClick={(e) => { e.stopPropagation(); onEdit(lot); }}
             >
-              <Edit className="h-3 w-3" />
+              <Edit className="h-3.5 w-3.5" />
             </Button>
           )}
           {onDelete && (
             <Button
               size="sm"
               variant="outline"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(lot);
-              }}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-9 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"
+              onClick={(e) => { e.stopPropagation(); onDelete(lot); }}
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>
