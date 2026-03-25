@@ -1,42 +1,69 @@
+# Plan: Consistencia de Datos del Master Plan
+
+## Problema raiz
+
+Los polígonos se reconstruyen desde LineStrings del KMZ con algoritmos aproximados (polygonize, buffer-hole, etc.), produciendo geometrías imprecisas con gaps de ~10m. No hay distinción entre bordes de lotes y caminos, por lo que la compactación fusiona todo indiscriminadamente.revisar [https://www.lanube360.com/las-cavas-tahona/](https://www.lanube360.com/las-cavas-tahona/)
+
+## Solución: 3 cambios coordinados
+
+### 1. Extraer y renderizar caminos del KMZ como capa separada
+
+**Archivo:** `src/lib/kmz/index.ts`
+
+- Nueva función `extractRoadGeometries(kmlContent)` que identifica LineStrings/placemarks que NO son lotes (nombres sin "Lote", "camino", "acceso", "calle", geometrías abiertas no asignables a lotes)
+- Retorna un GeoJSON FeatureCollection de LineStrings para renderizar como capa visual
+
+**Archivo:** `src/components/lots/LotMapView.tsx`
+
+- Nueva capa Mapbox `roads-kmz` (line, color blanco/amarillo, width 3, dash pattern) renderizada debajo de los polígonos de lotes
+- Toggle "Caminos" en toolbar admin (activo por defecto)
+- Al restaurar/reimportar KMZ, también extraer y guardar las geometrías de caminos en el state del componente
+
+### 2. Compactación segura con restricción de caminos
+
+**Archivo:** `src/components/lots/LotMapView.tsx` (función `handleCompactLots`)
+
+- Antes de snapear un par de vértices, verificar que la línea entre ellos no cruza ningún segmento de camino
+- Reducir tolerancia a **0.8m** (vertex-to-vertex) y **1.5m** (vertex-to-segment)
+- Agregar dialog de previsualización: "Se ajustarán X vértices en Y lotes. Confirmar?"
+- Si no hay caminos cargados, advertir al usuario antes de proceder
+
+### 3. Estandarizar nomenclatura "Lote ##"
+
+**Archivo:** `src/components/lots/LotMapView.tsx`
+
+- En `handleRestoreKmz` y `handleReimportByName`: al asignar polígono, también actualizar `name = 'Lote {N}'` en la BD
+- Label del mapa ya usa `['concat', 'Lote:', ['get', 'lot_number']]` -- cambiar a `['concat', 'Lote ', ['get', 'lot_number']]` (espacio en vez de dos puntos)
+- En popup hover, usar "Lote {N}" consistente
+
+**Archivo:** `src/components/lots/PlanCompareView.tsx`
+
+- Actualizar label format a `['concat', 'Lote ', ['get', 'lot_number']]`
+
+**Archivo:** `src/components/lots/LotRenumberTool.tsx`
+
+- Al confirmar renumeración, también actualizar `name = 'Lote {N}'`
+
+## Archivos a modificar
 
 
-# Plan: Restaurar Polígonos Originales del KMZ y Mejorar Compactación
+| Archivo                                   | Cambio                                                   |
+| ----------------------------------------- | -------------------------------------------------------- |
+| `src/lib/kmz/index.ts`                    | Nueva función `extractRoadGeometries`                    |
+| `src/components/lots/LotMapView.tsx`      | Capa caminos, compactación con restricción, nomenclatura |
+| `src/components/lots/PlanCompareView.tsx` | Label format                                             |
+| `src/components/lots/LotRenumberTool.tsx` | Name format                                              |
 
-## Problema
 
-La compactación con tolerancia de 15m fusionó bordes de lotes con bordes de caminos, eliminando visualmente las vialidades y deformando los polígonos. El resultado no se parece al KMZ original ni al plano.
-
-## Solución en 2 pasos
-
-### Paso 1: Botón "Restaurar KMZ Original"
-
-Agregar un botón que re-descargue el KMZ almacenado del proyecto y restaure los polígonos originales por nombre de placemark, sin ninguna modificación/snap. Esto deshace la compactación.
-
-- Usa la URL del KMZ ya guardada en el proyecto (`kmzFileUrl`)
-- Parsea placemarks y asigna por nombre (`Lote:N` → lot_number N)
-- Restaura coordenadas originales del archivo KMZ sin alteraciones
-
-### Paso 2: Reemplazar algoritmo de compactación
-
-Reducir la tolerancia de snap drásticamente:
-- **Vertex-to-segment**: de 15m → **3m** (solo bordes que realmente se tocan)
-- **Vertex-to-vertex**: de 10m → **2m**
-- Agregar filtro: NO snapear si el borde está en el perímetro exterior del proyecto (donde están los caminos)
-
-Esto preserva los caminos y solo fusiona los micro-gaps entre lotes verdaderamente adyacentes.
-
-## Archivos a Modificar
-
-| Archivo | Cambio |
-|---------|--------|
-| `src/components/lots/LotMapView.tsx` | Nuevo botón "Restaurar KMZ", reducir tolerancias de compactación |
-
-## Flujo
+## Flujo esperado
 
 ```text
-1. Admin presiona "Restaurar KMZ" → polígonos vuelven al estado original
-2. Verifica visualmente que caminos y lotes se ven como en Google Earth
-3. Opcionalmente presiona "Compactar" con tolerancia conservadora (3m)
-   → solo cierra micro-gaps sin tocar caminos
+Admin → Restaurar KMZ
+  → Polígonos originales restaurados por nombre
+  → Caminos extraídos y renderizados como capa
+  → Labels muestran "Lote 1", "Lote 2"...
+  → Opcionalmente: Compactar (con restricción de caminos)
+    → Preview: "12 vértices en 8 lotes, sin cruzar caminos"
+    → Solo micro-gaps (<1m) se cierran
+  → Resultado: lotes compactos, caminos visibles, tour virtual correcto
 ```
-
