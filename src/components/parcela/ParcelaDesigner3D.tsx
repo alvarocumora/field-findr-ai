@@ -12,6 +12,7 @@ import { MeasurementLine } from './MeasurementLine';
 import { PedestrianCamera } from './PedestrianCamera';
 import { RealisticTerrain, type TerrainHandle } from './RealisticTerrain';
 import { useParcelaState, type ParcelaObjectType } from './useParcelaState';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 
