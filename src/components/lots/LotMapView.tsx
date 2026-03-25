@@ -1010,19 +1010,28 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             closeButton: false,
             closeOnClick: false,
             className: 'lot-popup',
+            maxWidth: '240px',
           })
             .setLngLat(e.lngLat)
             .setHTML(`
-              <div style="padding: 8px; font-family: system-ui;">
-                <strong style="font-size: 16px;">Lote ${props.lot_number}</strong>
-                <div style="margin-top: 4px; font-size: 13px;">
-                  <div>Área: ${Number(props.area).toLocaleString()} m²</div>
-                  <div>Precio: ${formatPrice(props.price)}</div>
-                  <div style="margin-top: 4px; font-weight: 600; color: ${
-                    props.status === 'sold' ? '#6b7280' : 
-                    props.status === 'reserved' ? '#f59e0b' : '#10b981'
+              <div style="padding: 12px; font-family: system-ui; border-radius: 12px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                  <strong style="font-size: 15px; font-weight: 700;">Lote ${props.lot_number}</strong>
+                  <span style="font-size: 10px; padding: 2px 8px; border-radius: 9999px; font-weight: 600; color: white; background: ${
+                    props.status === 'sold' ? '#475569' : 
+                    props.status === 'reserved' ? '#d97706' : '#059669'
                   };">
                     ${status}
+                  </span>
+                </div>
+                <div style="font-size: 13px; color: #64748b; line-height: 1.6;">
+                  <div style="display:flex; justify-content:space-between;">
+                    <span>Superficie</span>
+                    <strong style="color: #0f172a;">${Number(props.area).toLocaleString()} m²</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span>Precio</span>
+                    <strong style="color: #059669;">${formatPrice(props.price)}</strong>
                   </div>
                 </div>
               </div>
