@@ -1403,6 +1403,62 @@ export type Database = {
         }
         Relationships: []
       }
+      tour_scenes: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          hotspots: Json | null
+          id: string
+          name: string
+          panorama_url: string
+          pitch_default: number | null
+          polygon_overlays: Json | null
+          position_index: number | null
+          project_id: string
+          thumbnail_url: string | null
+          user_id: string
+          yaw_default: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          hotspots?: Json | null
+          id?: string
+          name: string
+          panorama_url: string
+          pitch_default?: number | null
+          polygon_overlays?: Json | null
+          position_index?: number | null
+          project_id: string
+          thumbnail_url?: string | null
+          user_id: string
+          yaw_default?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          hotspots?: Json | null
+          id?: string
+          name?: string
+          panorama_url?: string
+          pitch_default?: number | null
+          polygon_overlays?: Json | null
+          position_index?: number | null
+          project_id?: string
+          thumbnail_url?: string | null
+          user_id?: string
+          yaw_default?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tour_scenes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transaction_documents: {
         Row: {
           created_at: string
