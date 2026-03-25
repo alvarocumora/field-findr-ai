@@ -1155,6 +1155,29 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           <Layers className="h-4 w-4" />
           {mapStyle === 'satellite' ? 'Calles' : 'Satélite'}
         </Button>
+
+        {/* Roads toggle */}
+        {roadGeojson && roadGeojson.features.length > 0 && (
+          <Button
+            variant={showRoads ? "default" : "secondary"}
+            size="sm"
+            className="gap-2 glass"
+            onClick={() => {
+              setShowRoads(!showRoads);
+              if (map.current && map.current.isStyleLoaded()) {
+                const vis = !showRoads ? 'visible' : 'none';
+                ['roads-kmz-outline', 'roads-kmz-center'].forEach(layerId => {
+                  if (map.current!.getLayer(layerId)) {
+                    map.current!.setLayoutProperty(layerId, 'visibility', vis);
+                  }
+                });
+              }
+            }}
+          >
+            <Route className="h-4 w-4" />
+            Caminos
+          </Button>
+        )}
         
         {/* Master plan overlay toggle - visible when plan images exist */}
         {masterPlanImagesList.length > 0 && (
