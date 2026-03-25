@@ -1,83 +1,42 @@
 
 
-# Plan: Motor de Planificación 3D Georreferenciado con Catálogo de Assets GLTF
+# Plan: Activar Terreno Georreferenciado por Defecto en el Diseñador 3D
 
-## Estado Actual
+## Problema
 
-El sistema ya tiene una base sólida:
-- R3F + Three.js + drei con 32 objetos procedimentales
-- Terreno realista via Mapbox Terrain-RGB (64x64 heightmap)
-- Simulación solar, medición, undo/redo, snap grid
-- Detección de colisiones y modos de vista (orbit/top/pedestrian)
-- TransformControls de drei (parcialmente integrados)
+El diseñador 3D de parcelas inicia con `useRealisticTerrain = false` (terreno plano verde), obligando al usuario a hacer clic manualmente en "Terreno Plano" para activar el relieve real. Además, `RealisticTerrain.tsx` intenta leer `VITE_MAPBOX_TOKEN` directamente del env (que no existe en producción), en vez de usar el sistema de token con caché del edge function (`useMapboxToken`). Resultado: terreno negro sin imagen satelital ni relieve.
 
-## Mejoras Propuestas (3 fases)
+Adicionalmente, cuando el terreno realista se activa, no se dibuja el contorno del lote sobre la imagen satelital, perdiendo la referencia geoespacial del polígono.
 
-### Fase 1: Terreno Georreferenciado de Alta Resolución
+## Cambios
 
-Mejorar `RealisticTerrain.tsx`:
-- Aumentar resolución de 64x64 a 128x128 para mayor fidelidad topográfica
-- Recortar (clip) la malla del terreno al polígono exacto del lote usando `ShapeGeometry` + displacement
-- Cargar tiles adyacentes para cubrir el área completa si el lote es grande
-- Agregar sombras de terreno con `receiveShadow` mejorado
-- Mostrar elevación base real en el UI (ej: "Elevación: 245m")
+### 1. `RealisticTerrain.tsx` - Recibir token como prop + dibujar contorno del lote
 
-Mejorar `ParcelaDesigner3D.tsx`:
-- Calibrar coordenadas: convertir GPS → local con `proj4` (ya se hace manualmente, formalizar con constantes)
-- Snap de objetos a la altura del terreno (Y) automáticamente via raycasting contra la malla
+- Agregar prop `mapboxToken: string` en vez de leer `import.meta.env.VITE_MAPBOX_TOKEN`
+- Usar el token recibido para cargar tiles de terreno y satélite
+- Agregar un `<lineLoop>` con el polígono del lote convertido a coordenadas locales, renderizado sobre el terreno realista (línea verde brillante)
+- Calcular el `size` automáticamente basado en el bounding box del polígono para que el tile cubra todo el lote
 
-### Fase 2: Catálogo de Assets GLTF/GLB
+### 2. `ParcelaDesigner3D.tsx` - Activar terreno real por defecto + pasar token
 
-Nuevo archivo `src/components/parcela/GLTFAssetLoader.tsx`:
-- Componente que usa `useGLTF` de drei para cargar modelos GLB desde Storage
-- Previsualización thumbnail en el catálogo (renderizado como imagen estática)
-- Sistema de fallback: si no hay GLB, usar el objeto procedural existente
+- Importar `useMapboxToken` hook
+- Cambiar `useState(false)` → `useState(true)` para `useRealisticTerrain` cuando hay coordenadas disponibles
+- Pasar `mapboxToken` al componente `RealisticTerrain`
+- Dibujar el contorno del polígono del lote sobre el terreno (línea visible en ambos modos: plano y realista)
 
-Nuevo archivo `src/components/parcela/AssetCatalog.tsx`:
-- UI mejorada del catálogo con tabs por categoría, thumbnails, y búsqueda
-- Drag & drop visual: al arrastrar un item del catálogo, muestra ghost preview
-- Indicador de "arrastra al terreno"
+### 3. Contorno del lote visible
 
-Ampliar `useParcelaState.ts`:
-- Nuevo tipo `glb_custom` en `ParcelaObjectType` para modelos GLTF externos
-- Campo `modelUrl?: string` en `PlacedObject` para referenciar el GLB
-- Campo `modelName?: string` para identificación
+- En modo realista: línea 3D verde sobre la malla del terreno usando las coordenadas locales del polígono
+- En modo plano: ya existe (`FlatTerrain` tiene el `lineLoop`)
 
-Storage: Crear bucket `3d-assets` para almacenar modelos GLB subidos por el admin
+## Archivos a Modificar
 
-### Fase 3: Interacción de Diseño Profesional
-
-Mejorar `ParcelaDesigner3D.tsx`:
-- Integrar `TransformControls` de drei correctamente (ya existe parcialmente) con switch entre translate/rotate/scale via teclas Q/W/E
-- Raycasting para snap automático al terreno en Y al mover objetos
-- Outline shader en objeto seleccionado (usando `Outlines` de drei)
-- Panel de propiedades del objeto seleccionado (posición, rotación, escala, nombre)
-
-Nuevo archivo `src/components/parcela/ObjectPropertiesPanel.tsx`:
-- Panel lateral que muestra/edita propiedades del objeto seleccionado
-- Inputs numéricos para posición X/Y/Z exacta
-- Slider de rotación 0-360°
-- Botones de alineación (centrar en lote, alinear a borde)
-
-## Archivos a Crear/Modificar
-
-| Archivo | Acción |
+| Archivo | Cambio |
 |---------|--------|
-| `src/components/parcela/RealisticTerrain.tsx` | Modificar - terreno 128x128, clip a polígono, snap Y |
-| `src/components/parcela/GLTFAssetLoader.tsx` | Crear - cargador dinámico de modelos GLB |
-| `src/components/parcela/AssetCatalog.tsx` | Crear - catálogo visual con drag & drop |
-| `src/components/parcela/ObjectPropertiesPanel.tsx` | Crear - panel de propiedades |
-| `src/components/parcela/ParcelaDesigner3D.tsx` | Modificar - gizmos, raycasting, outline |
-| `src/components/parcela/useParcelaState.ts` | Modificar - soporte GLB, modelUrl |
-| Migración SQL | Bucket `3d-assets` para modelos GLB |
+| `src/components/parcela/RealisticTerrain.tsx` | Prop `mapboxToken`, contorno del polígono, auto-size |
+| `src/components/parcela/ParcelaDesigner3D.tsx` | `useMapboxToken`, default realistic, pasar token |
 
-## Nota sobre CesiumJS
+## Resultado Esperado
 
-CesiumJS es una alternativa potente pero su bundle es de ~30MB y requiere workers dedicados, lo cual no es viable en el entorno Lovable. El enfoque con Mapbox Terrain-RGB + Three.js ya proporciona terreno real georreferenciado y es significativamente más liviano. Se mantiene este stack.
-
-## Limitaciones Honestas
-
-- Los modelos GLB deben ser proporcionados/subidos por el usuario (no se incluye una biblioteca precargada de cientos de modelos)
-- La precisión del terreno depende del zoom level de Mapbox (zoom 14 = ~10m/pixel)
-- No se implementa calibración manual tipo "arrastrar punto GPS a pixel" (demasiado complejo para esta iteración)
+Al abrir "Mi Parcela en 3D", el usuario ve inmediatamente la imagen satelital real con relieve topográfico y el contorno del lote dibujado, listo para colocar objetos sobre el terreno georreferenciado.
 
