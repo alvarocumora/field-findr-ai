@@ -342,67 +342,52 @@ export const EnhancedLotCard = ({
             <Button
               size="sm"
               variant="default"
-              className="flex-1 gap-1 h-8 text-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                onView3D(lot);
-              }}
+              className="flex-1 gap-1.5 h-9 text-xs rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              onClick={(e) => { e.stopPropagation(); onView3D(lot); }}
             >
-              <Box className="h-3 w-3" />
-              Ver 3D
+              <Box className="h-3.5 w-3.5" />
+              Ver en 3D
             </Button>
           )}
           {lot.status === 'available' && onSimulateFinancing && !onView3D && (
             <Button
               size="sm"
               variant="default"
-              className="flex-1 gap-1 h-8 text-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSimulateFinancing(lot);
-              }}
+              className="flex-1 gap-1.5 h-9 text-xs rounded-xl"
+              onClick={(e) => { e.stopPropagation(); onSimulateFinancing(lot); }}
             >
-              <Calculator className="h-3 w-3" />
-              Simular
+              <Calculator className="h-3.5 w-3.5" />
+              Simular Crédito
             </Button>
           )}
           {onView && (
             <Button
               size="sm"
               variant="outline"
-              className="gap-1 h-8 text-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                onView(lot);
-              }}
+              className="gap-1 h-9 text-xs rounded-xl"
+              onClick={(e) => { e.stopPropagation(); onView(lot); }}
             >
-              <Eye className="h-3 w-3" />
+              <Eye className="h-3.5 w-3.5" />
             </Button>
           )}
           {onEdit && (
             <Button
               size="sm"
               variant="outline"
-              className="gap-1 h-8 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(lot);
-              }}
+              className="gap-1 h-9 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"
+              onClick={(e) => { e.stopPropagation(); onEdit(lot); }}
             >
-              <Edit className="h-3 w-3" />
+              <Edit className="h-3.5 w-3.5" />
             </Button>
           )}
           {onDelete && (
             <Button
               size="sm"
               variant="outline"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(lot);
-              }}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-9 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"
+              onClick={(e) => { e.stopPropagation(); onDelete(lot); }}
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>
