@@ -163,6 +163,7 @@ const ProjectDetail = () => {
   const [designerLot, setDesignerLot] = useState<any | null>(null);
   const [showCompare, setShowCompare] = useState(false);
   const [editingSceneIdx, setEditingSceneIdx] = useState<number | null>(null);
+  const { scenes: tourScenes } = useTourScenes(id);
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
