@@ -158,7 +158,7 @@ export const useParcelaState = () => {
   const canUndo = undoStack.current.length > 0;
   const canRedo = redoStack.current.length > 0;
 
-  const addObject = useCallback((type: ParcelaObjectType, position?: [number, number, number]) => {
+  const addObject = useCallback((type: ParcelaObjectType, position?: [number, number, number], extras?: { modelUrl?: string; modelName?: string }): string => {
     const pos: [number, number, number] = position
       ? (snapEnabled
           ? [snapToGrid(position[0], GRID_SIZE), position[1], snapToGrid(position[2], GRID_SIZE)]
@@ -171,12 +171,14 @@ export const useParcelaState = () => {
       position: pos,
       rotation: 0,
       scale: OBJECT_CATALOG[type].defaultScale,
+      ...extras,
     };
 
     setState(prev => {
       pushUndo(prev.objects);
       return { ...prev, objects: [...prev.objects, newObj], selectedId: newObj.id };
     });
+    return newObj.id;
   }, [snapEnabled, pushUndo]);
 
   const selectObject = useCallback((id: string | null) => {
