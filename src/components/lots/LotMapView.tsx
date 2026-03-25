@@ -1128,33 +1128,20 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const hasRealPolygons = lots.some(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3);
 
   return (
-    <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
+    <div className="relative w-full h-[650px] rounded-2xl overflow-hidden shadow-lg border border-border/50">
       <div ref={mapContainer} className="w-full h-full" />
       
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".kmz,.kml"
-        onChange={handleFileImport}
-        className="hidden"
-      />
-      {/* Hidden file input for reimport by name */}
-      <input
-        ref={reimportFileInputRef}
-        type="file"
-        accept=".kmz,.kml"
-        onChange={handleReimportByName}
-        className="hidden"
-      />
+      {/* Hidden file inputs */}
+      <input ref={fileInputRef} type="file" accept=".kmz,.kml" onChange={handleFileImport} className="hidden" />
+      <input ref={reimportFileInputRef} type="file" accept=".kmz,.kml" onChange={handleReimportByName} className="hidden" />
       
-      {/* Controls row */}
+      {/* Controls row - clean and minimal */}
       <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
         {/* Style toggle */}
         <Button
           variant="secondary"
           size="sm"
-          className="gap-2 glass"
+          className="gap-2 bg-background/80 backdrop-blur-md border border-border/50 shadow-md hover:bg-background/90"
           onClick={toggleStyle}
         >
           <Layers className="h-4 w-4" />
@@ -1166,7 +1153,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           <Button
             variant={showRoads ? "default" : "secondary"}
             size="sm"
-            className="gap-2 glass"
+            className="gap-2 bg-background/80 backdrop-blur-md border border-border/50 shadow-md"
             onClick={() => {
               setShowRoads(!showRoads);
               if (map.current && map.current.isStyleLoaded()) {
@@ -1184,13 +1171,13 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           </Button>
         )}
         
-        {/* Master plan overlay toggle - visible when plan images exist */}
+        {/* Master plan overlay toggle */}
         {masterPlanImagesList.length > 0 && (
           <>
             <Button
               variant={showMasterPlanOverlay ? "default" : "secondary"}
               size="sm"
-              className="gap-2 glass"
+              className="gap-2 bg-background/80 backdrop-blur-md border border-border/50 shadow-md"
               onClick={() => setShowMasterPlanOverlay(!showMasterPlanOverlay)}
             >
               <Image className="h-4 w-4" />
@@ -1200,7 +1187,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
               <Button
                 variant="secondary"
                 size="sm"
-                className="gap-2 glass"
+                className="gap-2 bg-background/80 backdrop-blur-md border border-border/50 shadow-md"
                 onClick={onOpenCompare}
               >
                 <ArrowLeftRight className="h-4 w-4" />
@@ -1210,104 +1197,57 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           </>
         )}
 
-        {/* Admin-only controls - only shown when showAdminControls is true */}
-        {showAdminControls && !showDrawingPanel && !renumberMode && (
-          <>
-            {projectId && (
+        {/* Admin tools dropdown - only for project owners */}
+        {showAdminControls && !showDrawingPanel && !renumberMode && projectId && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
                 variant="secondary"
                 size="sm"
-                className="gap-2 glass"
-                onClick={showDrawingPanel ? handleDisableDrawingMode : handleEnableDrawingMode}
+                className="gap-2 bg-background/80 backdrop-blur-md border border-border/50 shadow-md"
               >
-                <PenTool className="h-4 w-4" />
+                <Settings2 className="h-4 w-4" />
+                Herramientas
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-52">
+              <DropdownMenuItem onClick={showDrawingPanel ? handleDisableDrawingMode : handleEnableDrawingMode}>
+                <PenTool className="h-4 w-4 mr-2" />
                 Dibujar Lotes
-              </Button>
-            )}
-
-            {/* Renumber button */}
-            {projectId && (
-              <Button
-                variant="secondary"
-                size="sm"
-                className="gap-2 glass"
-                onClick={() => {
-                  setRenumberMode(true);
-                  setShowMasterPlanOverlay(true);
-                }}
-              >
-                <Hash className="h-4 w-4" />
-                Renumerar
-              </Button>
-            )}
-            
-            {/* Import KMZ button */}
-            {projectId && (
-              <Button
-                variant="secondary"
-                size="sm"
-                className="gap-2 glass"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={importing}
-              >
-                <Upload className="h-4 w-4" />
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { setRenumberMode(true); setShowMasterPlanOverlay(true); }}>
+                <Hash className="h-4 w-4 mr-2" />
+                Renumerar Lotes
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => fileInputRef.current?.click()} disabled={importing}>
+                <Upload className="h-4 w-4 mr-2" />
                 {importing ? 'Importando...' : 'Importar KMZ'}
-              </Button>
-            )}
-
-            {/* Reimport KMZ by placemark name */}
-            {projectId && (
-              <Button
-                variant="secondary"
-                size="sm"
-                className="gap-2 glass"
-                onClick={() => reimportFileInputRef.current?.click()}
-                disabled={importing}
-              >
-                <RefreshCw className="h-4 w-4" />
-                {importing ? 'Reimportando...' : 'Reimportar KMZ'}
-              </Button>
-            )}
-            {/* Compact lots button */}
-            {projectId && (
-              <Button
-                variant="secondary"
-                size="sm"
-                className="gap-2 glass"
-                onClick={handleCompactLots}
-                disabled={compacting}
-              >
-                <Minimize2 className="h-4 w-4" />
-                {compacting ? 'Compactando...' : 'Compactar'}
-              </Button>
-            )}
-            {/* Restore original KMZ polygons */}
-            {projectId && kmzFileUrl && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 glass text-orange-600 border-orange-400"
-                onClick={handleRestoreKmz}
-                disabled={restoring}
-              >
-                <RotateCcw className="h-4 w-4" />
-                {restoring ? 'Restaurando...' : 'Restaurar KMZ'}
-              </Button>
-            )}
-            {/* Regenerate polygons button */}
-            {projectId && kmzFileUrl && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 glass"
-                onClick={handleRegeneratePolygons}
-                disabled={regenerating}
-              >
-                <Layers className="h-4 w-4" />
-                {regenerating ? 'Regenerando...' : 'Regenerar'}
-              </Button>
-            )}
-          </>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => reimportFileInputRef.current?.click()} disabled={importing}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                {importing ? 'Reimportando...' : 'Reimportar por Nombre'}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleCompactLots} disabled={compacting}>
+                <Minimize2 className="h-4 w-4 mr-2" />
+                {compacting ? 'Compactando...' : 'Compactar Lotes'}
+              </DropdownMenuItem>
+              {kmzFileUrl && (
+                <DropdownMenuItem onClick={handleRestoreKmz} disabled={restoring}>
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  {restoring ? 'Restaurando...' : 'Restaurar KMZ'}
+                </DropdownMenuItem>
+              )}
+              {kmzFileUrl && (
+                <DropdownMenuItem onClick={handleRegeneratePolygons} disabled={regenerating}>
+                  <Layers className="h-4 w-4 mr-2" />
+                  {regenerating ? 'Regenerando...' : 'Regenerar Polígonos'}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
 
         {/* Active drawing mode button */}
@@ -1315,7 +1255,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           <Button
             variant="default"
             size="sm"
-            className="gap-2 glass"
+            className="gap-2 shadow-md"
             onClick={handleDisableDrawingMode}
           >
             <PenTool className="h-4 w-4" />
@@ -1328,11 +1268,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           <Button
             variant="default"
             size="sm"
-            className="gap-2 glass"
-            onClick={() => {
-              setRenumberMode(false);
-              setRenumberSelectedLot(null);
-            }}
+            className="gap-2 shadow-md"
+            onClick={() => { setRenumberMode(false); setRenumberSelectedLot(null); }}
           >
             <Hash className="h-4 w-4" />
             Salir Renumerar
@@ -1344,13 +1281,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       {showAdminControls && showDrawingPanel && (
         <div className="absolute top-16 left-3 z-10 w-64">
           <LotDrawingTool
-            lots={lots.map(l => ({ 
-              id: l.id, 
-              lot_number: l.lot_number, 
-              area: l.area, 
-              status: l.status,
-              polygon: l.polygon 
-            }))}
+            lots={lots.map(l => ({ id: l.id, lot_number: l.lot_number, area: l.area, status: l.status, polygon: l.polygon }))}
             isDrawingMode={isDrawingMode}
             currentMode={currentMode}
             currentPolygon={currentPolygon}
@@ -1374,15 +1305,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           <LotRenumberTool
             lots={lots.map(l => ({ id: l.id, lot_number: l.lot_number, area: l.area, status: l.status }))}
             selectedLot={renumberSelectedLot}
-            onLotUpdated={() => {
-              setRenumberSelectedLot(null);
-              onLotsUpdated?.();
-            }}
-            onFinish={() => {
-              setRenumberMode(false);
-              setRenumberSelectedLot(null);
-              onLotsUpdated?.();
-            }}
+            onLotUpdated={() => { setRenumberSelectedLot(null); onLotsUpdated?.(); }}
+            onFinish={() => { setRenumberMode(false); setRenumberSelectedLot(null); onLotsUpdated?.(); }}
           />
         </div>
       )}
@@ -1398,24 +1322,25 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       
       {/* Status indicator */}
       {!hasRealPolygons && (
-        <div className="absolute top-3 right-14 px-3 py-1 glass rounded-full text-xs text-muted-foreground">
-          Polígonos simulados - Importa KMZ para ver datos reales
+        <div className="absolute top-3 right-14 px-3 py-1.5 bg-background/80 backdrop-blur-md rounded-full text-xs text-muted-foreground border border-border/50 shadow-sm">
+          Polígonos simulados — Importa KMZ para datos reales
         </div>
       )}
 
-      {/* Legend - status based */}
-      <div className="absolute bottom-3 left-3 p-3 glass rounded-lg text-sm space-y-1.5">
+      {/* Premium Legend */}
+      <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-md rounded-xl p-3 shadow-lg border border-border/50 space-y-2">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Estado</p>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-emerald-500" />
-          <span>Disponible</span>
+          <div className="w-3.5 h-3.5 rounded-sm bg-emerald-600 shadow-sm" />
+          <span className="text-xs font-medium">Disponible</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-amber-500" />
-          <span>Reservado</span>
+          <div className="w-3.5 h-3.5 rounded-sm bg-amber-600 shadow-sm" />
+          <span className="text-xs font-medium">Reservado</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-gray-400" />
-          <span>Vendido</span>
+          <div className="w-3.5 h-3.5 rounded-sm bg-slate-500 shadow-sm" />
+          <span className="text-xs font-medium">Vendido</span>
         </div>
       </div>
     </div>
