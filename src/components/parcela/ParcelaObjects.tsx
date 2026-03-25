@@ -752,7 +752,13 @@ const SportsCourt = () => (
   </group>
 );
 
-// ─── REGISTRY ───────────────────────────────────────────
+// Fallback for GLB custom objects (rendered by GLTFAssetLoader instead)
+const FallbackGLBPlaceholder = () => (
+  <mesh position={[0, 0.5, 0]} castShadow>
+    <boxGeometry args={[1, 1, 1]} />
+    <meshStandardMaterial color="#9E9E9E" wireframe />
+  </mesh>
+);
 
 const OBJECT_COMPONENTS: Record<ParcelaObjectType, React.FC> = {
   casa_50: () => <House size={2.2} color="#FFCC80" />,
