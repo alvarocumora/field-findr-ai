@@ -62,8 +62,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-muted-foreground">
               <p>© 2024 Ofertaterrenos.com</p>
               <div className="flex items-center gap-4">
-                <Link to="/contact" className="hover:text-foreground transition-colors">Contacto</Link>
-                <Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link>
+                <Link to="/contacto" className="hover:text-foreground transition-colors">Contacto</Link>
+                <Link to="/tools" className="hover:text-foreground transition-colors">Herramientas</Link>
                 <span>Chile 🇨🇱</span>
               </div>
             </div>

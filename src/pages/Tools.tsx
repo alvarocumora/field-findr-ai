@@ -1,33 +1,44 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AIChatAssistant } from '@/components/ai/AIChatAssistant';
 import { PricePredictorPanel } from '@/components/ai/PricePredictorPanel';
 import { SmartSearchBar } from '@/components/ai/SmartSearchBar';
 import { ContentGeneratorPanel } from '@/components/ai/ContentGeneratorPanel';
-import { LotComparator } from '@/components/tools/LotComparator';
 import { FinancialCalculators } from '@/components/tools/FinancialCalculators';
-import { AnalyticsDashboard } from '@/components/tools/AnalyticsDashboard';
-import { EnhancedCRM } from '@/components/tools/EnhancedCRM';
 import SIILookupPanel from '@/components/cadastral/SIILookupPanel';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Bot, Calculator, TrendingUp, Search, Wand2, 
-  Scale, BarChart3, Users, Sparkles, FileText 
+  Sparkles, FileText, BarChart3, Users, ArrowRight
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useSmartRedirect } from '@/hooks/useSmartRedirect';
 
 const Tools = () => {
   const [activeTab, setActiveTab] = useState('ai-chat');
+  const { user } = useAuth();
+  const { isAgent, isAdmin } = useSmartRedirect();
+  const isPro = isAgent || isAdmin;
 
-  const tabs = [
+  const publicTabs = [
     { id: 'ai-chat', label: 'Asistente IA', icon: Bot },
     { id: 'price-predictor', label: 'Predictor', icon: TrendingUp },
     { id: 'smart-search', label: 'Búsqueda IA', icon: Search },
-    { id: 'content-gen', label: 'Contenido', icon: Wand2 },
-    { id: 'comparator', label: 'Comparador', icon: Scale },
     { id: 'calculators', label: 'Calculadoras', icon: Calculator },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'crm', label: 'CRM', icon: Users },
     { id: 'sii', label: 'Catastro SII', icon: FileText },
+  ];
+
+  const proTabs = isPro ? [
+    { id: 'content-gen', label: 'Contenido', icon: Wand2 },
+  ] : [];
+
+  const tabs = [...publicTabs, ...proTabs];
+
+  const proLinks = [
+    { name: 'CRM Avanzado', href: '/asesor/crm', icon: Users, desc: 'Gestión completa de clientes y pipeline' },
+    { name: 'Analytics', href: '/asesor/analytics', icon: BarChart3, desc: 'Reportes e inteligencia de negocio' },
   ];
 
   return (
@@ -46,7 +57,7 @@ const Tools = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-5 lg:grid-cols-9 mb-6 h-auto">
+          <TabsList className={`grid mb-6 h-auto ${tabs.length <= 5 ? 'grid-cols-5' : 'grid-cols-3 lg:grid-cols-6'}`}>
             {tabs.map(tab => (
               <TabsTrigger 
                 key={tab.id} 
@@ -86,26 +97,41 @@ const Tools = () => {
             <ContentGeneratorPanel />
           </TabsContent>
 
-          <TabsContent value="comparator">
-            <LotComparator />
-          </TabsContent>
-
           <TabsContent value="calculators">
             <FinancialCalculators />
-          </TabsContent>
-
-          <TabsContent value="analytics">
-            <AnalyticsDashboard />
-          </TabsContent>
-
-          <TabsContent value="crm">
-            <EnhancedCRM />
           </TabsContent>
 
           <TabsContent value="sii">
             <SIILookupPanel />
           </TabsContent>
         </Tabs>
+
+        {/* Pro tools links */}
+        {isPro && (
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold mb-4">Herramientas Profesionales</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {proLinks.map(link => (
+                <Link key={link.href} to={link.href}>
+                  <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+                    <CardHeader className="flex flex-row items-center gap-4 pb-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <link.icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          {link.name}
+                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        </CardTitle>
+                        <CardDescription>{link.desc}</CardDescription>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
