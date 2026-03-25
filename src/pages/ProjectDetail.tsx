@@ -484,6 +484,12 @@ const ProjectDetail = () => {
                 <FileText className="h-4 w-4" />
                 Brochure
               </TabsTrigger>
+              {(tourScenes.length > 0 || isOwner) && (
+                <TabsTrigger value="tour360" className="gap-2">
+                  <Camera className="h-4 w-4" />
+                  Tour 360
+                </TabsTrigger>
+              )}
             </TabsList>
 
             {/* Map Tab */}
