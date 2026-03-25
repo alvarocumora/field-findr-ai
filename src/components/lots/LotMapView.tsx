@@ -4,9 +4,9 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { usePolygonDrawing } from '@/hooks/usePolygonDrawing';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Layers, Upload, Image, PenTool, ArrowLeftRight, Hash, RefreshCw, Minimize2, RotateCcw } from 'lucide-react';
+import { AlertCircle, Layers, Upload, Image, PenTool, ArrowLeftRight, Hash, RefreshCw, Minimize2, RotateCcw, Route } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced, buildPolygonsFromMixedGeometry } from '@/lib/kmz';
+import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced, buildPolygonsFromMixedGeometry, extractRoadGeometries } from '@/lib/kmz';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MasterPlanOverlay } from './MasterPlanOverlay';
@@ -157,6 +157,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [renumberSelectedLot, setRenumberSelectedLot] = useState<{ id: string; lot_number: string } | null>(null);
   const [compacting, setCompacting] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [roadGeojson, setRoadGeojson] = useState<GeoJSON.FeatureCollection<GeoJSON.LineString> | null>(null);
+  const [showRoads, setShowRoads] = useState(true);
 
   // Keep ref in sync with state for use inside map event handlers
   useEffect(() => {
@@ -580,6 +582,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             polygon: placemark.coordinates,
             latitude: centroid.lat,
             longitude: centroid.lng,
+            name: `Lote ${lotNum}`,
           })
           .eq('id', matchingLot.id);
 
@@ -636,6 +639,14 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         ? await parseKMLFile(file)
         : await parseKMZFile(file);
 
+      // Extract road geometries at the same time
+      const roadFile = new File([blob], 'project.kmz', { type: 'application/vnd.google-earth.kmz' });
+      const roads = await extractRoadGeometries(roadFile);
+      if (roads.features.length > 0) {
+        setRoadGeojson(roads);
+        console.log(`Extracted ${roads.features.length} road geometries`);
+      }
+
       // Get all polygons using the smart builder
       let allPolygons = parsed.placemarks.filter(p => p.isPolygon && p.coordinates.length >= 3);
       if (allPolygons.length < lots.length * 0.5) {
@@ -671,6 +682,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             polygon: placemark.coordinates,
             latitude: centroid.lat,
             longitude: centroid.lng,
+            name: `Lote ${lotNum}`,
           })
           .eq('id', matchingLot.id);
 
@@ -687,7 +699,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     }
   };
 
-  // === SNAP ALGORITHM: Compact lots by merging nearby vertices ===
+  // === SNAP ALGORITHM: Compact lots with road restriction ===
   const handleCompactLots = async () => {
     const lotsWithPolygons = lots.filter(l => l.polygon && Array.isArray(l.polygon) && l.polygon.length >= 3);
     if (lotsWithPolygons.length < 2) {
@@ -695,8 +707,12 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       return;
     }
 
+    if (!roadGeojson || roadGeojson.features.length === 0) {
+      toast.warning('No hay caminos cargados. Restaura el KMZ primero para cargar restricciones de caminos.');
+    }
+
     setCompacting(true);
-    toast.info('Compactando lotes con tolerancia conservadora (3m)...');
+    toast.info('Compactando lotes con restricción de caminos (0.8m)...');
 
     try {
       // Deep copy all polygons
@@ -705,11 +721,44 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         coords: l.polygon.map((c: [number, number]) => [...c] as [number, number]),
       }));
 
-      // CONSERVATIVE tolerances to preserve roads
-      const TOLERANCE_DEG = 3 / 111320; // ~3m in degrees (was 15m)
-      const SNAP_V2V = 2 / 111320; // ~2m in degrees (was 10m)
+      // SAFE tolerances
+      const SNAP_V2V = 0.8 / 111320; // ~0.8m
+      const TOLERANCE_DEG = 1.5 / 111320; // ~1.5m
 
-      // Helper: distance from point P to segment AB, returns projection point
+      // Road segments for crossing check
+      const roadSegments: { a: [number, number]; b: [number, number] }[] = [];
+      if (roadGeojson) {
+        for (const feature of roadGeojson.features) {
+          const coords = feature.geometry.coordinates;
+          for (let i = 0; i < coords.length - 1; i++) {
+            roadSegments.push({
+              a: [coords[i][0], coords[i][1]],
+              b: [coords[i + 1][0], coords[i + 1][1]],
+            });
+          }
+        }
+      }
+
+      // Check if line segment p1-p2 crosses any road segment
+      const crossesRoad = (p1: [number, number], p2: [number, number]): boolean => {
+        if (roadSegments.length === 0) return false;
+        const ROAD_BUFFER = 2 / 111320; // ~2m buffer around roads
+        for (const seg of roadSegments) {
+          // Simple proximity check: if midpoint of p1-p2 is within buffer of any road segment
+          const mid: [number, number] = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+          const dx = seg.b[0] - seg.a[0], dy = seg.b[1] - seg.a[1];
+          const lenSq = dx * dx + dy * dy;
+          if (lenSq === 0) continue;
+          let t = ((mid[0] - seg.a[0]) * dx + (mid[1] - seg.a[1]) * dy) / lenSq;
+          t = Math.max(0, Math.min(1, t));
+          const proj: [number, number] = [seg.a[0] + t * dx, seg.a[1] + t * dy];
+          const dist = Math.sqrt((mid[0] - proj[0]) ** 2 + (mid[1] - proj[1]) ** 2);
+          if (dist < ROAD_BUFFER) return true;
+        }
+        return false;
+      };
+
+      // Helper: distance from point P to segment AB
       const pointToSegment = (p: [number, number], a: [number, number], b: [number, number]) => {
         const dx = b[0] - a[0], dy = b[1] - a[1];
         const lenSq = dx * dx + dy * dy;
@@ -722,48 +771,9 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       };
 
       let snappedCount = 0;
+      let blockedByRoad = 0;
 
-      // For each pair of lots
-      for (let i = 0; i < polys.length; i++) {
-        for (let j = i + 1; j < polys.length; j++) {
-          const polyA = polys[i].coords;
-          const polyB = polys[j].coords;
-
-          // Check each vertex in A against segments in B
-          for (let vi = 0; vi < polyA.length; vi++) {
-            const v = polyA[vi];
-            for (let si = 0; si < polyB.length - 1; si++) {
-              const a = polyB[si], b = polyB[si + 1];
-              const { dist, proj, t } = pointToSegment(v, a, b);
-              if (dist < TOLERANCE_DEG && dist > 1e-10 && t !== undefined && t > 0.01 && t < 0.99) {
-                const midPt: [number, number] = [(v[0] + proj[0]) / 2, (v[1] + proj[1]) / 2];
-                polyA[vi] = midPt;
-                polyB.splice(si + 1, 0, [...midPt]);
-                snappedCount++;
-                break;
-              }
-            }
-          }
-
-          // Check each vertex in B against segments in A
-          for (let vi = 0; vi < polyB.length; vi++) {
-            const v = polyB[vi];
-            for (let si = 0; si < polyA.length - 1; si++) {
-              const a = polyA[si], b = polyA[si + 1];
-              const { dist, proj, t } = pointToSegment(v, a, b);
-              if (dist < TOLERANCE_DEG && dist > 1e-10 && t !== undefined && t > 0.01 && t < 0.99) {
-                const midPt: [number, number] = [(v[0] + proj[0]) / 2, (v[1] + proj[1]) / 2];
-                polyB[vi] = midPt;
-                polyA.splice(si + 1, 0, [...midPt]);
-                snappedCount++;
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      // Vertex-to-vertex snap with conservative tolerance
+      // Vertex-to-vertex snap
       for (let i = 0; i < polys.length; i++) {
         for (let j = i + 1; j < polys.length; j++) {
           for (let vi = 0; vi < polys[i].coords.length; vi++) {
@@ -772,6 +782,10 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
               const d = Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2);
               if (d < SNAP_V2V && d > 1e-10) {
                 const mid: [number, number] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+                if (crossesRoad(a, mid) || crossesRoad(b, mid)) {
+                  blockedByRoad++;
+                  continue;
+                }
                 polys[i].coords[vi] = mid;
                 polys[j].coords[vj] = [...mid];
                 snappedCount++;
@@ -781,7 +795,32 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         }
       }
 
-      console.log(`Snapped ${snappedCount} vertices (3m tolerance)`);
+      // Vertex-to-segment snap
+      for (let i = 0; i < polys.length; i++) {
+        for (let j = i + 1; j < polys.length; j++) {
+          // A vertices → B segments
+          for (let vi = 0; vi < polys[i].coords.length; vi++) {
+            const v = polys[i].coords[vi];
+            for (let si = 0; si < polys[j].coords.length - 1; si++) {
+              const a = polys[j].coords[si], b = polys[j].coords[si + 1];
+              const { dist, proj, t } = pointToSegment(v, a, b);
+              if (dist < TOLERANCE_DEG && dist > 1e-10 && t !== undefined && t > 0.01 && t < 0.99) {
+                const midPt: [number, number] = [(v[0] + proj[0]) / 2, (v[1] + proj[1]) / 2];
+                if (crossesRoad(v, midPt)) {
+                  blockedByRoad++;
+                  continue;
+                }
+                polys[i].coords[vi] = midPt;
+                polys[j].coords.splice(si + 1, 0, [...midPt]);
+                snappedCount++;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      console.log(`Snapped ${snappedCount} vertices (blocked by roads: ${blockedByRoad})`);
 
       // Update all polygons in DB
       let updatedCount = 0;
@@ -814,7 +853,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         if (!error) updatedCount++;
       }
 
-      toast.success(`${updatedCount} lotes compactados (${snappedCount} vértices, tolerancia 3m)`);
+      toast.success(`${updatedCount} lotes compactados (${snappedCount} vértices ajustados, ${blockedByRoad} bloqueados por caminos)`);
       onLotsUpdated?.();
     } catch (error) {
       console.error('Error compacting lots:', error);
@@ -914,7 +953,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         type: 'symbol',
         source: 'lots',
         layout: {
-          'text-field': ['concat', 'Lote:', ['get', 'lot_number']],
+          'text-field': ['concat', 'Lote ', ['get', 'lot_number']],
           'text-size': 14,
           'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
         },
@@ -924,6 +963,32 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           'text-halo-width': 1,
         },
       });
+
+      // Add roads layer if available
+      if (roadGeojson && roadGeojson.features.length > 0) {
+        map.current.addSource('roads-kmz', { type: 'geojson', data: roadGeojson });
+        map.current.addLayer({
+          id: 'roads-kmz-outline',
+          type: 'line',
+          source: 'roads-kmz',
+          paint: {
+            'line-color': '#fbbf24',
+            'line-width': 4,
+            'line-opacity': 0.6,
+          },
+        }, 'lots-fill'); // Insert below lots
+        map.current.addLayer({
+          id: 'roads-kmz-center',
+          type: 'line',
+          source: 'roads-kmz',
+          paint: {
+            'line-color': '#ffffff',
+            'line-width': 1.5,
+            'line-opacity': 0.8,
+            'line-dasharray': [4, 3],
+          },
+        }, 'lots-fill');
+      }
 
       // Hover effect
       map.current.on('mouseenter', 'lots-fill', (e) => {
@@ -1091,6 +1156,29 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           <Layers className="h-4 w-4" />
           {mapStyle === 'satellite' ? 'Calles' : 'Satélite'}
         </Button>
+
+        {/* Roads toggle */}
+        {roadGeojson && roadGeojson.features.length > 0 && (
+          <Button
+            variant={showRoads ? "default" : "secondary"}
+            size="sm"
+            className="gap-2 glass"
+            onClick={() => {
+              setShowRoads(!showRoads);
+              if (map.current && map.current.isStyleLoaded()) {
+                const vis = !showRoads ? 'visible' : 'none';
+                ['roads-kmz-outline', 'roads-kmz-center'].forEach(layerId => {
+                  if (map.current!.getLayer(layerId)) {
+                    map.current!.setLayoutProperty(layerId, 'visibility', vis);
+                  }
+                });
+              }
+            }}
+          >
+            <Route className="h-4 w-4" />
+            Caminos
+          </Button>
+        )}
         
         {/* Master plan overlay toggle - visible when plan images exist */}
         {masterPlanImagesList.length > 0 && (
