@@ -132,12 +132,13 @@ export const ParcelaDesigner3D = ({
   polygon, lotNumber, lotArea, lotPrice, latitude, longitude, savedDesign, onSave,
 }: ParcelaDesigner3DProps) => {
   const ps = useParcelaState();
+  const { token: mapboxToken } = useMapboxToken();
   const captureRef = useRef<(() => void) | null>(null);
   const pendingPlaceRef = useRef<ParcelaObjectType | null>(null);
   const pendingGLBRef = useRef<GLBAsset | null>(null);
   const controlsRef = useRef<any>(null);
   const terrainRef = useRef<TerrainHandle>(null);
-  const [useRealisticTerrain, setUseRealisticTerrain] = useState(false);
+  const [useRealisticTerrain, setUseRealisticTerrain] = useState(!!(latitude && longitude));
   const [baseElevation, setBaseElevation] = useState(0);
   const [glbAssets, setGlbAssets] = useState<GLBAsset[]>([]);
 
