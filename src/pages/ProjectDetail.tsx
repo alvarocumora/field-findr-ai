@@ -8,6 +8,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LotReservationDialog } from '@/components/lots/LotReservationDialog';
+import { TourViewer360 } from '@/components/tour/TourViewer360';
+import { TourSceneManager } from '@/components/tour/TourSceneManager';
+import { TourEditor } from '@/components/tour/TourEditor';
+import { useTourScenes } from '@/hooks/useTourScenes';
 import { LotDetailSheet } from '@/components/lots/LotDetailSheet';
 import { LotDesigner3DDialog } from '@/components/lots/LotDesigner3DDialog';
 import { LotMapView } from '@/components/lots/LotMapView';
@@ -40,6 +44,7 @@ import {
   Star,
   Scale,
   FileText,
+  Camera,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -157,6 +162,8 @@ const ProjectDetail = () => {
   const [detailLot, setDetailLot] = useState<any | null>(null);
   const [designerLot, setDesignerLot] = useState<any | null>(null);
   const [showCompare, setShowCompare] = useState(false);
+  const [editingSceneIdx, setEditingSceneIdx] = useState<number | null>(null);
+  const { scenes: tourScenes } = useTourScenes(id);
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
@@ -477,6 +484,12 @@ const ProjectDetail = () => {
                 <FileText className="h-4 w-4" />
                 Brochure
               </TabsTrigger>
+              {(tourScenes.length > 0 || isOwner) && (
+                <TabsTrigger value="tour360" className="gap-2">
+                  <Camera className="h-4 w-4" />
+                  Tour 360
+                </TabsTrigger>
+              )}
             </TabsList>
 
             {/* Map Tab */}
@@ -604,6 +617,54 @@ const ProjectDetail = () => {
             <TabsContent value="brochure">
               <div className="max-w-2xl">
                 <ProjectBrochureTab project={project} lots={lots} />
+              </div>
+            </TabsContent>
+
+            {/* Tour 360 Tab */}
+            <TabsContent value="tour360">
+              <div className="space-y-6">
+                {tourScenes.length > 0 && editingSceneIdx === null && (
+                  <TourViewer360
+                    scenes={tourScenes}
+                    onLotClick={(lotId) => {
+                      const lot = lots.find(l => l.id === lotId);
+                      if (lot) {
+                        setSelectedLot(lot.id);
+                        setDetailLot(lot);
+                      }
+                    }}
+                  />
+                )}
+
+                {isOwner && editingSceneIdx !== null && tourScenes[editingSceneIdx] && (
+                  <div>
+                    <Button variant="ghost" size="sm" className="mb-2" onClick={() => setEditingSceneIdx(null)}>
+                      ← Volver al visor
+                    </Button>
+                    <TourEditor
+                      scene={tourScenes[editingSceneIdx]}
+                      allScenes={tourScenes}
+                      lots={lots}
+                      projectId={project.id}
+                    />
+                  </div>
+                )}
+
+                {isOwner && (
+                  <TourSceneManager
+                    projectId={project.id}
+                    onPreviewScene={(idx) => setEditingSceneIdx(idx)}
+                  />
+                )}
+
+                {!isOwner && tourScenes.length === 0 && (
+                  <Card>
+                    <CardContent className="py-12 text-center">
+                      <Camera className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                      <p className="text-muted-foreground">Este proyecto aún no tiene tour virtual 360°.</p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </TabsContent>
           </Tabs>
