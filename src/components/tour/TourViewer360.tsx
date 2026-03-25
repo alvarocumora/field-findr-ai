@@ -20,8 +20,7 @@ export function TourViewer360({ scenes, initialSceneIndex = 0, onLotClick }: Tou
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<any>(null);
 
-  const currentScene = scenes[currentIndex];
-  if (!currentScene) return null;
+  const currentScene = scenes[currentIndex] || null;
 
   const navigateToScene = useCallback((sceneId: string) => {
     const idx = scenes.findIndex(s => s.id === sceneId);
