@@ -148,7 +148,7 @@ export const PlanCompareView = ({ lots, projectCenter, planImages }: PlanCompare
       type: 'symbol',
       source: sourceId,
       layout: {
-        'text-field': ['get', 'lot_number'],
+        'text-field': ['concat', 'Lote ', ['get', 'lot_number']],
         'text-size': 13,
         'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
       },

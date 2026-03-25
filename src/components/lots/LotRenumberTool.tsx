@@ -36,7 +36,7 @@ export const LotRenumberTool = ({ lots, selectedLot, onLotUpdated, onFinish }: L
     try {
       const { error } = await supabase
         .from('lots')
-        .update({ lot_number: newNumber, name: `Lote-${newNumber}` })
+        .update({ lot_number: newNumber, name: `Lote ${newNumber}` })
         .eq('id', selectedLot.id);
 
       if (error) throw error;
