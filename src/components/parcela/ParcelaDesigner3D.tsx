@@ -264,7 +264,7 @@ export const ParcelaDesigner3D = ({
         </div>
       </div>
 
-      <div className="flex-1 relative">
+      <div className="flex-1 relative" style={{ minHeight: '100%' }}>
         <Canvas
           shadows
           camera={{ position: [25, 20, 25], fov: 50 }}
