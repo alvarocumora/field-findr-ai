@@ -279,11 +279,11 @@ export const EnhancedLotCard = ({
         </div>
       </div>
 
-      <CardContent className="p-3 space-y-2">
+      <CardContent className="p-3.5 space-y-2.5">
         {/* Topography + Services compact row */}
         <div className="flex flex-wrap gap-1.5">
           {slopeLabel && (
-            <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
+            <Badge variant="outline" className="text-[10px] gap-0.5 px-2 py-0.5 rounded-full">
               <Mountain className="h-3 w-3" />
               {slopeLabel}
             </Badge>
@@ -292,7 +292,7 @@ export const EnhancedLotCard = ({
             {features.hasWater && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
+                  <Badge variant="outline" className="text-[10px] gap-0.5 px-2 py-0.5 rounded-full">
                     <Droplets className="h-3 w-3 text-blue-500" />
                   </Badge>
                 </TooltipTrigger>
@@ -302,7 +302,7 @@ export const EnhancedLotCard = ({
             {features.hasElectricity && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
+                  <Badge variant="outline" className="text-[10px] gap-0.5 px-2 py-0.5 rounded-full">
                     <Zap className="h-3 w-3 text-yellow-500" />
                   </Badge>
                 </TooltipTrigger>
@@ -312,7 +312,7 @@ export const EnhancedLotCard = ({
             {features.hasRoad && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
+                  <Badge variant="outline" className="text-[10px] gap-0.5 px-2 py-0.5 rounded-full">
                     <Route className="h-3 w-3" />
                   </Badge>
                 </TooltipTrigger>
@@ -321,8 +321,8 @@ export const EnhancedLotCard = ({
             )}
           </TooltipProvider>
           {lot.latitude && lot.longitude && (
-            <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0 ml-auto">
-              <MapPin className="h-3 w-3 text-primary" />
+            <Badge variant="outline" className="text-[10px] gap-0.5 px-2 py-0.5 rounded-full ml-auto">
+              <MapPin className="h-3 w-3 text-emerald-600" />
               GPS
             </Badge>
           )}
