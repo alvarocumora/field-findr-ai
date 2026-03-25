@@ -157,6 +157,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [renumberSelectedLot, setRenumberSelectedLot] = useState<{ id: string; lot_number: string } | null>(null);
   const [compacting, setCompacting] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [roadGeojson, setRoadGeojson] = useState<GeoJSON.FeatureCollection<GeoJSON.LineString> | null>(null);
+  const [showRoads, setShowRoads] = useState(true);
 
   // Keep ref in sync with state for use inside map event handlers
   useEffect(() => {
