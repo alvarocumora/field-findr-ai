@@ -890,3 +890,105 @@ export const parseKMZFromUrl = async (url: string): Promise<ParsedKMZ> => {
     throw error;
   }
 };
+
+// ============= ROAD GEOMETRY EXTRACTION =============
+
+const LOT_NAME_REGEX = /Lote[:\s\-]*\d+/i;
+const ROAD_KEYWORDS = /camino|calle|acceso|road|street|vialidad|pasaje|avenida|sendero|path/i;
+
+/**
+ * Extract road geometries from a KMZ/KML file.
+ * Roads are identified as LineStrings whose placemark name does NOT match a lot pattern,
+ * OR whose name matches road keywords, OR open LineStrings that aren't closeable to polygons.
+ */
+export const extractRoadGeometries = async (file: File): Promise<GeoJSON.FeatureCollection<GeoJSON.LineString>> => {
+  let kmlContent: string;
+
+  if (file.name.toLowerCase().endsWith('.kmz')) {
+    const arrayBuffer = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    const kmlFile = Object.keys(zip.files).find(name => name.toLowerCase().endsWith('.kml'));
+    if (!kmlFile) {
+      kmlContent = await file.text();
+    } else {
+      kmlContent = await zip.files[kmlFile].async('string');
+    }
+  } else {
+    kmlContent = await file.text();
+  }
+
+  const parser = new DOMParser();
+  const kmlDoc = parser.parseFromString(kmlContent, 'text/xml');
+
+  let placemarks: Element[] = Array.from(kmlDoc.getElementsByTagName('Placemark'));
+  if (placemarks.length === 0) placemarks = Array.from(kmlDoc.querySelectorAll('Placemark'));
+  if (placemarks.length === 0) placemarks = Array.from(kmlDoc.getElementsByTagNameNS('http://www.opengis.net/kml/2.2', 'Placemark'));
+
+  const roadFeatures: GeoJSON.Feature<GeoJSON.LineString>[] = [];
+
+  for (const placemark of placemarks) {
+    const nameEl = placemark.getElementsByTagName('name')[0];
+    const name = nameEl?.textContent?.trim() || '';
+
+    // Skip if this looks like a lot
+    if (LOT_NAME_REGEX.test(name) && !ROAD_KEYWORDS.test(name)) continue;
+
+    // Extract LineStrings
+    const lineStrings = placemark.getElementsByTagName('LineString');
+    for (let i = 0; i < lineStrings.length; i++) {
+      const coordsEl = lineStrings[i].getElementsByTagName('coordinates')[0];
+      if (!coordsEl) continue;
+
+      const coords = parseKMLCoordinateString(coordsEl.textContent?.trim() || '');
+      if (coords.length < 2) continue;
+
+      // Check if this is an open line (not closeable -> likely a road)
+      const isOpen = !isAlmostClosedCoords(coords);
+      const isNamedRoad = ROAD_KEYWORDS.test(name);
+      const isNotLot = !LOT_NAME_REGEX.test(name);
+
+      if (isOpen || isNamedRoad || isNotLot) {
+        roadFeatures.push({
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: coords.map(c => [c[0], c[1]]),
+          },
+          properties: { name },
+        });
+      }
+    }
+
+    // Also check MultiGeometry for LineStrings
+    const multiGeom = placemark.getElementsByTagName('MultiGeometry')[0];
+    if (multiGeom) {
+      const innerLines = multiGeom.getElementsByTagName('LineString');
+      for (let i = 0; i < innerLines.length; i++) {
+        const coordsEl = innerLines[i].getElementsByTagName('coordinates')[0];
+        if (!coordsEl) continue;
+
+        const coords = parseKMLCoordinateString(coordsEl.textContent?.trim() || '');
+        if (coords.length < 2) continue;
+
+        const isOpen = !isAlmostClosedCoords(coords);
+        if (isOpen || ROAD_KEYWORDS.test(name) || !LOT_NAME_REGEX.test(name)) {
+          roadFeatures.push({
+            type: 'Feature',
+            geometry: {
+              type: 'LineString',
+              coordinates: coords.map(c => [c[0], c[1]]),
+            },
+            properties: { name },
+          });
+        }
+      }
+    }
+  }
+
+  console.log(`Road geometries extracted: ${roadFeatures.length} roads from KMZ`);
+
+  return {
+    type: 'FeatureCollection',
+    features: roadFeatures,
+  };
+};
