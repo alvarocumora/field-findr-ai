@@ -188,15 +188,10 @@ export const ParcelaDesigner3D = ({
     const y = snapToTerrain(point.x, point.z);
     if (pendingGLBRef.current) {
       const asset = pendingGLBRef.current;
-      // Add GLB custom object
-      const id = `glb_${Date.now()}`;
-      const pos: [number, number, number] = [point.x, y, point.z];
-      ps.addObject('glb_custom' as ParcelaObjectType, pos);
-      // Update the last added object with modelUrl
-      setTimeout(() => {
-        ps.updateObject(id, { modelUrl: asset.url, modelName: asset.name });
-      }, 50);
-      // Workaround: directly set on the most recent object
+      ps.addObject('glb_custom' as ParcelaObjectType, [point.x, y, point.z], {
+        modelUrl: asset.url,
+        modelName: asset.name,
+      });
       pendingGLBRef.current = null;
     } else if (pendingPlaceRef.current) {
       ps.addObject(pendingPlaceRef.current, [point.x, y, point.z]);
