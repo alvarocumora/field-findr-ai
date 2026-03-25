@@ -788,6 +788,7 @@ const OBJECT_COMPONENTS: Record<ParcelaObjectType, React.FC> = {
   columpio: SwingSet,
   trampolin: Trampoline,
   cancha: SportsCourt,
+  glb_custom: FallbackGLBPlaceholder,
 };
 
 export const ParcelaObject3D = ({ obj, isSelected, onClick }: ObjectProps) => {

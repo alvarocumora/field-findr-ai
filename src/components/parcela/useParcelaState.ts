@@ -84,6 +84,7 @@ export const OBJECT_CATALOG: Record<ParcelaObjectType, CatalogItem> = {
   columpio: { label: 'Columpio', icon: '🎠', description: 'Set de columpios infantil', defaultScale: 1, category: 'recreacion', boundingRadius: 2 },
   trampolin: { label: 'Trampolín', icon: '🤸', description: 'Trampolín enterrado', defaultScale: 1, category: 'recreacion', boundingRadius: 2 },
   cancha: { label: 'Cancha', icon: '⚽', description: 'Cancha multiuso 10x5m', defaultScale: 1, category: 'recreacion', boundingRadius: 6 },
+  glb_custom: { label: 'Modelo GLB', icon: '📦', description: 'Modelo 3D importado', defaultScale: 1, category: 'vivienda', boundingRadius: 2 },
 };
 
 const GRID_SIZE = 0.5; // 50cm snap grid
