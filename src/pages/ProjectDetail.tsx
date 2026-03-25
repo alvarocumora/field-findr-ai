@@ -44,6 +44,7 @@ import {
   Star,
   Scale,
   FileText,
+  Camera,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
