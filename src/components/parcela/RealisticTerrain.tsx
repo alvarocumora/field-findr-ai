@@ -28,7 +28,7 @@ function decodeRGBElevation(r: number, g: number, b: number): number {
   return -10000 + (r * 256 * 256 + g * 256 + b) * 0.1;
 }
 
-async function loadTerrainTile(lat: number, lng: number, token: string, zoom = 14): Promise<{ heights: Float32Array; satellite: string }> {
+async function loadTerrainTile(lat: number, lng: number, token: string, zoom = 16): Promise<{ heights: Float32Array; satellite: string }> {
   const { x, y } = lngLatToTile(lng, lat, zoom);
   if (!token) return { heights: new Float32Array(TERRAIN_RES * TERRAIN_RES), satellite: '' };
 
@@ -178,10 +178,10 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
       <>
         <group rotation={[-Math.PI / 2, 0, 0]}>
           <mesh geometry={geometry} receiveShadow castShadow>
-            {texture ? (
-              <meshStandardMaterial map={texture} roughness={0.85} />
+          {texture ? (
+              <meshBasicMaterial map={texture} />
             ) : (
-              <meshStandardMaterial color="#5D8233" roughness={0.9} />
+              <meshBasicMaterial color="#5D8233" />
             )}
           </mesh>
         </group>
