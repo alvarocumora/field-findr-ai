@@ -963,6 +963,32 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         },
       });
 
+      // Add roads layer if available
+      if (roadGeojson && roadGeojson.features.length > 0) {
+        map.current.addSource('roads-kmz', { type: 'geojson', data: roadGeojson });
+        map.current.addLayer({
+          id: 'roads-kmz-outline',
+          type: 'line',
+          source: 'roads-kmz',
+          paint: {
+            'line-color': '#fbbf24',
+            'line-width': 4,
+            'line-opacity': 0.6,
+          },
+        }, 'lots-fill'); // Insert below lots
+        map.current.addLayer({
+          id: 'roads-kmz-center',
+          type: 'line',
+          source: 'roads-kmz',
+          paint: {
+            'line-color': '#ffffff',
+            'line-width': 1.5,
+            'line-opacity': 0.8,
+            'line-dasharray': [4, 3],
+          },
+        }, 'lots-fill');
+      }
+
       // Hover effect
       map.current.on('mouseenter', 'lots-fill', (e) => {
         if (!map.current) return;
