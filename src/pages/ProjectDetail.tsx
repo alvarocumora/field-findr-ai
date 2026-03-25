@@ -312,7 +312,6 @@ const ProjectDetail = () => {
 
   // selectedLotData removed - now using LotDetailSheet
   const isOwner = !!user && project.user_id === user.id;
-  const { scenes: tourScenes } = useTourScenes(project?.id);
 
   const handleCall = () => {
     const phone = ownerProfile?.phone;
