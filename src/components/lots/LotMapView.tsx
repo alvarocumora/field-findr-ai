@@ -916,47 +916,55 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         data: geojson,
       });
 
-      // Add fill layer
+      // Add fill layer with premium green palette
       map.current.addLayer({
         id: 'lots-fill',
         type: 'fill',
         source: 'lots',
         paint: {
-      'fill-color': [
+          'fill-color': [
             'case',
-            ['==', ['get', 'status'], 'sold'], '#6b7280',
-            ['==', ['get', 'status'], 'reserved'], '#f59e0b',
-            '#10b981'
+            ['==', ['get', 'status'], 'sold'], '#475569',
+            ['==', ['get', 'status'], 'reserved'], '#d97706',
+            '#059669'
           ],
-          'fill-opacity': 0.8,
+          'fill-opacity': 0.75,
         },
       });
 
-      // Add outline layer
+      // Add outline layer - crisp white borders
       map.current.addLayer({
         id: 'lots-outline',
         type: 'line',
         source: 'lots',
         paint: {
           'line-color': '#ffffff',
-          'line-width': 1,
+          'line-width': 1.5,
+          'line-opacity': 0.9,
         },
       });
 
-      // Add lot numbers
+      // Add lot numbers with better typography
       map.current.addLayer({
         id: 'lots-labels',
         type: 'symbol',
         source: 'lots',
         layout: {
           'text-field': ['concat', 'Lote ', ['get', 'lot_number']],
-          'text-size': 14,
+          'text-size': [
+            'interpolate', ['linear'], ['zoom'],
+            14, 10,
+            16, 13,
+            18, 16
+          ],
           'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
+          'text-allow-overlap': false,
+          'text-ignore-placement': false,
         },
         paint: {
           'text-color': '#ffffff',
-          'text-halo-color': '#000000',
-          'text-halo-width': 1,
+          'text-halo-color': 'rgba(0,0,0,0.7)',
+          'text-halo-width': 1.5,
         },
       });
 
