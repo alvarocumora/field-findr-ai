@@ -105,9 +105,10 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
         const min = Math.min(...Array.from(heights));
         setBaseElevation(min);
         onElevationLoaded?.(min);
+        // Nearly flat terrain (0.02 factor) so satellite image is usable as a design base
         const normalized = new Float32Array(heights.length);
         for (let i = 0; i < heights.length; i++) {
-          normalized[i] = (heights[i] - min) * 0.3;
+          normalized[i] = (heights[i] - min) * 0.02;
         }
         setHeightData(normalized);
 
