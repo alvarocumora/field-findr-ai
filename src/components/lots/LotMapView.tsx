@@ -118,15 +118,10 @@ const generateLotGeoJSON = (lots: Lot[], center: { lat: number; lng: number }) =
   };
 };
 
-const getPriceColor = (price: number | null, status: string): string => {
-  if (status === 'sold') return '#9ca3af'; // gray-400
-  if (status === 'reserved') return '#f59e0b'; // amber-500
-  
-  if (!price) return '#22c55e'; // green-500
-  if (price <= 15990000) return '#10b981'; // emerald-500
-  if (price <= 17990000) return '#0ea5e9'; // sky-500
-  if (price <= 24990000) return '#78716c'; // stone-500
-  return '#1e293b'; // slate-800
+const getStatusFillColor = (status: string): string => {
+  if (status === 'sold') return '#64748b';
+  if (status === 'reserved') return '#d97706';
+  return '#059669';
 };
 
 const formatPrice = (price: number | null) => {
