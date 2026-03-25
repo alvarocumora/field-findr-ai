@@ -261,6 +261,11 @@ const App = () => (
                   <APIPortal />
                 </DashboardLayout>
               } />
+              <Route path="/asesor/tools" element={
+                <DashboardLayout requiredRole="agent">
+                  <Tools />
+                </DashboardLayout>
+              } />
               <Route path="/publish" element={
                 <ProtectedRoute requireAuth requireRole="agent">
                   <PublishProperty />

@@ -37,6 +37,9 @@ import {
   Building2,
   CalendarCheck,
   MoreHorizontal,
+  Sparkles,
+  Heart,
+  Home,
   LucideIcon,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -97,6 +100,9 @@ const adminItems: NavItem[] = [
 
 const commonNavigation: NavItem[] = [
   { name: 'Explorar Mapa', href: '/explorar', icon: MapPin },
+  { name: 'Herramientas IA', href: '/tools', icon: Sparkles },
+  { name: 'Favoritos', href: '/favoritos', icon: Heart },
+  { name: 'Mi Terreno', href: '/mi-terreno', icon: Home },
   { name: 'Mi Perfil', href: '/profile', icon: UserCircle },
 ];
 
