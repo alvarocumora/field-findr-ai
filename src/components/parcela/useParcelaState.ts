@@ -10,7 +10,8 @@ export type ParcelaObjectType =
   | 'quincho' | 'pergola' | 'fogata' | 'deck'
   | 'estacionamiento' | 'camino' | 'sendero'
   | 'pozo_agua' | 'panel_solar' | 'bodega'
-  | 'columpio' | 'trampolin' | 'cancha';
+  | 'columpio' | 'trampolin' | 'cancha'
+  | 'glb_custom';
 
 export interface PlacedObject {
   id: string;
@@ -18,6 +19,8 @@ export interface PlacedObject {
   position: [number, number, number];
   rotation: number;
   scale: number;
+  modelUrl?: string;
+  modelName?: string;
 }
 
 export interface ParcelaState {
@@ -81,6 +84,7 @@ export const OBJECT_CATALOG: Record<ParcelaObjectType, CatalogItem> = {
   columpio: { label: 'Columpio', icon: '🎠', description: 'Set de columpios infantil', defaultScale: 1, category: 'recreacion', boundingRadius: 2 },
   trampolin: { label: 'Trampolín', icon: '🤸', description: 'Trampolín enterrado', defaultScale: 1, category: 'recreacion', boundingRadius: 2 },
   cancha: { label: 'Cancha', icon: '⚽', description: 'Cancha multiuso 10x5m', defaultScale: 1, category: 'recreacion', boundingRadius: 6 },
+  glb_custom: { label: 'Modelo GLB', icon: '📦', description: 'Modelo 3D importado', defaultScale: 1, category: 'vivienda', boundingRadius: 2 },
 };
 
 const GRID_SIZE = 0.5; // 50cm snap grid
@@ -154,7 +158,7 @@ export const useParcelaState = () => {
   const canUndo = undoStack.current.length > 0;
   const canRedo = redoStack.current.length > 0;
 
-  const addObject = useCallback((type: ParcelaObjectType, position?: [number, number, number]) => {
+  const addObject = useCallback((type: ParcelaObjectType, position?: [number, number, number], extras?: { modelUrl?: string; modelName?: string }): string => {
     const pos: [number, number, number] = position
       ? (snapEnabled
           ? [snapToGrid(position[0], GRID_SIZE), position[1], snapToGrid(position[2], GRID_SIZE)]
@@ -167,12 +171,14 @@ export const useParcelaState = () => {
       position: pos,
       rotation: 0,
       scale: OBJECT_CATALOG[type].defaultScale,
+      ...extras,
     };
 
     setState(prev => {
       pushUndo(prev.objects);
       return { ...prev, objects: [...prev.objects, newObj], selectedId: newObj.id };
     });
+    return newObj.id;
   }, [snapEnabled, pushUndo]);
 
   const selectObject = useCallback((id: string | null) => {
