@@ -102,6 +102,8 @@ export function TourViewer360({ scenes, initialSceneIndex = 0, onLotClick }: Tou
     [MarkersPlugin, { markers: [] }],
   ];
 
+  if (!currentScene) return null;
+
   return (
     <div
       ref={containerRef}
