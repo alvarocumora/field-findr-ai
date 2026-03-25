@@ -162,6 +162,7 @@ const ProjectDetail = () => {
   const [detailLot, setDetailLot] = useState<any | null>(null);
   const [designerLot, setDesignerLot] = useState<any | null>(null);
   const [showCompare, setShowCompare] = useState(false);
+  const [editingSceneIdx, setEditingSceneIdx] = useState<number | null>(null);
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
