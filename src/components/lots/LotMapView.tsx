@@ -582,6 +582,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             polygon: placemark.coordinates,
             latitude: centroid.lat,
             longitude: centroid.lng,
+            name: `Lote ${lotNum}`,
           })
           .eq('id', matchingLot.id);
 
