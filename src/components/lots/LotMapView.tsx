@@ -916,7 +916,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         type: 'symbol',
         source: 'lots',
         layout: {
-          'text-field': ['concat', 'Lote:', ['get', 'lot_number']],
+          'text-field': ['concat', 'Lote ', ['get', 'lot_number']],
           'text-size': 14,
           'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
         },
