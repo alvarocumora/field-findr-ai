@@ -290,6 +290,7 @@ export const ParcelaDesigner3D = ({
                 polygon={polygon}
                 latitude={latitude}
                 longitude={longitude}
+                mapboxToken={mapboxToken || ''}
                 onElevationLoaded={setBaseElevation}
               />
             ) : (
