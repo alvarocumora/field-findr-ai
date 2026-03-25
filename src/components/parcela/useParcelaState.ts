@@ -10,7 +10,8 @@ export type ParcelaObjectType =
   | 'quincho' | 'pergola' | 'fogata' | 'deck'
   | 'estacionamiento' | 'camino' | 'sendero'
   | 'pozo_agua' | 'panel_solar' | 'bodega'
-  | 'columpio' | 'trampolin' | 'cancha';
+  | 'columpio' | 'trampolin' | 'cancha'
+  | 'glb_custom';
 
 export interface PlacedObject {
   id: string;
@@ -18,6 +19,8 @@ export interface PlacedObject {
   position: [number, number, number];
   rotation: number;
   scale: number;
+  modelUrl?: string;
+  modelName?: string;
 }
 
 export interface ParcelaState {
