@@ -1,42 +1,28 @@
 
 
-# Plan: Activar Terreno Georreferenciado por Defecto en el Diseñador 3D
+# Plan: Hacer visible la imagen satelital como base del diseño 3D
 
 ## Problema
 
-El diseñador 3D de parcelas inicia con `useRealisticTerrain = false` (terreno plano verde), obligando al usuario a hacer clic manualmente en "Terreno Plano" para activar el relieve real. Además, `RealisticTerrain.tsx` intenta leer `VITE_MAPBOX_TOKEN` directamente del env (que no existe en producción), en vez de usar el sistema de token con caché del edge function (`useMapboxToken`). Resultado: terreno negro sin imagen satelital ni relieve.
-
-Adicionalmente, cuando el terreno realista se activa, no se dibuja el contorno del lote sobre la imagen satelital, perdiendo la referencia geoespacial del polígono.
+El terreno carga el tile satelital de Mapbox pero posiblemente el zoom level (14) no está centrado correctamente en el lote, o la textura no se está aplicando visiblemente. El usuario necesita ver claramente el bosque, caminos y terreno real como fondo para diseñar.
 
 ## Cambios
 
-### 1. `RealisticTerrain.tsx` - Recibir token como prop + dibujar contorno del lote
+### `RealisticTerrain.tsx`
 
-- Agregar prop `mapboxToken: string` en vez de leer `import.meta.env.VITE_MAPBOX_TOKEN`
-- Usar el token recibido para cargar tiles de terreno y satélite
-- Agregar un `<lineLoop>` con el polígono del lote convertido a coordenadas locales, renderizado sobre el terreno realista (línea verde brillante)
-- Calcular el `size` automáticamente basado en el bounding box del polígono para que el tile cubra todo el lote
+1. **Zoom más alto para mayor detalle**: Subir el zoom de 14 a 15 o 16 para que la imagen satelital tenga más resolución y muestre detalles como bosques y caminos a la escala del lote.
 
-### 2. `ParcelaDesigner3D.tsx` - Activar terreno real por defecto + pasar token
+2. **Tile satelital de mayor resolución**: Usar `@2x` en la URL del tile satelital (ya se usa) y asegurar que el tile se centre exactamente en el centroide del polígono del lote.
 
-- Importar `useMapboxToken` hook
-- Cambiar `useState(false)` → `useState(true)` para `useRealisticTerrain` cuando hay coordenadas disponibles
-- Pasar `mapboxToken` al componente `RealisticTerrain`
-- Dibujar el contorno del polígono del lote sobre el terreno (línea visible en ambos modos: plano y realista)
+3. **Material más brillante**: Cambiar `roughness` de 0.85 a 1.0 y usar `meshBasicMaterial` en vez de `meshStandardMaterial` para que la textura satelital se vea con colores reales sin verse oscurecida por la iluminación 3D. Esto es clave: con `meshStandardMaterial`, la luz solar del scene puede oscurecer la textura.
 
-### 3. Contorno del lote visible
+4. **Asegurar que la textura carga**: Agregar un `console.log` temporal o un estado visual que confirme que la textura satelital se cargó exitosamente (fallback a color verde si falla).
 
-- En modo realista: línea 3D verde sobre la malla del terreno usando las coordenadas locales del polígono
-- En modo plano: ya existe (`FlatTerrain` tiene el `lineLoop`)
+5. **Tamaño del plano ajustado al lote**: El plano de terreno debe dimensionarse para cubrir el área del lote con padding suficiente, y la textura satelital debe mapearse correctamente para que los bordes del tile coincidan con el área mostrada.
 
-## Archivos a Modificar
+### Archivo a modificar
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/parcela/RealisticTerrain.tsx` | Prop `mapboxToken`, contorno del polígono, auto-size |
-| `src/components/parcela/ParcelaDesigner3D.tsx` | `useMapboxToken`, default realistic, pasar token |
-
-## Resultado Esperado
-
-Al abrir "Mi Parcela en 3D", el usuario ve inmediatamente la imagen satelital real con relieve topográfico y el contorno del lote dibujado, listo para colocar objetos sobre el terreno georreferenciado.
+| `src/components/parcela/RealisticTerrain.tsx` | `meshBasicMaterial` para textura satelital, zoom 16, verificar carga de textura |
 
