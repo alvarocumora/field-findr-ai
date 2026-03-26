@@ -23,6 +23,9 @@ import { EnhancedLotCard } from '@/components/lots/EnhancedLotCard';
 import { ProjectReviews } from '@/components/projects/ProjectReviews';
 import { ShareButtons } from '@/components/social/ShareButtons';
 import { ProjectBrochureTab } from '@/components/projects/ProjectBrochureTab';
+import { ProjectHero } from '@/components/projects/ProjectHero';
+import { FloatingQuoter } from '@/components/projects/FloatingQuoter';
+import { SocialProofToast } from '@/components/projects/SocialProofToast';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LotComparatorInProject } from '@/components/projects/LotComparatorInProject';
@@ -338,118 +341,31 @@ const ProjectDetail = () => {
   return (
     <PublicLayout>
       <div className={`min-h-screen bg-background ${isMobile ? 'pb-20' : ''}`}>
-        {/* Header */}
-        <div className="border-b border-border bg-card/50">
-          <div className="container px-4 py-4">
-            <Link 
-              to="/" 
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Volver
-            </Link>
-            
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">{project.name}</h1>
-                  <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                    <MapPin className="h-4 w-4" />
-                    <span>{project.city}, {project.region}</span>
-                  </div>
-                </div>
-                {/* Inline contact + share buttons - desktop */}
-                {!isMobile && (
-                  <div className="flex gap-2 shrink-0">
-                    <ShareButtons 
-                      title={project.name} 
-                      description={`Proyecto de loteo en ${project.city}, ${project.region}. ${availableLots.length} lotes disponibles.`}
-                    />
-                    <Button size="sm" className="gap-2" onClick={handleCall}>
-                      <Phone className="h-4 w-4" />
-                      Llamar
-                    </Button>
-                    <Button size="sm" variant="outline" className="gap-2" onClick={handleMessage}>
-                      <MessageCircle className="h-4 w-4" />
-                      WhatsApp
-                    </Button>
-                  </div>
-                )}
-              </div>
+        {/* Immersive Hero */}
+        <ProjectHero
+          project={project}
+          lots={lots}
+          availableLots={availableLots}
+          reservedLots={reservedLots}
+          soldLots={soldLots}
+          priceRange={priceRange}
+          areaRange={areaRange}
+          isMobile={isMobile}
+          onCall={handleCall}
+          onMessage={handleMessage}
+        />
 
-              {/* Horizontal Stats Bar */}
-              <div className="flex flex-wrap items-center gap-2 text-sm">
-                <Badge variant="outline" className="text-emerald-600 border-emerald-500/30 bg-emerald-500/10">
-                  {availableLots.length} disponibles
-                </Badge>
-                {reservedLots.length > 0 && (
-                  <Badge variant="outline" className="text-amber-600 border-amber-500/30 bg-amber-500/10">
-                    {reservedLots.length} reservados
-                  </Badge>
-                )}
-                <Badge variant="secondary">
-                  {soldLots.length} vendidos
-                </Badge>
-                
-                {priceRange && (
-                  <>
-                    <span className="text-muted-foreground hidden sm:inline">·</span>
-                    <span className="text-foreground font-medium">
-                      Desde {formatPrice(priceRange.min)}
-                      {priceRange.min !== priceRange.max && ` — ${formatPrice(priceRange.max)}`}
-                    </span>
-                  </>
-                )}
-                
-                {areaRange && (
-                  <>
-                    <span className="text-muted-foreground hidden sm:inline">·</span>
-                    <span className="text-muted-foreground">
-                      {formatArea(areaRange.min)}
-                      {areaRange.min !== areaRange.max && ` — ${formatArea(areaRange.max)}`} m²
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Social Proof */}
+        {!isOwner && <SocialProofToast projectId={project.id} />}
 
-        {/* Hero Section - Description + Gallery */}
-        {(project.description || ((project as any)?.images?.length > 0)) && (
-          <div className="container px-4 py-6 border-b border-border">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Description */}
-              {project.description && (
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground mb-2">Sobre el Proyecto</h2>
-                  <p className="text-muted-foreground leading-relaxed">{project.description}</p>
-                  {project.total_area && (
-                    <div className="flex items-center gap-4 mt-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Maximize2 className="h-4 w-4 text-primary" />
-                        <span className="text-foreground font-medium">{formatArea(Number(project.total_area))} m² totales</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-primary" />
-                        <span className="text-foreground font-medium">{lots.length} lotes</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* Compact Gallery */}
-              {(project as any)?.images?.length > 0 && (
-                <div className="grid grid-cols-3 gap-2">
-                  {((project as any).images as string[]).slice(0, 3).map((img, idx) => (
-                    <div key={idx} className="aspect-[4/3] rounded-lg overflow-hidden">
-                      <img src={img} alt={`${project.name} ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform" />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+        {/* Floating Quoter */}
+        {!isOwner && (
+          <FloatingQuoter
+            selectedLot={detailLot || (selectedLot ? lots.find(l => l.id === selectedLot) : null)}
+            projectName={project.name}
+            onReserve={(lot) => setReservationLot(lot)}
+            onFinance={(lot) => setFinancingLot(lot)}
+          />
         )}
 
         {/* Main Content - Full Width */}
