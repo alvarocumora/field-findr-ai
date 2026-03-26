@@ -31,6 +31,16 @@ const formatPrice = (price: number | null) => {
 const formatArea = (area: number) =>
   new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 }).format(area);
 
+const GlassCard = ({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: string }) => (
+  <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-3">
+    <div className="flex items-center gap-2 mb-1">
+      <span className={accent}>{icon}</span>
+      <span className="text-[11px] text-white/50 uppercase tracking-wider">{label}</span>
+    </div>
+    <p className={`text-sm font-bold ${accent}`}>{value}</p>
+  </div>
+);
+
 export const ProjectHero = ({
   project, lots, availableLots, reservedLots, soldLots,
   priceRange, areaRange, isMobile, onCall, onMessage,
