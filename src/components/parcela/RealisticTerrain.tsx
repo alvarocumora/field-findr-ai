@@ -114,7 +114,7 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
         onElevationLoaded?.(min);
         const normalized = new Float32Array(heights.length);
         for (let i = 0; i < heights.length; i++) {
-          normalized[i] = (heights[i] - min) * 0.02;
+          normalized[i] = (heights[i] - min) * 0.005;
         }
         setHeightData(normalized);
         console.log('RealisticTerrain: elevation loaded, min=', min, 'loading satellite:', satellite ? 'yes' : 'no');
