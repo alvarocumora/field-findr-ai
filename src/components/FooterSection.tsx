@@ -8,16 +8,21 @@ const FooterSection = () => {
   const links = {
     platform: [
       { name: 'Explorar terrenos', href: '/explorar' },
-      { name: 'Proyectos de loteo', href: '/explorar' },
+      { name: 'Herramientas IA', href: '/tools' },
       { name: 'Precios', href: '/pricing' },
+      { name: 'Instalar App', href: '/instalar' },
     ],
     company: [
-      { name: 'Sobre nosotros', href: '#' },
+      { name: 'Blog', href: '/blog' },
       { name: 'Contacto', href: '/contacto' },
     ],
+    pro: [
+      { name: 'Para Profesionales', href: '/pricing' },
+      { name: 'Registrarse', href: '/auth' },
+    ],
     legal: [
-      { name: 'Términos de uso', href: '#' },
-      { name: 'Privacidad', href: '#' },
+      { name: 'Términos de uso', href: '/contacto' },
+      { name: 'Privacidad', href: '/contacto' },
     ],
   };
 
