@@ -2,11 +2,10 @@ import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Search, Box, Package } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { type ParcelaObjectType } from './useParcelaState';
 
 export interface GLBAsset {
   name: string;
@@ -19,18 +18,49 @@ interface AssetCatalogProps {
   onSelectAsset: (asset: GLBAsset) => void;
   uploadedAssets: GLBAsset[];
   onAssetsChange: (assets: GLBAsset[]) => void;
+  onAddPrimitive?: (type: ParcelaObjectType) => void;
 }
 
-const ASSET_CATEGORIES = [
-  { id: 'all', label: 'Todos', icon: '📦' },
-  { id: 'casas', label: 'Casas', icon: '🏠' },
-  { id: 'vehiculos', label: 'Vehículos', icon: '🚗' },
-  { id: 'vegetacion', label: 'Vegetación', icon: '🌳' },
-  { id: 'mobiliario', label: 'Mobiliario', icon: '🪑' },
-  { id: 'otros', label: 'Otros', icon: '📎' },
+interface BuiltInAsset {
+  name: string;
+  icon: string;
+  type: ParcelaObjectType;
+  category: string;
+}
+
+const BUILT_IN_ASSETS: BuiltInAsset[] = [
+  // Casas
+  { name: 'Casa Moderna', icon: '🏠', type: 'modern_house', category: 'casas' },
+  { name: 'Cabaña', icon: '🛖', type: 'cabin', category: 'casas' },
+  { name: 'Tiny House', icon: '🏡', type: 'tiny_house', category: 'casas' },
+  // Vegetación
+  { name: 'Pino', icon: '🌲', type: 'pine_tree', category: 'vegetacion' },
+  { name: 'Arbusto', icon: '🌳', type: 'bush', category: 'vegetacion' },
+  { name: 'Jardín', icon: '🌿', type: 'garden', category: 'vegetacion' },
+  // Mobiliario
+  { name: 'Piscina', icon: '🏊', type: 'pool', category: 'mobiliario' },
+  { name: 'Quincho', icon: '🍖', type: 'quincho', category: 'mobiliario' },
+  { name: 'Terraza', icon: '☂️', type: 'deck', category: 'mobiliario' },
+  // Vehículos
+  { name: 'Auto', icon: '🚗', type: 'car', category: 'vehiculos' },
+  { name: 'Camioneta', icon: '🛻', type: 'truck', category: 'vehiculos' },
+  // Infraestructura
+  { name: 'Cerca', icon: '🪵', type: 'fence', category: 'infraestructura' },
+  { name: 'Camino', icon: '🛤️', type: 'path', category: 'infraestructura' },
+  { name: 'Poste Luz', icon: '💡', type: 'light_post', category: 'infraestructura' },
 ];
 
-export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange }: AssetCatalogProps) => {
+const CATEGORIES = [
+  { id: 'all', label: 'Todos', icon: '📦' },
+  { id: 'casas', label: 'Casas', icon: '🏠' },
+  { id: 'vegetacion', label: 'Vegetación', icon: '🌳' },
+  { id: 'mobiliario', label: 'Mobiliario', icon: '🪑' },
+  { id: 'vehiculos', label: 'Vehículos', icon: '🚗' },
+  { id: 'infraestructura', label: 'Infra', icon: '🔧' },
+  { id: 'custom', label: 'Subidos', icon: '📎' },
+];
+
+export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, onAddPrimitive }: AssetCatalogProps) => {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [uploading, setUploading] = useState(false);
@@ -44,7 +74,6 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange }: 
       toast.error('Solo se permiten archivos GLB o GLTF');
       return;
     }
-
     if (file.size > 50 * 1024 * 1024) {
       toast.error('El archivo no puede superar 50MB');
       return;
@@ -56,29 +85,33 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange }: 
       const { data, error } = await supabase.storage
         .from('3d-assets')
         .upload(fileName, file, { contentType: 'model/gltf-binary' });
-
       if (error) throw error;
 
       const { data: urlData } = supabase.storage.from('3d-assets').getPublicUrl(data.path);
-      
       const newAsset: GLBAsset = {
         name: file.name.replace(/\.(glb|gltf)$/i, ''),
         url: urlData.publicUrl,
-        category: 'otros',
+        category: 'custom',
       };
-
       onAssetsChange([...uploadedAssets, newAsset]);
-      toast.success(`Modelo "${newAsset.name}" subido correctamente`);
+      toast.success(`Modelo "${newAsset.name}" subido`);
     } catch (err: any) {
-      toast.error(`Error al subir: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setUploading(false);
       e.target.value = '';
     }
   }, [uploadedAssets, onAssetsChange]);
 
-  const filtered = uploadedAssets.filter(a => {
-    if (activeCategory !== 'all' && a.category !== activeCategory) return false;
+  const filteredBuiltIn = BUILT_IN_ASSETS.filter(a => {
+    if (activeCategory !== 'all' && activeCategory !== 'custom' && a.category !== activeCategory) return false;
+    if (activeCategory === 'custom') return false;
+    if (search && !a.name.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  const filteredCustom = uploadedAssets.filter(a => {
+    if (activeCategory !== 'all' && activeCategory !== 'custom') return false;
     if (search && !a.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -87,10 +120,9 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange }: 
     <div className="space-y-2">
       <div className="flex items-center gap-1.5 px-1">
         <Package className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-[11px] font-semibold text-foreground">Modelos 3D (GLB)</span>
+        <span className="text-[11px] font-semibold text-foreground">Catálogo 3D</span>
       </div>
 
-      {/* Search */}
       <div className="relative px-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
         <Input
@@ -101,9 +133,8 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange }: 
         />
       </div>
 
-      {/* Category tabs */}
       <div className="flex gap-0.5 px-1 flex-wrap">
-        {ASSET_CATEGORIES.map(cat => (
+        {CATEGORIES.map(cat => (
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
@@ -118,53 +149,56 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange }: 
         ))}
       </div>
 
-      {/* Asset grid */}
-      <ScrollArea className="h-[120px]">
-        {filtered.length > 0 ? (
-          <div className="grid grid-cols-2 gap-1 px-1">
-            {filtered.map((asset, i) => (
-              <button
-                key={i}
-                onClick={() => onSelectAsset(asset)}
-                className="flex flex-col items-center p-2 rounded-md hover:bg-accent/50 transition-colors border border-border/30 bg-card"
-                title={asset.name}
-              >
-                <Box className="h-5 w-5 text-muted-foreground mb-1" />
-                <span className="text-[9px] text-muted-foreground line-clamp-1 w-full text-center">
-                  {asset.name}
-                </span>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full py-4 text-muted-foreground">
-            <Box className="h-6 w-6 mb-1 opacity-40" />
-            <span className="text-[10px]">Sin modelos</span>
+      <ScrollArea className="h-[140px]">
+        <div className="grid grid-cols-2 gap-1 px-1">
+          {/* Built-in primitives */}
+          {filteredBuiltIn.map((asset) => (
+            <button
+              key={asset.type}
+              onClick={() => onAddPrimitive?.(asset.type)}
+              className="flex flex-col items-center p-1.5 rounded-md hover:bg-accent/50 transition-colors border border-border/30 bg-card"
+              title={asset.name}
+            >
+              <span className="text-lg leading-none">{asset.icon}</span>
+              <span className="text-[8px] text-muted-foreground line-clamp-1 w-full text-center mt-0.5">
+                {asset.name}
+              </span>
+            </button>
+          ))}
+
+          {/* Custom uploaded GLB */}
+          {filteredCustom.map((asset, i) => (
+            <button
+              key={`custom-${i}`}
+              onClick={() => onSelectAsset(asset)}
+              className="flex flex-col items-center p-1.5 rounded-md hover:bg-accent/50 transition-colors border border-primary/20 bg-primary/5"
+              title={asset.name}
+            >
+              <Box className="h-4 w-4 text-primary" />
+              <span className="text-[8px] text-muted-foreground line-clamp-1 w-full text-center mt-0.5">
+                {asset.name}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {filteredBuiltIn.length === 0 && filteredCustom.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
+            <Box className="h-5 w-5 mb-1 opacity-40" />
+            <span className="text-[10px]">Sin resultados</span>
           </div>
         )}
       </ScrollArea>
 
-      {/* Upload button */}
       <div className="px-1">
         <label className="w-full">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full h-7 text-[10px]"
-            disabled={uploading}
-            asChild
-          >
+          <Button variant="outline" size="sm" className="w-full h-7 text-[10px]" disabled={uploading} asChild>
             <span>
               <Upload className="h-3 w-3 mr-1" />
               {uploading ? 'Subiendo...' : 'Subir modelo GLB'}
             </span>
           </Button>
-          <input
-            type="file"
-            accept=".glb,.gltf"
-            onChange={handleUpload}
-            className="hidden"
-          />
+          <input type="file" accept=".glb,.gltf" onChange={handleUpload} className="hidden" />
         </label>
       </div>
     </div>

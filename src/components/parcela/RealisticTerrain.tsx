@@ -18,8 +18,9 @@ export interface TerrainHandle {
 const TERRAIN_RES = 128;
 const SAT_ZOOM = 18;
 const ELEV_ZOOM = 15;
+const TILE_PX = 256;
+const GRID = 3; // 3x3 tile grid
 
-/** Returns tile x, y (integer) and fractional offsets fx, fy within that tile */
 function lngLatToTileFraction(lng: number, lat: number, zoom: number) {
   const n = Math.pow(2, zoom);
   const xFull = ((lng + 180) / 360) * n;
@@ -32,7 +33,6 @@ function lngLatToTileFraction(lng: number, lat: number, zoom: number) {
   return { tileX, tileY, fracX, fracY };
 }
 
-/** Meters per tile at a given zoom and latitude */
 function tileSizeMeters(lat: number, zoom: number): number {
   return (40075016.7 * Math.cos((lat * Math.PI) / 180)) / Math.pow(2, zoom);
 }
@@ -47,7 +47,7 @@ async function loadElevationTile(lat: number, lng: number, token: string): Promi
 
   const url = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${ELEV_ZOOM}/${tileX}/${tileY}.pngraw?access_token=${token}`;
 
-  return new Promise<Float32Array>((resolve, reject) => {
+  return new Promise<Float32Array>((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
@@ -63,56 +63,92 @@ async function loadElevationTile(lat: number, lng: number, token: string): Promi
       }
       resolve(h);
     };
-    img.onerror = reject;
+    img.onerror = () => resolve(new Float32Array(TERRAIN_RES * TERRAIN_RES));
     img.src = url;
   });
 }
 
-async function loadSatelliteTexture(
+/** Load a single tile image, returns null on failure */
+function loadTileImage(zoom: number, tx: number, ty: number, token: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = `https://api.mapbox.com/v4/mapbox.satellite/${zoom}/${tx}/${ty}@2x.jpg?access_token=${token}`;
+  });
+}
+
+/** Load a 3x3 grid of satellite tiles stitched into one canvas texture */
+async function loadStitchedSatelliteTexture(
   lat: number, lng: number, planeSize: number, token: string, zoom = SAT_ZOOM
 ): Promise<THREE.Texture | null> {
   if (!token) return null;
 
   const { tileX, tileY, fracX, fracY } = lngLatToTileFraction(lng, lat, zoom);
   const tileMeters = tileSizeMeters(lat, zoom);
+  const canvasPx = TILE_PX * GRID; // 768px
+  const gridMeters = tileMeters * GRID; // ~375m
 
-  const url = `https://api.mapbox.com/v4/mapbox.satellite/${zoom}/${tileX}/${tileY}@2x.jpg?access_token=${token}`;
+  // Load all 9 tiles in parallel
+  const promises: Promise<{ img: HTMLImageElement | null; col: number; row: number }>[] = [];
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const col = dx + 1;
+      const row = dy + 1;
+      promises.push(
+        loadTileImage(zoom, tileX + dx, tileY + dy, token).then(img => ({ img, col, row }))
+      );
+    }
+  }
 
-  return new Promise<THREE.Texture | null>((resolve) => {
-    const loader = new THREE.TextureLoader();
-    loader.crossOrigin = 'anonymous';
-    loader.load(
-      url,
-      (tex) => {
-        tex.wrapS = THREE.RepeatWrapping;
-        tex.wrapT = THREE.RepeatWrapping;
-        tex.minFilter = THREE.LinearMipMapLinearFilter;
-        tex.magFilter = THREE.LinearFilter;
+  const results = await Promise.all(promises);
+  const loaded = results.filter(r => r.img !== null).length;
+  
+  if (loaded === 0) {
+    // Fallback to lower zoom
+    if (zoom > 15) {
+      console.warn(`No tiles at zoom ${zoom}, falling back to ${zoom - 1}`);
+      return loadStitchedSatelliteTexture(lat, lng, planeSize, token, zoom - 1);
+    }
+    return null;
+  }
 
-        // How many tiles the plane covers
-        const repeatVal = planeSize / tileMeters;
-        tex.repeat.set(repeatVal, repeatVal);
+  // Stitch tiles onto a canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasPx;
+  canvas.height = canvasPx;
+  const ctx = canvas.getContext('2d')!;
 
-        // Offset so the center of the plane aligns with lat/lng
-        const offX = fracX - repeatVal / 2;
-        const offY = (1 - fracY) - repeatVal / 2;
-        tex.offset.set(offX, offY);
+  // Fill with a base color in case some tiles failed
+  ctx.fillStyle = '#5D8233';
+  ctx.fillRect(0, 0, canvasPx, canvasPx);
 
-        console.log('Satellite UV:', { zoom, tileMeters: tileMeters.toFixed(0), planeSize, repeatVal: repeatVal.toFixed(4), fracX: fracX.toFixed(4), fracY: fracY.toFixed(4) });
-        resolve(tex);
-      },
-      undefined,
-      (err) => {
-        console.error('Satellite texture failed at zoom', zoom, err);
-        // Fallback to lower zoom
-        if (zoom > 15) {
-          resolve(loadSatelliteTexture(lat, lng, planeSize, token, zoom - 1));
-        } else {
-          resolve(null);
-        }
-      }
-    );
-  });
+  for (const { img, col, row } of results) {
+    if (img) {
+      ctx.drawImage(img, col * TILE_PX, row * TILE_PX, TILE_PX, TILE_PX);
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.ClampToEdgeWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.minFilter = THREE.LinearMipMapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+
+  // UV mapping: map the plane onto the stitched grid
+  // The center tile is at grid position (1,1). The fractional position within it is (fracX, fracY).
+  // In texture space, the center of the lot is at ((1 + fracX) / 3, (1 + fracY) / 3)
+  const repeatVal = planeSize / gridMeters;
+  tex.repeat.set(repeatVal, repeatVal);
+
+  // Center of lot in UV space of the stitched canvas
+  const centerU = (1 + fracX) / GRID;
+  const centerV = 1 - (1 + fracY) / GRID; // flip Y
+  tex.offset.set(centerU - repeatVal / 2, centerV - repeatVal / 2);
+
+  console.log('Stitched satellite:', { zoom, tileMeters: Math.round(tileMeters), gridMeters: Math.round(gridMeters), planeSize, repeatVal: repeatVal.toFixed(3), loaded: `${loaded}/9`, centerU: centerU.toFixed(3), centerV: centerV.toFixed(3) });
+  return tex;
 }
 
 /** Convert polygon GPS coords to local XZ coords centered on centroid */
@@ -129,7 +165,6 @@ function polygonToLocal(polygon: number[][]): { coords: [number, number][]; cx: 
   return { coords, cx, cy };
 }
 
-/** Compute terrain size from polygon bounding box with padding */
 function computeSizeFromPolygon(localCoords: [number, number][]): number {
   if (localCoords.length === 0) return 40;
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -155,7 +190,7 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
     const { coords: localCoords } = useMemo(() => polygonToLocal(polygon || []), [polygon]);
     const size = sizeProp ?? computeSizeFromPolygon(localCoords);
 
-    // Load elevation data
+    // Load elevation
     useEffect(() => {
       if (!mapboxToken) {
         setHeightData(new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0));
@@ -175,11 +210,11 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
       });
     }, [lat, lng, mapboxToken]);
 
-    // Load satellite texture separately at high zoom
+    // Load stitched satellite texture (3x3 grid)
     useEffect(() => {
       if (!mapboxToken) return;
       onTextureLoading?.(true);
-      loadSatelliteTexture(lat, lng, size, mapboxToken, SAT_ZOOM).then((tex) => {
+      loadStitchedSatelliteTexture(lat, lng, size, mapboxToken, SAT_ZOOM).then((tex) => {
         if (tex) setTexture(tex);
         onTextureLoading?.(false);
       }).catch(() => {
