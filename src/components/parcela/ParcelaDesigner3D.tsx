@@ -393,13 +393,20 @@ export const ParcelaDesigner3D = ({
 
         {/* Satellite loading indicator */}
         {useRealisticTerrain && satelliteLoading && (
-          <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 bg-primary/80 backdrop-blur-sm rounded-lg px-3 py-1 text-[10px] text-primary-foreground font-medium animate-pulse border border-primary/40">
-            🛰️ Cargando imagen satelital...
+          <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 bg-primary/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-[10px] text-primary-foreground font-medium animate-pulse border border-primary/40">
+            🛰️ Cargando imagen satelital (9 tiles)...
+          </div>
+        )}
+
+        {/* Satellite error fallback */}
+        {useRealisticTerrain && !satelliteLoading && satelliteError && (
+          <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 bg-destructive/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-[10px] text-destructive-foreground font-medium border border-destructive/40">
+            ⚠️ No se pudo cargar imagen satelital
           </div>
         )}
 
         {/* Elevation badge */}
-        {useRealisticTerrain && !satelliteLoading && baseElevation > 0 && (
+        {useRealisticTerrain && !satelliteLoading && !satelliteError && baseElevation > 0 && (
           <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 bg-background/70 backdrop-blur-sm rounded px-2 py-0.5 text-[9px] text-muted-foreground border border-border/30">
             📍 Elevación base: {Math.round(baseElevation)}m
           </div>

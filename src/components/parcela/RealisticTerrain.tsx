@@ -131,10 +131,12 @@ async function loadStitchedSatelliteTexture(
   }
 
   const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = THREE.ClampToEdgeWrapping;
   tex.wrapT = THREE.ClampToEdgeWrapping;
   tex.minFilter = THREE.LinearMipMapLinearFilter;
   tex.magFilter = THREE.LinearFilter;
+  tex.needsUpdate = true;
 
   // UV mapping: map the plane onto the stitched grid
   // The center tile is at grid position (1,1). The fractional position within it is (fracX, fracY).
