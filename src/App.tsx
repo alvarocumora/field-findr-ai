@@ -337,6 +337,11 @@ const App = () => (
                   <ProjectsManagement />
                 </DashboardLayout>
               } />
+              <Route path="/admin/audit" element={
+                <DashboardLayout requiredRole="admin">
+                  <AuditLog />
+                </DashboardLayout>
+              } />
 
               {/* ====== LEGACY REDIRECTS ====== */}
               <Route path="/favorites" element={<Navigate to="/favoritos" replace />} />
