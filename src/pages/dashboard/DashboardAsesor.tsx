@@ -11,11 +11,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { useAgentStats, useAgentLeads, useAgentGoals } from '@/hooks/useDashboardStats';
 import { useProjects } from '@/hooks/useProjects';
+import { useNotifications } from '@/hooks/useNotifications';
 import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
 import { ListingFormDialog } from '@/components/listings/ListingFormDialog';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import { useNavigate } from 'react-router-dom';
 import { FolderKanban, Map, FileArchive, Sparkles } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 const DashboardAsesor = () => {
   const navigate = useNavigate();
