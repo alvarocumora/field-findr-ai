@@ -17,6 +17,8 @@ export interface Profile {
   new_listing_alerts: boolean | null;
   price_drop_alerts: boolean | null;
   marketing_emails: boolean | null;
+  onboarding_completed: boolean | null;
+  onboarding_data: Record<string, any> | null;
   created_at: string;
   updated_at: string;
 }
@@ -32,6 +34,8 @@ export interface ProfileUpdate {
   new_listing_alerts?: boolean | null;
   price_drop_alerts?: boolean | null;
   marketing_emails?: boolean | null;
+  onboarding_completed?: boolean | null;
+  onboarding_data?: Record<string, any> | null;
 }
 
 export const useProfile = () => {
