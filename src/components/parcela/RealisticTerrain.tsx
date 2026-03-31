@@ -28,7 +28,7 @@ function decodeRGBElevation(r: number, g: number, b: number): number {
   return -10000 + (r * 256 * 256 + g * 256 + b) * 0.1;
 }
 
-async function loadTerrainTile(lat: number, lng: number, token: string, zoom = 16): Promise<{ heights: Float32Array; satellite: string }> {
+async function loadTerrainTile(lat: number, lng: number, token: string, zoom = 15): Promise<{ heights: Float32Array; satellite: string }> {
   const { x, y } = lngLatToTile(lng, lat, zoom);
   if (!token) return { heights: new Float32Array(TERRAIN_RES * TERRAIN_RES), satellite: '' };
 
@@ -114,7 +114,7 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
         onElevationLoaded?.(min);
         const normalized = new Float32Array(heights.length);
         for (let i = 0; i < heights.length; i++) {
-          normalized[i] = (heights[i] - min) * 0.02;
+          normalized[i] = (heights[i] - min) * 0.005;
         }
         setHeightData(normalized);
         console.log('RealisticTerrain: elevation loaded, min=', min, 'loading satellite:', satellite ? 'yes' : 'no');

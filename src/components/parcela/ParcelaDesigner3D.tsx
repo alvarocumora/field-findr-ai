@@ -297,17 +297,32 @@ export const ParcelaDesigner3D = ({
               <FlatTerrain polygon={polygon} />
             )}
 
-            <Grid
-              infiniteGrid
-              cellSize={ps.snapEnabled ? 0.5 : 1}
-              sectionSize={5}
-              fadeDistance={60}
-              cellColor="#A5D6A7"
-              sectionColor="#66BB6A"
-              cellThickness={0.5}
-              sectionThickness={1}
-              position={[0, -0.01, 0]}
-            />
+            {!useRealisticTerrain && (
+              <Grid
+                infiniteGrid
+                cellSize={ps.snapEnabled ? 0.5 : 1}
+                sectionSize={5}
+                fadeDistance={60}
+                cellColor="#A5D6A7"
+                sectionColor="#66BB6A"
+                cellThickness={0.5}
+                sectionThickness={1}
+                position={[0, -0.01, 0]}
+              />
+            )}
+            {useRealisticTerrain && ps.snapEnabled && (
+              <Grid
+                infiniteGrid
+                cellSize={0.5}
+                sectionSize={5}
+                fadeDistance={30}
+                cellColor="rgba(255,255,255,0.08)"
+                sectionColor="rgba(255,255,255,0.15)"
+                cellThickness={0.3}
+                sectionThickness={0.6}
+                position={[0, 0.05, 0]}
+              />
+            )}
 
             <ClickPlane onClick={handleGroundClick} />
 
