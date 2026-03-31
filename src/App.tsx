@@ -44,6 +44,8 @@ import Contact from "./pages/Contact";
 import Comparar from "./pages/Comparar";
 import Alertas from "./pages/Alertas";
 import Blog from "./pages/Blog";
+import BuyerQuiz from "./pages/BuyerQuiz";
+import ProjectExperience from "./pages/ProjectExperience";
 
 // ===== Buyer Pages =====
 import Profile from "./pages/Profile";
