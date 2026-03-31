@@ -8,10 +8,11 @@ import { SmartSearchBar } from '@/components/ai/SmartSearchBar';
 import { ContentGeneratorPanel } from '@/components/ai/ContentGeneratorPanel';
 import { FinancialCalculators } from '@/components/tools/FinancialCalculators';
 import SIILookupPanel from '@/components/cadastral/SIILookupPanel';
+import InvestmentComparator from '@/components/tools/InvestmentComparator';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Bot, Calculator, TrendingUp, Search, Wand2, 
-  Sparkles, FileText, BarChart3, Users, ArrowRight
+  Sparkles, FileText, BarChart3, Users, ArrowRight, Scale
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
