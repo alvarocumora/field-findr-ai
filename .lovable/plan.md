@@ -1,143 +1,168 @@
 
 
-# Plan: Consolidación Disruptiva del Portal -- Expansión y Mejoras Integrales
+# Plan Disruptivo y Atípico: Portal Inmobiliario de Nueva Generación
 
-## Diagnóstico Rápido
+## Filosofía: "No vendemos lotes, vendemos futuros"
 
-La plataforma tiene ~50 rutas, 3 roles, herramientas IA, CRM, tours 360, diseñador 3D, y PWA. Sin embargo hay fragmentación: componentes duplicados, footer con links muertos (`#`), falta de cohesión entre flujos buyer/agent, y oportunidades de engagement sin explotar.
-
----
-
-## Fase A: Consolidación de Navegación y Footer (Limpieza)
-
-### A.1 Footer Completo con Links Reales
-**Archivo:** `src/components/FooterSection.tsx`
-- Reemplazar todos los `href: '#'` por rutas reales o páginas stub
-- Agregar links funcionales: Herramientas (`/tools`), Instalar App (`/instalar`), Blog (stub `/blog`)
-- Agregar sección "Para Profesionales" con links a `/pricing` y `/auth`
-
-### A.2 Página Blog Stub
-**Archivo:** nuevo `src/pages/Blog.tsx`
-- Página mínima con layout, titulo, y empty state "Próximamente"
-- Ruta `/blog` en `App.tsx`
+La mayoría de portales inmobiliarios son catálogos estáticos. Este plan transforma la plataforma en una **experiencia narrativa e inmersiva** donde el usuario no busca propiedades: las vive antes de comprarlas.
 
 ---
 
-## Fase B: Mejora del Flujo Buyer (Engagement + Retención)
+## Fase 1: "Modo Cine" — Storytelling Inmersivo por Proyecto
 
-### B.1 Buyer Dashboard Mejorado con Recomendaciones IA
-**Archivo:** `src/pages/BuyerHome.tsx`
-- Agregar sección "Recomendados para ti" que usa `saved_searches` + listings activos para match scoring
-- Mostrar proyectos con `available_lots > 0` ordenados por relevancia
-- Card de "Precio reducido" para listings con entradas recientes en `price_history`
+### 1.1 Landing Cinematográfica por Proyecto
+Cada proyecto tiene una URL pública `/proyecto/:id/experiencia` que es una página fullscreen tipo documental corto:
+- Scroll-driven: imagen satelital → zoom al terreno → renders → datos financieros → CTA de reserva
+- Sin chrome del sitio (sin header/footer/sidebar), experiencia 100% inmersiva
+- Optimizado para compartir en redes como un "micrositio" del proyecto
+- Botón flotante "Volver al portal" para salir
 
-### B.2 Alertas de Precio en Tiempo Real
-**Archivo:** nuevo `src/components/buyer/PriceAlertCard.tsx`
-- Componente que muestra listings donde el precio bajó en los últimos 7 días
-- Query a `price_history` + join con `listings`
-- Integrar en `BuyerHome.tsx`
+**Archivos:** nuevo `src/pages/ProjectExperience.tsx`, ruta en `App.tsx`
 
-### B.3 Quick Actions Contextuales para Buyer
-**Archivo:** `src/pages/BuyerHome.tsx`
-- Agregar grid de acciones rápidas: "Explorar Mapa", "Mis Favoritos", "Comparar Terrenos", "Simular Crédito"
-- Cada acción navega a la ruta correspondiente
+### 1.2 Generador de Micrositios para Agentes
+Desde el dashboard del agente, botón "Generar Micrositio" que activa la experiencia inmersiva del proyecto. El agente puede compartir el link directo a compradores por WhatsApp. El link trackea visitas con `user_events`.
+
+**Archivo:** botón en `src/pages/ProjectDetail.tsx`
 
 ---
 
-## Fase C: Dashboard Agent -- Widgets de Productividad
+## Fase 2: "Gemelo Digital" — Vivir el Terreno Antes de Comprarlo
 
-### C.1 Widget "Oportunidades Calientes"
-**Archivo:** `src/pages/dashboard/DashboardAsesor.tsx`
-- Sección que muestra los 3 leads con mayor `lead_score` que no han sido contactados en 48h+
-- Botón "Contactar ahora" que abre WhatsApp con template contextual
+### 2.1 Modo "Caminar el Terreno" Mejorado
+El diseñador 3D de parcelas ya tiene cámara peatonal. Mejorar con:
+- Overlay de información contextual: al caminar, mostrar distancia al borde, pendiente del punto, orientación solar
+- Botón "Captura Panorámica" que genera una imagen 360° del punto de vista actual usando Canvas
+- Sonido ambiente opcional (viento, pájaros) para inmersión sensorial
 
-### C.2 Mini-Resumen de Proyecto en Dashboard
-**Archivo:** `src/pages/dashboard/DashboardAsesor.tsx`
-- Grid compacto de proyectos activos mostrando: nombre, progress bar (vendidos/total), ingresos acumulados
-- Click navega al detalle del proyecto
+**Archivo:** `src/components/parcela/PedestrianCamera.tsx`, `src/components/parcela/ParcelaToolbar.tsx`
 
-### C.3 Notificaciones Inline en Dashboard
-**Archivo:** `src/pages/dashboard/DashboardAsesor.tsx`
-- Mostrar últimas 3 notificaciones no leídas como cards dismissibles
-- Link a `/asesor/notifications` para ver todas
+### 2.2 Simulador de Estaciones
+Toggle en el diseñador 3D que cambia la iluminación solar según la estación del año (verano/invierno). Muestra cómo se ve el terreno en junio vs diciembre. Usa el componente `SolarLight.tsx` existente con presets de ángulo solar por mes.
+
+**Archivo:** `src/components/parcela/SolarLight.tsx`, `src/components/parcela/ParcelaToolbar.tsx`
 
 ---
 
-## Fase D: Herramientas IA Consolidadas
+## Fase 3: "Smart Matching" — El Terreno te Encuentra
 
-### D.1 Centro de Herramientas Reorganizado
-**Archivo:** `src/pages/Tools.tsx`
-- Reorganizar tabs en categorías claras: "IA" (Chat, Predictor, Búsqueda), "Financiero" (Calculadoras, Comparador), "Datos" (SII, Catastro)
-- Agregar descripción breve en cada tab para guiar al usuario
-- Agregar acceso al Story Generator desde Tools para agents
+### 3.1 Quiz de Perfil de Comprador
+Página `/quiz` con 5 preguntas tipo "¿Para qué quieres el terreno?" (inversión/casa/campo/negocio), "¿Cuánto quieres invertir?", "¿Qué tan lejos de la ciudad?". Genera un perfil guardado en `profiles.onboarding_data` y redirige a resultados filtrados automáticamente.
 
-### D.2 Story Generator Accesible desde Tools
-**Archivo:** `src/pages/Tools.tsx`
-- Agregar tab "Social" (solo para agents) con el `StoryGenerator` existente
-- Permite generar contenido visual sin salir del centro de herramientas
+**Archivos:** nuevo `src/pages/BuyerQuiz.tsx`, ruta en `App.tsx`
 
----
+### 3.2 Match Score Visible en Cada Card
+Basado en el quiz, cada listing/lot muestra un badge de compatibilidad: "92% match". Usa datos del perfil del comprador vs atributos del terreno (precio, área, ubicación, uso).
 
-## Fase E: Mejoras de Experiencia Global
+**Archivo:** nuevo `src/components/explore/MatchScoreBadge.tsx`, integrar en cards existentes
 
-### E.1 Empty States Profesionales
-**Archivos:** `src/pages/Favorites.tsx` (componente Favorites), `src/pages/MiTerreno.tsx`
-- Cuando no hay datos, mostrar ilustración + CTA contextual
-- Favoritos vacío: "Explora terrenos y guarda tus favoritos" → link a `/explorar`
-- Mi Terreno sin reservas: "Aún no tienes un terreno" → link a `/explorar`
+### 3.3 Notificación "Tu Terreno Ideal Acaba de Publicarse"
+Edge function que compara nuevos listings contra perfiles de compradores activos. Envía notificación push/email cuando hay un match >80%.
 
-### E.2 Breadcrumbs en Páginas de Detalle
-**Archivo:** `src/pages/ProjectDetail.tsx`, `src/pages/PropertyDetail.tsx`
-- Agregar breadcrumb: Home > Explorar > Proyecto X
-- Mejora SEO y navegación
-
-### E.3 Skeleton Loading Consistente
-**Archivos:** varios dashboards
-- Asegurar que todas las páginas de dashboard usen skeletons consistentes durante carga
-- Patrón: `KPICard` skeleton (4 cards) + chart skeleton
+**Archivo:** nueva edge function `supabase/functions/smart-match-notify/index.ts`
 
 ---
 
-## Fase F: Mejoras Técnicas de Consolidación
+## Fase 4: "Transparencia Radical" — Confianza como Diferenciador
 
-### F.1 Tracking de Eventos de Usuario
-**Archivo:** nuevo `src/hooks/useTrackEvent.ts`
-- Hook reutilizable: `useTrackEvent()` que inserta en `user_events`
-- Integrar en: vista de proyecto, vista de lote, búsqueda, favorito
-- Base para recomendaciones IA y lead scoring futuro
+### 4.1 Timeline Público del Proyecto
+En cada proyecto, sección "Historia del Proyecto" visible públicamente:
+- Fecha de publicación, primera reserva, hitos de construcción, porcentaje vendido
+- Datos reales de `reservations` y `lots` agregados
+- Genera confianza mostrando actividad real
 
-### F.2 SEO Meta Tags Dinámicos
-**Archivo:** `src/hooks/useSEO.ts` (ya existe)
-- Verificar que `ProjectDetail` y `PropertyDetail` setean title/description dinámicos
-- Agregar Open Graph tags para compartir en redes sociales
+**Archivo:** nuevo `src/components/projects/ProjectTimeline.tsx`, integrar en `ProjectDetail.tsx`
+
+### 4.2 Calculadora de Plusvalía Histórica
+Herramienta que muestra: "Los terrenos en esta zona se han valorizado X% en los últimos Y años". Usa datos de `price_history` agregados por región. Gráfico de línea temporal con proyección futura estimada.
+
+**Archivo:** nuevo `src/components/tools/AppreciationCalculator.tsx`, integrar en `Tools.tsx`
+
+### 4.3 Verificador de Documentos Público
+Badge de "Proyecto Verificado" que muestra qué documentos legales están cargados (escritura, permiso municipal, etc.) sin revelar el contenido. Genera confianza tipo "esta propiedad tiene 5/6 documentos verificados".
+
+**Archivo:** componente en `src/components/projects/VerificationBadge.tsx`, integrar en `ProjectHero.tsx`
 
 ---
 
-## Resumen de Archivos
+## Fase 5: "Gamificación Sutil" — Engagement sin Fricciones
+
+### 5.1 Sistema de Logros para Compradores
+Badges desbloqueables: "Explorador" (visitó 10 proyectos), "Analista" (usó el comparador), "Decidido" (reservó un lote). Visible en perfil. Basado en `user_events`.
+
+**Archivo:** nuevo `src/components/profile/AchievementsBadges.tsx`
+
+### 5.2 Contador de Interés en Tiempo Real
+En cada lote: "7 personas vieron este lote esta semana". Query a `user_events` filtrado por `event_type = 'view_lot'`. Crea urgencia real basada en datos reales.
+
+**Archivo:** integrar en `EnhancedLotCard.tsx`
+
+### 5.3 "Watchlist" con Countdown
+Botón "Seguir este lote" que activa un mini-dashboard personal: cambios de precio, nuevas fotos, cambio de estado. Si un lote pasa a "reservado", notificación inmediata a todos los watchers.
+
+**Archivo:** nuevo `src/hooks/useWatchlist.ts`, integrar en `LotDetailSheet.tsx`
+
+---
+
+## Fase 6: "Agente Aumentado" — IA como Co-piloto de Ventas
+
+### 6.1 Briefing Matutino Automático
+Al abrir el dashboard del agente por la mañana, panel con resumen IA: "Hoy tienes 3 leads calientes, 1 reserva por vencer, y el proyecto X alcanzó el 80% de ventas". Generado por edge function con Lovable AI.
+
+**Archivo:** nuevo `src/components/dashboard/MorningBriefing.tsx`, edge function `supabase/functions/agent-briefing/index.ts`
+
+### 6.2 Auto-Generador de Descripción de Lote
+Botón "Generar descripción con IA" al crear/editar un lote. Toma: área, ubicación, pendiente, servicios → genera texto de venta optimizado. Usa Lovable AI.
+
+**Archivo:** integrar en `src/components/lots/LotForm.tsx`
+
+---
+
+## Resumen de Prioridad
+
+| # | Componente | Tipo | Impacto |
+|---|-----------|------|---------|
+| 1 | Quiz de Perfil + Match Score | Conversión | Muy Alto |
+| 2 | Landing Cinematográfica por Proyecto | Diferenciación | Muy Alto |
+| 3 | Timeline Público del Proyecto | Confianza | Alto |
+| 4 | Briefing Matutino del Agente | Productividad | Alto |
+| 5 | Contador de Interés Real | Urgencia | Alto |
+| 6 | Verificador de Documentos | Confianza | Alto |
+| 7 | Simulador de Estaciones | Diferenciación | Medio |
+| 8 | Sistema de Logros | Engagement | Medio |
+| 9 | Watchlist con Countdown | Retención | Medio |
+| 10 | Auto-Descripción IA | Productividad | Medio |
+
+## Archivos Nuevos
+
+| Archivo | Descripción |
+|---------|-------------|
+| `src/pages/ProjectExperience.tsx` | Micrositio inmersivo por proyecto |
+| `src/pages/BuyerQuiz.tsx` | Quiz de perfil de comprador |
+| `src/components/explore/MatchScoreBadge.tsx` | Badge de compatibilidad |
+| `src/components/projects/ProjectTimeline.tsx` | Historia pública del proyecto |
+| `src/components/projects/VerificationBadge.tsx` | Badge de documentos verificados |
+| `src/components/tools/AppreciationCalculator.tsx` | Calculadora de plusvalía |
+| `src/components/profile/AchievementsBadges.tsx` | Logros del comprador |
+| `src/hooks/useWatchlist.ts` | Hook de seguimiento de lotes |
+| `src/components/dashboard/MorningBriefing.tsx` | Briefing IA del agente |
+| `supabase/functions/smart-match-notify/index.ts` | Notificación de match automático |
+| `supabase/functions/agent-briefing/index.ts` | Generador de briefing matutino |
+
+## Archivos a Modificar
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/FooterSection.tsx` | Links reales, nueva sección Pro |
-| `src/pages/Blog.tsx` | **Nuevo** - Stub page |
-| `src/pages/BuyerHome.tsx` | Recomendaciones IA, price alerts, quick actions |
-| `src/components/buyer/PriceAlertCard.tsx` | **Nuevo** - Alertas de precio |
-| `src/pages/dashboard/DashboardAsesor.tsx` | Widgets oportunidades, mini-proyectos, notifs |
-| `src/pages/Tools.tsx` | Reorganizar tabs, agregar Social/Story |
-| `src/pages/MiTerreno.tsx` | Empty states mejorados |
-| `src/pages/ProjectDetail.tsx` | Breadcrumbs |
-| `src/hooks/useTrackEvent.ts` | **Nuevo** - Hook de tracking |
-| `src/App.tsx` | Ruta `/blog` |
-
-## Prioridad de Implementación
-
-1. Footer + Blog stub (limpieza inmediata)
-2. Event tracking hook (base para todo lo demás)
-3. Buyer Home mejorado + Price Alerts
-4. Dashboard Agent widgets
-5. Tools reorganizado
-6. Empty states + Breadcrumbs
+| `src/App.tsx` | Rutas `/proyecto/:id/experiencia`, `/quiz` |
+| `src/pages/ProjectDetail.tsx` | Timeline, VerificationBadge, link a experiencia |
+| `src/components/parcela/ParcelaToolbar.tsx` | Toggle estaciones, captura 360 |
+| `src/components/parcela/SolarLight.tsx` | Presets estacionales |
+| `src/components/lots/EnhancedLotCard.tsx` | Contador de interés, match score |
+| `src/components/lots/LotDetailSheet.tsx` | Watchlist button |
+| `src/components/lots/LotForm.tsx` | Auto-descripción IA |
+| `src/pages/Tools.tsx` | AppreciationCalculator |
+| `src/pages/dashboard/DashboardAsesor.tsx` | MorningBriefing |
 
 ## Sin Migraciones de BD
 
-Todos los datos necesarios ya existen en las tablas actuales (`user_events`, `price_history`, `leads`, `notifications`, `saved_searches`). No se requieren cambios de esquema.
+Todo se basa en tablas existentes: `user_events`, `profiles.onboarding_data`, `reservations`, `lots`, `price_history`, `documents`. No se requieren cambios de esquema.
 
