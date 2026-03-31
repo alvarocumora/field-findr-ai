@@ -215,12 +215,19 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
 
     // Load stitched satellite texture (3x3 grid)
     useEffect(() => {
-      if (!mapboxToken) return;
+      if (!mapboxToken) { onTextureError?.(true); return; }
       onTextureLoading?.(true);
+      onTextureError?.(false);
       loadStitchedSatelliteTexture(lat, lng, size, mapboxToken, SAT_ZOOM).then((tex) => {
-        if (tex) setTexture(tex);
+        if (tex) {
+          setTexture(tex);
+          onTextureError?.(false);
+        } else {
+          onTextureError?.(true);
+        }
         onTextureLoading?.(false);
       }).catch(() => {
+        onTextureError?.(true);
         onTextureLoading?.(false);
       });
     }, [lat, lng, mapboxToken, size]);
