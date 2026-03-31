@@ -271,6 +271,9 @@ const BuyerHome = () => {
               </CardContent>
             </Card>
 
+            {/* Price Alerts */}
+            <PriceAlertCard />
+
             {/* Price Alert CTA */}
             <Card className="border-border/40 bg-gradient-to-br from-primary/5 to-primary/10">
               <CardContent className="p-4 text-center space-y-3">
