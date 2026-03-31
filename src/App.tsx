@@ -134,6 +134,9 @@ const App = () => (
               <Route path="/reserva/pendiente" element={<ReservationPending />} />
 
               {/* ====== BUYER ROUTES (auth required) ====== */}
+              <Route path="/buyer/home" element={
+                <ProtectedRoute requireAuth><BuyerHome /></ProtectedRoute>
+              } />
               <Route path="/favoritos" element={
                 <ProtectedRoute requireAuth><Favorites /></ProtectedRoute>
               } />
