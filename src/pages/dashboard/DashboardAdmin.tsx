@@ -311,10 +311,29 @@ const DashboardAdmin = () => {
   const { data: listings, isLoading: listingsLoading } = useAdminListings();
   const { data: docStats } = useAdminDocumentStats();
 
+  // GMV - total reservation amounts
+  const { data: gmvData } = useQuery({
+    queryKey: ['admin-gmv'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('reservations')
+        .select('reservation_amount, status')
+        .in('status', ['paid', 'converted']);
+      const total = data?.reduce((sum, r) => sum + (r.reservation_amount || 0), 0) || 0;
+      return { total, count: data?.length || 0 };
+    },
+  });
+
+  const formatGMV = (v: number) => {
+    if (v >= 1000000000) return `$${(v / 1000000000).toFixed(1)}B`;
+    if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
+    return `$${v.toLocaleString('es-CL')}`;
+  };
+
   const statsConfig = [
     { label: 'Usuarios Totales', value: stats?.totalUsers || 0, icon: Users, color: 'text-blue-500' },
-    { label: 'Propiedades Activas', value: stats?.activeListings || 0, icon: Building2, color: 'text-emerald-500' },
-    { label: 'Proyectos Activos', value: stats?.activeProjects || 0, icon: FolderKanban, color: 'text-purple-500' },
+    { label: 'Reservas Pagadas', value: gmvData?.count || 0, icon: TrendingUp, color: 'text-emerald-500' },
+    { label: 'GMV Total', value: formatGMV(gmvData?.total || 0), icon: Building2, color: 'text-purple-500' },
     { label: 'Docs Pendientes', value: docStats?.pending || 0, icon: FileText, color: 'text-amber-500' },
   ];
 
