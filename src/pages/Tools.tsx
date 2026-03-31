@@ -32,6 +32,7 @@ const Tools = () => {
   const financeTabs = [
     { id: 'calculators', label: 'Calculadoras', icon: Calculator },
     { id: 'comparator', label: 'Comparador', icon: Scale },
+    { id: 'plusvalia', label: 'Plusvalía', icon: TrendingUp },
   ];
 
   const dataTabs = [

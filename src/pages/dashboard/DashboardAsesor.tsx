@@ -20,6 +20,7 @@ import { FolderKanban, Map, FileArchive, Sparkles } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import MorningBriefing from '@/components/dashboard/MorningBriefing';
 
 const DashboardAsesor = () => {
   const navigate = useNavigate();

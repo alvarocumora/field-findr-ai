@@ -198,6 +198,21 @@ export const ParcelaToolbar = ({
               onValueChange={([v]) => onSetSolarHour?.(v)}
               className="w-full"
             />
+            {/* Season presets */}
+            <div className="flex gap-1 mt-1">
+              <Button variant="ghost" size="sm" className="h-5 text-[8px] flex-1 px-0" onClick={() => onSetSolarHour?.(14)}>
+                ☀️ Verano
+              </Button>
+              <Button variant="ghost" size="sm" className="h-5 text-[8px] flex-1 px-0" onClick={() => onSetSolarHour?.(10)}>
+                ❄️ Invierno
+              </Button>
+              <Button variant="ghost" size="sm" className="h-5 text-[8px] flex-1 px-0" onClick={() => onSetSolarHour?.(7)}>
+                🌅 Amanecer
+              </Button>
+              <Button variant="ghost" size="sm" className="h-5 text-[8px] flex-1 px-0" onClick={() => onSetSolarHour?.(19)}>
+                🌇 Atardecer
+              </Button>
+            </div>
           </div>
 
           {/* Quick toggles */}
