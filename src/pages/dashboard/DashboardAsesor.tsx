@@ -95,6 +95,8 @@ const DashboardAsesor = () => {
   return (
     <div className="min-h-screen bg-background">
         <div className="container py-8 space-y-8">
+          {/* Morning Briefing */}
+          <MorningBriefing />
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
