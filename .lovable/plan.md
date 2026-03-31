@@ -1,166 +1,168 @@
 
 
-# Plan Disruptivo: Transformar el Portal en Plataforma Inmobiliaria de Clase Mundial
+# Plan Maestro Disruptivo: Experiencias por Perfil de Usuario
 
-## Estado Actual
+## Contexto
 
-Plataforma madura con: landing 3D con globo scroll-driven, explorador con Mapbox, detalle de proyecto con hero glassmorphism + cotizador flotante + social proof, diseñador 3D de parcelas, CRM, sistema de reservas/créditos/cierre, tour 360, y dashboard ejecutivo. La base es sólida pero hay brechas críticas en engagement, automatización y experiencia mobile.
-
----
-
-## Fase 1: Experiencia de Descubrimiento Inmersiva
-
-### 1.1 Búsqueda Conversacional con IA
-- Reemplazar el search bar estándar por un input tipo ChatGPT: "Busco terreno de 5000m² con bosque nativo cerca de Pucón bajo 50 millones"
-- El backend (edge function con Lovable AI) parsea la intención y devuelve resultados filtrados con explicación natural
-- Integrar en la landing como hero CTA principal
-
-**Archivos:** nuevo `src/components/explore/ConversationalSearch.tsx`, nueva edge function `supabase/functions/ai-natural-search/index.ts`
-
-### 1.2 Explorador con Vista Dividida Inteligente
-- Al hacer hover en un listing del panel izquierdo, el mapa hace fly-to animado al punto
-- Al dibujar un área en el mapa, el panel filtra solo los dentro del polígono
-- Agregar modo "Street View" embebido desde Google cuando se selecciona un listing
-
-**Archivo:** `src/pages/Explorar.tsx`, `src/components/explore/ExploreMapPanel.tsx`
-
-### 1.3 Cards de Proyecto con Video Preview
-- En la landing, las cards de proyecto muestran un video loop corto (3s) al hacer hover, similar a Netflix
-- Fallback a imagen estática si no hay video
-- Agregar campo `video_url` a la tabla `projects`
-
-**Archivos:** `src/components/landing/ScrollytellingSection.tsx`, migración SQL
+La plataforma tiene 3 roles (buyer, agent, admin) pero la experiencia post-login es genérica. El siguiente paso es crear experiencias diferenciadas y personalizadas para cada perfil, maximizando conversión para compradores, productividad para agentes, y control para admins.
 
 ---
 
-## Fase 2: Motor de Conversión Avanzado
+## Fase 6: Onboarding Personalizado por Rol
 
-### 2.1 Cotizador Público con Simulación Financiera Completa
-- Expandir `PublicLotQuoter` para incluir: pie inicial configurable, tasa de interés variable, tabla de amortización descargable en PDF
-- Comparación visual "Arriendo vs Compra" con gráfico de crossover
-- Botón "Agendar videollamada con asesor" integrado
+### 6.1 Wizard de Onboarding Post-Registro
+- Al primer login, detectar rol del usuario y mostrar un wizard de 3-4 pasos
+- **Buyer**: Preferencias de búsqueda (región, presupuesto, tamaño, uso) → Guardar como `saved_searches` automática
+- **Agent**: Datos de empresa, zona de operación, tipo de proyectos → Pre-configurar perfil y primer proyecto
+- Guardar flag `onboarding_completed` en profiles para no repetir
 
-**Archivo:** `src/components/projects/PublicLotQuoter.tsx`
+**Archivos:** nuevo `src/components/onboarding/OnboardingWizard.tsx`, migración (columna `onboarding_completed` en profiles), `src/pages/Auth.tsx` (redirect post-login)
 
-### 2.2 Reserva Express en 3 Clicks
-- Flujo simplificado: Seleccionar lote → Confirmar datos → Pagar (MercadoPago/transferencia)
-- Progress bar tipo checkout e-commerce
-- Timer de urgencia: "Este lote se reservará por 15 minutos"
+### 6.2 Dashboard de Bienvenida Contextual
+- **Buyer sin reservas**: "Explora terrenos cerca de ti" + cards de proyectos destacados + búsqueda IA
+- **Agent sin proyectos**: "Crea tu primer proyecto" + guía paso a paso + métricas vacías con CTA
+- Reemplazar dashboards vacíos por estados empty-state con acciones claras
 
-**Archivo:** `src/components/lots/LotReservationDialog.tsx`
-
-### 2.3 Retargeting Inteligente con Alertas Personalizadas
-- Cuando un usuario visita un proyecto pero no reserva, guardar evento en BD
-- Edge function programada que envía email/push 24h después: "El Lote 15 que viste sigue disponible, pero 3 personas lo están viendo"
-- Integrar con `saved_searches` existente
-
-**Archivos:** nueva edge function `supabase/functions/retargeting-alerts/index.ts`, migración para tabla `user_events`
+**Archivos:** `src/pages/dashboard/DashboardAsesor.tsx`, nuevo `src/components/dashboard/BuyerHome.tsx`
 
 ---
 
-## Fase 3: Experiencia Mobile-First Premium
+## Fase 7: Experiencia Buyer Premium
 
-### 3.1 Bottom Navigation Nativa (PWA)
-- Reemplazar el header mobile por una barra de navegación inferior estilo app nativa con 5 iconos: Explorar, Favoritos, Buscar, Mi Terreno, Perfil
-- Transiciones suaves entre secciones
-- Haptic feedback simulado con vibración API
+### 7.1 Home del Comprador
+- Página `/buyer/home` con: recomendaciones IA basadas en búsquedas guardadas, proyectos visitados recientemente, alertas de precio, favoritos recientes
+- Sección "Terrenos para ti" con scoring de match personalizado
+- Card de estado de reserva activa (si existe) con acceso directo a Mi Terreno
 
-**Archivos:** nuevo `src/components/navigation/MobileBottomNav.tsx`, `src/components/Layout.tsx`
+**Archivos:** nuevo `src/pages/BuyerHome.tsx`, ruta en `App.tsx`
 
-### 3.2 Swipe Cards para Explorar (Tinder de Terrenos)
-- Modo alternativo de exploración en mobile: cards con swipe derecha (favorito), izquierda (descartar), arriba (contactar)
-- Cada card muestra: imagen satelital, precio, área, score de inversión
-- Los swipes se guardan como interacciones para el motor de recomendaciones
+### 7.2 Historial de Actividad del Comprador
+- Timeline visual de interacciones: proyectos visitados, lotes cotizados, búsquedas realizadas
+- Basado en `user_events` existente
+- Accesible desde perfil y desde home del comprador
 
-**Archivo:** nuevo `src/components/explore/SwipeExplorer.tsx`
+**Archivo:** nuevo `src/components/buyer/ActivityTimeline.tsx`
 
-### 3.3 Compartir Lote como Story
-- Botón "Compartir como Story" que genera una imagen vertical (9:16) con la info del lote sobre fondo satelital
-- Optimizada para Instagram/WhatsApp Stories
-- Canvas API para generar la imagen client-side
+### 7.3 Alertas Inteligentes Personalizadas
+- Configurar alertas desde perfil: "Avisarme cuando haya terrenos < 30M en La Araucanía"
+- Integrar con `saved_searches` + `notifications`
+- Badge en bottom nav cuando hay alertas nuevas
 
-**Archivo:** nuevo `src/components/social/StoryGenerator.tsx`
-
----
-
-## Fase 4: Inteligencia de Datos para Agentes
-
-### 4.1 Scoring Predictivo de Leads
-- Modelo de scoring basado en: número de visitas, tiempo en página, lotes vistos, búsquedas similares, interacciones WhatsApp
-- Badge visual en CRM: "Hot", "Warm", "Cold" con probabilidad de conversión
-- Edge function que recalcula scores diariamente
-
-**Archivos:** `src/components/leads/LeadScoreBadge.tsx`, edge function `supabase/functions/lead-scoring/index.ts`
-
-### 4.2 Mapa de Calor de Demanda Real
-- Overlay en el mapa del agente que muestra zonas con más búsquedas/favoritos de compradores reales
-- Datos agregados y anonimizados de `user_events`
-- Filtrable por período (7d, 30d, 90d)
-
-**Archivo:** `src/pages/dashboard/DemandHeatmapDashboard.tsx`
-
-### 4.3 Auto-Seguimiento por WhatsApp
-- Templates predefinidos por etapa del funnel
-- Botón "Enviar seguimiento" que abre WhatsApp con mensaje pre-llenado contextual
-- Registro automático del contacto en el timeline del lead
-
-**Archivo:** `src/lib/whatsappUtils.ts`, `src/components/tools/EnhancedCRM.tsx`
+**Archivos:** `src/components/profile/PreferencesTab.tsx`, edge function `check-saved-searches`
 
 ---
 
-## Fase 5: Diferenciadores Únicos
+## Fase 8: Experiencia Agent Potenciada
 
-### 5.1 Comparador de Inversión Multi-Proyecto
-- Herramienta que compara retorno esperado entre lotes de diferentes proyectos
-- Gráfico de radar: plusvalía, accesibilidad, servicios, liquidez, riesgo
-- Basado en datos reales de ventas históricas cuando estén disponibles
+### 8.1 Dashboard Contextual Inteligente
+- KPIs que cambian según la hora: mañana = seguimientos pendientes, tarde = reservas del día, fin de mes = metas
+- "Acción del día": sugerencia IA basada en datos (ej: "Contacta a María, lleva 3 días sin respuesta")
+- Widget de actividad reciente de sus proyectos (nuevas vistas, favoritos, leads)
 
-**Archivo:** nuevo `src/components/tools/InvestmentComparator.tsx`
+**Archivos:** `src/pages/dashboard/DashboardAsesor.tsx`
 
-### 5.2 Timeline Interactivo del Terreno
-- Para cada lote vendido, mostrar su historia: publicación → primera visita → reserva → promesa → escritura
-- Visible para el comprador en "Mi Terreno" y para el agente en el CRM
-- Animación tipo "journey" con iconos y fechas
+### 8.2 Vista Rápida de Proyecto desde Sidebar
+- Hover en "Proyectos" del sidebar muestra mini-cards con stats de cada proyecto (lotes vendidos/disponibles)
+- Click directo al proyecto sin pasar por listado
 
-**Archivo:** `src/pages/MiTerreno.tsx`, `src/components/buyer/PurchaseTimeline.tsx`
+**Archivo:** `src/components/ModernSidebar.tsx`
 
-### 5.3 Modo Nocturno del Mapa Satelital
-- Toggle para ver el proyecto en modo nocturno (Mapbox dark satellite)
-- Simula iluminación artificial para mostrar accesibilidad y conectividad visual
-- Diferenciador visual vs competencia
+### 8.3 Centro de Comunicaciones Unificado
+- Fusionar mensajes internos + historial WhatsApp + emails enviados en un timeline por lead
+- Vista tipo "inbox" con threads por lead/comprador
+- Respuesta rápida con templates predefinidos
 
-**Archivo:** `src/components/lots/LotMapView.tsx`
+**Archivo:** `src/pages/dashboard/Messages.tsx`
 
 ---
 
-## Resumen de Archivos y Prioridad
+## Fase 9: Experiencia Admin Completa
 
-| Prioridad | Componente | Impacto | Esfuerzo |
-|-----------|-----------|---------|----------|
-| 1 | Búsqueda Conversacional IA | Muy Alto | Alto |
-| 2 | Bottom Nav Mobile | Alto | Bajo |
-| 3 | Reserva Express 3 clicks | Alto | Medio |
-| 4 | Swipe Explorer Mobile | Alto | Medio |
-| 5 | Cotizador Financiero Completo | Alto | Medio |
-| 6 | Story Generator | Medio | Bajo |
-| 7 | Lead Scoring Predictivo | Medio | Alto |
-| 8 | Retargeting Alerts | Medio | Alto |
-| 9 | Comparador de Inversión | Medio | Medio |
-| 10 | Modo Nocturno Mapa | Bajo | Bajo |
+### 9.1 Panel de Control de Plataforma
+- Métricas globales: usuarios activos, proyectos publicados, reservas totales, GMV (volumen bruto)
+- Gráficos de tendencia semanal/mensual
+- Alertas del sistema: funciones edge con errores, usuarios reportados, documentos vencidos
 
-## Migraciones de BD Necesarias
+**Archivo:** `src/pages/dashboard/DashboardAdmin.tsx`
+
+### 9.2 Gestión Avanzada de Agentes
+- Tabla de agentes con: proyectos activos, reservas logradas, tasa de conversión, comisiones pendientes
+- Acciones: activar/desactivar, asignar leads, ver rendimiento
+- Comparativa entre agentes (ranking)
+
+**Archivo:** `src/components/AgentManagement.tsx`
+
+### 9.3 Auditoría y Seguridad
+- Log de acciones críticas: cambios de precio, cancelaciones de reserva, cambios de estado
+- Basado en tabla `audit_logs` existente
+- Filtros por usuario, tipo de acción, fecha
+
+**Archivo:** nuevo `src/pages/dashboard/AuditLog.tsx`, ruta admin en `App.tsx`
+
+---
+
+## Fase 10: Personalización Cross-Perfil
+
+### 10.1 Notificaciones Push (PWA)
+- Solicitar permiso de notificaciones push al usuario
+- Enviar notificaciones para: nuevos lotes en zona de interés, pago próximo a vencer, seguimiento pendiente
+- Integrar con service worker existente
+
+**Archivo:** `src/hooks/usePWA.ts`, edge function para push
+
+### 10.2 Modo Demo/Tour Guiado
+- Para usuarios nuevos que no se registran, ofrecer "Tour de la plataforma" interactivo
+- Tooltips guiados que muestran las funciones principales
+- Call-to-action de registro al final del tour
+
+**Archivo:** nuevo `src/components/onboarding/GuidedTour.tsx`
+
+---
+
+## Migración de BD Necesaria
 
 ```sql
--- Tabla de eventos de usuario para analytics y retargeting
-CREATE TABLE user_events (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id),
-  event_type text NOT NULL, -- 'view_project', 'view_lot', 'search', 'favorite'
-  metadata jsonb DEFAULT '{}',
-  created_at timestamptz DEFAULT now()
-);
-
--- Campo video en proyectos
-ALTER TABLE projects ADD COLUMN IF NOT EXISTS video_url text;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS onboarding_completed boolean DEFAULT false;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS onboarding_data jsonb DEFAULT '{}';
 ```
+
+---
+
+## Resumen de Prioridad
+
+| Prioridad | Componente | Perfil | Impacto |
+|-----------|-----------|--------|---------|
+| 1 | Onboarding Wizard | Todos | Muy Alto |
+| 2 | Buyer Home con recomendaciones | Buyer | Alto |
+| 3 | Dashboard contextual agente | Agent | Alto |
+| 4 | Panel admin con métricas globales | Admin | Alto |
+| 5 | Alertas personalizadas buyer | Buyer | Alto |
+| 6 | Activity Timeline buyer | Buyer | Medio |
+| 7 | Centro comunicaciones unificado | Agent | Medio |
+| 8 | Auditoría admin | Admin | Medio |
+| 9 | Notificaciones Push PWA | Todos | Medio |
+| 10 | Tour guiado demo | Público | Medio |
+
+## Archivos Nuevos
+
+| Archivo | Descripción |
+|---------|-------------|
+| `src/components/onboarding/OnboardingWizard.tsx` | Wizard post-registro por rol |
+| `src/pages/BuyerHome.tsx` | Home personalizado del comprador |
+| `src/components/buyer/ActivityTimeline.tsx` | Historial de interacciones |
+| `src/components/dashboard/BuyerHome.tsx` | Dashboard empty-state buyer |
+| `src/pages/dashboard/AuditLog.tsx` | Visor de auditoría admin |
+| `src/components/onboarding/GuidedTour.tsx` | Tour interactivo para visitantes |
+
+## Archivos a Modificar
+
+| Archivo | Cambio |
+|---------|--------|
+| `src/App.tsx` | Rutas `/buyer/home`, `/admin/audit` |
+| `src/pages/Auth.tsx` | Redirect a onboarding si `!onboarding_completed` |
+| `src/pages/dashboard/DashboardAsesor.tsx` | KPIs contextuales + acción del día |
+| `src/pages/dashboard/DashboardAdmin.tsx` | Métricas globales de plataforma |
+| `src/components/ModernSidebar.tsx` | Mini-cards de proyecto en hover |
+| `src/components/profile/PreferencesTab.tsx` | Config de alertas inteligentes |
+| **Migración SQL** | `onboarding_completed`, `onboarding_data` en profiles |
 
