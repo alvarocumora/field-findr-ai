@@ -86,6 +86,14 @@ const OnboardingWizard = ({ onComplete }: OnboardingWizardProps) => {
     updateProfile({
       phone,
       first_name: profile?.first_name || companyName,
+      onboarding_completed: true,
+      onboarding_data: {
+        country: selectedCountry,
+        userType,
+        operatingRegion,
+        estimatedUnits,
+        completedAt: new Date().toISOString(),
+      },
     });
   };
 
