@@ -74,6 +74,16 @@ const FooterSection = () => {
                 </li>
               ))}
             </ul>
+            <h4 className="font-semibold text-foreground mb-4 mt-6">Profesionales</h4>
+            <ul className="space-y-3">
+              {links.pro.map((link) => (
+                <li key={link.name}>
+                  <Link to={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div>
