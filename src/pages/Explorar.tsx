@@ -20,6 +20,9 @@ const Explorar = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
+  // View mode for mobile
+  const [mobileViewMode, setMobileViewMode] = useState<'list' | 'swipe'>('list');
+
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [showAISearch, setShowAISearch] = useState(false);
