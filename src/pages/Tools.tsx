@@ -24,25 +24,27 @@ const Tools = () => {
   const { isAgent, isAdmin } = useSmartRedirect();
   const isPro = isAgent || isAdmin;
 
-  const publicTabs = [
+  const aiTabs = [
     { id: 'ai-chat', label: 'Asistente IA', icon: Bot },
     { id: 'price-predictor', label: 'Predictor', icon: TrendingUp },
     { id: 'smart-search', label: 'Búsqueda IA', icon: Search },
+  ];
+
+  const financeTabs = [
     { id: 'calculators', label: 'Calculadoras', icon: Calculator },
-    { id: 'sii', label: 'Catastro SII', icon: FileText },
     { id: 'comparator', label: 'Comparador', icon: Scale },
+  ];
+
+  const dataTabs = [
+    { id: 'sii', label: 'Catastro SII', icon: FileText },
   ];
 
   const proTabs = isPro ? [
     { id: 'content-gen', label: 'Contenido', icon: Wand2 },
+    { id: 'social', label: 'Social', icon: Share2 },
   ] : [];
 
-  const tabs = [...publicTabs, ...proTabs];
-
-  const proLinks = [
-    { name: 'CRM Avanzado', href: '/asesor/crm', icon: Users, desc: 'Gestión completa de clientes y pipeline' },
-    { name: 'Analytics', href: '/asesor/analytics', icon: BarChart3, desc: 'Reportes e inteligencia de negocio' },
-  ];
+  const tabs = [...aiTabs, ...financeTabs, ...dataTabs, ...proTabs];
 
   return (
     <Layout>
