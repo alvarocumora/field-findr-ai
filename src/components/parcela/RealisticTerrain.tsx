@@ -135,7 +135,8 @@ async function loadStitchedSatelliteTexture(
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = THREE.ClampToEdgeWrapping;
   tex.wrapT = THREE.ClampToEdgeWrapping;
-  tex.minFilter = THREE.LinearMipMapLinearFilter;
+  tex.generateMipmaps = false;
+  tex.minFilter = THREE.LinearFilter;
   tex.magFilter = THREE.LinearFilter;
   tex.needsUpdate = true;
 
