@@ -1,56 +1,67 @@
 
+Plan: Debug y consolidación del Diseñador 3D
 
-# Plan: Fix Satellite Imagery + Mejoras 3D
+Hallazgos clave
+- El Canvas sí está renderizando; no parece un problema de altura 0.
+- La vista “Relieve Real” entra sin error, pero la base sigue viéndose ploma. En el código hay 3 causas probables:
+  1. la grilla técnica oscura se dibuja encima del terreno cuando `Snap` está activo;
+  2. el satélite usa `meshStandardMaterial`, así que luz/sombra pueden lavar la imagen;
+  3. `RealisticTerrain` prioriza `latitude/longitude` del lote sobre el centroide real del polígono.
+- Además hay fragmentación: `ParcelaToolbar` y `AssetCatalog` duplican el catálogo 3D con lógicas y categorías distintas.
 
-## Root Cause
+Fase 1 — Debug visual del pipeline 3D
+- Añadir un HUD de depuración dentro del diseñador con: fuente de coordenadas, centroide, tamaño del terreno, tiles cargados, zoom usado, `repeat/offset`, estado de textura y material activo.
+- Añadir una mini preview 2D del canvas satelital stitched para separar “la imagen no llegó” de “Three.js no la está mostrando”.
+- Añadir toggles de diagnóstico: ocultar grilla, usar material básico sin iluminación, mostrar solo textura, mostrar solo relieve.
 
-Los logs confirman que **9/9 tiles se cargaron correctamente** y la textura se creó. El problema es la **API endpoint**:
+Fase 2 — Normalización geográfica
+- Crear un helper único para normalizar polígonos desde array o GeoJSON, eliminar punto de cierre duplicado y calcular centroide/bounds.
+- Usar ese helper en `LotDesigner3DDialog`, `LotDetailSheet`, `MiTerreno` y `RealisticTerrain`.
+- Cambiar la prioridad del centro geográfico: si hay polígono válido, usar su centroide; solo usar `latitude/longitude` como fallback.
+- Mostrar aviso claro cuando el lote no tenga polígono válido o sus coordenadas sean inconsistentes.
 
-- Se usa `/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg` — esta API legacy puede devolver imágenes vacías o con CORS restrictivo en ciertas zonas
-- Los tiles `@2x` son de 512x512px pero se dibujan en slots de 256px, perdiendo resolución
-- Si el canvas se "tainted" por CORS, THREE.js muestra el mesh sin textura (gris)
+Fase 3 — Corrección del render satelital
+- Desactivar por defecto la grilla técnica sobre terreno real y moverla a un toggle manual.
+- Separar el terreno en dos capas:
+  - base satelital con `meshBasicMaterial` para color fiel;
+  - relieve/sombreado opcional muy suave encima.
+- Ajustar cámara top/orbit para priorizar lectura del terreno antes que el cielo.
+- Escalar el `ClickPlane` al tamaño real del terreno y limpiar/dispose de texturas al recargar.
 
-## Solución
+Fase 4 — Consolidación de herramientas
+- Unificar `ParcelaToolbar` + `AssetCatalog` en un solo panel lateral.
+- Dejar `OBJECT_CATALOG` como única fuente de verdad para categorías, labels, iconos, escala y footprint.
+- Reorganizar la UI en módulos: Escena, Modelos, Terreno, Medición, Exportar.
+- Corregir detalles de estado del diseñador, incluyendo la carga del diseño guardado con `useEffect` en vez de `useMemo`.
 
-### 1. Cambiar a Mapbox Static Tiles API (moderna, con CORS)
+Fase 5 — Mejora de modelos 3D
+- Mantener primitives existentes, pero exponerlas como presets visuales con miniatura, escala sugerida y huella aproximada.
+- Ordenar familias claras: viviendas, vegetación, outdoor, infraestructura.
+- Mejorar acciones de objeto: duplicar, bloquear, bajar al terreno, centrar, reset de rotación/escala.
+- Dejar “Subidos” solo para GLB/GLTF externos y separar esa lógica del catálogo base.
 
-Reemplazar la URL de tiles de:
-```
-/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg
-```
-por:
-```
-/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}
-```
+Fase 6 — Validación de rutas críticas
+- Probar el diseñador en 3 entradas: diálogo público del proyecto, preview de `LotDetailSheet` y pestaña `MiTerreno`.
+- Verificar un lote con polígono real contra el mapa 2D para confirmar que el centro 3D coincide visualmente.
+- Confirmar estados: carga, error, sin polígono, con satélite, con terreno plano.
 
-Esta API es la recomendada, tiene CORS correcto, y siempre devuelve imágenes válidas.
+Archivos a intervenir
+- `src/components/parcela/RealisticTerrain.tsx`
+- `src/components/parcela/ParcelaDesigner3D.tsx`
+- `src/components/parcela/ParcelaToolbar.tsx`
+- `src/components/parcela/AssetCatalog.tsx`
+- `src/components/parcela/useParcelaState.ts`
+- `src/components/lots/LotDesigner3DDialog.tsx`
+- `src/components/lots/LotDetailSheet.tsx`
+- `src/pages/MiTerreno.tsx`
+- nuevo helper compartido para normalización geográfica del lote
 
-### 2. Usar tiles de 512px nativos
+Resultado esperado
+- La base satelital se ve claramente, sin velo gris.
+- El diseñador queda con una sola arquitectura de herramientas y catálogo.
+- Los modelos 3D se sienten más consistentes, más útiles y más fáciles de operar en todas las rutas.
 
-Cambiar `TILE_PX` de 256 a 512 para el canvas stitched (1536x1536), duplicando la resolución visual del terreno satelital.
-
-### 3. Agregar debug visual temporal
-
-Si la textura no carga, mostrar un mensaje visible en el canvas con el estado ("Textura cargada: sí/no, tiles: 9/9"). Esto permite confirmar que la textura se aplicó.
-
-### 4. Forzar `texture.needsUpdate` y `colorSpace`
-
-Asegurar que:
-- `tex.needsUpdate = true` se llama explícitamente
-- `tex.colorSpace = THREE.SRGBColorSpace` para colores correctos (sin esto, satellite puede verse oscuro/lavado)
-
-### 5. Fallback visible
-
-Si después de 5 segundos no hay textura, mostrar un overlay "No se pudo cargar imagen satelital" en lugar de un plano gris silencioso.
-
-## Archivos a Modificar
-
-| Archivo | Cambio |
-|---------|--------|
-| `src/components/parcela/RealisticTerrain.tsx` | Cambiar URL de tiles, usar 512px, agregar colorSpace, needsUpdate, fallback |
-| `src/components/parcela/ParcelaDesigner3D.tsx` | Mostrar estado de textura como overlay cuando falla |
-
-## Resultado Esperado
-
-Al abrir el diseñador 3D con "Relieve Real" activo, se ve inmediatamente la imagen satelital con vegetación, caminos y terreno real como fondo del diseño.
-
+Detalle técnico
+- No parece un problema de tamaño del `Canvas`; la escena sí está viva.
+- El primer ajuste crítico es aislar textura vs grilla vs iluminación para confirmar si el fallo es de carga, georreferencia o presentación.
+- No se requieren cambios de base de datos para esta consolidación.
