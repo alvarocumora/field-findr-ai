@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AIChatAssistant } from '@/components/ai/AIChatAssistant';
@@ -12,7 +11,7 @@ import InvestmentComparator from '@/components/tools/InvestmentComparator';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Bot, Calculator, TrendingUp, Search, Wand2, 
-  Sparkles, FileText, BarChart3, Users, ArrowRight, Scale
+  Sparkles, FileText, Scale
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
@@ -23,25 +22,26 @@ const Tools = () => {
   const { isAgent, isAdmin } = useSmartRedirect();
   const isPro = isAgent || isAdmin;
 
-  const publicTabs = [
+  const aiTabs = [
     { id: 'ai-chat', label: 'Asistente IA', icon: Bot },
     { id: 'price-predictor', label: 'Predictor', icon: TrendingUp },
     { id: 'smart-search', label: 'Búsqueda IA', icon: Search },
+  ];
+
+  const financeTabs = [
     { id: 'calculators', label: 'Calculadoras', icon: Calculator },
-    { id: 'sii', label: 'Catastro SII', icon: FileText },
     { id: 'comparator', label: 'Comparador', icon: Scale },
+  ];
+
+  const dataTabs = [
+    { id: 'sii', label: 'Catastro SII', icon: FileText },
   ];
 
   const proTabs = isPro ? [
     { id: 'content-gen', label: 'Contenido', icon: Wand2 },
   ] : [];
 
-  const tabs = [...publicTabs, ...proTabs];
-
-  const proLinks = [
-    { name: 'CRM Avanzado', href: '/asesor/crm', icon: Users, desc: 'Gestión completa de clientes y pipeline' },
-    { name: 'Analytics', href: '/asesor/analytics', icon: BarChart3, desc: 'Reportes e inteligencia de negocio' },
-  ];
+  const tabs = [...aiTabs, ...financeTabs, ...dataTabs, ...proTabs];
 
   return (
     <Layout>
@@ -59,7 +59,7 @@ const Tools = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className={`grid mb-6 h-auto ${tabs.length <= 5 ? 'grid-cols-5' : 'grid-cols-3 lg:grid-cols-6'}`}>
+          <TabsList className={`grid mb-6 h-auto ${tabs.length <= 5 ? 'grid-cols-5' : tabs.length <= 7 ? 'grid-cols-4 lg:grid-cols-7' : 'grid-cols-4 lg:grid-cols-' + tabs.length}`}>
             {tabs.map(tab => (
               <TabsTrigger 
                 key={tab.id} 
@@ -111,33 +111,6 @@ const Tools = () => {
             <InvestmentComparator />
           </TabsContent>
         </Tabs>
-
-        {/* Pro tools links */}
-        {isPro && (
-          <div className="mt-8">
-            <h2 className="text-lg font-semibold mb-4">Herramientas Profesionales</h2>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {proLinks.map(link => (
-                <Link key={link.href} to={link.href}>
-                  <Card className="hover:border-primary/50 transition-colors cursor-pointer">
-                    <CardHeader className="flex flex-row items-center gap-4 pb-3">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <link.icon className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          {link.name}
-                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                        </CardTitle>
-                        <CardDescription>{link.desc}</CardDescription>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </Layout>
   );

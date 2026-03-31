@@ -341,6 +341,17 @@ const ProjectDetail = () => {
   return (
     <PublicLayout>
       <div className={`min-h-screen bg-background ${isMobile ? 'pb-20' : ''}`}>
+        {/* Breadcrumbs */}
+        <div className="container px-4 pt-4 pb-2">
+          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Link to="/" className="hover:text-primary transition-colors">Inicio</Link>
+            <span>/</span>
+            <Link to="/explorar" className="hover:text-primary transition-colors">Explorar</Link>
+            <span>/</span>
+            <span className="text-foreground font-medium truncate max-w-[200px]">{project.name}</span>
+          </nav>
+        </div>
+
         {/* Immersive Hero */}
         <ProjectHero
           project={project}

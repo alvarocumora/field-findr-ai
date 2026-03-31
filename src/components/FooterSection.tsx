@@ -8,16 +8,21 @@ const FooterSection = () => {
   const links = {
     platform: [
       { name: 'Explorar terrenos', href: '/explorar' },
-      { name: 'Proyectos de loteo', href: '/explorar' },
+      { name: 'Herramientas IA', href: '/tools' },
       { name: 'Precios', href: '/pricing' },
+      { name: 'Instalar App', href: '/instalar' },
     ],
     company: [
-      { name: 'Sobre nosotros', href: '#' },
+      { name: 'Blog', href: '/blog' },
       { name: 'Contacto', href: '/contacto' },
     ],
+    pro: [
+      { name: 'Para Profesionales', href: '/pricing' },
+      { name: 'Registrarse', href: '/auth' },
+    ],
     legal: [
-      { name: 'Términos de uso', href: '#' },
-      { name: 'Privacidad', href: '#' },
+      { name: 'Términos de uso', href: '/contacto' },
+      { name: 'Privacidad', href: '/contacto' },
     ],
   };
 
@@ -62,6 +67,16 @@ const FooterSection = () => {
             <h4 className="font-semibold text-foreground mb-4">Empresa</h4>
             <ul className="space-y-3">
               {links.company.map((link) => (
+                <li key={link.name}>
+                  <Link to={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <h4 className="font-semibold text-foreground mb-4 mt-6">Profesionales</h4>
+            <ul className="space-y-3">
+              {links.pro.map((link) => (
                 <li key={link.name}>
                   <Link to={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                     {link.name}

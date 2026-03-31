@@ -7,13 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Heart, MapPin, Bell, TrendingDown, Search, Home, 
-  ChevronRight, Sparkles, Calendar, Eye
+  ChevronRight, Sparkles, Calendar, Eye, Scale, Calculator
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '@/components/Layout';
 import ActivityTimeline from '@/components/buyer/ActivityTimeline';
+import PriceAlertCard from '@/components/buyer/PriceAlertCard';
 
 const BuyerHome = () => {
   const { user } = useAuth();
@@ -87,12 +88,14 @@ const BuyerHome = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
           {[
             { label: 'Explorar Mapa', icon: MapPin, href: '/explorar', variant: 'default' as const },
             { label: 'Mis Favoritos', icon: Heart, href: '/favoritos', variant: 'outline' as const, badge: favorites?.length },
             { label: 'Mis Alertas', icon: Bell, href: '/alertas', variant: 'outline' as const },
             { label: 'Mi Terreno', icon: Home, href: '/mi-terreno', variant: 'outline' as const },
+            { label: 'Comparar', icon: Scale, href: '/comparar', variant: 'outline' as const },
+            { label: 'Calculadoras', icon: Calculator, href: '/tools', variant: 'outline' as const },
           ].map((action) => (
             <Button
               key={action.href}
@@ -267,6 +270,9 @@ const BuyerHome = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Price Alerts */}
+            <PriceAlertCard />
 
             {/* Price Alert CTA */}
             <Card className="border-border/40 bg-gradient-to-br from-primary/5 to-primary/10">

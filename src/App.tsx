@@ -43,6 +43,7 @@ import CityLanding from "./pages/CityLanding";
 import Contact from "./pages/Contact";
 import Comparar from "./pages/Comparar";
 import Alertas from "./pages/Alertas";
+import Blog from "./pages/Blog";
 
 // ===== Buyer Pages =====
 import Profile from "./pages/Profile";
@@ -123,6 +124,7 @@ const App = () => (
               <Route path="/contacto" element={<Contact />} />
               <Route path="/comparar" element={<Comparar />} />
               <Route path="/alertas" element={<Alertas />} />
+              <Route path="/blog" element={<Blog />} />
 
               {/* Subscription result pages */}
               <Route path="/subscription/success" element={<SubscriptionSuccess />} />
