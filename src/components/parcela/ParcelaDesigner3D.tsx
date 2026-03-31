@@ -270,6 +270,7 @@ export const ParcelaDesigner3D = ({
           shadows
           camera={{ position: [25, 20, 25], fov: 50 }}
           gl={{ preserveDrawingBuffer: true }}
+          style={{ background: 'linear-gradient(180deg, #87CEEB 0%, #B0D4E8 60%, #D4E4D0 100%)' }}
         >
           <Suspense fallback={null}>
             <SceneCapture captureRef={captureRef} />
