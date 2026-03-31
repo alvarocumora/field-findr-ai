@@ -9,6 +9,7 @@ interface RealisticTerrainProps {
   mapboxToken: string;
   onElevationLoaded?: (baseElevation: number) => void;
   onTextureLoading?: (loading: boolean) => void;
+  onTextureError?: (error: boolean) => void;
 }
 
 export interface TerrainHandle {
