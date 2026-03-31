@@ -12,6 +12,9 @@ import { Lot, LotInsert, LotFeatures } from '@/hooks/useLots';
 import { Project } from '@/hooks/useProjects';
 import { LotImageUploader } from './LotImageUploader';
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { Sparkles, Loader2 } from 'lucide-react';
 
 const lotSchema = z.object({
   lot_number: z.string().min(1, 'El número de lote es requerido').max(50),
