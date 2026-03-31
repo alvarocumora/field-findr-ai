@@ -294,6 +294,7 @@ export const ParcelaDesigner3D = ({
                 longitude={longitude}
                 mapboxToken={mapboxToken || ''}
                 onElevationLoaded={setBaseElevation}
+                onTextureLoading={setSatelliteLoading}
               />
             ) : (
               <FlatTerrain polygon={polygon} />
