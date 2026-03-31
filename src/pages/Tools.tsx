@@ -111,6 +111,10 @@ const Tools = () => {
           <TabsContent value="comparator">
             <InvestmentComparator />
           </TabsContent>
+
+          <TabsContent value="plusvalia">
+            <AppreciationCalculator />
+          </TabsContent>
         </Tabs>
       </div>
     </Layout>
