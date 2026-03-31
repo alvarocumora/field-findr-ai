@@ -182,7 +182,7 @@ function computeSizeFromPolygon(localCoords: [number, number][]): number {
 }
 
 export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>(
-  ({ polygon, latitude, longitude, size: sizeProp, mapboxToken, onElevationLoaded, onTextureLoading }, ref) => {
+  ({ polygon, latitude, longitude, size: sizeProp, mapboxToken, onElevationLoaded, onTextureLoading, onTextureError }, ref) => {
     const [heightData, setHeightData] = useState<Float32Array | null>(null);
     const [texture, setTexture] = useState<THREE.Texture | null>(null);
     const [baseElevation, setBaseElevation] = useState(0);
