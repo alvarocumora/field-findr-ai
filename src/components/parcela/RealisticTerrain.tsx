@@ -68,14 +68,14 @@ async function loadElevationTile(lat: number, lng: number, token: string): Promi
   });
 }
 
-/** Load a single tile image, returns null on failure */
+/** Load a single tile image using modern Static Tiles API */
 function loadTileImage(zoom: number, tx: number, ty: number, token: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
-    img.src = `https://api.mapbox.com/v4/mapbox.satellite/${zoom}/${tx}/${ty}@2x.jpg?access_token=${token}`;
+    img.src = `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/${TILE_PX}/${zoom}/${tx}/${ty}?access_token=${token}`;
   });
 }
 
