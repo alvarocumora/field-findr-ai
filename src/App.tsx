@@ -86,6 +86,10 @@ import AdminUsers from "./pages/AdminUsers";
 import AgentManagement from "./components/AgentManagement";
 import PropertyApprovalQueue from "./components/admin/PropertyApprovalQueue";
 import DocumentCenter from "./components/admin/DocumentCenter";
+import AuditLog from "./pages/dashboard/AuditLog";
+
+// ===== Buyer Pages (new) =====
+import BuyerHome from "./pages/BuyerHome";
 
 // ===== Dashboard Pages (lazy) =====
 import { DashboardAdmin, DashboardAsesor, DashboardInmobiliaria } from "./pages/dashboard";
@@ -130,6 +134,9 @@ const App = () => (
               <Route path="/reserva/pendiente" element={<ReservationPending />} />
 
               {/* ====== BUYER ROUTES (auth required) ====== */}
+              <Route path="/buyer/home" element={
+                <ProtectedRoute requireAuth><BuyerHome /></ProtectedRoute>
+              } />
               <Route path="/favoritos" element={
                 <ProtectedRoute requireAuth><Favorites /></ProtectedRoute>
               } />
@@ -328,6 +335,11 @@ const App = () => (
               <Route path="/admin/projects" element={
                 <DashboardLayout requiredRole="admin">
                   <ProjectsManagement />
+                </DashboardLayout>
+              } />
+              <Route path="/admin/audit" element={
+                <DashboardLayout requiredRole="admin">
+                  <AuditLog />
                 </DashboardLayout>
               } />
 

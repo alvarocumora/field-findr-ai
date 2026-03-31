@@ -15,7 +15,7 @@ import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
 import { ListingFormDialog } from '@/components/listings/ListingFormDialog';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import { useNavigate } from 'react-router-dom';
-import { FolderKanban, Map, FileArchive } from 'lucide-react';
+import { FolderKanban, Map, FileArchive, Sparkles } from 'lucide-react';
 
 const DashboardAsesor = () => {
   const navigate = useNavigate();
@@ -258,6 +258,38 @@ const DashboardAsesor = () => {
                       No hay datos de metas disponibles
                     </p>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Contextual Action */}
+              <Card className="border-border/40 bg-gradient-to-br from-primary/5 to-primary/10">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <h4 className="font-semibold text-foreground text-sm">Acción del Día</h4>
+                  </div>
+                  {(() => {
+                    const hour = new Date().getHours();
+                    if (hour < 12) return (
+                      <p className="text-sm text-muted-foreground">
+                        🌅 <strong>Mañana productiva:</strong> Revisa tus seguimientos pendientes. Los leads contactados antes del mediodía tienen 3x más conversión.
+                      </p>
+                    );
+                    if (hour < 17) return (
+                      <p className="text-sm text-muted-foreground">
+                        📊 <strong>Hora de cerrar:</strong> Revisa las reservas del día y actualiza el estado de tus leads activos.
+                      </p>
+                    );
+                    return (
+                      <p className="text-sm text-muted-foreground">
+                        🌙 <strong>Planifica mañana:</strong> Organiza tus citas y prepara cotizaciones para enviar temprano.
+                      </p>
+                    );
+                  })()}
+                  <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => navigate('/asesor/leads')}>
+                    <Users className="h-3 w-3" />
+                    Ver Leads Pendientes
+                  </Button>
                 </CardContent>
               </Card>
 

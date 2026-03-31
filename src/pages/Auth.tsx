@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
+import { useProfile } from '@/hooks/useProfile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,7 +23,8 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, signIn, signUp, loading } = useAuth();
-  const { getRedirectPath, isLoading: rolesLoading } = useSmartRedirect();
+  const { getRedirectPath, isLoading: rolesLoading, isBuyer } = useSmartRedirect();
+  const { profile, isLoading: profileLoading } = useProfile();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -34,11 +36,11 @@ const Auth = () => {
   const redirectParam = searchParams.get('redirect');
 
   useEffect(() => {
-    if (user && !rolesLoading) {
+    if (user && !rolesLoading && !profileLoading) {
       const target = redirectParam || getRedirectPath();
       navigate(target, { replace: true });
     }
-  }, [user, rolesLoading, redirectParam, navigate, getRedirectPath]);
+  }, [user, rolesLoading, profileLoading, redirectParam, navigate, getRedirectPath]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
