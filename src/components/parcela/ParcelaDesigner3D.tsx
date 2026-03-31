@@ -386,6 +386,8 @@ export const ParcelaDesigner3D = ({
             onUpdate={ps.updateObject}
             onRemove={ps.removeObject}
             onCenterInLot={handleCenterInLot}
+            onDuplicate={handleDuplicate}
+            onSnapToGround={handleSnapToGround}
           />
         )}
 
