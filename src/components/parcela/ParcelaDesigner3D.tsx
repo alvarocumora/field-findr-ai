@@ -41,7 +41,8 @@ function createTerrainShape(coords: [number, number][]): THREE.Shape {
 }
 
 const FlatTerrain = ({ polygon }: { polygon: number[][] | null }) => {
-  const localCoords = useMemo(() => polygonToLocalCoords(polygon || []), [polygon]);
+  const norm = useMemo(() => normalizePolygon(polygon), [polygon]);
+  const localCoords = norm.localCoords;
   const shape = useMemo(() => createTerrainShape(localCoords), [localCoords]);
 
   return (
