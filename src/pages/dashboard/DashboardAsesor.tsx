@@ -15,7 +15,7 @@ import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
 import { ListingFormDialog } from '@/components/listings/ListingFormDialog';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import { useNavigate } from 'react-router-dom';
-import { FolderKanban, Map, FileArchive } from 'lucide-react';
+import { FolderKanban, Map, FileArchive, Sparkles } from 'lucide-react';
 
 const DashboardAsesor = () => {
   const navigate = useNavigate();
