@@ -282,9 +282,9 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
         <group rotation={[-Math.PI / 2, 0, 0]}>
           <mesh geometry={geometry} receiveShadow castShadow>
             {texture ? (
-              <meshBasicMaterial map={texture} />
+              <meshStandardMaterial map={texture} roughness={1} metalness={0} side={THREE.DoubleSide} toneMapped={false} />
             ) : (
-              <meshBasicMaterial color="#5D8233" />
+              <meshStandardMaterial color="#5D8233" roughness={1} metalness={0} side={THREE.DoubleSide} toneMapped={false} />
             )}
           </mesh>
         </group>

@@ -57,6 +57,25 @@ function createTerrainShape(coords: [number, number][]): THREE.Shape {
   return shape;
 }
 
+function computeTerrainSize(coords: [number, number][]): number {
+  if (coords.length === 0) return 60;
+
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  for (const [x, y] of coords) {
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+
+  const span = Math.max(maxX - minX, maxY - minY);
+  return Math.max(60, span * 2.5);
+}
+
 const FlatTerrain = ({ polygon }: { polygon: number[][] | null }) => {
   const localCoords = useMemo(() => polygonToLocalCoords(polygon || []), [polygon]);
   const shape = useMemo(() => createTerrainShape(localCoords), [localCoords]);
@@ -112,19 +131,31 @@ const SceneCapture = ({ captureRef }: { captureRef: React.MutableRefObject<(() =
   return null;
 };
 
-const CameraController = ({ viewMode, controlsRef }: { viewMode: string; controlsRef: React.MutableRefObject<any> }) => {
+const CameraController = ({
+  viewMode,
+  controlsRef,
+  terrainSize,
+}: {
+  viewMode: string;
+  controlsRef: React.MutableRefObject<any>;
+  terrainSize: number;
+}) => {
   const { camera } = useThree();
   useEffect(() => {
+    const topHeight = Math.max(terrainSize * 0.95, 70);
+    const orbitDistance = Math.max(terrainSize * 0.7, 55);
+    const orbitHeight = Math.max(terrainSize * 0.42, 28);
+
     if (viewMode === 'top') {
-      camera.position.set(0, 60, 0.01);
+      camera.position.set(0, topHeight, 0.01);
       camera.lookAt(0, 0, 0);
       if (controlsRef.current) { controlsRef.current.target.set(0, 0, 0); controlsRef.current.update(); }
     } else if (viewMode === 'orbit') {
-      camera.position.set(25, 20, 25);
+      camera.position.set(orbitDistance, orbitHeight, orbitDistance);
       camera.lookAt(0, 0, 0);
       if (controlsRef.current) { controlsRef.current.target.set(0, 0, 0); controlsRef.current.update(); }
     }
-  }, [viewMode, camera, controlsRef]);
+  }, [viewMode, camera, controlsRef, terrainSize]);
   return null;
 };
 
@@ -143,6 +174,8 @@ export const ParcelaDesigner3D = ({
   const [glbAssets, setGlbAssets] = useState<GLBAsset[]>([]);
   const [satelliteLoading, setSatelliteLoading] = useState(false);
   const [satelliteError, setSatelliteError] = useState(false);
+  const terrainCoords = useMemo(() => polygonToLocalCoords(polygon || []), [polygon]);
+  const terrainSize = useMemo(() => computeTerrainSize(terrainCoords), [terrainCoords]);
 
   // Load saved design on mount
   useMemo(() => {
@@ -276,7 +309,7 @@ export const ParcelaDesigner3D = ({
         >
           <Suspense fallback={null}>
             <SceneCapture captureRef={captureRef} />
-            <CameraController viewMode={ps.viewMode} controlsRef={controlsRef} />
+             <CameraController viewMode={ps.viewMode} controlsRef={controlsRef} terrainSize={terrainSize} />
 
             <SolarLight hour={ps.solarHour} latitude={latitude} longitude={longitude} />
 
@@ -359,8 +392,8 @@ export const ParcelaDesigner3D = ({
               <OrbitControls
                 ref={controlsRef}
                 maxPolarAngle={ps.viewMode === 'top' ? 0.01 : Math.PI / 2.2}
-                minDistance={5}
-                maxDistance={ps.viewMode === 'top' ? 120 : 80}
+                minDistance={Math.max(terrainSize * 0.12, 12)}
+                maxDistance={ps.viewMode === 'top' ? Math.max(terrainSize * 2.2, 140) : Math.max(terrainSize * 1.8, 120)}
                 enableDamping
                 dampingFactor={0.1}
                 enableRotate={ps.viewMode !== 'top'}
