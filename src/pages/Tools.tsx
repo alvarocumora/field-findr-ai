@@ -29,6 +29,7 @@ const Tools = () => {
     { id: 'smart-search', label: 'Búsqueda IA', icon: Search },
     { id: 'calculators', label: 'Calculadoras', icon: Calculator },
     { id: 'sii', label: 'Catastro SII', icon: FileText },
+    { id: 'comparator', label: 'Comparador', icon: Scale },
   ];
 
   const proTabs = isPro ? [
