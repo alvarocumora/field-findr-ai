@@ -23,10 +23,34 @@ import { useAuth } from '@/hooks/useAuth';
 
 const DashboardAsesor = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: stats, isLoading: statsLoading } = useAgentStats();
   const { data: leads, isLoading: leadsLoading } = useAgentLeads();
   const { data: goals, isLoading: goalsLoading } = useAgentGoals();
   const { projects, isLoading: projectsLoading } = useProjects();
+  const { notifications } = useNotifications();
+
+  // Hot leads: high score, not contacted in 48h+
+  const { data: hotLeads } = useQuery({
+    queryKey: ['hot-leads', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const twoDaysAgo = new Date();
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+      const { data } = await supabase
+        .from('leads')
+        .select('id, first_name, last_name, lead_score, phone, status, updated_at')
+        .eq('user_id', user.id)
+        .in('status', ['new', 'contacted', 'interested'])
+        .lte('updated_at', twoDaysAgo.toISOString())
+        .order('lead_score', { ascending: false })
+        .limit(3);
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  const unreadNotifs = notifications?.filter((n: any) => !n.read).slice(0, 3) || [];
 
   const hasNoProjects = !projectsLoading && projects.length === 0;
 
