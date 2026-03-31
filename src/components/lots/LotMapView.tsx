@@ -1368,21 +1368,62 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         </div>
       )}
 
-      {/* Premium Legend */}
+      {/* Color Mode Selector */}
+      <div className="absolute bottom-4 right-4 flex gap-1 bg-background/90 backdrop-blur-md rounded-xl p-1 shadow-lg border border-border/50">
+        {[
+          { key: 'status' as const, label: 'Estado' },
+          { key: 'price' as const, label: 'Precio' },
+          { key: 'area' as const, label: 'Área' },
+        ].map(m => (
+          <button
+            key={m.key}
+            onClick={() => {
+              setColorMode(m.key);
+              if (map.current && map.current.isStyleLoaded() && map.current.getLayer('lots-fill')) {
+                map.current.setPaintProperty('lots-fill', 'fill-color', getColorExpression(m.key, lots));
+              }
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              colorMode === m.key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Dynamic Legend */}
       <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-md rounded-xl p-3 shadow-lg border border-border/50 space-y-2">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Estado</p>
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-sm bg-emerald-600 shadow-sm" />
-          <span className="text-xs font-medium">Disponible</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-sm bg-amber-600 shadow-sm" />
-          <span className="text-xs font-medium">Reservado</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-sm bg-slate-500 shadow-sm" />
-          <span className="text-xs font-medium">Vendido</span>
-        </div>
+        {colorMode === 'status' && (
+          <>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Estado</p>
+            <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-sm bg-emerald-600" /><span className="text-xs font-medium">Disponible</span></div>
+            <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-sm bg-amber-600" /><span className="text-xs font-medium">Reservado</span></div>
+            <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-sm bg-slate-500" /><span className="text-xs font-medium">Vendido</span></div>
+          </>
+        )}
+        {colorMode === 'price' && (
+          <>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Precio</p>
+            <div className="flex items-center gap-2">
+              <div className="w-16 h-3 rounded-sm" style={{ background: 'linear-gradient(to right, #22c55e, #eab308, #ef4444)' }} />
+            </div>
+            <div className="flex justify-between text-[10px] text-muted-foreground w-16">
+              <span>Bajo</span><span>Alto</span>
+            </div>
+          </>
+        )}
+        {colorMode === 'area' && (
+          <>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Superficie</p>
+            <div className="flex items-center gap-2">
+              <div className="w-16 h-3 rounded-sm" style={{ background: 'linear-gradient(to right, #bfdbfe, #3b82f6, #1e3a5f)' }} />
+            </div>
+            <div className="flex justify-between text-[10px] text-muted-foreground w-16">
+              <span>Menor</span><span>Mayor</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
