@@ -41,7 +41,6 @@ const Tools = () => {
 
   const proTabs = isPro ? [
     { id: 'content-gen', label: 'Contenido', icon: Wand2 },
-    { id: 'social', label: 'Social', icon: Share2 },
   ] : [];
 
   const tabs = [...aiTabs, ...financeTabs, ...dataTabs, ...proTabs];
