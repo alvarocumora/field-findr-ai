@@ -141,6 +141,7 @@ export const ParcelaDesigner3D = ({
   const [useRealisticTerrain, setUseRealisticTerrain] = useState(!!(latitude && longitude));
   const [baseElevation, setBaseElevation] = useState(0);
   const [glbAssets, setGlbAssets] = useState<GLBAsset[]>([]);
+  const [satelliteLoading, setSatelliteLoading] = useState(false);
 
   // Load saved design on mount
   useMemo(() => {
