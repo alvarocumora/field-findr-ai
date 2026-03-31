@@ -13,6 +13,7 @@ import { PedestrianCamera } from './PedestrianCamera';
 import { RealisticTerrain, type TerrainHandle, type TerrainDebugInfo } from './RealisticTerrain';
 import { useParcelaState, type ParcelaObjectType } from './useParcelaState';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { normalizePolygon } from '@/lib/polygonUtils';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 
