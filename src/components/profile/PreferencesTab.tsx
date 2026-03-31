@@ -1,192 +1,130 @@
-import { useState } from 'react';
-import { Bell, Sun, Moon, Monitor, Globe, Mail } from 'lucide-react';
+import { useEffect } from 'react';
+import { Bell, Sun, Moon, Monitor, Globe, Loader2, Save } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/theme/ThemeProvider';
-import { useToast } from '@/hooks/use-toast';
+import { useProfile, ProfileUpdate } from '@/hooks/useProfile';
 import { getAllCurrencies } from '@/lib/latam';
+import { useState } from 'react';
 
 const PreferencesTab = () => {
   const { theme, setTheme } = useTheme();
-  const { toast } = useToast();
+  const { profile, updateProfile, isUpdating } = useProfile();
   
-  // Local state for preferences (could be persisted to database later)
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [newListingAlerts, setNewListingAlerts] = useState(true);
   const [priceDropAlerts, setPriceDropAlerts] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
+  const [currency, setCurrency] = useState('CLP');
+  const [language, setLanguage] = useState('es');
+  const [hasChanges, setHasChanges] = useState(false);
 
-  const handlePreferenceChange = (preference: string, value: boolean) => {
-    toast({
-      title: "Preferencia actualizada",
-      description: `${preference} ha sido ${value ? 'activado' : 'desactivado'}.`,
-    });
+  useEffect(() => {
+    if (profile) {
+      setEmailNotifications(profile.email_notifications ?? true);
+      setNewListingAlerts(profile.new_listing_alerts ?? true);
+      setPriceDropAlerts(profile.price_drop_alerts ?? true);
+      setMarketingEmails(profile.marketing_emails ?? false);
+      setCurrency(profile.preferred_currency || 'CLP');
+      setLanguage(profile.preferred_language || 'es');
+    }
+  }, [profile]);
+
+  const markChanged = () => setHasChanges(true);
+
+  const handleSave = () => {
+    const updates: ProfileUpdate = {
+      email_notifications: emailNotifications,
+      new_listing_alerts: newListingAlerts,
+      price_drop_alerts: priceDropAlerts,
+      marketing_emails: marketingEmails,
+      preferred_currency: currency,
+      preferred_language: language,
+    };
+    updateProfile(updates);
+    setHasChanges(false);
   };
 
   return (
     <div className="space-y-6">
-      {/* Theme Settings */}
+      {/* Theme */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sun className="h-5 w-5" />
             Apariencia
           </CardTitle>
-          <CardDescription>
-            Personaliza cómo se ve la aplicación
-          </CardDescription>
+          <CardDescription>Personaliza cómo se ve la aplicación</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <div className="space-y-2">
             <Label htmlFor="theme">Tema</Label>
-            <Select value={theme} onValueChange={(value: 'light' | 'dark' | 'system') => setTheme(value)}>
+            <Select value={theme} onValueChange={(v: 'light' | 'dark' | 'system') => setTheme(v)}>
               <SelectTrigger id="theme" className="w-full md:w-[200px]">
                 <SelectValue placeholder="Seleccionar tema" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="light">
-                  <div className="flex items-center gap-2">
-                    <Sun className="h-4 w-4" />
-                    Claro
-                  </div>
-                </SelectItem>
-                <SelectItem value="dark">
-                  <div className="flex items-center gap-2">
-                    <Moon className="h-4 w-4" />
-                    Oscuro
-                  </div>
-                </SelectItem>
-                <SelectItem value="system">
-                  <div className="flex items-center gap-2">
-                    <Monitor className="h-4 w-4" />
-                    Sistema
-                  </div>
-                </SelectItem>
+                <SelectItem value="light"><div className="flex items-center gap-2"><Sun className="h-4 w-4" />Claro</div></SelectItem>
+                <SelectItem value="dark"><div className="flex items-center gap-2"><Moon className="h-4 w-4" />Oscuro</div></SelectItem>
+                <SelectItem value="system"><div className="flex items-center gap-2"><Monitor className="h-4 w-4" />Sistema</div></SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-sm text-muted-foreground">
-              Elige entre tema claro, oscuro o automático según tu sistema
-            </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Notification Settings */}
+      {/* Notifications */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
             Notificaciones
           </CardTitle>
-          <CardDescription>
-            Configura cómo quieres recibir alertas y actualizaciones
-          </CardDescription>
+          <CardDescription>Configura cómo quieres recibir alertas</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="email-notifications" className="text-base">
-                Notificaciones por Email
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Recibe actualizaciones importantes en tu correo
-              </p>
+          {[
+            { id: 'email-notifications', label: 'Notificaciones por Email', desc: 'Recibe actualizaciones importantes en tu correo', value: emailNotifications, setter: setEmailNotifications },
+            { id: 'new-listing-alerts', label: 'Alertas de Nuevas Propiedades', desc: 'Avisos de propiedades que coincidan con tus búsquedas', value: newListingAlerts, setter: setNewListingAlerts },
+            { id: 'price-drop-alerts', label: 'Alertas de Baja de Precio', desc: 'Notificaciones cuando baje el precio en tus favoritos', value: priceDropAlerts, setter: setPriceDropAlerts },
+            { id: 'marketing-emails', label: 'Emails de Marketing', desc: 'Ofertas especiales, tips del mercado y novedades', value: marketingEmails, setter: setMarketingEmails },
+          ].map((item, i) => (
+            <div key={item.id}>
+              {i > 0 && <Separator className="mb-6" />}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor={item.id} className="text-base">{item.label}</Label>
+                  <p className="text-sm text-muted-foreground">{item.desc}</p>
+                </div>
+                <Switch
+                  id={item.id}
+                  checked={item.value}
+                  onCheckedChange={(checked) => { item.setter(checked); markChanged(); }}
+                />
+              </div>
             </div>
-            <Switch
-              id="email-notifications"
-              checked={emailNotifications}
-              onCheckedChange={(checked) => {
-                setEmailNotifications(checked);
-                handlePreferenceChange('Notificaciones por email', checked);
-              }}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="new-listing-alerts" className="text-base">
-                Alertas de Nuevas Propiedades
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Recibe avisos cuando se publiquen propiedades que coincidan con tus búsquedas guardadas
-              </p>
-            </div>
-            <Switch
-              id="new-listing-alerts"
-              checked={newListingAlerts}
-              onCheckedChange={(checked) => {
-                setNewListingAlerts(checked);
-                handlePreferenceChange('Alertas de nuevas propiedades', checked);
-              }}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="price-drop-alerts" className="text-base">
-                Alertas de Baja de Precio
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Notificaciones cuando baje el precio de propiedades en tus favoritos
-              </p>
-            </div>
-            <Switch
-              id="price-drop-alerts"
-              checked={priceDropAlerts}
-              onCheckedChange={(checked) => {
-                setPriceDropAlerts(checked);
-                handlePreferenceChange('Alertas de baja de precio', checked);
-              }}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="marketing-emails" className="text-base">
-                Emails de Marketing
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Recibe ofertas especiales, tips del mercado y novedades
-              </p>
-            </div>
-            <Switch
-              id="marketing-emails"
-              checked={marketingEmails}
-              onCheckedChange={(checked) => {
-                setMarketingEmails(checked);
-                handlePreferenceChange('Emails de marketing', checked);
-              }}
-            />
-          </div>
+          ))}
         </CardContent>
       </Card>
 
-      {/* Language Settings */}
+      {/* Language & Region */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Globe className="h-5 w-5" />
             Idioma y Región
           </CardTitle>
-          <CardDescription>
-            Configura tu idioma y preferencias regionales
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="language">Idioma</Label>
-            <Select defaultValue="es">
+            <Select value={language} onValueChange={(v) => { setLanguage(v); markChanged(); }}>
               <SelectTrigger id="language" className="w-full md:w-[200px]">
-                <SelectValue placeholder="Seleccionar idioma" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="es">Español (Chile)</SelectItem>
@@ -194,12 +132,11 @@ const PreferencesTab = () => {
               </SelectContent>
             </Select>
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="currency">Moneda Preferida</Label>
-            <Select defaultValue="CLP">
+            <Select value={currency} onValueChange={(v) => { setCurrency(v); markChanged(); }}>
               <SelectTrigger id="currency" className="w-full md:w-[200px]">
-                <SelectValue placeholder="Seleccionar moneda" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {getAllCurrencies().map(cur => (
@@ -212,6 +149,19 @@ const PreferencesTab = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Save */}
+      {hasChanges && (
+        <div className="flex justify-end">
+          <Button onClick={handleSave} disabled={isUpdating}>
+            {isUpdating ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Guardando...</>
+            ) : (
+              <><Save className="mr-2 h-4 w-4" />Guardar Preferencias</>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

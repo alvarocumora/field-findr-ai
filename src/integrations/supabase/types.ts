@@ -981,10 +981,16 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           email: string | null
+          email_notifications: boolean | null
           first_name: string | null
           id: string
           last_name: string | null
+          marketing_emails: boolean | null
+          new_listing_alerts: boolean | null
           phone: string | null
+          preferred_currency: string | null
+          preferred_language: string | null
+          price_drop_alerts: boolean | null
           updated_at: string
           user_id: string
         }
@@ -992,10 +998,16 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          email_notifications?: boolean | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          marketing_emails?: boolean | null
+          new_listing_alerts?: boolean | null
           phone?: string | null
+          preferred_currency?: string | null
+          preferred_language?: string | null
+          price_drop_alerts?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -1003,10 +1015,16 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          email_notifications?: boolean | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          marketing_emails?: boolean | null
+          new_listing_alerts?: boolean | null
           phone?: string | null
+          preferred_currency?: string | null
+          preferred_language?: string | null
+          price_drop_alerts?: boolean | null
           updated_at?: string
           user_id?: string
         }

@@ -11,6 +11,12 @@ export interface Profile {
   email: string | null;
   phone: string | null;
   avatar_url: string | null;
+  preferred_currency: string | null;
+  preferred_language: string | null;
+  email_notifications: boolean | null;
+  new_listing_alerts: boolean | null;
+  price_drop_alerts: boolean | null;
+  marketing_emails: boolean | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,6 +26,12 @@ export interface ProfileUpdate {
   last_name?: string | null;
   phone?: string | null;
   avatar_url?: string | null;
+  preferred_currency?: string | null;
+  preferred_language?: string | null;
+  email_notifications?: boolean | null;
+  new_listing_alerts?: boolean | null;
+  price_drop_alerts?: boolean | null;
+  marketing_emails?: boolean | null;
 }
 
 export const useProfile = () => {
