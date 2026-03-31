@@ -8,6 +8,7 @@ interface RealisticTerrainProps {
   size?: number;
   mapboxToken: string;
   onElevationLoaded?: (baseElevation: number) => void;
+  onTextureLoading?: (loading: boolean) => void;
 }
 
 export interface TerrainHandle {
@@ -15,27 +16,38 @@ export interface TerrainHandle {
 }
 
 const TERRAIN_RES = 128;
+const SAT_ZOOM = 18;
+const ELEV_ZOOM = 15;
 
-function lngLatToTile(lng: number, lat: number, zoom: number) {
+/** Returns tile x, y (integer) and fractional offsets fx, fy within that tile */
+function lngLatToTileFraction(lng: number, lat: number, zoom: number) {
   const n = Math.pow(2, zoom);
-  const x = Math.floor(((lng + 180) / 360) * n);
+  const xFull = ((lng + 180) / 360) * n;
   const latRad = (lat * Math.PI) / 180;
-  const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
-  return { x, y };
+  const yFull = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
+  const tileX = Math.floor(xFull);
+  const tileY = Math.floor(yFull);
+  const fracX = xFull - tileX;
+  const fracY = yFull - tileY;
+  return { tileX, tileY, fracX, fracY };
+}
+
+/** Meters per tile at a given zoom and latitude */
+function tileSizeMeters(lat: number, zoom: number): number {
+  return (40075016.7 * Math.cos((lat * Math.PI) / 180)) / Math.pow(2, zoom);
 }
 
 function decodeRGBElevation(r: number, g: number, b: number): number {
   return -10000 + (r * 256 * 256 + g * 256 + b) * 0.1;
 }
 
-async function loadTerrainTile(lat: number, lng: number, token: string, zoom = 15): Promise<{ heights: Float32Array; satellite: string }> {
-  const { x, y } = lngLatToTile(lng, lat, zoom);
-  if (!token) return { heights: new Float32Array(TERRAIN_RES * TERRAIN_RES), satellite: '' };
+async function loadElevationTile(lat: number, lng: number, token: string): Promise<Float32Array> {
+  const { tileX, tileY } = lngLatToTileFraction(lng, lat, ELEV_ZOOM);
+  if (!token) return new Float32Array(TERRAIN_RES * TERRAIN_RES);
 
-  const terrainUrl = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${zoom}/${x}/${y}.pngraw?access_token=${token}`;
-  const satelliteUrl = `https://api.mapbox.com/v4/mapbox.satellite/${zoom}/${x}/${y}@2x.jpg?access_token=${token}`;
+  const url = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${ELEV_ZOOM}/${tileX}/${tileY}.pngraw?access_token=${token}`;
 
-  const heights = await new Promise<Float32Array>((resolve, reject) => {
+  return new Promise<Float32Array>((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
@@ -52,10 +64,55 @@ async function loadTerrainTile(lat: number, lng: number, token: string, zoom = 1
       resolve(h);
     };
     img.onerror = reject;
-    img.src = terrainUrl;
+    img.src = url;
   });
+}
 
-  return { heights, satellite: satelliteUrl };
+async function loadSatelliteTexture(
+  lat: number, lng: number, planeSize: number, token: string, zoom = SAT_ZOOM
+): Promise<THREE.Texture | null> {
+  if (!token) return null;
+
+  const { tileX, tileY, fracX, fracY } = lngLatToTileFraction(lng, lat, zoom);
+  const tileMeters = tileSizeMeters(lat, zoom);
+
+  const url = `https://api.mapbox.com/v4/mapbox.satellite/${zoom}/${tileX}/${tileY}@2x.jpg?access_token=${token}`;
+
+  return new Promise<THREE.Texture | null>((resolve) => {
+    const loader = new THREE.TextureLoader();
+    loader.crossOrigin = 'anonymous';
+    loader.load(
+      url,
+      (tex) => {
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.minFilter = THREE.LinearMipMapLinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+
+        // How many tiles the plane covers
+        const repeatVal = planeSize / tileMeters;
+        tex.repeat.set(repeatVal, repeatVal);
+
+        // Offset so the center of the plane aligns with lat/lng
+        const offX = fracX - repeatVal / 2;
+        const offY = (1 - fracY) - repeatVal / 2;
+        tex.offset.set(offX, offY);
+
+        console.log('Satellite UV:', { zoom, tileMeters: tileMeters.toFixed(0), planeSize, repeatVal: repeatVal.toFixed(4), fracX: fracX.toFixed(4), fracY: fracY.toFixed(4) });
+        resolve(tex);
+      },
+      undefined,
+      (err) => {
+        console.error('Satellite texture failed at zoom', zoom, err);
+        // Fallback to lower zoom
+        if (zoom > 15) {
+          resolve(loadSatelliteTexture(lat, lng, planeSize, token, zoom - 1));
+        } else {
+          resolve(null);
+        }
+      }
+    );
+  });
 }
 
 /** Convert polygon GPS coords to local XZ coords centered on centroid */
@@ -83,11 +140,11 @@ function computeSizeFromPolygon(localCoords: [number, number][]): number {
     if (y > maxY) maxY = y;
   }
   const span = Math.max(maxX - minX, maxY - minY);
-  return Math.max(40, span * 2.5); // 2.5x padding for context
+  return Math.max(40, span * 2.5);
 }
 
 export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>(
-  ({ polygon, latitude, longitude, size: sizeProp, mapboxToken, onElevationLoaded }, ref) => {
+  ({ polygon, latitude, longitude, size: sizeProp, mapboxToken, onElevationLoaded, onTextureLoading }, ref) => {
     const [heightData, setHeightData] = useState<Float32Array | null>(null);
     const [texture, setTexture] = useState<THREE.Texture | null>(null);
     const [baseElevation, setBaseElevation] = useState(0);
@@ -95,20 +152,16 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
     const lat = latitude ?? (polygon ? polygon.reduce((s, p) => s + p[1], 0) / polygon.length : -33.4);
     const lng = longitude ?? (polygon ? polygon.reduce((s, p) => s + p[0], 0) / polygon.length : -70.6);
 
-    // Compute local polygon coords and auto-size
     const { coords: localCoords } = useMemo(() => polygonToLocal(polygon || []), [polygon]);
     const size = sizeProp ?? computeSizeFromPolygon(localCoords);
 
+    // Load elevation data
     useEffect(() => {
       if (!mapboxToken) {
-        console.warn('RealisticTerrain: no mapboxToken, showing flat green terrain');
-        // Show a flat terrain even without token
-        const flat = new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0);
-        setHeightData(flat);
+        setHeightData(new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0));
         return;
       }
-      console.log('RealisticTerrain: loading tile at', lat, lng, 'token prefix:', mapboxToken.substring(0, 10));
-      loadTerrainTile(lat, lng, mapboxToken).then(({ heights, satellite }) => {
+      loadElevationTile(lat, lng, mapboxToken).then((heights) => {
         const min = Math.min(...Array.from(heights));
         setBaseElevation(min);
         onElevationLoaded?.(min);
@@ -117,32 +170,22 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
           normalized[i] = (heights[i] - min) * 0.005;
         }
         setHeightData(normalized);
-        console.log('RealisticTerrain: elevation loaded, min=', min, 'loading satellite:', satellite ? 'yes' : 'no');
-
-        if (satellite) {
-          const loader = new THREE.TextureLoader();
-          loader.crossOrigin = 'anonymous';
-          loader.load(
-            satellite,
-            (tex) => {
-              tex.wrapS = THREE.ClampToEdgeWrapping;
-              tex.wrapT = THREE.ClampToEdgeWrapping;
-              tex.minFilter = THREE.LinearMipMapLinearFilter;
-              tex.magFilter = THREE.LinearFilter;
-              setTexture(tex);
-              console.log('RealisticTerrain: satellite texture loaded successfully');
-            },
-            undefined,
-            (err) => console.error('RealisticTerrain: satellite texture failed', err)
-          );
-        }
-      }).catch((err) => {
-        console.error('RealisticTerrain: tile load failed', err);
-        // Fallback to flat green
-        const flat = new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0);
-        setHeightData(flat);
+      }).catch(() => {
+        setHeightData(new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0));
       });
     }, [lat, lng, mapboxToken]);
+
+    // Load satellite texture separately at high zoom
+    useEffect(() => {
+      if (!mapboxToken) return;
+      onTextureLoading?.(true);
+      loadSatelliteTexture(lat, lng, size, mapboxToken, SAT_ZOOM).then((tex) => {
+        if (tex) setTexture(tex);
+        onTextureLoading?.(false);
+      }).catch(() => {
+        onTextureLoading?.(false);
+      });
+    }, [lat, lng, mapboxToken, size]);
 
     const geometry = useMemo(() => {
       const geo = new THREE.PlaneGeometry(size, size, TERRAIN_RES - 1, TERRAIN_RES - 1);
@@ -157,11 +200,9 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
       return geo;
     }, [heightData, size]);
 
-    // Build polygon contour line positions (in terrain-local space, on top of terrain)
+    // Polygon contour
     const contourPositions = useMemo(() => {
       if (localCoords.length === 0) return null;
-      // Each local coord [x, y] maps to terrain XZ as [x, -y] (y flipped for 3D)
-      // We sample terrain height at each point
       const pts: number[] = [];
       for (const [x, y] of localCoords) {
         const terrainY = (() => {
@@ -173,8 +214,6 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
           const iz = Math.max(0, Math.min(TERRAIN_RES - 1, Math.round(gz)));
           return (heightData[iz * TERRAIN_RES + ix] || 0) + 0.3;
         })();
-        // In terrain group (rotated -PI/2 on X), the plane is in XY.
-        // But we render the contour in world space outside the rotated group.
         pts.push(x, terrainY, -y);
       }
       return new Float32Array(pts);
@@ -196,7 +235,7 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
       <>
         <group rotation={[-Math.PI / 2, 0, 0]}>
           <mesh geometry={geometry} receiveShadow castShadow>
-          {texture ? (
+            {texture ? (
               <meshBasicMaterial map={texture} />
             ) : (
               <meshBasicMaterial color="#5D8233" />
@@ -204,19 +243,32 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
           </mesh>
         </group>
 
-        {/* Lot polygon contour rendered in world space */}
+        {/* Lot polygon contour — outer glow */}
         {contourPositions && contourPositions.length >= 9 && (
-          <lineLoop>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                count={contourPositions.length / 3}
-                array={contourPositions}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial color="#00FF88" linewidth={2} />
-          </lineLoop>
+          <>
+            <lineLoop>
+              <bufferGeometry>
+                <bufferAttribute
+                  attach="attributes-position"
+                  count={contourPositions.length / 3}
+                  array={contourPositions}
+                  itemSize={3}
+                />
+              </bufferGeometry>
+              <lineBasicMaterial color="#00FF88" linewidth={3} transparent opacity={0.4} />
+            </lineLoop>
+            <lineLoop>
+              <bufferGeometry>
+                <bufferAttribute
+                  attach="attributes-position"
+                  count={contourPositions.length / 3}
+                  array={contourPositions}
+                  itemSize={3}
+                />
+              </bufferGeometry>
+              <lineBasicMaterial color="#00FF88" linewidth={2} />
+            </lineLoop>
+          </>
         )}
       </>
     );
