@@ -62,7 +62,7 @@ const Tools = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className={`grid mb-6 h-auto ${tabs.length <= 5 ? 'grid-cols-5' : 'grid-cols-3 lg:grid-cols-6'}`}>
+          <TabsList className={`grid mb-6 h-auto ${tabs.length <= 5 ? 'grid-cols-5' : tabs.length <= 7 ? 'grid-cols-4 lg:grid-cols-7' : 'grid-cols-4 lg:grid-cols-' + tabs.length}`}>
             {tabs.map(tab => (
               <TabsTrigger 
                 key={tab.id} 
