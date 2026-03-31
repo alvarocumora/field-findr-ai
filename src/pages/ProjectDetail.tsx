@@ -369,6 +369,18 @@ const ProjectDetail = () => {
         {/* Social Proof */}
         {!isOwner && <SocialProofToast projectId={project.id} />}
 
+        {/* Experience link for owners */}
+        {isOwner && (
+          <div className="container px-4 pb-2">
+            <Link to={`/proyecto/${project.id}/experiencia`}>
+              <Button variant="outline" size="sm" className="gap-2 text-xs">
+                <Camera className="h-3.5 w-3.5" />
+                Ver Micrositio Inmersivo
+              </Button>
+            </Link>
+          </div>
+        )}
+
         {/* Floating Quoter */}
         {!isOwner && (
           <FloatingQuoter

@@ -7,6 +7,7 @@ import { SmartSearchBar } from '@/components/ai/SmartSearchBar';
 import { ContentGeneratorPanel } from '@/components/ai/ContentGeneratorPanel';
 import { FinancialCalculators } from '@/components/tools/FinancialCalculators';
 import SIILookupPanel from '@/components/cadastral/SIILookupPanel';
+import AppreciationCalculator from '@/components/tools/AppreciationCalculator';
 import InvestmentComparator from '@/components/tools/InvestmentComparator';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
@@ -31,6 +32,7 @@ const Tools = () => {
   const financeTabs = [
     { id: 'calculators', label: 'Calculadoras', icon: Calculator },
     { id: 'comparator', label: 'Comparador', icon: Scale },
+    { id: 'plusvalia', label: 'Plusvalía', icon: TrendingUp },
   ];
 
   const dataTabs = [
@@ -109,6 +111,10 @@ const Tools = () => {
 
           <TabsContent value="comparator">
             <InvestmentComparator />
+          </TabsContent>
+
+          <TabsContent value="plusvalia">
+            <AppreciationCalculator />
           </TabsContent>
         </Tabs>
       </div>

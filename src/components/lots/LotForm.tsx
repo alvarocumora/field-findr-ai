@@ -12,6 +12,9 @@ import { Lot, LotInsert, LotFeatures } from '@/hooks/useLots';
 import { Project } from '@/hooks/useProjects';
 import { LotImageUploader } from './LotImageUploader';
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { Sparkles, Loader2 } from 'lucide-react';
 
 const lotSchema = z.object({
   lot_number: z.string().min(1, 'El número de lote es requerido').max(50),
@@ -47,6 +50,7 @@ export const LotForm = ({ projects, initialData, onSubmit, onCancel, isLoading }
   const [lotImages, setLotImages] = useState<string[]>(
     ((initialData as any)?.images as string[]) || []
   );
+  const [generatingDesc, setGeneratingDesc] = useState(false);
   
   const {
     register,
@@ -205,7 +209,52 @@ export const LotForm = ({ projects, initialData, onSubmit, onCancel, isLoading }
 
         {/* Description */}
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="description">Descripción</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="description">Descripción</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs gap-1"
+              disabled={generatingDesc}
+              onClick={async () => {
+                setGeneratingDesc(true);
+                try {
+                  const area = watch('area');
+                  const name = watch('name');
+                  const hasW = watch('hasWater');
+                  const hasE = watch('hasElectricity');
+                  const hasR = watch('hasRoad');
+                  const extra = watch('additionalFeatures');
+                  
+                  const { data, error } = await supabase.functions.invoke('ai-assistant', {
+                    body: {
+                      messages: [{
+                        role: 'user',
+                        content: `Genera una descripción de venta atractiva y profesional (máximo 3 líneas) para un lote con estas características:
+- Superficie: ${area} m²
+${name ? `- Nombre: ${name}` : ''}
+- Servicios: ${[hasW && 'agua', hasE && 'electricidad', hasR && 'acceso pavimentado'].filter(Boolean).join(', ') || 'sin servicios'}
+${extra ? `- Extras: ${extra}` : ''}
+Responde SOLO con la descripción, sin comillas ni explicaciones.`
+                      }]
+                    }
+                  });
+                  if (data) {
+                    const text = typeof data === 'string' ? data : data?.text || data?.choices?.[0]?.message?.content || '';
+                    if (text) setValue('description', text.trim());
+                  }
+                } catch {
+                  toast.error('No se pudo generar la descripción');
+                } finally {
+                  setGeneratingDesc(false);
+                }
+              }}
+            >
+              {generatingDesc ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+              {generatingDesc ? 'Generando...' : 'Generar con IA'}
+            </Button>
+          </div>
           <Textarea
             id="description"
             placeholder="Descripción del lote..."
