@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import ModernSidebar from './ModernSidebar';
 import AIFloatingButton from './AIFloatingButton';
+import MobileBottomNav from './navigation/MobileBottomNav';
 import Logo from '@/components/brand/Logo';
 import { 
   Menu, 
