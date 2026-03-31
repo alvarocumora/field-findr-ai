@@ -13,6 +13,7 @@ export const useSmartRedirect = () => {
 
     if (roleNames.includes('admin')) return '/admin/dashboard';
     if (roleNames.includes('agent')) return '/asesor/dashboard';
+    if (roleNames.includes('buyer')) return '/buyer/home';
     return '/explorar';
   };
 

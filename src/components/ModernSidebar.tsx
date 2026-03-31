@@ -96,6 +96,7 @@ const adminItems: NavItem[] = [
   { name: 'Aprobaciones', href: '/admin/approvals', icon: ClipboardCheck },
   { name: 'Créditos', href: '/admin/credits', icon: CreditCard },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+  { name: 'Auditoría', href: '/admin/audit', icon: ShieldCheck },
 ];
 
 const commonNavigation: NavItem[] = [
