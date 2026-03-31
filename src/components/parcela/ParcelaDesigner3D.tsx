@@ -150,8 +150,8 @@ export const ParcelaDesigner3D = ({
   const [debugInfo, setDebugInfo] = useState<TerrainDebugInfo | null>(null);
   const [showDebug, setShowDebug] = useState(false);
 
-  const terrainCoords = useMemo(() => polygonToLocalCoords(polygon || []), [polygon]);
-  const terrainSize = useMemo(() => computeTerrainSize(terrainCoords), [terrainCoords]);
+  const norm = useMemo(() => normalizePolygon(polygon, latitude, longitude), [polygon, latitude, longitude]);
+  const terrainSize = norm.terrainSize;
 
   // Load saved design on mount (useEffect instead of useMemo)
   useEffect(() => {
