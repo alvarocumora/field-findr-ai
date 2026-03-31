@@ -127,7 +127,6 @@ const AppreciationCalculator = () => {
                     stroke="hsl(var(--primary))"
                     strokeWidth={2}
                     dot={false}
-                    strokeDasharray={(d: any) => d?.projected ? '5 5' : undefined}
                   />
                 </LineChart>
               </ResponsiveContainer>
