@@ -13,7 +13,7 @@ import InvestmentComparator from '@/components/tools/InvestmentComparator';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Bot, Calculator, TrendingUp, Search, Wand2, 
-  Sparkles, FileText, Scale, Share2
+  Sparkles, FileText, Scale
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
