@@ -987,6 +987,8 @@ export type Database = {
           last_name: string | null
           marketing_emails: boolean | null
           new_listing_alerts: boolean | null
+          onboarding_completed: boolean | null
+          onboarding_data: Json | null
           phone: string | null
           preferred_currency: string | null
           preferred_language: string | null
@@ -1004,6 +1006,8 @@ export type Database = {
           last_name?: string | null
           marketing_emails?: boolean | null
           new_listing_alerts?: boolean | null
+          onboarding_completed?: boolean | null
+          onboarding_data?: Json | null
           phone?: string | null
           preferred_currency?: string | null
           preferred_language?: string | null
@@ -1021,6 +1025,8 @@ export type Database = {
           last_name?: string | null
           marketing_emails?: boolean | null
           new_listing_alerts?: boolean | null
+          onboarding_completed?: boolean | null
+          onboarding_data?: Json | null
           phone?: string | null
           preferred_currency?: string | null
           preferred_language?: string | null
