@@ -258,11 +258,11 @@ export const ParcelaDesigner3D = ({
         <Separator />
         <div className="p-2 flex-shrink-0">
           <AssetCatalog
-261:             onSelectAsset={handleAddGLBAsset}
-262:             uploadedAssets={glbAssets}
-263:             onAssetsChange={setGlbAssets}
-264:             onAddPrimitive={handleAddObject}
-265:           />
+            onSelectAsset={handleAddGLBAsset}
+            uploadedAssets={glbAssets}
+            onAssetsChange={setGlbAssets}
+            onAddPrimitive={handleAddObject}
+          />
         </div>
       </div>
 
