@@ -6,6 +6,7 @@ import FloatingCTA from '@/components/landing/FloatingCTA';
 import LogoCloud from '@/components/landing/LogoCloud';
 import TestimonialMarquee from '@/components/landing/TestimonialMarquee';
 import CountrySelector from '@/components/landing/CountrySelector';
+import ConversationalSearch from '@/components/explore/ConversationalSearch';
 
 const CartographicHero = lazy(() => import('@/components/landing/CartographicHero'));
 const ScrollytellingSection = lazy(() => import('@/components/landing/ScrollytellingSection'));
