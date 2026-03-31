@@ -917,18 +917,13 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         data: geojson,
       });
 
-      // Add fill layer with premium green palette
+      // Add fill layer with dynamic color mode
       map.current.addLayer({
         id: 'lots-fill',
         type: 'fill',
         source: 'lots',
         paint: {
-          'fill-color': [
-            'case',
-            ['==', ['get', 'status'], 'sold'], '#475569',
-            ['==', ['get', 'status'], 'reserved'], '#d97706',
-            '#059669'
-          ],
+          'fill-color': getColorExpression(colorMode, lots),
           'fill-opacity': 0.75,
         },
       });
