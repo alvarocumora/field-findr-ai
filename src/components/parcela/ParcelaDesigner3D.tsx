@@ -1,6 +1,6 @@
 import { useRef, useMemo, useCallback, useEffect, useState, Suspense } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls, Grid, Sky } from '@react-three/drei';
+import { OrbitControls, Sky } from '@react-three/drei';
 import * as THREE from 'three';
 import { ParcelaObject3D } from './ParcelaObjects';
 import { GLTFAssetObject } from './GLTFAssetLoader';
@@ -10,7 +10,7 @@ import { ObjectPropertiesPanel } from './ObjectPropertiesPanel';
 import { SolarLight } from './SolarLight';
 import { MeasurementLine } from './MeasurementLine';
 import { PedestrianCamera } from './PedestrianCamera';
-import { RealisticTerrain, type TerrainHandle } from './RealisticTerrain';
+import { RealisticTerrain, type TerrainHandle, type TerrainDebugInfo } from './RealisticTerrain';
 import { useParcelaState, type ParcelaObjectType } from './useParcelaState';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { toast } from 'sonner';
@@ -59,19 +59,13 @@ function createTerrainShape(coords: [number, number][]): THREE.Shape {
 
 function computeTerrainSize(coords: [number, number][]): number {
   if (coords.length === 0) return 60;
-
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
-
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   for (const [x, y] of coords) {
     if (x < minX) minX = x;
     if (x > maxX) maxX = x;
     if (y < minY) minY = y;
     if (y > maxY) maxY = y;
   }
-
   const span = Math.max(maxX - minX, maxY - minY);
   return Math.max(60, span * 2.5);
 }
@@ -105,14 +99,14 @@ const FlatTerrain = ({ polygon }: { polygon: number[][] | null }) => {
   );
 };
 
-const ClickPlane = ({ onClick }: { onClick: (point: THREE.Vector3) => void }) => (
+const ClickPlane = ({ onClick, size }: { onClick: (point: THREE.Vector3) => void; size: number }) => (
   <mesh
     rotation={[-Math.PI / 2, 0, 0]}
     position={[0, 0, 0]}
     visible={false}
     onClick={(e) => { e.stopPropagation(); onClick(e.point); }}
   >
-    <planeGeometry args={[200, 200]} />
+    <planeGeometry args={[size * 2, size * 2]} />
     <meshBasicMaterial transparent opacity={0} />
   </mesh>
 );
@@ -169,27 +163,37 @@ export const ParcelaDesigner3D = ({
   const pendingGLBRef = useRef<GLBAsset | null>(null);
   const controlsRef = useRef<any>(null);
   const terrainRef = useRef<TerrainHandle>(null);
-  const [useRealisticTerrain, setUseRealisticTerrain] = useState(!!(latitude && longitude));
+
+  // Determine if polygon has valid geo data
+  const hasGeoData = useMemo(() => {
+    if (polygon && polygon.length >= 3) return true;
+    if (latitude && longitude) return true;
+    return false;
+  }, [polygon, latitude, longitude]);
+
+  const [useRealisticTerrain, setUseRealisticTerrain] = useState(hasGeoData);
   const [baseElevation, setBaseElevation] = useState(0);
   const [glbAssets, setGlbAssets] = useState<GLBAsset[]>([]);
   const [satelliteLoading, setSatelliteLoading] = useState(false);
   const [satelliteError, setSatelliteError] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<TerrainDebugInfo | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
+
   const terrainCoords = useMemo(() => polygonToLocalCoords(polygon || []), [polygon]);
   const terrainSize = useMemo(() => computeTerrainSize(terrainCoords), [terrainCoords]);
 
-  // Load saved design on mount
-  useMemo(() => {
+  // Load saved design on mount (useEffect instead of useMemo)
+  useEffect(() => {
     if (savedDesign) ps.loadFromJSON(savedDesign);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keyboard shortcuts: Q/W/E for transform mode, Delete, Ctrl+Z/Y
+  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === 'z') { e.preventDefault(); ps.undo(); }
       if (e.ctrlKey && e.key === 'y') { e.preventDefault(); ps.redo(); }
       if (e.key === 'Delete' && ps.selectedId) ps.removeObject(ps.selectedId);
       if (e.key === 'Escape') ps.selectObject(null);
-      // Q/W/E for transform modes
       if (e.key === 'q' || e.key === 'Q') ps.setTransformMode('translate');
       if (e.key === 'w' || e.key === 'W') { if (!e.ctrlKey) ps.setTransformMode('rotate'); }
       if (e.key === 'e' || e.key === 'E') ps.setTransformMode('scale');
@@ -288,9 +292,9 @@ export const ParcelaDesigner3D = ({
             ps.clearMeasure();
           }}
         />
-        {/* GLB Asset Catalog at bottom of sidebar */}
+        {/* GLB Asset Catalog */}
         <Separator />
-        <div className="p-2 flex-shrink-0">
+        <div className="p-2 flex-shrink-0 overflow-auto">
           <AssetCatalog
             onSelectAsset={handleAddGLBAsset}
             uploadedAssets={glbAssets}
@@ -309,7 +313,7 @@ export const ParcelaDesigner3D = ({
         >
           <Suspense fallback={null}>
             <SceneCapture captureRef={captureRef} />
-             <CameraController viewMode={ps.viewMode} controlsRef={controlsRef} terrainSize={terrainSize} />
+            <CameraController viewMode={ps.viewMode} controlsRef={controlsRef} terrainSize={terrainSize} />
 
             <SolarLight hour={ps.solarHour} latitude={latitude} longitude={longitude} />
 
@@ -321,6 +325,9 @@ export const ParcelaDesigner3D = ({
               ]}
             />
 
+            {/* Ambient light boost for meshBasicMaterial fallback visibility */}
+            <ambientLight intensity={0.6} />
+
             {useRealisticTerrain ? (
               <RealisticTerrain
                 ref={terrainRef}
@@ -330,42 +337,21 @@ export const ParcelaDesigner3D = ({
                 mapboxToken={mapboxToken || ''}
                 onElevationLoaded={setBaseElevation}
                 onTextureLoading={setSatelliteLoading}
-                onTextureError={(err) => setSatelliteError(err)}
+                onTextureError={setSatelliteError}
+                onDebugInfo={setDebugInfo}
               />
             ) : (
               <FlatTerrain polygon={polygon} />
             )}
 
+            {/* Grid ONLY on flat terrain, never on realistic terrain */}
             {!useRealisticTerrain && (
-              <Grid
-                infiniteGrid
-                cellSize={ps.snapEnabled ? 0.5 : 1}
-                sectionSize={5}
-                fadeDistance={60}
-                cellColor="#A5D6A7"
-                sectionColor="#66BB6A"
-                cellThickness={0.5}
-                sectionThickness={1}
-                position={[0, -0.01, 0]}
-              />
-            )}
-            {useRealisticTerrain && ps.snapEnabled && (
-              <Grid
-                infiniteGrid
-                cellSize={0.5}
-                sectionSize={5}
-                fadeDistance={30}
-                cellColor="#1a1a1a"
-                sectionColor="#2a2a2a"
-                cellThickness={0.3}
-                sectionThickness={0.6}
-                position={[0, 0.05, 0]}
-              />
+              <gridHelper args={[terrainSize, Math.floor(terrainSize / (ps.snapEnabled ? 0.5 : 1)), '#A5D6A7', '#66BB6A']} position={[0, -0.01, 0]} />
             )}
 
-            <ClickPlane onClick={handleGroundClick} />
+            <ClickPlane onClick={handleGroundClick} size={terrainSize} />
 
-            {/* Render objects - GLB customs use GLTFAssetObject, others use ParcelaObject3D */}
+            {/* Render objects */}
             {ps.objects.map(obj => (
               obj.type === 'glb_custom' && obj.modelUrl ? (
                 <GLTFAssetObject
@@ -404,7 +390,7 @@ export const ParcelaDesigner3D = ({
           </Suspense>
         </Canvas>
 
-        {/* Properties panel for selected object */}
+        {/* Properties panel */}
         {selectedObj && (
           <ObjectPropertiesPanel
             obj={selectedObj}
@@ -415,35 +401,80 @@ export const ParcelaDesigner3D = ({
         )}
 
         {/* Terrain toggle */}
-        <button
-          onClick={() => setUseRealisticTerrain(!useRealisticTerrain)}
-          className={`absolute top-3 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-lg text-[10px] font-medium border transition-all backdrop-blur-sm ${
-            useRealisticTerrain
-              ? 'bg-primary/20 text-primary border-primary/30'
-              : 'bg-background/60 text-muted-foreground border-border/30 hover:bg-background/80'
-          }`}
-        >
-          ⛰ {useRealisticTerrain ? 'Relieve Real' : 'Terreno Plano'}
-        </button>
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex gap-1">
+          <button
+            onClick={() => setUseRealisticTerrain(!useRealisticTerrain)}
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-medium border transition-all backdrop-blur-sm ${
+              useRealisticTerrain
+                ? 'bg-primary/20 text-primary border-primary/30'
+                : 'bg-background/60 text-muted-foreground border-border/30 hover:bg-background/80'
+            }`}
+          >
+            ⛰ {useRealisticTerrain ? 'Relieve Real' : 'Terreno Plano'}
+          </button>
+          {useRealisticTerrain && (
+            <button
+              onClick={() => setShowDebug(!showDebug)}
+              className="px-2 py-1.5 rounded-lg text-[10px] font-medium border border-border/30 bg-background/60 text-muted-foreground hover:bg-background/80 backdrop-blur-sm"
+              title="Debug info"
+            >
+              🔍
+            </button>
+          )}
+        </div>
 
-        {/* Satellite loading indicator */}
+        {/* Satellite loading */}
         {useRealisticTerrain && satelliteLoading && (
           <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 bg-primary/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-[10px] text-primary-foreground font-medium animate-pulse border border-primary/40">
             🛰️ Cargando imagen satelital (9 tiles)...
           </div>
         )}
 
-        {/* Satellite error fallback */}
+        {/* Satellite error */}
         {useRealisticTerrain && !satelliteLoading && satelliteError && (
           <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 bg-destructive/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-[10px] text-destructive-foreground font-medium border border-destructive/40">
-            ⚠️ No se pudo cargar imagen satelital
+            ⚠️ No se pudo cargar imagen satelital — verificar token Mapbox
           </div>
         )}
 
         {/* Elevation badge */}
-        {useRealisticTerrain && !satelliteLoading && !satelliteError && baseElevation > 0 && (
+        {useRealisticTerrain && !satelliteLoading && !satelliteError && baseElevation > 0 && !showDebug && (
           <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 bg-background/70 backdrop-blur-sm rounded px-2 py-0.5 text-[9px] text-muted-foreground border border-border/30">
             📍 Elevación base: {Math.round(baseElevation)}m
+          </div>
+        )}
+
+        {/* Debug HUD */}
+        {showDebug && debugInfo && (
+          <div className="absolute top-12 right-3 z-20 bg-background/95 backdrop-blur-sm rounded-lg p-3 text-[10px] font-mono border border-border/40 space-y-1 max-w-[220px]">
+            <p className="font-bold text-foreground text-[11px]">🔍 Debug Satelital</p>
+            <p>Lat: {debugInfo.lat.toFixed(6)}</p>
+            <p>Lng: {debugInfo.lng.toFixed(6)}</p>
+            <p>Zoom: {debugInfo.zoom}</p>
+            <p>Tile size: {debugInfo.tileMeters}m</p>
+            <p>Plane size: {debugInfo.planeSize}m</p>
+            <p>Tiles: {debugInfo.tilesLoaded}/{debugInfo.tilesTotal}</p>
+            <p>Textura: {debugInfo.textureApplied ? '✅ Aplicada' : '❌ No aplicada'}</p>
+            <p>Elevación: {Math.round(baseElevation)}m</p>
+            <p>Token: {mapboxToken ? `✅ ${mapboxToken.substring(0, 8)}...` : '❌ Sin token'}</p>
+            {debugInfo.canvasDataUrl && (
+              <div>
+                <p className="mt-1">Preview satelital:</p>
+                <img
+                  src={debugInfo.canvasDataUrl}
+                  alt="Satellite preview"
+                  className="w-full rounded border border-border/40 mt-1"
+                  style={{ imageRendering: 'pixelated' }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* No geo data warning */}
+        {!hasGeoData && useRealisticTerrain && (
+          <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 bg-yellow-500/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-[10px] text-yellow-950 font-medium border border-yellow-600/40">
+            ⚠️ Sin coordenadas GPS — usando terreno plano
           </div>
         )}
 
@@ -466,7 +497,7 @@ export const ParcelaDesigner3D = ({
             ).toFixed(1)}m
           </div>
         )}
-        {ps.snapEnabled && (
+        {ps.snapEnabled && !useRealisticTerrain && (
           <div className="absolute bottom-3 right-3 bg-background/60 backdrop-blur-sm rounded px-2 py-0.5 text-[9px] text-muted-foreground border border-border/30">
             ⊞ Snap 50cm
           </div>
