@@ -229,6 +229,24 @@ export const ParcelaDesigner3D = ({
     ps.updateObject(id, { position: [0, snapToTerrain(0, 0), 0] });
   }, [ps, snapToTerrain]);
 
+  const handleDuplicate = useCallback((id: string) => {
+    const obj = ps.objects.find(o => o.id === id);
+    if (!obj) return;
+    const offset = 2;
+    ps.addObject(obj.type, [obj.position[0] + offset, obj.position[1], obj.position[2] + offset], {
+      modelUrl: obj.modelUrl,
+      modelName: obj.modelName,
+    });
+    toast.success('Objeto duplicado');
+  }, [ps]);
+
+  const handleSnapToGround = useCallback((id: string) => {
+    const obj = ps.objects.find(o => o.id === id);
+    if (!obj) return;
+    const y = snapToTerrain(obj.position[0], obj.position[2]);
+    ps.updateObject(id, { position: [obj.position[0], y, obj.position[2]] });
+  }, [ps, snapToTerrain]);
+
   const selectedObj = ps.objects.find(o => o.id === ps.selectedId);
 
   return (
