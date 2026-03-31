@@ -261,6 +261,7 @@ export const ParcelaDesigner3D = ({
             onSelectAsset={handleAddGLBAsset}
             uploadedAssets={glbAssets}
             onAssetsChange={setGlbAssets}
+            onAddPrimitive={handleAddObject}
           />
         </div>
       </div>
@@ -319,8 +320,8 @@ export const ParcelaDesigner3D = ({
                 cellSize={0.5}
                 sectionSize={5}
                 fadeDistance={30}
-                cellColor="rgba(255,255,255,0.08)"
-                sectionColor="rgba(255,255,255,0.15)"
+                cellColor="#1a1a1a"
+                sectionColor="#2a2a2a"
                 cellThickness={0.3}
                 sectionThickness={0.6}
                 position={[0, 0.05, 0]}
