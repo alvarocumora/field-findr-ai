@@ -88,12 +88,14 @@ const BuyerHome = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
           {[
             { label: 'Explorar Mapa', icon: MapPin, href: '/explorar', variant: 'default' as const },
             { label: 'Mis Favoritos', icon: Heart, href: '/favoritos', variant: 'outline' as const, badge: favorites?.length },
             { label: 'Mis Alertas', icon: Bell, href: '/alertas', variant: 'outline' as const },
             { label: 'Mi Terreno', icon: Home, href: '/mi-terreno', variant: 'outline' as const },
+            { label: 'Comparar', icon: Scale, href: '/comparar', variant: 'outline' as const },
+            { label: 'Calculadoras', icon: Calculator, href: '/tools', variant: 'outline' as const },
           ].map((action) => (
             <Button
               key={action.href}
