@@ -9,10 +9,11 @@ import { ContentGeneratorPanel } from '@/components/ai/ContentGeneratorPanel';
 import { FinancialCalculators } from '@/components/tools/FinancialCalculators';
 import SIILookupPanel from '@/components/cadastral/SIILookupPanel';
 import InvestmentComparator from '@/components/tools/InvestmentComparator';
+import { StoryGenerator } from '@/components/social/StoryGenerator';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Bot, Calculator, TrendingUp, Search, Wand2, 
-  Sparkles, FileText, BarChart3, Users, ArrowRight, Scale
+  Sparkles, FileText, Scale, Share2
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
