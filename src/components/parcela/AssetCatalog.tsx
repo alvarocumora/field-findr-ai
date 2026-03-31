@@ -30,24 +30,27 @@ interface BuiltInAsset {
 
 const BUILT_IN_ASSETS: BuiltInAsset[] = [
   // Casas
-  { name: 'Casa Moderna', icon: '🏠', type: 'modern_house', category: 'casas' },
-  { name: 'Cabaña', icon: '🛖', type: 'cabin', category: 'casas' },
+  { name: 'Casa Moderna', icon: '🏠', type: 'casa_moderna', category: 'casas' },
+  { name: 'Cabaña', icon: '🛖', type: 'cabana', category: 'casas' },
   { name: 'Tiny House', icon: '🏡', type: 'tiny_house', category: 'casas' },
+  { name: 'Casa 50m²', icon: '🏘️', type: 'casa_50', category: 'casas' },
   // Vegetación
-  { name: 'Pino', icon: '🌲', type: 'pine_tree', category: 'vegetacion' },
-  { name: 'Arbusto', icon: '🌳', type: 'bush', category: 'vegetacion' },
-  { name: 'Jardín', icon: '🌿', type: 'garden', category: 'vegetacion' },
+  { name: 'Pino', icon: '🌲', type: 'arbol_pino', category: 'vegetacion' },
+  { name: 'Arbusto', icon: '🌳', type: 'arbusto', category: 'vegetacion' },
+  { name: 'Jardín Zen', icon: '🌿', type: 'jardin_zen', category: 'vegetacion' },
+  { name: 'Césped', icon: '🟩', type: 'cesped', category: 'vegetacion' },
   // Mobiliario
-  { name: 'Piscina', icon: '🏊', type: 'pool', category: 'mobiliario' },
+  { name: 'Piscina', icon: '🏊', type: 'piscina', category: 'mobiliario' },
   { name: 'Quincho', icon: '🍖', type: 'quincho', category: 'mobiliario' },
   { name: 'Terraza', icon: '☂️', type: 'deck', category: 'mobiliario' },
-  // Vehículos
-  { name: 'Auto', icon: '🚗', type: 'car', category: 'vehiculos' },
-  { name: 'Camioneta', icon: '🛻', type: 'truck', category: 'vehiculos' },
+  { name: 'Pérgola', icon: '🏛️', type: 'pergola', category: 'mobiliario' },
+  { name: 'Fogata', icon: '🔥', type: 'fogata', category: 'mobiliario' },
   // Infraestructura
-  { name: 'Cerca', icon: '🪵', type: 'fence', category: 'infraestructura' },
-  { name: 'Camino', icon: '🛤️', type: 'path', category: 'infraestructura' },
-  { name: 'Poste Luz', icon: '💡', type: 'light_post', category: 'infraestructura' },
+  { name: 'Cerca', icon: '🪵', type: 'cerco', category: 'infraestructura' },
+  { name: 'Camino', icon: '🛤️', type: 'camino', category: 'infraestructura' },
+  { name: 'Panel Solar', icon: '☀️', type: 'panel_solar', category: 'infraestructura' },
+  { name: 'Bodega', icon: '🏗️', type: 'bodega', category: 'infraestructura' },
+  { name: 'Estacionamiento', icon: '🅿️', type: 'estacionamiento', category: 'infraestructura' },
 ];
 
 const CATEGORIES = [
