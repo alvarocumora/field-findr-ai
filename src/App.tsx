@@ -86,6 +86,10 @@ import AdminUsers from "./pages/AdminUsers";
 import AgentManagement from "./components/AgentManagement";
 import PropertyApprovalQueue from "./components/admin/PropertyApprovalQueue";
 import DocumentCenter from "./components/admin/DocumentCenter";
+import AuditLog from "./pages/dashboard/AuditLog";
+
+// ===== Buyer Pages (new) =====
+import BuyerHome from "./pages/BuyerHome";
 
 // ===== Dashboard Pages (lazy) =====
 import { DashboardAdmin, DashboardAsesor, DashboardInmobiliaria } from "./pages/dashboard";
