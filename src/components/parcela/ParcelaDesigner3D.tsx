@@ -28,47 +28,16 @@ interface ParcelaDesigner3DProps {
   onSave?: (designJson: string) => void;
 }
 
-function polygonToLocalCoords(polygon: number[][]): [number, number][] {
-  if (!polygon || polygon.length === 0) return [];
-  const cx = polygon.reduce((s, p) => s + p[0], 0) / polygon.length;
-  const cy = polygon.reduce((s, p) => s + p[1], 0) / polygon.length;
-  const metersPerDegLng = 111320 * Math.cos((cy * Math.PI) / 180);
-  const metersPerDegLat = 110540;
-  return polygon.map(([lng, lat]) => [
-    (lng - cx) * metersPerDegLng,
-    (lat - cy) * metersPerDegLat,
-  ]);
-}
-
 function createTerrainShape(coords: [number, number][]): THREE.Shape {
   const shape = new THREE.Shape();
   if (coords.length === 0) {
-    shape.moveTo(-10, -15);
-    shape.lineTo(10, -15);
-    shape.lineTo(10, 15);
-    shape.lineTo(-10, 15);
-    shape.closePath();
-    return shape;
+    shape.moveTo(-10, -15); shape.lineTo(10, -15); shape.lineTo(10, 15); shape.lineTo(-10, 15);
+    shape.closePath(); return shape;
   }
   shape.moveTo(coords[0][0], coords[0][1]);
-  for (let i = 1; i < coords.length; i++) {
-    shape.lineTo(coords[i][0], coords[i][1]);
-  }
+  for (let i = 1; i < coords.length; i++) shape.lineTo(coords[i][0], coords[i][1]);
   shape.closePath();
   return shape;
-}
-
-function computeTerrainSize(coords: [number, number][]): number {
-  if (coords.length === 0) return 60;
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (const [x, y] of coords) {
-    if (x < minX) minX = x;
-    if (x > maxX) maxX = x;
-    if (y < minY) minY = y;
-    if (y > maxY) maxY = y;
-  }
-  const span = Math.max(maxX - minX, maxY - minY);
-  return Math.max(60, span * 2.5);
 }
 
 const FlatTerrain = ({ polygon }: { polygon: number[][] | null }) => {
