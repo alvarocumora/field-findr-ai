@@ -7,13 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Heart, MapPin, Bell, TrendingDown, Search, Home, 
-  ChevronRight, Sparkles, Calendar, Eye
+  ChevronRight, Sparkles, Calendar, Eye, Scale, Calculator
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '@/components/Layout';
 import ActivityTimeline from '@/components/buyer/ActivityTimeline';
+import PriceAlertCard from '@/components/buyer/PriceAlertCard';
 
 const BuyerHome = () => {
   const { user } = useAuth();
