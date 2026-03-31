@@ -19,7 +19,7 @@ const BuyerHome = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const navigate = useNavigate();
-  const { favorites, isLoading: favsLoading } = useFavorites();
+  const { data: favorites, isLoading: favsLoading } = useFavorites();
 
   // Get active reservations
   const { data: reservations, isLoading: resLoading } = useQuery({
