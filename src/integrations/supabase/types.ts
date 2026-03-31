@@ -1062,6 +1062,7 @@ export type Database = {
           total_lots: number | null
           updated_at: string
           user_id: string
+          video_url: string | null
         }
         Insert: {
           address?: string | null
@@ -1094,6 +1095,7 @@ export type Database = {
           total_lots?: number | null
           updated_at?: string
           user_id: string
+          video_url?: string | null
         }
         Update: {
           address?: string | null
@@ -1126,6 +1128,7 @@ export type Database = {
           total_lots?: number | null
           updated_at?: string
           user_id?: string
+          video_url?: string | null
         }
         Relationships: [
           {
@@ -1535,6 +1538,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

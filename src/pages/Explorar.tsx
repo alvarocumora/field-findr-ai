@@ -9,15 +9,19 @@ import EnhancedAISearch from '@/components/ai/EnhancedAISearch';
 import CompareFloatingBar from '@/components/compare/CompareFloatingBar';
 import CompareSheet from '@/components/compare/CompareSheet';
 import CinematicTransition from '@/components/map/CinematicTransition';
+import SwipeExplorer from '@/components/explore/SwipeExplorer';
+import { Button } from '@/components/ui/button';
 import { Listing, getPricePerM2 } from '@/hooks/useListings';
 import { useFlattenedListings } from '@/hooks/useInfiniteListings';
 import { useIsMobile } from '@/hooks/use-mobile';
-
-const ParcelaDesigner3D = lazy(() => import('@/components/parcela/ParcelaDesigner3D').then(m => ({ default: m.ParcelaDesigner3D })));
+import { Layers, CreditCard } from 'lucide-react';
 
 const Explorar = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+
+  // View mode for mobile
+  const [mobileViewMode, setMobileViewMode] = useState<'list' | 'swipe'>('list');
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -148,26 +152,60 @@ const Explorar = () => {
   // ── MOBILE VIEW ──
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col pb-16">
         <StickyHeader />
-        <MobileExploreView
-          listings={filteredListings}
-          isLoading={isLoading}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedTypes={selectedTypes}
-          selectedRegions={selectedRegions}
-          selectedTags={selectedTags}
-          priceRange={priceRange}
-          areaRange={areaRange}
-          onToggleType={toggleType}
-          onToggleRegion={toggleRegion}
-          onToggleTag={toggleTag}
-          onPriceRangeChange={setPriceRange}
-          onAreaRangeChange={setAreaRange}
-          onClearFilters={clearFilters}
-          activeFiltersCount={activeFiltersCount}
-        />
+
+        {/* Mobile view mode toggle */}
+        <div className="flex items-center gap-2 px-4 py-2 border-b">
+          <Button
+            variant={mobileViewMode === 'list' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setMobileViewMode('list')}
+          >
+            <Layers className="h-4 w-4 mr-1" />
+            Lista
+          </Button>
+          <Button
+            variant={mobileViewMode === 'swipe' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setMobileViewMode('swipe')}
+          >
+            <CreditCard className="h-4 w-4 mr-1" />
+            Swipe
+          </Button>
+        </div>
+
+        {mobileViewMode === 'swipe' ? (
+          <div className="flex-1">
+            <SwipeExplorer
+              listings={filteredListings}
+              onFavorite={(l) => console.log('Favorite:', l.id)}
+              onDismiss={(l) => console.log('Dismiss:', l.id)}
+              onContact={(l) => navigate(`/propiedad/${l.id}`)}
+              onBack={() => setMobileViewMode('list')}
+            />
+          </div>
+        ) : (
+          <MobileExploreView
+            listings={filteredListings}
+            isLoading={isLoading}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedTypes={selectedTypes}
+            selectedRegions={selectedRegions}
+            selectedTags={selectedTags}
+            priceRange={priceRange}
+            areaRange={areaRange}
+            onToggleType={toggleType}
+            onToggleRegion={toggleRegion}
+            onToggleTag={toggleTag}
+            onPriceRangeChange={setPriceRange}
+            onAreaRangeChange={setAreaRange}
+            onClearFilters={clearFilters}
+            activeFiltersCount={activeFiltersCount}
+          />
+        )}
+
         <PropertyPreviewSheet
           listing={previewListing}
           open={!!previewListing}

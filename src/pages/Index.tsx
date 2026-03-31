@@ -6,6 +6,7 @@ import FloatingCTA from '@/components/landing/FloatingCTA';
 import LogoCloud from '@/components/landing/LogoCloud';
 import TestimonialMarquee from '@/components/landing/TestimonialMarquee';
 import CountrySelector from '@/components/landing/CountrySelector';
+import ConversationalSearch from '@/components/explore/ConversationalSearch';
 
 const CartographicHero = lazy(() => import('@/components/landing/CartographicHero'));
 const ScrollytellingSection = lazy(() => import('@/components/landing/ScrollytellingSection'));
@@ -26,6 +27,13 @@ const Index = () => {
 
       {/* ===== LOGO CLOUD ===== */}
       <LogoCloud />
+
+      {/* ===== AI CONVERSATIONAL SEARCH ===== */}
+      <section className="container px-4 -mt-8 relative z-10">
+        <div className="max-w-3xl mx-auto">
+          <ConversationalSearch className="bg-card rounded-2xl shadow-xl p-6 border" />
+        </div>
+      </section>
 
       {/* ===== SCROLLYTELLING PROJECTS ===== */}
       <Suspense fallback={null}>
