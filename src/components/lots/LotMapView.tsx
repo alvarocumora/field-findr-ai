@@ -124,6 +124,42 @@ const getStatusFillColor = (status: string): string => {
   return '#059669';
 };
 
+// Color expressions for different visualization modes
+const getColorExpression = (mode: 'status' | 'price' | 'area', lots: Lot[]): any => {
+  if (mode === 'price') {
+    const prices = lots.filter(l => l.price).map(l => l.price!);
+    const minP = Math.min(...prices) || 0;
+    const maxP = Math.max(...prices) || 1;
+    const mid = (minP + maxP) / 2;
+    return [
+      'interpolate', ['linear'], ['coalesce', ['get', 'price'], 0],
+      0, '#94a3b8',
+      minP, '#22c55e',
+      mid, '#eab308',
+      maxP, '#ef4444',
+    ];
+  }
+  if (mode === 'area') {
+    const areas = lots.map(l => l.area);
+    const minA = Math.min(...areas) || 0;
+    const maxA = Math.max(...areas) || 1;
+    const mid = (minA + maxA) / 2;
+    return [
+      'interpolate', ['linear'], ['get', 'area'],
+      minA, '#bfdbfe',
+      mid, '#3b82f6',
+      maxA, '#1e3a5f',
+    ];
+  }
+  // Default: status
+  return [
+    'case',
+    ['==', ['get', 'status'], 'sold'], '#475569',
+    ['==', ['get', 'status'], 'reserved'], '#d97706',
+    '#059669',
+  ];
+};
+
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
   return new Intl.NumberFormat('es-CL', {
