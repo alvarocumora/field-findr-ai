@@ -50,6 +50,7 @@ export const LotForm = ({ projects, initialData, onSubmit, onCancel, isLoading }
   const [lotImages, setLotImages] = useState<string[]>(
     ((initialData as any)?.images as string[]) || []
   );
+  const [generatingDesc, setGeneratingDesc] = useState(false);
   
   const {
     register,
