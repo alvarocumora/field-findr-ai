@@ -9,7 +9,7 @@ import { ContentGeneratorPanel } from '@/components/ai/ContentGeneratorPanel';
 import { FinancialCalculators } from '@/components/tools/FinancialCalculators';
 import SIILookupPanel from '@/components/cadastral/SIILookupPanel';
 import InvestmentComparator from '@/components/tools/InvestmentComparator';
-import { StoryGenerator } from '@/components/social/StoryGenerator';
+import StoryGenerator from '@/components/social/StoryGenerator';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Bot, Calculator, TrendingUp, Search, Wand2, 
