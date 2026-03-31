@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Trash2, RotateCcw, Crosshair } from 'lucide-react';
+import { Trash2, RotateCcw, Crosshair, Copy, Lock, Unlock, ArrowDown } from 'lucide-react';
 import type { PlacedObject } from './useParcelaState';
 import { OBJECT_CATALOG } from './useParcelaState';
 
@@ -11,9 +11,11 @@ interface ObjectPropertiesPanelProps {
   onUpdate: (id: string, updates: Partial<PlacedObject>) => void;
   onRemove: (id: string) => void;
   onCenterInLot: (id: string) => void;
+  onDuplicate?: (id: string) => void;
+  onSnapToGround?: (id: string) => void;
 }
 
-export const ObjectPropertiesPanel = ({ obj, onUpdate, onRemove, onCenterInLot }: ObjectPropertiesPanelProps) => {
+export const ObjectPropertiesPanel = ({ obj, onUpdate, onRemove, onCenterInLot, onDuplicate, onSnapToGround }: ObjectPropertiesPanelProps) => {
   const catalog = obj.type !== 'glb_custom' ? OBJECT_CATALOG[obj.type] : null;
   const label = catalog?.label || obj.modelName || 'Modelo GLB';
   const icon = catalog?.icon || '📦';
@@ -88,23 +90,23 @@ export const ObjectPropertiesPanel = ({ obj, onUpdate, onRemove, onCenterInLot }
       </div>
 
       {/* Quick actions */}
-      <div className="flex gap-1">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 h-6 text-[9px]"
-          onClick={() => onUpdate(obj.id, { rotation: 0 })}
-        >
+      <div className="grid grid-cols-2 gap-1">
+        <Button variant="outline" size="sm" className="h-6 text-[9px]" onClick={() => onUpdate(obj.id, { rotation: 0 })}>
           <RotateCcw className="h-2.5 w-2.5 mr-0.5" /> Reset
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 h-6 text-[9px]"
-          onClick={() => onCenterInLot(obj.id)}
-        >
+        <Button variant="outline" size="sm" className="h-6 text-[9px]" onClick={() => onCenterInLot(obj.id)}>
           <Crosshair className="h-2.5 w-2.5 mr-0.5" /> Centrar
         </Button>
+        {onDuplicate && (
+          <Button variant="outline" size="sm" className="h-6 text-[9px]" onClick={() => onDuplicate(obj.id)}>
+            <Copy className="h-2.5 w-2.5 mr-0.5" /> Duplicar
+          </Button>
+        )}
+        {onSnapToGround && (
+          <Button variant="outline" size="sm" className="h-6 text-[9px]" onClick={() => onSnapToGround(obj.id)}>
+            <ArrowDown className="h-2.5 w-2.5 mr-0.5" /> Al suelo
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import { PedestrianCamera } from './PedestrianCamera';
 import { RealisticTerrain, type TerrainHandle, type TerrainDebugInfo } from './RealisticTerrain';
 import { useParcelaState, type ParcelaObjectType } from './useParcelaState';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { normalizePolygon } from '@/lib/polygonUtils';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 
@@ -27,51 +28,21 @@ interface ParcelaDesigner3DProps {
   onSave?: (designJson: string) => void;
 }
 
-function polygonToLocalCoords(polygon: number[][]): [number, number][] {
-  if (!polygon || polygon.length === 0) return [];
-  const cx = polygon.reduce((s, p) => s + p[0], 0) / polygon.length;
-  const cy = polygon.reduce((s, p) => s + p[1], 0) / polygon.length;
-  const metersPerDegLng = 111320 * Math.cos((cy * Math.PI) / 180);
-  const metersPerDegLat = 110540;
-  return polygon.map(([lng, lat]) => [
-    (lng - cx) * metersPerDegLng,
-    (lat - cy) * metersPerDegLat,
-  ]);
-}
-
 function createTerrainShape(coords: [number, number][]): THREE.Shape {
   const shape = new THREE.Shape();
   if (coords.length === 0) {
-    shape.moveTo(-10, -15);
-    shape.lineTo(10, -15);
-    shape.lineTo(10, 15);
-    shape.lineTo(-10, 15);
-    shape.closePath();
-    return shape;
+    shape.moveTo(-10, -15); shape.lineTo(10, -15); shape.lineTo(10, 15); shape.lineTo(-10, 15);
+    shape.closePath(); return shape;
   }
   shape.moveTo(coords[0][0], coords[0][1]);
-  for (let i = 1; i < coords.length; i++) {
-    shape.lineTo(coords[i][0], coords[i][1]);
-  }
+  for (let i = 1; i < coords.length; i++) shape.lineTo(coords[i][0], coords[i][1]);
   shape.closePath();
   return shape;
 }
 
-function computeTerrainSize(coords: [number, number][]): number {
-  if (coords.length === 0) return 60;
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (const [x, y] of coords) {
-    if (x < minX) minX = x;
-    if (x > maxX) maxX = x;
-    if (y < minY) minY = y;
-    if (y > maxY) maxY = y;
-  }
-  const span = Math.max(maxX - minX, maxY - minY);
-  return Math.max(60, span * 2.5);
-}
-
 const FlatTerrain = ({ polygon }: { polygon: number[][] | null }) => {
-  const localCoords = useMemo(() => polygonToLocalCoords(polygon || []), [polygon]);
+  const norm = useMemo(() => normalizePolygon(polygon), [polygon]);
+  const localCoords = norm.localCoords;
   const shape = useMemo(() => createTerrainShape(localCoords), [localCoords]);
 
   return (
@@ -179,8 +150,8 @@ export const ParcelaDesigner3D = ({
   const [debugInfo, setDebugInfo] = useState<TerrainDebugInfo | null>(null);
   const [showDebug, setShowDebug] = useState(false);
 
-  const terrainCoords = useMemo(() => polygonToLocalCoords(polygon || []), [polygon]);
-  const terrainSize = useMemo(() => computeTerrainSize(terrainCoords), [terrainCoords]);
+  const norm = useMemo(() => normalizePolygon(polygon, latitude, longitude), [polygon, latitude, longitude]);
+  const terrainSize = norm.terrainSize;
 
   // Load saved design on mount (useEffect instead of useMemo)
   useEffect(() => {
@@ -258,10 +229,28 @@ export const ParcelaDesigner3D = ({
     ps.updateObject(id, { position: [0, snapToTerrain(0, 0), 0] });
   }, [ps, snapToTerrain]);
 
+  const handleDuplicate = useCallback((id: string) => {
+    const obj = ps.objects.find(o => o.id === id);
+    if (!obj) return;
+    const offset = 2;
+    ps.addObject(obj.type, [obj.position[0] + offset, obj.position[1], obj.position[2] + offset], {
+      modelUrl: obj.modelUrl,
+      modelName: obj.modelName,
+    });
+    toast.success('Objeto duplicado');
+  }, [ps]);
+
+  const handleSnapToGround = useCallback((id: string) => {
+    const obj = ps.objects.find(o => o.id === id);
+    if (!obj) return;
+    const y = snapToTerrain(obj.position[0], obj.position[2]);
+    ps.updateObject(id, { position: [obj.position[0], y, obj.position[2]] });
+  }, [ps, snapToTerrain]);
+
   const selectedObj = ps.objects.find(o => o.id === ps.selectedId);
 
   return (
-    <div className="flex h-[600px] sm:h-[700px] rounded-xl overflow-hidden border border-border/40 bg-card">
+    <div className="flex h-full w-full rounded-xl overflow-hidden border border-border/40 bg-card" style={{ minHeight: 400 }}>
       {/* Left toolbar */}
       <div className="flex flex-col w-60 h-full overflow-hidden">
         <ParcelaToolbar
@@ -397,6 +386,8 @@ export const ParcelaDesigner3D = ({
             onUpdate={ps.updateObject}
             onRemove={ps.removeObject}
             onCenterInLot={handleCenterInLot}
+            onDuplicate={handleDuplicate}
+            onSnapToGround={handleSnapToGround}
           />
         )}
 
