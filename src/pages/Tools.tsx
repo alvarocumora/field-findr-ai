@@ -113,34 +113,13 @@ const Tools = () => {
           <TabsContent value="comparator">
             <InvestmentComparator />
           </TabsContent>
-        </Tabs>
 
-        {/* Pro tools links */}
-        {isPro && (
-          <div className="mt-8">
-            <h2 className="text-lg font-semibold mb-4">Herramientas Profesionales</h2>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {proLinks.map(link => (
-                <Link key={link.href} to={link.href}>
-                  <Card className="hover:border-primary/50 transition-colors cursor-pointer">
-                    <CardHeader className="flex flex-row items-center gap-4 pb-3">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <link.icon className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          {link.name}
-                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                        </CardTitle>
-                        <CardDescription>{link.desc}</CardDescription>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+          {isPro && (
+            <TabsContent value="social">
+              <StoryGenerator />
+            </TabsContent>
+          )}
+        </Tabs>
       </div>
     </Layout>
   );
