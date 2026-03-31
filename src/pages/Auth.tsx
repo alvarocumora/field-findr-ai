@@ -36,11 +36,11 @@ const Auth = () => {
   const redirectParam = searchParams.get('redirect');
 
   useEffect(() => {
-    if (user && !rolesLoading) {
+    if (user && !rolesLoading && !profileLoading) {
       const target = redirectParam || getRedirectPath();
       navigate(target, { replace: true });
     }
-  }, [user, rolesLoading, redirectParam, navigate, getRedirectPath]);
+  }, [user, rolesLoading, profileLoading, redirectParam, navigate, getRedirectPath]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
