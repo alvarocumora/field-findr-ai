@@ -1,168 +1,143 @@
 
 
-# Plan Maestro Disruptivo: Experiencias por Perfil de Usuario
+# Plan: Consolidación Disruptiva del Portal -- Expansión y Mejoras Integrales
 
-## Contexto
+## Diagnóstico Rápido
 
-La plataforma tiene 3 roles (buyer, agent, admin) pero la experiencia post-login es genérica. El siguiente paso es crear experiencias diferenciadas y personalizadas para cada perfil, maximizando conversión para compradores, productividad para agentes, y control para admins.
-
----
-
-## Fase 6: Onboarding Personalizado por Rol
-
-### 6.1 Wizard de Onboarding Post-Registro
-- Al primer login, detectar rol del usuario y mostrar un wizard de 3-4 pasos
-- **Buyer**: Preferencias de búsqueda (región, presupuesto, tamaño, uso) → Guardar como `saved_searches` automática
-- **Agent**: Datos de empresa, zona de operación, tipo de proyectos → Pre-configurar perfil y primer proyecto
-- Guardar flag `onboarding_completed` en profiles para no repetir
-
-**Archivos:** nuevo `src/components/onboarding/OnboardingWizard.tsx`, migración (columna `onboarding_completed` en profiles), `src/pages/Auth.tsx` (redirect post-login)
-
-### 6.2 Dashboard de Bienvenida Contextual
-- **Buyer sin reservas**: "Explora terrenos cerca de ti" + cards de proyectos destacados + búsqueda IA
-- **Agent sin proyectos**: "Crea tu primer proyecto" + guía paso a paso + métricas vacías con CTA
-- Reemplazar dashboards vacíos por estados empty-state con acciones claras
-
-**Archivos:** `src/pages/dashboard/DashboardAsesor.tsx`, nuevo `src/components/dashboard/BuyerHome.tsx`
+La plataforma tiene ~50 rutas, 3 roles, herramientas IA, CRM, tours 360, diseñador 3D, y PWA. Sin embargo hay fragmentación: componentes duplicados, footer con links muertos (`#`), falta de cohesión entre flujos buyer/agent, y oportunidades de engagement sin explotar.
 
 ---
 
-## Fase 7: Experiencia Buyer Premium
+## Fase A: Consolidación de Navegación y Footer (Limpieza)
 
-### 7.1 Home del Comprador
-- Página `/buyer/home` con: recomendaciones IA basadas en búsquedas guardadas, proyectos visitados recientemente, alertas de precio, favoritos recientes
-- Sección "Terrenos para ti" con scoring de match personalizado
-- Card de estado de reserva activa (si existe) con acceso directo a Mi Terreno
+### A.1 Footer Completo con Links Reales
+**Archivo:** `src/components/FooterSection.tsx`
+- Reemplazar todos los `href: '#'` por rutas reales o páginas stub
+- Agregar links funcionales: Herramientas (`/tools`), Instalar App (`/instalar`), Blog (stub `/blog`)
+- Agregar sección "Para Profesionales" con links a `/pricing` y `/auth`
 
-**Archivos:** nuevo `src/pages/BuyerHome.tsx`, ruta en `App.tsx`
-
-### 7.2 Historial de Actividad del Comprador
-- Timeline visual de interacciones: proyectos visitados, lotes cotizados, búsquedas realizadas
-- Basado en `user_events` existente
-- Accesible desde perfil y desde home del comprador
-
-**Archivo:** nuevo `src/components/buyer/ActivityTimeline.tsx`
-
-### 7.3 Alertas Inteligentes Personalizadas
-- Configurar alertas desde perfil: "Avisarme cuando haya terrenos < 30M en La Araucanía"
-- Integrar con `saved_searches` + `notifications`
-- Badge en bottom nav cuando hay alertas nuevas
-
-**Archivos:** `src/components/profile/PreferencesTab.tsx`, edge function `check-saved-searches`
+### A.2 Página Blog Stub
+**Archivo:** nuevo `src/pages/Blog.tsx`
+- Página mínima con layout, titulo, y empty state "Próximamente"
+- Ruta `/blog` en `App.tsx`
 
 ---
 
-## Fase 8: Experiencia Agent Potenciada
+## Fase B: Mejora del Flujo Buyer (Engagement + Retención)
 
-### 8.1 Dashboard Contextual Inteligente
-- KPIs que cambian según la hora: mañana = seguimientos pendientes, tarde = reservas del día, fin de mes = metas
-- "Acción del día": sugerencia IA basada en datos (ej: "Contacta a María, lleva 3 días sin respuesta")
-- Widget de actividad reciente de sus proyectos (nuevas vistas, favoritos, leads)
+### B.1 Buyer Dashboard Mejorado con Recomendaciones IA
+**Archivo:** `src/pages/BuyerHome.tsx`
+- Agregar sección "Recomendados para ti" que usa `saved_searches` + listings activos para match scoring
+- Mostrar proyectos con `available_lots > 0` ordenados por relevancia
+- Card de "Precio reducido" para listings con entradas recientes en `price_history`
 
-**Archivos:** `src/pages/dashboard/DashboardAsesor.tsx`
+### B.2 Alertas de Precio en Tiempo Real
+**Archivo:** nuevo `src/components/buyer/PriceAlertCard.tsx`
+- Componente que muestra listings donde el precio bajó en los últimos 7 días
+- Query a `price_history` + join con `listings`
+- Integrar en `BuyerHome.tsx`
 
-### 8.2 Vista Rápida de Proyecto desde Sidebar
-- Hover en "Proyectos" del sidebar muestra mini-cards con stats de cada proyecto (lotes vendidos/disponibles)
-- Click directo al proyecto sin pasar por listado
-
-**Archivo:** `src/components/ModernSidebar.tsx`
-
-### 8.3 Centro de Comunicaciones Unificado
-- Fusionar mensajes internos + historial WhatsApp + emails enviados en un timeline por lead
-- Vista tipo "inbox" con threads por lead/comprador
-- Respuesta rápida con templates predefinidos
-
-**Archivo:** `src/pages/dashboard/Messages.tsx`
+### B.3 Quick Actions Contextuales para Buyer
+**Archivo:** `src/pages/BuyerHome.tsx`
+- Agregar grid de acciones rápidas: "Explorar Mapa", "Mis Favoritos", "Comparar Terrenos", "Simular Crédito"
+- Cada acción navega a la ruta correspondiente
 
 ---
 
-## Fase 9: Experiencia Admin Completa
+## Fase C: Dashboard Agent -- Widgets de Productividad
 
-### 9.1 Panel de Control de Plataforma
-- Métricas globales: usuarios activos, proyectos publicados, reservas totales, GMV (volumen bruto)
-- Gráficos de tendencia semanal/mensual
-- Alertas del sistema: funciones edge con errores, usuarios reportados, documentos vencidos
+### C.1 Widget "Oportunidades Calientes"
+**Archivo:** `src/pages/dashboard/DashboardAsesor.tsx`
+- Sección que muestra los 3 leads con mayor `lead_score` que no han sido contactados en 48h+
+- Botón "Contactar ahora" que abre WhatsApp con template contextual
 
-**Archivo:** `src/pages/dashboard/DashboardAdmin.tsx`
+### C.2 Mini-Resumen de Proyecto en Dashboard
+**Archivo:** `src/pages/dashboard/DashboardAsesor.tsx`
+- Grid compacto de proyectos activos mostrando: nombre, progress bar (vendidos/total), ingresos acumulados
+- Click navega al detalle del proyecto
 
-### 9.2 Gestión Avanzada de Agentes
-- Tabla de agentes con: proyectos activos, reservas logradas, tasa de conversión, comisiones pendientes
-- Acciones: activar/desactivar, asignar leads, ver rendimiento
-- Comparativa entre agentes (ranking)
-
-**Archivo:** `src/components/AgentManagement.tsx`
-
-### 9.3 Auditoría y Seguridad
-- Log de acciones críticas: cambios de precio, cancelaciones de reserva, cambios de estado
-- Basado en tabla `audit_logs` existente
-- Filtros por usuario, tipo de acción, fecha
-
-**Archivo:** nuevo `src/pages/dashboard/AuditLog.tsx`, ruta admin en `App.tsx`
+### C.3 Notificaciones Inline en Dashboard
+**Archivo:** `src/pages/dashboard/DashboardAsesor.tsx`
+- Mostrar últimas 3 notificaciones no leídas como cards dismissibles
+- Link a `/asesor/notifications` para ver todas
 
 ---
 
-## Fase 10: Personalización Cross-Perfil
+## Fase D: Herramientas IA Consolidadas
 
-### 10.1 Notificaciones Push (PWA)
-- Solicitar permiso de notificaciones push al usuario
-- Enviar notificaciones para: nuevos lotes en zona de interés, pago próximo a vencer, seguimiento pendiente
-- Integrar con service worker existente
+### D.1 Centro de Herramientas Reorganizado
+**Archivo:** `src/pages/Tools.tsx`
+- Reorganizar tabs en categorías claras: "IA" (Chat, Predictor, Búsqueda), "Financiero" (Calculadoras, Comparador), "Datos" (SII, Catastro)
+- Agregar descripción breve en cada tab para guiar al usuario
+- Agregar acceso al Story Generator desde Tools para agents
 
-**Archivo:** `src/hooks/usePWA.ts`, edge function para push
-
-### 10.2 Modo Demo/Tour Guiado
-- Para usuarios nuevos que no se registran, ofrecer "Tour de la plataforma" interactivo
-- Tooltips guiados que muestran las funciones principales
-- Call-to-action de registro al final del tour
-
-**Archivo:** nuevo `src/components/onboarding/GuidedTour.tsx`
+### D.2 Story Generator Accesible desde Tools
+**Archivo:** `src/pages/Tools.tsx`
+- Agregar tab "Social" (solo para agents) con el `StoryGenerator` existente
+- Permite generar contenido visual sin salir del centro de herramientas
 
 ---
 
-## Migración de BD Necesaria
+## Fase E: Mejoras de Experiencia Global
 
-```sql
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS onboarding_completed boolean DEFAULT false;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS onboarding_data jsonb DEFAULT '{}';
-```
+### E.1 Empty States Profesionales
+**Archivos:** `src/pages/Favorites.tsx` (componente Favorites), `src/pages/MiTerreno.tsx`
+- Cuando no hay datos, mostrar ilustración + CTA contextual
+- Favoritos vacío: "Explora terrenos y guarda tus favoritos" → link a `/explorar`
+- Mi Terreno sin reservas: "Aún no tienes un terreno" → link a `/explorar`
+
+### E.2 Breadcrumbs en Páginas de Detalle
+**Archivo:** `src/pages/ProjectDetail.tsx`, `src/pages/PropertyDetail.tsx`
+- Agregar breadcrumb: Home > Explorar > Proyecto X
+- Mejora SEO y navegación
+
+### E.3 Skeleton Loading Consistente
+**Archivos:** varios dashboards
+- Asegurar que todas las páginas de dashboard usen skeletons consistentes durante carga
+- Patrón: `KPICard` skeleton (4 cards) + chart skeleton
 
 ---
 
-## Resumen de Prioridad
+## Fase F: Mejoras Técnicas de Consolidación
 
-| Prioridad | Componente | Perfil | Impacto |
-|-----------|-----------|--------|---------|
-| 1 | Onboarding Wizard | Todos | Muy Alto |
-| 2 | Buyer Home con recomendaciones | Buyer | Alto |
-| 3 | Dashboard contextual agente | Agent | Alto |
-| 4 | Panel admin con métricas globales | Admin | Alto |
-| 5 | Alertas personalizadas buyer | Buyer | Alto |
-| 6 | Activity Timeline buyer | Buyer | Medio |
-| 7 | Centro comunicaciones unificado | Agent | Medio |
-| 8 | Auditoría admin | Admin | Medio |
-| 9 | Notificaciones Push PWA | Todos | Medio |
-| 10 | Tour guiado demo | Público | Medio |
+### F.1 Tracking de Eventos de Usuario
+**Archivo:** nuevo `src/hooks/useTrackEvent.ts`
+- Hook reutilizable: `useTrackEvent()` que inserta en `user_events`
+- Integrar en: vista de proyecto, vista de lote, búsqueda, favorito
+- Base para recomendaciones IA y lead scoring futuro
 
-## Archivos Nuevos
+### F.2 SEO Meta Tags Dinámicos
+**Archivo:** `src/hooks/useSEO.ts` (ya existe)
+- Verificar que `ProjectDetail` y `PropertyDetail` setean title/description dinámicos
+- Agregar Open Graph tags para compartir en redes sociales
 
-| Archivo | Descripción |
-|---------|-------------|
-| `src/components/onboarding/OnboardingWizard.tsx` | Wizard post-registro por rol |
-| `src/pages/BuyerHome.tsx` | Home personalizado del comprador |
-| `src/components/buyer/ActivityTimeline.tsx` | Historial de interacciones |
-| `src/components/dashboard/BuyerHome.tsx` | Dashboard empty-state buyer |
-| `src/pages/dashboard/AuditLog.tsx` | Visor de auditoría admin |
-| `src/components/onboarding/GuidedTour.tsx` | Tour interactivo para visitantes |
+---
 
-## Archivos a Modificar
+## Resumen de Archivos
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/App.tsx` | Rutas `/buyer/home`, `/admin/audit` |
-| `src/pages/Auth.tsx` | Redirect a onboarding si `!onboarding_completed` |
-| `src/pages/dashboard/DashboardAsesor.tsx` | KPIs contextuales + acción del día |
-| `src/pages/dashboard/DashboardAdmin.tsx` | Métricas globales de plataforma |
-| `src/components/ModernSidebar.tsx` | Mini-cards de proyecto en hover |
-| `src/components/profile/PreferencesTab.tsx` | Config de alertas inteligentes |
-| **Migración SQL** | `onboarding_completed`, `onboarding_data` en profiles |
+| `src/components/FooterSection.tsx` | Links reales, nueva sección Pro |
+| `src/pages/Blog.tsx` | **Nuevo** - Stub page |
+| `src/pages/BuyerHome.tsx` | Recomendaciones IA, price alerts, quick actions |
+| `src/components/buyer/PriceAlertCard.tsx` | **Nuevo** - Alertas de precio |
+| `src/pages/dashboard/DashboardAsesor.tsx` | Widgets oportunidades, mini-proyectos, notifs |
+| `src/pages/Tools.tsx` | Reorganizar tabs, agregar Social/Story |
+| `src/pages/MiTerreno.tsx` | Empty states mejorados |
+| `src/pages/ProjectDetail.tsx` | Breadcrumbs |
+| `src/hooks/useTrackEvent.ts` | **Nuevo** - Hook de tracking |
+| `src/App.tsx` | Ruta `/blog` |
+
+## Prioridad de Implementación
+
+1. Footer + Blog stub (limpieza inmediata)
+2. Event tracking hook (base para todo lo demás)
+3. Buyer Home mejorado + Price Alerts
+4. Dashboard Agent widgets
+5. Tools reorganizado
+6. Empty states + Breadcrumbs
+
+## Sin Migraciones de BD
+
+Todos los datos necesarios ya existen en las tablas actuales (`user_events`, `price_history`, `leads`, `notifications`, `saved_searches`). No se requieren cambios de esquema.
 
