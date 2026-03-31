@@ -23,7 +23,8 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, signIn, signUp, loading } = useAuth();
-  const { getRedirectPath, isLoading: rolesLoading } = useSmartRedirect();
+  const { getRedirectPath, isLoading: rolesLoading, isBuyer } = useSmartRedirect();
+  const { profile, isLoading: profileLoading } = useProfile();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
