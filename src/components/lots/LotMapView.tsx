@@ -155,6 +155,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [restoring, setRestoring] = useState(false);
   const [roadGeojson, setRoadGeojson] = useState<GeoJSON.FeatureCollection<GeoJSON.LineString> | null>(null);
   const [showRoads, setShowRoads] = useState(true);
+  const [colorMode, setColorMode] = useState<'status' | 'price' | 'area'>('status');
 
   // Keep ref in sync with state for use inside map event handlers
   useEffect(() => {
