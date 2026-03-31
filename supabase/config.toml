@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.search-autocomplete]
 verify_jwt = false
+
+[functions.ai-natural-search]
+verify_jwt = false

@@ -106,6 +106,10 @@ const Tools = () => {
           <TabsContent value="sii">
             <SIILookupPanel />
           </TabsContent>
+
+          <TabsContent value="comparator">
+            <InvestmentComparator />
+          </TabsContent>
         </Tabs>
 
         {/* Pro tools links */}

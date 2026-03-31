@@ -58,7 +58,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <main className="flex-1">{children}</main>
 
         {/* Minimal Footer */}
-        <footer className="border-t bg-muted/30 py-4">
+        <footer className="border-t bg-muted/30 py-4 pb-20 md:pb-4">
           <div className="container">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-muted-foreground">
               <p>© 2024 Ofertaterrenos.com</p>
@@ -72,8 +72,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </footer>
       </div>
 
-      {/* AI Floating Button */}
-      <AIFloatingButton />
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
+
+      {/* AI Floating Button - hidden on mobile (bottom nav takes precedence) */}
+      <div className="hidden md:block">
+        <AIFloatingButton />
+      </div>
     </div>
   );
 };
