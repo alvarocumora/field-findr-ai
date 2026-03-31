@@ -232,7 +232,7 @@ export const ParcelaDesigner3D = ({
   const selectedObj = ps.objects.find(o => o.id === ps.selectedId);
 
   return (
-    <div className="flex h-[600px] sm:h-[700px] rounded-xl overflow-hidden border border-border/40 bg-card">
+    <div className="flex h-full w-full rounded-xl overflow-hidden border border-border/40 bg-card" style={{ minHeight: 400 }}>
       {/* Left toolbar */}
       <div className="flex flex-col w-60 h-full overflow-hidden">
         <ParcelaToolbar
