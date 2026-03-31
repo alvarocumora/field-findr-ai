@@ -9,6 +9,7 @@ interface RealisticTerrainProps {
   mapboxToken: string;
   onElevationLoaded?: (baseElevation: number) => void;
   onTextureLoading?: (loading: boolean) => void;
+  onTextureError?: (error: boolean) => void;
 }
 
 export interface TerrainHandle {
@@ -18,7 +19,7 @@ export interface TerrainHandle {
 const TERRAIN_RES = 128;
 const SAT_ZOOM = 18;
 const ELEV_ZOOM = 15;
-const TILE_PX = 256;
+const TILE_PX = 512;
 const GRID = 3; // 3x3 tile grid
 
 function lngLatToTileFraction(lng: number, lat: number, zoom: number) {
@@ -68,14 +69,14 @@ async function loadElevationTile(lat: number, lng: number, token: string): Promi
   });
 }
 
-/** Load a single tile image, returns null on failure */
+/** Load a single tile image using modern Static Tiles API */
 function loadTileImage(zoom: number, tx: number, ty: number, token: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
-    img.src = `https://api.mapbox.com/v4/mapbox.satellite/${zoom}/${tx}/${ty}@2x.jpg?access_token=${token}`;
+    img.src = `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/${TILE_PX}/${zoom}/${tx}/${ty}?access_token=${token}`;
   });
 }
 
@@ -131,10 +132,12 @@ async function loadStitchedSatelliteTexture(
   }
 
   const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = THREE.ClampToEdgeWrapping;
   tex.wrapT = THREE.ClampToEdgeWrapping;
   tex.minFilter = THREE.LinearMipMapLinearFilter;
   tex.magFilter = THREE.LinearFilter;
+  tex.needsUpdate = true;
 
   // UV mapping: map the plane onto the stitched grid
   // The center tile is at grid position (1,1). The fractional position within it is (fracX, fracY).
@@ -179,7 +182,7 @@ function computeSizeFromPolygon(localCoords: [number, number][]): number {
 }
 
 export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>(
-  ({ polygon, latitude, longitude, size: sizeProp, mapboxToken, onElevationLoaded, onTextureLoading }, ref) => {
+  ({ polygon, latitude, longitude, size: sizeProp, mapboxToken, onElevationLoaded, onTextureLoading, onTextureError }, ref) => {
     const [heightData, setHeightData] = useState<Float32Array | null>(null);
     const [texture, setTexture] = useState<THREE.Texture | null>(null);
     const [baseElevation, setBaseElevation] = useState(0);
@@ -212,12 +215,19 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
 
     // Load stitched satellite texture (3x3 grid)
     useEffect(() => {
-      if (!mapboxToken) return;
+      if (!mapboxToken) { onTextureError?.(true); return; }
       onTextureLoading?.(true);
+      onTextureError?.(false);
       loadStitchedSatelliteTexture(lat, lng, size, mapboxToken, SAT_ZOOM).then((tex) => {
-        if (tex) setTexture(tex);
+        if (tex) {
+          setTexture(tex);
+          onTextureError?.(false);
+        } else {
+          onTextureError?.(true);
+        }
         onTextureLoading?.(false);
       }).catch(() => {
+        onTextureError?.(true);
         onTextureLoading?.(false);
       });
     }, [lat, lng, mapboxToken, size]);
