@@ -18,7 +18,7 @@ export interface TerrainHandle {
 const TERRAIN_RES = 128;
 const SAT_ZOOM = 18;
 const ELEV_ZOOM = 15;
-const TILE_PX = 256;
+const TILE_PX = 512;
 const GRID = 3; // 3x3 tile grid
 
 function lngLatToTileFraction(lng: number, lat: number, zoom: number) {
