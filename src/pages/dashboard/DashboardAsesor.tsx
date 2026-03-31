@@ -321,6 +321,88 @@ const DashboardAsesor = () => {
                 </CardContent>
               </Card>
 
+              {/* Hot Leads */}
+              {hotLeads && hotLeads.length > 0 && (
+                <Card className="border-orange-500/20 bg-orange-500/5">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Flame className="h-4 w-4 text-orange-500" />
+                      Oportunidades Calientes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {hotLeads.map((lead: any) => (
+                      <div key={lead.id} className="flex items-center justify-between p-2 rounded-lg bg-background border border-border/40">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {lead.first_name} {lead.last_name || ''}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Score: {lead.lead_score}</p>
+                        </div>
+                        {lead.phone && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${lead.first_name}, te contacto desde Ofertaterrenos.`)}`} target="_blank" rel="noopener noreferrer">
+                              <Phone className="h-3 w-3" />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Inline Notifications */}
+              {unreadNotifs.length > 0 && (
+                <Card className="border-border/40">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <BellRing className="h-4 w-4 text-primary" />
+                      Notificaciones
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {unreadNotifs.map((notif: any) => (
+                      <div key={notif.id} className="p-2 rounded-lg bg-muted/30 text-sm">
+                        <p className="font-medium text-foreground text-xs">{notif.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{notif.message}</p>
+                      </div>
+                    ))}
+                    <Button variant="ghost" size="sm" className="w-full text-primary text-xs" onClick={() => navigate('/asesor/notifications')}>
+                      Ver todas <ChevronRight className="h-3 w-3" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Mini Project Summaries */}
+              {projects.length > 0 && (
+                <Card className="border-border/40">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FolderKanban className="h-4 w-4 text-primary" />
+                      Mis Proyectos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {projects.slice(0, 3).map((project: any) => {
+                      const total = project.total_lots || 1;
+                      const sold = project.sold_lots || 0;
+                      const progress = Math.round((sold / total) * 100);
+                      return (
+                        <div key={project.id} className="cursor-pointer hover:bg-muted/30 p-2 rounded-lg transition-colors" onClick={() => navigate(`/proyecto/${project.id}`)}>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
+                            <span className="text-xs text-muted-foreground">{sold}/{total}</span>
+                          </div>
+                          <Progress value={progress} className="h-1.5" />
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Quick Tips */}
               <Card className="border-border/40 bg-primary/5">
                 <CardContent className="p-4">
