@@ -10,17 +10,30 @@ interface RealisticTerrainProps {
   onElevationLoaded?: (baseElevation: number) => void;
   onTextureLoading?: (loading: boolean) => void;
   onTextureError?: (error: boolean) => void;
+  onDebugInfo?: (info: TerrainDebugInfo) => void;
 }
 
 export interface TerrainHandle {
   getHeightAt: (x: number, z: number) => number;
 }
 
+export interface TerrainDebugInfo {
+  lat: number;
+  lng: number;
+  zoom: number;
+  tileMeters: number;
+  planeSize: number;
+  tilesLoaded: number;
+  tilesTotal: number;
+  textureApplied: boolean;
+  canvasDataUrl?: string;
+}
+
 const TERRAIN_RES = 128;
 const SAT_ZOOM = 18;
 const ELEV_ZOOM = 15;
 const TILE_PX = 512;
-const GRID = 3; // 3x3 tile grid
+const GRID = 3;
 
 function lngLatToTileFraction(lng: number, lat: number, zoom: number) {
   const n = Math.pow(2, zoom);
@@ -69,7 +82,6 @@ async function loadElevationTile(lat: number, lng: number, token: string): Promi
   });
 }
 
-/** Load a single tile image using modern Static Tiles API */
 function loadTileImage(zoom: number, tx: number, ty: number, token: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -80,18 +92,22 @@ function loadTileImage(zoom: number, tx: number, ty: number, token: string): Pro
   });
 }
 
-/** Load a 3x3 grid of satellite tiles stitched into one canvas texture */
+interface StitchResult {
+  texture: THREE.Texture;
+  tilesLoaded: number;
+  canvasDataUrl: string;
+}
+
 async function loadStitchedSatelliteTexture(
   lat: number, lng: number, planeSize: number, token: string, zoom = SAT_ZOOM
-): Promise<THREE.Texture | null> {
+): Promise<StitchResult | null> {
   if (!token) return null;
 
   const { tileX, tileY, fracX, fracY } = lngLatToTileFraction(lng, lat, zoom);
   const tileMeters = tileSizeMeters(lat, zoom);
-  const canvasPx = TILE_PX * GRID; // 768px
-  const gridMeters = tileMeters * GRID; // ~375m
+  const canvasPx = TILE_PX * GRID;
+  const gridMeters = tileMeters * GRID;
 
-  // Load all 9 tiles in parallel
   const promises: Promise<{ img: HTMLImageElement | null; col: number; row: number }>[] = [];
   for (let dy = -1; dy <= 1; dy++) {
     for (let dx = -1; dx <= 1; dx++) {
@@ -105,23 +121,19 @@ async function loadStitchedSatelliteTexture(
 
   const results = await Promise.all(promises);
   const loaded = results.filter(r => r.img !== null).length;
-  
+
   if (loaded === 0) {
-    // Fallback to lower zoom
-    if (zoom > 15) {
-      console.warn(`No tiles at zoom ${zoom}, falling back to ${zoom - 1}`);
+    if (zoom > 14) {
       return loadStitchedSatelliteTexture(lat, lng, planeSize, token, zoom - 1);
     }
     return null;
   }
 
-  // Stitch tiles onto a canvas
   const canvas = document.createElement('canvas');
   canvas.width = canvasPx;
   canvas.height = canvasPx;
   const ctx = canvas.getContext('2d')!;
 
-  // Fill with a base color in case some tiles failed
   ctx.fillStyle = '#5D8233';
   ctx.fillRect(0, 0, canvasPx, canvasPx);
 
@@ -130,6 +142,14 @@ async function loadStitchedSatelliteTexture(
       ctx.drawImage(img, col * TILE_PX, row * TILE_PX, TILE_PX, TILE_PX);
     }
   }
+
+  // Get a small preview for debug
+  const previewCanvas = document.createElement('canvas');
+  previewCanvas.width = 128;
+  previewCanvas.height = 128;
+  const pCtx = previewCanvas.getContext('2d')!;
+  pCtx.drawImage(canvas, 0, 0, 128, 128);
+  const canvasDataUrl = previewCanvas.toDataURL('image/jpeg', 0.5);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -140,22 +160,18 @@ async function loadStitchedSatelliteTexture(
   tex.magFilter = THREE.LinearFilter;
   tex.needsUpdate = true;
 
-  // UV mapping: map the plane onto the stitched grid
-  // The center tile is at grid position (1,1). The fractional position within it is (fracX, fracY).
-  // In texture space, the center of the lot is at ((1 + fracX) / 3, (1 + fracY) / 3)
   const repeatVal = planeSize / gridMeters;
   tex.repeat.set(repeatVal, repeatVal);
 
-  // Center of lot in UV space of the stitched canvas
   const centerU = (1 + fracX) / GRID;
-  const centerV = 1 - (1 + fracY) / GRID; // flip Y
+  const centerV = 1 - (1 + fracY) / GRID;
   tex.offset.set(centerU - repeatVal / 2, centerV - repeatVal / 2);
 
-  console.log('Stitched satellite:', { zoom, tileMeters: Math.round(tileMeters), gridMeters: Math.round(gridMeters), planeSize, repeatVal: repeatVal.toFixed(3), loaded: `${loaded}/9`, centerU: centerU.toFixed(3), centerV: centerV.toFixed(3) });
-  return tex;
+  console.log('🛰️ Satellite stitched:', { zoom, tileMeters: Math.round(tileMeters), gridMeters: Math.round(gridMeters), planeSize: Math.round(planeSize), repeatVal: repeatVal.toFixed(3), loaded: `${loaded}/9` });
+
+  return { texture: tex, tilesLoaded: loaded, canvasDataUrl };
 }
 
-/** Convert polygon GPS coords to local XZ coords centered on centroid */
 function polygonToLocal(polygon: number[][]): { coords: [number, number][]; cx: number; cy: number } {
   if (!polygon || polygon.length === 0) return { coords: [], cx: 0, cy: 0 };
   const cx = polygon.reduce((s, p) => s + p[0], 0) / polygon.length;
@@ -183,13 +199,21 @@ function computeSizeFromPolygon(localCoords: [number, number][]): number {
 }
 
 export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>(
-  ({ polygon, latitude, longitude, size: sizeProp, mapboxToken, onElevationLoaded, onTextureLoading, onTextureError }, ref) => {
+  ({ polygon, latitude, longitude, size: sizeProp, mapboxToken, onElevationLoaded, onTextureLoading, onTextureError, onDebugInfo }, ref) => {
     const [heightData, setHeightData] = useState<Float32Array | null>(null);
     const [texture, setTexture] = useState<THREE.Texture | null>(null);
     const [baseElevation, setBaseElevation] = useState(0);
 
-    const lat = latitude ?? (polygon ? polygon.reduce((s, p) => s + p[1], 0) / polygon.length : -33.4);
-    const lng = longitude ?? (polygon ? polygon.reduce((s, p) => s + p[0], 0) / polygon.length : -70.6);
+    // PRIORITY: use polygon centroid if available, fallback to lat/lng props
+    const polygonCentroid = useMemo(() => {
+      if (!polygon || polygon.length < 3) return null;
+      const cx = polygon.reduce((s, p) => s + p[0], 0) / polygon.length;
+      const cy = polygon.reduce((s, p) => s + p[1], 0) / polygon.length;
+      return { lng: cx, lat: cy };
+    }, [polygon]);
+
+    const lat = polygonCentroid?.lat ?? latitude ?? -33.4;
+    const lng = polygonCentroid?.lng ?? longitude ?? -70.6;
 
     const { coords: localCoords } = useMemo(() => polygonToLocal(polygon || []), [polygon]);
     const size = sizeProp ?? computeSizeFromPolygon(localCoords);
@@ -214,17 +238,28 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
       });
     }, [lat, lng, mapboxToken]);
 
-    // Load stitched satellite texture (3x3 grid)
+    // Load stitched satellite texture
     useEffect(() => {
       if (!mapboxToken) { onTextureError?.(true); return; }
       onTextureLoading?.(true);
       onTextureError?.(false);
-      loadStitchedSatelliteTexture(lat, lng, size, mapboxToken, SAT_ZOOM).then((tex) => {
-        if (tex) {
-          setTexture(tex);
+
+      loadStitchedSatelliteTexture(lat, lng, size, mapboxToken, SAT_ZOOM).then((result) => {
+        if (result) {
+          setTexture(result.texture);
           onTextureError?.(false);
+          onDebugInfo?.({
+            lat, lng, zoom: SAT_ZOOM, tileMeters: Math.round(tileSizeMeters(lat, SAT_ZOOM)),
+            planeSize: Math.round(size), tilesLoaded: result.tilesLoaded, tilesTotal: 9,
+            textureApplied: true, canvasDataUrl: result.canvasDataUrl,
+          });
         } else {
           onTextureError?.(true);
+          onDebugInfo?.({
+            lat, lng, zoom: SAT_ZOOM, tileMeters: Math.round(tileSizeMeters(lat, SAT_ZOOM)),
+            planeSize: Math.round(size), tilesLoaded: 0, tilesTotal: 9,
+            textureApplied: false,
+          });
         }
         onTextureLoading?.(false);
       }).catch(() => {
@@ -280,11 +315,19 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
     return (
       <>
         <group rotation={[-Math.PI / 2, 0, 0]}>
-          <mesh geometry={geometry} receiveShadow castShadow>
+          <mesh geometry={geometry} receiveShadow>
             {texture ? (
-              <meshStandardMaterial map={texture} roughness={1} metalness={0} side={THREE.DoubleSide} toneMapped={false} />
+              <meshBasicMaterial
+                map={texture}
+                side={THREE.DoubleSide}
+                toneMapped={false}
+              />
             ) : (
-              <meshStandardMaterial color="#5D8233" roughness={1} metalness={0} side={THREE.DoubleSide} toneMapped={false} />
+              <meshBasicMaterial
+                color="#5D8233"
+                side={THREE.DoubleSide}
+                toneMapped={false}
+              />
             )}
           </mesh>
         </group>
