@@ -1,16 +1,18 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, LogOut, User, Shield, Settings } from 'lucide-react';
+import { ArrowLeft, Loader2, LogOut, User, Shield, Settings, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PersonalInfoTab from '@/components/profile/PersonalInfoTab';
 import SecurityTab from '@/components/profile/SecurityTab';
 import PreferencesTab from '@/components/profile/PreferencesTab';
+import ProfileStatsCards from '@/components/profile/ProfileStatsCards';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -18,9 +20,7 @@ const Profile = () => {
   const { profile, isLoading, updateProfile, isUpdating } = useProfile();
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
+    if (!authLoading && !user) navigate('/auth');
   }, [user, authLoading, navigate]);
 
   const handleSignOut = async () => {
@@ -34,6 +34,8 @@ const Profile = () => {
     return (first + last).toUpperCase();
   };
 
+  const isEmailConfirmed = !!user?.email_confirmed_at;
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -44,68 +46,63 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-3xl py-8 px-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+      {/* Premium Header */}
+      <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-b">
+        <div className="container max-w-3xl py-8 px-4">
+          <div className="flex items-center justify-between mb-6">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Mi Perfil</h1>
-              <p className="text-muted-foreground">Gestiona tu cuenta y preferencias</p>
-            </div>
+            <Button variant="outline" onClick={handleSignOut} className="hidden sm:flex">
+              <LogOut className="mr-2 h-4 w-4" />
+              Cerrar Sesión
+            </Button>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={handleSignOut}
-            className="hidden sm:flex"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Cerrar Sesión
-          </Button>
-        </div>
 
-        {/* Avatar Card */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6">
+            {isLoading ? (
+              <Skeleton className="h-24 w-24 rounded-full" />
+            ) : (
+              <Avatar className="h-24 w-24 border-4 border-primary/20 shadow-lg">
+                <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
+                <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                  {getInitials()}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            <div className="flex-1 min-w-0">
               {isLoading ? (
-                <Skeleton className="h-20 w-20 rounded-full" />
+                <>
+                  <Skeleton className="h-7 w-48 mb-2" />
+                  <Skeleton className="h-4 w-64" />
+                </>
               ) : (
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
-                  <AvatarFallback className="text-xl bg-primary text-primary-foreground">
-                    {getInitials()}
-                  </AvatarFallback>
-                </Avatar>
+                <>
+                  <h1 className="text-2xl font-bold text-foreground truncate">
+                    {profile?.first_name} {profile?.last_name}
+                  </h1>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-muted-foreground truncate">{user?.email}</p>
+                    {isEmailConfirmed && (
+                      <Badge variant="outline" className="gap-1 text-green-600 border-green-200 bg-green-50 dark:bg-green-950/20">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Verificado
+                      </Badge>
+                    )}
+                  </div>
+                </>
               )}
-              <div className="flex-1">
-                {isLoading ? (
-                  <>
-                    <Skeleton className="h-6 w-40 mb-2" />
-                    <Skeleton className="h-4 w-56" />
-                  </>
-                ) : (
-                  <>
-                    <h2 className="text-xl font-semibold text-foreground">
-                      {profile?.first_name} {profile?.last_name}
-                    </h2>
-                    <p className="text-muted-foreground">{user?.email}</p>
-                  </>
-                )}
-              </div>
-              <Button 
-                variant="outline" 
-                onClick={handleSignOut}
-                className="sm:hidden"
-                size="icon"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
             </div>
-          </CardContent>
-        </Card>
+            <Button variant="outline" onClick={handleSignOut} className="sm:hidden" size="icon">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="container max-w-3xl py-6 px-4 space-y-6">
+        {/* Stats Cards */}
+        {user && !isLoading && <ProfileStatsCards userId={user.id} />}
 
         {/* Tabs */}
         {isLoading ? (
@@ -131,26 +128,20 @@ const Profile = () => {
             </TabsList>
 
             <TabsContent value="personal">
-              <PersonalInfoTab 
+              <PersonalInfoTab
                 profile={profile}
                 user={user}
                 updateProfile={updateProfile}
                 isUpdating={isUpdating}
               />
             </TabsContent>
-
-            <TabsContent value="security">
-              <SecurityTab />
-            </TabsContent>
-
-            <TabsContent value="preferences">
-              <PreferencesTab />
-            </TabsContent>
+            <TabsContent value="security"><SecurityTab /></TabsContent>
+            <TabsContent value="preferences"><PreferencesTab /></TabsContent>
           </Tabs>
         )}
 
         {/* Account Info */}
-        <Card className="mt-6">
+        <Card>
           <CardHeader>
             <CardTitle className="text-base">Información de la Cuenta</CardTitle>
           </CardHeader>
@@ -159,27 +150,17 @@ const Profile = () => {
               <div>
                 <p className="text-muted-foreground">Miembro desde</p>
                 <p className="font-medium">
-                  {profile?.created_at 
-                    ? new Date(profile.created_at).toLocaleDateString('es-CL', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })
-                    : '-'
-                  }
+                  {profile?.created_at
+                    ? new Date(profile.created_at).toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' })
+                    : '-'}
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Última actualización</p>
                 <p className="font-medium">
-                  {profile?.updated_at 
-                    ? new Date(profile.updated_at).toLocaleDateString('es-CL', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })
-                    : '-'
-                  }
+                  {profile?.updated_at
+                    ? new Date(profile.updated_at).toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' })
+                    : '-'}
                 </p>
               </div>
             </div>
