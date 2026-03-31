@@ -112,12 +112,6 @@ const Tools = () => {
           <TabsContent value="comparator">
             <InvestmentComparator />
           </TabsContent>
-
-          {isPro && (
-            <TabsContent value="social">
-              <StoryGenerator />
-            </TabsContent>
-          )}
         </Tabs>
       </div>
     </Layout>
