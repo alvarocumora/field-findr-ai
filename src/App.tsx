@@ -87,6 +87,7 @@ import DemandHeatmapDashboard from "./pages/dashboard/DemandHeatmapDashboard";
 import APIPortal from "./pages/dashboard/APIPortal";
 import LandOpportunities from "./pages/dashboard/LandOpportunities";
 import Contacts from "./pages/dashboard/Contacts";
+import OpportunityDetail from "./pages/dashboard/OpportunityDetail";
 // ===== Admin Pages =====
 import AdminUsers from "./pages/AdminUsers";
 import AgentManagement from "./components/AgentManagement";
