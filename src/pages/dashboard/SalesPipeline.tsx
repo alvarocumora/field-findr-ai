@@ -13,12 +13,12 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 const PIPELINE_COLUMNS = [
-  { key: 'new', label: 'Nuevos', color: 'bg-blue-500', bgColor: 'bg-blue-500/10 border-blue-500/20', accent: 'border-t-blue-500' },
-  { key: 'contacted', label: 'Contactados', color: 'bg-yellow-500', bgColor: 'bg-yellow-500/10 border-yellow-500/20', accent: 'border-t-yellow-500' },
-  { key: 'interested', label: 'Interesados', color: 'bg-purple-500', bgColor: 'bg-purple-500/10 border-purple-500/20', accent: 'border-t-purple-500' },
-  { key: 'negotiating', label: 'Negociando', color: 'bg-orange-500', bgColor: 'bg-orange-500/10 border-orange-500/20', accent: 'border-t-orange-500' },
-  { key: 'converted', label: 'Convertidos', color: 'bg-green-500', bgColor: 'bg-green-500/10 border-green-500/20', accent: 'border-t-green-500' },
-  { key: 'lost', label: 'Perdidos', color: 'bg-red-500', bgColor: 'bg-red-500/10 border-red-500/20', accent: 'border-t-red-500' },
+  { key: 'new', label: 'Capturado', color: 'bg-blue-500', bgColor: 'bg-blue-500/10 border-blue-500/20', accent: 'border-t-blue-500' },
+  { key: 'contacted', label: 'Pre-evaluación', color: 'bg-amber-500', bgColor: 'bg-amber-500/10 border-amber-500/20', accent: 'border-t-amber-500' },
+  { key: 'interested', label: 'Revisión Legal', color: 'bg-purple-500', bgColor: 'bg-purple-500/10 border-purple-500/20', accent: 'border-t-purple-500' },
+  { key: 'negotiating', label: 'Negociación', color: 'bg-orange-500', bgColor: 'bg-orange-500/10 border-orange-500/20', accent: 'border-t-orange-500' },
+  { key: 'converted', label: 'Cerrado', color: 'bg-green-500', bgColor: 'bg-green-500/10 border-green-500/20', accent: 'border-t-green-500' },
+  { key: 'lost', label: 'Descartado', color: 'bg-red-500', bgColor: 'bg-red-500/10 border-red-500/20', accent: 'border-t-red-500' },
 ];
 
 const SalesPipeline = () => {
