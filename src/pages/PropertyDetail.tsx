@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import GeoEnrichmentPanel from '@/components/map/GeoEnrichmentPanel';
+import InvestmentScoreWidget from '@/components/property/InvestmentScoreWidget';
 import { useParams, Link } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import { useListing, useListings, formatPrice, formatArea, getListingTypeLabel, getLegalStatusLabel } from '@/hooks/useListings';
@@ -556,6 +557,18 @@ const PropertyDetail = () => {
                 </p>
               </CardContent>
             </Card>
+
+            {/* Investment Score */}
+            <InvestmentScoreWidget
+              price={listing.price}
+              area_m2={listing.area_m2}
+              area_ha={listing.area_ha}
+              legal_status={listing.legal_status}
+              utilities={utilities as { water?: boolean; electricity?: string; road_access?: string }}
+              subdivision_eligible={listing.subdivision_eligible}
+              zoning={listing.zoning}
+              tags={listing.tags}
+            />
 
             {/* GIS Enrichment Data */}
             <GeoEnrichmentPanel lat={listing.lat} lng={listing.lng} />
