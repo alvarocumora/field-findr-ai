@@ -59,20 +59,21 @@ interface ModernSidebarProps {
 // Core items always visible
 const coreItems: NavItem[] = [
   { name: 'Dashboard', href: '/asesor/dashboard', icon: LayoutDashboard },
+  { name: 'Oportunidades', href: '/asesor/opportunities', icon: Target },
+  { name: 'Pipeline', href: '/asesor/pipeline', icon: Workflow },
+  { name: 'Contactos CRM', href: '/asesor/contacts', icon: Users },
   { name: 'Proyectos', href: '/asesor/projects', icon: FolderKanban },
   { name: 'Lotes', href: '/asesor/lots', icon: Grid3X3 },
-  { name: 'CRM Leads', href: '/asesor/leads', icon: Users },
   { name: 'Reservas', href: '/asesor/reservations', icon: CalendarCheck },
-  { name: 'Pagos', href: '/asesor/payments', icon: DollarSign },
   { name: 'Reportes', href: '/asesor/reports', icon: FileBarChart },
 ];
 
 // Advanced items collapsed by default
 const advancedItems: NavItem[] = [
-  { name: 'Ventas', href: '/asesor/sales', icon: Handshake },
-  { name: 'Pipeline', href: '/asesor/pipeline', icon: Workflow },
+  { name: 'Pagos', href: '/asesor/payments', icon: DollarSign },
   { name: 'Créditos', href: '/asesor/credits', icon: CreditCard },
   { name: 'Cierres', href: '/asesor/closing', icon: Scale },
+  { name: 'Ventas', href: '/asesor/sales', icon: Handshake },
   { name: 'Financiero', href: '/asesor/financial', icon: TrendingUp },
   { name: 'Multi-Proyecto', href: '/asesor/multi-project', icon: BarChart3 },
   { name: 'Rendimiento', href: '/asesor/performance', icon: Target },
@@ -80,8 +81,7 @@ const advancedItems: NavItem[] = [
   { name: 'Demanda', href: '/asesor/demand', icon: Flame },
   { name: 'Propiedades', href: '/asesor/listings', icon: Building2 },
   { name: 'Mensajes', href: '/asesor/messages', icon: MessageSquare },
-  { name: 'Enterprise', href: '/asesor/enterprise', icon: Globe },
-  { name: 'API Portal', href: '/asesor/api', icon: Code },
+  { name: 'Documentos', href: '/asesor/documents', icon: FileBarChart },
   { name: 'Notificaciones', href: '/asesor/notifications', icon: Bell },
 ];
 
