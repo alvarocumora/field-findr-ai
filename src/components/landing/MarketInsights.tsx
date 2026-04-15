@@ -19,7 +19,7 @@ const ARTICLES = [
   {
     icon: BarChart3,
     title: 'Las regiones con mayor plusvalía',
-    summary: 'Análisis comparativo de valorización por zona: desde O'Higgins hasta Los Lagos, dónde están las mejores oportunidades.',
+    summary: 'Análisis comparativo de valorización por zona: desde O\'Higgins hasta Los Lagos, dónde están las mejores oportunidades.',
     tag: 'Análisis',
   },
 ];
