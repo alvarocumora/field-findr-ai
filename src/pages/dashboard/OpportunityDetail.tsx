@@ -13,7 +13,7 @@ import {
   ArrowLeft, MapPin, Ruler, DollarSign, Shield, Zap, Droplets,
   Route, Trees, Building2, TrendingUp, AlertTriangle, CheckCircle2,
   Clock, FileText, Users, MessageSquare, Lightbulb, Target,
-  Phone, Mail, Calendar, ChevronRight, Layers, Star
+  Phone, Mail, Calendar, ChevronRight, Layers, Star, Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
