@@ -190,7 +190,7 @@ const DashboardAsesor = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {statsConfig.map((stat, index) => (
             <Card key={index} className="border-border/40 bg-card/50 backdrop-blur">
               <CardContent className="p-5">
