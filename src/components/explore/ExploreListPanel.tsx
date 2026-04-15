@@ -268,7 +268,36 @@ const ExploreListPanel = ({
     return listings;
   }, [listings, activeTab]);
 
-  const sortedListings = sortListings(tabFilteredListings, sortBy);
+  // Apply territorial filters
+  const territorialFilteredListings = useMemo(() => {
+    let result = tabFilteredListings;
+    const f = territorialFilter;
+    if (f.aptitudes.length > 0) {
+      result = result.filter(l => {
+        const tags = (l.tags || []).map(t => t.toLowerCase());
+        const type = (l.type || '').toLowerCase();
+        return f.aptitudes.some(apt => tags.some(t => t.includes(apt)) || type.includes(apt));
+      });
+    }
+    if (f.hasWater === true) {
+      result = result.filter(l => {
+        const u = l.utilities as Record<string, boolean> | null;
+        return u?.water === true || (l.tags || []).some(t => t.toLowerCase().includes('agua'));
+      });
+    }
+    if (f.hasRoad === true) {
+      result = result.filter(l => {
+        const u = l.utilities as Record<string, boolean> | null;
+        return u?.road === true || (l.tags || []).some(t => t.toLowerCase().includes('camino') || t.toLowerCase().includes('acceso'));
+      });
+    }
+    if (f.legalStatus === 'verified') {
+      result = result.filter(l => l.legal_status === 'verified');
+    }
+    return result;
+  }, [tabFilteredListings, territorialFilter]);
+
+  const sortedListings = sortListings(territorialFilteredListings, sortBy);
 
   // Smart summary
   const displayCount = totalCount ?? listings.length;
