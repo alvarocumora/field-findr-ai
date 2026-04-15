@@ -8,6 +8,10 @@ const BADGES = [
   { icon: Users, title: 'Soporte Experto', description: 'Equipo inmobiliario a tu disposición' },
 ];
 
+const LOGOS = [
+  'Mapbox', 'OpenAI', 'MercadoPago', 'SII Chile',
+];
+
 const container = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.1 } },
@@ -21,10 +25,11 @@ const TrustBadges = () => {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <section className="py-12 border-t border-border/50">
+    <section className="py-16 border-t border-border/50">
       <div className="container px-4">
+        {/* Trust badges */}
         <motion.div
-          className="flex flex-wrap justify-center gap-8 md:gap-12"
+          className="flex flex-wrap justify-center gap-8 md:gap-12 mb-12"
           variants={prefersReducedMotion ? {} : container}
           initial="hidden"
           whileInView="visible"
@@ -46,6 +51,15 @@ const TrustBadges = () => {
             </motion.div>
           ))}
         </motion.div>
+
+        {/* Logo cloud integrated */}
+        <div className="flex items-center justify-center gap-8 opacity-40">
+          {LOGOS.map((name) => (
+            <span key={name} className="text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground">
+              {name}
+            </span>
+          ))}
+        </div>
       </div>
     </section>
   );
