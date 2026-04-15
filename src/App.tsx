@@ -47,6 +47,7 @@ import Blog from "./pages/Blog";
 import Oportunidades from "./pages/Oportunidades";
 import BuyerQuiz from "./pages/BuyerQuiz";
 import ProjectExperience from "./pages/ProjectExperience";
+import ResetPassword from "./pages/ResetPassword";
 
 // ===== Buyer Pages =====
 import Profile from "./pages/Profile";
@@ -97,6 +98,7 @@ import AuditLog from "./pages/dashboard/AuditLog";
 
 // ===== Buyer Pages (new) =====
 import BuyerHome from "./pages/BuyerHome";
+import BuyerLayout from "./components/layouts/BuyerLayout";
 
 // ===== Dashboard Pages (lazy) =====
 import { DashboardAdmin, DashboardAsesor, DashboardInmobiliaria } from "./pages/dashboard";
@@ -134,6 +136,7 @@ const App = () => (
               <Route path="/oportunidades" element={<Oportunidades />} />
               <Route path="/quiz" element={<BuyerQuiz />} />
               <Route path="/proyecto/:id/experiencia" element={<ProjectExperience />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Subscription result pages */}
               <Route path="/subscription/success" element={<SubscriptionSuccess />} />
@@ -146,13 +149,13 @@ const App = () => (
 
               {/* ====== BUYER ROUTES (auth required) ====== */}
               <Route path="/buyer/home" element={
-                <ProtectedRoute requireAuth><BuyerHome /></ProtectedRoute>
+                <BuyerLayout><BuyerHome /></BuyerLayout>
               } />
               <Route path="/favoritos" element={
-                <ProtectedRoute requireAuth><Favorites /></ProtectedRoute>
+                <BuyerLayout><Favorites /></BuyerLayout>
               } />
               <Route path="/mi-terreno" element={
-                <ProtectedRoute requireAuth><MiTerreno /></ProtectedRoute>
+                <BuyerLayout><MiTerreno /></BuyerLayout>
               } />
               <Route path="/profile" element={
                 <ProtectedRoute requireAuth><Profile /></ProtectedRoute>
