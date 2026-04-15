@@ -1,11 +1,11 @@
 import { lazy, Suspense } from 'react';
 import PublicLayout from '@/components/layouts/PublicLayout';
-import HowItWorks from '@/components/landing/HowItWorks';
-import TrustBadges from '@/components/landing/TrustBadges';
 import FloatingCTA from '@/components/landing/FloatingCTA';
-import LogoCloud from '@/components/landing/LogoCloud';
 import TestimonialMarquee from '@/components/landing/TestimonialMarquee';
-import CountrySelector from '@/components/landing/CountrySelector';
+import TrustBadges from '@/components/landing/TrustBadges';
+import ValueProposition from '@/components/landing/ValueProposition';
+import InvestmentShowcase from '@/components/landing/InvestmentShowcase';
+import AgentCTA from '@/components/landing/AgentCTA';
 import ConversationalSearch from '@/components/explore/ConversationalSearch';
 
 const CartographicHero = lazy(() => import('@/components/landing/CartographicHero'));
@@ -20,13 +20,10 @@ const LazyFallback = () => (
 const Index = () => {
   return (
     <PublicLayout showFooter={true}>
-      {/* ===== 3D GLOBE HERO — Scroll-driven zoom to Chile ===== */}
+      {/* ===== HERO — Globe zoom to Chile ===== */}
       <Suspense fallback={<LazyFallback />}>
         <CartographicHero />
       </Suspense>
-
-      {/* ===== LOGO CLOUD ===== */}
-      <LogoCloud />
 
       {/* ===== AI CONVERSATIONAL SEARCH ===== */}
       <section className="container px-4 -mt-8 relative z-10">
@@ -40,23 +37,17 @@ const Index = () => {
         <ScrollytellingSection />
       </Suspense>
 
-      {/* ===== Section divider ===== */}
-      <div className="container px-4">
-        <div className="divider-cartographic">
-          <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
-            Cómo funciona
-          </span>
-        </div>
-      </div>
+      {/* ===== VALUE PROPOSITION — 3 audiences ===== */}
+      <ValueProposition />
 
-      {/* ===== HOW IT WORKS ===== */}
-      <HowItWorks />
+      {/* ===== INVESTMENT SHOWCASE — KPIs ===== */}
+      <InvestmentShowcase />
+
+      {/* ===== AGENT CTA — Broker lead-gen ===== */}
+      <AgentCTA />
 
       {/* ===== TESTIMONIALS ===== */}
       <TestimonialMarquee />
-
-      {/* ===== COUNTRIES ===== */}
-      <CountrySelector />
 
       {/* ===== TRUST ===== */}
       <TrustBadges />
