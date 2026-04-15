@@ -40,6 +40,7 @@ import {
   ChevronLeft,
   MessageCircle,
   Phone,
+  TrendingUp,
 } from 'lucide-react';
 
 const isValidUUID = (val?: string) =>
