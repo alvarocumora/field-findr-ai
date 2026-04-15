@@ -29,7 +29,7 @@ import {
 import { useProjects, Project } from '@/hooks/useProjects';
 import { KMZImportDialog } from './projects/KMZImportDialog';
 import CreateProjectWizard from './projects/CreateProjectWizard';
-import { useLots } from '@/hooks/useLots';
+
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   draft: { label: 'Borrador', color: 'bg-muted text-muted-foreground border-border' },
