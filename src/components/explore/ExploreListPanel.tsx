@@ -230,6 +230,9 @@ const ExploreListPanel = ({
             onToggleValuation={onToggleValuation}
           />
         )}
+
+        {/* Territorial Aptitude Filters */}
+        <TerritorialFilters listings={listings} onFilterChange={setTerritorialFilter} />
       </div>
 
       {/* Summary + Tabs + Sort */}
