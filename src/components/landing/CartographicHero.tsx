@@ -143,42 +143,12 @@ const CartographicHero = () => {
         <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background/50 to-transparent" />
 
         {/* Typography overlay */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-          <motion.div
-            className="text-center"
-            style={prefersReducedMotion ? {} : { y: titleY }}
-          >
-            <motion.p
-              className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.4em] text-primary/70 mb-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 1 }}
-            >
-              Plataforma de Inversión en Terrenos
-            </motion.p>
-
-            <motion.h1
-              className="text-5xl sm:text-7xl md:text-8xl lg:text-[10rem] font-heading font-bold tracking-tight leading-[0.85] text-foreground"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.8, ease: 'easeOut' }}
-            >
-              <span className="block">OFERTA</span>
-              <span className="block gradient-text-hero">TERRENOS</span>
-            </motion.h1>
-
-            <motion.div
-              className="mt-8 font-mono text-xs sm:text-sm text-muted-foreground tracking-[0.2em]"
-              style={prefersReducedMotion ? {} : { opacity: coordOpacity, y: coordY }}
-            >
-              <span className="text-primary">−33.4489° S</span>
-              <span className="mx-3 text-border">|</span>
-              <span className="text-primary">−70.6693° W</span>
-              <span className="mx-3 text-border">|</span>
-              <span>Santiago, Chile</span>
-            </motion.div>
-          </motion.div>
-        </div>
+        <HeroContent
+          prefersReducedMotion={prefersReducedMotion}
+          titleY={titleY}
+          coordOpacity={coordOpacity}
+          coordY={coordY}
+        />
 
         {/* Scroll indicator */}
         <motion.div
