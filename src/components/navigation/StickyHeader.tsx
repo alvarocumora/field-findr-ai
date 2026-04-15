@@ -48,7 +48,8 @@ const StickyHeader = () => {
 
   const publicNavigation = [
     { name: 'Explorar', href: '/explorar' },
-    { name: 'Precios', href: '/pricing' },
+    { name: 'Herramientas IA', href: '/tools', badge: 'Nuevo' },
+    { name: 'Para Profesionales', href: '/pricing' },
   ];
 
   // Contextual nav items based on role
@@ -109,13 +110,18 @@ const StickyHeader = () => {
                 key={item.name}
                 to={item.href}
                 className={cn(
-                  "px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus-ring",
+                  "px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus-ring relative",
                   isActive(item.href)
                     ? "text-primary bg-primary/10"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
                 {item.name}
+                {'badge' in item && (item as any).badge && (
+                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full bg-primary text-primary-foreground">
+                    {(item as any).badge}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>
