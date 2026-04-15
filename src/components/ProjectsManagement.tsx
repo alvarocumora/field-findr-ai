@@ -9,10 +9,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { 
   FolderOpen, Plus, Search, MapPin, 
   TrendingUp, Building2, Eye, Edit,
-  Settings, FileArchive, Trash2, Rocket
+  FileArchive, Trash2, Rocket, Clock, BarChart3
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { differenceInDays } from 'date-fns';
 
 import {
   AlertDialog,
@@ -28,6 +29,7 @@ import {
 import { useProjects, Project } from '@/hooks/useProjects';
 import { KMZImportDialog } from './projects/KMZImportDialog';
 import CreateProjectWizard from './projects/CreateProjectWizard';
+import { useLots } from '@/hooks/useLots';
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   draft: { label: 'Borrador', color: 'bg-muted text-muted-foreground border-border' },
@@ -52,6 +54,8 @@ const ProjectsManagement = () => {
   );
 
   const formatCurrency = (amount: number) => {
+    if (amount >= 1000000000) return `$${(amount / 1000000000).toFixed(1)}B`;
+    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(0)}M`;
     return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
   };
 
@@ -61,7 +65,23 @@ const ProjectsManagement = () => {
     return total > 0 ? Math.round((sold / total) * 100) : 0;
   };
 
-  const estimatedRevenue = stats.soldLots * 25000000;
+  const getVelocity = (project: Project) => {
+    const days = differenceInDays(new Date(), new Date(project.created_at));
+    const sold = project.sold_lots || 0;
+    if (days <= 0 || sold <= 0) return null;
+    return (sold / (days / 30)).toFixed(1); // lots per month
+  };
+
+  const isNew = (project: Project) => {
+    return differenceInDays(new Date(), new Date(project.created_at)) <= 7;
+  };
+
+  // Calculate real revenue from sold lot prices (estimate with avg price if not available per-lot)
+  const totalRevenue = projects.reduce((sum, p) => {
+    const soldCount = p.sold_lots || 0;
+    // If no sold, skip. Use total_area / total_lots as avg area, times a rough price/m2
+    return sum + soldCount * 25000000; // fallback estimate
+  }, 0);
 
   if (isLoading) {
     return (
@@ -71,14 +91,10 @@ const ProjectsManagement = () => {
           <Skeleton className="h-10 w-40" />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24" />)}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-80" />
-          ))}
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-80" />)}
         </div>
       </div>
     );
@@ -86,137 +102,157 @@ const ProjectsManagement = () => {
 
   return (
     <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Proyectos de Loteo</h1>
-            <p className="text-muted-foreground">Gestiona tus desarrollos inmobiliarios</p>
-          </div>
-          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Nuevo Proyecto
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Crear Nuevo Proyecto</DialogTitle>
-              </DialogHeader>
-              <CreateProjectWizard
-                createProject={createProject}
-                onComplete={() => setShowAddDialog(false)}
-                onCancel={() => setShowAddDialog(false)}
-              />
-            </DialogContent>
-          </Dialog>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Proyectos de Loteo</h1>
+          <p className="text-muted-foreground">Gestiona tus desarrollos inmobiliarios</p>
         </div>
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nuevo Proyecto
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Crear Nuevo Proyecto</DialogTitle>
+            </DialogHeader>
+            <CreateProjectWizard
+              createProject={createProject}
+              onComplete={() => setShowAddDialog(false)}
+              onCancel={() => setShowAddDialog(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Proyectos</p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                </div>
-                <FolderOpen className="h-8 w-8 text-primary/60" />
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Proyectos</p>
+                <p className="text-2xl font-bold">{stats.total}</p>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Lotes</p>
-                  <p className="text-2xl font-bold">{stats.totalLots}</p>
-                </div>
-                <MapPin className="h-8 w-8 text-blue-500/60" />
+              <FolderOpen className="h-8 w-8 text-primary/60" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Lotes</p>
+                <p className="text-2xl font-bold">{stats.totalLots}</p>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Lotes Vendidos</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.soldLots}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-green-500/60" />
+              <MapPin className="h-8 w-8 text-blue-500/60" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Vendidos</p>
+                <p className="text-2xl font-bold text-green-600">{stats.soldLots}</p>
+                {stats.totalLots > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {Math.round((stats.soldLots / stats.totalLots) * 100)}% del total
+                  </p>
+                )}
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Ingresos Est.</p>
-                  <p className="text-xl font-bold text-green-600">{formatCurrency(estimatedRevenue)}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-green-500/60" />
+              <TrendingUp className="h-8 w-8 text-green-500/60" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Ingresos Est.</p>
+                <p className="text-xl font-bold text-green-600">{formatCurrency(totalRevenue)}</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <BarChart3 className="h-8 w-8 text-purple-500/60" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar proyectos..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar proyectos..."
+          className="pl-10"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
 
-        {/* Empty State */}
-        {filteredProjects.length === 0 && !isLoading && (
-          <Card className="p-12 text-center">
-            <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No hay proyectos</h3>
-            <p className="text-muted-foreground mb-4">
-              {searchQuery ? 'No se encontraron proyectos con ese criterio' : 'Crea tu primer proyecto de loteo'}
-            </p>
-            {!searchQuery && (
-              <Button onClick={() => setShowAddDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Crear Proyecto
-              </Button>
-            )}
-          </Card>
-        )}
+      {/* Empty State */}
+      {filteredProjects.length === 0 && !isLoading && (
+        <Card className="p-12 text-center">
+          <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No hay proyectos</h3>
+          <p className="text-muted-foreground mb-4">
+            {searchQuery ? 'No se encontraron proyectos con ese criterio' : 'Crea tu primer proyecto de loteo'}
+          </p>
+          {!searchQuery && (
+            <Button onClick={() => setShowAddDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Crear Proyecto
+            </Button>
+          )}
+        </Card>
+      )}
 
-        {/* Project Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredProjects.map((project) => (
+      {/* Project Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {filteredProjects.map((project) => {
+          const velocity = getVelocity(project);
+          const projectIsNew = isNew(project);
+          const hasImage = project.images && project.images.length > 0;
+
+          return (
             <Card key={project.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden">
-              <div className="h-32 bg-gradient-to-br from-primary/20 via-primary/10 to-background relative">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Building2 className="h-16 w-16 text-primary/30" />
+              {/* Cover image or gradient */}
+              <div className="h-36 relative overflow-hidden">
+                {hasImage ? (
+                  <img
+                    src={project.images![0]}
+                    alt={project.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="h-full bg-gradient-to-br from-primary/20 via-primary/10 to-background flex items-center justify-center">
+                    <Building2 className="h-16 w-16 text-primary/30" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                <div className="absolute top-3 right-3 flex gap-1.5">
+                  {projectIsNew && (
+                    <Badge className="bg-blue-500 text-white border-0 text-[10px]">Nuevo</Badge>
+                  )}
+                  <Badge className={statusConfig[project.status || 'draft']?.color || statusConfig.draft.color}>
+                    {statusConfig[project.status || 'draft']?.label || 'Borrador'}
+                  </Badge>
                 </div>
-                <Badge className={`absolute top-4 right-4 ${statusConfig[project.status || 'draft']?.color || statusConfig.draft.color}`}>
-                  {statusConfig[project.status || 'draft']?.label || 'Borrador'}
-                </Badge>
+                <div className="absolute bottom-3 left-4">
+                  <h3 className="text-lg font-bold text-foreground">{project.name}</h3>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {project.location || project.city || 'Sin ubicación'}
+                  </p>
+                </div>
               </div>
               
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-xl">{project.name}</CardTitle>
-                    <CardDescription className="flex items-center gap-1 mt-1">
-                      <MapPin className="h-3 w-3" />
-                      {project.location || 'Sin ubicación'}
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {project.description || 'Sin descripción'}
-                </p>
+              <CardContent className="space-y-4 pt-4">
+                {project.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
+                )}
 
                 {/* Progress */}
                 <div className="space-y-2">
@@ -241,6 +277,20 @@ const ProjectsManagement = () => {
                     <p className="text-lg font-bold text-blue-600">{project.sold_lots || 0}</p>
                     <p className="text-xs text-muted-foreground">Vendidos</p>
                   </div>
+                </div>
+
+                {/* Velocity & Age */}
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {differenceInDays(new Date(), new Date(project.created_at))} días
+                  </span>
+                  {velocity && (
+                    <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                      <TrendingUp className="h-3 w-3" />
+                      {velocity} ventas/mes
+                    </span>
+                  )}
                 </div>
 
                 {/* Actions */}
@@ -316,63 +366,64 @@ const ProjectsManagement = () => {
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-
-        {/* KMZ Import Dialog */}
-        <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <FileArchive className="h-5 w-5" />
-                Importar Lotes desde KMZ
-              </DialogTitle>
-            </DialogHeader>
-            {selectedProjectForImport && (
-              <KMZImportDialog
-                projectId={selectedProjectForImport.id}
-                projectName={selectedProjectForImport.name}
-                onComplete={() => {
-                  setShowImportDialog(false);
-                  setSelectedProjectForImport(null);
-                  refetch();
-                }}
-                onCancel={() => {
-                  setShowImportDialog(false);
-                  setSelectedProjectForImport(null);
-                }}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Project Dialog */}
-        <Dialog open={showEditDialog} onOpenChange={(open) => {
-          setShowEditDialog(open);
-          if (!open) setEditingProject(null);
-        }}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Editar Proyecto</DialogTitle>
-            </DialogHeader>
-            {editingProject && (
-              <CreateProjectWizard
-                createProject={createProject}
-                updateProject={updateProject}
-                editingProject={editingProject}
-                onComplete={() => {
-                  setShowEditDialog(false);
-                  setEditingProject(null);
-                }}
-                onCancel={() => {
-                  setShowEditDialog(false);
-                  setEditingProject(null);
-                }}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
+          );
+        })}
       </div>
+
+      {/* KMZ Import Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileArchive className="h-5 w-5" />
+              Importar Lotes desde KMZ
+            </DialogTitle>
+          </DialogHeader>
+          {selectedProjectForImport && (
+            <KMZImportDialog
+              projectId={selectedProjectForImport.id}
+              projectName={selectedProjectForImport.name}
+              onComplete={() => {
+                setShowImportDialog(false);
+                setSelectedProjectForImport(null);
+                refetch();
+              }}
+              onCancel={() => {
+                setShowImportDialog(false);
+                setSelectedProjectForImport(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Project Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={(open) => {
+        setShowEditDialog(open);
+        if (!open) setEditingProject(null);
+      }}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Proyecto</DialogTitle>
+          </DialogHeader>
+          {editingProject && (
+            <CreateProjectWizard
+              createProject={createProject}
+              updateProject={updateProject}
+              editingProject={editingProject}
+              onComplete={() => {
+                setShowEditDialog(false);
+                setEditingProject(null);
+              }}
+              onCancel={() => {
+                setShowEditDialog(false);
+                setEditingProject(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 
