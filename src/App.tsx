@@ -85,6 +85,8 @@ import Reports from "./pages/dashboard/Reports";
 import NotificationCenter from "./pages/NotificationCenter";
 import DemandHeatmapDashboard from "./pages/dashboard/DemandHeatmapDashboard";
 import APIPortal from "./pages/dashboard/APIPortal";
+import LandOpportunities from "./pages/dashboard/LandOpportunities";
+import Contacts from "./pages/dashboard/Contacts";
 // ===== Admin Pages =====
 import AdminUsers from "./pages/AdminUsers";
 import AgentManagement from "./components/AgentManagement";
@@ -164,6 +166,16 @@ const App = () => (
                   <Suspense fallback={<PageLoader />}>
                     <DashboardAsesor />
                   </Suspense>
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/opportunities" element={
+                <DashboardLayout requiredRole="agent">
+                  <LandOpportunities />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/contacts" element={
+                <DashboardLayout requiredRole="agent">
+                  <Contacts />
                 </DashboardLayout>
               } />
               <Route path="/asesor/listings" element={
