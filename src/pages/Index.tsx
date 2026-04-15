@@ -8,6 +8,7 @@ import InvestmentShowcase from '@/components/landing/InvestmentShowcase';
 import AgentCTA from '@/components/landing/AgentCTA';
 import CategoryShowcase from '@/components/landing/CategoryShowcase';
 import MarketInsights from '@/components/landing/MarketInsights';
+import RegionStatsCards from '@/components/landing/RegionStatsCards';
 import FeaturedListings from '@/components/landing/FeaturedListings';
 import HowItWorksFlow from '@/components/landing/HowItWorksFlow';
 import ConversationalSearch from '@/components/explore/ConversationalSearch';
@@ -58,6 +59,9 @@ const Index = () => {
 
       {/* ===== AGENT CTA — Broker lead-gen ===== */}
       <AgentCTA />
+
+      {/* ===== REGION STATS ===== */}
+      <RegionStatsCards />
 
       {/* ===== MARKET INSIGHTS ===== */}
       <MarketInsights />
