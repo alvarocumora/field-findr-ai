@@ -8,6 +8,8 @@ import InvestmentShowcase from '@/components/landing/InvestmentShowcase';
 import AgentCTA from '@/components/landing/AgentCTA';
 import CategoryShowcase from '@/components/landing/CategoryShowcase';
 import MarketInsights from '@/components/landing/MarketInsights';
+import FeaturedListings from '@/components/landing/FeaturedListings';
+import HowItWorksFlow from '@/components/landing/HowItWorksFlow';
 import ConversationalSearch from '@/components/explore/ConversationalSearch';
 
 const CartographicHero = lazy(() => import('@/components/landing/CartographicHero'));
@@ -36,6 +38,12 @@ const Index = () => {
 
       {/* ===== CATEGORY SHOWCASE ===== */}
       <CategoryShowcase />
+
+      {/* ===== FEATURED LISTINGS ===== */}
+      <FeaturedListings />
+
+      {/* ===== HOW IT WORKS ===== */}
+      <HowItWorksFlow />
 
       {/* ===== SCROLLYTELLING PROJECTS ===== */}
       <Suspense fallback={null}>

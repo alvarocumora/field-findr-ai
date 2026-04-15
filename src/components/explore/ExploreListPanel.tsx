@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown, LayoutGrid, List } from 'lucide-react';
+import { Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown, LayoutGrid, List, Wheat, Factory, Truck, Zap, Home, Droplets, Car, ShieldCheck } from 'lucide-react';
 import SearchAutocomplete from '@/components/search/SearchAutocomplete';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,109 @@ import FilterBar from './FilterBar';
 import ValuationFilters from './ValuationFilters';
 import { Listing, formatPriceShort, getPricePerM2 } from '@/hooks/useListings';
 import { cn } from '@/lib/utils';
+
+type TerritorialFilterState = {
+  aptitudes: string[];
+  hasWater: boolean | null;
+  hasRoad: boolean | null;
+  legalStatus: string | null;
+};
+
+const APTITUDE_OPTIONS = [
+  { key: 'agricola', label: 'Agrícola', icon: Wheat },
+  { key: 'industrial', label: 'Industrial', icon: Factory },
+  { key: 'logistico', label: 'Logístico', icon: Truck },
+  { key: 'energetico', label: 'Energético', icon: Zap },
+  { key: 'residencial', label: 'Residencial', icon: Home },
+];
+
+const TerritorialFilters = ({ onFilterChange }: { listings: Listing[]; onFilterChange: (filter: TerritorialFilterState) => void }) => {
+  const [filter, setFilter] = useState<TerritorialFilterState>({
+    aptitudes: [], hasWater: null, hasRoad: null, legalStatus: null,
+  });
+
+  const update = (next: TerritorialFilterState) => { setFilter(next); onFilterChange(next); };
+
+  const toggleAptitude = (key: string) => {
+    const aptitudes = filter.aptitudes.includes(key)
+      ? filter.aptitudes.filter(a => a !== key)
+      : [...filter.aptitudes, key];
+    update({ ...filter, aptitudes });
+  };
+
+  const hasAny = filter.aptitudes.length > 0 || filter.hasWater !== null || filter.hasRoad !== null || filter.legalStatus !== null;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1.5">
+        {APTITUDE_OPTIONS.map(opt => {
+          const active = filter.aptitudes.includes(opt.key);
+          return (
+            <button
+              key={opt.key}
+              onClick={() => toggleAptitude(opt.key)}
+              className={cn(
+                'flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all border',
+                active
+                  ? 'bg-primary/10 text-primary border-primary/30'
+                  : 'text-muted-foreground border-border/40 hover:bg-muted/50'
+              )}
+            >
+              <opt.icon className="h-3 w-3" />
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        <button
+          onClick={() => update({ ...filter, hasWater: filter.hasWater === true ? null : true })}
+          className={cn(
+            'flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all border',
+            filter.hasWater === true
+              ? 'bg-primary/10 text-primary border-primary/30'
+              : 'text-muted-foreground border-border/40 hover:bg-muted/50'
+          )}
+        >
+          <Droplets className="h-3 w-3" />
+          Con agua
+        </button>
+        <button
+          onClick={() => update({ ...filter, hasRoad: filter.hasRoad === true ? null : true })}
+          className={cn(
+            'flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all border',
+            filter.hasRoad === true
+              ? 'bg-primary/10 text-primary border-primary/30'
+              : 'text-muted-foreground border-border/40 hover:bg-muted/50'
+          )}
+        >
+          <Car className="h-3 w-3" />
+          Con camino
+        </button>
+        <button
+          onClick={() => update({ ...filter, legalStatus: filter.legalStatus === 'verified' ? null : 'verified' })}
+          className={cn(
+            'flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all border',
+            filter.legalStatus === 'verified'
+              ? 'bg-primary/10 text-primary border-primary/30'
+              : 'text-muted-foreground border-border/40 hover:bg-muted/50'
+          )}
+        >
+          <ShieldCheck className="h-3 w-3" />
+          Legal al día
+        </button>
+        {hasAny && (
+          <button
+            onClick={() => update({ aptitudes: [], hasWater: null, hasRoad: null, legalStatus: null })}
+            className="px-2 py-1 rounded-lg text-[11px] text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            Limpiar
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
 
 type SortOption = 'featured' | 'price_asc' | 'price_desc' | 'area_asc' | 'area_desc' | 'recent';
 type TabFilter = 'all' | 'featured' | 'recent';
@@ -131,6 +234,9 @@ const ExploreListPanel = ({
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [viewLayout, setViewLayout] = useState<'compact' | 'grid'>('compact');
+  const [territorialFilter, setTerritorialFilter] = useState<TerritorialFilterState>({
+    aptitudes: [], hasWater: null, hasRoad: null, legalStatus: null,
+  });
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -162,7 +268,36 @@ const ExploreListPanel = ({
     return listings;
   }, [listings, activeTab]);
 
-  const sortedListings = sortListings(tabFilteredListings, sortBy);
+  // Apply territorial filters
+  const territorialFilteredListings = useMemo(() => {
+    let result = tabFilteredListings;
+    const f = territorialFilter;
+    if (f.aptitudes.length > 0) {
+      result = result.filter(l => {
+        const tags = (l.tags || []).map(t => t.toLowerCase());
+        const type = (l.type || '').toLowerCase();
+        return f.aptitudes.some(apt => tags.some(t => t.includes(apt)) || type.includes(apt));
+      });
+    }
+    if (f.hasWater === true) {
+      result = result.filter(l => {
+        const u = l.utilities as Record<string, boolean> | null;
+        return u?.water === true || (l.tags || []).some(t => t.toLowerCase().includes('agua'));
+      });
+    }
+    if (f.hasRoad === true) {
+      result = result.filter(l => {
+        const u = l.utilities as Record<string, boolean> | null;
+        return u?.road === true || (l.tags || []).some(t => t.toLowerCase().includes('camino') || t.toLowerCase().includes('acceso'));
+      });
+    }
+    if (f.legalStatus === 'verified') {
+      result = result.filter(l => l.legal_status === 'verified');
+    }
+    return result;
+  }, [tabFilteredListings, territorialFilter]);
+
+  const sortedListings = sortListings(territorialFilteredListings, sortBy);
 
   // Smart summary
   const displayCount = totalCount ?? listings.length;
@@ -230,6 +365,9 @@ const ExploreListPanel = ({
             onToggleValuation={onToggleValuation}
           />
         )}
+
+        {/* Territorial Aptitude Filters */}
+        <TerritorialFilters listings={listings} onFilterChange={setTerritorialFilter} />
       </div>
 
       {/* Summary + Tabs + Sort */}
