@@ -174,6 +174,11 @@ const App = () => (
                   <LandOpportunities />
                 </DashboardLayout>
               } />
+              <Route path="/asesor/opportunity/:id" element={
+                <DashboardLayout requiredRole="agent">
+                  <OpportunityDetail />
+                </DashboardLayout>
+              } />
               <Route path="/asesor/contacts" element={
                 <DashboardLayout requiredRole="agent">
                   <Contacts />
