@@ -130,10 +130,12 @@ const DashboardAsesor = () => {
   }
 
   const statsConfig = [
+    { label: 'Oportunidades', value: stats?.properties || 0, icon: Target, color: 'text-primary', delta: 'Total activas' },
     { label: 'Leads Activos', value: stats?.activeLeads || 0, icon: Users, color: 'text-blue-500', delta: '+3 esta semana' },
-    { label: 'Propiedades', value: stats?.properties || 0, icon: Building2, color: 'text-emerald-500' },
-    { label: 'Ventas del Mes', value: formatCurrency(stats?.monthlySales || 0), icon: DollarSign, color: 'text-purple-500' },
-    { label: 'Lotes Vendidos', value: stats?.soldCount || 0, icon: Target, color: 'text-amber-500' },
+    { label: 'En Revisión', value: (leads || []).filter((l: any) => l.status === 'interested').length, icon: Clock, color: 'text-amber-500', delta: 'Revisión legal/técnica' },
+    { label: 'Deals Prioritarios', value: (hotLeads || []).length, icon: Flame, color: 'text-red-500', delta: 'Alta prioridad' },
+    { label: 'Ventas del Mes', value: formatCurrency(stats?.monthlySales || 0), icon: DollarSign, color: 'text-emerald-500' },
+    { label: 'Lotes Vendidos', value: stats?.soldCount || 0, icon: Building2, color: 'text-purple-500' },
   ];
 
   const getStatusBadge = (status: string) => {
@@ -188,7 +190,7 @@ const DashboardAsesor = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {statsConfig.map((stat, index) => (
             <Card key={index} className="border-border/40 bg-card/50 backdrop-blur">
               <CardContent className="p-5">

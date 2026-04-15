@@ -257,7 +257,7 @@ const LandOpportunities = () => {
                     <TableRow
                       key={listing.id}
                       className="cursor-pointer hover:bg-muted/30 transition-colors"
-                      onClick={() => navigate(`/propiedad/${listing.id}`)}
+                      onClick={() => navigate(`/asesor/opportunity/${listing.id}`)}
                     >
                       <TableCell>
                         <div className="flex items-center gap-3 min-w-[200px]">

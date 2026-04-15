@@ -87,6 +87,7 @@ import DemandHeatmapDashboard from "./pages/dashboard/DemandHeatmapDashboard";
 import APIPortal from "./pages/dashboard/APIPortal";
 import LandOpportunities from "./pages/dashboard/LandOpportunities";
 import Contacts from "./pages/dashboard/Contacts";
+import OpportunityDetail from "./pages/dashboard/OpportunityDetail";
 // ===== Admin Pages =====
 import AdminUsers from "./pages/AdminUsers";
 import AgentManagement from "./components/AgentManagement";
@@ -171,6 +172,11 @@ const App = () => (
               <Route path="/asesor/opportunities" element={
                 <DashboardLayout requiredRole="agent">
                   <LandOpportunities />
+                </DashboardLayout>
+              } />
+              <Route path="/asesor/opportunity/:id" element={
+                <DashboardLayout requiredRole="agent">
+                  <OpportunityDetail />
                 </DashboardLayout>
               } />
               <Route path="/asesor/contacts" element={
