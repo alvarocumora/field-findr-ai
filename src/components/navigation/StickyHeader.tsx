@@ -47,9 +47,11 @@ const StickyHeader = () => {
   }, []);
 
   const publicNavigation = [
-    { name: 'Explorar', href: '/explorar' },
-    { name: 'Herramientas IA', href: '/tools', badge: 'Nuevo' },
-    { name: 'Para Profesionales', href: '/pricing' },
+    { name: 'Buscar Terrenos', href: '/explorar' },
+    { name: 'Oportunidades', href: '/oportunidades' },
+    { name: 'Publicar', href: '/auth?role=agent' },
+    { name: 'Corredores', href: '/pricing' },
+    { name: 'Blog', href: '/blog' },
   ];
 
   // Contextual nav items based on role

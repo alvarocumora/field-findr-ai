@@ -6,6 +6,8 @@ import TrustBadges from '@/components/landing/TrustBadges';
 import ValueProposition from '@/components/landing/ValueProposition';
 import InvestmentShowcase from '@/components/landing/InvestmentShowcase';
 import AgentCTA from '@/components/landing/AgentCTA';
+import CategoryShowcase from '@/components/landing/CategoryShowcase';
+import MarketInsights from '@/components/landing/MarketInsights';
 import ConversationalSearch from '@/components/explore/ConversationalSearch';
 
 const CartographicHero = lazy(() => import('@/components/landing/CartographicHero'));
@@ -32,6 +34,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* ===== CATEGORY SHOWCASE ===== */}
+      <CategoryShowcase />
+
       {/* ===== SCROLLYTELLING PROJECTS ===== */}
       <Suspense fallback={null}>
         <ScrollytellingSection />
@@ -45,6 +50,9 @@ const Index = () => {
 
       {/* ===== AGENT CTA — Broker lead-gen ===== */}
       <AgentCTA />
+
+      {/* ===== MARKET INSIGHTS ===== */}
+      <MarketInsights />
 
       {/* ===== TESTIMONIALS ===== */}
       <TestimonialMarquee />

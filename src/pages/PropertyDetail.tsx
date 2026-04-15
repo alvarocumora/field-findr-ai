@@ -40,6 +40,7 @@ import {
   ChevronLeft,
   MessageCircle,
   Phone,
+  TrendingUp,
 } from 'lucide-react';
 
 const isValidUUID = (val?: string) =>
@@ -327,6 +328,71 @@ const PropertyDetail = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Potencial del Terreno */}
+            {(listing.zoning || listing.tags.length > 0) && (
+              <Card className="glass border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Potencial del terreno
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {listing.zoning && (
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
+                        <span className="text-sm text-muted-foreground">Zonificación</span>
+                        <Badge variant="secondary">{listing.zoning}</Badge>
+                      </div>
+                    )}
+                    {listing.subdivision_eligible && (
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-primary/5 border border-primary/20">
+                        <span className="text-sm text-foreground font-medium">Subdivisible</span>
+                        <Badge className="bg-primary/20 text-primary">Apto</Badge>
+                      </div>
+                    )}
+                    {listing.area_ha && listing.area_ha >= 5 && (
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
+                        <span className="text-sm text-muted-foreground">Escala</span>
+                        <span className="text-sm font-medium text-foreground">Gran superficie</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Ideal Para */}
+            {(() => {
+              const ideals: string[] = [];
+              const type = listing.type?.toLowerCase() || '';
+              const tags = listing.tags.map(t => t.toLowerCase());
+              if (type.includes('parcela') || tags.some(t => t.includes('agrado'))) ideals.push('Parcela de agrado');
+              if (type.includes('campo') || type.includes('agricola') || tags.some(t => t.includes('agrícola'))) ideals.push('Proyecto agrícola');
+              if (type.includes('industrial') || tags.some(t => t.includes('industrial'))) ideals.push('Desarrollo industrial');
+              if (tags.some(t => t.includes('logístic') || t.includes('logistic'))) ideals.push('Centro logístico');
+              if (tags.some(t => t.includes('energétic') || t.includes('solar'))) ideals.push('Proyecto energético');
+              if (listing.subdivision_eligible) ideals.push('Subdivisión y loteo');
+              if (listing.area_ha && listing.area_ha >= 10) ideals.push('Inversión de largo plazo');
+              if (ideals.length === 0) ideals.push('Inversión territorial', 'Desarrollo inmobiliario');
+              return ideals.length > 0 ? (
+                <Card className="glass border-border/50">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Ideal para</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {ideals.map(i => (
+                        <Badge key={i} className="bg-primary/10 text-primary border-primary/20 text-sm px-3 py-1">
+                          {i}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : null;
+            })()}
 
             {/* Document Checklist */}
             <Card className="glass border-border/50">
