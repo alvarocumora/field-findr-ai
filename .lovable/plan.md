@@ -1,160 +1,97 @@
 
-Plan: Corrección real del visor 3D + consolidación del diseñador
 
-Diagnóstico confirmado
+# Rediseño Estrategico: Ofertaterrenos.com como Referente Digital
 
-Sí sé dónde está el problema. El fallo ya no parece ser “solo la textura”, sino una combinación de 4 errores estructurales:
+## Vision
 
-1. Normalización geográfica incompleta
-- Ya existe `src/lib/polygonUtils.ts`, pero el diseñador no la usa.
-- `LotDesigner3DDialog.tsx` y `LotDetailSheet.tsx` siguen casteando `lot.polygon` directo.
-- `ParcelaDesigner3D.tsx` y `RealisticTerrain.tsx` duplican centroides/tamaños por separado, así que el visor puede calcular un centro, tamaño y UV distintos según la entrada.
+Transformar la landing page y experiencia publica de un "portal inmobiliario con features" a una **plataforma de inteligencia territorial** que comunique autoridad, sofisticacion y oportunidad de inversion. El rediseño se enfoca en la experiencia publica (lo que ve un visitante nuevo) manteniendo intacta toda la infraestructura backend y dashboards internos.
 
-2. Contrato de layout débil del Canvas
-- `ParcelaDesigner3D.tsx` tiene altura fija (`h-[600px] sm:h-[700px]`) dentro del propio componente.
-- Eso rompe la integración embebida en preview, sheet, dialog y tabs, y hace que el visor no respete el tamaño real del contenedor.
+## Diagnostico Actual
 
-3. Pipeline satelital no está validado visualmente
-- El sistema puede “creer” que aplicó la textura, pero el plano seguir viéndose lavado/plano.
-- Además, con tiles de `512`, la calibración de escala debe considerar el offset de zoom documentado por Mapbox; hoy esa matemática no está cerrada en el componente.
+La app ya tiene una base solida: globe 3D, scrollytelling, AI search, split-view explorer. Pero la landing actual se siente como una coleccion de secciones genericas (LogoCloud, HowItWorks, TrustBadges) sin narrativa clara. Falta:
+- **Propuesta de valor diferenciada** (no dice POR QUE es mejor que un portal comun)
+- **Social proof con datos reales** (estadisticas del negocio, no solo testimonios)
+- **Captacion de corredores** (la landing no habla a profesionales)
+- **Seccion de inversion** (no hay contenido para inversionistas)
+- **Header con mas autoridad** (navegacion muy basica para una plataforma compleja)
 
-4. Herramientas duplicadas
-- `ParcelaToolbar.tsx` y `AssetCatalog.tsx` repiten catálogo y controles.
-- Eso hace más difícil depurar el render y deja una UX fragmentada.
+## Cambios Propuestos
 
-Fase 1 — Unificar la fuente de verdad del lote
-- Integrar `normalizePolygon` como base obligatoria dentro de `ParcelaDesigner3D`.
-- Aceptar:
-  - array de coordenadas
-  - anillo GeoJSON
-  - polígono cerrado con punto repetido
-- Usar el mismo resultado normalizado para:
-  - centroide
-  - `terrainSize`
-  - contorno del lote
-  - UV del satélite
-  - `ClickPlane`
-- Dejar `latitude/longitude` solo como fallback si no hay polígono válido.
+### 1. Hero Mejorado — CartographicHero.tsx
+- Agregar un **tagline mas potente**: "Inteligencia Territorial para Invertir con Certeza"
+- Agregar **3 metricas animadas** debajo del titulo (ej: "+2,400 hectareas mapeadas", "12 regiones", "$XX mil millones en inventario") usando datos reales de `useLandingStats`
+- Agregar **doble CTA**: "Explorar Terrenos" (primario) + "Soy Corredor" (secundario, lleva a /pricing)
+- Mejorar la tipografia del subtitulo con tracking mas refinado
 
-Archivos
-- `src/components/parcela/ParcelaDesigner3D.tsx`
-- `src/components/parcela/RealisticTerrain.tsx`
-- `src/components/lots/LotDesigner3DDialog.tsx`
-- `src/components/lots/LotDetailSheet.tsx`
-- `src/pages/MiTerreno.tsx`
-- `src/lib/polygonUtils.ts`
+### 2. Nueva Seccion — ValueProposition (nueva)
+- Reemplazar la seccion HowItWorks actual con una **seccion de valor en 3 columnas** tipo "Por que Ofertaterrenos":
+  - **Para Inversionistas**: Analisis de plusvalia, scoring de inversion, datos verificados SII
+  - **Para Compradores**: Reserva digital, simulador financiero, 3D interactivo
+  - **Para Corredores**: CRM integrado, cotizador publico, leads automaticos
+- Cada columna con icono premium, titulo, 3-4 bullets y CTA contextual
+- Diseño con cards glassmorphism y bordes sutiles
 
-Fase 2 — Arreglar el contrato visual del visor
-- Quitar la altura fija interna del diseñador.
-- Hacer que `ParcelaDesigner3D` use `h-full min-h-0 w-full`.
-- Pasar la altura desde cada contexto:
-  - dialog: full height
-  - sheet preview: altura compacta controlada
-  - `MiTerreno`: altura grande de escritorio
-- Asegurar que el `Canvas` siempre herede un contenedor con altura explícita y estable.
+### 3. Nueva Seccion — InvestmentShowcase (nueva)
+- Seccion dedicada a **inteligencia de inversion** con:
+  - Mini mapa estatico mostrando densidad de oportunidades por region
+  - 3 KPIs grandes animados: "Plusvalia promedio", "Terrenos bajo valor de mercado", "Nuevos esta semana"
+  - CTA: "Ver Analisis Completo" → /explorar
+- Fondo con gradiente sutil esmeralda-to-transparent
 
-Archivos
-- `src/components/parcela/ParcelaDesigner3D.tsx`
-- `src/components/lots/LotDesigner3DDialog.tsx`
-- `src/components/lots/LotDetailSheet.tsx`
-- `src/pages/MiTerreno.tsx`
+### 4. Nueva Seccion — AgentCTA (nueva)
+- Seccion full-width oscura dirigida a **corredores y desarrolladores**:
+  - Headline: "Vende mas rapido con inteligencia artificial"
+  - 4 features inline: CRM + Lead Scoring + Cotizador Publico + Brochures IA
+  - CTA prominente: "Comienza Gratis" → /auth con account_type=agent
+  - Badge "Usado por +XX corredores" (dato de profiles con rol agent)
 
-Fase 3 — Debug real del satélite
-- Mantener el HUD, pero convertirlo en diagnóstico útil:
-  - centroide usado
-  - tamaño real del terreno
-  - zoom efectivo
-  - tiles cargados
-  - `repeat/offset`
-  - preview 2D del canvas stitched
-- Separar estados:
-  - tile descargado
-  - canvas compuesto
-  - textura creada
-  - textura visible en escena
-- Corregir la matemática de tiles 512 con su equivalencia de zoom.
-- Si el preview 2D se ve bien pero el terreno sigue mal, aplicar modo de aislamiento:
-  - plano satelital puro sin relieve
-  - luego relieve encima como capa secundaria
+### 5. Mejora del Header — StickyHeader.tsx
+- Agregar link "Para Profesionales" en la nav publica
+- Cambiar "Precios" por "Planes" (mas SaaS)
+- Agregar micro-badge "BETA" o "NUEVO" junto a "Herramientas IA" cuando exista esa nav
+- En mobile, hacer el CTA "Explorar" mas prominente
 
-Archivos
-- `src/components/parcela/RealisticTerrain.tsx`
-- `src/components/parcela/ParcelaDesigner3D.tsx`
+### 6. Mejora del Footer — FooterSection.tsx
+- Agregar seccion "Regiones Populares" con links a /region/valparaiso, /region/los-lagos, etc.
+- Agregar seccion "Para Inversionistas" con links a /tools, /comparar, /quiz
+- Agregar badge de seguridad "Datos verificados por SII"
+- Agregar contador real: "XX terrenos disponibles hoy"
 
-Fase 4 — Render robusto en 2 capas
-- Cambiar de “un solo mesh hace todo” a:
-  1. base satelital con `meshBasicMaterial`
-  2. capa de relieve/sombreado muy suave encima
-- Beneficio:
-  - la imagen siempre se ve
-  - el relieve deja de comerse el color
-  - el usuario entiende mejor el lote
-- Mantener contorno verde neón y agregar opcionalmente máscara exterior tenue para que el polígono destaque mejor.
+### 7. Mejora Estetica — index.css
+- Agregar nueva clase `.section-premium` con padding generoso y fondo con noise texture sutil
+- Agregar clase `.stat-counter` para los numeros grandes animados
+- Refinar el gradiente hero para que sea mas cinematografico en light mode
 
-Archivos
-- `src/components/parcela/RealisticTerrain.tsx`
+### 8. Reorganizacion del Index — Index.tsx
+Nueva estructura de la landing:
+```text
+CartographicHero (mejorado con stats + doble CTA)
+ConversationalSearch (se mantiene)
+ScrollytellingSection (proyectos activos)
+ValueProposition (NUEVO - 3 columnas por audiencia)
+InvestmentShowcase (NUEVO - KPIs de inversion)
+AgentCTA (NUEVO - captacion de corredores)
+TestimonialMarquee (se mantiene)
+TrustBadges (se mantiene, con datos reales)
+FloatingCTA (se mantiene)
+```
+Se eliminan: LogoCloud (se integra en TrustBadges), CountrySelector (se mueve al footer como links), el divider cartographic (innecesario).
 
-Fase 5 — Consolidación de herramientas 3D
-- Unificar `ParcelaToolbar` + `AssetCatalog` en un solo panel lateral.
-- Dejar `OBJECT_CATALOG` como única fuente de verdad.
-- Reorganizar módulos:
-  - Escena
-  - Terreno
-  - Modelos
-  - Medición
-  - Exportar
-- Mover ahí:
-  - toggle de relieve real
-  - debug
-  - snap
-  - vista orbital/cenital/peatón
+## Archivos a Crear
+- `src/components/landing/ValueProposition.tsx`
+- `src/components/landing/InvestmentShowcase.tsx`
+- `src/components/landing/AgentCTA.tsx`
 
-Archivos
-- `src/components/parcela/ParcelaToolbar.tsx`
-- `src/components/parcela/AssetCatalog.tsx`
-- `src/components/parcela/useParcelaState.ts`
-- `src/components/parcela/ParcelaDesigner3D.tsx`
+## Archivos a Modificar
+- `src/pages/Index.tsx` — nueva estructura
+- `src/components/landing/CartographicHero.tsx` — stats + doble CTA
+- `src/components/navigation/StickyHeader.tsx` — nav mejorada
+- `src/components/FooterSection.tsx` — mas completo
+- `src/components/landing/TrustBadges.tsx` — integrar LogoCloud
+- `src/index.css` — clases premium nuevas
 
-Fase 6 — Mejora del sistema de modelos 3D
-- Alinear el catálogo visual con `OBJECT_CATALOG`.
-- Mostrar presets con:
-  - nombre
-  - categoría
-  - escala sugerida
-  - footprint aproximado
-- Agregar acciones críticas:
-  - duplicar
-  - bajar al terreno
-  - bloquear
-  - reset de rotación
-  - centrar
-- Mantener GLB subidos como grupo separado, no mezclados con primitives base.
+## Sin Cambios
+- No se tocan dashboards, backend, base de datos, edge functions ni el explorador
+- No se requieren migraciones SQL
+- Todo es frontend, componentes nuevos y refactoring visual
 
-Archivos
-- `src/components/parcela/AssetCatalog.tsx`
-- `src/components/parcela/ObjectPropertiesPanel.tsx`
-- `src/components/parcela/useParcelaState.ts`
-
-Fase 7 — Validación por rutas críticas
-Probar el mismo lote en 3 entradas:
-1. `LotDesigner3DDialog`
-2. `LotDetailSheet`
-3. `MiTerreno`
-
-Casos a validar
-- lote con polígono válido
-- polígono cerrado con punto duplicado
-- polígono GeoJSON
-- sin polígono pero con lat/lng
-- con diseño guardado
-- con satélite activo
-- terreno plano fallback
-
-Resultado esperado
-- El visor deja de verse “plomo/blanco”.
-- La base satelital se ve realmente en todas las entradas.
-- El diseñador respeta el tamaño del contenedor donde se monta.
-- El sistema 3D queda más estable, menos duplicado y listo para seguir creciendo con herramientas disruptivas.
-
-Sin migraciones de base de datos
-- Todo este ajuste es frontend + integración del backend ya existente.
