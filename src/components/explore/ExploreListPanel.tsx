@@ -234,6 +234,9 @@ const ExploreListPanel = ({
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [viewLayout, setViewLayout] = useState<'compact' | 'grid'>('compact');
+  const [territorialFilter, setTerritorialFilter] = useState<TerritorialFilterState>({
+    aptitudes: [], hasWater: null, hasRoad: null, legalStatus: null,
+  });
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
