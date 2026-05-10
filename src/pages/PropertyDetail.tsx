@@ -274,7 +274,28 @@ const PropertyDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Utilities */}
+            {/* Visión del Proyecto — Teno only */}
+            {isTeno && (
+              <Card className="glass border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center justify-between gap-2">
+                    <span>Visión del Proyecto</span>
+                    <Button
+                      size="sm"
+                      onClick={() => setDesignerOpen(true)}
+                      className="gap-2"
+                    >
+                      <Box className="h-4 w-4" />
+                      Diseña tu packing en 3D
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ConceptRenderGallery />
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="glass border-border/50">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">Servicios y Accesos</CardTitle>
