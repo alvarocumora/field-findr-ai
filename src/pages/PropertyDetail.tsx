@@ -67,9 +67,11 @@ const PropertyDetail = () => {
   const { user } = useAuth();
   const { toggle, isLoading: isFavoriteLoading } = useToggleFavorite();
   const { data: favoriteIds = [] } = useFavoriteIds();
+  const [designerOpen, setDesignerOpen] = useState(false);
 
   const isFavorite = listing ? favoriteIds.includes(listing.id) : false;
   const similarListings = allListings.filter(l => l.id !== id).slice(0, 3);
+  const isTeno = listing?.id === TENO_LISTING_ID;
 
   const propertyJsonLd = listing ? buildPropertyJsonLd({
     id: listing.id,
