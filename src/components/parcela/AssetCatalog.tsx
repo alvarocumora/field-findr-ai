@@ -29,6 +29,16 @@ interface BuiltInAsset {
 }
 
 const BUILT_IN_ASSETS: BuiltInAsset[] = [
+  // Industrial / Packing (priorizadas para listings industriales)
+  { name: 'Galpón Packing', icon: '🏭', type: 'galpon_packing', category: 'industrial' },
+  { name: 'Andén Carga', icon: '🚛', type: 'anden_carga', category: 'industrial' },
+  { name: 'Cámara Frío', icon: '❄️', type: 'camara_frio', category: 'industrial' },
+  { name: 'Oficinas', icon: '🏢', type: 'oficinas_industrial', category: 'industrial' },
+  { name: 'Estac. Camiones', icon: '🅿️', type: 'estacionamiento_camiones', category: 'industrial' },
+  { name: 'Área Maniobras', icon: '🔄', type: 'area_maniobras', category: 'industrial' },
+  { name: 'Báscula', icon: '⚖️', type: 'bascula', category: 'industrial' },
+  { name: 'Portería', icon: '🛂', type: 'porteria', category: 'industrial' },
+  { name: 'Cerco Industrial', icon: '🚧', type: 'cerco_industrial', category: 'industrial' },
   // Casas
   { name: 'Casa Moderna', icon: '🏠', type: 'casa_moderna', category: 'casas' },
   { name: 'Cabaña', icon: '🛖', type: 'cabana', category: 'casas' },
@@ -55,10 +65,10 @@ const BUILT_IN_ASSETS: BuiltInAsset[] = [
 
 const CATEGORIES = [
   { id: 'all', label: 'Todos', icon: '📦' },
+  { id: 'industrial', label: 'Industrial', icon: '🏭' },
   { id: 'casas', label: 'Casas', icon: '🏠' },
   { id: 'vegetacion', label: 'Vegetación', icon: '🌳' },
   { id: 'mobiliario', label: 'Mobiliario', icon: '🪑' },
-  { id: 'vehiculos', label: 'Vehículos', icon: '🚗' },
   { id: 'infraestructura', label: 'Infra', icon: '🔧' },
   { id: 'custom', label: 'Subidos', icon: '📎' },
 ];

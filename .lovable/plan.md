@@ -1,94 +1,83 @@
 
+# Visualización Industrial — Proyecto Teno
 
-# Plan: Consolidacion y Mejora de OFERTATERRENOS.COM
+Dos módulos complementarios en la ficha de Teno: **Render conceptual** (galería visual generada con IA) y **Diseñador 3D Industrial** (extensión del ParcelaDesigner3D existente con piezas de packing frutícola).
 
-## Estado Actual
+---
 
-La plataforma ya tiene implementado el **85-90%** de lo solicitado:
-- Home premium con globe 3D, scrollytelling, ValueProposition, InvestmentShowcase, AgentCTA
-- Explorador split-view con mapa Mapbox, filtros, scroll infinito
-- Ficha de propiedad con galeria, mapa, contacto, IA, PDF, favoritos
-- Dashboard de agentes con CRM, leads, proyectos, lotes, analytics, pipeline, creditos, reservas
-- Panel admin con aprobaciones, usuarios, documentos, audit log
-- Comparador de propiedades (hasta 4)
-- Auth con roles (buyer/agent/admin), suscripciones, pagos
-- Blog (placeholder), Pricing, Tools, Quiz, Referidos
-- PWA, SEO dinamico, multi-moneda, edge functions
+## 1. Sección "Visión del Proyecto" — Render conceptual
 
-Lo que falta o necesita mejora concreta:
+Nueva sección visual en `PropertyDetail` (solo cuando el listing es industrial / tiene tag `packing`).
 
-## Cambios Propuestos
+- **4 imágenes generadas con IA** (3:2, calidad standard) guardadas en `src/assets/teno-render/`:
+  1. Vista aérea del packing emplazado en el terreno con Ruta 5 al fondo.
+  2. Galpón packing + andén de carga con camiones refrigerados.
+  3. Cámara de frío + módulo administrativo (vista frontal).
+  4. Estacionamiento de camiones y área de maniobras al amanecer.
+- Componente `ConceptRenderGallery.tsx`: grid 2×2 con hover zoom, click → lightbox reutilizando `ImageGallery`.
+- Badge "Render conceptual — referencial" sobre cada imagen para evitar confusión legal.
 
-### 1. Seccion "Categorias Destacadas" en Landing (NUEVO)
-Crear componente `CategoryShowcase.tsx` con cards visuales para los tipos de terreno:
-- Parcelas de agrado, Terrenos rurales, Campos agricolas, Fundos, Sitios industriales, Panos urbanos, Terrenos logisticos, Terrenos energeticos, Terrenos mineros, Oportunidades de inversion
-- Cada card con icono, nombre, conteo real de listings de ese tipo, y link a `/explorar?type=X`
-- Insertar en `Index.tsx` despues del ConversationalSearch
+## 2. Diseñador 3D Industrial
 
-**Archivo**: `src/components/landing/CategoryShowcase.tsx`, `src/pages/Index.tsx`
+Extender el sistema existente `ParcelaDesigner3D` (no reescribir).
 
-### 2. Pagina "Oportunidades" dedicada (NUEVO)
-Crear `/oportunidades` como pagina premium que muestre listings filtrados por: featured=true, precio atractivo, gran superficie, tags de inversion.
-- Diseno tipo "marketplace de deals" con cards grandes, etiquetas de oportunidad, scoring de inversion
-- Filtros rapidos por tipo de oportunidad (agricola, industrial, energetica, logistica)
+### Nuevas primitivas en `useParcelaState.ts`
+Agregar a `ParcelaObjectType`:
+- `galpon_packing` — caja 40×20×8m con techo a dos aguas, color zinc
+- `anden_carga` — plataforma elevada 1.2m con barandas
+- `camara_frio` — bloque adosado 15×10×6m, panel sandwich blanco
+- `oficinas` — módulo 2 pisos 12×8×6m con ventanales
+- `estacionamiento_camiones` — pavimento con demarcación amarilla para semirremolques
+- `area_maniobras` — círculo asfaltado para radio de giro
+- `bascula` — plataforma 18×3m con caseta lateral
+- `porteria` — caseta de control de acceso 4×3m con barrera
+- `cerco_industrial` — malla acmafor 2.5m con postes
 
-**Archivo**: `src/pages/Oportunidades.tsx`, ruta en `App.tsx`
+### Nueva categoría "Industrial" en `AssetCatalog.tsx`
+- Icono 🏭, separada de "casas" / "infraestructura".
+- Solo visible cuando el listing/lote tiene tag `industrial` o `packing`.
 
-### 3. Navegacion actualizada
-Cambiar nav publica a: Inicio | Buscar Terrenos | Oportunidades | Publicar | Corredores (=pricing) | Blog | Ingresar
-- Agregar link "Oportunidades" apuntando a `/oportunidades`
-- Renombrar "Explorar" a "Buscar Terrenos"
+### Renderizado en `ParcelaObjects.tsx`
+Cada primitiva = composición de meshes Three.js (BoxGeometry + materiales con color/roughness adecuados). Sin cargar GLB externos para mantener performance < 60FPS.
 
-**Archivo**: `src/components/navigation/StickyHeader.tsx`
+### Habilitar Diseñador en ficha de listing industrial
+Hoy `LotDesigner3DDialog` solo se invoca desde lots con polígono. Crear `ListingDesigner3DDialog.tsx` que:
+- Reciba `polygon` desde el KMZ del listing (parsear `/listings/teno-poligono.kmz` con el parser KMZ existente).
+- Usa `normalizePolygon` de `polygonUtils.ts` (regla del proyecto).
+- Botón **"Diseña tu packing aquí →"** en `PropertyDetail` (sección hero stats), solo si listing tiene polígono industrial.
+- Guarda diseño en `localStorage` por `listing_id` (sin nueva tabla por ahora).
 
-### 4. Seccion "Insights / Tendencias" en Landing (NUEVO)
-Crear componente `MarketInsights.tsx` con 3-4 cards editoriales estaticas:
-- "Tendencias del mercado de terrenos 2026"
-- "Guia para invertir en terrenos rurales"
-- "Las regiones con mayor plusvalia"
-- CTA a `/blog`
+## 3. Layout en PropertyDetail
 
-**Archivo**: `src/components/landing/MarketInsights.tsx`, insertar en `Index.tsx`
+```text
+[Galería actual]
+[Hero stats: Precio · 7 ha · Botón "Diseña tu packing"]
+[Sección "Visión del Proyecto" — 4 renders IA]   ← NUEVO
+[Descripción]
+[Mapa con polígono]
+[Resto: contacto, similares, etc.]
+```
 
-### 5. Mejora de la ficha de propiedad
-Agregar bloques faltantes al `PropertyDetail.tsx`:
-- "Potencial del terreno" (basado en tags y zoning)
-- "Ideal para" (chips derivados del tipo y atributos)
-- "Proyeccion de valor" (mini chart si hay price_history)
-Estos son bloques visuales adicionales, no cambios estructurales.
+---
 
-**Archivo**: `src/pages/PropertyDetail.tsx`
+## Detalles técnicos
 
-### 6. Filtros avanzados de terreno en Explorador
-Agregar al panel de filtros:
-- Aptitud del terreno (agricola, industrial, logistico, energetico, residencial)
-- Acceso a caminos (si/no)
-- Disponibilidad de agua (si/no)
-- Condicion legal (al dia, en tramite, con restricciones)
-Estos filtros operan client-side sobre los campos `utilities`, `tags` y `legal_status` existentes.
+- **Generación renders**: usar `lovable_ai.py` (skill ai-gateway) con `google/gemini-3-pro-image-preview`, batch de 4 prompts. Output a `src/assets/teno-render/render-{1..4}.jpg`.
+- **Trigger condicional**: `listing.tags.includes('packing')` activa ambos módulos.
+- **Performance 3D**: las primitivas industriales son meshes simples (sin GLB), shadow casting solo en galpón y oficinas.
+- **Accesibilidad**: alt text descriptivo en cada render, labels ARIA en botones del designer.
+- **Sin cambios DB**: no se requieren migraciones; el diseño persiste en localStorage.
+- **Reutilización**: `ConceptRenderGallery` y `ListingDesigner3DDialog` quedan genéricos para futuros listings industriales (ej. otros packing, bodegas, terrenos logísticos).
 
-**Archivo**: `src/components/explore/ExploreListPanel.tsx` (filtros UI)
+## Archivos a crear/modificar
 
-### 7. Blog con contenido inicial
-Reemplazar el placeholder actual con 4-6 articulos estaticos editoriales que comuniquen autoridad en el nicho.
+**Crear**
+- `src/assets/teno-render/render-{1..4}.jpg`
+- `src/components/property/ConceptRenderGallery.tsx`
+- `src/components/property/ListingDesigner3DDialog.tsx`
 
-**Archivo**: `src/pages/Blog.tsx`
-
-## Archivos a Crear
-- `src/components/landing/CategoryShowcase.tsx`
-- `src/components/landing/MarketInsights.tsx`
-- `src/pages/Oportunidades.tsx`
-
-## Archivos a Modificar
-- `src/pages/Index.tsx` — agregar CategoryShowcase y MarketInsights
-- `src/App.tsx` — ruta `/oportunidades`
-- `src/components/navigation/StickyHeader.tsx` — nav actualizada
-- `src/pages/PropertyDetail.tsx` — bloques "Potencial" e "Ideal para"
-- `src/components/explore/ExploreListPanel.tsx` — filtros de aptitud
-- `src/pages/Blog.tsx` — contenido editorial real
-
-## Sin Cambios
-- No se tocan dashboards, backend, base de datos ni edge functions
-- Todo es frontend, componentes nuevos y mejoras visuales
-- No se requieren migraciones SQL
-
+**Modificar**
+- `src/components/parcela/useParcelaState.ts` — añadir 9 tipos industriales
+- `src/components/parcela/ParcelaObjects.tsx` — renderizado de las 9 piezas
+- `src/components/parcela/AssetCatalog.tsx` — categoría "Industrial"
+- `src/pages/PropertyDetail.tsx` — integrar render gallery + botón designer
