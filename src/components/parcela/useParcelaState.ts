@@ -11,6 +11,8 @@ export type ParcelaObjectType =
   | 'estacionamiento' | 'camino' | 'sendero'
   | 'pozo_agua' | 'panel_solar' | 'bodega'
   | 'columpio' | 'trampolin' | 'cancha'
+  | 'galpon_packing' | 'anden_carga' | 'camara_frio' | 'oficinas_industrial'
+  | 'estacionamiento_camiones' | 'area_maniobras' | 'bascula' | 'porteria' | 'cerco_industrial'
   | 'glb_custom';
 
 export interface PlacedObject {
