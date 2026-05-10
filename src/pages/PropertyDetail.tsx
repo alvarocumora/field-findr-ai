@@ -627,6 +627,20 @@ const PropertyDetail = () => {
           </section>
         )}
       </div>
+
+      {isTeno && (
+        <ListingDesigner3DDialog
+          open={designerOpen}
+          onOpenChange={setDesignerOpen}
+          listingId={listing.id}
+          title={listing.title}
+          polygon={TENO_POLYGON}
+          area_m2={listing.area_m2}
+          lat={listing.lat}
+          lng={listing.lng}
+          price={listing.price}
+        />
+      )}
     </PublicLayout>
   );
 };
