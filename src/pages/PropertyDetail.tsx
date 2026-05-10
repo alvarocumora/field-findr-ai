@@ -277,24 +277,40 @@ const PropertyDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Visión del Proyecto — Teno only */}
+            {/* Visión del Proyecto — Teno only (renders conceptuales) */}
             {isTeno && (
               <Card className="glass border-border/50">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center justify-between gap-2">
                     <span>Visión del Proyecto</span>
-                    <Button
-                      size="sm"
-                      onClick={() => setDesignerOpen(true)}
-                      className="gap-2"
-                    >
-                      <Box className="h-4 w-4" />
-                      Diseña tu packing en 3D
-                    </Button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ConceptRenderGallery />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Diseñador 3D Industrial — visible para listings con tag "packing" */}
+            {showPackingDesigner && (
+              <Card className="glass border-border/50 border-primary/30">
+                <CardContent className="p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 justify-between">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-foreground flex items-center gap-2">
+                      <Box className="h-4 w-4 text-primary" />
+                      Diseña tu packing aquí
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Arrastra galpones, andenes, cámaras de frío y áreas de maniobras sobre el polígono real del terreno.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setDesignerOpen(true)}
+                    className="gap-2 w-full sm:w-auto flex-shrink-0"
+                  >
+                    <Box className="h-4 w-4" />
+                    Abrir diseñador 3D
+                  </Button>
                 </CardContent>
               </Card>
             )}
