@@ -647,13 +647,13 @@ const PropertyDetail = () => {
         )}
       </div>
 
-      {isTeno && (
+      {showPackingDesigner && (
         <ListingDesigner3DDialog
           open={designerOpen}
           onOpenChange={setDesignerOpen}
           listingId={listing.id}
           title={listing.title}
-          polygon={TENO_POLYGON}
+          polygon={designerPolygon}
           area_m2={listing.area_m2}
           lat={listing.lat}
           lng={listing.lng}
