@@ -44,7 +44,17 @@ import {
   MessageCircle,
   Phone,
   TrendingUp,
+  Box,
 } from 'lucide-react';
+
+// Teno industrial project — hardcoded polygon parsed from /listings/teno-poligono.kmz
+const TENO_LISTING_ID = '4f5bca9a-22df-4afd-85cb-0fbda3667a84';
+const TENO_POLYGON: number[][] = [
+  [-71.10207789626766, -34.83985930032581],
+  [-71.10082501892941, -34.83878040549396],
+  [-71.10358736183998, -34.83656170747045],
+  [-71.10540485393523, -34.83805490208448],
+];
 
 const isValidUUID = (val?: string) =>
   !!val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
@@ -57,9 +67,11 @@ const PropertyDetail = () => {
   const { user } = useAuth();
   const { toggle, isLoading: isFavoriteLoading } = useToggleFavorite();
   const { data: favoriteIds = [] } = useFavoriteIds();
+  const [designerOpen, setDesignerOpen] = useState(false);
 
   const isFavorite = listing ? favoriteIds.includes(listing.id) : false;
   const similarListings = allListings.filter(l => l.id !== id).slice(0, 3);
+  const isTeno = listing?.id === TENO_LISTING_ID;
 
   const propertyJsonLd = listing ? buildPropertyJsonLd({
     id: listing.id,
@@ -262,7 +274,28 @@ const PropertyDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Utilities */}
+            {/* Visión del Proyecto — Teno only */}
+            {isTeno && (
+              <Card className="glass border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center justify-between gap-2">
+                    <span>Visión del Proyecto</span>
+                    <Button
+                      size="sm"
+                      onClick={() => setDesignerOpen(true)}
+                      className="gap-2"
+                    >
+                      <Box className="h-4 w-4" />
+                      Diseña tu packing en 3D
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ConceptRenderGallery />
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="glass border-border/50">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">Servicios y Accesos</CardTitle>
@@ -594,6 +627,20 @@ const PropertyDetail = () => {
           </section>
         )}
       </div>
+
+      {isTeno && (
+        <ListingDesigner3DDialog
+          open={designerOpen}
+          onOpenChange={setDesignerOpen}
+          listingId={listing.id}
+          title={listing.title}
+          polygon={TENO_POLYGON}
+          area_m2={listing.area_m2}
+          lat={listing.lat}
+          lng={listing.lng}
+          price={listing.price}
+        />
+      )}
     </PublicLayout>
   );
 };
