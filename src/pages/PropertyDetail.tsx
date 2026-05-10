@@ -669,7 +669,7 @@ const PropertyDetail = () => {
         )}
       </div>
 
-      {showPackingDesigner && (
+      {showPackingDesigner && user && (
         <ListingDesigner3DDialog
           open={designerOpen}
           onOpenChange={setDesignerOpen}
