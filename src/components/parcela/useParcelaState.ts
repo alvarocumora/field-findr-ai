@@ -30,7 +30,7 @@ export interface ParcelaState {
   selectedId: string | null;
 }
 
-export type CatalogCategory = 'vivienda' | 'agua' | 'cercos' | 'vegetacion' | 'outdoor' | 'infraestructura' | 'recreacion';
+export type CatalogCategory = 'vivienda' | 'agua' | 'cercos' | 'vegetacion' | 'outdoor' | 'infraestructura' | 'recreacion' | 'industrial';
 
 export interface CatalogItem {
   label: string;
