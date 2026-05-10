@@ -50,6 +50,7 @@ export const CATEGORY_LABELS: Record<CatalogCategory, { label: string; icon: str
   outdoor: { label: 'Exterior', icon: '☀️' },
   infraestructura: { label: 'Infraestructura', icon: '⚡' },
   recreacion: { label: 'Recreación', icon: '🎯' },
+  industrial: { label: 'Industrial / Packing', icon: '🏭' },
 };
 
 export const OBJECT_CATALOG: Record<ParcelaObjectType, CatalogItem> = {
@@ -86,6 +87,15 @@ export const OBJECT_CATALOG: Record<ParcelaObjectType, CatalogItem> = {
   columpio: { label: 'Columpio', icon: '🎠', description: 'Set de columpios infantil', defaultScale: 1, category: 'recreacion', boundingRadius: 2 },
   trampolin: { label: 'Trampolín', icon: '🤸', description: 'Trampolín enterrado', defaultScale: 1, category: 'recreacion', boundingRadius: 2 },
   cancha: { label: 'Cancha', icon: '⚽', description: 'Cancha multiuso 10x5m', defaultScale: 1, category: 'recreacion', boundingRadius: 6 },
+  galpon_packing: { label: 'Galpón Packing', icon: '🏭', description: 'Galpón industrial 40x20x8m', defaultScale: 1, category: 'industrial', boundingRadius: 22 },
+  anden_carga: { label: 'Andén Carga', icon: '🚛', description: 'Plataforma de carga elevada', defaultScale: 1, category: 'industrial', boundingRadius: 8 },
+  camara_frio: { label: 'Cámara Frío', icon: '❄️', description: 'Cámara refrigerada 15x10x6m', defaultScale: 1, category: 'industrial', boundingRadius: 9 },
+  oficinas_industrial: { label: 'Oficinas', icon: '🏢', description: 'Módulo administrativo 2 pisos', defaultScale: 1, category: 'industrial', boundingRadius: 7 },
+  estacionamiento_camiones: { label: 'Estac. Camiones', icon: '🅿️', description: 'Pavimento para semirremolques', defaultScale: 1, category: 'industrial', boundingRadius: 12 },
+  area_maniobras: { label: 'Área Maniobras', icon: '🔄', description: 'Radio de giro semirremolque', defaultScale: 1, category: 'industrial', boundingRadius: 10 },
+  bascula: { label: 'Báscula', icon: '⚖️', description: 'Balanza camionera 18m', defaultScale: 1, category: 'industrial', boundingRadius: 10 },
+  porteria: { label: 'Portería', icon: '🛂', description: 'Control de acceso con barrera', defaultScale: 1, category: 'industrial', boundingRadius: 3 },
+  cerco_industrial: { label: 'Cerco Industrial', icon: '🚧', description: 'Malla acmafor 2.5m', defaultScale: 1, category: 'industrial', boundingRadius: 5 },
   glb_custom: { label: 'Modelo GLB', icon: '📦', description: 'Modelo 3D importado', defaultScale: 1, category: 'vivienda', boundingRadius: 2 },
 };
 
