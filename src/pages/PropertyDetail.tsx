@@ -74,7 +74,11 @@ const PropertyDetail = () => {
   const isTeno = listing?.id === TENO_LISTING_ID;
   const hasPackingTag = !!listing?.tags?.some(t => t.toLowerCase().includes('packing'));
   const designerPolygon = isTeno ? TENO_POLYGON : null;
-  const showPackingDesigner = hasPackingTag || isTeno;
+  // Permisos: visible solo si el listing está activo/aprobado, o si lo ve su dueño (cualquier estado)
+  const isListingOwner = !!user && !!listing && listing.user_id === user.id;
+  const isListingPublished = listing?.status === 'active';
+  const showPackingDesigner =
+    (hasPackingTag || isTeno) && (isListingPublished || isListingOwner);
 
   const propertyJsonLd = listing ? buildPropertyJsonLd({
     id: listing.id,
