@@ -72,6 +72,9 @@ const PropertyDetail = () => {
   const isFavorite = listing ? favoriteIds.includes(listing.id) : false;
   const similarListings = allListings.filter(l => l.id !== id).slice(0, 3);
   const isTeno = listing?.id === TENO_LISTING_ID;
+  const hasPackingTag = !!listing?.tags?.some(t => t.toLowerCase().includes('packing'));
+  const designerPolygon = isTeno ? TENO_POLYGON : null;
+  const showPackingDesigner = hasPackingTag || isTeno;
 
   const propertyJsonLd = listing ? buildPropertyJsonLd({
     id: listing.id,
