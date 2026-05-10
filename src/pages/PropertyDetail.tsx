@@ -74,7 +74,11 @@ const PropertyDetail = () => {
   const isTeno = listing?.id === TENO_LISTING_ID;
   const hasPackingTag = !!listing?.tags?.some(t => t.toLowerCase().includes('packing'));
   const designerPolygon = isTeno ? TENO_POLYGON : null;
-  const showPackingDesigner = hasPackingTag || isTeno;
+  // Permisos: visible solo si el listing está activo/aprobado, o si lo ve su dueño (cualquier estado)
+  const isListingOwner = !!user && !!listing && listing.user_id === user.id;
+  const isListingPublished = listing?.status === 'active';
+  const showPackingDesigner =
+    (hasPackingTag || isTeno) && (isListingPublished || isListingOwner);
 
   const propertyJsonLd = listing ? buildPropertyJsonLd({
     id: listing.id,
@@ -291,7 +295,7 @@ const PropertyDetail = () => {
               </Card>
             )}
 
-            {/* Diseñador 3D Industrial — visible para listings con tag "packing" */}
+            {/* Diseñador 3D Industrial — visible para listings activos con tag "packing" */}
             {showPackingDesigner && (
               <Card className="glass border-border/50 border-primary/30">
                 <CardContent className="p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 justify-between">
@@ -299,18 +303,36 @@ const PropertyDetail = () => {
                     <p className="font-semibold text-foreground flex items-center gap-2">
                       <Box className="h-4 w-4 text-primary" />
                       Diseña tu packing aquí
+                      {!isListingPublished && isListingOwner && (
+                        <Badge variant="outline" className="text-[10px]">Vista previa (no publicado)</Badge>
+                      )}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Arrastra galpones, andenes, cámaras de frío y áreas de maniobras sobre el polígono real del terreno.
+                      {user
+                        ? 'Arrastra galpones, andenes, cámaras de frío y áreas de maniobras sobre el polígono real del terreno. Tu diseño se guarda en tu cuenta.'
+                        : 'Inicia sesión para diseñar y guardar tu propio layout industrial sobre el polígono real del terreno.'}
                     </p>
                   </div>
-                  <Button
-                    onClick={() => setDesignerOpen(true)}
-                    className="gap-2 w-full sm:w-auto flex-shrink-0"
-                  >
-                    <Box className="h-4 w-4" />
-                    Abrir diseñador 3D
-                  </Button>
+                  {user ? (
+                    <Button
+                      onClick={() => setDesignerOpen(true)}
+                      className="gap-2 w-full sm:w-auto flex-shrink-0"
+                    >
+                      <Box className="h-4 w-4" />
+                      Abrir diseñador 3D
+                    </Button>
+                  ) : (
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="gap-2 w-full sm:w-auto flex-shrink-0"
+                    >
+                      <Link to={`/auth?redirect=${encodeURIComponent(window.location.pathname)}`}>
+                        <Box className="h-4 w-4" />
+                        Iniciar sesión para diseñar
+                      </Link>
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -647,7 +669,7 @@ const PropertyDetail = () => {
         )}
       </div>
 
-      {showPackingDesigner && (
+      {showPackingDesigner && user && (
         <ListingDesigner3DDialog
           open={designerOpen}
           onOpenChange={setDesignerOpen}
