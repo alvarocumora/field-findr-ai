@@ -752,6 +752,319 @@ const SportsCourt = () => (
   </group>
 );
 
+// ─── INDUSTRIAL / PACKING ───────────────────────────────
+
+const PackingWarehouse = () => (
+  <group>
+    {/* Concrete plinth */}
+    <mesh position={[0, 0.15, 0]} receiveShadow>
+      <boxGeometry args={[40.5, 0.3, 20.5]} />
+      <meshStandardMaterial color="#9E9E9E" roughness={0.95} />
+    </mesh>
+    {/* Walls (sandwich panel white) */}
+    <mesh position={[0, 3.3, 0]} castShadow receiveShadow>
+      <boxGeometry args={[40, 6, 20]} />
+      <meshStandardMaterial color="#F5F5F5" roughness={0.6} metalness={0.1} />
+    </mesh>
+    {/* Gable roof - two sloped planes */}
+    <mesh position={[0, 7.3, 5]} rotation={[0.32, 0, 0]} castShadow>
+      <boxGeometry args={[40.4, 0.15, 11]} />
+      <meshStandardMaterial color="#78909C" metalness={0.5} roughness={0.4} />
+    </mesh>
+    <mesh position={[0, 7.3, -5]} rotation={[-0.32, 0, 0]} castShadow>
+      <boxGeometry args={[40.4, 0.15, 11]} />
+      <meshStandardMaterial color="#78909C" metalness={0.5} roughness={0.4} />
+    </mesh>
+    {/* Ridge */}
+    <mesh position={[0, 8.85, 0]} castShadow>
+      <boxGeometry args={[40.5, 0.2, 0.4]} />
+      <meshStandardMaterial color="#546E7A" />
+    </mesh>
+    {/* Loading bay doors (front face) */}
+    {Array.from({ length: 5 }).map((_, i) => (
+      <mesh key={`door${i}`} position={[(i - 2) * 6.5, 1.8, 10.06]}>
+        <planeGeometry args={[3, 3.2]} />
+        <meshStandardMaterial color="#37474F" />
+      </mesh>
+    ))}
+    {/* Side strip windows */}
+    <mesh position={[20.06, 5, 0]} rotation={[0, -Math.PI / 2, 0]}>
+      <planeGeometry args={[18, 0.8]} />
+      <meshStandardMaterial color="#4FC3F7" transparent opacity={0.6} />
+    </mesh>
+    <mesh position={[-20.06, 5, 0]} rotation={[0, Math.PI / 2, 0]}>
+      <planeGeometry args={[18, 0.8]} />
+      <meshStandardMaterial color="#4FC3F7" transparent opacity={0.6} />
+    </mesh>
+    {/* Brand stripe */}
+    <mesh position={[0, 5.2, 10.06]}>
+      <planeGeometry args={[40, 0.4]} />
+      <meshStandardMaterial color="#0EA5E9" />
+    </mesh>
+  </group>
+);
+
+const LoadingDock = () => (
+  <group>
+    {/* Elevated platform 1.2m high */}
+    <mesh position={[0, 0.6, 0]} castShadow receiveShadow>
+      <boxGeometry args={[16, 1.2, 4]} />
+      <meshStandardMaterial color="#BDBDBD" roughness={0.9} />
+    </mesh>
+    {/* Edge buffer (yellow) */}
+    <mesh position={[0, 1.22, 2]}>
+      <boxGeometry args={[16, 0.04, 0.2]} />
+      <meshStandardMaterial color="#FFC107" />
+    </mesh>
+    {/* Bumpers */}
+    {[-6, -2, 2, 6].map((x, i) => (
+      <mesh key={i} position={[x, 0.45, 2.15]} castShadow>
+        <boxGeometry args={[0.5, 0.4, 0.2]} />
+        <meshStandardMaterial color="#212121" />
+      </mesh>
+    ))}
+    {/* Railing back */}
+    {[-7.5, 7.5].map((x, i) => (
+      <mesh key={`p${i}`} position={[x, 1.7, -1.9]} castShadow>
+        <cylinderGeometry args={[0.04, 0.04, 1, 8]} />
+        <meshStandardMaterial color="#FFC107" />
+      </mesh>
+    ))}
+    <mesh position={[0, 2.1, -1.9]} castShadow>
+      <boxGeometry args={[15.2, 0.06, 0.06]} />
+      <meshStandardMaterial color="#FFC107" />
+    </mesh>
+  </group>
+);
+
+const ColdRoom = () => (
+  <group>
+    {/* Insulated panel building 15x10x6 */}
+    <mesh position={[0, 3, 0]} castShadow receiveShadow>
+      <boxGeometry args={[15, 6, 10]} />
+      <meshStandardMaterial color="#FAFAFA" roughness={0.5} metalness={0.2} />
+    </mesh>
+    {/* Flat roof slab */}
+    <mesh position={[0, 6.1, 0]} castShadow>
+      <boxGeometry args={[15.4, 0.2, 10.4]} />
+      <meshStandardMaterial color="#90A4AE" metalness={0.4} />
+    </mesh>
+    {/* Refrigeration units on roof */}
+    {[-4, 0, 4].map((x, i) => (
+      <mesh key={i} position={[x, 6.7, -2]} castShadow>
+        <boxGeometry args={[2.5, 1.2, 1.8]} />
+        <meshStandardMaterial color="#607D8B" metalness={0.6} />
+      </mesh>
+    ))}
+    {/* Insulated door */}
+    <mesh position={[0, 1.8, 5.06]}>
+      <planeGeometry args={[2.5, 3]} />
+      <meshStandardMaterial color="#CFD8DC" metalness={0.5} />
+    </mesh>
+    {/* Snowflake-blue stripe */}
+    <mesh position={[0, 5.2, 5.06]}>
+      <planeGeometry args={[15, 0.3]} />
+      <meshStandardMaterial color="#4DD0E1" />
+    </mesh>
+  </group>
+);
+
+const IndustrialOffice = () => (
+  <group>
+    {/* Two-story block */}
+    <mesh position={[0, 3, 0]} castShadow receiveShadow>
+      <boxGeometry args={[12, 6, 8]} />
+      <meshStandardMaterial color="#ECEFF1" />
+    </mesh>
+    {/* Roof */}
+    <mesh position={[0, 6.1, 0]} castShadow>
+      <boxGeometry args={[12.4, 0.2, 8.4]} />
+      <meshStandardMaterial color="#455A64" />
+    </mesh>
+    {/* Strip windows level 1 */}
+    <mesh position={[0, 1.8, 4.06]}>
+      <planeGeometry args={[10, 1.4]} />
+      <meshStandardMaterial color="#4FC3F7" transparent opacity={0.6} />
+    </mesh>
+    {/* Strip windows level 2 */}
+    <mesh position={[0, 4.5, 4.06]}>
+      <planeGeometry args={[10, 1.4]} />
+      <meshStandardMaterial color="#4FC3F7" transparent opacity={0.6} />
+    </mesh>
+    {/* Same on back */}
+    <mesh position={[0, 1.8, -4.06]}>
+      <planeGeometry args={[10, 1.4]} />
+      <meshStandardMaterial color="#4FC3F7" transparent opacity={0.6} />
+    </mesh>
+    <mesh position={[0, 4.5, -4.06]}>
+      <planeGeometry args={[10, 1.4]} />
+      <meshStandardMaterial color="#4FC3F7" transparent opacity={0.6} />
+    </mesh>
+    {/* Entrance canopy */}
+    <mesh position={[0, 2.5, 4.5]} castShadow>
+      <boxGeometry args={[3.5, 0.1, 1.2]} />
+      <meshStandardMaterial color="#37474F" />
+    </mesh>
+    {/* Door */}
+    <mesh position={[0, 1, 4.07]}>
+      <planeGeometry args={[1.6, 2]} />
+      <meshStandardMaterial color="#263238" />
+    </mesh>
+  </group>
+);
+
+const TruckParking = () => (
+  <group>
+    {/* Asphalt base */}
+    <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <planeGeometry args={[24, 16]} />
+      <meshStandardMaterial color="#37474F" roughness={0.95} />
+    </mesh>
+    {/* Yellow bay markings - 6 bays for semi-trailers */}
+    {Array.from({ length: 7 }).map((_, i) => (
+      <mesh key={i} position={[(i - 3) * 3.5, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[0.12, 14]} />
+        <meshStandardMaterial color="#FFC107" />
+      </mesh>
+    ))}
+    {/* End line */}
+    <mesh position={[0, 0.04, -7]} rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[24, 0.15]} />
+      <meshStandardMaterial color="#FFC107" />
+    </mesh>
+    {/* Bay numbers — yellow circles */}
+    {Array.from({ length: 6 }).map((_, i) => (
+      <mesh key={`n${i}`} position={[(i - 2.5) * 3.5, 0.04, 5.5]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.4, 16]} />
+        <meshStandardMaterial color="#FFC107" />
+      </mesh>
+    ))}
+  </group>
+);
+
+const ManeuverArea = () => (
+  <group>
+    {/* Circular asphalt pad 20m diameter */}
+    <mesh position={[0, 0.02, 0]} receiveShadow>
+      <cylinderGeometry args={[10, 10, 0.04, 48]} />
+      <meshStandardMaterial color="#37474F" roughness={0.95} />
+    </mesh>
+    {/* Outer yellow ring */}
+    <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[9.5, 9.7, 48]} />
+      <meshStandardMaterial color="#FFC107" />
+    </mesh>
+    {/* Inner directional arrows */}
+    {Array.from({ length: 8 }).map((_, i) => {
+      const a = (i / 8) * Math.PI * 2;
+      return (
+        <mesh key={i} position={[Math.cos(a) * 6, 0.05, Math.sin(a) * 6]} rotation={[-Math.PI / 2, 0, -a]}>
+          <planeGeometry args={[0.6, 0.15]} />
+          <meshStandardMaterial color="#FFFFFF" />
+        </mesh>
+      );
+    })}
+  </group>
+);
+
+const Weighbridge = () => (
+  <group>
+    {/* Concrete platform 18x3 */}
+    <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
+      <boxGeometry args={[18, 0.3, 3]} />
+      <meshStandardMaterial color="#BDBDBD" roughness={0.9} />
+    </mesh>
+    {/* Steel deck overlay */}
+    <mesh position={[0, 0.32, 0]} receiveShadow>
+      <boxGeometry args={[17.6, 0.05, 2.8]} />
+      <meshStandardMaterial color="#78909C" metalness={0.7} roughness={0.4} />
+    </mesh>
+    {/* Approach lines */}
+    {[-1.2, 1.2].map((x, i) => (
+      <mesh key={i} position={[x, 0.36, 0]}>
+        <boxGeometry args={[18, 0.02, 0.1]} />
+        <meshStandardMaterial color="#FFC107" />
+      </mesh>
+    ))}
+    {/* Operator booth */}
+    <mesh position={[10.5, 1.5, 2]} castShadow receiveShadow>
+      <boxGeometry args={[3, 3, 2.5]} />
+      <meshStandardMaterial color="#FF7043" />
+    </mesh>
+    <mesh position={[10.5, 3.15, 2]} castShadow>
+      <boxGeometry args={[3.3, 0.15, 2.8]} />
+      <meshStandardMaterial color="#37474F" />
+    </mesh>
+    {/* Booth window */}
+    <mesh position={[9, 1.8, 2]} rotation={[0, Math.PI / 2, 0]}>
+      <planeGeometry args={[1.8, 1.2]} />
+      <meshStandardMaterial color="#4FC3F7" transparent opacity={0.6} />
+    </mesh>
+  </group>
+);
+
+const Gatehouse = () => (
+  <group>
+    {/* Booth 4x3 */}
+    <mesh position={[0, 1.4, 0]} castShadow receiveShadow>
+      <boxGeometry args={[4, 2.8, 3]} />
+      <meshStandardMaterial color="#ECEFF1" />
+    </mesh>
+    {/* Roof overhang */}
+    <mesh position={[0, 2.95, 0]} castShadow>
+      <boxGeometry args={[5, 0.15, 4]} />
+      <meshStandardMaterial color="#D32F2F" />
+    </mesh>
+    {/* Windows wraparound */}
+    <mesh position={[0, 1.7, 1.51]}>
+      <planeGeometry args={[3.2, 1.4]} />
+      <meshStandardMaterial color="#4FC3F7" transparent opacity={0.6} />
+    </mesh>
+    <mesh position={[2.01, 1.7, 0]} rotation={[0, -Math.PI / 2, 0]}>
+      <planeGeometry args={[2.2, 1.4]} />
+      <meshStandardMaterial color="#4FC3F7" transparent opacity={0.6} />
+    </mesh>
+    {/* Boom barrier */}
+    <mesh position={[3, 1.4, 0]} castShadow>
+      <cylinderGeometry args={[0.1, 0.1, 2.8, 8]} />
+      <meshStandardMaterial color="#D32F2F" />
+    </mesh>
+    <mesh position={[6.5, 1.6, 0]} rotation={[0, 0, 0]} castShadow>
+      <boxGeometry args={[7, 0.1, 0.1]} />
+      <meshStandardMaterial color="#FFFFFF" />
+    </mesh>
+    {/* Stripes on boom */}
+    {[-2.5, 0, 2.5].map((x, i) => (
+      <mesh key={i} position={[6.5 + x, 1.61, 0]}>
+        <boxGeometry args={[0.6, 0.12, 0.12]} />
+        <meshStandardMaterial color="#D32F2F" />
+      </mesh>
+    ))}
+  </group>
+);
+
+const IndustrialFence = () => (
+  <group>
+    {/* Posts every meter */}
+    {Array.from({ length: 11 }).map((_, i) => (
+      <mesh key={i} position={[i * 1 - 5, 1.25, 0]} castShadow>
+        <boxGeometry args={[0.08, 2.5, 0.08]} />
+        <meshStandardMaterial color="#616161" metalness={0.6} />
+      </mesh>
+    ))}
+    {/* Mesh panels (translucent grey) */}
+    <mesh position={[0, 1.25, 0]}>
+      <planeGeometry args={[10, 2.4]} />
+      <meshStandardMaterial color="#9E9E9E" wireframe transparent opacity={0.7} />
+    </mesh>
+    {/* Top barbed wire suggestion */}
+    <mesh position={[0, 2.6, 0]}>
+      <boxGeometry args={[10.2, 0.04, 0.04]} />
+      <meshStandardMaterial color="#424242" />
+    </mesh>
+  </group>
+);
+
 // Fallback for GLB custom objects (rendered by GLTFAssetLoader instead)
 const FallbackGLBPlaceholder = () => (
   <mesh position={[0, 0.5, 0]} castShadow>
@@ -794,6 +1107,15 @@ const OBJECT_COMPONENTS: Record<ParcelaObjectType, React.FC> = {
   columpio: SwingSet,
   trampolin: Trampoline,
   cancha: SportsCourt,
+  galpon_packing: PackingWarehouse,
+  anden_carga: LoadingDock,
+  camara_frio: ColdRoom,
+  oficinas_industrial: IndustrialOffice,
+  estacionamiento_camiones: TruckParking,
+  area_maniobras: ManeuverArea,
+  bascula: Weighbridge,
+  porteria: Gatehouse,
+  cerco_industrial: IndustrialFence,
   glb_custom: FallbackGLBPlaceholder,
 };
 
