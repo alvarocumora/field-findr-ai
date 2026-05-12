@@ -34,7 +34,7 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
 
   const norm = useMemo(() => normalizePolygon(polygon), [polygon]);
   const layout = useMemo(
-    () => (norm.valid ? buildLayout(mode, norm.bounds) : null),
+    () => (norm.valid ? buildLayout(mode, norm.bounds, norm.localCoords) : null),
     [mode, norm],
   );
 
@@ -59,27 +59,29 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
     };
   }, [norm]);
 
-  // Buildings GeoJSON
+  // Buildings GeoJSON — one feature per building part (base + roof + ...)
   const buildingsGeoJSON = useMemo<GeoJSON.FeatureCollection>(() => {
     if (!layout) return { type: 'FeatureCollection', features: [] };
-    return {
-      type: 'FeatureCollection',
-      features: layout.buildings.map((b: LayoutBuilding, idx: number) => {
-        const ring = b.coords.map(([x, y]) => localToLngLat(x, y));
+    const features: GeoJSON.Feature[] = [];
+    layout.buildings.forEach((b: LayoutBuilding, idx: number) => {
+      b.parts.forEach((part, partIdx) => {
+        const ring = part.coords.map(([x, y]) => localToLngLat(x, y));
         ring.push(ring[0]);
-        return {
-          type: 'Feature' as const,
+        features.push({
+          type: 'Feature',
           properties: {
-            id: b.id,
-            color: b.color,
-            height: b.height,
+            id: `${b.id}-p${partIdx}`,
+            color: part.color,
+            base: part.base,
+            height: part.height,
             order: idx,
             label: b.label ?? '',
           },
-          geometry: { type: 'Polygon' as const, coordinates: [ring] },
-        };
-      }),
-    };
+          geometry: { type: 'Polygon', coordinates: [ring] },
+        });
+      });
+    });
+    return { type: 'FeatureCollection', features };
   }, [layout, localToLngLat]);
 
   // Init map
