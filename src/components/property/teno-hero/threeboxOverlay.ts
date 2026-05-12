@@ -269,7 +269,12 @@ function makeFlat(w: number, h: number, color: string, thickness = 0.12): THREE.
 
 // ─── Builders per LayoutBuilding type ───────────────────────────────
 
-function buildHouse(b: LayoutBuilding): THREE.Group | null {
+function buildHouse(b: LayoutBuilding, gltfTemplate?: THREE.Group | null): THREE.Group | null {
+  const wall0 = b.parts[0];
+  if (wall0 && gltfTemplate) {
+    const i0 = rectInfoFromCoords(wall0.coords);
+    return cloneAndFit(gltfTemplate, i0.w, i0.h, i0.rot);
+  }
   // parts[0] = walls box; subsequent stepped slabs were faux-roof
   const wall = b.parts[0];
   if (!wall) return null;
