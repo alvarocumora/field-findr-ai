@@ -459,17 +459,41 @@ export async function mountThreeboxOverlay(
     render: () => tb.update(),
   });
 
+  // ── Preload GLB templates declared in MODEL_REGISTRY ─────────────
+  // Failed loads resolve to null and the procedural fallback is used.
+  const needsHouse = buildings.some((b) => b.type === 'casa');
+  const needsWarehouse = buildings.some((b) => b.type === 'galpon');
+  const needsTrees = buildings.some((b) =>
+    b.parts.some((p) => p.height - p.base > 2.5 && rectInfoFromCoords(p.coords).w < 4),
+  );
+
+  const [houseA, houseB, warehouseTpl, treePine, treeOak] = await Promise.all([
+    needsHouse && modelUrl('casa_a') ? loadGLTF(modelUrl('casa_a')!) : Promise.resolve(null),
+    needsHouse && modelUrl('casa_b') ? loadGLTF(modelUrl('casa_b')!) : Promise.resolve(null),
+    needsWarehouse && modelUrl('galpon') ? loadGLTF(modelUrl('galpon')!) : Promise.resolve(null),
+    needsTrees && modelUrl('tree_pine') ? loadGLTF(modelUrl('tree_pine')!) : Promise.resolve(null),
+    needsTrees && modelUrl('tree_oak') ? loadGLTF(modelUrl('tree_oak')!) : Promise.resolve(null),
+  ]);
+  const houseTemplates = [houseA, houseB].filter(Boolean) as THREE.Group[];
+  const treeTemplates = [treePine, treeOak].filter(Boolean) as THREE.Group[];
+
   // Track all added objects so we can clear them on rebuild
   const placed: any[] = [];
   // For fade-in animation
   const meshAnimRefs: THREE.Group[] = [];
 
+  let casaCounter = 0;
   for (let i = 0; i < buildings.length; i++) {
     const b = buildings[i];
     let group: THREE.Group | null = null;
-    if (b.type === 'casa') group = buildHouse(b);
-    else if (b.type === 'galpon') group = buildWarehouse(b);
-    else group = buildGenericByParts(b);
+    if (b.type === 'casa') {
+      const tpl = houseTemplates.length ? houseTemplates[casaCounter++ % houseTemplates.length] : null;
+      group = buildHouse(b, tpl);
+    } else if (b.type === 'galpon') {
+      group = buildWarehouse(b, warehouseTpl);
+    } else {
+      group = buildGenericByParts(b, treeTemplates);
+    }
     if (!group) continue;
 
     // Cast shadows where supported
