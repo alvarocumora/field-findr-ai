@@ -21,7 +21,8 @@ const FloatingCTA = () => {
 
   return (
     <div
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ${
+      style={{ zIndex: 'var(--z-fab)' }}
+      className={`fixed bottom-safe-nav left-1/2 -translate-x-1/2 transition-all duration-500 ${
         isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'
       }`}
     >
