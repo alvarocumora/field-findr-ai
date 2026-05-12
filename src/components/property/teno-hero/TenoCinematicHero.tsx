@@ -45,6 +45,7 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
   const animFrameRef = useRef<number | null>(null);
   const userInteractingRef = useRef(false);
   const lastInteractionRef = useRef(0);
+  const threeboxRef = useRef<ThreeboxHandle | null>(null);
   const { token, loading: tokenLoading } = useMapboxToken();
 
   const detail = useMemo<DetailLevel>(() => detectDetail(), []);
