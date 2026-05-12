@@ -122,6 +122,48 @@
     --glass-border: hsla(0, 0%, 100%, 0.06);
     --glass-strong-bg: hsla(240, 6%, 7%, 0.92);
   }
+
+  /* ==========================================================
+     Layering & safe-area tokens (global)
+     Single source of truth for sticky / floating / overlays.
+     ========================================================== */
+  :root {
+    --header-h: 3.5rem;          /* mobile header h-14 */
+    --bottom-nav-h: 0rem;        /* set 4rem when MobileBottomNav is visible */
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+
+    /* Z-index scale — never use ad-hoc z-[123] for these layers */
+    --z-base: 0;
+    --z-content: 10;
+    --z-map-overlay: 20;     /* toggles, badges, legends inside maps */
+    --z-sticky: 30;          /* in-page sticky bars */
+    --z-header: 40;          /* global app header */
+    --z-fab: 45;             /* floating action buttons */
+    --z-overlay: 50;         /* sheets, drawers backdrop */
+    --z-modal: 60;           /* dialogs, popovers */
+    --z-toast: 70;           /* toasts, sonner */
+    --z-tour: 80;            /* onboarding tour */
+  }
+
+  @media (min-width: 768px) {
+    :root { --header-h: 4rem; }   /* md+ header h-16 */
+  }
+
+  html {
+    /* So in-page anchors / scrollIntoView don't hide under sticky header */
+    scroll-padding-top: calc(var(--header-h) + 0.75rem);
+  }
+}
+
+@layer utilities {
+  .pb-safe { padding-bottom: max(0.75rem, var(--safe-bottom)); }
+  .pt-safe { padding-top: max(0.75rem, var(--safe-top)); }
+  .bottom-safe { bottom: max(1rem, calc(var(--safe-bottom) + 0.75rem)); }
+  /* Stack offset for FABs that sit above the mobile bottom nav */
+  .bottom-safe-nav {
+    bottom: max(1rem, calc(var(--safe-bottom) + var(--bottom-nav-h) + 0.75rem));
+  }
 }
 
 * {
