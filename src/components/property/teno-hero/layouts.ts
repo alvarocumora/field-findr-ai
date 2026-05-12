@@ -33,24 +33,7 @@ export interface LayoutResult {
   legend: { color: string; label: string }[];
 }
 
-// ─── Geometry helpers ────────────────────────────────────────────────
-
-const rect = (
-  cx: number,
-  cy: number,
-  w: number,
-  h: number,
-  rotRad: number,
-): [number, number][] => {
-  const cos = Math.cos(rotRad), sin = Math.sin(rotRad);
-  const corners: [number, number][] = [
-    [-w / 2, -h / 2],
-    [w / 2, -h / 2],
-    [w / 2, h / 2],
-    [-w / 2, h / 2],
-  ];
-  return corners.map(([x, y]) => [cx + x * cos - y * sin, cy + x * sin + y * cos]);
-};
+// ─── Geometry helpers (clipping + axis alignment) ────────────────────
 
 /** Ray-casting point-in-polygon (local coords). */
 const pointInPolygon = (
@@ -69,7 +52,6 @@ const pointInPolygon = (
   return inside;
 };
 
-/** Distance from point to segment (local meters). */
 const distPointSeg = (
   p: [number, number],
   a: [number, number],
@@ -83,7 +65,6 @@ const distPointSeg = (
   return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy));
 };
 
-/** Min distance from point to polygon boundary. */
 const distToBoundary = (p: [number, number], poly: [number, number][]): number => {
   let min = Infinity;
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -93,7 +74,7 @@ const distToBoundary = (p: [number, number], poly: [number, number][]): number =
   return min;
 };
 
-/** Check all 4 corners of a rect are inside polygon AND have margin from boundary. */
+/** Check rect corners are inside polygon AND have margin from boundary. */
 const rectFitsInside = (
   corners: [number, number][],
   poly: [number, number][],
@@ -103,14 +84,29 @@ const rectFitsInside = (
     if (!pointInPolygon(c, poly)) return false;
     if (distToBoundary(c, poly) < margin) return false;
   }
-  // also center
   const cx = corners.reduce((s, p) => s + p[0], 0) / corners.length;
   const cy = corners.reduce((s, p) => s + p[1], 0) / corners.length;
   if (!pointInPolygon([cx, cy], poly)) return false;
   return true;
 };
 
-/** Compute main-axis angle (rad) from longest edge of polygon (local coords). */
+/**
+ * For roofs that overhang their walls, also verify the *expanded* footprint
+ * (walls + eaves) fits inside the polygon to prevent eaves crossing the limit.
+ */
+const buildingFitsInside = (
+  cx: number,
+  cy: number,
+  w: number,
+  h: number,
+  rot: number,
+  poly: [number, number][],
+  margin = 4,
+  overhang = 1.0,
+): boolean =>
+  rectFitsInside(rect(cx, cy, w + overhang * 2, h + overhang * 2, rot), poly, margin);
+
+/** Compute main-axis angle (rad) from longest edge of polygon. */
 const mainAxisAngle = (poly: [number, number][]): number => {
   let bestLen = 0, bestAng = 0;
   for (let i = 0; i < poly.length; i++) {
@@ -123,61 +119,6 @@ const mainAxisAngle = (poly: [number, number][]): number => {
     }
   }
   return bestAng;
-};
-
-// ─── Roof helpers ────────────────────────────────────────────────────
-
-/** Gable roof: base box + narrow ridge box on top, both axis-aligned. */
-const gableRoof = (
-  cx: number,
-  cy: number,
-  w: number,
-  h: number,
-  rot: number,
-  baseHeight: number,
-  roofHeight: number,
-  baseColor: string,
-  roofColor: string,
-): BuildingPart[] => {
-  // Ridge runs along the longer dimension
-  const ridgeAlongX = w >= h;
-  const ridgeW = ridgeAlongX ? w * 0.92 : w * 0.18;
-  const ridgeH = ridgeAlongX ? h * 0.18 : h * 0.92;
-  return [
-    {
-      coords: rect(cx, cy, w, h, rot),
-      base: 0,
-      height: baseHeight,
-      color: baseColor,
-    },
-    {
-      coords: rect(cx, cy, ridgeW, ridgeH, rot),
-      base: baseHeight,
-      height: baseHeight + roofHeight,
-      color: roofColor,
-    },
-  ];
-};
-
-/** House: base + pitched roof + small chimney bump. */
-const houseParts = (
-  cx: number,
-  cy: number,
-  w: number,
-  h: number,
-  rot: number,
-  wallColor = '#fef3c7',
-  roofColor = '#b91c1c',
-): BuildingPart[] => {
-  return [
-    { coords: rect(cx, cy, w, h, rot), base: 0, height: 3.2, color: wallColor },
-    {
-      coords: rect(cx, cy, w * 0.94, h * 0.25, rot),
-      base: 3.2,
-      height: 5.4,
-      color: roofColor,
-    },
-  ];
 };
 
 // ─── Packing layout (industrial fruit/cold storage) ──────────────────
