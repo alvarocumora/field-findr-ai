@@ -199,6 +199,7 @@ export function buildPackingLayout(
           baseHeight: 7.5,
           ridgeHeight: 3.2,
           withSkylight,
+          steps: steps.warehouse,
         }),
       });
     }
