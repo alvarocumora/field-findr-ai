@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Route } from "react-router-dom";
 
 import DashboardLayout from "@/components/layouts/DashboardLayout";
@@ -15,7 +15,7 @@ import ProjectsManagement from "@/components/ProjectsManagement";
 import { DashboardAdmin } from "@/pages/dashboard";
 import { PageLoader } from "./routeUtils";
 
-const adminElement = (children: React.ReactNode) => (
+const adminElement = (children: ReactNode) => (
   <DashboardLayout requiredRole="admin">
     {children}
   </DashboardLayout>
