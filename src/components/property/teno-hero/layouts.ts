@@ -478,16 +478,34 @@ export function buildConjuntoLayout(
       }
     }
 
-    // Patio trasero compartido (franja verde en el centro del bloque)
+    // Patio trasero compartido (franja verde en el centro del bloque) + arbolado
     const backCv = blockBaseV + blockV / 2;
     const [bx, by] = toLocal(pminU + usableU / 2, backCv);
     const backCand = rect(bx, by, houseStripU * 0.95, backYardV * 0.7, rot);
     if (rectFitsInside(backCand, poly, 2)) {
+      const backParts: BuildingPart[] = [
+        { coords: backCand, base: 0, height: 0.15, color: '#86efac' },
+      ];
+      // Árboles dispersos en el patio trasero
+      const treeCols = Math.max(3, Math.floor(nCols * 0.6));
+      for (let t = 0; t < treeCols; t++) {
+        const cu = startU + ((t + 0.5) / treeCols) * houseStripU;
+        const jitterV = ((t * 13) % 5 - 2) * 0.5;
+        const [tx, ty] = toLocal(cu, backCv + jitterV);
+        const trunk = rect(tx, ty, 0.55, 0.55, 0);
+        const canopy = rect(tx, ty, 1.9 + (t % 2) * 0.6, 1.9 + (t % 2) * 0.6, 0);
+        if (!rectFitsInside(canopy, poly, 0.3)) continue;
+        backParts.push({ coords: trunk, base: 0.15, height: 1.6, color: '#78350f' });
+        backParts.push({
+          coords: canopy, base: 1.6, height: 3.8 + (t % 3) * 0.8,
+          color: ['#15803d', '#166534', '#16a34a'][t % 3],
+        });
+      }
       buildings.push({
         id: `backyards-${b}`,
         type: 'jardin',
         cx: bx, cy: by,
-        parts: [{ coords: backCand, base: 0, height: 0.15, color: '#86efac' }],
+        parts: backParts,
       });
     }
   }
