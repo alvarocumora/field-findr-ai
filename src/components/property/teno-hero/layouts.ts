@@ -279,7 +279,9 @@ export function buildPackingLayout(
 export function buildConjuntoLayout(
   bounds: PolygonBounds,
   poly: [number, number][],
+  detail: DetailLevel = 'high',
 ): LayoutResult {
+  const steps = ROOF_STEPS[detail];
   const buildings: LayoutBuilding[] = [];
   const rot = mainAxisAngle(poly);
   const cosR = Math.cos(rot), sinR = Math.sin(rot);
