@@ -134,7 +134,9 @@ const mainAxisAngle = (poly: [number, number][]): number => {
 export function buildPackingLayout(
   bounds: PolygonBounds,
   poly: [number, number][],
+  detail: DetailLevel = 'high',
 ): LayoutResult {
+  const steps = ROOF_STEPS[detail];
   const buildings: LayoutBuilding[] = [];
   const rot = mainAxisAngle(poly);
   const cosR = Math.cos(rot), sinR = Math.sin(rot);
