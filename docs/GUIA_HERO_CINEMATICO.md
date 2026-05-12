@@ -156,6 +156,7 @@ src/components/property/teno-hero/        ← renombrar a /cinematic-hero/ en pr
 ├── TenoCinematicHero.tsx                 ← orquestador (Mapbox + overlays + toggle)
 ├── HeroLayoutToggle.tsx                  ← pill toggle Packing/Conjunto/...
 ├── layouts.ts                            ← builders de overlays + LayoutType
+├── buildingPrimitives.ts                 ← 🔧 LIBRERÍA REUTILIZABLE (base/eaves/roof/ridge)
 └── (futuro) overlays/
     ├── packing.ts
     ├── conjunto.ts
@@ -163,6 +164,31 @@ src/components/property/teno-hero/        ← renombrar a /cinematic-hero/ en pr
     ├── agricola.ts
     └── logistico.ts
 ```
+
+### 8.1 Backend de primitivas 3D (obligatorio)
+
+Mapbox `fill-extrusion` solo soporta extrusiones verticales. Para simular
+techos a dos aguas (gable) y a cuatro aguas (hip) usamos **slabs escalonados
+que reducen su huella en el eje corto a medida que suben** — desde el pitch
+canónico de 60° leen como pendientes reales.
+
+Toda nueva publicación **DEBE** consumir las factories de
+`buildingPrimitives.ts` en vez de inventar geometría inline:
+
+| Factory                | Uso                                                      |
+|------------------------|----------------------------------------------------------|
+| `house(...)`           | Vivienda: muros + aleros + techo gable + chimenea opt.   |
+| `warehouse(...)`       | Galpón industrial: muros altos + aleros anchos + skylight|
+| `gableRoofStepped(...)`| Techo a dos aguas escalonado (cumbrera larga)            |
+| `hipRoofStepped(...)`  | Techo a cuatro aguas (piramidal)                         |
+| `eaves(...)`           | Alero perimetral (slab oscuro fino sobre muros)          |
+| `chimney(...)`         | Volumen pequeño sobre cumbrera                           |
+| `rect(...)`            | Helper de rectángulo rotado en coords locales            |
+| `shadeColor(hex, %)`   | Sombrear progresivo de techos (depth fake)               |
+
+**Regla anti-overflow:** antes de emitir un edificio con aleros, validar con
+`buildingFitsInside(cx, cy, w, h, rot, poly, margin, overhang)` — el overhang
+suma al footprint real para evitar que el alero sobresalga del polígono.
 
 **Reglas de implementación:**
 
