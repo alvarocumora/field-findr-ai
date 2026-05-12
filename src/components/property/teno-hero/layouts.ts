@@ -301,98 +301,240 @@ export function buildConjuntoLayout(
     u * sinR + v * cosR,
   ];
 
-  // Casa dimensions: ~10m × 8m typical Chilean lot
-  const casaU = 11, casaV = 8;
-  const gapU = 4; // jardín lateral
-  const stepU = casaU + gapU;
-  const calleV = 8; // calle central
+  // ── Realistic neighbourhood layout ────────────────────────────────
+  // Pattern: parallel street corridors. Between corridors sits a "block"
+  // of two back-to-back rows of houses (front towards street, back yards
+  // sharing a central garden strip). Perimeter loop street + sidewalks.
 
-  // Two rows of houses around a central street
-  const rowOffsetV = (calleV / 2) + (casaV / 2) + 2;
-  const nCols = Math.max(2, Math.floor(usableU / stepU));
-  const startU = pminU + (usableU - (nCols * stepU - gapU)) / 2;
-  const centerV = pminV + usableV / 2;
+  // Lot/house dimensions (Chilean conjunto típico)
+  const casaU = 9.5;          // frente de casa
+  const casaV = 7.5;          // fondo de casa
+  const frontYardV = 2.5;     // antejardín hacia la calle
+  const backYardV = 5.0;      // patio trasero compartido
+  const sideGapU = 2.5;       // distancia entre casas vecinas
+  const stepU = casaU + sideGapU;
+  const calleV = 7.0;         // calzada
+  const aceraV = 1.6;         // acera + antejardín "público"
+  // Module = street + sidewalk + frontyard + casa + backyard/2 (mirrored)
+  const blockV = 2 * (aceraV + frontYardV + casaV) + backYardV;
+  const moduleV = blockV + calleV;
+
+  // Perimeter setback (vereda perimetral)
+  const perim = 4.0;
+  const innerUmin = pminU + perim;
+  const innerUmax = pmaxU - perim;
+  const innerVmin = pminV + perim;
+  const innerVmax = pmaxV - perim;
+  const innerU = innerUmax - innerUmin;
+  const innerV = innerVmax - innerVmin;
+
+  // How many blocks fit along V?
+  const nBlocks = Math.max(1, Math.floor((innerV + calleV) / moduleV));
+  const totalLayoutV = nBlocks * blockV + (nBlocks + 1) * calleV; // streets between & around blocks
+  const startV = innerVmin + Math.max(0, (innerV - totalLayoutV) / 2);
+
+  // Columns of houses
+  const nCols = Math.max(3, Math.floor((innerU + sideGapU) / stepU));
+  const houseStripU = nCols * stepU - sideGapU;
+  const startU = innerUmin + Math.max(0, (innerU - houseStripU) / 2);
+
+  const wallColors = ['#fef3c7', '#fde68a', '#fed7aa', '#fee2e2', '#e0f2fe', '#ede9fe', '#ecfccb'];
+  const roofColors = ['#b91c1c', '#9a3412', '#7c2d12', '#a16207', '#78350f'];
+
+  // Reserve a "plaza central" position: middle column of middle block
+  const plazaBlock = Math.floor(nBlocks / 2);
+  const plazaColStart = Math.max(0, Math.floor(nCols / 2) - 1);
+  const plazaColEnd = Math.min(nCols - 1, plazaColStart + 1);
 
   let id = 0;
-  for (const rowSign of [-1, 1] as const) {
-    for (let c = 0; c < nCols; c++) {
-      const cu = startU + c * stepU + casaU / 2;
-      const cv = centerV + rowSign * rowOffsetV;
-      const [cx, cy] = toLocal(cu, cv);
-      const cand = rect(cx, cy, casaU, casaV, rot);
-      if (!rectFitsInside(cand, poly, 4)) continue;
-      if (!buildingFitsInside(cx, cy, casaU, casaV, rot, poly, 2, 0.5)) continue;
-      const wallColors = ['#fef3c7', '#fde68a', '#fed7aa', '#fee2e2', '#e0f2fe'];
-      const roofColors = ['#b91c1c', '#9a3412', '#7c2d12', '#a16207'];
-      const wall = wallColors[(id + (rowSign === -1 ? 0 : 2)) % wallColors.length];
-      const roof = roofColors[id % roofColors.length];
-      buildings.push({
-        id: `casa-${id++}`,
-        type: 'casa',
-        label: `Casa ${id}`,
-        cx, cy,
-        parts: house(cx, cy, casaU, casaV, rot, {
-          wallColor: wall,
-          roofColor: roof,
-          withChimney: id % 3 === 0,
-          steps: steps.house,
-        }),
-      });
-    }
-  }
 
-  // Calle central (asphalt strip)
-  const calleCand = rect(
-    ...toLocal(pminU + usableU / 2, centerV),
-    Math.min(usableU * 0.88, nCols * stepU - gapU),
-    calleV,
-    rot,
-  );
-  buildings.push({
-    id: 'calle-central',
-    type: 'calle',
-    label: 'Vía principal',
-    cx: 0, cy: 0,
-    parts: [{ coords: calleCand, base: 0, height: 0.25, color: '#1e293b' }],
-  });
-
-  // 2 plazas en los extremos
-  for (let i = 0; i < 2; i++) {
-    const cu = startU + (i === 0 ? -stepU * 0.4 : nCols * stepU - gapU + stepU * 0.4);
-    const cv = centerV;
-    const [px, py] = toLocal(cu, cv);
-    const cand = rect(px, py, casaU * 1.5, casaV * 2.5, rot);
-    if (rectFitsInside(cand, poly, 3)) {
+  // ── Streets (horizontal corridors along U) ─────────────────────────
+  for (let s = 0; s <= nBlocks; s++) {
+    const sv = startV + s * (blockV + calleV) + calleV / 2;
+    const [sx, sy] = toLocal(pminU + usableU / 2, sv);
+    const calleCand = rect(sx, sy, houseStripU + perim * 1.2, calleV, rot);
+    if (rectFitsInside(calleCand, poly, 1)) {
       buildings.push({
-        id: `plaza-${i}`,
-        type: 'plaza',
-        label: 'Área verde',
-        cx: px, cy: py,
+        id: `calle-${s}`,
+        type: 'calle',
+        label: s === 0 || s === nBlocks ? 'Calle perimetral' : 'Calle interior',
+        cx: sx, cy: sy,
         parts: [
-          { coords: cand, base: 0, height: 0.5, color: '#16a34a' },
-          // Algunos "árboles" puntuales
-          { coords: rect(px - casaU * 0.3, py - casaV * 0.5, 2.5, 2.5, 0), base: 0.5, height: 4, color: '#15803d' },
-          { coords: rect(px + casaU * 0.3, py + casaV * 0.5, 2.5, 2.5, 0), base: 0.5, height: 4, color: '#166534' },
-          { coords: rect(px, py, 2.5, 2.5, 0), base: 0.5, height: 4.5, color: '#15803d' },
+          { coords: calleCand, base: 0, height: 0.18, color: '#1e293b' },
+          // línea central pintada
+          { coords: rect(sx, sy, houseStripU * 0.92, 0.25, rot), base: 0.18, height: 0.22, color: '#fde047' },
         ],
       });
     }
   }
 
-  // Sede comunitaria
-  const sedeCu = pminU + usableU / 2;
-  const sedeCv = centerV + (rowOffsetV + casaV * 1.4) * (usableV > rowOffsetV * 2 + casaV * 2 ? 1 : 0.6);
-  const [sX, sY] = toLocal(sedeCu, sedeCv);
-  const sedeCand = rect(sX, sY, casaU * 1.6, casaV * 1.4, rot);
-  if (rectFitsInside(sedeCand, poly, 4)) {
+  // ── Casas (dos hileras por bloque) ─────────────────────────────────
+  for (let b = 0; b < nBlocks; b++) {
+    const blockBaseV = startV + calleV + b * (blockV + calleV);
+    // row 0: front faces street BELOW (toward -V), so house centre offset
+    // row 1: front faces street ABOVE
+    for (const rowIdx of [0, 1] as const) {
+      const rowV = rowIdx === 0
+        ? blockBaseV + aceraV + frontYardV + casaV / 2
+        : blockBaseV + blockV - (aceraV + frontYardV + casaV / 2);
+
+      for (let c = 0; c < nCols; c++) {
+        // Skip houses where plaza will be
+        if (b === plazaBlock && c >= plazaColStart && c <= plazaColEnd) continue;
+
+        const cu = startU + c * stepU + casaU / 2;
+        const [cx, cy] = toLocal(cu, rowV);
+        const cand = rect(cx, cy, casaU, casaV, rot);
+        if (!rectFitsInside(cand, poly, 2.5)) continue;
+        if (!buildingFitsInside(cx, cy, casaU, casaV, rot, poly, 1.5, 0.5)) continue;
+
+        const variant = (b * 7 + c * 3 + rowIdx) % wallColors.length;
+        const wall = wallColors[variant];
+        const roof = roofColors[(variant + rowIdx) % roofColors.length];
+
+        // Antejardín (césped frente a la casa)
+        const yardV = aceraV + frontYardV;
+        const yardCv = rowIdx === 0
+          ? rowV - casaV / 2 - yardV / 2
+          : rowV + casaV / 2 + yardV / 2;
+        const [yx, yy] = toLocal(cu, yardCv);
+        const yardCand = rect(yx, yy, casaU * 0.95, yardV * 0.85, rot);
+        if (rectFitsInside(yardCand, poly, 1)) {
+          buildings.push({
+            id: `jardin-${id}`,
+            type: 'jardin',
+            cx: yx, cy: yy,
+            parts: [{ coords: yardCand, base: 0, height: 0.18, color: '#4ade80' }],
+          });
+        }
+
+        buildings.push({
+          id: `casa-${id++}`,
+          type: 'casa',
+          label: `Casa ${id}`,
+          cx, cy,
+          parts: house(cx, cy, casaU, casaV, rot, {
+            wallColor: wall,
+            roofColor: roof,
+            withChimney: (b + c) % 4 === 0,
+            steps: steps.house,
+            baseHeight: 3.0 + ((b + c) % 2) * 0.6, // alguna casa de 2 pisos
+            ridgeHeight: 2.4 + ((c) % 3) * 0.3,
+          }),
+        });
+      }
+    }
+
+    // Patio trasero compartido (franja verde en el centro del bloque)
+    const backCv = blockBaseV + blockV / 2;
+    const [bx, by] = toLocal(pminU + usableU / 2, backCv);
+    const backCand = rect(bx, by, houseStripU * 0.95, backYardV * 0.7, rot);
+    if (rectFitsInside(backCand, poly, 2)) {
+      buildings.push({
+        id: `backyards-${b}`,
+        type: 'jardin',
+        cx: bx, cy: by,
+        parts: [{ coords: backCand, base: 0, height: 0.15, color: '#86efac' }],
+      });
+    }
+  }
+
+  // ── Plaza central con árboles + juegos ─────────────────────────────
+  if (nBlocks > 0) {
+    const plazaBaseV = startV + calleV + plazaBlock * (blockV + calleV);
+    const plazaCv = plazaBaseV + blockV / 2;
+    const plazaCu = startU + ((plazaColStart + plazaColEnd) / 2 + 0.5) * stepU;
+    const plazaW = (plazaColEnd - plazaColStart + 1) * stepU - sideGapU;
+    const plazaH = blockV - aceraV * 2;
+    const [pX, pY] = toLocal(plazaCu, plazaCv);
+    const plazaCand = rect(pX, pY, plazaW, plazaH, rot);
+    if (rectFitsInside(plazaCand, poly, 2)) {
+      const treeColors = ['#15803d', '#166534', '#14532d', '#16a34a'];
+      const treeParts: BuildingPart[] = [
+        { coords: plazaCand, base: 0, height: 0.3, color: '#16a34a' },
+        // sendero diagonal
+        { coords: rect(pX, pY, plazaW * 0.7, 1.2, rot), base: 0.3, height: 0.4, color: '#d6d3d1' },
+        { coords: rect(pX, pY, 1.2, plazaH * 0.7, rot), base: 0.3, height: 0.4, color: '#d6d3d1' },
+      ];
+      // Árboles distribuidos
+      for (let t = 0; t < 6; t++) {
+        const ang = (t / 6) * Math.PI * 2;
+        const rU = plazaW * 0.32 * Math.cos(ang);
+        const rV = plazaH * 0.32 * Math.sin(ang);
+        const [tx, ty] = toLocal(plazaCu + rU, plazaCv + rV);
+        treeParts.push({
+          coords: rect(tx, ty, 2.4, 2.4, 0),
+          base: 0.3,
+          height: 4.5 + (t % 2) * 1.2,
+          color: treeColors[t % treeColors.length],
+        });
+      }
+      buildings.push({
+        id: 'plaza-central',
+        type: 'plaza',
+        label: 'Plaza central',
+        cx: pX, cy: pY,
+        parts: treeParts,
+      });
+    }
+  }
+
+  // ── Sede comunitaria + multicancha (en plaza si hay espacio extra) ─
+  // Buscar primer bloque distinto al de la plaza para colocar sede
+  const sedeBlockIdx = plazaBlock === 0 ? Math.min(nBlocks - 1, 1) : 0;
+  if (sedeBlockIdx !== plazaBlock && nBlocks > 1) {
+    const sedeBaseV = startV + calleV + sedeBlockIdx * (blockV + calleV);
+    const sedeCv = sedeBaseV + blockV / 2;
+    const sedeCu = startU + houseStripU - stepU * 0.5;
+    const [sX, sY] = toLocal(sedeCu, sedeCv);
+    const sedeCand = rect(sX, sY, casaU * 1.4, casaV * 1.6, rot);
+    if (rectFitsInside(sedeCand, poly, 3)) {
+      buildings.push({
+        id: 'sede',
+        type: 'equipamiento',
+        label: 'Sede comunitaria',
+        cx: sX, cy: sY,
+        parts: [
+          { coords: sedeCand, base: 0, height: 4.5, color: '#e9d5ff' },
+          eaves(sX, sY, casaU * 1.4, casaV * 1.6, rot, 4.5, 0.6, 0.25, '#1f2937'),
+          ...hipRoofStepped(sX, sY, casaU * 1.4, casaV * 1.6, rot, 4.7, 2.2, '#7e22ce', steps.house),
+        ],
+      });
+    }
+
+    // Multicancha al lado
+    const canchaCu = startU + stepU * 0.6;
+    const [ccx, ccy] = toLocal(canchaCu, sedeCv);
+    const canchaCand = rect(ccx, ccy, casaU * 1.6, casaV * 1.5, rot);
+    if (rectFitsInside(canchaCand, poly, 3)) {
+      buildings.push({
+        id: 'cancha',
+        type: 'equipamiento',
+        label: 'Multicancha',
+        cx: ccx, cy: ccy,
+        parts: [
+          { coords: canchaCand, base: 0, height: 0.25, color: '#0ea5e9' },
+          { coords: rect(ccx, ccy, casaU * 1.55, 0.2, rot), base: 0.25, height: 0.32, color: '#f8fafc' },
+          { coords: rect(ccx, ccy, 0.2, casaV * 1.45, rot), base: 0.25, height: 0.32, color: '#f8fafc' },
+        ],
+      });
+    }
+  }
+
+  // ── Acceso principal: portería al borde inferior ───────────────────
+  const accessCu = startU + houseStripU * 0.5;
+  const accessCv = startV + calleV * 0.5;
+  const [aX, aY] = toLocal(accessCu, accessCv - calleV * 0.6);
+  const accessCand = rect(aX, aY, casaU * 0.7, casaV * 0.5, rot);
+  if (rectFitsInside(accessCand, poly, 2)) {
     buildings.push({
-      id: 'sede',
+      id: 'acceso',
       type: 'equipamiento',
-      label: 'Sede comunitaria',
-      cx: sX, cy: sY,
+      label: 'Acceso / Portería',
+      cx: aX, cy: aY,
       parts: [
-        { coords: sedeCand, base: 0, height: 5, color: '#a855f7' },
-        { coords: rect(sX, sY, casaU * 1.5, casaV * 0.4, rot), base: 5, height: 7.5, color: '#7e22ce' },
+        { coords: accessCand, base: 0, height: 3.2, color: '#f1f5f9' },
+        ...hipRoofStepped(aX, aY, casaU * 0.7, casaV * 0.5, rot, 3.2, 1.4, '#475569', steps.house),
       ],
     });
   }
