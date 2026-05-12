@@ -104,6 +104,7 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
     if (!containerRef.current || tokenLoading || !token || !norm.valid) return;
     mapboxgl.accessToken = token;
 
+    const isLow = detail === 'low';
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: 'mapbox://styles/mapbox/satellite-streets-v12',
@@ -111,23 +112,54 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
       zoom: 13.5,
       pitch: 0,
       bearing: 0,
+      maxPitch: 75,
       attributionControl: false,
       interactive: true,
-      antialias: true,
+      antialias: !isLow,        // disable AA on mobile for perf
+      cooperativeGestures: false,
+      dragRotate: true,
+      pitchWithRotate: true,
+      touchPitch: true,
+      touchZoomRotate: true,
+      fadeDuration: isLow ? 0 : 300,
     });
     mapRef.current = map;
+    // Cursor hint that the scene is grabbable
+    if (containerRef.current) containerRef.current.style.cursor = 'grab';
 
     map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
+    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true, showCompass: true }), 'bottom-left');
+
+    // Pause cinematic oscillation while user interacts
+    const markInteracting = () => {
+      userInteractingRef.current = true;
+      lastInteractionRef.current = performance.now();
+      if (containerRef.current) containerRef.current.style.cursor = 'grabbing';
+    };
+    const markIdle = () => {
+      lastInteractionRef.current = performance.now();
+      if (containerRef.current) containerRef.current.style.cursor = 'grab';
+    };
+    map.on('mousedown', markInteracting);
+    map.on('touchstart', markInteracting);
+    map.on('dragstart', markInteracting);
+    map.on('zoomstart', markInteracting);
+    map.on('rotatestart', markInteracting);
+    map.on('mouseup', markIdle);
+    map.on('touchend', markIdle);
+    map.on('dragend', markIdle);
+    map.on('zoomend', markIdle);
+    map.on('rotateend', markIdle);
 
     map.on('load', () => {
-      // Terrain
+      // Terrain — lighter on mobile to reduce DEM tile cost
       map.addSource('mapbox-dem', {
         type: 'raster-dem',
         url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
         tileSize: 512,
-        maxzoom: 14,
+        maxzoom: isLow ? 12 : 14,
       });
-      map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.3 });
+      map.setTerrain({ source: 'mapbox-dem', exaggeration: isLow ? 1.0 : 1.3 });
 
       // Sky
       map.addLayer({
