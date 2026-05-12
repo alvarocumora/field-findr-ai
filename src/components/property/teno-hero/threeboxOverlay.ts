@@ -351,7 +351,7 @@ function buildWarehouse(b: LayoutBuilding, gltfTemplate?: THREE.Group | null): T
 }
 
 /** Generic part-by-part renderer for plaza/calle/jardin/equipamiento etc. */
-function buildGenericByParts(b: LayoutBuilding): THREE.Group {
+function buildGenericByParts(b: LayoutBuilding, treeTemplates: (THREE.Group | null)[] = []): THREE.Group {
   const g = new THREE.Group();
   // Use the centroid of parts[0] as anchor; offset others relative to it
   const anchor = b.parts[0] ? rectInfoFromCoords(b.parts[0].coords) : { cx: b.cx, cy: b.cy, rot: 0, w: 0, h: 0 };
