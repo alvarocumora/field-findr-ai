@@ -274,6 +274,8 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
 
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      threeboxRef.current?.destroy();
+      threeboxRef.current = null;
       map.remove();
       mapRef.current = null;
     };
@@ -288,28 +290,37 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
     src?.setData(outlineGeoJSON);
   }, [outlineGeoJSON, mapReady]);
 
-  // Update / animate buildings on mode change
+  // Mount / remount Threebox realistic 3D overlay whenever layout changes.
+  // Falls back to fill-extrusion cubes if Threebox fails to load.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapReady) return;
-    const src = map.getSource(BLDG_SRC) as mapboxgl.GeoJSONSource | undefined;
-    if (!src) return;
+    if (!map || !mapReady || !layout) return;
+    let cancelled = false;
 
-    // Fade out, swap data, fade in
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduceMotion) {
-      src.setData(buildingsGeoJSON);
-      animateBuildings(map, buildingsGeoJSON, 0);
-      return;
-    }
-    // Smooth swap: fade extrusion opacity to 0, then setData, then animate up
-    map.setPaintProperty(BLDG_LAYER, 'fill-extrusion-opacity-transition', { duration: 350 } as never);
-    map.setPaintProperty(BLDG_LAYER, 'fill-extrusion-opacity', 0);
-    setTimeout(() => {
-      src.setData(buildingsGeoJSON);
-      animateBuildings(map, buildingsGeoJSON, 800);
-    }, 360);
-  }, [buildingsGeoJSON, mapReady]);
+    // Tear down previous overlay
+    threeboxRef.current?.destroy();
+    threeboxRef.current = null;
+
+    mountThreeboxOverlay(map, layout.buildings, localToLngLat).then((handle) => {
+      if (cancelled || !handle) {
+        // Fallback: keep showing fill-extrusion cubes
+        if (!handle) {
+          const src = map.getSource(BLDG_SRC) as mapboxgl.GeoJSONSource | undefined;
+          src?.setData(buildingsGeoJSON);
+          animateBuildings(map, buildingsGeoJSON, 0);
+        }
+        return;
+      }
+      threeboxRef.current = handle;
+      // Hide fill-extrusion fallback now that real meshes are placed
+      if (map.getLayer(BLDG_LAYER)) {
+        map.setPaintProperty(BLDG_LAYER, 'fill-extrusion-opacity', 0);
+      }
+      handle.fadeIn(1800);
+    });
+
+    return () => { cancelled = true; };
+  }, [buildingsGeoJSON, layout, localToLngLat, mapReady]);
 
   if (!norm.valid) return null;
 
