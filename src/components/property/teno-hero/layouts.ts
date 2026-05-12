@@ -308,15 +308,21 @@ export function buildConjuntoLayout(
       const [cx, cy] = toLocal(cu, cv);
       const cand = rect(cx, cy, casaU, casaV, rot);
       if (!rectFitsInside(cand, poly, 4)) continue;
-      // Alternate facade colors lightly
-      const wallColors = ['#fef3c7', '#fde68a', '#fed7aa', '#fee2e2'];
+      if (!buildingFitsInside(cx, cy, casaU, casaV, rot, poly, 2, 0.5)) continue;
+      const wallColors = ['#fef3c7', '#fde68a', '#fed7aa', '#fee2e2', '#e0f2fe'];
+      const roofColors = ['#b91c1c', '#9a3412', '#7c2d12', '#a16207'];
       const wall = wallColors[(id + (rowSign === -1 ? 0 : 2)) % wallColors.length];
+      const roof = roofColors[id % roofColors.length];
       buildings.push({
         id: `casa-${id++}`,
         type: 'casa',
         label: `Casa ${id}`,
         cx, cy,
-        parts: houseParts(cx, cy, casaU, casaV, rot, wall, '#b91c1c'),
+        parts: house(cx, cy, casaU, casaV, rot, {
+          wallColor: wall,
+          roofColor: roof,
+          withChimney: id % 3 === 0,
+        }),
       });
     }
   }
