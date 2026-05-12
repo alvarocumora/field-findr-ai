@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Route } from "react-router-dom";
 
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -34,7 +34,7 @@ import OpportunityDetail from "@/pages/dashboard/OpportunityDetail";
 import { DashboardAsesor } from "@/pages/dashboard";
 import { PageLoader } from "./routeUtils";
 
-const agentElement = (children: React.ReactNode) => (
+const agentElement = (children: ReactNode) => (
   <DashboardLayout requiredRole="agent">
     {children}
   </DashboardLayout>
