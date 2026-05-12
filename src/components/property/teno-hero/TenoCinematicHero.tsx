@@ -241,16 +241,26 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
           if (mapRef.current) animateBuildings(mapRef.current, buildingsGeoJSON, 1800);
         }, 4600);
 
-        // Subtle bearing oscillation loop
-        let baseBearing = -25;
-        let osc = 0;
-        const oscillate = () => {
-          if (!mapRef.current || mapRef.current._removed) return;
-          osc += 0.005;
-          mapRef.current.setBearing(baseBearing + Math.sin(osc) * 4);
-          animFrameRef.current = requestAnimationFrame(oscillate);
-        };
-        setTimeout(() => { oscillate(); }, 5200);
+        // Subtle bearing oscillation — pauses while user interacts and
+        // resumes 4s after the last interaction. Skipped on low-detail.
+        if (!isLow) {
+          const baseBearing = -25;
+          let osc = 0;
+          const IDLE_RESUME_MS = 4000;
+          const oscillate = () => {
+            const m = mapRef.current;
+            if (!m || (m as unknown as { _removed?: boolean })._removed) return;
+            const sinceUser = performance.now() - lastInteractionRef.current;
+            const userActive =
+              userInteractingRef.current || sinceUser < IDLE_RESUME_MS;
+            if (!userActive) {
+              osc += 0.005;
+              m.setBearing(baseBearing + Math.sin(osc) * 4);
+            }
+            animFrameRef.current = requestAnimationFrame(oscillate);
+          };
+          setTimeout(() => { oscillate(); }, 5200);
+        }
       }
     });
 
