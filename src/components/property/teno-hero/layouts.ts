@@ -5,15 +5,18 @@
  * extrusion "parts" to fake gable roofs / volumetry.
  */
 import type { PolygonBounds } from '@/lib/polygonUtils';
+import {
+  rect,
+  house,
+  warehouse,
+  gableRoofStepped,
+  hipRoofStepped,
+  eaves,
+  type BuildingPart,
+} from './buildingPrimitives';
 
 export type LayoutType = 'packing' | 'conjunto';
-
-export interface BuildingPart {
-  coords: [number, number][]; // local meters, CCW
-  base: number;
-  height: number;
-  color: string;
-}
+export type { BuildingPart };
 
 export interface LayoutBuilding {
   id: string;
