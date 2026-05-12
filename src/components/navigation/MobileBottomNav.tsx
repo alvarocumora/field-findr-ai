@@ -32,7 +32,11 @@ const MobileBottomNav = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-lg border-t border-border/50 safe-area-bottom">
+    <nav
+      className="fixed bottom-0 left-0 right-0 md:hidden bg-background/95 backdrop-blur-lg border-t border-border/50 safe-area-bottom"
+      style={{ zIndex: 'var(--z-header)', ['--bottom-nav-h' as string]: '4rem' }}
+      ref={(el) => { if (el) document.documentElement.style.setProperty('--bottom-nav-h', '4rem'); }}
+    >
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const active = isActive(item.path);
