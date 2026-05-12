@@ -8,7 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import HeroLayoutToggle from './HeroLayoutToggle';
-import { buildLayout, type LayoutType, type LayoutBuilding } from './layouts';
+import { buildLayout, type LayoutType, type LayoutBuilding, type DetailLevel } from './layouts';
+
+/** Pick detail tier based on device + user motion preference. */
+function detectDetail(): DetailLevel {
+  if (typeof window === 'undefined') return 'high';
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 'low';
+  const w = window.innerWidth;
+  // Heuristic: coarse pointer (touch) + small viewport = low; tablet = med
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
+  if (coarse && w < 640) return 'low';
+  if (w < 1024) return 'med';
+  return 'high';
+}
 
 interface Props {
   polygon: number[][];
@@ -30,12 +42,15 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
   const [mode, setMode] = useState<LayoutType>('packing');
   const [mapReady, setMapReady] = useState(false);
   const animFrameRef = useRef<number | null>(null);
+  const userInteractingRef = useRef(false);
+  const lastInteractionRef = useRef(0);
   const { token, loading: tokenLoading } = useMapboxToken();
 
+  const detail = useMemo<DetailLevel>(() => detectDetail(), []);
   const norm = useMemo(() => normalizePolygon(polygon), [polygon]);
   const layout = useMemo(
-    () => (norm.valid ? buildLayout(mode, norm.bounds, norm.localCoords) : null),
-    [mode, norm],
+    () => (norm.valid ? buildLayout(mode, norm.bounds, norm.localCoords, detail) : null),
+    [mode, norm, detail],
   );
 
   // Convert local meters to lng/lat
@@ -89,6 +104,7 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
     if (!containerRef.current || tokenLoading || !token || !norm.valid) return;
     mapboxgl.accessToken = token;
 
+    const isLow = detail === 'low';
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: 'mapbox://styles/mapbox/satellite-streets-v12',
@@ -96,23 +112,55 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
       zoom: 13.5,
       pitch: 0,
       bearing: 0,
+      maxPitch: 75,
       attributionControl: false,
       interactive: true,
-      antialias: true,
+      antialias: !isLow,        // disable AA on mobile for perf
+      cooperativeGestures: false,
+      dragRotate: true,
+      pitchWithRotate: true,
+      touchPitch: true,
+      touchZoomRotate: true,
+      fadeDuration: isLow ? 0 : 300,
     });
     mapRef.current = map;
+    // Cursor hint that the scene is grabbable
+    if (containerRef.current) containerRef.current.style.cursor = 'grab';
 
     map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
+    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true, showCompass: true }), 'bottom-left');
+
+    // Pause cinematic oscillation while user interacts
+    const markInteracting = () => {
+      userInteractingRef.current = true;
+      lastInteractionRef.current = performance.now();
+      if (containerRef.current) containerRef.current.style.cursor = 'grabbing';
+    };
+    const markIdle = () => {
+      userInteractingRef.current = false;
+      lastInteractionRef.current = performance.now();
+      if (containerRef.current) containerRef.current.style.cursor = 'grab';
+    };
+    map.on('mousedown', markInteracting);
+    map.on('touchstart', markInteracting);
+    map.on('dragstart', markInteracting);
+    map.on('zoomstart', markInteracting);
+    map.on('rotatestart', markInteracting);
+    map.on('mouseup', markIdle);
+    map.on('touchend', markIdle);
+    map.on('dragend', markIdle);
+    map.on('zoomend', markIdle);
+    map.on('rotateend', markIdle);
 
     map.on('load', () => {
-      // Terrain
+      // Terrain — lighter on mobile to reduce DEM tile cost
       map.addSource('mapbox-dem', {
         type: 'raster-dem',
         url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
         tileSize: 512,
-        maxzoom: 14,
+        maxzoom: isLow ? 12 : 14,
       });
-      map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.3 });
+      map.setTerrain({ source: 'mapbox-dem', exaggeration: isLow ? 1.0 : 1.3 });
 
       // Sky
       map.addLayer({
@@ -194,16 +242,26 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
           if (mapRef.current) animateBuildings(mapRef.current, buildingsGeoJSON, 1800);
         }, 4600);
 
-        // Subtle bearing oscillation loop
-        let baseBearing = -25;
-        let osc = 0;
-        const oscillate = () => {
-          if (!mapRef.current || mapRef.current._removed) return;
-          osc += 0.005;
-          mapRef.current.setBearing(baseBearing + Math.sin(osc) * 4);
-          animFrameRef.current = requestAnimationFrame(oscillate);
-        };
-        setTimeout(() => { oscillate(); }, 5200);
+        // Subtle bearing oscillation — pauses while user interacts and
+        // resumes 4s after the last interaction. Skipped on low-detail.
+        if (!isLow) {
+          const baseBearing = -25;
+          let osc = 0;
+          const IDLE_RESUME_MS = 4000;
+          const oscillate = () => {
+            const m = mapRef.current;
+            if (!m || (m as unknown as { _removed?: boolean })._removed) return;
+            const sinceUser = performance.now() - lastInteractionRef.current;
+            const userActive =
+              userInteractingRef.current || sinceUser < IDLE_RESUME_MS;
+            if (!userActive) {
+              osc += 0.005;
+              m.setBearing(baseBearing + Math.sin(osc) * 4);
+            }
+            animFrameRef.current = requestAnimationFrame(oscillate);
+          };
+          setTimeout(() => { oscillate(); }, 5200);
+        }
       }
     });
 

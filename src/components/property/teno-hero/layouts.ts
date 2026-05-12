@@ -16,7 +16,15 @@ import {
 } from './buildingPrimitives';
 
 export type LayoutType = 'packing' | 'conjunto';
+export type DetailLevel = 'low' | 'med' | 'high';
 export type { BuildingPart };
+
+/** Roof step counts per detail tier — directly drives draw call count. */
+const ROOF_STEPS: Record<DetailLevel, { house: number; warehouse: number }> = {
+  low:  { house: 2, warehouse: 2 },  // mobile / reduced motion
+  med:  { house: 3, warehouse: 3 },  // tablet
+  high: { house: 5, warehouse: 6 },  // desktop
+};
 
 export interface LayoutBuilding {
   id: string;
@@ -126,7 +134,9 @@ const mainAxisAngle = (poly: [number, number][]): number => {
 export function buildPackingLayout(
   bounds: PolygonBounds,
   poly: [number, number][],
+  detail: DetailLevel = 'high',
 ): LayoutResult {
+  const steps = ROOF_STEPS[detail];
   const buildings: LayoutBuilding[] = [];
   const rot = mainAxisAngle(poly);
   const cosR = Math.cos(rot), sinR = Math.sin(rot);
@@ -189,6 +199,7 @@ export function buildPackingLayout(
           baseHeight: 7.5,
           ridgeHeight: 3.2,
           withSkylight,
+          steps: steps.warehouse,
         }),
       });
     }
@@ -268,7 +279,9 @@ export function buildPackingLayout(
 export function buildConjuntoLayout(
   bounds: PolygonBounds,
   poly: [number, number][],
+  detail: DetailLevel = 'high',
 ): LayoutResult {
+  const steps = ROOF_STEPS[detail];
   const buildings: LayoutBuilding[] = [];
   const rot = mainAxisAngle(poly);
   const cosR = Math.cos(rot), sinR = Math.sin(rot);
@@ -322,6 +335,7 @@ export function buildConjuntoLayout(
           wallColor: wall,
           roofColor: roof,
           withChimney: id % 3 === 0,
+          steps: steps.house,
         }),
       });
     }
@@ -398,8 +412,9 @@ export function buildLayout(
   type: LayoutType,
   bounds: PolygonBounds,
   poly: [number, number][],
+  detail: DetailLevel = 'high',
 ): LayoutResult {
   return type === 'packing'
-    ? buildPackingLayout(bounds, poly)
-    : buildConjuntoLayout(bounds, poly);
+    ? buildPackingLayout(bounds, poly, detail)
+    : buildConjuntoLayout(bounds, poly, detail);
 }
