@@ -348,23 +348,68 @@ export function buildConjuntoLayout(
 
   let id = 0;
 
-  // ── Streets (horizontal corridors along U) ─────────────────────────
+  // ── Streets (horizontal corridors along U) + sidewalks + street trees ─
+  const streetTreeColors = ['#15803d', '#166534', '#16a34a', '#22c55e'];
   for (let s = 0; s <= nBlocks; s++) {
     const sv = startV + s * (blockV + calleV) + calleV / 2;
     const [sx, sy] = toLocal(pminU + usableU / 2, sv);
-    const calleCand = rect(sx, sy, houseStripU + perim * 1.2, calleV, rot);
+    const calleW = houseStripU + perim * 1.2;
+    const calleCand = rect(sx, sy, calleW, calleV, rot);
     if (rectFitsInside(calleCand, poly, 1)) {
+      const parts: BuildingPart[] = [
+        { coords: calleCand, base: 0, height: 0.18, color: '#1f2937' },
+        // línea central discontinua simulada con segmentos
+      ];
+      // Línea central segmentada
+      const dashCount = Math.max(6, Math.floor(houseStripU / 4));
+      const dashLen = houseStripU / (dashCount * 2);
+      for (let d = 0; d < dashCount; d++) {
+        const du = startU + (d * 2 + 0.5) * dashLen + houseStripU * 0;
+        const dCu = startU - houseStripU / 2 + (d * 2 + 0.5) * dashLen * 2;
+        const [dx, dy] = toLocal(dCu, sv);
+        parts.push({
+          coords: rect(dx, dy, dashLen, 0.22, rot),
+          base: 0.18, height: 0.22, color: '#fde047',
+        });
+      }
+      // Aceras a ambos lados
+      const aceraOffset = calleV / 2 + aceraV / 2;
+      for (const sign of [-1, 1] as const) {
+        const [ax, ay] = toLocal(pminU + usableU / 2, sv + sign * aceraOffset);
+        const aceraCand = rect(ax, ay, calleW * 0.96, aceraV * 0.9, rot);
+        if (rectFitsInside(aceraCand, poly, 0.5)) {
+          parts.push({ coords: aceraCand, base: 0, height: 0.22, color: '#cbd5e1' });
+        }
+      }
       buildings.push({
         id: `calle-${s}`,
         type: 'calle',
         label: s === 0 || s === nBlocks ? 'Calle perimetral' : 'Calle interior',
         cx: sx, cy: sy,
-        parts: [
-          { coords: calleCand, base: 0, height: 0.18, color: '#1e293b' },
-          // línea central pintada
-          { coords: rect(sx, sy, houseStripU * 0.92, 0.25, rot), base: 0.18, height: 0.22, color: '#fde047' },
-        ],
+        parts,
       });
+    }
+
+    // Arbolado urbano: árboles entre veredas y calzada, alternando
+    const treeOffset = calleV / 2 + aceraV * 0.15;
+    for (let c = 0; c < nCols; c++) {
+      if ((c + s) % 2 !== 0) continue; // alternar para no saturar
+      const cu = startU + c * stepU + casaU / 2;
+      for (const sign of [-1, 1] as const) {
+        const [tx, ty] = toLocal(cu, sv + sign * treeOffset);
+        const trunkCand = rect(tx, ty, 0.6, 0.6, 0);
+        const canopyCand = rect(tx, ty, 2.2, 2.2, 0);
+        if (!rectFitsInside(canopyCand, poly, 0.3)) continue;
+        buildings.push({
+          id: `arbol-c${s}-${c}-${sign}`,
+          type: 'arbol',
+          cx: tx, cy: ty,
+          parts: [
+            { coords: trunkCand, base: 0, height: 1.8, color: '#78350f' },
+            { coords: canopyCand, base: 1.8, height: 4.2, color: streetTreeColors[(c + s) % streetTreeColors.length] },
+          ],
+        });
+      }
     }
   }
 
@@ -392,7 +437,7 @@ export function buildConjuntoLayout(
         const wall = wallColors[variant];
         const roof = roofColors[(variant + rowIdx) % roofColors.length];
 
-        // Antejardín (césped frente a la casa)
+        // Antejardín (césped frente a la casa) + acceso vehicular pavimentado
         const yardV = aceraV + frontYardV;
         const yardCv = rowIdx === 0
           ? rowV - casaV / 2 - yardV / 2
@@ -400,11 +445,19 @@ export function buildConjuntoLayout(
         const [yx, yy] = toLocal(cu, yardCv);
         const yardCand = rect(yx, yy, casaU * 0.95, yardV * 0.85, rot);
         if (rectFitsInside(yardCand, poly, 1)) {
+          // Driveway: franja pavimentada al costado del antejardín
+          const driveU = casaU * 0.32;
+          const driveCu = cu + (variant % 2 === 0 ? 1 : -1) * (casaU * 0.28);
+          const [dx, dy] = toLocal(driveCu, yardCv);
+          const driveCand = rect(dx, dy, driveU, yardV * 0.85, rot);
           buildings.push({
             id: `jardin-${id}`,
             type: 'jardin',
             cx: yx, cy: yy,
-            parts: [{ coords: yardCand, base: 0, height: 0.18, color: '#4ade80' }],
+            parts: [
+              { coords: yardCand, base: 0, height: 0.18, color: '#4ade80' },
+              { coords: driveCand, base: 0, height: 0.20, color: '#94a3b8' },
+            ],
           });
         }
 
@@ -425,16 +478,34 @@ export function buildConjuntoLayout(
       }
     }
 
-    // Patio trasero compartido (franja verde en el centro del bloque)
+    // Patio trasero compartido (franja verde en el centro del bloque) + arbolado
     const backCv = blockBaseV + blockV / 2;
     const [bx, by] = toLocal(pminU + usableU / 2, backCv);
     const backCand = rect(bx, by, houseStripU * 0.95, backYardV * 0.7, rot);
     if (rectFitsInside(backCand, poly, 2)) {
+      const backParts: BuildingPart[] = [
+        { coords: backCand, base: 0, height: 0.15, color: '#86efac' },
+      ];
+      // Árboles dispersos en el patio trasero
+      const treeCols = Math.max(3, Math.floor(nCols * 0.6));
+      for (let t = 0; t < treeCols; t++) {
+        const cu = startU + ((t + 0.5) / treeCols) * houseStripU;
+        const jitterV = ((t * 13) % 5 - 2) * 0.5;
+        const [tx, ty] = toLocal(cu, backCv + jitterV);
+        const trunk = rect(tx, ty, 0.55, 0.55, 0);
+        const canopy = rect(tx, ty, 1.9 + (t % 2) * 0.6, 1.9 + (t % 2) * 0.6, 0);
+        if (!rectFitsInside(canopy, poly, 0.3)) continue;
+        backParts.push({ coords: trunk, base: 0.15, height: 1.6, color: '#78350f' });
+        backParts.push({
+          coords: canopy, base: 1.6, height: 3.8 + (t % 3) * 0.8,
+          color: ['#15803d', '#166534', '#16a34a'][t % 3],
+        });
+      }
       buildings.push({
         id: `backyards-${b}`,
         type: 'jardin',
         cx: bx, cy: by,
-        parts: [{ coords: backCand, base: 0, height: 0.15, color: '#86efac' }],
+        parts: backParts,
       });
     }
   }
