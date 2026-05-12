@@ -16,7 +16,6 @@ import {
 } from './buildingPrimitives';
 
 export type LayoutType = 'packing' | 'conjunto';
-export type LayoutType = 'packing' | 'conjunto';
 export type DetailLevel = 'low' | 'med' | 'high';
 export type { BuildingPart };
 
