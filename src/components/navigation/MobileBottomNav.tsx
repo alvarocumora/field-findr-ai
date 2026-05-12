@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Compass, Heart, Search, MapPin, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
