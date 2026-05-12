@@ -42,12 +42,15 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
   const [mode, setMode] = useState<LayoutType>('packing');
   const [mapReady, setMapReady] = useState(false);
   const animFrameRef = useRef<number | null>(null);
+  const userInteractingRef = useRef(false);
+  const lastInteractionRef = useRef(0);
   const { token, loading: tokenLoading } = useMapboxToken();
 
+  const detail = useMemo<DetailLevel>(() => detectDetail(), []);
   const norm = useMemo(() => normalizePolygon(polygon), [polygon]);
   const layout = useMemo(
-    () => (norm.valid ? buildLayout(mode, norm.bounds, norm.localCoords) : null),
-    [mode, norm],
+    () => (norm.valid ? buildLayout(mode, norm.bounds, norm.localCoords, detail) : null),
+    [mode, norm, detail],
   );
 
   // Convert local meters to lng/lat
