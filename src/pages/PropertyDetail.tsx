@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import GeoEnrichmentPanel from '@/components/map/GeoEnrichmentPanel';
 import InvestmentScoreWidget from '@/components/property/InvestmentScoreWidget';
 import ConceptRenderGallery from '@/components/property/ConceptRenderGallery';
@@ -22,12 +23,14 @@ import ContactForm from '@/components/property/ContactForm';
 import { ShareButtons } from '@/components/social/ShareButtons';
 import VisitRequestDialog from '@/components/property/VisitRequestDialog';
 import { AIInvestmentCopilot } from '@/components/ai/AIInvestmentCopilot';
+import { VisualScenarioViewer } from '@/components/visual-scenarios';
+import { mockVisualScenarios } from '@/data/mockVisualScenarios';
 import { generatePropertyPdf } from '@/lib/propertyPdfGenerator';
 import { cn } from '@/lib/utils';
 import { useSEO, buildPropertyJsonLd } from '@/hooks/useSEO';
+import type { VisualScenario } from '@/types/visualScenario';
 import {
   Heart,
-  Share2,
   MapPin,
   Ruler,
   FileText,
@@ -44,7 +47,6 @@ import {
   Brain,
   ChevronLeft,
   MessageCircle,
-  Phone,
   TrendingUp,
   Box,
 } from 'lucide-react';
@@ -81,6 +83,7 @@ const PropertyDetail = () => {
   const isListingPublished = listing?.status === 'active';
   const showPackingDesigner =
     (hasPackingTag || isTeno) && (isListingPublished || isListingOwner);
+  const visualScenarios = isTeno ? mockVisualScenarios : [];
 
   const propertyJsonLd = listing ? buildPropertyJsonLd({
     id: listing.id,
@@ -161,6 +164,18 @@ const PropertyDetail = () => {
       url: window.location.href,
     }).catch(() => {
       navigator.clipboard.writeText(window.location.href);
+    });
+  };
+
+  const handleScenarioAnalyze = (scenario: VisualScenario) => {
+    toast.info('Análisis IA de escenario pendiente de integración', {
+      description: `Escenario seleccionado: ${scenario.title}`,
+    });
+  };
+
+  const handleScenarioExportPdf = (scenario: VisualScenario) => {
+    toast.info('PDF de escenario pendiente de integración', {
+      description: `Ficha solicitada: ${scenario.title}`,
     });
   };
 
@@ -348,6 +363,16 @@ const PropertyDetail = () => {
                   <ConceptRenderGallery />
                 </CardContent>
               </Card>
+            )}
+
+            {/* Visual Scenarios — conditional preview */}
+            {visualScenarios.length > 0 && (
+              <VisualScenarioViewer
+                scenarios={visualScenarios}
+                title="Escenarios visuales sobre este terreno"
+                onAnalyze={handleScenarioAnalyze}
+                onExportPdf={handleScenarioExportPdf}
+              />
             )}
 
             {/* Diseñador 3D Industrial — visible para listings activos con tag "packing" */}
