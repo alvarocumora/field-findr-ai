@@ -335,6 +335,7 @@ export function buildConjuntoLayout(
           wallColor: wall,
           roofColor: roof,
           withChimney: id % 3 === 0,
+          steps: steps.house,
         }),
       });
     }
