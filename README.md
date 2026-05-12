@@ -1,73 +1,173 @@
-# Welcome to your Lovable project
+# OfertaTerrenos / Field Findr AI
 
-## Project info
+Plataforma PropTech de inteligencia territorial para visualizar, analizar y comercializar terrenos, parcelas, predios industriales y oportunidades inmobiliarias mediante mapas, IA y escenarios visuales montados sobre imágenes reales del terreno.
 
-**URL**: https://lovable.dev/projects/95b244b9-9214-47ff-bbb3-35e26af50af7
+## Propuesta de valor
 
-## How can I edit this code?
+OfertaTerrenos no muestra solo un terreno: muestra el potencial de desarrollo sobre el activo.
 
-There are several ways of editing your application.
+La plataforma combina marketplace de terrenos, visualización cartográfica, búsqueda conversacional con IA, paneles para corredores, fichas comerciales descargables, gestión de leads, CRM y escenarios visuales como packing industrial, loteo habitacional, subdivisión, bodegaje, proyecto agrícola, turismo o energía.
 
-**Use Lovable**
+## Stack técnico
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/95b244b9-9214-47ff-bbb3-35e26af50af7) and start prompting.
+- Vite
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn-ui / Radix UI
+- Supabase Auth, Database y Edge Functions
+- Mapbox GL
+- Turf.js
+- React Query
+- Zustand
+- Framer Motion
+- PWA con vite-plugin-pwa
+- jsPDF / JSZip para documentos y exportables
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Instalación local
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+git clone https://github.com/alvarocumora/field-findr-ai.git
+cd field-findr-ai
+npm install
+cp .env.example .env.local
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+El servidor local usa Vite en el puerto configurado por `vite.config.ts`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Variables de entorno
 
-**Use GitHub Codespaces**
+Crear un archivo `.env.local` a partir de `.env.example`.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Variables principales:
 
-## What technologies are used for this project?
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `VITE_MAPBOX_TOKEN`
 
-This project is built with:
+`VITE_MAPBOX_TOKEN` es fallback. La app intenta obtener el token mediante la Edge Function `get-mapbox-token`.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Edge Functions esperadas
 
-## How can I deploy this project?
+### `get-mapbox-token`
 
-Simply open [Lovable](https://lovable.dev/projects/95b244b9-9214-47ff-bbb3-35e26af50af7) and click on Share -> Publish.
+Devuelve un token público válido de Mapbox para inicializar mapas y experiencias cartográficas.
 
-## Can I connect a custom domain to my Lovable project?
+### `ai-natural-search`
 
-Yes, you can!
+Procesa búsquedas en lenguaje natural y devuelve resultados inmobiliarios junto con una explicación generada por IA.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Payload conceptual:
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+```json
+{
+  "query": "Terreno industrial cerca de Ruta 5 en Maule"
+}
+```
+
+Respuesta conceptual:
+
+```json
+{
+  "explanation": "Resumen generado por IA",
+  "results": [
+    {
+      "id": "property-id",
+      "title": "Terreno industrial premium",
+      "location": "Maule, Chile",
+      "price": 20000,
+      "area_m2": 70000,
+      "type": "industrial"
+    }
+  ]
+}
+```
+
+## Scripts
+
+```sh
+npm run dev
+npm run build
+npm run build:dev
+npm run lint
+npm run preview
+```
+
+## Rutas principales
+
+### Públicas
+
+- `/`
+- `/explorar`
+- `/propiedad/:id`
+- `/proyecto/:id`
+- `/pricing`
+- `/tools`
+- `/search`
+- `/oportunidades`
+- `/blog`
+
+### Comprador
+
+- `/buyer/home`
+- `/favoritos`
+- `/mi-terreno`
+- `/profile`
+- `/subscription`
+
+### Asesor / corredor
+
+- `/asesor/dashboard`
+- `/asesor/listings`
+- `/asesor/leads`
+- `/asesor/projects`
+- `/asesor/lots`
+- `/asesor/crm`
+- `/asesor/sales`
+- `/asesor/reservations`
+- `/asesor/reports`
+
+### Admin
+
+- `/admin/dashboard`
+- `/admin/users`
+- `/admin/agents`
+- `/admin/approvals`
+- `/admin/documents`
+- `/admin/audit`
+
+## Seguridad y roles
+
+La autenticación se gestiona con Supabase Auth.
+
+Roles de aplicación:
+
+- `buyer`
+- `agent`
+- `admin`
+
+Las rutas de dashboard usan validación en frontend, pero la seguridad real debe estar reforzada con RLS policies en Supabase.
+
+## Roadmap inmediato
+
+1. Fortalecer documentación, variables de entorno y QA.
+2. Separar rutas por dominio para reducir riesgo de regresión.
+3. Crear módulo formal de escenarios visuales:
+   - industrial / packing;
+   - subdivisión habitacional;
+   - parcelación;
+   - agrícola;
+   - energía solar;
+   - turismo / lodge;
+   - bodegaje / logística.
+4. Agregar generación de ficha PDF por escenario.
+5. Integrar IA para análisis de cabida, oportunidad, restricciones y potencial comercial.
+
+## Lovable
+
+Este proyecto está conectado a Lovable. Los cambios hechos desde Lovable se sincronizan automáticamente con este repositorio.
+
+Proyecto Lovable:
+
+https://lovable.dev/projects/95b244b9-9214-47ff-bbb3-35e26af50af7
