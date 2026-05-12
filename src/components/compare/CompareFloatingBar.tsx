@@ -16,7 +16,8 @@ const CompareFloatingBar = memo(() => {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+        className="fixed bottom-safe-nav left-1/2 -translate-x-1/2"
+        style={{ zIndex: 'var(--z-fab)' }}
       >
         <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/50 shadow-2xl shadow-primary/10">
           <Scale className="h-5 w-5 text-primary flex-shrink-0" />

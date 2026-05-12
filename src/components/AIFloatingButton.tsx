@@ -60,7 +60,8 @@ const AIFloatingButton = () => {
       {/* Floating Button */}
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-medium bg-primary hover:bg-primary/90 z-50"
+        className="fixed right-4 md:right-6 bottom-safe-nav h-14 w-14 rounded-full shadow-medium bg-primary hover:bg-primary/90"
+        style={{ zIndex: 'var(--z-fab)' }}
         size="icon"
       >
         <Sparkles className="h-6 w-6" />

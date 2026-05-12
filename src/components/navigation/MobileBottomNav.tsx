@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Compass, Heart, Search, MapPin, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,6 +15,14 @@ const navItems = [
 const MobileBottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Publish bottom-nav height so FABs can stack above it via .bottom-safe-nav
+  useEffect(() => {
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+    if (!isMobile) return;
+    document.documentElement.style.setProperty('--bottom-nav-h', '4rem');
+    return () => { document.documentElement.style.setProperty('--bottom-nav-h', '0rem'); };
+  }, []);
 
   const handleNav = (item: typeof navItems[0]) => {
     if ('vibrate' in navigator) {
@@ -32,7 +41,10 @@ const MobileBottomNav = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-lg border-t border-border/50 safe-area-bottom">
+    <nav
+      className="fixed bottom-0 left-0 right-0 md:hidden bg-background/95 backdrop-blur-lg border-t border-border/50 safe-area-bottom"
+      style={{ zIndex: 'var(--z-header)' }}
+    >
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const active = isActive(item.path);

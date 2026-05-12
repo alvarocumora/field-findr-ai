@@ -128,7 +128,12 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
     if (containerRef.current) containerRef.current.style.cursor = 'grab';
 
     map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
-    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true, showCompass: true }), 'bottom-left');
+    // Right-side stack: nav control sits above attribution. Avoids colliding
+    // with the bottom info bar (badges + legend on the left side).
+    map.addControl(
+      new mapboxgl.NavigationControl({ visualizePitch: true, showCompass: true, showZoom: true }),
+      'bottom-right',
+    );
 
     // Pause cinematic oscillation while user interacts
     const markInteracting = () => {
@@ -325,13 +330,19 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
       )}
 
       {/* Top-left: layout toggle */}
-      <div className="absolute top-3 left-3 md:top-4 md:left-4 z-20">
+      <div
+        className="absolute top-3 left-3 md:top-4 md:left-4"
+        style={{ zIndex: 'var(--z-map-overlay)' }}
+      >
         <HeroLayoutToggle value={mode} onChange={setMode} />
       </div>
 
       {/* Top-right: open designer CTA */}
       {canDesign && onOpenDesigner && (
-        <div className="absolute top-3 right-3 md:top-4 md:right-4 z-20">
+        <div
+          className="absolute top-3 right-3 md:top-4 md:right-4"
+          style={{ zIndex: 'var(--z-map-overlay)' }}
+        >
           <Button
             size="sm"
             onClick={onOpenDesigner}
@@ -344,8 +355,12 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
         </div>
       )}
 
-      {/* Bottom gradient + info bar */}
-      <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent pt-16 pb-3 px-4 md:px-5 pointer-events-none">
+      {/* Bottom gradient + info bar — reserves right padding for the
+          navigation control stack at bottom-right (~44px wide). */}
+      <div
+        className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent pt-16 pb-3 pl-4 pr-16 md:pl-5 md:pr-20 pointer-events-none"
+        style={{ zIndex: 'var(--z-content)' }}
+      >
         <div className="flex flex-wrap items-end justify-between gap-3 pointer-events-auto">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
