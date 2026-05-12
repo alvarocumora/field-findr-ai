@@ -8,7 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import HeroLayoutToggle from './HeroLayoutToggle';
-import { buildLayout, type LayoutType, type LayoutBuilding } from './layouts';
+import { buildLayout, type LayoutType, type LayoutBuilding, type DetailLevel } from './layouts';
+
+/** Pick detail tier based on device + user motion preference. */
+function detectDetail(): DetailLevel {
+  if (typeof window === 'undefined') return 'high';
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 'low';
+  const w = window.innerWidth;
+  // Heuristic: coarse pointer (touch) + small viewport = low; tablet = med
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
+  if (coarse && w < 640) return 'low';
+  if (w < 1024) return 'med';
+  return 'high';
+}
 
 interface Props {
   polygon: number[][];
