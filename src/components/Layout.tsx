@@ -28,8 +28,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* Main Content Area */}
       <div className={`flex-1 flex flex-col min-h-screen transition-all duration-200 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-60'}`}>
         {/* Mobile Header */}
-        <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur md:hidden">
-          <div className="flex h-14 items-center justify-between px-4">
+        <header className="sticky top-0 w-full border-b bg-background/95 backdrop-blur md:hidden" style={{ zIndex: 'var(--z-header)' }}>
+          <div className="flex h-[var(--header-h)] items-center justify-between px-4">
             <Link to="/">
               <Logo size="sm" />
             </Link>
