@@ -11,21 +11,115 @@
  * GLB files in `/public/models/quaternius/`.
  */
 import * as THREE from 'three';
-import type { LayoutBuilding, BuildingPart } from './layouts';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import type { LayoutBuilding } from './layouts';
 
-// ─── Asset registry (drop GLBs here later) ─────────────────────────
-// When a URL is set, the overlay will load the GLTF and instance it instead
-// of generating procedural geometry. CC0 assets recommended:
-// https://quaternius.com/packs/ultimatebuildings.html
-// https://quaternius.com/packs/ultimatenature.html
+// ─── Asset registry (drop GLBs here) ───────────────────────────────
+// Default paths assume GLB files placed at /public/models/quaternius/.
+// Pull from https://quaternius.com/packs/ultimatebuildings.html (CC0)
+// and  https://quaternius.com/packs/ultimatenature.html (CC0).
+// Set a key to `undefined` (or delete it) to force the procedural fallback
+// for that asset class.
+//
+// Convention for casa_a/casa_b: A and B are visual variants picked
+// alternately to break the row-of-clones look. Same for tree_pine/oak.
 export const MODEL_REGISTRY: Record<string, string | undefined> = {
-  casa_a: undefined,        // e.g. '/models/quaternius/house_small.glb'
-  casa_b: undefined,
-  galpon: undefined,
-  tree_pine: undefined,
-  tree_oak: undefined,
-  street_lamp: undefined,
+  casa_a: '/models/quaternius/house_a.glb',
+  casa_b: '/models/quaternius/house_b.glb',
+  galpon: '/models/quaternius/warehouse.glb',
+  tree_pine: '/models/quaternius/tree_pine.glb',
+  tree_oak: '/models/quaternius/tree_oak.glb',
+  street_lamp: '/models/quaternius/street_lamp.glb',
 };
+
+/** Override the registry at runtime (e.g. host assets on a CDN). */
+export function setModelRegistry(partial: Partial<typeof MODEL_REGISTRY>) {
+  Object.assign(MODEL_REGISTRY, partial);
+}
+
+// ─── GLTF loader + cache ────────────────────────────────────────────
+// Each URL is fetched once. Failed URLs are remembered so we don't retry
+// every render — the procedural fallback takes over silently.
+const gltfCache = new Map<string, Promise<THREE.Group | null>>();
+const gltfLoader = new GLTFLoader();
+
+function loadGLTF(url: string): Promise<THREE.Group | null> {
+  let p = gltfCache.get(url);
+  if (p) return p;
+  p = new Promise<THREE.Group | null>((resolve) => {
+    gltfLoader.load(
+      url,
+      (gltf) => {
+        // Quaternius GLBs are Y-up; Threebox/Mapbox needs Z-up.
+        // We bake the rotation into a wrapping group so per-instance clones
+        // can apply their own Z rotation cleanly.
+        const wrap = new THREE.Group();
+        wrap.rotation.x = Math.PI / 2;
+        wrap.add(gltf.scene);
+        resolve(wrap);
+      },
+      undefined,
+      (err) => {
+        // Network 404 / asset missing → silent fallback to procedural
+        if (typeof console !== 'undefined') {
+          console.info('[threebox] GLTF not available, using procedural:', url, err?.message ?? '');
+        }
+        resolve(null);
+      },
+    );
+  });
+  gltfCache.set(url, p);
+  return p;
+}
+
+/**
+ * Clone a preloaded GLTF group, normalize its bounding box so it sits with
+ * its bottom at z=0 and centered on (x=0, y=0), then scale uniformly to fit
+ * a target footprint of `targetW × targetH` (meters). Aspect is preserved
+ * by using the larger of the two scale factors so the model never looks
+ * squashed — small overflows are acceptable since visual realism wins.
+ */
+function cloneAndFit(
+  template: THREE.Group,
+  targetW: number,
+  targetH: number,
+  rotZ: number,
+): THREE.Group {
+  const inst = template.clone(true);
+  // Materials shared (cheap clones); only geometry topology is shared.
+  const wrapper = new THREE.Group();
+  wrapper.add(inst);
+  // Apply normalized rotation BEFORE measuring bbox
+  const bbox = new THREE.Box3().setFromObject(wrapper);
+  const size = new THREE.Vector3();
+  bbox.getSize(size);
+  const center = new THREE.Vector3();
+  bbox.getCenter(center);
+  // After the wrapper.rotation.x baked into loadGLTF, model is Z-up.
+  // size.x = width along X, size.y = depth along Y, size.z = height along Z.
+  const modelW = Math.max(0.01, size.x);
+  const modelD = Math.max(0.01, size.y);
+  // Pick the larger of (w/modelW, h/modelD) so the building fills its plot.
+  // For house meshes whose long side ≈ targetW, this gives a natural fit.
+  const sx = targetW / modelW;
+  const sy = targetH / modelD;
+  const s = Math.max(sx, sy) * 0.95; // 5% margin to avoid eaves overshoot
+  inst.scale.setScalar(s);
+  // Re-measure after scale to translate bottom to z=0 + center on XY
+  const bbox2 = new THREE.Box3().setFromObject(inst);
+  const c2 = new THREE.Vector3();
+  bbox2.getCenter(c2);
+  inst.position.x -= c2.x;
+  inst.position.y -= c2.y;
+  inst.position.z -= bbox2.min.z;
+  wrapper.rotation.z = rotZ;
+  return wrapper;
+}
+
+/** Resolve an asset URL by key; returns null if not registered. */
+function modelUrl(key: keyof typeof MODEL_REGISTRY): string | null {
+  return MODEL_REGISTRY[key] ?? null;
+}
 
 // ─── Material cache (re-use across all buildings) ───────────────────
 const matCache = new Map<string, THREE.MeshStandardMaterial>();
