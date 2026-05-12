@@ -356,7 +356,8 @@ function animateBuildings(
     }
     if (!map.getLayer('teno-bldg-layer')) return;
 
-    // Height expression: per-feature based on order
+    // Height expression: per-feature based on order. Interpolate from base→height
+    // so roof parts (with base>0) don't invert.
     map.setPaintProperty('teno-bldg-layer', 'fill-extrusion-height', [
       'let',
       'progress',
@@ -369,7 +370,11 @@ function animateBuildings(
           ['/', ['-', elapsed, ['*', ['get', 'order'], perBuildingDelay]], riseDuration],
         ],
       ],
-      ['*', ['get', 'height'], ['var', 'progress']],
+      [
+        '+',
+        ['get', 'base'],
+        ['*', ['-', ['get', 'height'], ['get', 'base']], ['var', 'progress']],
+      ],
     ] as never);
 
     map.setPaintProperty('teno-bldg-layer', 'fill-extrusion-opacity', Math.min(1, elapsed / 400) * 0.92);
