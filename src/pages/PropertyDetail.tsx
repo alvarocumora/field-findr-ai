@@ -3,6 +3,8 @@ import GeoEnrichmentPanel from '@/components/map/GeoEnrichmentPanel';
 import InvestmentScoreWidget from '@/components/property/InvestmentScoreWidget';
 import ConceptRenderGallery from '@/components/property/ConceptRenderGallery';
 import ListingDesigner3DDialog from '@/components/property/ListingDesigner3DDialog';
+import { lazy, Suspense } from 'react';
+const TenoCinematicHero = lazy(() => import('@/components/property/teno-hero/TenoCinematicHero'));
 import { useParams, Link } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import { useListing, useListings, formatPrice, formatArea, getListingTypeLabel, getLegalStatusLabel } from '@/hooks/useListings';
