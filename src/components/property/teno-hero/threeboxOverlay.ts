@@ -307,10 +307,11 @@ function buildHouse(b: LayoutBuilding, gltfTemplate?: THREE.Group | null): THREE
   return g;
 }
 
-function buildWarehouse(b: LayoutBuilding): THREE.Group | null {
+function buildWarehouse(b: LayoutBuilding, gltfTemplate?: THREE.Group | null): THREE.Group | null {
   const wall = b.parts[0];
   if (!wall) return null;
   const info = rectInfoFromCoords(wall.coords);
+  if (gltfTemplate) return cloneAndFit(gltfTemplate, info.w, info.h, info.rot);
   const baseHeight = wall.height;
   const ridgeHeight = Math.max(2.0, (b.parts.find((p) => p.base > baseHeight + 0.2)?.height ?? baseHeight + 2.5) - baseHeight);
   const wallColor = wall.color;
