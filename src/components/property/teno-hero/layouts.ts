@@ -348,23 +348,68 @@ export function buildConjuntoLayout(
 
   let id = 0;
 
-  // ── Streets (horizontal corridors along U) ─────────────────────────
+  // ── Streets (horizontal corridors along U) + sidewalks + street trees ─
+  const streetTreeColors = ['#15803d', '#166534', '#16a34a', '#22c55e'];
   for (let s = 0; s <= nBlocks; s++) {
     const sv = startV + s * (blockV + calleV) + calleV / 2;
     const [sx, sy] = toLocal(pminU + usableU / 2, sv);
-    const calleCand = rect(sx, sy, houseStripU + perim * 1.2, calleV, rot);
+    const calleW = houseStripU + perim * 1.2;
+    const calleCand = rect(sx, sy, calleW, calleV, rot);
     if (rectFitsInside(calleCand, poly, 1)) {
+      const parts: BuildingPart[] = [
+        { coords: calleCand, base: 0, height: 0.18, color: '#1f2937' },
+        // línea central discontinua simulada con segmentos
+      ];
+      // Línea central segmentada
+      const dashCount = Math.max(6, Math.floor(houseStripU / 4));
+      const dashLen = houseStripU / (dashCount * 2);
+      for (let d = 0; d < dashCount; d++) {
+        const du = startU + (d * 2 + 0.5) * dashLen + houseStripU * 0;
+        const dCu = startU - houseStripU / 2 + (d * 2 + 0.5) * dashLen * 2;
+        const [dx, dy] = toLocal(dCu, sv);
+        parts.push({
+          coords: rect(dx, dy, dashLen, 0.22, rot),
+          base: 0.18, height: 0.22, color: '#fde047',
+        });
+      }
+      // Aceras a ambos lados
+      const aceraOffset = calleV / 2 + aceraV / 2;
+      for (const sign of [-1, 1] as const) {
+        const [ax, ay] = toLocal(pminU + usableU / 2, sv + sign * aceraOffset);
+        const aceraCand = rect(ax, ay, calleW * 0.96, aceraV * 0.9, rot);
+        if (rectFitsInside(aceraCand, poly, 0.5)) {
+          parts.push({ coords: aceraCand, base: 0, height: 0.22, color: '#cbd5e1' });
+        }
+      }
       buildings.push({
         id: `calle-${s}`,
         type: 'calle',
         label: s === 0 || s === nBlocks ? 'Calle perimetral' : 'Calle interior',
         cx: sx, cy: sy,
-        parts: [
-          { coords: calleCand, base: 0, height: 0.18, color: '#1e293b' },
-          // línea central pintada
-          { coords: rect(sx, sy, houseStripU * 0.92, 0.25, rot), base: 0.18, height: 0.22, color: '#fde047' },
-        ],
+        parts,
       });
+    }
+
+    // Arbolado urbano: árboles entre veredas y calzada, alternando
+    const treeOffset = calleV / 2 + aceraV * 0.15;
+    for (let c = 0; c < nCols; c++) {
+      if ((c + s) % 2 !== 0) continue; // alternar para no saturar
+      const cu = startU + c * stepU + casaU / 2;
+      for (const sign of [-1, 1] as const) {
+        const [tx, ty] = toLocal(cu, sv + sign * treeOffset);
+        const trunkCand = rect(tx, ty, 0.6, 0.6, 0);
+        const canopyCand = rect(tx, ty, 2.2, 2.2, 0);
+        if (!rectFitsInside(canopyCand, poly, 0.3)) continue;
+        buildings.push({
+          id: `arbol-c${s}-${c}-${sign}`,
+          type: 'arbol',
+          cx: tx, cy: ty,
+          parts: [
+            { coords: trunkCand, base: 0, height: 1.8, color: '#78350f' },
+            { coords: canopyCand, base: 1.8, height: 4.2, color: streetTreeColors[(c + s) % streetTreeColors.length] },
+          ],
+        });
+      }
     }
   }
 
