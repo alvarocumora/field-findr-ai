@@ -437,7 +437,7 @@ export function buildConjuntoLayout(
         const wall = wallColors[variant];
         const roof = roofColors[(variant + rowIdx) % roofColors.length];
 
-        // Antejardín (césped frente a la casa)
+        // Antejardín (césped frente a la casa) + acceso vehicular pavimentado
         const yardV = aceraV + frontYardV;
         const yardCv = rowIdx === 0
           ? rowV - casaV / 2 - yardV / 2
@@ -445,11 +445,19 @@ export function buildConjuntoLayout(
         const [yx, yy] = toLocal(cu, yardCv);
         const yardCand = rect(yx, yy, casaU * 0.95, yardV * 0.85, rot);
         if (rectFitsInside(yardCand, poly, 1)) {
+          // Driveway: franja pavimentada al costado del antejardín
+          const driveU = casaU * 0.32;
+          const driveCu = cu + (variant % 2 === 0 ? 1 : -1) * (casaU * 0.28);
+          const [dx, dy] = toLocal(driveCu, yardCv);
+          const driveCand = rect(dx, dy, driveU, yardV * 0.85, rot);
           buildings.push({
             id: `jardin-${id}`,
             type: 'jardin',
             cx: yx, cy: yy,
-            parts: [{ coords: yardCand, base: 0, height: 0.18, color: '#4ade80' }],
+            parts: [
+              { coords: yardCand, base: 0, height: 0.18, color: '#4ade80' },
+              { coords: driveCand, base: 0, height: 0.20, color: '#94a3b8' },
+            ],
           });
         }
 
