@@ -173,16 +173,23 @@ export function buildPackingLayout(
       const cv = startV + r * stepV + galponWideV / 2;
       const [cx, cy] = toLocal(cu, cv);
 
-      // Build candidate corners (in local coords) and verify fit
+      // Verify both walls AND roof eaves fit (overhang ~0.9m)
       const candidate = rect(cx, cy, galponLongU, galponWideV, rot);
       if (!rectFitsInside(candidate, poly, 5)) continue;
+      if (!buildingFitsInside(cx, cy, galponLongU, galponWideV, rot, poly, 3, 0.9)) continue;
 
+      // Alternate skylight on every other galpón for variation
+      const withSkylight = ((c + r) % 2) === 0;
       buildings.push({
         id: `galpon-${id++}`,
         type: 'galpon',
         label: `Galpón ${id}`,
         cx, cy,
-        parts: gableRoof(cx, cy, galponLongU, galponWideV, rot, 7.5, 3.5, '#cbd5e1', '#475569'),
+        parts: warehouse(cx, cy, galponLongU, galponWideV, rot, {
+          baseHeight: 7.5,
+          ridgeHeight: 3.2,
+          withSkylight,
+        }),
       });
     }
   }
