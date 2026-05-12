@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import HeroLayoutToggle from './HeroLayoutToggle';
 import { buildLayout, type LayoutType, type LayoutBuilding, type DetailLevel } from './layouts';
+import { mountThreeboxOverlay, type ThreeboxHandle } from './threeboxOverlay';
 
 /** Pick detail tier based on device + user motion preference. */
 function detectDetail(): DetailLevel {
