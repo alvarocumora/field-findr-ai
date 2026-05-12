@@ -128,7 +128,12 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
     if (containerRef.current) containerRef.current.style.cursor = 'grab';
 
     map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
-    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true, showCompass: true }), 'bottom-left');
+    // Right-side stack: nav control sits above attribution. Avoids colliding
+    // with the bottom info bar (badges + legend on the left side).
+    map.addControl(
+      new mapboxgl.NavigationControl({ visualizePitch: true, showCompass: true, showZoom: true }),
+      'bottom-right',
+    );
 
     // Pause cinematic oscillation while user interacts
     const markInteracting = () => {
