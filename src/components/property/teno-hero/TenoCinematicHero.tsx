@@ -137,6 +137,7 @@ const TenoCinematicHero = ({ polygon, title, areaM2, onOpenDesigner, canDesign }
       if (containerRef.current) containerRef.current.style.cursor = 'grabbing';
     };
     const markIdle = () => {
+      userInteractingRef.current = false;
       lastInteractionRef.current = performance.now();
       if (containerRef.current) containerRef.current.style.cursor = 'grab';
     };
