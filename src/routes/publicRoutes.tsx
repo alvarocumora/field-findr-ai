@@ -26,6 +26,7 @@ import SubscriptionFailure from "@/pages/SubscriptionFailure";
 import ReservationSuccess from "@/pages/ReservationSuccess";
 import ReservationError from "@/pages/ReservationError";
 import ReservationPending from "@/pages/ReservationPending";
+import VisualScenariosDemo from "@/pages/demo/VisualScenariosDemo";
 
 export const publicRoutes = [
   <Route key="home" path="/" element={<Index />} />,
@@ -36,6 +37,7 @@ export const publicRoutes = [
   <Route key="pricing" path="/pricing" element={<Pricing />} />,
   <Route key="tools" path="/tools" element={<Tools />} />,
   <Route key="search" path="/search" element={<IntelligentSearch />} />,
+  <Route key="visual-scenarios-demo" path="/demo/visual-scenarios" element={<VisualScenariosDemo />} />,
   <Route key="instalar" path="/instalar" element={<Install />} />,
   <Route key="referidos" path="/referidos" element={<Referrals />} />,
   <Route key="region" path="/region/:slug" element={<RegionLanding />} />,
