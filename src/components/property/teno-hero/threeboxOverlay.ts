@@ -375,7 +375,16 @@ function buildGenericByParts(b: LayoutBuilding, treeTemplates: (THREE.Group | nu
       partHeight > 2.5 && p.base < 1.5;
 
     if (isTreeLike) {
-      mesh = makeTree(p.color);
+      // Pick a tree template alternately; fall back to procedural cone
+      const tpl = treeTemplates.length
+        ? treeTemplates[(localX * 7 + localY * 13) % treeTemplates.length | 0]
+        : null;
+      if (tpl) {
+        const targetSize = Math.max(2.5, Math.min(info.w, info.h) * 1.1);
+        mesh = cloneAndFit(tpl, targetSize, targetSize, 0);
+      } else {
+        mesh = makeTree(p.color);
+      }
       mesh.position.set(localX, localY, p.base);
     } else if (partHeight < 0.6) {
       // Flat patch (grass, road, sidewalk)
