@@ -16,7 +16,16 @@ import {
 } from './buildingPrimitives';
 
 export type LayoutType = 'packing' | 'conjunto';
+export type LayoutType = 'packing' | 'conjunto';
+export type DetailLevel = 'low' | 'med' | 'high';
 export type { BuildingPart };
+
+/** Roof step counts per detail tier — directly drives draw call count. */
+const ROOF_STEPS: Record<DetailLevel, { house: number; warehouse: number }> = {
+  low:  { house: 2, warehouse: 2 },  // mobile / reduced motion
+  med:  { house: 3, warehouse: 3 },  // tablet
+  high: { house: 5, warehouse: 6 },  // desktop
+};
 
 export interface LayoutBuilding {
   id: string;
