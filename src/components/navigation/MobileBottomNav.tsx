@@ -16,6 +16,14 @@ const MobileBottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Publish bottom-nav height so FABs can stack above it via .bottom-safe-nav
+  useEffect(() => {
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+    if (!isMobile) return;
+    document.documentElement.style.setProperty('--bottom-nav-h', '4rem');
+    return () => { document.documentElement.style.setProperty('--bottom-nav-h', '0rem'); };
+  }, []);
+
   const handleNav = (item: typeof navItems[0]) => {
     if ('vibrate' in navigator) {
       navigator.vibrate(10);
