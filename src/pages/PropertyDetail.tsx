@@ -3,6 +3,8 @@ import GeoEnrichmentPanel from '@/components/map/GeoEnrichmentPanel';
 import InvestmentScoreWidget from '@/components/property/InvestmentScoreWidget';
 import ConceptRenderGallery from '@/components/property/ConceptRenderGallery';
 import ListingDesigner3DDialog from '@/components/property/ListingDesigner3DDialog';
+import { lazy, Suspense } from 'react';
+const TenoCinematicHero = lazy(() => import('@/components/property/teno-hero/TenoCinematicHero'));
 import { useParams, Link } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import { useListing, useListings, formatPrice, formatArea, getListingTypeLabel, getLegalStatusLabel } from '@/hooks/useListings';
@@ -199,44 +201,88 @@ const PropertyDetail = () => {
         <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6 md:space-y-8">
-            {/* Gallery */}
-            <div className="relative">
-              <ImageGallery images={listing.images} title={listing.title} />
-              
-              {/* Actions Overlay */}
-              <div className="absolute top-3 md:top-4 right-3 md:right-4 flex gap-2 z-10">
-                <ShareButtons 
-                  title={listing.title}
-                  description={`${listing.title} en ${listing.location}. ${formatPrice(listing.price, listing.currency)}`}
-                  variant="icon"
-                  className="h-10 w-10 glass hover:bg-white/30 touch-target text-white"
-                />
-                {user && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                      "h-10 w-10 glass hover:bg-white/30 touch-target",
-                      isFavorite ? 'text-red-500' : 'text-white'
-                    )}
-                    onClick={() => toggle(listing.id)}
-                    disabled={isFavoriteLoading}
-                  >
-                    <Heart className={cn("h-5 w-5", isFavorite && 'fill-current')} />
-                  </Button>
-                )}
+            {/* Hero — Teno cinematic, otherwise standard gallery */}
+            {isTeno && designerPolygon ? (
+              <div className="relative">
+                <Suspense fallback={<Skeleton className="w-full h-[55vh] min-h-[380px] rounded-2xl" />}>
+                  <TenoCinematicHero
+                    polygon={designerPolygon}
+                    title={listing.title}
+                    areaM2={listing.area_m2}
+                    canDesign={showPackingDesigner && !!user}
+                    onOpenDesigner={() => setDesignerOpen(true)}
+                  />
+                </Suspense>
+                <div className="absolute top-3 md:top-4 right-3 md:right-4 flex gap-2 z-30">
+                  <ShareButtons
+                    title={listing.title}
+                    description={`${listing.title} en ${listing.location}. ${formatPrice(listing.price, listing.currency)}`}
+                    variant="icon"
+                    className="h-10 w-10 glass hover:bg-white/30 touch-target text-white"
+                  />
+                  {user && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn(
+                        "h-10 w-10 glass hover:bg-white/30 touch-target",
+                        isFavorite ? 'text-red-500' : 'text-white'
+                      )}
+                      onClick={() => toggle(listing.id)}
+                      disabled={isFavoriteLoading}
+                    >
+                      <Heart className={cn("h-5 w-5", isFavorite && 'fill-current')} />
+                    </Button>
+                  )}
+                </div>
               </div>
+            ) : (
+              /* Gallery */
+              <div className="relative">
+                <ImageGallery images={listing.images} title={listing.title} />
 
-              {/* Badges */}
-              <div className="absolute top-3 md:top-4 left-3 md:left-4 flex gap-2 z-10">
-                {listing.featured && (
-                  <Badge className="bg-primary text-primary-foreground shadow-lg">Destacado</Badge>
-                )}
-                <Badge variant="secondary" className="glass shadow-lg">
-                  {getListingTypeLabel(listing.type)}
-                </Badge>
+                {/* Actions Overlay */}
+                <div className="absolute top-3 md:top-4 right-3 md:right-4 flex gap-2 z-10">
+                  <ShareButtons
+                    title={listing.title}
+                    description={`${listing.title} en ${listing.location}. ${formatPrice(listing.price, listing.currency)}`}
+                    variant="icon"
+                    className="h-10 w-10 glass hover:bg-white/30 touch-target text-white"
+                  />
+                  {user && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn(
+                        "h-10 w-10 glass hover:bg-white/30 touch-target",
+                        isFavorite ? 'text-red-500' : 'text-white'
+                      )}
+                      onClick={() => toggle(listing.id)}
+                      disabled={isFavoriteLoading}
+                    >
+                      <Heart className={cn("h-5 w-5", isFavorite && 'fill-current')} />
+                    </Button>
+                  )}
+                </div>
+
+                {/* Badges */}
+                <div className="absolute top-3 md:top-4 left-3 md:left-4 flex gap-2 z-10">
+                  {listing.featured && (
+                    <Badge className="bg-primary text-primary-foreground shadow-lg">Destacado</Badge>
+                  )}
+                  <Badge variant="secondary" className="glass shadow-lg">
+                    {getListingTypeLabel(listing.type)}
+                  </Badge>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Galería de fotos secundaria para Teno */}
+            {isTeno && listing.images?.length > 0 && (
+              <div className="relative">
+                <ImageGallery images={listing.images} title={listing.title} />
+              </div>
+            )}
 
             {/* Title & Location */}
             <div>
