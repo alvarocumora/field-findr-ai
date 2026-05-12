@@ -412,8 +412,9 @@ export function buildLayout(
   type: LayoutType,
   bounds: PolygonBounds,
   poly: [number, number][],
+  detail: DetailLevel = 'high',
 ): LayoutResult {
   return type === 'packing'
-    ? buildPackingLayout(bounds, poly)
-    : buildConjuntoLayout(bounds, poly);
+    ? buildPackingLayout(bounds, poly, detail)
+    : buildConjuntoLayout(bounds, poly, detail);
 }
