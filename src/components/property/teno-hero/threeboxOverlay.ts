@@ -62,7 +62,7 @@ function loadGLTF(url: string): Promise<THREE.Group | null> {
       (err) => {
         // Network 404 / asset missing → silent fallback to procedural
         if (typeof console !== 'undefined') {
-          console.info('[threebox] GLTF not available, using procedural:', url, err?.message ?? '');
+          console.info('[threebox] GLTF not available, using procedural:', url, (err as Error)?.message ?? '');
         }
         resolve(null);
       },
