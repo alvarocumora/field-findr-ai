@@ -213,7 +213,16 @@ const PropertyDetail = () => {
                     onOpenDesigner={() => setDesignerOpen(true)}
                   />
                 </Suspense>
-                <div className="absolute top-3 md:top-4 right-3 md:right-4 flex gap-2 z-30">
+                <div
+                  className={cn(
+                    "absolute right-3 md:right-4 flex gap-2",
+                    // Si hay CTA Diseñar (canDesign) lo dejamos debajo para no superponerse
+                    showPackingDesigner && user
+                      ? "top-16 md:top-20"
+                      : "top-3 md:top-4"
+                  )}
+                  style={{ zIndex: 'var(--z-map-overlay)' }}
+                >
                   <ShareButtons
                     title={listing.title}
                     description={`${listing.title} en ${listing.location}. ${formatPrice(listing.price, listing.currency)}`}
