@@ -599,6 +599,12 @@ const PropertyDetail = () => {
                   <p className="text-2xl md:text-3xl font-bold text-primary">
                     {formatPrice(listing.price, listing.currency)}
                   </p>
+                  {listing.currency === 'UF' && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      ≈ {formatPrice(Math.round(listing.price * 39500), 'CLP')}
+                      <span className="ml-1 text-xs opacity-70">(UF ref. $39.500)</span>
+                    </p>
+                  )}
                   {listing.area_m2 && listing.area_m2 > 0 && (
                     <div className="mt-2 p-2.5 rounded-lg bg-primary/10 border border-primary/20">
                       <p className="text-sm font-semibold text-primary">
