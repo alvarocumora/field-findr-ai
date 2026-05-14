@@ -531,6 +531,7 @@ export async function mountThreeboxOverlay(
     tb.add(obj);
     placed.push(obj);
   }
+  mapAny[TB_PLACED_KEY] = placed;
 
   let rafId: number | null = null;
   const fadeIn = (durationMs = 1600) => {
