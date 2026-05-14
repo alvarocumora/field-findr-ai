@@ -559,14 +559,11 @@ export async function mountThreeboxOverlay(
   return {
     fadeIn,
     destroy: () => {
+      // Only stop the fade-in animation. Keep the Threebox instance and the
+      // custom layer alive so the next mount (e.g. layout toggle) can reuse
+      // them without corrupting Mapbox's GL state. Placed objects are
+      // cleared on the next mount via TB_PLACED_KEY.
       if (rafId) cancelAnimationFrame(rafId);
-      try {
-        for (const o of placed) tb.remove?.(o);
-        if (map.getLayer(LAYER_ID)) map.removeLayer(LAYER_ID);
-        tb.dispose?.();
-      } catch (e) {
-        console.warn('[threebox] cleanup error', e);
-      }
     },
   };
 }
