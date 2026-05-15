@@ -115,6 +115,10 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
   const [firmaDataUrl, setFirmaDataUrl] = useState<string | null>(null);
   const [firmaTasador, setFirmaTasador] = useState('');
   const [firmaFecha, setFirmaFecha] = useState<string | null>(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareExpiresAt, setShareExpiresAt] = useState<string | null>(null);
+  const [shareExpiresIn, setShareExpiresIn] = useState<string>('604800'); // 7 días por defecto
 
   // Cuando llega la UF de hoy desde el Banco Central, sincroniza el valor por defecto
   useMemo(() => {
