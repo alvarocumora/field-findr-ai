@@ -266,21 +266,39 @@ const TasacionLive = () => {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between gap-2 flex-wrap pt-2">
-                  <div className="flex items-center gap-2 text-xs">
-                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-muted-foreground">Anclaje blockchain:</span>
-                    {row.blockchain_anchor ? (
-                      <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30">
-                        Anclado en {row.blockchain_anchor.network}
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline">Sin anclar</Badge>
-                    )}
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs">
+                      <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground">Anclaje blockchain:</span>
+                      {row.blockchain_anchor ? (
+                        <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">
+                          {row.blockchain_anchor.protocol === 'opentimestamps'
+                            ? `OpenTimestamps · ${row.blockchain_anchor.network}`
+                            : `Anclado en ${row.blockchain_anchor.network}`}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">Sin anclar</Badge>
+                      )}
+                    </div>
+                    <Button size="sm" variant="secondary" className="gap-2" onClick={downloadOriginal}>
+                      <Download className="h-3.5 w-3.5" /> Descargar PDF
+                    </Button>
                   </div>
-                  <Button size="sm" variant="secondary" className="gap-2" onClick={downloadOriginal}>
-                    <Download className="h-3.5 w-3.5" /> Descargar PDF
-                  </Button>
+
+                  {row.blockchain_anchor?.protocol === 'opentimestamps' && (
+                    <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-2 text-[11px] space-y-1">
+                      <div className="text-muted-foreground">
+                        Enviado a {row.blockchain_anchor.ok_count}/{row.blockchain_anchor.calendars?.length} calendarios
+                        OpenTimestamps el{' '}
+                        {new Date(row.blockchain_anchor.submitted_at).toLocaleString()}.
+                        El SHA-256 quedará incluido en un bloque Bitcoin (~horas).
+                      </div>
+                      <div className="font-mono text-[10px] break-all text-muted-foreground">
+                        digest: {row.blockchain_anchor.digest}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
