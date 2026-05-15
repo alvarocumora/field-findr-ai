@@ -55,15 +55,19 @@ const inferTopografia = (tags?: string[] | null) => {
   return 'Topografía variable según sector del predio.';
 };
 
-const inferComparables = (areaM2: number, valorM2UF: number) => {
-  // Genera 4 comparables sintéticos centrados alrededor del valor estimado
+// Referencias reales de mercado (Curicó / Ruta 5 Sur) capturadas desde MercadoLibre
+const MARKET_REFS = [
+  { ubicacion: 'Curicó – Pío XI 505 (Vivax)', superficie: 52800, valorUF: 78000, valorM2UF: 1.477, fuente: 'Mercado Libre – Vivax Corredores' },
+  { ubicacion: 'Ruta 5 Sur / Ruta J-55 (E&V)', superficie: 154700, valorUF: 147000, valorM2UF: 0.950, fuente: 'Mercado Libre – Engel & Völkers Commercial' },
+];
+
+const inferComparables = (areaM2: number, valorM2UF: number, region?: string, city?: string) => {
+  // Genera 2 comparables sintéticos + 2 referencias reales de mercado
   const variations = [
     { suf: 'norte', f: 0.85, areaF: 0.7 },
     { suf: 'sur', f: 1.1, areaF: 1.15 },
-    { suf: 'oriente', f: 0.95, areaF: 0.9 },
-    { suf: 'poniente', f: 1.05, areaF: 1.05 },
   ];
-  return variations.map((v, i) => {
+  const synthetic = variations.map((v, i) => {
     const sup = Math.round(areaM2 * v.areaF);
     const m2uf = +(valorM2UF * v.f).toFixed(3);
     return {
@@ -71,9 +75,13 @@ const inferComparables = (areaM2: number, valorM2UF: number) => {
       superficie: sup,
       valorUF: Math.round(sup * m2uf),
       valorM2UF: m2uf,
-      fuente: ['Portal Inmobiliario', 'Yapo / Mercado Libre', 'Corretaje local', 'Oferta directa'][i],
+      fuente: ['Portal Inmobiliario', 'Corretaje local'][i],
     };
   });
+  // Añade refs reales si la propiedad está en Maule / Curicó / Teno (o por defecto)
+  const zone = `${region || ''} ${city || ''}`.toLowerCase();
+  const useReal = !zone || /maule|curic|teno|romeral|molina/.test(zone);
+  return useReal ? [...MARKET_REFS, ...synthetic] : synthetic;
 };
 
 export function buildTasacionData(listing: ListingLike, ufRate: number = UF_REF): TasacionData {
@@ -134,7 +142,7 @@ export function buildTasacionData(listing: ListingLike, ufRate: number = UF_REF)
     avaluoFiscalConstruccion: 0,
     avaluoFiscalTotal: avaluoTerreno,
     valorUnitarioSII,
-    comparables: inferComparables(areaM2, valorM2UF || 0.3),
+    comparables: inferComparables(areaM2, valorM2UF || 0.3, listing.region, listing.city),
     valorComercialUF: priceUF,
     valorComercialCLP: priceUF * ufRate,
     valorM2UF,
