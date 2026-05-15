@@ -12,6 +12,8 @@ import { generateTasacionPdf, type TasacionData } from '@/lib/tasacionPdfGenerat
 import { buildTasacionData, applyUfRate, UF_REF } from '@/lib/buildTasacionData';
 import { useComparables } from '@/hooks/useComparables';
 import { useUfRate } from '@/hooks/useUfRate';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const TENO_TASACION: TasacionData = {
   fecha: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }),
