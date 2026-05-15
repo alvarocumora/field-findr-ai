@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { drawPdfHeaderLogo, drawPdfFooter } from './pdfBrandHeader';
+import { getT, type TasacionLang } from './tasacionI18n';
 
 export interface TasacionData {
   // Antecedentes generales
@@ -52,10 +53,14 @@ export interface TasacionData {
   firmaDataUrl?: string;
   firmaTasador?: string;
   firmaFecha?: string;
+  // Idioma del informe
+  lang?: TasacionLang;
 }
 
-export const buildTasacionFilename = (data: TasacionData) =>
-  `Tasacion_${(data.comuna || 'predio').replace(/\s+/g, '-')}_${data.fecha.replace(/[^\d]/g, '')}.pdf`;
+export const buildTasacionFilename = (data: TasacionData) => {
+  const prefix = data.lang === 'en' ? 'Appraisal' : 'Tasacion';
+  return `${prefix}_${(data.comuna || 'predio').replace(/\s+/g, '-')}_${data.fecha.replace(/[^\d]/g, '')}.pdf`;
+};
 
 export const buildTasacionPdfBlob = (data: TasacionData): Blob => {
   const doc = buildTasacionDoc(data);
@@ -68,6 +73,8 @@ export const generateTasacionPdf = (data: TasacionData) => {
 };
 
 const buildTasacionDoc = (data: TasacionData) => {
+  const t = getT(data.lang);
+  const L = t.labels;
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -83,10 +90,12 @@ const buildTasacionDoc = (data: TasacionData) => {
     }
   };
 
-  const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
-  const fmtUF = (n: number) => `UF ${n.toLocaleString('es-CL', { maximumFractionDigits: 2 })}`;
+  const fmtCLP = t.fmtCLP;
+  const fmtUF = t.fmtUF;
+  const fmtNum = t.fmtNumber;
 
-  const sectionTitle = (n: number, title: string) => {
+  const sectionTitle = (n: number) => {
+    const title = t.sections[n] ?? '';
     ensureSpace(14);
     doc.setFillColor(15, 23, 42);
     doc.rect(margin, y, contentW, 8, 'F');
@@ -105,7 +114,7 @@ const buildTasacionDoc = (data: TasacionData) => {
     doc.setFont('helvetica', 'bold');
     doc.text(`${label}:`, margin, y);
     doc.setFont('helvetica', 'normal');
-    const lines = doc.splitTextToSize(value || '—', contentW - 55);
+    const lines = doc.splitTextToSize(value || t.dash, contentW - 55);
     doc.text(lines, margin + 55, y);
     y += 5 * Math.max(1, lines.length) + 1;
   };
@@ -123,11 +132,11 @@ const buildTasacionDoc = (data: TasacionData) => {
   y = 40;
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text('INFORME DE TASACIÓN COMERCIAL', pageW / 2, y, { align: 'center' });
+  doc.text(t.coverTitle, pageW / 2, y, { align: 'center' });
   y += 8;
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  doc.text('Predio Industrial / Agroindustrial', pageW / 2, y, { align: 'center' });
+  doc.text(t.coverSubtitle, pageW / 2, y, { align: 'center' });
   y += 16;
 
   doc.setDrawColor(200);
@@ -135,13 +144,13 @@ const buildTasacionDoc = (data: TasacionData) => {
   doc.rect(margin, y, contentW, 50);
   y += 6;
   doc.setFontSize(10);
-  const cover = [
-    ['Inmueble', `${data.direccion}, ${data.comuna}, ${data.region}`],
-    ['Rol SII', data.rol || '—'],
-    ['Superficie', `${data.superficieTerreno.toLocaleString('es-CL')} m² (${(data.superficieTerreno / 10000).toFixed(2)} ha)`],
-    ['Solicitante', data.solicitante],
-    ['Tasador', data.tasador],
-    ['Fecha', data.fecha],
+  const cover: Array<[string, string]> = [
+    [t.coverProperty, `${data.direccion}, ${data.comuna}, ${data.region}`],
+    [t.coverRol, data.rol || t.dash],
+    [t.coverSurface, `${fmtNum(data.superficieTerreno)} m² (${(data.superficieTerreno / 10000).toFixed(2)} ha)`],
+    [t.coverApplicant, data.solicitante],
+    [t.coverAppraiser, data.tasador],
+    [t.coverDate, data.fecha],
   ];
   cover.forEach(([k, v]) => {
     doc.setFont('helvetica', 'bold');
@@ -157,12 +166,12 @@ const buildTasacionDoc = (data: TasacionData) => {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.text('VALOR COMERCIAL ESTIMADO', pageW / 2, y + 8, { align: 'center' });
+  doc.text(t.estimatedCommercialValue, pageW / 2, y + 8, { align: 'center' });
   doc.setFontSize(18);
   doc.text(fmtUF(data.valorComercialUF), pageW / 2, y + 17, { align: 'center' });
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.text(`(≈ ${fmtCLP(data.valorComercialCLP)} · ${fmtUF(data.valorM2UF)} / m²)`, pageW / 2, y + 23, { align: 'center' });
+  doc.text(`(≈ ${fmtCLP(data.valorComercialCLP)} · ${fmtUF(data.valorM2UF)} ${t.perM2})`, pageW / 2, y + 23, { align: 'center' });
   doc.setTextColor(0, 0, 0);
 
   drawPdfFooter(doc);
@@ -170,118 +179,118 @@ const buildTasacionDoc = (data: TasacionData) => {
   y = margin;
 
   // 1. Antecedentes
-  sectionTitle(1, 'Antecedentes generales');
-  kv('Fecha de tasación', data.fecha);
-  kv('Solicitante', data.solicitante);
-  kv('Tasador', data.tasador);
-  kv('Propósito', data.proposito);
+  sectionTitle(1);
+  kv(L.appraisalDate, data.fecha);
+  kv(L.applicant, data.solicitante);
+  kv(L.appraiser, data.tasador);
+  kv(L.purpose, data.proposito);
 
   // 2. Identificación
-  sectionTitle(2, 'Identificación del inmueble');
-  kv('Propietario', data.propietario);
-  kv('Dirección', data.direccion);
-  kv('Comuna / Región', `${data.comuna}, ${data.region}`);
-  kv('Rol SII', data.rol || '—');
-  kv('Inscripción CBR', data.inscripcionCBR);
-  kv('Coordenadas', data.coordenadas);
+  sectionTitle(2);
+  kv(L.owner, data.propietario);
+  kv(L.address, data.direccion);
+  kv(L.municipalityRegion, `${data.comuna}, ${data.region}`);
+  kv(L.rolSII, data.rol || t.dash);
+  kv(L.cbrInscription, data.inscripcionCBR);
+  kv(L.coordinates, data.coordenadas);
 
   // 3. Deslindes
-  sectionTitle(3, 'Deslindes');
-  kv('Norte', data.deslindes.norte);
-  kv('Sur', data.deslindes.sur);
-  kv('Oriente', data.deslindes.oriente);
-  kv('Poniente', data.deslindes.poniente);
+  sectionTitle(3);
+  kv(L.north, data.deslindes.norte);
+  kv(L.south, data.deslindes.sur);
+  kv(L.east, data.deslindes.oriente);
+  kv(L.west, data.deslindes.poniente);
 
   // 4. Superficie
-  sectionTitle(4, 'Superficies');
-  kv('Terreno', `${data.superficieTerreno.toLocaleString('es-CL')} m² (${(data.superficieTerreno / 10000).toFixed(2)} ha)`);
-  kv('Construida', `${data.superficieConstruida.toLocaleString('es-CL')} m²`);
+  sectionTitle(4);
+  kv(L.land, `${fmtNum(data.superficieTerreno)} m² (${(data.superficieTerreno / 10000).toFixed(2)} ha)`);
+  kv(L.built, `${fmtNum(data.superficieConstruida)} m²`);
 
   // 5. Descripción del sector
-  sectionTitle(5, 'Descripción del sector');
+  sectionTitle(5);
   para(data.descripcionSector);
-  kv('Accesos', data.accesos);
-  kv('Equipamiento', data.equipamiento);
+  kv(L.access, data.accesos);
+  kv(L.facilities, data.equipamiento);
 
   // 6. Características del terreno
-  sectionTitle(6, 'Características del terreno');
-  kv('Topografía', data.topografia);
-  kv('Forma', data.forma);
-  kv('Tipo de suelo', data.tipoSuelo);
-  kv('Frente', data.frente);
+  sectionTitle(6);
+  kv(L.topography, data.topografia);
+  kv(L.shape, data.forma);
+  kv(L.soilType, data.tipoSuelo);
+  kv(L.frontage, data.frente);
 
   // 7. Servicios básicos
-  sectionTitle(7, 'Servicios básicos disponibles');
+  sectionTitle(7);
   const s = data.servicios;
-  const yes = (b: boolean) => (b ? 'Sí' : 'No');
-  kv('Agua potable', yes(s.agua));
-  kv('Electricidad', yes(s.electricidad));
-  kv('Alcantarillado', yes(s.alcantarillado));
-  kv('Gas', yes(s.gas));
-  kv('Telecomunicaciones', yes(s.telecom));
-  kv('Pavimento', yes(s.pavimento));
+  const yes = (b: boolean) => (b ? t.yes : t.no);
+  kv(L.water, yes(s.agua));
+  kv(L.electricity, yes(s.electricidad));
+  kv(L.sewage, yes(s.alcantarillado));
+  kv(L.gas, yes(s.gas));
+  kv(L.telecom, yes(s.telecom));
+  kv(L.pavement, yes(s.pavimento));
 
   // 8. Normativa
-  sectionTitle(8, 'Normativa y zonificación');
-  kv('Zonificación', data.zonificacion);
-  kv('Uso de suelo', data.usoSuelo);
-  kv('Coef. constructibilidad', data.coefConstructibilidad);
+  sectionTitle(8);
+  kv(L.zoning, data.zonificacion);
+  kv(L.landUse, data.usoSuelo);
+  kv(L.buildCoef, data.coefConstructibilidad);
 
   // 9. Avalúo fiscal SII
-  sectionTitle(9, 'Avalúo fiscal SII');
-  kv('Avalúo terreno', fmtCLP(data.avaluoFiscalTerreno));
-  kv('Avalúo construcción', fmtCLP(data.avaluoFiscalConstruccion));
-  kv('Avalúo total', fmtCLP(data.avaluoFiscalTotal));
-  kv('Valor unitario SII', `${fmtCLP(data.valorUnitarioSII)} / m²`);
+  sectionTitle(9);
+  kv(L.siiLand, fmtCLP(data.avaluoFiscalTerreno));
+  kv(L.siiBuilt, fmtCLP(data.avaluoFiscalConstruccion));
+  kv(L.siiTotal, fmtCLP(data.avaluoFiscalTotal));
+  kv(L.siiUnit, `${fmtCLP(data.valorUnitarioSII)} ${t.perM2}`);
 
   // 10. Comparables de mercado
-  sectionTitle(10, 'Análisis comparativo de mercado');
-  para('Se analizan transacciones recientes y ofertas vigentes de predios industriales/agroindustriales en el sector Teno – Curicó – Romeral – Molina, con condiciones similares de acceso a Ruta 5, urbanización y aptitud productiva.');
+  sectionTitle(10);
+  para(t.paragraphs.comparablesIntro);
   ensureSpace(8);
   doc.setFont('helvetica', 'bold');
   doc.setFillColor(241, 245, 249);
   doc.rect(margin, y, contentW, 7, 'F');
-  doc.text('Ubicación', margin + 2, y + 5);
-  doc.text('Sup. (m²)', margin + 70, y + 5);
-  doc.text('Valor (UF)', margin + 100, y + 5);
-  doc.text('UF/m²', margin + 130, y + 5);
-  doc.text('Fuente', margin + 155, y + 5);
+  doc.text(L.colLocation, margin + 2, y + 5);
+  doc.text(L.colArea, margin + 70, y + 5);
+  doc.text(L.colValueUF, margin + 100, y + 5);
+  doc.text(L.colUFm2, margin + 130, y + 5);
+  doc.text(L.colSource, margin + 155, y + 5);
   y += 8;
   doc.setFont('helvetica', 'normal');
   data.comparables.forEach(c => {
     ensureSpace(6);
     doc.text(doc.splitTextToSize(c.ubicacion, 65), margin + 2, y);
-    doc.text(c.superficie.toLocaleString('es-CL'), margin + 70, y);
-    doc.text(c.valorUF.toLocaleString('es-CL'), margin + 100, y);
+    doc.text(fmtNum(c.superficie), margin + 70, y);
+    doc.text(fmtNum(c.valorUF), margin + 100, y);
     doc.text(c.valorM2UF.toFixed(3), margin + 130, y);
     doc.text(c.fuente, margin + 155, y);
     y += 6;
   });
 
   // 11. Metodología
-  sectionTitle(11, 'Metodología de tasación');
-  para('La presente tasación utiliza el Método Comparativo de Mercado, contrastando el valor SII del predio con el comportamiento de transacciones de bienes raíces equivalentes en la zona. Se aplican factores de ajuste por: (i) ubicación frente a Ruta 5, (ii) superficie útil y forma del polígono, (iii) urbanización y servicios disponibles, (iv) zonificación industrial/agroindustrial vigente, y (v) potencial productivo (packing, agroindustria, logística y cadena de frío).');
+  sectionTitle(11);
+  para(t.paragraphs.methodology);
 
   // 12. Conclusión
-  sectionTitle(12, 'Conclusión – Valor comercial');
+  sectionTitle(12);
   ensureSpace(30);
   doc.setFillColor(34, 197, 94);
   doc.rect(margin, y, contentW, 22, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
-  doc.text('VALOR COMERCIAL FINAL', margin + 4, y + 7);
+  doc.text(t.finalCommercialValue, margin + 4, y + 7);
   doc.setFontSize(16);
   doc.text(`${fmtUF(data.valorComercialUF)}  (${fmtCLP(data.valorComercialCLP)})`, margin + 4, y + 16);
   doc.setTextColor(0, 0, 0);
   y += 26;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  kv('Valor unitario', `${fmtUF(data.valorM2UF)} / m²  (≈ ${fmtCLP(data.valorM2CLP)} / m²)`);
+  kv(L.unitValue, `${fmtUF(data.valorM2UF)} ${t.perM2}  (≈ ${fmtCLP(data.valorM2CLP)} ${t.perM2})`);
   para(data.observaciones);
 
   // 13. Firma digital del tasador
-  sectionTitle(13, 'Firma digital del tasador');
+  sectionTitle(13);
   ensureSpace(60);
   const sigBoxW = 90;
   const sigBoxH = 40;
@@ -296,13 +305,13 @@ const buildTasacionDoc = (data: TasacionData) => {
     } catch (e) {
       doc.setFontSize(8);
       doc.setTextColor(180);
-      doc.text('(firma no disponible)', sigX + 4, sigY + sigBoxH / 2);
+      doc.text(L.signatureUnavailable, sigX + 4, sigY + sigBoxH / 2);
       doc.setTextColor(0);
     }
   } else {
     doc.setFontSize(8);
     doc.setTextColor(150);
-    doc.text('Firma pendiente', sigX + 4, sigY + sigBoxH / 2);
+    doc.text(L.signaturePending, sigX + 4, sigY + sigBoxH / 2);
     doc.setTextColor(0);
   }
   // Línea base + datos del firmante
@@ -313,13 +322,13 @@ const buildTasacionDoc = (data: TasacionData) => {
   doc.text(data.firmaTasador || data.tasador, sigX, sigY + sigBoxH + 7);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.text(`Fecha de firma: ${data.firmaFecha || data.fecha}`, sigX, sigY + sigBoxH + 12);
+  doc.text(`${L.signatureDate}: ${data.firmaFecha || data.fecha}`, sigX, sigY + sigBoxH + 12);
   if (data.firmaDataUrl) {
     doc.setTextColor(34, 197, 94);
-    doc.text('Firmado digitalmente', sigX + sigBoxW + 6, sigY + sigBoxH + 7);
+    doc.text(L.signedDigitally, sigX + sigBoxW + 6, sigY + sigBoxH + 7);
     doc.setTextColor(120);
     doc.setFontSize(7);
-    doc.text('Hash visual del trazo embebido en este PDF.', sigX + sigBoxW + 6, sigY + sigBoxH + 12);
+    doc.text(L.signatureHash, sigX + sigBoxW + 6, sigY + sigBoxH + 12);
     doc.setTextColor(0);
   }
   y = sigY + sigBoxH + 18;

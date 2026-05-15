@@ -11,6 +11,8 @@ import { Download, FileBarChart, MapPin, Ruler, Layers, Droplets, Zap, Cable, Fl
 import { generateTasacionPdf, buildTasacionPdfBlob, buildTasacionFilename, type TasacionData } from '@/lib/tasacionPdfGenerator';
 import SignatureCanvas from '@/components/signature/SignatureCanvas';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getT, type TasacionLang } from '@/lib/tasacionI18n';
+import { Languages } from 'lucide-react';
 import { buildTasacionData, applyUfRate, UF_REF } from '@/lib/buildTasacionData';
 import { useComparables } from '@/hooks/useComparables';
 import { useUfRate } from '@/hooks/useUfRate';
@@ -119,6 +121,10 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [shareExpiresAt, setShareExpiresAt] = useState<string | null>(null);
   const [shareExpiresIn, setShareExpiresIn] = useState<string>('604800'); // 7 días por defecto
+  const [lang, setLang] = useState<TasacionLang>('es');
+  const t = useMemo(() => getT(lang), [lang]);
+  const L = t.labels;
+  const tt = (es: string, en: string) => (lang === 'en' ? en : es);
 
   // Cuando llega la UF de hoy desde el Banco Central, sincroniza el valor por defecto
   useMemo(() => {
@@ -225,6 +231,7 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
     firmaDataUrl: firmaDataUrl || undefined,
     firmaTasador: firmaTasador || d.tasador,
     firmaFecha: firmaFecha || d.fecha,
+    lang,
   });
 
   const handleShare = async () => {
@@ -268,36 +275,54 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           <div>
             <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
               <FileBarChart className="h-6 w-6 text-primary" />
-              Informe de Tasación Comercial
+              {L.reportTitle}
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Predio agroindustrial · {d.comuna}, {d.region} · {d.fecha}
+              {L.reportSubtitle(d.comuna, d.region, d.fecha)}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <div className="inline-flex rounded-md border border-border/50 overflow-hidden">
+              <Button
+                variant={lang === 'es' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setLang('es')}
+                className="h-9 rounded-none gap-1 px-3"
+              >
+                <Languages className="h-3.5 w-3.5" /> ES
+              </Button>
+              <Button
+                variant={lang === 'en' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setLang('en')}
+                className="h-9 rounded-none px-3"
+              >
+                EN
+              </Button>
+            </div>
             <Button
               variant={editing ? 'default' : 'outline'}
               size="sm"
               onClick={() => setEditing((v) => !v)}
               className="gap-2"
             >
-              <Pencil className="h-4 w-4" /> {editing ? 'Cerrar edición' : 'Editar campos'}
+              <Pencil className="h-4 w-4" /> {editing ? tt('Cerrar edición', 'Close editor') : tt('Editar campos', 'Edit fields')}
             </Button>
             {Object.keys(overrides).length > 0 && (
               <Button variant="ghost" size="sm" onClick={() => setOverrides({})} className="gap-2 text-muted-foreground">
-                <RotateCcw className="h-4 w-4" /> Restablecer
+                <RotateCcw className="h-4 w-4" /> {tt('Restablecer', 'Reset')}
               </Button>
             )}
             <Select value={shareExpiresIn} onValueChange={setShareExpiresIn}>
               <SelectTrigger className="h-9 w-[140px]">
-                <SelectValue placeholder="Expira en" />
+                <SelectValue placeholder={tt('Expira en', 'Expires in')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="3600">1 hora</SelectItem>
-                <SelectItem value="86400">24 horas</SelectItem>
-                <SelectItem value="604800">7 días</SelectItem>
-                <SelectItem value="2592000">30 días</SelectItem>
-                <SelectItem value="31536000">1 año</SelectItem>
+                <SelectItem value="3600">{tt('1 hora', '1 hour')}</SelectItem>
+                <SelectItem value="86400">{tt('24 horas', '24 hours')}</SelectItem>
+                <SelectItem value="604800">{tt('7 días', '7 days')}</SelectItem>
+                <SelectItem value="2592000">{tt('30 días', '30 days')}</SelectItem>
+                <SelectItem value="31536000">{tt('1 año', '1 year')}</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -307,13 +332,13 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
               className="gap-2"
             >
               {shareLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
-              Compartir
+              {tt('Compartir', 'Share')}
             </Button>
             <Button
               onClick={() => generateTasacionPdf(buildPdfData())}
               className="gap-2"
             >
-              <Download className="h-4 w-4" /> Descargar PDF
+              <Download className="h-4 w-4" /> {tt('Descargar PDF', 'Download PDF')}
             </Button>
           </div>
         </div>
@@ -557,14 +582,14 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           </div>
         </div>
 
-        <SectionCard n={1} icon={FileBarChart} title="Antecedentes generales">
+        <SectionCard n={1} icon={FileBarChart} title={t.sections[1]}>
           <Row k="Fecha de tasación" v={d.fecha} />
           <Row k="Solicitante" v={d.solicitante} />
           <Row k="Tasador" v={d.tasador} />
           <Row k="Propósito" v={d.proposito} />
         </SectionCard>
 
-        <SectionCard n={2} icon={MapPin} title="Identificación del inmueble">
+        <SectionCard n={2} icon={MapPin} title={t.sections[2]}>
           <Row k="Propietario" v={d.propietario} />
           <Row k="Dirección" v={d.direccion} />
           <Row k="Comuna / Región" v={`${d.comuna}, ${d.region}`} />
@@ -573,33 +598,33 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           <Row k="Coordenadas" v={d.coordenadas} />
         </SectionCard>
 
-        <SectionCard n={3} icon={Layers} title="Deslindes">
+        <SectionCard n={3} icon={Layers} title={t.sections[3]}>
           <Row k="Norte" v={d.deslindes.norte} />
           <Row k="Sur" v={d.deslindes.sur} />
           <Row k="Oriente" v={d.deslindes.oriente} />
           <Row k="Poniente" v={d.deslindes.poniente} />
         </SectionCard>
 
-        <SectionCard n={4} icon={Ruler} title="Superficies">
+        <SectionCard n={4} icon={Ruler} title={t.sections[4]}>
           <Row k="Terreno" v={`${d.superficieTerreno.toLocaleString('es-CL')} m² (${(d.superficieTerreno/10000).toFixed(2)} ha)`} />
           <Row k="Construida" v={`${d.superficieConstruida.toLocaleString('es-CL')} m²`} />
         </SectionCard>
 
-        <SectionCard n={5} icon={Building2} title="Descripción del sector">
+        <SectionCard n={5} icon={Building2} title={t.sections[5]}>
           <p className="text-sm text-muted-foreground leading-relaxed">{d.descripcionSector}</p>
           <Separator className="my-2" />
           <Row k="Accesos" v={d.accesos} />
           <Row k="Equipamiento" v={d.equipamiento} />
         </SectionCard>
 
-        <SectionCard n={6} icon={Layers} title="Características del terreno">
+        <SectionCard n={6} icon={Layers} title={t.sections[6]}>
           <Row k="Topografía" v={d.topografia} />
           <Row k="Forma" v={d.forma} />
           <Row k="Tipo de suelo" v={d.tipoSuelo} />
           <Row k="Frente" v={d.frente} />
         </SectionCard>
 
-        <SectionCard n={7} icon={Droplets} title="Servicios básicos">
+        <SectionCard n={7} icon={Droplets} title={t.sections[7]}>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <ServiceBadge ok={d.servicios.agua} icon={Droplets} label="Agua potable" />
             <ServiceBadge ok={d.servicios.electricidad} icon={Zap} label="Electricidad" />
@@ -610,13 +635,13 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           </div>
         </SectionCard>
 
-        <SectionCard n={8} icon={Scale} title="Normativa y zonificación">
+        <SectionCard n={8} icon={Scale} title={t.sections[8]}>
           <Row k="Zonificación" v={d.zonificacion} />
           <Row k="Uso de suelo" v={d.usoSuelo} />
           <Row k="Constructibilidad" v={d.coefConstructibilidad} />
         </SectionCard>
 
-        <SectionCard n={9} icon={Calculator} title="Avalúo fiscal SII">
+        <SectionCard n={9} icon={Calculator} title={t.sections[9]}>
           <div className="rounded-md border border-border/40 bg-muted/20 p-3 mb-2 space-y-2">
             <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
               <div className="flex-1">
@@ -658,7 +683,7 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           <Row k="Valor unitario SII" v={`${fmtCLP(d.valorUnitarioSII)} / m²`} />
         </SectionCard>
 
-        <SectionCard n={10} icon={Scale} title="Análisis comparativo de mercado">
+        <SectionCard n={10} icon={Scale} title={t.sections[10]}>
           <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
             <p className="text-xs text-muted-foreground">
               {comparablesData.items.length > 0
@@ -735,7 +760,7 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           </div>
         </SectionCard>
 
-        <SectionCard n={11} icon={Calculator} title="Metodología de tasación">
+        <SectionCard n={11} icon={Calculator} title={t.sections[11]}>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Se aplica el <strong>Método Comparativo de Mercado</strong>, contrastando el valor SII del predio con
             transacciones de inmuebles equivalentes en la zona. Factores de ajuste: (i) frente a Ruta 5,
@@ -744,7 +769,7 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           </p>
         </SectionCard>
 
-        <SectionCard n={12} icon={Trophy} title="Conclusión – Valor comercial">
+        <SectionCard n={12} icon={Trophy} title={t.sections[12]}>
           <div className="rounded-lg bg-gradient-to-br from-emerald-500/20 to-primary/10 border border-emerald-500/30 p-4">
             <Badge className="bg-emerald-500 text-white mb-2">Valor final</Badge>
             <p className="text-3xl font-bold text-emerald-500">{fmtUF(d.valorComercialUF)}</p>
@@ -753,7 +778,7 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           <p className="text-sm text-muted-foreground leading-relaxed mt-3">{d.observaciones}</p>
         </SectionCard>
 
-        <SectionCard n={13} icon={Pen} title="Firma digital del tasador">
+        <SectionCard n={13} icon={Pen} title={t.sections[13]}>
           <p className="text-xs text-muted-foreground mb-3">
             Firma manuscrita del tasador acreditado. Se embebe en el PDF como evidencia visual del informe.
           </p>
