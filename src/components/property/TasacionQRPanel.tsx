@@ -13,6 +13,9 @@ import {
   Link2,
   Anchor,
   Bitcoin,
+  RefreshCw,
+  CheckCircle2,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { publishTasacion, downloadDataUrl, downloadText, type PublishResult } from '@/lib/tasacionPublish';
