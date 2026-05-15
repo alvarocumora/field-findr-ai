@@ -171,6 +171,46 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
   const setServicio = (k: keyof TasacionData['servicios'], v: boolean) =>
     setOverrides((o) => ({ ...o, servicios: { ...(o.servicios || base.servicios), [k]: v } as any }));
 
+  const lookupSII = async (useDemoData = false) => {
+    const rolRaw = (siiRol || d.rol || '').trim();
+    const rolClean = rolRaw.replace(/\s/g, '');
+    if (!/^\d+-\d+$/.test(rolClean)) {
+      toast.error('Rol inválido', { description: 'Usa el formato XXXX-YY (ej: 1234-56).' });
+      return;
+    }
+    setSiiLoading(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke('sii-lookup', {
+        body: { rol: rolClean, useDemoData },
+      });
+      if (error) throw error;
+      if (!result?.success) throw new Error(result?.error || 'Error en la consulta');
+      const sii = result.data;
+      const updates: Partial<TasacionData> = { rol: sii.rol };
+      if (sii.avaluoFiscal != null) {
+        const construccion = d.avaluoFiscalConstruccion || 0;
+        const terreno = Math.max(0, sii.avaluoFiscal - construccion);
+        updates.avaluoFiscalTerreno = terreno;
+        updates.avaluoFiscalTotal = sii.avaluoFiscal;
+        const sup = sii.superficieTerreno || d.superficieTerreno || 0;
+        if (sup > 0) updates.valorUnitarioSII = Math.round(terreno / sup);
+      }
+      if (sii.superficieTerreno != null && (!overrides.superficieTerreno)) {
+        updates.superficieTerreno = Math.round(sii.superficieTerreno);
+      }
+      setOverrides((o) => ({ ...o, ...updates }));
+      setSiiSource(sii.source);
+      setSiiTimestamp(sii.timestamp);
+      toast.success('Avalúo fiscal actualizado', {
+        description: sii.source === 'demo' ? 'Datos de demostración aplicados.' : 'Datos obtenidos del SII.',
+      });
+    } catch (err: any) {
+      toast.error('No se pudo consultar el SII', { description: err.message });
+    } finally {
+      setSiiLoading(false);
+    }
+  };
+
   return (
     <Card className="glass border-border/50 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border-b border-border/40">
