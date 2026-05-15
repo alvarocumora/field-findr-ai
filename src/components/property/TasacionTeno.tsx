@@ -320,6 +320,35 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
       </CardHeader>
 
       <CardContent className="p-4 md:p-6 space-y-4">
+        {shareUrl && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <LinkIcon className="h-4 w-4 text-primary" />
+              Enlace compartible generado
+              {shareExpiresAt && (
+                <Badge variant="secondary" className="ml-auto text-xs">Expira: {shareExpiresAt}</Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Input readOnly value={shareUrl} className="h-9 text-xs font-mono" onFocus={(e) => e.currentTarget.select()} />
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1"
+                onClick={() => {
+                  navigator.clipboard.writeText(shareUrl);
+                  toast.success('Enlace copiado');
+                }}
+              >
+                <Copy className="h-3.5 w-3.5" /> Copiar
+              </Button>
+              <Button size="sm" variant="ghost" asChild>
+                <a href={shareUrl} target="_blank" rel="noopener noreferrer">Abrir</a>
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Selector tasa UF→CLP */}
         <div className="rounded-lg border border-border/50 bg-muted/20 p-3 space-y-2">
           <div className="flex flex-col sm:flex-row sm:items-end gap-3">
