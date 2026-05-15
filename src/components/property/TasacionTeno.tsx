@@ -275,36 +275,54 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           <div>
             <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
               <FileBarChart className="h-6 w-6 text-primary" />
-              Informe de Tasación Comercial
+              {L.reportTitle}
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Predio agroindustrial · {d.comuna}, {d.region} · {d.fecha}
+              {L.reportSubtitle(d.comuna, d.region, d.fecha)}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <div className="inline-flex rounded-md border border-border/50 overflow-hidden">
+              <Button
+                variant={lang === 'es' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setLang('es')}
+                className="h-9 rounded-none gap-1 px-3"
+              >
+                <Languages className="h-3.5 w-3.5" /> ES
+              </Button>
+              <Button
+                variant={lang === 'en' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setLang('en')}
+                className="h-9 rounded-none px-3"
+              >
+                EN
+              </Button>
+            </div>
             <Button
               variant={editing ? 'default' : 'outline'}
               size="sm"
               onClick={() => setEditing((v) => !v)}
               className="gap-2"
             >
-              <Pencil className="h-4 w-4" /> {editing ? 'Cerrar edición' : 'Editar campos'}
+              <Pencil className="h-4 w-4" /> {editing ? tt('Cerrar edición', 'Close editor') : tt('Editar campos', 'Edit fields')}
             </Button>
             {Object.keys(overrides).length > 0 && (
               <Button variant="ghost" size="sm" onClick={() => setOverrides({})} className="gap-2 text-muted-foreground">
-                <RotateCcw className="h-4 w-4" /> Restablecer
+                <RotateCcw className="h-4 w-4" /> {tt('Restablecer', 'Reset')}
               </Button>
             )}
             <Select value={shareExpiresIn} onValueChange={setShareExpiresIn}>
               <SelectTrigger className="h-9 w-[140px]">
-                <SelectValue placeholder="Expira en" />
+                <SelectValue placeholder={tt('Expira en', 'Expires in')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="3600">1 hora</SelectItem>
-                <SelectItem value="86400">24 horas</SelectItem>
-                <SelectItem value="604800">7 días</SelectItem>
-                <SelectItem value="2592000">30 días</SelectItem>
-                <SelectItem value="31536000">1 año</SelectItem>
+                <SelectItem value="3600">{tt('1 hora', '1 hour')}</SelectItem>
+                <SelectItem value="86400">{tt('24 horas', '24 hours')}</SelectItem>
+                <SelectItem value="604800">{tt('7 días', '7 days')}</SelectItem>
+                <SelectItem value="2592000">{tt('30 días', '30 days')}</SelectItem>
+                <SelectItem value="31536000">{tt('1 año', '1 year')}</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -314,13 +332,13 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
               className="gap-2"
             >
               {shareLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
-              Compartir
+              {tt('Compartir', 'Share')}
             </Button>
             <Button
               onClick={() => generateTasacionPdf(buildPdfData())}
               className="gap-2"
             >
-              <Download className="h-4 w-4" /> Descargar PDF
+              <Download className="h-4 w-4" /> {tt('Descargar PDF', 'Download PDF')}
             </Button>
           </div>
         </div>
