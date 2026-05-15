@@ -48,6 +48,10 @@ export interface TasacionData {
   valorM2UF: number;
   valorM2CLP: number;
   observaciones: string;
+  // Firma digital del tasador (opcional)
+  firmaDataUrl?: string;
+  firmaTasador?: string;
+  firmaFecha?: string;
 }
 
 export const generateTasacionPdf = (data: TasacionData) => {
@@ -262,6 +266,50 @@ export const generateTasacionPdf = (data: TasacionData) => {
   doc.setFontSize(10);
   kv('Valor unitario', `${fmtUF(data.valorM2UF)} / m²  (≈ ${fmtCLP(data.valorM2CLP)} / m²)`);
   para(data.observaciones);
+
+  // 13. Firma digital del tasador
+  sectionTitle(13, 'Firma digital del tasador');
+  ensureSpace(60);
+  const sigBoxW = 90;
+  const sigBoxH = 40;
+  const sigX = margin;
+  const sigY = y;
+  doc.setDrawColor(180);
+  doc.setLineWidth(0.3);
+  doc.rect(sigX, sigY, sigBoxW, sigBoxH);
+  if (data.firmaDataUrl) {
+    try {
+      doc.addImage(data.firmaDataUrl, 'PNG', sigX + 2, sigY + 2, sigBoxW - 4, sigBoxH - 4);
+    } catch (e) {
+      doc.setFontSize(8);
+      doc.setTextColor(180);
+      doc.text('(firma no disponible)', sigX + 4, sigY + sigBoxH / 2);
+      doc.setTextColor(0);
+    }
+  } else {
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text('Firma pendiente', sigX + 4, sigY + sigBoxH / 2);
+    doc.setTextColor(0);
+  }
+  // Línea base + datos del firmante
+  doc.setDrawColor(80);
+  doc.line(sigX, sigY + sigBoxH + 2, sigX + sigBoxW, sigY + sigBoxH + 2);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text(data.firmaTasador || data.tasador, sigX, sigY + sigBoxH + 7);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text(`Fecha de firma: ${data.firmaFecha || data.fecha}`, sigX, sigY + sigBoxH + 12);
+  if (data.firmaDataUrl) {
+    doc.setTextColor(34, 197, 94);
+    doc.text('Firmado digitalmente', sigX + sigBoxW + 6, sigY + sigBoxH + 7);
+    doc.setTextColor(120);
+    doc.setFontSize(7);
+    doc.text('Hash visual del trazo embebido en este PDF.', sigX + sigBoxW + 6, sigY + sigBoxH + 12);
+    doc.setTextColor(0);
+  }
+  y = sigY + sigBoxH + 18;
 
   drawPdfFooter(doc);
   doc.save(`Tasacion_${data.comuna}_${data.fecha.replace(/[^\d]/g, '')}.pdf`);

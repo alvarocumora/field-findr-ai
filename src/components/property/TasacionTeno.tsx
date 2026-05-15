@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Download, FileBarChart, MapPin, Ruler, Layers, Droplets, Zap, Cable, Flame, Wifi, Route, CheckCircle2, XCircle, Building2, Calculator, Scale, Trophy, Pencil, RotateCcw, Loader2, Info } from 'lucide-react';
+import { Download, FileBarChart, MapPin, Ruler, Layers, Droplets, Zap, Cable, Flame, Wifi, Route, CheckCircle2, XCircle, Building2, Calculator, Scale, Trophy, Pencil, RotateCcw, Loader2, Info, Pen, Eraser } from 'lucide-react';
 import { generateTasacionPdf, type TasacionData } from '@/lib/tasacionPdfGenerator';
+import SignatureCanvas from '@/components/signature/SignatureCanvas';
 import { buildTasacionData, applyUfRate, UF_REF } from '@/lib/buildTasacionData';
 import { useComparables } from '@/hooks/useComparables';
 import { useUfRate } from '@/hooks/useUfRate';
@@ -110,6 +111,9 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
   const [siiLoading, setSiiLoading] = useState(false);
   const [siiSource, setSiiSource] = useState<'sii_scraping' | 'demo' | null>(null);
   const [siiTimestamp, setSiiTimestamp] = useState<string | null>(null);
+  const [firmaDataUrl, setFirmaDataUrl] = useState<string | null>(null);
+  const [firmaTasador, setFirmaTasador] = useState('');
+  const [firmaFecha, setFirmaFecha] = useState<string | null>(null);
 
   // Cuando llega la UF de hoy desde el Banco Central, sincroniza el valor por defecto
   useMemo(() => {
@@ -238,7 +242,15 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
                 <RotateCcw className="h-4 w-4" /> Restablecer
               </Button>
             )}
-            <Button onClick={() => generateTasacionPdf(d)} className="gap-2">
+            <Button
+              onClick={() => generateTasacionPdf({
+                ...d,
+                firmaDataUrl: firmaDataUrl || undefined,
+                firmaTasador: firmaTasador || d.tasador,
+                firmaFecha: firmaFecha || d.fecha,
+              })}
+              className="gap-2"
+            >
               <Download className="h-4 w-4" /> Descargar PDF
             </Button>
           </div>
@@ -632,7 +644,6 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           </div>
         </SectionCard>
 
-
         <SectionCard n={11} icon={Calculator} title="Metodología de tasación">
           <p className="text-sm text-muted-foreground leading-relaxed">
             Se aplica el <strong>Método Comparativo de Mercado</strong>, contrastando el valor SII del predio con
@@ -649,6 +660,69 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
             <p className="text-sm text-muted-foreground mt-1">≈ {fmtCLP(d.valorComercialCLP)} ({fmtUF(d.valorM2UF)}/m²)</p>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed mt-3">{d.observaciones}</p>
+        </SectionCard>
+
+        <SectionCard n={13} icon={Pen} title="Firma digital del tasador">
+          <p className="text-xs text-muted-foreground mb-3">
+            Firma manuscrita del tasador acreditado. Se embebe en el PDF como evidencia visual del informe.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_minmax(0,360px)] gap-4 items-start">
+            <div className="space-y-2">
+              <div>
+                <Label className="text-xs">Nombre del tasador</Label>
+                <Input
+                  value={firmaTasador}
+                  onChange={(e) => setFirmaTasador(e.target.value)}
+                  placeholder={d.tasador}
+                  className="h-9 mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Fecha de firma</Label>
+                <Input
+                  type="date"
+                  value={firmaFecha ?? ''}
+                  onChange={(e) => setFirmaFecha(e.target.value || null)}
+                  className="h-9 mt-1"
+                />
+              </div>
+              {firmaDataUrl ? (
+                <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-2 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-xs text-emerald-500">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Firma capturada · se incluirá en el PDF
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setFirmaDataUrl(null)}
+                    className="h-7 gap-1 text-xs"
+                  >
+                    <Eraser className="h-3 w-3" /> Quitar
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                  <Info className="h-3 w-3 mt-0.5 shrink-0" />
+                  Firma con el mouse o el dedo en el panel y pulsa "Guardar firma".
+                </p>
+              )}
+              {firmaDataUrl && (
+                <div className="rounded-md border border-border/40 bg-white p-2">
+                  <img src={firmaDataUrl} alt="Vista previa de la firma" className="max-h-24 mx-auto" />
+                </div>
+              )}
+            </div>
+            <SignatureCanvas
+              label="Trazo de firma"
+              width={340}
+              height={160}
+              onSave={(dataUrl) => {
+                setFirmaDataUrl(dataUrl);
+                if (!firmaFecha) setFirmaFecha(new Date().toISOString().slice(0, 10));
+              }}
+            />
+          </div>
         </SectionCard>
 
         <p className="text-[11px] text-muted-foreground italic text-center pt-2">
