@@ -136,9 +136,9 @@ export function buildTasacionData(listing: ListingLike, ufRate: number = UF_REF)
     valorUnitarioSII,
     comparables: inferComparables(areaM2, valorM2UF || 0.3),
     valorComercialUF: priceUF,
-    valorComercialCLP: priceUF * UF_REF,
+    valorComercialCLP: priceUF * ufRate,
     valorM2UF,
-    valorM2CLP: Math.round(valorM2UF * UF_REF),
+    valorM2CLP: Math.round(valorM2UF * ufRate),
     observaciones: `Valor comercial referencial calculado a partir del precio de oferta vigente y comparables del sector. Factores considerados: ubicación, superficie (${areaM2.toLocaleString('es-CL')} m²), uso ${tipo}, accesos y servicios disponibles. Para uso bancario o judicial se requiere ratificación por tasador acreditado.`,
   };
 }
