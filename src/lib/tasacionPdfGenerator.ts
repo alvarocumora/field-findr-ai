@@ -55,6 +55,11 @@ export interface TasacionData {
   firmaFecha?: string;
   // Idioma del informe
   lang?: TasacionLang;
+  // Trazabilidad / validación pública
+  qrDataUrl?: string;          // PNG dataURL del QR que apunta al validador
+  validatorUrl?: string;       // URL pública del validador
+  pdfHashShort?: string;       // hash visible (corto) en portada
+  publicId?: string;           // id corto del registro publicado
 }
 
 export const buildTasacionFilename = (data: TasacionData) => {
