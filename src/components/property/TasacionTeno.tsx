@@ -115,8 +115,6 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
     () => [{ label: ufLoading ? 'Hoy…' : 'Hoy', value: ufToday }, ...ufHistoricos],
     [ufToday, ufHistoricos, ufLoading]
   );
-  const [editing, setEditing] = useState(false);
-  const [overrides, setOverrides] = useState<Partial<TasacionData>>({});
 
   const base: TasacionData = useMemo(() => {
     if (data) return applyUfRate(data, ufRate);
