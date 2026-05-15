@@ -201,36 +201,56 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
 
       <CardContent className="p-4 md:p-6 space-y-4">
         {/* Selector tasa UF→CLP */}
-        <div className="rounded-lg border border-border/50 bg-muted/20 p-3 flex flex-col sm:flex-row sm:items-end gap-3">
-          <div className="flex-1 min-w-[180px]">
-            <Label htmlFor="uf-rate" className="text-xs text-muted-foreground">Tasa UF → CLP (a la fecha de tasación)</Label>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-sm text-muted-foreground">$</span>
-              <Input
-                id="uf-rate"
-                type="number"
-                min={1000}
-                step={10}
-                value={ufRate}
-                onChange={(e) => setUfRate(Math.max(1, Number(e.target.value) || UF_REF))}
-                className="h-9"
-              />
-              <span className="text-xs text-muted-foreground whitespace-nowrap">/ UF</span>
+        <div className="rounded-lg border border-border/50 bg-muted/20 p-3 space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div className="flex-1 min-w-[180px]">
+              <Label htmlFor="uf-rate" className="text-xs text-muted-foreground">
+                Tasa UF → CLP (a la fecha de tasación)
+              </Label>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-sm text-muted-foreground">$</span>
+                <Input
+                  id="uf-rate"
+                  type="number"
+                  min={1000}
+                  step={10}
+                  value={ufRate}
+                  onChange={(e) => {
+                    setUserTouchedRate(true);
+                    setUfRate(Math.max(1, Number(e.target.value) || UF_REF));
+                  }}
+                  className="h-9"
+                />
+                <span className="text-xs text-muted-foreground whitespace-nowrap">/ UF</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {ufPresets.map((p) => (
+                <Button
+                  key={p.label}
+                  size="sm"
+                  variant={ufRate === p.value ? 'default' : 'outline'}
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    setUserTouchedRate(true);
+                    setUfRate(p.value);
+                  }}
+                  disabled={ufLoading && p.label.startsWith('Hoy')}
+                >
+                  {p.label}
+                </Button>
+              ))}
             </div>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {ufPresets.map((p) => (
-              <Button
-                key={p.label}
-                size="sm"
-                variant={ufRate === p.value ? 'default' : 'outline'}
-                className="h-8 text-xs"
-                onClick={() => setUfRate(p.value)}
-              >
-                {p.label}
-              </Button>
-            ))}
-          </div>
+          <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+            {ufLoading ? (
+              <><Loader2 className="h-3 w-3 animate-spin" /> Consultando UF al Banco Central…</>
+            ) : ufError ? (
+              <><Info className="h-3 w-3" /> {ufError}</>
+            ) : (
+              <><Info className="h-3 w-3" /> Valores oficiales obtenidos desde mindicador.cl (Banco Central de Chile).</>
+            )}
+          </p>
         </div>
 
         {/* Editor de campos */}
