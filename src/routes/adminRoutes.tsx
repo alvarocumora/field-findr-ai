@@ -12,6 +12,7 @@ import CreditManager from "@/components/credits/CreditManager";
 import BusinessIntelligence from "@/components/BusinessIntelligence";
 import FinancialDashboard from "@/pages/dashboard/FinancialDashboard";
 import ProjectsManagement from "@/components/ProjectsManagement";
+import VisualScenariosAdmin from "@/pages/admin/VisualScenariosAdmin";
 import { DashboardAdmin } from "@/pages/dashboard";
 import { PageLoader } from "./routeUtils";
 
@@ -40,5 +41,6 @@ export const adminRoutes = [
   <Route key="admin-financial" path="/admin/financial" element={adminElement(<FinancialDashboard />)} />,
   <Route key="admin-documents" path="/admin/documents" element={adminElement(<DocumentCenter />)} />,
   <Route key="admin-projects" path="/admin/projects" element={adminElement(<ProjectsManagement />)} />,
+  <Route key="admin-visual-scenarios" path="/admin/visual-scenarios" element={adminElement(<VisualScenariosAdmin />)} />,
   <Route key="admin-audit" path="/admin/audit" element={adminElement(<AuditLog />)} />,
 ];
