@@ -288,13 +288,29 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
                 <RotateCcw className="h-4 w-4" /> Restablecer
               </Button>
             )}
+            <Select value={shareExpiresIn} onValueChange={setShareExpiresIn}>
+              <SelectTrigger className="h-9 w-[140px]">
+                <SelectValue placeholder="Expira en" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="3600">1 hora</SelectItem>
+                <SelectItem value="86400">24 horas</SelectItem>
+                <SelectItem value="604800">7 días</SelectItem>
+                <SelectItem value="2592000">30 días</SelectItem>
+                <SelectItem value="31536000">1 año</SelectItem>
+              </SelectContent>
+            </Select>
             <Button
-              onClick={() => generateTasacionPdf({
-                ...d,
-                firmaDataUrl: firmaDataUrl || undefined,
-                firmaTasador: firmaTasador || d.tasador,
-                firmaFecha: firmaFecha || d.fecha,
-              })}
+              variant="secondary"
+              onClick={handleShare}
+              disabled={shareLoading}
+              className="gap-2"
+            >
+              {shareLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+              Compartir
+            </Button>
+            <Button
+              onClick={() => generateTasacionPdf(buildPdfData())}
               className="gap-2"
             >
               <Download className="h-4 w-4" /> Descargar PDF
