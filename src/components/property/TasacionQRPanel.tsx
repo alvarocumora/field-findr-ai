@@ -11,6 +11,8 @@ import {
   QrCode as QrIcon,
   Hash,
   Link2,
+  Anchor,
+  Bitcoin,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { publishTasacion, downloadDataUrl, downloadText, type PublishResult } from '@/lib/tasacionPublish';
