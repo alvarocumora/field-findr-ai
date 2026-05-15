@@ -231,6 +231,7 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
     firmaDataUrl: firmaDataUrl || undefined,
     firmaTasador: firmaTasador || d.tasador,
     firmaFecha: firmaFecha || d.fecha,
+    lang,
   });
 
   const handleShare = async () => {
