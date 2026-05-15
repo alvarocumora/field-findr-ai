@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Download, FileBarChart, MapPin, Ruler, Layers, Droplets, Zap, Cable, Flame, Wifi, Route, CheckCircle2, XCircle, Building2, Calculator, Scale, Trophy, Pencil, RotateCcw, Loader2, Info, Pen, Eraser, Share2, Copy, Link as LinkIcon } from 'lucide-react';
 import { generateTasacionPdf, buildTasacionPdfBlob, buildTasacionFilename, type TasacionData } from '@/lib/tasacionPdfGenerator';
+import TasacionQRPanel from '@/components/property/TasacionQRPanel';
 import SignatureCanvas from '@/components/signature/SignatureCanvas';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getT, type TasacionLang } from '@/lib/tasacionI18n';
