@@ -644,6 +644,68 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           </div>
         </SectionCard>
 
+        <SectionCard n={13} icon={Pen} title="Firma digital del tasador">
+          <p className="text-xs text-muted-foreground mb-3">
+            Firma manuscrita del tasador acreditado. Se embebe en el PDF como evidencia visual del informe.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_minmax(0,360px)] gap-4 items-start">
+            <div className="space-y-2">
+              <div>
+                <Label className="text-xs">Nombre del tasador</Label>
+                <Input
+                  value={firmaTasador}
+                  onChange={(e) => setFirmaTasador(e.target.value)}
+                  placeholder={d.tasador}
+                  className="h-9 mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Fecha de firma</Label>
+                <Input
+                  type="date"
+                  value={firmaFecha ?? ''}
+                  onChange={(e) => setFirmaFecha(e.target.value || null)}
+                  className="h-9 mt-1"
+                />
+              </div>
+              {firmaDataUrl ? (
+                <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-2 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-xs text-emerald-500">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Firma capturada · se incluirá en el PDF
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setFirmaDataUrl(null)}
+                    className="h-7 gap-1 text-xs"
+                  >
+                    <Eraser className="h-3 w-3" /> Quitar
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                  <Info className="h-3 w-3 mt-0.5 shrink-0" />
+                  Firma con el mouse o el dedo en el panel y pulsa "Guardar firma".
+                </p>
+              )}
+              {firmaDataUrl && (
+                <div className="rounded-md border border-border/40 bg-white p-2">
+                  <img src={firmaDataUrl} alt="Vista previa de la firma" className="max-h-24 mx-auto" />
+                </div>
+              )}
+            </div>
+            <SignatureCanvas
+              label="Trazo de firma"
+              width={340}
+              height={160}
+              onSave={(dataUrl) => {
+                setFirmaDataUrl(dataUrl);
+                if (!firmaFecha) setFirmaFecha(new Date().toISOString().slice(0, 10));
+              }}
+            />
+          </div>
+        </SectionCard>
 
         <SectionCard n={11} icon={Calculator} title="Metodología de tasación">
           <p className="text-sm text-muted-foreground leading-relaxed">
