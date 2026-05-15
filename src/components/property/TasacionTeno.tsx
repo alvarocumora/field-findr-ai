@@ -1,10 +1,13 @@
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Download, FileBarChart, MapPin, Ruler, Layers, Droplets, Zap, Cable, Flame, Wifi, Route, CheckCircle2, XCircle, Building2, Calculator, Scale, Trophy } from 'lucide-react';
 import { generateTasacionPdf, type TasacionData } from '@/lib/tasacionPdfGenerator';
-import { buildTasacionData, UF_REF } from '@/lib/buildTasacionData';
+import { buildTasacionData, applyUfRate, UF_REF } from '@/lib/buildTasacionData';
 
 const TENO_TASACION: TasacionData = {
   fecha: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }),
@@ -90,9 +93,22 @@ interface TasacionInformeProps {
   data?: TasacionData;
 }
 
+const UF_PRESETS = [
+  { label: 'Hoy (ref.)', value: UF_REF },
+  { label: 'Ene 2025', value: 38500 },
+  { label: 'Ene 2024', value: 36800 },
+  { label: 'Ene 2023', value: 35100 },
+];
+
 export default function TasacionTeno({ listing, data }: TasacionInformeProps = {}) {
-  const d: TasacionData = data
-    ?? (listing ? buildTasacionData(listing) : TENO_TASACION);
+  const [ufRate, setUfRate] = useState<number>(UF_REF);
+
+  const d: TasacionData = useMemo(() => {
+    if (data) return applyUfRate(data, ufRate);
+    if (listing) return buildTasacionData(listing, ufRate);
+    return applyUfRate(TENO_TASACION, ufRate);
+  }, [data, listing, ufRate]);
+
   return (
     <Card className="glass border-border/50 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border-b border-border/40">
@@ -113,6 +129,39 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
       </CardHeader>
 
       <CardContent className="p-4 md:p-6 space-y-4">
+        {/* Selector tasa UF→CLP */}
+        <div className="rounded-lg border border-border/50 bg-muted/20 p-3 flex flex-col sm:flex-row sm:items-end gap-3">
+          <div className="flex-1 min-w-[180px]">
+            <Label htmlFor="uf-rate" className="text-xs text-muted-foreground">Tasa UF → CLP (a la fecha de tasación)</Label>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-sm text-muted-foreground">$</span>
+              <Input
+                id="uf-rate"
+                type="number"
+                min={1000}
+                step={10}
+                value={ufRate}
+                onChange={(e) => setUfRate(Math.max(1, Number(e.target.value) || UF_REF))}
+                className="h-9"
+              />
+              <span className="text-xs text-muted-foreground whitespace-nowrap">/ UF</span>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {UF_PRESETS.map((p) => (
+              <Button
+                key={p.label}
+                size="sm"
+                variant={ufRate === p.value ? 'default' : 'outline'}
+                className="h-8 text-xs"
+                onClick={() => setUfRate(p.value)}
+              >
+                {p.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
         {/* Resumen ejecutivo */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-4">

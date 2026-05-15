@@ -2,6 +2,15 @@ import type { TasacionData } from './tasacionPdfGenerator';
 
 export const UF_REF = 39500;
 
+/** Recalcula los campos CLP de una TasacionData a partir de los UF, usando la tasa indicada. */
+export function applyUfRate(d: TasacionData, ufRate: number): TasacionData {
+  return {
+    ...d,
+    valorComercialCLP: Math.round(d.valorComercialUF * ufRate),
+    valorM2CLP: Math.round(d.valorM2UF * ufRate),
+  };
+}
+
 const TENO_LISTING_ID = 'a4c4c2bb-3f59-4a4f-9c08-2f5e8a7e8b1a'; // mantener si difiere, override por id
 
 interface ListingLike {
@@ -67,17 +76,18 @@ const inferComparables = (areaM2: number, valorM2UF: number) => {
   });
 };
 
-export function buildTasacionData(listing: ListingLike): TasacionData {
+export function buildTasacionData(listing: ListingLike, ufRate: number = UF_REF): TasacionData {
   const areaM2 = listing.area_m2 || (listing.area_ha ? listing.area_ha * 10000 : 5000);
   const priceUF = listing.currency === 'UF'
     ? (listing.price || 0)
-    : Math.round((listing.price || 0) / UF_REF);
+    : Math.round((listing.price || 0) / ufRate);
   const valorM2UF = areaM2 > 0 ? +(priceUF / areaM2).toFixed(3) : 0;
   const utilities = (listing.utilities || {}) as Record<string, any>;
   const tipo = typeLabel(listing.type);
 
-  const valorUnitarioSII = Math.max(1500, Math.round(valorM2UF * UF_REF * 0.18)); // ~18% del valor comercial
+  const valorUnitarioSII = Math.max(1500, Math.round(valorM2UF * ufRate * 0.18));
   const avaluoTerreno = Math.round(valorUnitarioSII * areaM2);
+
 
   return {
     fecha: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }),
@@ -126,9 +136,9 @@ export function buildTasacionData(listing: ListingLike): TasacionData {
     valorUnitarioSII,
     comparables: inferComparables(areaM2, valorM2UF || 0.3),
     valorComercialUF: priceUF,
-    valorComercialCLP: priceUF * UF_REF,
+    valorComercialCLP: priceUF * ufRate,
     valorM2UF,
-    valorM2CLP: Math.round(valorM2UF * UF_REF),
+    valorM2CLP: Math.round(valorM2UF * ufRate),
     observaciones: `Valor comercial referencial calculado a partir del precio de oferta vigente y comparables del sector. Factores considerados: ubicación, superficie (${areaM2.toLocaleString('es-CL')} m²), uso ${tipo}, accesos y servicios disponibles. Para uso bancario o judicial se requiere ratificación por tasador acreditado.`,
   };
 }
