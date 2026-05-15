@@ -84,27 +84,50 @@ export const mapVisualScenarioRow = (row: VisualScenarioRow): VisualScenario => 
   updatedAt: row.updated_at ?? undefined,
 });
 
+const visualScenariosTable = () => (supabase as unknown as {
+  from: (table: 'visual_scenarios') => {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => {
+        order: (column: string, options?: { ascending?: boolean }) => Promise<{
+          data: VisualScenarioRow[] | null;
+          error: Error | null;
+        }>;
+      };
+      order: (column: string, options?: { ascending?: boolean }) => {
+        limit: (count: number) => Promise<{
+          data: VisualScenarioRow[] | null;
+          error: Error | null;
+        }>;
+      };
+    };
+  };
+}).from('visual_scenarios');
+
 export const useVisualScenarios = (propertyId?: string | null) => {
   return useQuery({
     queryKey: ['visual-scenarios', propertyId],
     enabled: !!propertyId,
     queryFn: async () => {
-      const { data, error } = await (supabase as unknown as {
-        from: (table: 'visual_scenarios') => {
-          select: (columns: string) => {
-            eq: (column: string, value: string) => {
-              order: (column: string, options?: { ascending?: boolean }) => Promise<{
-                data: VisualScenarioRow[] | null;
-                error: Error | null;
-              }>;
-            };
-          };
-        };
-      })
-        .from('visual_scenarios')
+      const { data, error } = await visualScenariosTable()
         .select('*')
         .eq('property_id', propertyId as string)
         .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      return (data ?? []).map(mapVisualScenarioRow);
+    },
+  });
+};
+
+export const useAdminVisualScenarios = (limit = 100) => {
+  return useQuery({
+    queryKey: ['visual-scenarios', 'admin', limit],
+    queryFn: async () => {
+      const { data, error } = await visualScenariosTable()
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(limit);
 
       if (error) throw error;
 
