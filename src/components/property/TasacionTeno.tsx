@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Download, FileBarChart, MapPin, Ruler, Layers, Droplets, Zap, Cable, Flame, Wifi, Route, CheckCircle2, XCircle, Building2, Calculator, Scale, Trophy } from 'lucide-react';
 import { generateTasacionPdf, type TasacionData } from '@/lib/tasacionPdfGenerator';
-
-const UF_REF = 39500;
+import { buildTasacionData, UF_REF } from '@/lib/buildTasacionData';
 
 const TENO_TASACION: TasacionData = {
   fecha: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }),
@@ -86,8 +85,14 @@ const ServiceBadge = ({ ok, icon: Icon, label }: { ok: boolean; icon: any; label
 const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
 const fmtUF = (n: number) => `UF ${n.toLocaleString('es-CL', { maximumFractionDigits: 2 })}`;
 
-export default function TasacionTeno() {
-  const d = TENO_TASACION;
+interface TasacionInformeProps {
+  listing?: any;
+  data?: TasacionData;
+}
+
+export default function TasacionTeno({ listing, data }: TasacionInformeProps = {}) {
+  const d: TasacionData = data
+    ?? (listing ? buildTasacionData(listing) : TENO_TASACION);
   return (
     <Card className="glass border-border/50 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border-b border-border/40">

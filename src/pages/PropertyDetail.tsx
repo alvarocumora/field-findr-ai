@@ -366,8 +366,8 @@ const PropertyDetail = () => {
               </Card>
             )}
 
-            {/* Tasación Comercial — Teno only */}
-            {isTeno && <TasacionTeno />}
+            {/* Tasación Comercial — generada para cualquier propiedad */}
+            <TasacionTeno listing={isTeno ? undefined : listing} />
 
             {/* Visual Scenarios — conditional preview */}
             {visualScenarios.length > 0 && (
