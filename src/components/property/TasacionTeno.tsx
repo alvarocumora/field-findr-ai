@@ -104,12 +104,40 @@ const UF_PRESETS = [
 
 export default function TasacionTeno({ listing, data }: TasacionInformeProps = {}) {
   const [ufRate, setUfRate] = useState<number>(UF_REF);
+  const [editing, setEditing] = useState(false);
+  const [overrides, setOverrides] = useState<Partial<TasacionData>>({});
 
-  const d: TasacionData = useMemo(() => {
+  const base: TasacionData = useMemo(() => {
     if (data) return applyUfRate(data, ufRate);
     if (listing) return buildTasacionData(listing, ufRate);
     return applyUfRate(TENO_TASACION, ufRate);
   }, [data, listing, ufRate]);
+
+  // Merge overrides on top of auto-built data, recomputing derived CLP fields
+  const d: TasacionData = useMemo(() => {
+    const merged: TasacionData = {
+      ...base,
+      ...overrides,
+      deslindes: { ...base.deslindes, ...(overrides.deslindes || {}) },
+      servicios: { ...base.servicios, ...(overrides.servicios || {}) },
+    };
+    // Recompute CLP fields if user edited UF values
+    merged.valorComercialCLP = Math.round(merged.valorComercialUF * ufRate);
+    merged.valorM2CLP = Math.round(merged.valorM2UF * ufRate);
+    if (merged.superficieTerreno > 0) {
+      merged.valorM2UF = +(merged.valorComercialUF / merged.superficieTerreno).toFixed(3);
+      merged.valorM2CLP = Math.round(merged.valorM2UF * ufRate);
+    }
+    merged.avaluoFiscalTotal = (merged.avaluoFiscalTerreno || 0) + (merged.avaluoFiscalConstruccion || 0);
+    return merged;
+  }, [base, overrides, ufRate]);
+
+  const setField = <K extends keyof TasacionData>(k: K, v: TasacionData[K]) =>
+    setOverrides((o) => ({ ...o, [k]: v }));
+  const setDeslinde = (k: keyof TasacionData['deslindes'], v: string) =>
+    setOverrides((o) => ({ ...o, deslindes: { ...(o.deslindes || base.deslindes), [k]: v } as any }));
+  const setServicio = (k: keyof TasacionData['servicios'], v: boolean) =>
+    setOverrides((o) => ({ ...o, servicios: { ...(o.servicios || base.servicios), [k]: v } as any }));
 
   return (
     <Card className="glass border-border/50 overflow-hidden">
