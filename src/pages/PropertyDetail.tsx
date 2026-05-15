@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import GeoEnrichmentPanel from '@/components/map/GeoEnrichmentPanel';
 import InvestmentScoreWidget from '@/components/property/InvestmentScoreWidget';
 import ConceptRenderGallery from '@/components/property/ConceptRenderGallery';
+import TasacionTeno from '@/components/property/TasacionTeno';
 import ListingDesigner3DDialog from '@/components/property/ListingDesigner3DDialog';
 import { lazy, Suspense } from 'react';
 const TenoCinematicHero = lazy(() => import('@/components/property/teno-hero/TenoCinematicHero'));
@@ -364,6 +365,9 @@ const PropertyDetail = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Tasación Comercial — Teno only */}
+            {isTeno && <TasacionTeno />}
 
             {/* Visual Scenarios — conditional preview */}
             {visualScenarios.length > 0 && (
