@@ -152,9 +152,24 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
               Predio agroindustrial · {d.comuna}, {d.region} · {d.fecha}
             </p>
           </div>
-          <Button onClick={() => generateTasacionPdf(d)} className="gap-2">
-            <Download className="h-4 w-4" /> Descargar PDF
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={editing ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setEditing((v) => !v)}
+              className="gap-2"
+            >
+              <Pencil className="h-4 w-4" /> {editing ? 'Cerrar edición' : 'Editar campos'}
+            </Button>
+            {Object.keys(overrides).length > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => setOverrides({})} className="gap-2 text-muted-foreground">
+                <RotateCcw className="h-4 w-4" /> Restablecer
+              </Button>
+            )}
+            <Button onClick={() => generateTasacionPdf(d)} className="gap-2">
+              <Download className="h-4 w-4" /> Descargar PDF
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
