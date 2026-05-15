@@ -357,6 +357,29 @@ const buildTasacionDoc = (data: TasacionData) => {
   }
   y = sigY + sigBoxH + 18;
 
+  // QR + datos de trazabilidad junto a la firma (si está publicado)
+  if (data.qrDataUrl && data.validatorUrl) {
+    const qrSize = 30;
+    const qrX = pageW - margin - qrSize;
+    const qrY = sigY;
+    try { doc.addImage(data.qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize); } catch {}
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(34, 197, 94);
+    doc.text('TASACIÓN VERIFICABLE', qrX + qrSize / 2, qrY + qrSize + 3, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(80);
+    doc.setFontSize(6);
+    doc.text(data.validatorUrl, qrX + qrSize / 2, qrY + qrSize + 6, { align: 'center' });
+    if (data.publicId) {
+      doc.text(`ID: ${data.publicId}`, qrX + qrSize / 2, qrY + qrSize + 9, { align: 'center' });
+    }
+    if (data.pdfHashShort) {
+      doc.text(`SHA-256: ${data.pdfHashShort}`, qrX + qrSize / 2, qrY + qrSize + 12, { align: 'center' });
+    }
+    doc.setTextColor(0);
+  }
+
   drawPdfFooter(doc);
   return doc;
 };
