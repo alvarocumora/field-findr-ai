@@ -96,6 +96,32 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
     }
   };
 
+  const onVerify = async () => {
+    if (!result) return;
+    setVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-tasacion-ots', {
+        body: { tasacionId: result.id },
+      });
+      if (error) throw error;
+      setVerify(data);
+      setVerifyAt(new Date());
+      if (data?.aggregate === 'confirmed') {
+        toast.success('OpenTimestamps confirmado', { description: 'El SHA-256 ya quedó comprometido en Bitcoin.' });
+      } else if (data?.aggregate === 'pending') {
+        toast.info('Pendiente de bloque Bitcoin', { description: 'Los calendarios recibieron el digest.' });
+      } else if (!data?.anchored) {
+        toast.warning('Aún no anclado', { description: 'Primero ancla a Bitcoin (OTS).' });
+      } else {
+        toast.warning('Estado desconocido', { description: 'Reintenta en unos minutos.' });
+      }
+    } catch (err: any) {
+      toast.error('No se pudo verificar', { description: err.message ?? 'Error desconocido' });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   return (
     <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-3">
       <div className="flex items-start justify-between gap-3 flex-wrap">
