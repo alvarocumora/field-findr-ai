@@ -106,6 +106,10 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
   const [userTouchedRate, setUserTouchedRate] = useState(false);
   const [editing, setEditing] = useState(false);
   const [overrides, setOverrides] = useState<Partial<TasacionData>>({});
+  const [siiRol, setSiiRol] = useState('');
+  const [siiLoading, setSiiLoading] = useState(false);
+  const [siiSource, setSiiSource] = useState<'sii_scraping' | 'demo' | null>(null);
+  const [siiTimestamp, setSiiTimestamp] = useState<string | null>(null);
 
   // Cuando llega la UF de hoy desde el Banco Central, sincroniza el valor por defecto
   useMemo(() => {
