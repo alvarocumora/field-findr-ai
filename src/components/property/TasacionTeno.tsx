@@ -98,15 +98,23 @@ interface TasacionInformeProps {
   data?: TasacionData;
 }
 
-const UF_PRESETS = [
-  { label: 'Hoy (ref.)', value: UF_REF },
-  { label: 'Ene 2025', value: 38500 },
-  { label: 'Ene 2024', value: 36800 },
-  { label: 'Ene 2023', value: 35100 },
-];
-
 export default function TasacionTeno({ listing, data }: TasacionInformeProps = {}) {
+  const { today: ufToday, presets: ufHistoricos, loading: ufLoading, error: ufError } = useUfRate();
   const [ufRate, setUfRate] = useState<number>(UF_REF);
+  const [userTouchedRate, setUserTouchedRate] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [overrides, setOverrides] = useState<Partial<TasacionData>>({});
+
+  // Cuando llega la UF de hoy desde el Banco Central, sincroniza el valor por defecto
+  useMemo(() => {
+    if (!userTouchedRate && ufToday && ufToday !== ufRate) setUfRate(ufToday);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ufToday]);
+
+  const ufPresets = useMemo(
+    () => [{ label: ufLoading ? 'Hoy…' : 'Hoy', value: ufToday }, ...ufHistoricos],
+    [ufToday, ufHistoricos, ufLoading]
+  );
   const [editing, setEditing] = useState(false);
   const [overrides, setOverrides] = useState<Partial<TasacionData>>({});
 
