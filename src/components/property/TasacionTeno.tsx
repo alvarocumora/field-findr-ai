@@ -242,7 +242,15 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
                 <RotateCcw className="h-4 w-4" /> Restablecer
               </Button>
             )}
-            <Button onClick={() => generateTasacionPdf(d)} className="gap-2">
+            <Button
+              onClick={() => generateTasacionPdf({
+                ...d,
+                firmaDataUrl: firmaDataUrl || undefined,
+                firmaTasador: firmaTasador || d.tasador,
+                firmaFecha: firmaFecha || d.fecha,
+              })}
+              className="gap-2"
+            >
               <Download className="h-4 w-4" /> Descargar PDF
             </Button>
           </div>
