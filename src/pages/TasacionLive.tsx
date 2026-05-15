@@ -316,11 +316,17 @@ const TasacionLive = () => {
                       <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
                       <span className="text-muted-foreground">Anclaje blockchain:</span>
                       {row.blockchain_anchor ? (
-                        <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">
-                          {row.blockchain_anchor.protocol === 'opentimestamps'
-                            ? `OpenTimestamps · ${row.blockchain_anchor.network}`
-                            : `Anclado en ${row.blockchain_anchor.network}`}
-                        </Badge>
+                        ots?.aggregate === 'confirmed' ? (
+                          <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 gap-1">
+                            <Bitcoin className="h-3 w-3" /> Confirmado en Bitcoin
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">
+                            {row.blockchain_anchor.protocol === 'opentimestamps'
+                              ? `OpenTimestamps · ${row.blockchain_anchor.network}`
+                              : `Anclado en ${row.blockchain_anchor.network}`}
+                          </Badge>
+                        )
                       ) : (
                         <Badge variant="outline">Sin anclar</Badge>
                       )}
@@ -331,14 +337,80 @@ const TasacionLive = () => {
                   </div>
 
                   {row.blockchain_anchor?.protocol === 'opentimestamps' && (
-                    <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-2 text-[11px] space-y-1">
-                      <div className="text-muted-foreground">
-                        Enviado a {row.blockchain_anchor.ok_count}/{row.blockchain_anchor.calendars?.length} calendarios
-                        OpenTimestamps el{' '}
-                        {new Date(row.blockchain_anchor.submitted_at).toLocaleString()}.
-                        El SHA-256 quedará incluido en un bloque Bitcoin (~horas).
+                    <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-3 text-[11px] space-y-2">
+                      <div className="flex items-start justify-between gap-2 flex-wrap">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400 text-xs">
+                            <Bitcoin className="h-3.5 w-3.5" /> Verificación pública OpenTimestamps
+                          </div>
+                          <div className="text-muted-foreground">
+                            Enviado el {new Date(row.blockchain_anchor.submitted_at).toLocaleString()} a{' '}
+                            {row.blockchain_anchor.ok_count}/{row.blockchain_anchor.calendars?.length} calendarios.
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 gap-1 text-[10px]"
+                          onClick={runOtsVerify}
+                          disabled={otsLoading}
+                        >
+                          {otsLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                          Re-verificar
+                        </Button>
                       </div>
-                      <div className="font-mono text-[10px] break-all text-muted-foreground">
+
+                      {ots && ots.anchored && (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            {ots.aggregate === 'confirmed' ? (
+                              <>
+                                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                <span className="font-medium text-emerald-600">
+                                  Confirmado en Bitcoin · {ots.confirmed_count}/{ots.checks?.length} calendarios devolvieron prueba actualizada
+                                </span>
+                              </>
+                            ) : ots.aggregate === 'pending' ? (
+                              <>
+                                <Clock className="h-4 w-4 text-amber-500" />
+                                <span className="font-medium text-amber-600">
+                                  Pendiente de inclusión en bloque Bitcoin · {ots.pending_count}/{ots.checks?.length} calendarios reconocen el digest
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <XCircle className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">Estado no determinado</span>
+                              </>
+                            )}
+                          </div>
+                          <p className="text-muted-foreground">{ots.verify_hint}</p>
+                          <ul className="space-y-0.5">
+                            {ots.checks?.map((c) => (
+                              <li key={c.url} className="flex items-center gap-1.5 font-mono text-[10px]">
+                                {c.status === 'confirmed' && <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />}
+                                {c.status === 'pending' && <Clock className="h-3 w-3 text-amber-500 shrink-0" />}
+                                {c.status === 'error' && <XCircle className="h-3 w-3 text-red-500 shrink-0" />}
+                                <span className="truncate">{c.url}</span>
+                                {c.status === 'error' && <span className="text-red-500">— {c.error ?? `HTTP ${c.http}`}</span>}
+                              </li>
+                            ))}
+                          </ul>
+                          {otsLastChecked && (
+                            <div className="text-[10px] text-muted-foreground">
+                              Última verificación: {otsLastChecked.toLocaleTimeString()}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {!ots && otsLoading && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Consultando calendarios OpenTimestamps…
+                        </div>
+                      )}
+
+                      <div className="font-mono text-[10px] break-all text-muted-foreground border-t border-amber-500/20 pt-1.5">
                         digest: {row.blockchain_anchor.digest}
                       </div>
                     </div>
