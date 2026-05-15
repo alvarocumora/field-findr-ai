@@ -13,6 +13,9 @@ import {
   Link2,
   Anchor,
   Bitcoin,
+  RefreshCw,
+  CheckCircle2,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { publishTasacion, downloadDataUrl, downloadText, type PublishResult } from '@/lib/tasacionPublish';
@@ -30,6 +33,9 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
   const [anchoring, setAnchoring] = useState(false);
   const [anchor, setAnchor] = useState<any | null>(null);
   const [result, setResult] = useState<PublishResult | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verify, setVerify] = useState<any | null>(null);
+  const [verifyAt, setVerifyAt] = useState<Date | null>(null);
 
   const onPublish = async () => {
     setLoading(true);
@@ -87,6 +93,32 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
       toast.error('No se pudo anclar', { description: err.message ?? 'Error desconocido' });
     } finally {
       setAnchoring(false);
+    }
+  };
+
+  const onVerify = async () => {
+    if (!result) return;
+    setVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-tasacion-ots', {
+        body: { tasacionId: result.id },
+      });
+      if (error) throw error;
+      setVerify(data);
+      setVerifyAt(new Date());
+      if (data?.aggregate === 'confirmed') {
+        toast.success('OpenTimestamps confirmado', { description: 'El SHA-256 ya quedó comprometido en Bitcoin.' });
+      } else if (data?.aggregate === 'pending') {
+        toast.info('Pendiente de bloque Bitcoin', { description: 'Los calendarios recibieron el digest.' });
+      } else if (!data?.anchored) {
+        toast.warning('Aún no anclado', { description: 'Primero ancla a Bitcoin (OTS).' });
+      } else {
+        toast.warning('Estado desconocido', { description: 'Reintenta en unos minutos.' });
+      }
+    } catch (err: any) {
+      toast.error('No se pudo verificar', { description: err.message ?? 'Error desconocido' });
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -214,7 +246,73 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
                 {anchoring ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Anchor className="h-3.5 w-3.5" />}
                 {anchor ? 'Anclado a Bitcoin' : anchoring ? 'Anclando…' : 'Anclar a Bitcoin (OTS)'}
               </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                onClick={onVerify}
+                disabled={verifying}
+                title="Consulta los calendarios OpenTimestamps en vivo, sin salir de esta ficha."
+              >
+                {verifying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                {verifying ? 'Verificando…' : 'Verificar OTS ahora'}
+              </Button>
             </div>
+
+            {verify && (
+              <div className="rounded-md border border-border bg-muted/30 p-2 space-y-1 text-[11px]">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {verify.aggregate === 'confirmed' ? (
+                    <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-[10px]">
+                      <CheckCircle2 className="h-3 w-3 mr-1" /> Confirmado en Bitcoin
+                    </Badge>
+                  ) : verify.aggregate === 'pending' ? (
+                    <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px]">
+                      <Clock className="h-3 w-3 mr-1" /> Pendiente de bloque
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px]">
+                      {verify.anchored ? 'Estado desconocido' : 'Sin anclar'}
+                    </Badge>
+                  )}
+                  {verify.anchored && (
+                    <span className="text-muted-foreground">
+                      {verify.confirmed_count}✓ · {verify.pending_count}⏳ · {verify.error_count}✗
+                    </span>
+                  )}
+                  {verifyAt && (
+                    <span className="text-muted-foreground ml-auto">
+                      Verificado: {verifyAt.toLocaleTimeString()}
+                    </span>
+                  )}
+                </div>
+                {verify.verify_hint && (
+                  <div className="text-muted-foreground">{verify.verify_hint}</div>
+                )}
+                {Array.isArray(verify.checks) && verify.checks.length > 0 && (
+                  <ul className="space-y-0.5 pt-1">
+                    {verify.checks.map((c: any) => (
+                      <li key={c.url} className="flex items-center gap-1 font-mono text-[10px]">
+                        <span
+                          className={
+                            c.status === 'confirmed'
+                              ? 'text-emerald-500'
+                              : c.status === 'pending'
+                                ? 'text-amber-500'
+                                : 'text-red-500'
+                          }
+                        >
+                          ●
+                        </span>
+                        <span className="truncate">{c.url}</span>
+                        {c.proof_bytes && <span className="text-muted-foreground">— {c.proof_bytes}B</span>}
+                        {c.error && <span className="text-red-500">— {c.error}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
 
             {anchor && (
               <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 space-y-1 text-[11px]">
