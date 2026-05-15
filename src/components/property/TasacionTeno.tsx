@@ -93,9 +93,22 @@ interface TasacionInformeProps {
   data?: TasacionData;
 }
 
+const UF_PRESETS = [
+  { label: 'Hoy (ref.)', value: UF_REF },
+  { label: 'Ene 2025', value: 38500 },
+  { label: 'Ene 2024', value: 36800 },
+  { label: 'Ene 2023', value: 35100 },
+];
+
 export default function TasacionTeno({ listing, data }: TasacionInformeProps = {}) {
-  const d: TasacionData = data
-    ?? (listing ? buildTasacionData(listing) : TENO_TASACION);
+  const [ufRate, setUfRate] = useState<number>(UF_REF);
+
+  const d: TasacionData = useMemo(() => {
+    if (data) return applyUfRate(data, ufRate);
+    if (listing) return buildTasacionData(listing, ufRate);
+    return applyUfRate(TENO_TASACION, ufRate);
+  }, [data, listing, ufRate]);
+
   return (
     <Card className="glass border-border/50 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border-b border-border/40">
