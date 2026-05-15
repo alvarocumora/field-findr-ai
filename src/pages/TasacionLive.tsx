@@ -65,6 +65,47 @@ const TasacionLive = () => {
   const [verifyState, setVerifyState] = useState<'idle' | 'checking' | 'match' | 'mismatch'>('idle');
   const [uploadedHash, setUploadedHash] = useState<string | null>(null);
 
+  // OpenTimestamps live verification
+  type OtsCheck = { url: string; status: 'confirmed' | 'pending' | 'error'; http?: number; error?: string; proof_bytes?: number };
+  type OtsVerify = {
+    anchored: boolean;
+    aggregate?: 'confirmed' | 'pending' | 'unknown';
+    confirmed_count?: number;
+    pending_count?: number;
+    error_count?: number;
+    digest?: string;
+    submitted_at?: string;
+    checks?: OtsCheck[];
+    verify_hint?: string;
+  };
+  const [ots, setOts] = useState<OtsVerify | null>(null);
+  const [otsLoading, setOtsLoading] = useState(false);
+  const [otsLastChecked, setOtsLastChecked] = useState<Date | null>(null);
+
+  const runOtsVerify = async () => {
+    if (!id) return;
+    setOtsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-tasacion-ots', {
+        body: { tasacionId: id },
+      });
+      if (error) throw error;
+      setOts(data as OtsVerify);
+      setOtsLastChecked(new Date());
+    } catch (e: any) {
+      toast.error('No se pudo verificar OpenTimestamps', { description: e.message });
+    } finally {
+      setOtsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (row?.blockchain_anchor && row.blockchain_anchor.protocol === 'opentimestamps') {
+      runOtsVerify();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [row?.id]);
+
   useEffect(() => {
     let alive = true;
     (async () => {
