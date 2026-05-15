@@ -179,6 +179,25 @@ const buildTasacionDoc = (data: TasacionData) => {
   doc.text(`(≈ ${fmtCLP(data.valorComercialCLP)} · ${fmtUF(data.valorM2UF)} ${t.perM2})`, pageW / 2, y + 23, { align: 'center' });
   doc.setTextColor(0, 0, 0);
 
+  // QR de verificación pública (esquina inferior derecha de la portada)
+  if (data.qrDataUrl && data.validatorUrl) {
+    const qrSize = 28;
+    const qrX = pageW - margin - qrSize;
+    const qrY = pageH - margin - qrSize - 12;
+    try { doc.addImage(data.qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize); } catch {}
+    doc.setFontSize(7);
+    doc.setTextColor(80);
+    doc.setFont('helvetica', 'bold');
+    doc.text('VERIFICAR / VERIFY', qrX + qrSize / 2, qrY + qrSize + 3, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6);
+    doc.text(data.validatorUrl, qrX + qrSize / 2, qrY + qrSize + 6, { align: 'center' });
+    if (data.pdfHashShort) {
+      doc.text(`SHA-256: ${data.pdfHashShort}`, qrX + qrSize / 2, qrY + qrSize + 9, { align: 'center' });
+    }
+    doc.setTextColor(0);
+  }
+
   drawPdfFooter(doc);
   doc.addPage();
   y = margin;
