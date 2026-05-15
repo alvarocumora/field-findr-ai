@@ -1457,6 +1457,96 @@ export type Database = {
         }
         Relationships: []
       }
+      tasaciones_publicadas: {
+        Row: {
+          blockchain_anchor: Json | null
+          comuna: string | null
+          created_at: string
+          direccion: string | null
+          fecha_emision: string | null
+          firma_data_hash: string | null
+          id: string
+          lang: string | null
+          listing_id: string | null
+          payload_hash: string
+          payload_json: Json
+          pdf_final_path: string | null
+          pdf_final_sha256: string | null
+          pdf_path: string
+          pdf_sha256: string
+          publisher_user_id: string
+          region: string | null
+          revoked_at: string | null
+          revoked_reason: string | null
+          rol: string | null
+          superficie_m2: number | null
+          tasador_nombre: string | null
+          updated_at: string
+          valor_clp: number | null
+          valor_m2_uf: number | null
+          valor_uf: number | null
+          version: number
+        }
+        Insert: {
+          blockchain_anchor?: Json | null
+          comuna?: string | null
+          created_at?: string
+          direccion?: string | null
+          fecha_emision?: string | null
+          firma_data_hash?: string | null
+          id?: string
+          lang?: string | null
+          listing_id?: string | null
+          payload_hash: string
+          payload_json: Json
+          pdf_final_path?: string | null
+          pdf_final_sha256?: string | null
+          pdf_path: string
+          pdf_sha256: string
+          publisher_user_id: string
+          region?: string | null
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          rol?: string | null
+          superficie_m2?: number | null
+          tasador_nombre?: string | null
+          updated_at?: string
+          valor_clp?: number | null
+          valor_m2_uf?: number | null
+          valor_uf?: number | null
+          version?: number
+        }
+        Update: {
+          blockchain_anchor?: Json | null
+          comuna?: string | null
+          created_at?: string
+          direccion?: string | null
+          fecha_emision?: string | null
+          firma_data_hash?: string | null
+          id?: string
+          lang?: string | null
+          listing_id?: string | null
+          payload_hash?: string
+          payload_json?: Json
+          pdf_final_path?: string | null
+          pdf_final_sha256?: string | null
+          pdf_path?: string
+          pdf_sha256?: string
+          publisher_user_id?: string
+          region?: string | null
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          rol?: string | null
+          superficie_m2?: number | null
+          tasador_nombre?: string | null
+          updated_at?: string
+          valor_clp?: number | null
+          valor_m2_uf?: number | null
+          valor_uf?: number | null
+          version?: number
+        }
+        Relationships: []
+      }
       tour_scenes: {
         Row: {
           created_at: string | null
@@ -1755,6 +1845,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      find_tasacion_by_hash: {
+        Args: { _hash: string }
+        Returns: {
+          comuna: string
+          direccion: string
+          fecha_emision: string
+          id: string
+          matched_field: string
+          region: string
+          revoked_at: string
+          tasador_nombre: string
+          valor_clp: number
+          valor_uf: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

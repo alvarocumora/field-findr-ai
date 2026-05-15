@@ -55,6 +55,11 @@ export interface TasacionData {
   firmaFecha?: string;
   // Idioma del informe
   lang?: TasacionLang;
+  // Trazabilidad / validación pública
+  qrDataUrl?: string;          // PNG dataURL del QR que apunta al validador
+  validatorUrl?: string;       // URL pública del validador
+  pdfHashShort?: string;       // hash visible (corto) en portada
+  publicId?: string;           // id corto del registro publicado
 }
 
 export const buildTasacionFilename = (data: TasacionData) => {
@@ -173,6 +178,25 @@ const buildTasacionDoc = (data: TasacionData) => {
   doc.setFont('helvetica', 'normal');
   doc.text(`(≈ ${fmtCLP(data.valorComercialCLP)} · ${fmtUF(data.valorM2UF)} ${t.perM2})`, pageW / 2, y + 23, { align: 'center' });
   doc.setTextColor(0, 0, 0);
+
+  // QR de verificación pública (esquina inferior derecha de la portada)
+  if (data.qrDataUrl && data.validatorUrl) {
+    const qrSize = 28;
+    const qrX = pageW - margin - qrSize;
+    const qrY = pageH - margin - qrSize - 12;
+    try { doc.addImage(data.qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize); } catch {}
+    doc.setFontSize(7);
+    doc.setTextColor(80);
+    doc.setFont('helvetica', 'bold');
+    doc.text('VERIFICAR / VERIFY', qrX + qrSize / 2, qrY + qrSize + 3, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6);
+    doc.text(data.validatorUrl, qrX + qrSize / 2, qrY + qrSize + 6, { align: 'center' });
+    if (data.pdfHashShort) {
+      doc.text(`SHA-256: ${data.pdfHashShort}`, qrX + qrSize / 2, qrY + qrSize + 9, { align: 'center' });
+    }
+    doc.setTextColor(0);
+  }
 
   drawPdfFooter(doc);
   doc.addPage();
@@ -332,6 +356,29 @@ const buildTasacionDoc = (data: TasacionData) => {
     doc.setTextColor(0);
   }
   y = sigY + sigBoxH + 18;
+
+  // QR + datos de trazabilidad junto a la firma (si está publicado)
+  if (data.qrDataUrl && data.validatorUrl) {
+    const qrSize = 30;
+    const qrX = pageW - margin - qrSize;
+    const qrY = sigY;
+    try { doc.addImage(data.qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize); } catch {}
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(34, 197, 94);
+    doc.text('TASACIÓN VERIFICABLE', qrX + qrSize / 2, qrY + qrSize + 3, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(80);
+    doc.setFontSize(6);
+    doc.text(data.validatorUrl, qrX + qrSize / 2, qrY + qrSize + 6, { align: 'center' });
+    if (data.publicId) {
+      doc.text(`ID: ${data.publicId}`, qrX + qrSize / 2, qrY + qrSize + 9, { align: 'center' });
+    }
+    if (data.pdfHashShort) {
+      doc.text(`SHA-256: ${data.pdfHashShort}`, qrX + qrSize / 2, qrY + qrSize + 12, { align: 'center' });
+    }
+    doc.setTextColor(0);
+  }
 
   drawPdfFooter(doc);
   return doc;
