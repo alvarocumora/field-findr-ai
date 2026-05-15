@@ -219,7 +219,7 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {UF_PRESETS.map((p) => (
+            {ufPresets.map((p) => (
               <Button
                 key={p.label}
                 size="sm"
