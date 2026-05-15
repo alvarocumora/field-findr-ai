@@ -126,6 +126,10 @@ const TasacionLive = () => {
     return `Tasación verificada · ${row.comuna ?? ''} · OFERTA TERRENOS`;
   }, [row]);
 
+  useEffect(() => {
+    document.title = title;
+  }, [title]);
+
   return (
     <div className="min-h-screen bg-background text-foreground py-8 px-4">
       <div className="max-w-3xl mx-auto space-y-4">
