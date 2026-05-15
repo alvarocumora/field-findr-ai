@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Download, FileBarChart, MapPin, Ruler, Layers, Droplets, Zap, Cable, Flame, Wifi, Route, CheckCircle2, XCircle, Building2, Calculator, Scale, Trophy } from 'lucide-react';
 import { generateTasacionPdf, type TasacionData } from '@/lib/tasacionPdfGenerator';
-
-const UF_REF = 39500;
+import { buildTasacionData, UF_REF } from '@/lib/buildTasacionData';
 
 const TENO_TASACION: TasacionData = {
   fecha: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }),
