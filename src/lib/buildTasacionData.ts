@@ -76,17 +76,18 @@ const inferComparables = (areaM2: number, valorM2UF: number) => {
   });
 };
 
-export function buildTasacionData(listing: ListingLike): TasacionData {
+export function buildTasacionData(listing: ListingLike, ufRate: number = UF_REF): TasacionData {
   const areaM2 = listing.area_m2 || (listing.area_ha ? listing.area_ha * 10000 : 5000);
   const priceUF = listing.currency === 'UF'
     ? (listing.price || 0)
-    : Math.round((listing.price || 0) / UF_REF);
+    : Math.round((listing.price || 0) / ufRate);
   const valorM2UF = areaM2 > 0 ? +(priceUF / areaM2).toFixed(3) : 0;
   const utilities = (listing.utilities || {}) as Record<string, any>;
   const tipo = typeLabel(listing.type);
 
-  const valorUnitarioSII = Math.max(1500, Math.round(valorM2UF * UF_REF * 0.18)); // ~18% del valor comercial
+  const valorUnitarioSII = Math.max(1500, Math.round(valorM2UF * ufRate * 0.18));
   const avaluoTerreno = Math.round(valorUnitarioSII * areaM2);
+
 
   return {
     fecha: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }),
