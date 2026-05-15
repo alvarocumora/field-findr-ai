@@ -1,10 +1,13 @@
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Download, FileBarChart, MapPin, Ruler, Layers, Droplets, Zap, Cable, Flame, Wifi, Route, CheckCircle2, XCircle, Building2, Calculator, Scale, Trophy } from 'lucide-react';
 import { generateTasacionPdf, type TasacionData } from '@/lib/tasacionPdfGenerator';
-import { buildTasacionData, UF_REF } from '@/lib/buildTasacionData';
+import { buildTasacionData, applyUfRate, UF_REF } from '@/lib/buildTasacionData';
 
 const TENO_TASACION: TasacionData = {
   fecha: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }),
