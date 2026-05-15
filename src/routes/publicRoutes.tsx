@@ -58,4 +58,6 @@ export const publicRoutes = [
   <Route key="reservation-success" path="/reserva/exito" element={<ReservationSuccess />} />,
   <Route key="reservation-error" path="/reserva/error" element={<ReservationError />} />,
   <Route key="reservation-pending" path="/reserva/pendiente" element={<ReservationPending />} />,
+  <Route key="tasacion-live" path="/tasacion/v/:id" element={<TasacionLive />} />,
+  <Route key="tasacion-validar" path="/tasacion/validar" element={<TasacionValidator />} />,
 ];
