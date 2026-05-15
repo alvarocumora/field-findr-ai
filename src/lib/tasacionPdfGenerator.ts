@@ -325,5 +325,5 @@ const buildTasacionDoc = (data: TasacionData) => {
   y = sigY + sigBoxH + 18;
 
   drawPdfFooter(doc);
-  doc.save(`Tasacion_${data.comuna}_${data.fecha.replace(/[^\d]/g, '')}.pdf`);
+  return doc;
 };
