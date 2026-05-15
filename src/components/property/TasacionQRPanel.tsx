@@ -69,6 +69,27 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
     window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
   };
 
+  const onAnchor = async () => {
+    if (!result) return;
+    setAnchoring(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('anchor-tasacion', {
+        body: { tasacionId: result.id, hashField: 'pdf_final_sha256' },
+      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error ?? 'No se pudo anclar');
+      setAnchor(data.anchor);
+      const ok = data.anchor?.ok_count ?? 0;
+      toast.success('Anclado a Bitcoin (OpenTimestamps)', {
+        description: `${ok}/${data.anchor?.calendars?.length ?? 0} calendarios confirmaron la recepción.`,
+      });
+    } catch (err: any) {
+      toast.error('No se pudo anclar', { description: err.message ?? 'Error desconocido' });
+    } finally {
+      setAnchoring(false);
+    }
+  };
+
   return (
     <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-3">
       <div className="flex items-start justify-between gap-3 flex-wrap">
