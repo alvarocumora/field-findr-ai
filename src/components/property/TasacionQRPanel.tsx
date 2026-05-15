@@ -33,6 +33,9 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
   const [anchoring, setAnchoring] = useState(false);
   const [anchor, setAnchor] = useState<any | null>(null);
   const [result, setResult] = useState<PublishResult | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verify, setVerify] = useState<any | null>(null);
+  const [verifyAt, setVerifyAt] = useState<Date | null>(null);
 
   const onPublish = async () => {
     setLoading(true);
