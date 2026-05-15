@@ -207,6 +207,142 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           </div>
         </div>
 
+        {/* Editor de campos */}
+        {editing && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Pencil className="h-4 w-4 text-primary" />
+                Editar datos del informe
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Los campos se prellenan desde la ficha de la propiedad. Modifica lo que necesites antes de generar el PDF.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Propietario</Label>
+                  <Input value={d.propietario} onChange={(e) => setField('propietario', e.target.value)} className="h-9 mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Rol SII</Label>
+                  <Input value={d.rol} onChange={(e) => setField('rol', e.target.value)} className="h-9 mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Inscripción CBR</Label>
+                  <Input value={d.inscripcionCBR} onChange={(e) => setField('inscripcionCBR', e.target.value)} className="h-9 mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Solicitante</Label>
+                  <Input value={d.solicitante} onChange={(e) => setField('solicitante', e.target.value)} className="h-9 mt-1" />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label className="text-xs">Dirección</Label>
+                  <Input value={d.direccion} onChange={(e) => setField('direccion', e.target.value)} className="h-9 mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Comuna</Label>
+                  <Input value={d.comuna} onChange={(e) => setField('comuna', e.target.value)} className="h-9 mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Región</Label>
+                  <Input value={d.region} onChange={(e) => setField('region', e.target.value)} className="h-9 mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Superficie terreno (m²)</Label>
+                  <Input type="number" value={d.superficieTerreno} onChange={(e) => setField('superficieTerreno', Number(e.target.value) || 0)} className="h-9 mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Superficie construida (m²)</Label>
+                  <Input type="number" value={d.superficieConstruida} onChange={(e) => setField('superficieConstruida', Number(e.target.value) || 0)} className="h-9 mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Valor comercial (UF)</Label>
+                  <Input type="number" value={d.valorComercialUF} onChange={(e) => setField('valorComercialUF', Number(e.target.value) || 0)} className="h-9 mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Avalúo fiscal terreno (CLP)</Label>
+                  <Input type="number" value={d.avaluoFiscalTerreno} onChange={(e) => setField('avaluoFiscalTerreno', Number(e.target.value) || 0)} className="h-9 mt-1" />
+                </div>
+              </div>
+
+              <Separator />
+              <div>
+                <Label className="text-xs mb-2 block">Deslindes</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {(['norte', 'sur', 'oriente', 'poniente'] as const).map((dir) => (
+                    <div key={dir}>
+                      <Label className="text-xs capitalize text-muted-foreground">{dir}</Label>
+                      <Input value={d.deslindes[dir]} onChange={(e) => setDeslinde(dir, e.target.value)} className="h-9 mt-1" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+              <div>
+                <Label className="text-xs mb-2 block">Servicios disponibles</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {([
+                    ['agua', 'Agua potable'],
+                    ['electricidad', 'Electricidad'],
+                    ['alcantarillado', 'Alcantarillado'],
+                    ['gas', 'Gas'],
+                    ['telecom', 'Telecom'],
+                    ['pavimento', 'Pavimento'],
+                  ] as const).map(([key, label]) => (
+                    <div key={key} className="flex items-center justify-between rounded-md border border-border/50 px-3 py-2">
+                      <span className="text-xs">{label}</span>
+                      <Switch checked={d.servicios[key]} onCheckedChange={(v) => setServicio(key, v)} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <Label className="text-xs">Zonificación</Label>
+                  <Input value={d.zonificacion} onChange={(e) => setField('zonificacion', e.target.value)} className="h-9 mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Uso de suelo</Label>
+                  <Input value={d.usoSuelo} onChange={(e) => setField('usoSuelo', e.target.value)} className="h-9 mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Constructibilidad</Label>
+                  <Input value={d.coefConstructibilidad} onChange={(e) => setField('coefConstructibilidad', e.target.value)} className="h-9 mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Topografía</Label>
+                  <Textarea value={d.topografia} onChange={(e) => setField('topografia', e.target.value)} rows={2} className="mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Tipo de suelo</Label>
+                  <Textarea value={d.tipoSuelo} onChange={(e) => setField('tipoSuelo', e.target.value)} rows={2} className="mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Accesos</Label>
+                  <Textarea value={d.accesos} onChange={(e) => setField('accesos', e.target.value)} rows={2} className="mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Equipamiento</Label>
+                  <Textarea value={d.equipamiento} onChange={(e) => setField('equipamiento', e.target.value)} rows={2} className="mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Descripción del sector</Label>
+                  <Textarea value={d.descripcionSector} onChange={(e) => setField('descripcionSector', e.target.value)} rows={4} className="mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Observaciones / conclusión</Label>
+                  <Textarea value={d.observaciones} onChange={(e) => setField('observaciones', e.target.value)} rows={4} className="mt-1" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Resumen ejecutivo */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-4">
