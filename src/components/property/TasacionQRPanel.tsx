@@ -235,7 +235,6 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
                 </ul>
               </div>
             )}
-            </div>
           </div>
         </div>
       )}
