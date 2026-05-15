@@ -19,6 +19,9 @@ import {
   User,
   FileBarChart,
   Link2,
+  Bitcoin,
+  Clock,
+  RefreshCw,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sha256OfBlob, shortHash } from '@/lib/tasacionHash';
