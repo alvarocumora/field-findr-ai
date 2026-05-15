@@ -447,34 +447,82 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
         </SectionCard>
 
         <SectionCard n={10} icon={Scale} title="Análisis comparativo de mercado">
-          <p className="text-xs text-muted-foreground mb-2">
-            Transacciones y ofertas vigentes en el corredor Teno – Curicó – Romeral – Molina.
-          </p>
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+            <p className="text-xs text-muted-foreground">
+              {comparablesData.items.length > 0
+                ? `Comparables activos en ${d.region}${d.comuna ? ` y comunas cercanas a ${d.comuna}` : ''}.`
+                : 'Comparables referenciales del sector.'}
+            </p>
+            {comparablesData.loading && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" /> Calculando…
+              </span>
+            )}
+            {comparablesData.weightedAvgM2UF > 0 && (
+              <Badge variant="outline" className="text-xs">
+                Promedio ponderado: {comparablesData.weightedAvgM2UF.toFixed(3)} UF/m²
+              </Badge>
+            )}
+          </div>
           <div className="overflow-x-auto -mx-2">
             <table className="w-full text-xs">
               <thead className="text-muted-foreground">
                 <tr className="border-b border-border/40">
                   <th className="text-left py-2 px-2 font-medium">Ubicación</th>
                   <th className="text-right py-2 px-2 font-medium">Sup. m²</th>
+                  <th className="text-right py-2 px-2 font-medium">Dist.</th>
                   <th className="text-right py-2 px-2 font-medium">Valor UF</th>
                   <th className="text-right py-2 px-2 font-medium">UF/m²</th>
-                  <th className="text-left py-2 px-2 font-medium">Fuente</th>
+                  <th className="text-right py-2 px-2 font-medium">Peso</th>
                 </tr>
               </thead>
               <tbody>
-                {d.comparables.map((c, i) => (
-                  <tr key={i} className="border-b border-border/20">
-                    <td className="py-2 px-2">{c.ubicacion}</td>
-                    <td className="py-2 px-2 text-right">{c.superficie.toLocaleString('es-CL')}</td>
-                    <td className="py-2 px-2 text-right">{c.valorUF.toLocaleString('es-CL')}</td>
-                    <td className="py-2 px-2 text-right font-medium">{c.valorM2UF.toFixed(3)}</td>
-                    <td className="py-2 px-2 text-muted-foreground">{c.fuente}</td>
-                  </tr>
-                ))}
+                {d.comparables.map((c, i) => {
+                  const scored = comparablesData.items[i];
+                  return (
+                    <tr key={i} className="border-b border-border/20">
+                      <td className="py-2 px-2">
+                        <div className="font-medium">{c.ubicacion}</div>
+                        <div className="text-[10px] text-muted-foreground">{c.fuente}</div>
+                      </td>
+                      <td className="py-2 px-2 text-right">{c.superficie.toLocaleString('es-CL')}</td>
+                      <td className="py-2 px-2 text-right text-muted-foreground">
+                        {scored?.distanciaKm != null ? `${scored.distanciaKm} km` : '—'}
+                      </td>
+                      <td className="py-2 px-2 text-right">{c.valorUF.toLocaleString('es-CL')}</td>
+                      <td className="py-2 px-2 text-right font-medium">{c.valorM2UF.toFixed(3)}</td>
+                      <td className="py-2 px-2 text-right">
+                        {scored ? (
+                          <span
+                            className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium"
+                            style={{ background: `hsl(var(--primary) / ${0.15 + scored.weight * 0.5})`, color: 'hsl(var(--primary))' }}
+                            title={`tipo ${scored.weightBreakdown.tipo} × área ${scored.weightBreakdown.area} × dist ${scored.weightBreakdown.distancia}`}
+                          >
+                            {scored.weight.toFixed(2)}
+                          </span>
+                        ) : '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
+
+          {/* Supuestos y ponderaciones */}
+          <div className="mt-4 rounded-md border border-border/40 bg-muted/20 p-3">
+            <div className="flex items-center gap-2 text-xs font-semibold text-foreground mb-2">
+              <Info className="h-3.5 w-3.5 text-primary" />
+              Supuestos y ponderaciones
+            </div>
+            <ul className="space-y-1 text-[11px] text-muted-foreground list-disc pl-4">
+              {comparablesData.assumptions.map((a, i) => (
+                <li key={i}>{a}</li>
+              ))}
+            </ul>
+          </div>
         </SectionCard>
+
 
         <SectionCard n={11} icon={Calculator} title="Metodología de tasación">
           <p className="text-sm text-muted-foreground leading-relaxed">
