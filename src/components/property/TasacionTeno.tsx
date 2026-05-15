@@ -48,10 +48,11 @@ const TENO_TASACION: TasacionData = {
   avaluoFiscalTotal: 245_000_000,
   valorUnitarioSII: 3500,
   comparables: [
+    // Referencias reales de mercado (MercadoLibre / Vivax / Engel & Völkers)
+    { ubicacion: 'Curicó – Pío XI 505 (Vivax)', superficie: 52800, valorUF: 78000, valorM2UF: 1.477, fuente: 'Mercado Libre – Vivax Corredores' },
+    { ubicacion: 'Ruta 5 Sur / Ruta J-55 (E&V)', superficie: 154700, valorUF: 147000, valorM2UF: 0.950, fuente: 'Mercado Libre – Engel & Völkers Commercial' },
     { ubicacion: 'Romeral – Ruta 5', superficie: 50000, valorUF: 22500, valorM2UF: 0.45, fuente: 'Portal Inmobiliario' },
-    { ubicacion: 'Curicó norte – Ruta 5', superficie: 80000, valorUF: 44000, valorM2UF: 0.55, fuente: 'Yapo / Mercado Libre' },
     { ubicacion: 'Molina – Salida sur', superficie: 60000, valorUF: 27000, valorM2UF: 0.45, fuente: 'Corretaje local' },
-    { ubicacion: 'Teno – Sector industrial', superficie: 45000, valorUF: 27000, valorM2UF: 0.60, fuente: 'Oferta directa' },
   ],
   valorComercialUF: 35000,
   valorComercialCLP: 35000 * UF_REF,
