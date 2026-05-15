@@ -85,8 +85,14 @@ const ServiceBadge = ({ ok, icon: Icon, label }: { ok: boolean; icon: any; label
 const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
 const fmtUF = (n: number) => `UF ${n.toLocaleString('es-CL', { maximumFractionDigits: 2 })}`;
 
-export default function TasacionTeno() {
-  const d = TENO_TASACION;
+interface TasacionInformeProps {
+  listing?: any;
+  data?: TasacionData;
+}
+
+export default function TasacionTeno({ listing, data }: TasacionInformeProps = {}) {
+  const d: TasacionData = data
+    ?? (listing ? buildTasacionData(listing) : TENO_TASACION);
   return (
     <Card className="glass border-border/50 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border-b border-border/40">
