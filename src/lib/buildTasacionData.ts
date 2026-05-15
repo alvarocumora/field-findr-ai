@@ -142,7 +142,7 @@ export function buildTasacionData(listing: ListingLike, ufRate: number = UF_REF)
     avaluoFiscalConstruccion: 0,
     avaluoFiscalTotal: avaluoTerreno,
     valorUnitarioSII,
-    comparables: inferComparables(areaM2, valorM2UF || 0.3),
+    comparables: inferComparables(areaM2, valorM2UF || 0.3, listing.region, listing.city),
     valorComercialUF: priceUF,
     valorComercialCLP: priceUF * ufRate,
     valorM2UF,
