@@ -204,6 +204,37 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
               >
                 <QrIcon className="h-3.5 w-3.5" /> Ir al validador
               </Button>
+              <Button
+                size="sm"
+                className="gap-2 bg-amber-500 hover:bg-amber-600 text-white"
+                onClick={onAnchor}
+                disabled={anchoring || !!anchor}
+                title="Envía el SHA-256 a calendarios OpenTimestamps. Sin costo, sin claves; la atestación Bitcoin llega en horas."
+              >
+                {anchoring ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Anchor className="h-3.5 w-3.5" />}
+                {anchor ? 'Anclado a Bitcoin' : anchoring ? 'Anclando…' : 'Anclar a Bitcoin (OTS)'}
+              </Button>
+            </div>
+
+            {anchor && (
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 space-y-1 text-[11px]">
+                <div className="flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400">
+                  <Bitcoin className="h-3 w-3" /> OpenTimestamps · pendiente de bloque Bitcoin
+                </div>
+                <div className="text-muted-foreground">
+                  Enviado: {new Date(anchor.submitted_at).toLocaleString()}
+                </div>
+                <ul className="space-y-0.5">
+                  {anchor.calendars?.map((c: any) => (
+                    <li key={c.url} className="flex items-center gap-1 font-mono text-[10px]">
+                      <span className={c.ok ? 'text-emerald-500' : 'text-red-500'}>●</span>
+                      <span className="truncate">{c.url}</span>
+                      {!c.ok && <span className="text-red-500">— {c.error}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             </div>
           </div>
         </div>
