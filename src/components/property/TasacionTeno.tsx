@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Download, FileBarChart, MapPin, Ruler, Layers, Droplets, Zap, Cable, Flame, Wifi, Route, CheckCircle2, XCircle, Building2, Calculator, Scale, Trophy, Pencil, RotateCcw, Loader2, Info, Pen, Eraser } from 'lucide-react';
-import { generateTasacionPdf, type TasacionData } from '@/lib/tasacionPdfGenerator';
+import { Download, FileBarChart, MapPin, Ruler, Layers, Droplets, Zap, Cable, Flame, Wifi, Route, CheckCircle2, XCircle, Building2, Calculator, Scale, Trophy, Pencil, RotateCcw, Loader2, Info, Pen, Eraser, Share2, Copy, Link as LinkIcon } from 'lucide-react';
+import { generateTasacionPdf, buildTasacionPdfBlob, buildTasacionFilename, type TasacionData } from '@/lib/tasacionPdfGenerator';
 import SignatureCanvas from '@/components/signature/SignatureCanvas';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { buildTasacionData, applyUfRate, UF_REF } from '@/lib/buildTasacionData';
 import { useComparables } from '@/hooks/useComparables';
 import { useUfRate } from '@/hooks/useUfRate';
@@ -114,6 +115,10 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
   const [firmaDataUrl, setFirmaDataUrl] = useState<string | null>(null);
   const [firmaTasador, setFirmaTasador] = useState('');
   const [firmaFecha, setFirmaFecha] = useState<string | null>(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareExpiresAt, setShareExpiresAt] = useState<string | null>(null);
+  const [shareExpiresIn, setShareExpiresIn] = useState<string>('604800'); // 7 días por defecto
 
   // Cuando llega la UF de hoy desde el Banco Central, sincroniza el valor por defecto
   useMemo(() => {
@@ -215,6 +220,47 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
     }
   };
 
+  const buildPdfData = (): TasacionData => ({
+    ...d,
+    firmaDataUrl: firmaDataUrl || undefined,
+    firmaTasador: firmaTasador || d.tasador,
+    firmaFecha: firmaFecha || d.fecha,
+  });
+
+  const handleShare = async () => {
+    setShareLoading(true);
+    setShareUrl(null);
+    setShareExpiresAt(null);
+    try {
+      const pdfData = buildPdfData();
+      const blob = buildTasacionPdfBlob(pdfData);
+      const filename = buildTasacionFilename(pdfData);
+      const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}_${filename}`;
+
+      const { error: upErr } = await supabase.storage
+        .from('tasaciones')
+        .upload(path, blob, { contentType: 'application/pdf', upsert: false });
+      if (upErr) throw upErr;
+
+      const expiresIn = Number(shareExpiresIn) || 604800;
+      const { data: signed, error: sErr } = await supabase.storage
+        .from('tasaciones')
+        .createSignedUrl(path, expiresIn);
+      if (sErr) throw sErr;
+
+      setShareUrl(signed.signedUrl);
+      setShareExpiresAt(new Date(Date.now() + expiresIn * 1000).toLocaleString('es-CL'));
+      try { await navigator.clipboard.writeText(signed.signedUrl); } catch {}
+      toast.success('Enlace generado y copiado', {
+        description: `Vigencia: ${Math.round(expiresIn / 3600)} h`,
+      });
+    } catch (err: any) {
+      toast.error('No se pudo compartir el PDF', { description: err.message || 'Error desconocido' });
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
   return (
     <Card className="glass border-border/50 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border-b border-border/40">
@@ -242,13 +288,29 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
                 <RotateCcw className="h-4 w-4" /> Restablecer
               </Button>
             )}
+            <Select value={shareExpiresIn} onValueChange={setShareExpiresIn}>
+              <SelectTrigger className="h-9 w-[140px]">
+                <SelectValue placeholder="Expira en" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="3600">1 hora</SelectItem>
+                <SelectItem value="86400">24 horas</SelectItem>
+                <SelectItem value="604800">7 días</SelectItem>
+                <SelectItem value="2592000">30 días</SelectItem>
+                <SelectItem value="31536000">1 año</SelectItem>
+              </SelectContent>
+            </Select>
             <Button
-              onClick={() => generateTasacionPdf({
-                ...d,
-                firmaDataUrl: firmaDataUrl || undefined,
-                firmaTasador: firmaTasador || d.tasador,
-                firmaFecha: firmaFecha || d.fecha,
-              })}
+              variant="secondary"
+              onClick={handleShare}
+              disabled={shareLoading}
+              className="gap-2"
+            >
+              {shareLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+              Compartir
+            </Button>
+            <Button
+              onClick={() => generateTasacionPdf(buildPdfData())}
               className="gap-2"
             >
               <Download className="h-4 w-4" /> Descargar PDF
@@ -258,6 +320,35 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
       </CardHeader>
 
       <CardContent className="p-4 md:p-6 space-y-4">
+        {shareUrl && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <LinkIcon className="h-4 w-4 text-primary" />
+              Enlace compartible generado
+              {shareExpiresAt && (
+                <Badge variant="secondary" className="ml-auto text-xs">Expira: {shareExpiresAt}</Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Input readOnly value={shareUrl} className="h-9 text-xs font-mono" onFocus={(e) => e.currentTarget.select()} />
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1"
+                onClick={() => {
+                  navigator.clipboard.writeText(shareUrl);
+                  toast.success('Enlace copiado');
+                }}
+              >
+                <Copy className="h-3.5 w-3.5" /> Copiar
+              </Button>
+              <Button size="sm" variant="ghost" asChild>
+                <a href={shareUrl} target="_blank" rel="noopener noreferrer">Abrir</a>
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Selector tasa UF→CLP */}
         <div className="rounded-lg border border-border/50 bg-muted/20 p-3 space-y-2">
           <div className="flex flex-col sm:flex-row sm:items-end gap-3">
