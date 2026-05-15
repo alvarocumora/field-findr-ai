@@ -11,6 +11,7 @@ import { Download, FileBarChart, MapPin, Ruler, Layers, Droplets, Zap, Cable, Fl
 import { generateTasacionPdf, type TasacionData } from '@/lib/tasacionPdfGenerator';
 import { buildTasacionData, applyUfRate, UF_REF } from '@/lib/buildTasacionData';
 import { useComparables } from '@/hooks/useComparables';
+import { useUfRate } from '@/hooks/useUfRate';
 
 const TENO_TASACION: TasacionData = {
   fecha: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }),
