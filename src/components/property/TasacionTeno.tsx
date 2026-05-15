@@ -11,6 +11,8 @@ import { Download, FileBarChart, MapPin, Ruler, Layers, Droplets, Zap, Cable, Fl
 import { generateTasacionPdf, buildTasacionPdfBlob, buildTasacionFilename, type TasacionData } from '@/lib/tasacionPdfGenerator';
 import SignatureCanvas from '@/components/signature/SignatureCanvas';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getT, type TasacionLang } from '@/lib/tasacionI18n';
+import { Languages } from 'lucide-react';
 import { buildTasacionData, applyUfRate, UF_REF } from '@/lib/buildTasacionData';
 import { useComparables } from '@/hooks/useComparables';
 import { useUfRate } from '@/hooks/useUfRate';
