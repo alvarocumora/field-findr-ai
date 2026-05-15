@@ -12,6 +12,8 @@ import { generateTasacionPdf, type TasacionData } from '@/lib/tasacionPdfGenerat
 import { buildTasacionData, applyUfRate, UF_REF } from '@/lib/buildTasacionData';
 import { useComparables } from '@/hooks/useComparables';
 import { useUfRate } from '@/hooks/useUfRate';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const TENO_TASACION: TasacionData = {
   fecha: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }),
@@ -104,6 +106,10 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
   const [userTouchedRate, setUserTouchedRate] = useState(false);
   const [editing, setEditing] = useState(false);
   const [overrides, setOverrides] = useState<Partial<TasacionData>>({});
+  const [siiRol, setSiiRol] = useState('');
+  const [siiLoading, setSiiLoading] = useState(false);
+  const [siiSource, setSiiSource] = useState<'sii_scraping' | 'demo' | null>(null);
+  const [siiTimestamp, setSiiTimestamp] = useState<string | null>(null);
 
   // Cuando llega la UF de hoy desde el Banco Central, sincroniza el valor por defecto
   useMemo(() => {
@@ -164,6 +170,46 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
     setOverrides((o) => ({ ...o, deslindes: { ...(o.deslindes || base.deslindes), [k]: v } as any }));
   const setServicio = (k: keyof TasacionData['servicios'], v: boolean) =>
     setOverrides((o) => ({ ...o, servicios: { ...(o.servicios || base.servicios), [k]: v } as any }));
+
+  const lookupSII = async (useDemoData = false) => {
+    const rolRaw = (siiRol || d.rol || '').trim();
+    const rolClean = rolRaw.replace(/\s/g, '');
+    if (!/^\d+-\d+$/.test(rolClean)) {
+      toast.error('Rol inválido', { description: 'Usa el formato XXXX-YY (ej: 1234-56).' });
+      return;
+    }
+    setSiiLoading(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke('sii-lookup', {
+        body: { rol: rolClean, useDemoData },
+      });
+      if (error) throw error;
+      if (!result?.success) throw new Error(result?.error || 'Error en la consulta');
+      const sii = result.data;
+      const updates: Partial<TasacionData> = { rol: sii.rol };
+      if (sii.avaluoFiscal != null) {
+        const construccion = d.avaluoFiscalConstruccion || 0;
+        const terreno = Math.max(0, sii.avaluoFiscal - construccion);
+        updates.avaluoFiscalTerreno = terreno;
+        updates.avaluoFiscalTotal = sii.avaluoFiscal;
+        const sup = sii.superficieTerreno || d.superficieTerreno || 0;
+        if (sup > 0) updates.valorUnitarioSII = Math.round(terreno / sup);
+      }
+      if (sii.superficieTerreno != null && (!overrides.superficieTerreno)) {
+        updates.superficieTerreno = Math.round(sii.superficieTerreno);
+      }
+      setOverrides((o) => ({ ...o, ...updates }));
+      setSiiSource(sii.source);
+      setSiiTimestamp(sii.timestamp);
+      toast.success('Avalúo fiscal actualizado', {
+        description: sii.source === 'demo' ? 'Datos de demostración aplicados.' : 'Datos obtenidos del SII.',
+      });
+    } catch (err: any) {
+      toast.error('No se pudo consultar el SII', { description: err.message });
+    } finally {
+      setSiiLoading(false);
+    }
+  };
 
   return (
     <Card className="glass border-border/50 overflow-hidden">
@@ -468,6 +514,41 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
         </SectionCard>
 
         <SectionCard n={9} icon={Calculator} title="Avalúo fiscal SII">
+          <div className="rounded-md border border-border/40 bg-muted/20 p-3 mb-2 space-y-2">
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+              <div className="flex-1">
+                <Label htmlFor="sii-rol-tasacion" className="text-xs text-muted-foreground">
+                  Rol SII (formato XXXX-YY)
+                </Label>
+                <Input
+                  id="sii-rol-tasacion"
+                  placeholder={d.rol && /^\d+-\d+$/.test(d.rol) ? d.rol : 'Ej: 1234-56'}
+                  value={siiRol}
+                  onChange={(e) => setSiiRol(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && lookupSII(false)}
+                  className="h-9 mt-1"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => lookupSII(false)} disabled={siiLoading} className="gap-1.5">
+                  {siiLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Calculator className="h-3.5 w-3.5" />}
+                  Consultar SII
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => lookupSII(true)} disabled={siiLoading} className="gap-1.5">
+                  Demo
+                </Button>
+              </div>
+            </div>
+            {siiSource && (
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                <Info className="h-3 w-3" />
+                Fuente: <Badge variant={siiSource === 'sii_scraping' ? 'default' : 'secondary'} className="text-[10px] h-4 px-1.5">
+                  {siiSource === 'sii_scraping' ? 'SII oficial' : 'Demo'}
+                </Badge>
+                {siiTimestamp && <span>· {new Date(siiTimestamp).toLocaleString('es-CL')}</span>}
+              </p>
+            )}
+          </div>
           <Row k="Avalúo terreno" v={fmtCLP(d.avaluoFiscalTerreno)} />
           <Row k="Avalúo construcción" v={fmtCLP(d.avaluoFiscalConstruccion)} />
           <Row k="Avalúo total" v={<span className="font-bold text-amber-500">{fmtCLP(d.avaluoFiscalTotal)}</span>} />
