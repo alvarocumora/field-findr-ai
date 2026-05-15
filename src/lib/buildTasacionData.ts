@@ -2,6 +2,15 @@ import type { TasacionData } from './tasacionPdfGenerator';
 
 export const UF_REF = 39500;
 
+/** Recalcula los campos CLP de una TasacionData a partir de los UF, usando la tasa indicada. */
+export function applyUfRate(d: TasacionData, ufRate: number): TasacionData {
+  return {
+    ...d,
+    valorComercialCLP: Math.round(d.valorComercialUF * ufRate),
+    valorM2CLP: Math.round(d.valorM2UF * ufRate),
+  };
+}
+
 const TENO_LISTING_ID = 'a4c4c2bb-3f59-4a4f-9c08-2f5e8a7e8b1a'; // mantener si difiere, override por id
 
 interface ListingLike {
