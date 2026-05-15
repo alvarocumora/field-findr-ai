@@ -27,6 +27,8 @@ interface Props {
 
 const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
   const [loading, setLoading] = useState(false);
+  const [anchoring, setAnchoring] = useState(false);
+  const [anchor, setAnchor] = useState<any | null>(null);
   const [result, setResult] = useState<PublishResult | null>(null);
 
   const onPublish = async () => {
