@@ -11,6 +11,8 @@ import {
   QrCode as QrIcon,
   Hash,
   Link2,
+  Anchor,
+  Bitcoin,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { publishTasacion, downloadDataUrl, downloadText, type PublishResult } from '@/lib/tasacionPublish';
@@ -25,6 +27,8 @@ interface Props {
 
 const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
   const [loading, setLoading] = useState(false);
+  const [anchoring, setAnchoring] = useState(false);
+  const [anchor, setAnchor] = useState<any | null>(null);
   const [result, setResult] = useState<PublishResult | null>(null);
 
   const onPublish = async () => {
@@ -63,6 +67,27 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
       return;
     }
     window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const onAnchor = async () => {
+    if (!result) return;
+    setAnchoring(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('anchor-tasacion', {
+        body: { tasacionId: result.id, hashField: 'pdf_final_sha256' },
+      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error ?? 'No se pudo anclar');
+      setAnchor(data.anchor);
+      const ok = data.anchor?.ok_count ?? 0;
+      toast.success('Anclado a Bitcoin (OpenTimestamps)', {
+        description: `${ok}/${data.anchor?.calendars?.length ?? 0} calendarios confirmaron la recepción.`,
+      });
+    } catch (err: any) {
+      toast.error('No se pudo anclar', { description: err.message ?? 'Error desconocido' });
+    } finally {
+      setAnchoring(false);
+    }
   };
 
   return (
@@ -116,7 +141,13 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
               <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30">
                 <ShieldCheck className="h-3 w-3 mr-1" /> Publicado · v{result.version}
               </Badge>
-              <Badge variant="outline" className="text-[10px]">Sin anclar a blockchain</Badge>
+              {anchor ? (
+                <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px]">
+                  <Bitcoin className="h-3 w-3 mr-1" /> OTS · {anchor.ok_count}/{anchor.calendars?.length} calendars
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[10px]">Sin anclar a Bitcoin</Badge>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -173,7 +204,37 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
               >
                 <QrIcon className="h-3.5 w-3.5" /> Ir al validador
               </Button>
+              <Button
+                size="sm"
+                className="gap-2 bg-amber-500 hover:bg-amber-600 text-white"
+                onClick={onAnchor}
+                disabled={anchoring || !!anchor}
+                title="Envía el SHA-256 a calendarios OpenTimestamps. Sin costo, sin claves; la atestación Bitcoin llega en horas."
+              >
+                {anchoring ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Anchor className="h-3.5 w-3.5" />}
+                {anchor ? 'Anclado a Bitcoin' : anchoring ? 'Anclando…' : 'Anclar a Bitcoin (OTS)'}
+              </Button>
             </div>
+
+            {anchor && (
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 space-y-1 text-[11px]">
+                <div className="flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400">
+                  <Bitcoin className="h-3 w-3" /> OpenTimestamps · pendiente de bloque Bitcoin
+                </div>
+                <div className="text-muted-foreground">
+                  Enviado: {new Date(anchor.submitted_at).toLocaleString()}
+                </div>
+                <ul className="space-y-0.5">
+                  {anchor.calendars?.map((c: any) => (
+                    <li key={c.url} className="flex items-center gap-1 font-mono text-[10px]">
+                      <span className={c.ok ? 'text-emerald-500' : 'text-red-500'}>●</span>
+                      <span className="truncate">{c.url}</span>
+                      {!c.ok && <span className="text-red-500">— {c.error}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       )}
