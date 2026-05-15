@@ -220,6 +220,47 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
     }
   };
 
+  const buildPdfData = (): TasacionData => ({
+    ...d,
+    firmaDataUrl: firmaDataUrl || undefined,
+    firmaTasador: firmaTasador || d.tasador,
+    firmaFecha: firmaFecha || d.fecha,
+  });
+
+  const handleShare = async () => {
+    setShareLoading(true);
+    setShareUrl(null);
+    setShareExpiresAt(null);
+    try {
+      const pdfData = buildPdfData();
+      const blob = buildTasacionPdfBlob(pdfData);
+      const filename = buildTasacionFilename(pdfData);
+      const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}_${filename}`;
+
+      const { error: upErr } = await supabase.storage
+        .from('tasaciones')
+        .upload(path, blob, { contentType: 'application/pdf', upsert: false });
+      if (upErr) throw upErr;
+
+      const expiresIn = Number(shareExpiresIn) || 604800;
+      const { data: signed, error: sErr } = await supabase.storage
+        .from('tasaciones')
+        .createSignedUrl(path, expiresIn);
+      if (sErr) throw sErr;
+
+      setShareUrl(signed.signedUrl);
+      setShareExpiresAt(new Date(Date.now() + expiresIn * 1000).toLocaleString('es-CL'));
+      try { await navigator.clipboard.writeText(signed.signedUrl); } catch {}
+      toast.success('Enlace generado y copiado', {
+        description: `Vigencia: ${Math.round(expiresIn / 3600)} h`,
+      });
+    } catch (err: any) {
+      toast.error('No se pudo compartir el PDF', { description: err.message || 'Error desconocido' });
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
   return (
     <Card className="glass border-border/50 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border-b border-border/40">
