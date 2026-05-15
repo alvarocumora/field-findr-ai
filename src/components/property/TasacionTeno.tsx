@@ -121,6 +121,10 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [shareExpiresAt, setShareExpiresAt] = useState<string | null>(null);
   const [shareExpiresIn, setShareExpiresIn] = useState<string>('604800'); // 7 días por defecto
+  const [lang, setLang] = useState<TasacionLang>('es');
+  const t = useMemo(() => getT(lang), [lang]);
+  const L = t.labels;
+  const tt = (es: string, en: string) => (lang === 'en' ? en : es);
 
   // Cuando llega la UF de hoy desde el Banco Central, sincroniza el valor por defecto
   useMemo(() => {
