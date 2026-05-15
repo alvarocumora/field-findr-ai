@@ -128,11 +128,6 @@ const TasacionLive = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground py-8 px-4">
-      <Helmet>
-        <title>{title}</title>
-        <meta name="robots" content="noindex,nofollow" />
-      </Helmet>
-
       <div className="max-w-3xl mx-auto space-y-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
