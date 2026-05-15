@@ -27,6 +27,8 @@ import ReservationSuccess from "@/pages/ReservationSuccess";
 import ReservationError from "@/pages/ReservationError";
 import ReservationPending from "@/pages/ReservationPending";
 import VisualScenariosDemo from "@/pages/demo/VisualScenariosDemo";
+import TasacionLive from "@/pages/TasacionLive";
+import TasacionValidator from "@/pages/TasacionValidator";
 
 export const publicRoutes = [
   <Route key="home" path="/" element={<Index />} />,
