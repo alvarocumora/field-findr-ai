@@ -48,6 +48,10 @@ export interface TasacionData {
   valorM2UF: number;
   valorM2CLP: number;
   observaciones: string;
+  // Firma digital del tasador (opcional)
+  firmaDataUrl?: string;
+  firmaTasador?: string;
+  firmaFecha?: string;
 }
 
 export const generateTasacionPdf = (data: TasacionData) => {
