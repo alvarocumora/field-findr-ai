@@ -514,6 +514,41 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
         </SectionCard>
 
         <SectionCard n={9} icon={Calculator} title="Avalúo fiscal SII">
+          <div className="rounded-md border border-border/40 bg-muted/20 p-3 mb-2 space-y-2">
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+              <div className="flex-1">
+                <Label htmlFor="sii-rol-tasacion" className="text-xs text-muted-foreground">
+                  Rol SII (formato XXXX-YY)
+                </Label>
+                <Input
+                  id="sii-rol-tasacion"
+                  placeholder={d.rol && /^\d+-\d+$/.test(d.rol) ? d.rol : 'Ej: 1234-56'}
+                  value={siiRol}
+                  onChange={(e) => setSiiRol(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && lookupSII(false)}
+                  className="h-9 mt-1"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => lookupSII(false)} disabled={siiLoading} className="gap-1.5">
+                  {siiLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Calculator className="h-3.5 w-3.5" />}
+                  Consultar SII
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => lookupSII(true)} disabled={siiLoading} className="gap-1.5">
+                  Demo
+                </Button>
+              </div>
+            </div>
+            {siiSource && (
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                <Info className="h-3 w-3" />
+                Fuente: <Badge variant={siiSource === 'sii_scraping' ? 'default' : 'secondary'} className="text-[10px] h-4 px-1.5">
+                  {siiSource === 'sii_scraping' ? 'SII oficial' : 'Demo'}
+                </Badge>
+                {siiTimestamp && <span>· {new Date(siiTimestamp).toLocaleString('es-CL')}</span>}
+              </p>
+            )}
+          </div>
           <Row k="Avalúo terreno" v={fmtCLP(d.avaluoFiscalTerreno)} />
           <Row k="Avalúo construcción" v={fmtCLP(d.avaluoFiscalConstruccion)} />
           <Row k="Avalúo total" v={<span className="font-bold text-amber-500">{fmtCLP(d.avaluoFiscalTotal)}</span>} />
