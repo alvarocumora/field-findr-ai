@@ -54,7 +54,20 @@ export interface TasacionData {
   firmaFecha?: string;
 }
 
+export const buildTasacionFilename = (data: TasacionData) =>
+  `Tasacion_${(data.comuna || 'predio').replace(/\s+/g, '-')}_${data.fecha.replace(/[^\d]/g, '')}.pdf`;
+
+export const buildTasacionPdfBlob = (data: TasacionData): Blob => {
+  const doc = buildTasacionDoc(data);
+  return doc.output('blob');
+};
+
 export const generateTasacionPdf = (data: TasacionData) => {
+  const doc = buildTasacionDoc(data);
+  doc.save(buildTasacionFilename(data));
+};
+
+const buildTasacionDoc = (data: TasacionData) => {
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
