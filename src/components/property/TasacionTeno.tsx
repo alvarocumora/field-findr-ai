@@ -346,6 +346,7 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
       </CardHeader>
 
       <CardContent className="p-4 md:p-6 space-y-4">
+        <TasacionQRPanel buildPdfData={buildPdfData} />
         {shareUrl && (
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium">
