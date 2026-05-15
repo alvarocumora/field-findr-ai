@@ -114,6 +114,14 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
     return applyUfRate(TENO_TASACION, ufRate);
   }, [data, listing, ufRate]);
 
+  // Comparables reales desde listings (misma región/comuna), con ponderación.
+  const comparablesData = useComparables(
+    listing
+      ? { id: listing.id, region: listing.region, city: listing.city, type: listing.type, area_m2: listing.area_m2, lat: listing.lat, lng: listing.lng }
+      : null,
+    ufRate
+  );
+
   // Merge overrides on top of auto-built data, recomputing derived CLP fields
   const d: TasacionData = useMemo(() => {
     const merged: TasacionData = {
@@ -122,7 +130,16 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
       deslindes: { ...base.deslindes, ...(overrides.deslindes || {}) },
       servicios: { ...base.servicios, ...(overrides.servicios || {}) },
     };
-    // Recompute CLP fields if user edited UF values
+    // Si hay comparables reales, reemplazan los estáticos (a menos que el usuario los haya editado)
+    if (!overrides.comparables && comparablesData.items.length > 0) {
+      merged.comparables = comparablesData.items.map((c) => ({
+        ubicacion: c.ubicacion,
+        superficie: c.superficie,
+        valorUF: c.valorUF,
+        valorM2UF: c.valorM2UF,
+        fuente: c.fuente,
+      }));
+    }
     merged.valorComercialCLP = Math.round(merged.valorComercialUF * ufRate);
     merged.valorM2CLP = Math.round(merged.valorM2UF * ufRate);
     if (merged.superficieTerreno > 0) {
@@ -131,7 +148,7 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
     }
     merged.avaluoFiscalTotal = (merged.avaluoFiscalTerreno || 0) + (merged.avaluoFiscalConstruccion || 0);
     return merged;
-  }, [base, overrides, ufRate]);
+  }, [base, overrides, ufRate, comparablesData.items]);
 
   const setField = <K extends keyof TasacionData>(k: K, v: TasacionData[K]) =>
     setOverrides((o) => ({ ...o, [k]: v }));
