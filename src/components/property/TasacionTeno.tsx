@@ -111,6 +111,9 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
   const [siiLoading, setSiiLoading] = useState(false);
   const [siiSource, setSiiSource] = useState<'sii_scraping' | 'demo' | null>(null);
   const [siiTimestamp, setSiiTimestamp] = useState<string | null>(null);
+  const [firmaDataUrl, setFirmaDataUrl] = useState<string | null>(null);
+  const [firmaTasador, setFirmaTasador] = useState('');
+  const [firmaFecha, setFirmaFecha] = useState<string | null>(null);
 
   // Cuando llega la UF de hoy desde el Banco Central, sincroniza el valor por defecto
   useMemo(() => {
