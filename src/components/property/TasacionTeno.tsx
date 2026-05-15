@@ -644,6 +644,24 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           </div>
         </SectionCard>
 
+        <SectionCard n={11} icon={Calculator} title="Metodología de tasación">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Se aplica el <strong>Método Comparativo de Mercado</strong>, contrastando el valor SII del predio con
+            transacciones de inmuebles equivalentes en la zona. Factores de ajuste: (i) frente a Ruta 5,
+            (ii) superficie y forma, (iii) servicios básicos, (iv) zonificación industrial vigente, y
+            (v) potencial productivo (packing, agroindustria, logística, cadena de frío).
+          </p>
+        </SectionCard>
+
+        <SectionCard n={12} icon={Trophy} title="Conclusión – Valor comercial">
+          <div className="rounded-lg bg-gradient-to-br from-emerald-500/20 to-primary/10 border border-emerald-500/30 p-4">
+            <Badge className="bg-emerald-500 text-white mb-2">Valor final</Badge>
+            <p className="text-3xl font-bold text-emerald-500">{fmtUF(d.valorComercialUF)}</p>
+            <p className="text-sm text-muted-foreground mt-1">≈ {fmtCLP(d.valorComercialCLP)} ({fmtUF(d.valorM2UF)}/m²)</p>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed mt-3">{d.observaciones}</p>
+        </SectionCard>
+
         <SectionCard n={13} icon={Pen} title="Firma digital del tasador">
           <p className="text-xs text-muted-foreground mb-3">
             Firma manuscrita del tasador acreditado. Se embebe en el PDF como evidencia visual del informe.
@@ -705,24 +723,6 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
               }}
             />
           </div>
-        </SectionCard>
-
-        <SectionCard n={11} icon={Calculator} title="Metodología de tasación">
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Se aplica el <strong>Método Comparativo de Mercado</strong>, contrastando el valor SII del predio con
-            transacciones de inmuebles equivalentes en la zona. Factores de ajuste: (i) frente a Ruta 5,
-            (ii) superficie y forma, (iii) servicios básicos, (iv) zonificación industrial vigente, y
-            (v) potencial productivo (packing, agroindustria, logística, cadena de frío).
-          </p>
-        </SectionCard>
-
-        <SectionCard n={12} icon={Trophy} title="Conclusión – Valor comercial">
-          <div className="rounded-lg bg-gradient-to-br from-emerald-500/20 to-primary/10 border border-emerald-500/30 p-4">
-            <Badge className="bg-emerald-500 text-white mb-2">Valor final</Badge>
-            <p className="text-3xl font-bold text-emerald-500">{fmtUF(d.valorComercialUF)}</p>
-            <p className="text-sm text-muted-foreground mt-1">≈ {fmtCLP(d.valorComercialCLP)} ({fmtUF(d.valorM2UF)}/m²)</p>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed mt-3">{d.observaciones}</p>
         </SectionCard>
 
         <p className="text-[11px] text-muted-foreground italic text-center pt-2">
