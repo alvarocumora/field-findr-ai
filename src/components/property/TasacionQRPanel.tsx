@@ -141,7 +141,13 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
               <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30">
                 <ShieldCheck className="h-3 w-3 mr-1" /> Publicado · v{result.version}
               </Badge>
-              <Badge variant="outline" className="text-[10px]">Sin anclar a blockchain</Badge>
+              {anchor ? (
+                <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px]">
+                  <Bitcoin className="h-3 w-3 mr-1" /> OTS · {anchor.ok_count}/{anchor.calendars?.length} calendars
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[10px]">Sin anclar a Bitcoin</Badge>
+              )}
             </div>
 
             <div className="space-y-1">
