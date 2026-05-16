@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
+import { useAuth } from '@/hooks/useAuth';
 import type {
   VisualScenario,
   VisualScenarioAssumption,
@@ -41,12 +42,67 @@ type VisualScenarioRow = {
   updated_at: string | null;
 };
 
+export type VisualScenarioEditorInput = {
+  propertyId: string;
+  type: VisualScenarioType;
+  status: VisualScenarioStatus;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  baseImageUrl?: string;
+  overlayImageUrl?: string;
+  thumbnailUrl?: string;
+  tags?: string[];
+  estimatedCapex?: number;
+  estimatedRevenue?: number;
+};
+
+type VisualScenarioWriteRow = {
+  property_id: string;
+  scenario_type: VisualScenarioType;
+  status: VisualScenarioStatus;
+  title: string;
+  subtitle: string | null;
+  description: string | null;
+  base_image_url: string | null;
+  overlay_image_url: string | null;
+  thumbnail_url: string | null;
+  tags: string[];
+  estimated_capex: number | null;
+  estimated_revenue: number | null;
+  created_by?: string | null;
+};
+
 const isArray = <T>(value: unknown): value is T[] => Array.isArray(value);
 
 const parseJsonArray = <T>(value: Json | null): T[] => {
   if (!value || !isArray<T>(value)) return [];
   return value;
 };
+
+const emptyToNull = (value?: string) => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+};
+
+const normalizeEditorInput = (
+  input: VisualScenarioEditorInput,
+  userId?: string | null,
+): VisualScenarioWriteRow => ({
+  property_id: input.propertyId.trim(),
+  scenario_type: input.type,
+  status: input.status,
+  title: input.title.trim(),
+  subtitle: emptyToNull(input.subtitle),
+  description: emptyToNull(input.description),
+  base_image_url: emptyToNull(input.baseImageUrl),
+  overlay_image_url: emptyToNull(input.overlayImageUrl),
+  thumbnail_url: emptyToNull(input.thumbnailUrl),
+  tags: input.tags ?? [],
+  estimated_capex: input.estimatedCapex ?? null,
+  estimated_revenue: input.estimatedRevenue ?? null,
+  created_by: userId ?? null,
+});
 
 export const mapVisualScenarioRow = (row: VisualScenarioRow): VisualScenario => ({
   id: row.id,
@@ -100,8 +156,30 @@ const visualScenariosTable = () => (supabase as unknown as {
         }>;
       };
     };
+    insert: (row: VisualScenarioWriteRow) => {
+      select: (columns: string) => {
+        single: () => Promise<{ data: VisualScenarioRow | null; error: Error | null }>;
+      };
+    };
+    update: (row: Partial<VisualScenarioWriteRow>) => {
+      eq: (column: string, value: string) => {
+        select: (columns: string) => {
+          single: () => Promise<{ data: VisualScenarioRow | null; error: Error | null }>;
+        };
+      };
+    };
+    delete: () => {
+      eq: (column: string, value: string) => Promise<{ error: Error | null }>;
+    };
   };
 }).from('visual_scenarios');
+
+const invalidateVisualScenarioQueries = (queryClient: ReturnType<typeof useQueryClient>, propertyId?: string) => {
+  queryClient.invalidateQueries({ queryKey: ['visual-scenarios'] });
+  if (propertyId) {
+    queryClient.invalidateQueries({ queryKey: ['visual-scenarios', propertyId] });
+  }
+};
 
 export const useVisualScenarios = (propertyId?: string | null) => {
   return useQuery({
@@ -133,5 +211,64 @@ export const useAdminVisualScenarios = (limit = 100) => {
 
       return (data ?? []).map(mapVisualScenarioRow);
     },
+  });
+};
+
+export const useCreateVisualScenario = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (input: VisualScenarioEditorInput) => {
+      const { data, error } = await visualScenariosTable()
+        .insert(normalizeEditorInput(input, user?.id))
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('No se pudo crear el escenario visual.');
+
+      return mapVisualScenarioRow(data);
+    },
+    onSuccess: (scenario) => invalidateVisualScenarioQueries(queryClient, scenario.propertyId),
+  });
+};
+
+export const useUpdateVisualScenario = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, input }: { id: string; input: VisualScenarioEditorInput }) => {
+      const row = normalizeEditorInput(input, user?.id);
+      const { created_by, ...updates } = row;
+
+      const { data, error } = await visualScenariosTable()
+        .update(updates)
+        .eq('id', id)
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('No se pudo actualizar el escenario visual.');
+
+      return mapVisualScenarioRow(data);
+    },
+    onSuccess: (scenario) => invalidateVisualScenarioQueries(queryClient, scenario.propertyId),
+  });
+};
+
+export const useDeleteVisualScenario = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, propertyId }: { id: string; propertyId: string }) => {
+      const { error } = await visualScenariosTable().delete().eq('id', id);
+
+      if (error) throw error;
+
+      return { id, propertyId };
+    },
+    onSuccess: ({ propertyId }) => invalidateVisualScenarioQueries(queryClient, propertyId),
   });
 };
