@@ -93,4 +93,51 @@ export function computeMethods(input: MethodInput): MethodsResult {
     name: 'Income Capitalisation (renta capitalizada)',
     formula: 'V = NOI_estabilizado / Cap_rate',
     inputs: [
-      { label: 
+      { label: 'Renta UF/m²/mes', calc: 'Bodegaje agro referencial', result: m3RentaUF.toFixed(2) },
+      { label: 'Sup. arrendable', calc: `5% del predio`, result: `${m3SupArr.toLocaleString('es-CL')} m²` },
+      { label: 'Ingreso bruto anual', calc: `${m3SupArr} × ${m3RentaUF} × 12`, result: `UF ${round(m3Ingreso).toLocaleString('es-CL')}` },
+      { label: `OPEX ${(m3OpexPct*100).toFixed(0)}%`, calc: 'Mantención + admin', result: `UF ${round(m3Ingreso*m3OpexPct).toLocaleString('es-CL')}` },
+      { label: 'NOI estabilizado', calc: 'Ingreso − OPEX', result: `UF ${round(m3NOI).toLocaleString('es-CL')}` },
+      { label: 'Cap rate', calc: 'Industrial Maule', result: `${(capRate*100).toFixed(1)}%` },
+      { label: 'Valor capitalizado', calc: `${round(m3NOI)} / ${capRate.toFixed(2)}`, result: `UF ${m3.toLocaleString('es-CL')}` },
+    ],
+    source: 'Colliers International Chile · Cap Rate Survey Industrial 2025',
+  };
+
+  // Método 4 — Cost Approach
+  const m4Suelo = areaM2 * costoSueloUFm2;
+  const m4Habilit = 4500 + 2800 + 1825; // CGE + APR + accesos
+  const m4 = round(m4Suelo + m4Habilit);
+  const method4: MethodRow = {
+    id: 4, weight: 0.15, resultUF: m4,
+    name: 'Cost Approach (reposición)',
+    formula: 'V = Sup × Pu_suelo + Habilitación + Accesos',
+    inputs: [
+      { label: 'Suelo agroindustrial', calc: `${areaM2.toLocaleString('es-CL')} × ${costoSueloUFm2.toFixed(2)} UF/m²`, result: `UF ${round(m4Suelo).toLocaleString('es-CL')}` },
+      { label: 'Empalme CGE MT', calc: 'Trafo 100 kVA', result: 'UF 4.500' },
+      { label: 'Agua APR', calc: 'Pozo + estanque', result: 'UF 2.800' },
+      { label: 'Accesos', calc: 'Caleta + asfalto', result: 'UF 1.825' },
+      { label: 'Total reposición', calc: 'suma', result: `UF ${m4.toLocaleString('es-CL')}` },
+    ],
+    source: 'CChC Índice de Costos 2025 · CGE tarifas BT/MT · MOP costos referenciales',
+  };
+
+  // Método 5 — Residual / H&BU
+  const m5SupTechada = round(areaM2 * 0.11);
+  const m5ValorProy = m5SupTechada * 21.3; // UF / m² techado desarrollado
+  const m5Capex = m5SupTechada * 7.85;
+  const m5Margen = m5ValorProy * 0.18;
+  const m5Soft = m5ValorProy * 0.05;
+  const m5Residual = Math.max(0, m5ValorProy - m5Capex - m5Margen - m5Soft);
+  const m5 = round(m5Residual * optionalityFactor);
+  const method5: MethodRow = {
+    id: 5, weight: 0.20, resultUF: m5,
+    name: 'Residual Method (desarrollo H&BU)',
+    formula: 'V_suelo = (V_proy − CAPEX − Soft − Margen) × Opcionalidad',
+    inputs: [
+      { label: 'Sup. techada potencial', calc: '11% ocupación', result: `${m5SupTechada.toLocaleString('es-CL')} m²` },
+      { label: 'Valor proyecto estabilizado', calc: `${m5SupTechada} × 21,3 UF/m²`, result: `UF ${round(m5ValorProy).toLocaleString('es-CL')}` },
+      { label: 'CAPEX construcción', calc: `${m5SupTechada} × 7,85 UF/m²`, result: `UF ${round(m5Capex).toLocaleString('es-CL')}` },
+      { label: 'Margen desarrollador', calc: '18%', result: `UF ${round(m5Margen).toLocaleString('es-CL')}` },
+      { label: 'Costos soft', calc: '5% (permisos + gestión)', result: `UF ${round(m5Soft).toLocaleString('es-CL')}` },
+      { label: 'Residual base', calc: 'V_proy − CAPEX − Margen − Soft', result: `UF ${round(m5Residual).toLoc
