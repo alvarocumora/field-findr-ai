@@ -1,114 +1,91 @@
 
-# Sistema QR · Validador público · Tasación Live · Trazabilidad
+# Tasación Teno v6 — Editorial Premium
 
-Construyo el sistema en tres capas. Las dos primeras (QR + validador + live + hash auditado en Lovable Cloud) las implemento ahora. La capa blockchain la diseño como módulo opcional a activar después.
+Reemplazo total del lenguaje visual del PDF (actualmente bloques planos tipo "salida de IA") por un dossier comercial editorial premium tipo Sotheby's / Engel & Völkers Commercial, con la portada como pieza épica de venta.
 
-## 1. Capa de datos: registro auditado de tasaciones
+## Resultado esperado
 
-Nueva tabla `tasaciones_publicadas` en Lovable Cloud. Cada vez que el tasador genera el PDF y lo "publica", se guarda un registro inmutable con:
+- Archivo: `/mnt/documents/Tasacion_Teno_16052026_v6_editorial.pdf`
+- 6–7 páginas A4 vertical, márgenes generosos
+- Valor comercial: **UF 99.000** (UF 1,39 / m²) — alineado al comparable de 52.800 m² (UF 1,48/m²) con leve castigo por estar interior respecto a Ruta 5
 
-- `id` (uuid público corto, usado en la URL del validador)
-- `listing_id` (opcional)
-- `comuna`, `region`, `direccion`, `rol`
-- `valor_uf`, `valor_clp`, `valor_m2_uf`, `superficie_m2`
-- `fecha_emision`, `tasador_nombre`, `lang`
-- `pdf_path` (ruta en bucket `tasaciones`)
-- `pdf_sha256` (huella SHA-256 del PDF — cualquier modificación cambia el hash)
-- `firma_data_hash` (SHA-256 del trazo de firma)
-- `payload_json` (snapshot completo de `TasacionData` para reconstrucción)
-- `payload_hash` (SHA-256 del payload canónico)
-- `version` (incremental por listing)
-- `revoked_at`, `revoked_reason` (para invalidar una tasación)
-- `blockchain_anchor` (jsonb null por ahora; ver capa 3)
+## Lenguaje visual (Editorial Premium)
 
-RLS:
-- INSERT: solo `appraiser` o `admin`.
-- SELECT: público (los detalles de validación son públicos por diseño — el QR está hecho para verificarse sin login).
-- UPDATE/DELETE: solo `admin`. La revocación es un `update`, no un delete.
+**Paleta**
+- Negro carbón `#0E0E0E` (titulares y barras)
+- Beige hueso `#EFEAE1` (fondo páginas interiores)
+- Champagne / dorado mate `#B8945A` (líneas finas, KPIs, marca)
+- Gris piedra `#6B6B6B` (texto secundario)
+- Blanco roto `#FAF8F4` (cajas de cifras)
 
-## 2. Generación del QR y publicación
+**Tipografía**
+- Display: **Cormorant Garamond** (serif, light, tracking abierto) para titulares y valor
+- Texto: **Inter Light** para cuerpo y tablas
+- Caps con letter-spacing 0.25em para etiquetas de sección
 
-En `TasacionTeno.tsx`, junto a "Compartir" agrego un botón **"Publicar y generar QR"**:
+**Reglas de composición**
+- Foto satelital ESRI a sangre cubriendo toda la portada (sin marcos)
+- Overlay vertical degradado negro 0→70% solo en la mitad inferior
+- Numeración de páginas romana en pie (II, III, IV…)
+- Línea filete dorada 0.3pt como único divisor entre secciones
+- Cero gradientes verde→azul, cero íconos emoji, cero cajas de colores planos
+- Cifras grandes en serif (cuerpo 48–72pt) como protagonistas
 
-1. Construye el PDF, calcula `sha256(blob)` con `crypto.subtle.digest`.
-2. Sube el PDF a `tasaciones/<id>/<filename>.pdf`.
-3. Inserta el registro en `tasaciones_publicadas`.
-4. Genera el QR (lib `qrcode`) que apunta a:
-   `https://ofertaterrenos.com/tasacion/v/<id>`
-5. Muestra: QR descargable PNG/SVG, link copiable, hash visible y badge "Publicado · v{n}".
-6. El QR queda **embebido en el propio PDF** (esquina inferior derecha de la portada y de la página de firma) en una nueva versión re-generada que incluye el QR, hash y URL del validador. Ese segundo PDF se vuelve a subir como `pdf_final` y su hash se sella en la fila.
+## Estructura del dossier
 
-## 3. Tasación Live (`/tasacion/v/:id`)
+**I — Portada épica (full bleed)**
+- Foto satelital ESRI a sangre completa
+- Esquina sup-izq: monograma "OT" en dorado + línea + "OFERTA TERRENOS · DIVISIÓN TASACIONES"
+- Centro-inferior: "TENO" en Cormorant 96pt blanco + "Valle Central · Región del Maule" en caps tracked
+- Pie: "INFORME DE TASACIÓN COMERCIAL · MAYO 2026 · DOCUMENTO CONFIDENCIAL"
+- Sin caja de precio en portada (eso va dentro, página de Valor)
 
-Página pública nueva. Renderiza la tasación dinámicamente desde `payload_json`, no desde el PDF:
+**II — Resumen ejecutivo** (una sola página, mucho aire)
+- Cifra protagonista: **UF 99.000** en Cormorant 84pt
+- Tres KPIs en columna: Superficie 7,11 ha · UF/m² 1,39 · Multiplicador IFC 1,9×
+- Párrafo editorial de 4 líneas sobre la oportunidad
 
-- Header con badge **Verificada / Revocada / No encontrada**.
-- Datos clave: predio, comuna, fecha, valor UF, valor CLP, valor/m².
-- Tasador firmante + fecha + miniatura de firma.
-- **Hash SHA-256 del PDF** (con copiar al portapapeles).
-- Botón "Descargar PDF original" (signed URL del bucket).
-- Botón "Verificar archivo" → input file: el usuario sube su copia del PDF y comparamos `sha256(uploaded) === pdf_sha256` en cliente. Resultado en verde/rojo.
-- Comparables y sección 12 íntegros (reusa `TasacionTeno` en modo `readOnly`).
-- Botón "Ver en idioma EN/ES" (usa el mismo i18n existente).
-- Si `revoked_at` no es null: banner rojo con motivo y fecha.
+**III — La propiedad**
+- Foto satelital media página + ficha técnica a dos columnas (Rol, sup, deslindes, IFC, urbanización, accesos)
 
-Misma página accesible escaneando el QR del PDF.
+**IV — Contexto de mercado** (tabla rediseñada)
+- Comparables reales con tipografía editorial, sin headers de color, solo filete dorado
+- Incluir los dos comparables reales aportados por el cliente:
+  - Pío XI 505 · 52.800 m² · UF 78.000 · UF 1,48/m² · Vivax (con foto satelital miniatura)
+  - Ruta 5 Sur / J-55 · 154.700 m² · UF 147.000 · UF 0,95/m² · Engel & Völkers
+  - + 4 referencias del sector Teno/Curicó industrial
+- Columna "Ajuste vs. Teno" explicando por qué cada uno lo posiciona
 
-## 4. Validador independiente (`/tasacion/validar`)
+**V — Análisis de valor**
+- Tres escenarios en tipografía editorial (no cajas):
+  - Conservador UF 85.000 — venta directa pa ño sin desarrollo
+  - **Central UF 99.000** — valor comercial recomendado (resaltado dorado)
+  - Optimista UF 120.000 — loteo terminado con IFC ejecutado
+- Justificación del valor central referenciando comparables III y IV
 
-Página pública con dos modos:
+**VI — Fundamentos del valor**
+- 4 pilares en cuadrícula 2×2 con número romano:
+  - I. Ubicación estratégica Valle Central
+  - II. IFC aprobado vigente
+  - III. Escala y forma del paño
+  - IV. Liquidez del mercado de paños subdivididos
 
-- **Por código**: pegar el id del informe.
-- **Por archivo**: subir el PDF; calculamos su SHA-256 y buscamos coincidencia en `tasaciones_publicadas.pdf_sha256` o `pdf_final_sha256` vía función pública `find_tasacion_by_hash(hash)` (security definer, expone solo: estado, fecha, tasador, valor, link al detalle).
+**VII — Condiciones y firma**
+- Metodología, supuestos, vigencia 90 días, limitaciones
+- Bloque firma: Field-Findr AI · Departamento de Tasaciones
+- QR de validación (si la función ya existe en el código actual)
+- Pie con número de informe y hash SHA-256
 
-Resultado: redirige al detalle live + muestra "Documento auténtico ✔" o "No coincide con ningún informe emitido ✘".
+## Cambios técnicos
 
-## 5. Trazabilidad blockchain (módulo opcional, lo dejo preparado)
+- Nuevo script `/tmp/genTenoV6.ts` (no toca `src/lib/tasacionPdfGenerator.ts`, que sigue sirviendo al flujo dentro de la app)
+- Cargar fuentes Cormorant + Inter vía `jsPDF.addFont` desde Google Fonts API (descarga a `/tmp/fonts/` y embeber TTF)
+- Reutilizar el mosaico ESRI ya generado en v4/v5 (cacheado en `/tmp/teno_satellite.jpg`)
+- Para los comparables con foto: fetch de tile ESRI 1×1 z16 centrado en cada coordenada (Pío XI 505 Teno, Ruta 5 / J-55 Teno)
+- QA obligatorio: pdftoppm 150 DPI sobre las 7 páginas, verificar sin overlaps, sin texto cortado, sin cajas de color residuales del estilo viejo
 
-Tres opciones, ordenadas por costo/fricción:
+## No incluido (fuera de alcance)
 
-1. **OpenTimestamps (Bitcoin) — recomendada para empezar**
-   - Edge function `anchor-tasacion` toma `pdf_sha256`, llama a `https://a.pool.opentimestamps.org/digest`, recibe un `.ots` (proof) y lo guarda en `blockchain_anchor.ots_proof` + `blockchain_anchor.network = 'bitcoin'`.
-   - Costo: 0. Confirmación: minutos para attestation, 1-6 h para upgrade a Bitcoin block.
-   - El validador muestra "Anclado en Bitcoin · bloque #xxx · timestamp xxx" y un botón "Verificar prueba" (verificación local con `javascript-opentimestamps`).
-   - Ventaja: sin cuentas, sin gas, sin privadas. Lo más razonable para un MVP de notarización.
-
-2. **EVM (Polygon/Base) con contrato `Notary`**
-   - Contrato mínimo: `mapping(bytes32 => uint256) public anchored;` con `function notarize(bytes32 hash) external { anchored[hash] = block.timestamp; emit Anchored(hash, msg.sender, block.timestamp); }`.
-   - Edge function firma con una wallet de servicio (clave en secret) y llama al contrato.
-   - Costo: ~0.001 USD por tasación en Polygon. Necesita custodiar una privada y MATIC.
-   - Mejor si quieren UX "ver en Polygonscan" + smart contracts futuros (NFT del informe, royalties, etc).
-
-3. **Cardano / Algorand metadata transactions**
-   - Costos estables (~0.17 ADA), buen storytelling LATAM. Más fricción de tooling.
-
-Recomendación: implemento ahora la **estructura** (campo `blockchain_anchor`, badge "Sin anclar / Anclado en {network}", función edge stub `anchor-tasacion` que retorna 501) y dejamos OpenTimestamps lista para activar con una decisión tuya. No agrego dependencias EVM ni privadas hasta que confirmes.
-
-## 6. Archivos que tocaré
-
-Nuevos:
-- `supabase/migrations/...` — tabla + RLS + función `find_tasacion_by_hash`.
-- `supabase/functions/anchor-tasacion/index.ts` — stub para futura activación blockchain.
-- `src/lib/tasacionHash.ts` — `sha256` de Blob/JSON canónico.
-- `src/lib/tasacionPublish.ts` — orquesta upload + insert + QR + re-PDF con QR.
-- `src/components/property/TasacionQRPanel.tsx` — UI de publicación, QR, hash.
-- `src/pages/TasacionLive.tsx` — `/tasacion/v/:id`.
-- `src/pages/TasacionValidator.tsx` — `/tasacion/validar`.
-
-Modificados:
-- `src/lib/tasacionPdfGenerator.ts` — recibe `qrDataUrl`, `validatorUrl`, `pdfHashShort` y los pinta en portada + firma.
-- `src/components/property/TasacionTeno.tsx` — nuevo botón "Publicar".
-- `src/App.tsx` — rutas nuevas.
-
-## 7. Dependencia nueva
-
-`qrcode` (~50 KB, MIT). Usada para generar dataURL PNG y string SVG.
-
-## 8. Lo que dejo fuera de este pase
-
-- Notificaciones por email del comprador/vendedor cuando se publica.
-- Pago para "premium verification".
-- NFT del informe (depende de capa 3 opción 2).
-- Multi-firmante (notario + tasador). Hoy una firma.
-
-Procedo con capas 1, 2, 3 (live), 4 (validador) y la estructura preparada para la 5. ¿Avanzo con OpenTimestamps como red por defecto cuando llegue el momento de activar el anclaje, o prefieres EVM/Polygon?
+- No cambia el generador en producción (`src/lib/tasacionPdfGenerator.ts`) — eso queda para una iteración separada si te gusta el resultado
+- No re-parsea el KMZ (se reutilizan datos del v4/v5)
+- No agrega nuevos planos PDF anexos
