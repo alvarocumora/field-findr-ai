@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ShieldCheck,
@@ -11,15 +12,57 @@ import {
   FileText,
   Hash,
   ArrowRight,
+  Copy,
+  Check,
+  Download,
+  ExternalLink,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sha256OfBlob, shortHash } from '@/lib/tasacionHash';
+import { toast } from 'sonner';
 
+type Found = {
+  kind: 'found';
+  id: string;
+  revoked: boolean;
+  comuna: string | null;
+  valor_uf: number | null;
+  tasador: string | null;
+  fecha: string | null;
+  matched: string;
+  pdf_path: string | null;
+  pdf_final_path: string | null;
+  pdf_sha256: string | null;
+  pdf_final_sha256: string | null;
+  revoked_reason?: string | null;
+};
 type LookupResult =
   | { kind: 'idle' }
   | { kind: 'checking' }
-  | { kind: 'found'; id: string; revoked: boolean; comuna: string | null; valor_uf: number | null; tasador: string | null; fecha: string | null; matched: string }
+  | Found
   | { kind: 'notfound' };
+
+const SELECT_COLS =
+  'id,comuna,valor_uf,tasador_nombre,fecha_emision,revoked_at,revoked_reason,pdf_path,pdf_final_path,pdf_sha256,pdf_final_sha256';
+
+const toFound = (data: any, matched: string): Found => ({
+  kind: 'found',
+  id: data.id,
+  revoked: !!data.revoked_at,
+  revoked_reason: data.revoked_reason ?? null,
+  comuna: data.comuna,
+  valor_uf: data.valor_uf,
+  tasador: data.tasador_nombre,
+  fecha: data.fecha_emision,
+  matched,
+  pdf_path: data.pdf_path ?? null,
+  pdf_final_path: data.pdf_final_path ?? null,
+  pdf_sha256: data.pdf_sha256 ?? null,
+  pdf_final_sha256: data.pdf_final_sha256 ?? null,
+});
+
+const pdfUrlFor = (path: string) =>
+  supabase.storage.from('tasaciones').getPublicUrl(path).data.publicUrl;
 
 const TasacionValidator = () => {
   const navigate = useNavigate();
@@ -34,45 +77,45 @@ const TasacionValidator = () => {
     setByCodeState({ kind: 'checking' });
     const { data, error } = await supabase
       .from('tasaciones_publicadas')
-      .select('id,comuna,valor_uf,tasador_nombre,fecha_emision,revoked_at')
+      .select(SELECT_COLS)
       .eq('id', id)
       .maybeSingle();
     if (error || !data) {
       setByCodeState({ kind: 'notfound' });
       return;
     }
-    setByCodeState({
-      kind: 'found',
-      id: data.id,
-      revoked: !!data.revoked_at,
-      comuna: data.comuna,
-      valor_uf: data.valor_uf,
-      tasador: data.tasador_nombre,
-      fecha: data.fecha_emision,
-      matched: 'id',
-    });
+    setByCodeState(toFound(data, 'id'));
   };
 
   const checkByFile = async (file: File) => {
     setByFileState({ kind: 'checking' });
     const hash = await sha256OfBlob(file);
     setUploadedHash(hash);
-    const { data, error } = await supabase.rpc('find_tasacion_by_hash', { _hash: hash });
-    const row = Array.isArray(data) ? data[0] : data;
-    if (error || !row) {
-      setByFileState({ kind: 'notfound' });
+    // 1) Try RPC first (covers payload + firma hashes)
+    const { data: rpcData } = await supabase.rpc('find_tasacion_by_hash', { _hash: hash });
+    const rpcRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+    if (rpcRow?.id) {
+      const { data: full } = await supabase
+        .from('tasaciones_publicadas')
+        .select(SELECT_COLS)
+        .eq('id', rpcRow.id)
+        .maybeSingle();
+      if (full) {
+        setByFileState(toFound(full, rpcRow.matched_field ?? 'pdf'));
+        return;
+      }
+    }
+    // 2) Fallback: direct match on pdf_sha256 / pdf_final_sha256
+    const { data: direct } = await supabase
+      .from('tasaciones_publicadas')
+      .select(SELECT_COLS)
+      .or(`pdf_sha256.eq.${hash},pdf_final_sha256.eq.${hash}`)
+      .maybeSingle();
+    if (direct) {
+      setByFileState(toFound(direct, 'pdf'));
       return;
     }
-    setByFileState({
-      kind: 'found',
-      id: row.id,
-      revoked: !!row.revoked_at,
-      comuna: row.comuna,
-      valor_uf: row.valor_uf,
-      tasador: row.tasador_nombre,
-      fecha: row.fecha_emision,
-      matched: row.matched_field,
-    });
+    setByFileState({ kind: 'notfound' });
   };
 
   return (
@@ -106,7 +149,7 @@ const TasacionValidator = () => {
               <TabsContent value="file" className="space-y-3 pt-4">
                 <p className="text-xs text-muted-foreground">
                   Sube el PDF que recibiste. Calculamos su huella SHA-256 en tu navegador y
-                  buscamos coincidencia en el registro público.
+                  buscamos coincidencia exacta en el registro público.
                 </p>
                 <Input
                   type="file"
@@ -117,11 +160,13 @@ const TasacionValidator = () => {
                   }}
                 />
                 {uploadedHash && (
-                  <div className="text-[10px] font-mono text-muted-foreground">
-                    SHA-256 del archivo: {shortHash(uploadedHash, 12, 12)}
-                  </div>
+                  <HashRow label="SHA-256 del archivo" hash={uploadedHash} />
                 )}
-                <ResultBlock state={byFileState} onOpen={(id) => navigate(`/tasacion/v/${id}`)} />
+                <ResultBlock
+                  state={byFileState}
+                  uploadedHash={uploadedHash}
+                  onOpen={(id) => navigate(`/tasacion/v/${id}`)}
+                />
               </TabsContent>
 
               <TabsContent value="code" className="space-y-3 pt-4">
@@ -134,12 +179,16 @@ const TasacionValidator = () => {
                     onChange={(e) => setCode(e.target.value)}
                     placeholder="00000000-0000-0000-0000-000000000000"
                     className="font-mono text-xs"
+                    onKeyDown={(e) => e.key === 'Enter' && checkByCode()}
                   />
                   <Button onClick={checkByCode} disabled={!code.trim()}>
                     Validar
                   </Button>
                 </div>
-                <ResultBlock state={byCodeState} onOpen={(id) => navigate(`/tasacion/v/${id}`)} />
+                <ResultBlock
+                  state={byCodeState}
+                  onOpen={(id) => navigate(`/tasacion/v/${id}`)}
+                />
               </TabsContent>
             </Tabs>
           </CardContent>
@@ -155,7 +204,52 @@ const TasacionValidator = () => {
   );
 };
 
-const ResultBlock = ({ state, onOpen }: { state: LookupResult; onOpen: (id: string) => void }) => {
+const CopyButton = ({ value, label = 'hash' }: { value: string; label?: string }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <Button
+      type="button"
+      size="icon"
+      variant="ghost"
+      className="h-6 w-6 shrink-0"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(value);
+          setCopied(true);
+          toast.success(`${label} copiado`);
+          setTimeout(() => setCopied(false), 1500);
+        } catch {
+          toast.error('No se pudo copiar');
+        }
+      }}
+      aria-label={`Copiar ${label}`}
+    >
+      {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+    </Button>
+  );
+};
+
+const HashRow = ({ label, hash }: { label: string; hash: string }) => (
+  <div className="rounded-md border bg-muted/30 px-2.5 py-1.5 flex items-center gap-2">
+    <div className="flex-1 min-w-0">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="font-mono text-[11px] truncate" title={hash}>
+        {shortHash(hash, 14, 14)}
+      </div>
+    </div>
+    <CopyButton value={hash} label="Hash" />
+  </div>
+);
+
+const ResultBlock = ({
+  state,
+  uploadedHash,
+  onOpen,
+}: {
+  state: LookupResult;
+  uploadedHash?: string | null;
+  onOpen: (id: string) => void;
+}) => {
   if (state.kind === 'idle') return null;
   if (state.kind === 'checking') {
     return (
@@ -166,34 +260,145 @@ const ResultBlock = ({ state, onOpen }: { state: LookupResult; onOpen: (id: stri
   }
   if (state.kind === 'notfound') {
     return (
-      <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm flex items-center gap-2">
-        <ShieldAlert className="h-4 w-4 text-destructive" />
-        <span>No coincide con ningún informe emitido.</span>
+      <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 space-y-2">
+        <div className="flex items-center gap-2 font-semibold text-destructive">
+          <ShieldAlert className="h-5 w-5" /> No verificado
+        </div>
+        <p className="text-xs text-muted-foreground">
+          No encontramos ningún informe que coincida con este archivo o ID en el registro
+          público. Si lo recibiste de un agente, pídele el link público oficial
+          (<code>/tasacion/v/…</code>).
+        </p>
       </div>
     );
   }
+
+  const ok = !state.revoked;
+  const refHash = state.pdf_final_sha256 || state.pdf_sha256 || null;
+  const pdfPath = state.pdf_final_path || state.pdf_path;
+  const pdfUrl = pdfPath ? pdfUrlFor(pdfPath) : null;
+  const hashesMatch =
+    uploadedHash && refHash ? uploadedHash.toLowerCase() === refHash.toLowerCase() : null;
+
   return (
-    <div className={`rounded-md border p-3 text-sm space-y-2 ${state.revoked ? 'border-destructive/40 bg-destructive/10' : 'border-emerald-500/40 bg-emerald-500/5'}`}>
-      <div className="flex items-center gap-2 font-medium">
-        {state.revoked ? (
-          <><ShieldAlert className="h-4 w-4 text-destructive" /> Documento revocado</>
-        ) : (
-          <><ShieldCheck className="h-4 w-4 text-emerald-500" /> Documento auténtico</>
+    <div
+      className={`rounded-lg border p-4 space-y-3 ${
+        ok
+          ? 'border-emerald-500/40 bg-emerald-500/5'
+          : 'border-destructive/40 bg-destructive/10'
+      }`}
+    >
+      {/* Status header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {ok ? (
+            <>
+              <div className="h-9 w-9 rounded-full bg-emerald-500/15 text-emerald-500 inline-flex items-center justify-center">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="font-semibold text-emerald-600 dark:text-emerald-400">
+                  Documento verificado
+                </div>
+                <div className="text-[11px] text-muted-foreground">
+                  Coincidencia en registro público · {state.matched === 'id' ? 'por ID' : 'por hash del PDF'}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="h-9 w-9 rounded-full bg-destructive/15 text-destructive inline-flex items-center justify-center">
+                <ShieldAlert className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="font-semibold text-destructive">Documento revocado</div>
+                <div className="text-[11px] text-muted-foreground">
+                  {state.revoked_reason || 'Este informe ya no es válido.'}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+        {hashesMatch !== null && (
+          <Badge
+            variant="outline"
+            className={
+              hashesMatch
+                ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
+                : 'border-amber-500/40 text-amber-600 dark:text-amber-400'
+            }
+          >
+            {hashesMatch ? 'Hash idéntico' : 'Hash difiere'}
+          </Badge>
         )}
       </div>
-      <div className="text-xs text-muted-foreground">
-        {state.comuna && <>Predio en {state.comuna} · </>}
-        {state.fecha && <>Emitido {state.fecha} · </>}
-        {state.tasador && <>Tasador: {state.tasador}</>}
+
+      {/* Metadata grid */}
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        {state.comuna && (
+          <Field label="Comuna" value={state.comuna} />
+        )}
+        {state.fecha && <Field label="Emitido" value={state.fecha} />}
+        {state.tasador && <Field label="Tasador" value={state.tasador} />}
+        {state.valor_uf != null && (
+          <Field label="Valor" value={`UF ${state.valor_uf.toLocaleString('es-CL')}`} />
+        )}
       </div>
-      {state.valor_uf != null && (
-        <div className="text-xs">Valor: <strong>UF {state.valor_uf.toLocaleString('es-CL')}</strong></div>
-      )}
-      <Button size="sm" variant="default" className="gap-2" onClick={() => onOpen(state.id)}>
-        Ver tasación completa <ArrowRight className="h-3.5 w-3.5" />
-      </Button>
+
+      {/* Hashes */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0 rounded-md border bg-background/60 px-2.5 py-1.5">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              ID del informe
+            </div>
+            <div className="font-mono text-[11px] truncate" title={state.id}>
+              {state.id}
+            </div>
+          </div>
+          <CopyButton value={state.id} label="ID" />
+        </div>
+        {refHash && <HashRow label="SHA-256 registrado" hash={refHash} />}
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-wrap gap-2 pt-1">
+        {pdfUrl && (
+          <Button
+            size="sm"
+            variant="default"
+            className="gap-2"
+            asChild
+          >
+            <a href={pdfUrl} download target="_blank" rel="noreferrer">
+              <Download className="h-3.5 w-3.5" /> Descargar PDF oficial
+            </a>
+          </Button>
+        )}
+        <Button size="sm" variant="outline" className="gap-2" onClick={() => onOpen(state.id)}>
+          Ver página pública <ArrowRight className="h-3.5 w-3.5" />
+        </Button>
+        <Button size="sm" variant="ghost" className="gap-2" asChild>
+          <a
+            href={`/tasacion/v/${state.id}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <ExternalLink className="h-3.5 w-3.5" /> Abrir en nueva pestaña
+          </a>
+        </Button>
+      </div>
     </div>
   );
 };
+
+const Field = ({ label, value }: { label: string; value: string }) => (
+  <div className="rounded-md border bg-background/60 px-2.5 py-1.5">
+    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    <div className="text-sm font-medium truncate" title={value}>
+      {value}
+    </div>
+  </div>
+);
 
 export default TasacionValidator;
