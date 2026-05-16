@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Boxes, ExternalLink, FileWarning, Layers, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
+import { Boxes, ExternalLink, FileWarning, Layers, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,15 +9,69 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import ScenarioStatusBadge from '@/components/visual-scenarios/ScenarioStatusBadge';
 import ScenarioTypeBadge from '@/components/visual-scenarios/ScenarioTypeBadge';
-import { useAdminVisualScenarios } from '@/hooks/useVisualScenarios';
+import VisualScenarioFormDialog from '@/components/visual-scenarios/VisualScenarioFormDialog';
+import {
+  useAdminVisualScenarios,
+  useCreateVisualScenario,
+  useDeleteVisualScenario,
+  useUpdateVisualScenario,
+  type VisualScenarioEditorInput,
+} from '@/hooks/useVisualScenarios';
 import { formatVisualScenarioCurrency } from '@/lib/visualScenarios';
+import type { VisualScenario } from '@/types/visualScenario';
 
 const VisualScenariosAdmin = () => {
   const { data: scenarios = [], isLoading, isError, refetch, isFetching } = useAdminVisualScenarios();
+  const createScenario = useCreateVisualScenario();
+  const updateScenario = useUpdateVisualScenario();
+  const deleteScenario = useDeleteVisualScenario();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedScenario, setSelectedScenario] = useState<VisualScenario | null>(null);
 
   const totalConcept = scenarios.filter((scenario) => scenario.status === 'concept').length;
   const totalDraft = scenarios.filter((scenario) => scenario.status === 'draft').length;
   const totalApproved = scenarios.filter((scenario) => scenario.status === 'approved').length;
+  const isSubmitting = createScenario.isPending || updateScenario.isPending;
+
+  const openCreate = () => {
+    setSelectedScenario(null);
+    setDialogOpen(true);
+  };
+
+  const openEdit = (scenario: VisualScenario) => {
+    setSelectedScenario(scenario);
+    setDialogOpen(true);
+  };
+
+  const handleSubmit = async (input: VisualScenarioEditorInput) => {
+    try {
+      if (selectedScenario) {
+        await updateScenario.mutateAsync({ id: selectedScenario.id, input });
+        toast.success('Escenario actualizado');
+      } else {
+        await createScenario.mutateAsync(input);
+        toast.success('Escenario creado');
+      }
+      setDialogOpen(false);
+      setSelectedScenario(null);
+    } catch (error) {
+      console.error('Visual scenario save error:', error);
+      toast.error('No se pudo guardar el escenario');
+    }
+  };
+
+  const handleDelete = async (scenario: VisualScenario) => {
+    const confirmed = window.confirm(`¿Eliminar el escenario "${scenario.title}"? Esta acción no se puede deshacer.`);
+    if (!confirmed) return;
+
+    try {
+      await deleteScenario.mutateAsync({ id: scenario.id, propertyId: scenario.propertyId });
+      toast.success('Escenario eliminado');
+    } catch (error) {
+      console.error('Visual scenario delete error:', error);
+      toast.error('No se pudo eliminar el escenario');
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -24,13 +80,19 @@ const VisualScenariosAdmin = () => {
           <p className="text-xs font-medium uppercase tracking-[0.28em] text-primary">Admin</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">Visual Scenarios</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Panel inicial para auditar escenarios visuales persistidos en Supabase. La edición completa se implementará en el siguiente sprint.
+            Panel para crear, editar y auditar escenarios visuales persistidos en Supabase. Métricas avanzadas, GLB, IA y PDF se gestionarán en sprints posteriores.
           </p>
         </div>
-        <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Actualizar
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Crear escenario
+          </Button>
+          <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Actualizar
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -75,7 +137,7 @@ const VisualScenariosAdmin = () => {
       <Card>
         <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>Escenarios registrados</CardTitle>
-          <Badge variant="outline">Lectura admin</Badge>
+          <Badge variant="outline">Admin CRUD básico</Badge>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -92,7 +154,7 @@ const VisualScenariosAdmin = () => {
             <div className="rounded-xl border border-dashed p-8 text-center">
               <p className="font-semibold text-foreground">No hay escenarios registrados</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Aplica el seed de Teno o crea escenarios desde Supabase para comenzar.
+                Crea un escenario desde el botón superior o aplica el seed de Teno para comenzar.
               </p>
             </div>
           ) : (
@@ -125,12 +187,28 @@ const VisualScenariosAdmin = () => {
                       <span className="text-muted-foreground">
                         CAPEX: {formatVisualScenarioCurrency(scenario.estimatedCapex)}
                       </span>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to={`/propiedad/${scenario.propertyId}`}>
-                          Ver ficha
-                          <ExternalLink className="ml-2 h-3.5 w-3.5" />
-                        </Link>
-                      </Button>
+                      <div className="flex flex-wrap gap-2 lg:justify-end">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/propiedad/${scenario.propertyId}`}>
+                            Ver ficha
+                            <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                          </Link>
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => openEdit(scenario)}>
+                          <Pencil className="mr-2 h-3.5 w-3.5" />
+                          Editar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDelete(scenario)}
+                          disabled={deleteScenario.isPending}
+                        >
+                          <Trash2 className="mr-2 h-3.5 w-3.5" />
+                          Eliminar
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -139,6 +217,14 @@ const VisualScenariosAdmin = () => {
           )}
         </CardContent>
       </Card>
+
+      <VisualScenarioFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        scenario={selectedScenario}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 };
