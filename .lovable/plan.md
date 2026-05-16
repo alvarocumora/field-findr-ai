@@ -1,91 +1,55 @@
+## Objetivo
 
-# Tasación Teno v6 — Editorial Premium
+Generar **v10 — Vista Real + Escenarios Packing** del PDF de tasación del terreno Teno, con:
+1. **Vista satelital real** del predio con el **polígono real demarcado** (KMZ oficial, 4 vértices ya en código).
+2. **3 escenarios de packing** renderizados como overlays geográficos (footprints de naves, oficinas, patio de camiones, estanques) sobre la **misma imagen satelital**, no como bocetos.
 
-Reemplazo total del lenguaje visual del PDF (actualmente bloques planos tipo "salida de IA") por un dossier comercial editorial premium tipo Sotheby's / Engel & Völkers Commercial, con la portada como pieza épica de venta.
+Polígono real ya disponible en `src/pages/PropertyDetail.tsx` (TENO_POLYGON, 4 vértices, ~7 ha).
+Centro: `-71.10297, -34.83831`. Token Mapbox disponible (`MAPBOX_PUBLIC_TOKEN`).
 
-## Resultado esperado
+## Páginas del PDF (A4, 6 páginas)
 
-- Archivo: `/mnt/documents/Tasacion_Teno_16052026_v6_editorial.pdf`
-- 6–7 páginas A4 vertical, márgenes generosos
-- Valor comercial: **UF 99.000** (UF 1,39 / m²) — alineado al comparable de 52.800 m² (UF 1,48/m²) con leve castigo por estar interior respecto a Ruta 5
+```text
+1  Portada              · Satelital real + polígono dorado + título y KPIs
+2  Predio en contexto   · 2 vistas reales: zoom predio y zoom regional (Ruta 5)
+3  Escenario A · Packing Compacto      · 1 nave 80×40 + oficinas + patio
+4  Escenario B · Packing + Frío        · 2 naves + cámara frío + estanque
+5  Escenario C · Hub Agroindustrial    · 3 naves + báscula + 40 estac. camión
+6  Comparativo + Verificación pública  · Tabla m² construible / inversión / QR
+```
 
-## Lenguaje visual (Editorial Premium)
+## Cómo se generan las "vistas reales con polígono"
 
-**Paleta**
-- Negro carbón `#0E0E0E` (titulares y barras)
-- Beige hueso `#EFEAE1` (fondo páginas interiores)
-- Champagne / dorado mate `#B8945A` (líneas finas, KPIs, marca)
-- Gris piedra `#6B6B6B` (texto secundario)
-- Blanco roto `#FAF8F4` (cajas de cifras)
+- Mapbox **Static Images API** estilo `satellite-v9`, 1280×800 @2x.
+- Overlay 1: el **polígono real** como `path-5+B5894A-1+B5894A-0.15(geojson)` (encoded polyline o GeoJSON path).
+- Overlay 2 (escenarios): cada edificio como **rectángulo geo-referenciado** (4 vértices lng/lat calculados a partir del centroide + rotación del lado largo del predio + dimensiones en metros → grados con factor de latitud).
+- Colores por tipo: nave `#3B82F6`, oficinas `#F59E0B`, frío `#10B981`, patio `#64748B`.
+- Se descargan vía `requests`, se componen en `reportlab` y se anotan con leyenda + escala gráfica.
 
-**Tipografía**
-- Display: **Cormorant Garamond** (serif, light, tracking abierto) para titulares y valor
-- Texto: **Inter Light** para cuerpo y tablas
-- Caps con letter-spacing 0.25em para etiquetas de sección
+## Escenarios (footprints aproximados)
 
-**Reglas de composición**
-- Foto satelital ESRI a sangre cubriendo toda la portada (sin marcos)
-- Overlay vertical degradado negro 0→70% solo en la mitad inferior
-- Numeración de páginas romana en pie (II, III, IV…)
-- Línea filete dorada 0.3pt como único divisor entre secciones
-- Cero gradientes verde→azul, cero íconos emoji, cero cajas de colores planos
-- Cifras grandes en serif (cuerpo 48–72pt) como protagonistas
+| Escenario | Naves | Oficinas | Frío | Patio camiones | m² techados | % ocupación |
+|---|---|---|---|---|---|---|
+| A — Compacto | 1 × 80×40 m | 1 × 20×15 m | — | 30×40 m | 3.500 | 5% |
+| B — Packing + Frío | 2 × 60×30 m | 1 × 25×15 m | 1 × 30×20 m | 40×40 m | 4.575 | 6,5% |
+| C — Hub Agroind. | 3 × 70×30 m | 1 × 30×20 m | 1 × 40×25 m | 50×60 m | 7.900 | 11,3% |
 
-## Estructura del dossier
+Todos respetan el frente a Ruta 5 (lado largo orientado SW-NE según el polígono real).
 
-**I — Portada épica (full bleed)**
-- Foto satelital ESRI a sangre completa
-- Esquina sup-izq: monograma "OT" en dorado + línea + "OFERTA TERRENOS · DIVISIÓN TASACIONES"
-- Centro-inferior: "TENO" en Cormorant 96pt blanco + "Valle Central · Región del Maule" en caps tracked
-- Pie: "INFORME DE TASACIÓN COMERCIAL · MAYO 2026 · DOCUMENTO CONFIDENCIAL"
-- Sin caja de precio en portada (eso va dentro, página de Valor)
+## Implementación técnica
 
-**II — Resumen ejecutivo** (una sola página, mucho aire)
-- Cifra protagonista: **UF 99.000** en Cormorant 84pt
-- Tres KPIs en columna: Superficie 7,11 ha · UF/m² 1,39 · Multiplicador IFC 1,9×
-- Párrafo editorial de 4 líneas sobre la oportunidad
+- **Archivo nuevo**: `/tmp/teno_v10/gen.py` (igual estilo que `/tmp/teno_v89/gen.py`).
+- **Funciones**:
+  - `static_satellite(polygon, overlays, w, h)` → bytes JPG de Mapbox.
+  - `building_rect(center_lng, center_lat, w_m, h_m, rot_deg)` → 4 vértices GeoJSON.
+  - `scenario_overlays(scenario)` → lista de GeoJSON Features con stroke/fill.
+- **QA obligatorio**: convertir las 6 páginas a JPG, inspeccionar polígono alineado, edificios dentro del predio, leyendas legibles. Corregir y re-generar si algo se sale.
+- **Output**: `/mnt/documents/Tasacion_Teno_16052026_v10_packing_real.pdf`.
+- **Sin cambios** en código del proyecto (`src/`). Es un entregable generado por script.
 
-**III — La propiedad**
-- Foto satelital media página + ficha técnica a dos columnas (Rol, sup, deslindes, IFC, urbanización, accesos)
+## Riesgos / decisiones abiertas
 
-**IV — Contexto de mercado** (tabla rediseñada)
-- Comparables reales con tipografía editorial, sin headers de color, solo filete dorado
-- Incluir los dos comparables reales aportados por el cliente:
-  - Pío XI 505 · 52.800 m² · UF 78.000 · UF 1,48/m² · Vivax (con foto satelital miniatura)
-  - Ruta 5 Sur / J-55 · 154.700 m² · UF 147.000 · UF 0,95/m² · Engel & Völkers
-  - + 4 referencias del sector Teno/Curicó industrial
-- Columna "Ajuste vs. Teno" explicando por qué cada uno lo posiciona
+- Mapbox Static URL tiene límite ~8 KB ⇒ si los 5 overlays de un escenario exceden, se pre-compone el polígono en una sola imagen base y los edificios se dibujan vectorialmente en `reportlab` reproyectando lng/lat al bounding box de la imagen (más limpio visualmente). **Plan A: probar overlays Mapbox; Plan B: dibujo vectorial sobre imagen base**. Voy con Plan B por defecto para máxima nitidez y control tipográfico.
+- Si quieres además una **4ª vista cenital "fotorrealista"** (render 3D con naves volumétricas estilo el hero cinemático), se agrega 1 página extra; no incluida por defecto para no inflar.
 
-**V — Análisis de valor**
-- Tres escenarios en tipografía editorial (no cajas):
-  - Conservador UF 85.000 — venta directa pa ño sin desarrollo
-  - **Central UF 99.000** — valor comercial recomendado (resaltado dorado)
-  - Optimista UF 120.000 — loteo terminado con IFC ejecutado
-- Justificación del valor central referenciando comparables III y IV
-
-**VI — Fundamentos del valor**
-- 4 pilares en cuadrícula 2×2 con número romano:
-  - I. Ubicación estratégica Valle Central
-  - II. IFC aprobado vigente
-  - III. Escala y forma del paño
-  - IV. Liquidez del mercado de paños subdivididos
-
-**VII — Condiciones y firma**
-- Metodología, supuestos, vigencia 90 días, limitaciones
-- Bloque firma: Field-Findr AI · Departamento de Tasaciones
-- QR de validación (si la función ya existe en el código actual)
-- Pie con número de informe y hash SHA-256
-
-## Cambios técnicos
-
-- Nuevo script `/tmp/genTenoV6.ts` (no toca `src/lib/tasacionPdfGenerator.ts`, que sigue sirviendo al flujo dentro de la app)
-- Cargar fuentes Cormorant + Inter vía `jsPDF.addFont` desde Google Fonts API (descarga a `/tmp/fonts/` y embeber TTF)
-- Reutilizar el mosaico ESRI ya generado en v4/v5 (cacheado en `/tmp/teno_satellite.jpg`)
-- Para los comparables con foto: fetch de tile ESRI 1×1 z16 centrado en cada coordenada (Pío XI 505 Teno, Ruta 5 / J-55 Teno)
-- QA obligatorio: pdftoppm 150 DPI sobre las 7 páginas, verificar sin overlaps, sin texto cortado, sin cajas de color residuales del estilo viejo
-
-## No incluido (fuera de alcance)
-
-- No cambia el generador en producción (`src/lib/tasacionPdfGenerator.ts`) — eso queda para una iteración separada si te gusta el resultado
-- No re-parsea el KMZ (se reutilizan datos del v4/v5)
-- No agrega nuevos planos PDF anexos
+¿Apruebas que genere v10 con estas 6 páginas y Plan B (imagen satelital real + edificios vectoriales sobre el polígono)?
