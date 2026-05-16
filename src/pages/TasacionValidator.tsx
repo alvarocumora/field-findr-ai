@@ -16,6 +16,7 @@ import {
   Check,
   Download,
   ExternalLink,
+  Link2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sha256OfBlob, shortHash } from '@/lib/tasacionHash';
