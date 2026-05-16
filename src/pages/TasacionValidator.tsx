@@ -407,6 +407,30 @@ const ResultBlock = ({
               >
                 <Link2 className="h-3.5 w-3.5" /> Copiar link
               </Button>
+              {(() => {
+                const lines = [
+                  'Hola 👋 Te comparto una tasación verificable de OFERTA TERRENOS.',
+                  state.comuna ? `📍 ${state.comuna}` : null,
+                  state.valor_uf != null
+                    ? `💼 Valor: UF ${state.valor_uf.toLocaleString('es-CL')}`
+                    : null,
+                  state.fecha ? `📅 Emitido: ${state.fecha}` : null,
+                  '',
+                  `🔐 Valida aquí: ${publicUrl}`,
+                ].filter(Boolean);
+                const waUrl = `https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`;
+                return (
+                  <Button
+                    size="sm"
+                    className="gap-2 bg-[#25D366] hover:bg-[#1ebe57] text-white"
+                    asChild
+                  >
+                    <a href={waUrl} target="_blank" rel="noreferrer">
+                      <MessageCircle className="h-3.5 w-3.5" /> Compartir por WhatsApp
+                    </a>
+                  </Button>
+                );
+              })()}
               <Button size="sm" variant="outline" className="gap-2" onClick={() => onOpen(state.id)}>
                 Ver página pública <ArrowRight className="h-3.5 w-3.5" />
               </Button>
