@@ -17,6 +17,7 @@ import {
   Download,
   ExternalLink,
   Link2,
+  MessageCircle,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sha256OfBlob, shortHash } from '@/lib/tasacionHash';
