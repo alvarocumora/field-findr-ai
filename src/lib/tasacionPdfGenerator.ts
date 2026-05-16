@@ -275,20 +275,23 @@ const buildTasacionDoc = (data: TasacionData) => {
   doc.setFillColor(241, 245, 249);
   doc.rect(margin, y, contentW, 7, 'F');
   doc.text(L.colLocation, margin + 2, y + 5);
-  doc.text(L.colArea, margin + 70, y + 5);
-  doc.text(L.colValueUF, margin + 100, y + 5);
-  doc.text(L.colUFm2, margin + 130, y + 5);
-  doc.text(L.colSource, margin + 155, y + 5);
+  doc.text(L.colArea, margin + 62, y + 5);
+  doc.text(L.colValueUF, margin + 82, y + 5);
+  doc.text(L.colUFm2, margin + 106, y + 5);
+  doc.text(L.colSource, margin + 128, y + 5);
   y += 8;
   doc.setFont('helvetica', 'normal');
   data.comparables.forEach(c => {
-    ensureSpace(6);
-    doc.text(doc.splitTextToSize(c.ubicacion, 65), margin + 2, y);
-    doc.text(fmtNum(c.superficie), margin + 70, y);
-    doc.text(fmtNum(c.valorUF), margin + 100, y);
-    doc.text(c.valorM2UF.toFixed(3), margin + 130, y);
-    doc.text(c.fuente, margin + 155, y);
-    y += 6;
+    const locLines = doc.splitTextToSize(c.ubicacion, 58) as string[];
+    const srcLines = doc.splitTextToSize(c.fuente, 44) as string[];
+    const rowH = Math.max(locLines.length, srcLines.length) * 5 + 1;
+    ensureSpace(rowH);
+    doc.text(locLines, margin + 2, y);
+    doc.text(fmtNum(c.superficie), margin + 62, y);
+    doc.text(fmtNum(c.valorUF), margin + 82, y);
+    doc.text(c.valorM2UF.toFixed(3), margin + 106, y);
+    doc.text(srcLines, margin + 128, y);
+    y += rowH;
   });
 
   // 11. Metodología
