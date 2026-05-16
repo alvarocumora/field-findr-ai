@@ -1,104 +1,95 @@
+# Plan — Tasación v11 (solo FMV) + Guía .md reutilizable
 
-## Diagnóstico
+## Objetivo
+Refactor del informe a **v11 "Tasación Comercial"**: eliminar toda referencia al precio de venta (35.000 UF) y a la lógica "Buy/Strong Buy / spread / ROI inversionista". El documento debe leerse como una **Broker's Opinion of Value (BOV) / informe de tasación profesional** que justifica el **Valor Comercial ≈ 89.420 UF** (o el valor que arroje la ponderación). Mantener intacta la estética épica ya lograda en v10.5.
 
-La portada (y casi todo el informe v10.x) arrastra **UF 7.480** como "Valor comercial". Ese número viene del precio de oferta del listing original cargado en `buildTasacionData()` (UF priceUF = price/UF rate), no de una tasación. La página 3 nueva (Justificación) introdujo **89.420 UF** de valor de mercado y **35.000 UF** de precio de venta, dejando el resto del informe contradictorio.
+Además, dejar una **guía maestra en Markdown** dentro del repo para que cualquier tasación futura siga el mismo estándar.
 
-Tres números viven en el documento y se contradicen entre sí:
+---
 
-```text
-Portada / Resumen ejecutivo:   UF 7.480   ← incorrecto, hay que eliminarlo
-Justificación (pág. 3):        UF 89.420  ← valor de mercado ponderado
-Justificación (pág. 3):        UF 35.000  ← precio de venta directo (oferta)
-Comparativo escenarios:        valores propios por escenario A/B/C
-Supuestos (pág. 8):            UF 39.500 (tasa UF/CLP), CAPEX en UF/m²
-```
+## 1. Cambios en el informe (v11)
 
-Un informe estilo Colliers / RE/MAX Commercial exige **una sola arquitectura de valor**, declarada en portada y repetida con la misma cifra en cada página, con metodología explícita.
+### 1.1 Qué se conserva (no tocar)
+- Portada cinematográfica con satélite + branding.
+- Glosario / definiciones IVS.
+- Página de ubicación con mapa, Ruta 5, contexto Teno.
+- Análisis de mercado comparable.
+- Datos SII (rol, avalúo fiscal, destino, superficie oficial).
+- 5 métodos de valuación con pesos, fórmulas, fuentes (páginas 4–5 de v10.5).
+- Imágenes satelitales, polígono KMZ, overlays.
+- QR a ficha pública del activo.
+- Tabla de propiedades comparables con fuente/link (E&V, Vivax, Portal Inmobiliario, MercadoLibre, etc.).
 
-## Objetivo v10.4
+### 1.2 Qué se elimina
+- Bloque "Asking Price 35.000 UF".
+- "Spread 155%", "Price/Value 0.39", "Strong Buy".
+- ROI 37–73%, "ecuación de negocio Compra + CAPEX".
+- Cualquier lenguaje de listing / oportunidad para inversionista.
+- Recomendación tipo equity research.
 
-Reescribir el PDF completo de 9 páginas con tres anclas numéricas únicas, presentes en portada, resumen ejecutivo, justificación, escenarios, comparativo y supuestos:
+### 1.3 Qué se reemplaza
+| Página | Antes (v10.5) | Después (v11) |
+|---|---|---|
+| Portada | Dual block FMV 89.420 / Ask 35.000 + "Strong Buy" | Bloque único: **Valor Comercial (FMV) 89.420 UF** + rango de confianza (p.ej. 84.900 – 94.100 UF) + sello "Tasación Comercial – IVS 2022" |
+| Resumen ejecutivo | Tesis de inversión + recomendación BUY | **Opinión de Valor**: 4 KPIs (FMV, UF/m², superficie, destino), síntesis metodológica, conclusión del tasador |
+| Escenarios A/B/C | Valor estabilizado vs CAPEX vs compra 35k | **Escenarios de mayor y mejor uso (Highest & Best Use)**: agroindustrial / logístico / mixto → cada uno con valor desarrollado estimado, sin precio de entrada |
+| Supuestos | Anclas (FMV/Ask/Spread) | Anclas solo de FMV + supuestos de cada método |
+| Comparativo final | Entry price vs developed value | Tabla solo de **valor por escenario de uso** y sensibilidad ±10% |
+| Footer / disclaimer | — | Añadir: "Este informe no constituye oferta de compra ni venta. Precio de transacción se determina entre las partes." |
 
-```text
-VALOR DE MERCADO (Fair Market Value):     UF 89.420   (~CLP 3.532 MM)
-PRECIO DE VENTA DIRECTO (Asking Price):   UF 35.000   (~CLP 1.383 MM)
-SPREAD / MARGEN DE ENTRADA:               +155%       (ratio P/V 0,39)
-```
+### 1.4 Tono
+Consultor / tasador independiente (Colliers, JLL, Tinsa, Arenas y Cayo). Verbos: *se concluye, se pondera, se estima, se reconcilia*. Nunca: *oportunidad, buy, upside, descuento*.
 
-## Cambios página por página
+---
 
-```text
-1  PORTADA
-   - KPI "Valor comercial UF 7.480" → reemplazar por bloque dual:
-       · Valor de mercado:  UF 89.420
-       · Precio de venta:   UF 35.000   ·  Descuento −60% vs mercado
-   - Sub-bloque: Superficie 7,12 ha · Frente Ruta 5 ~440 m · Uso agroindustrial
-   - Folio, QR y "tasación referencial estilo Colliers/RE/MAX" mantenidos
+## 2. Guía Markdown reutilizable
 
-2  RESUMEN EJECUTIVO
-   - Cambiar 4 KPIs: Valor mercado, Precio venta, Spread, CAPEX rango
-   - Bullet "TESIS DE INVERSIÓN" reescrito en lenguaje de consultor:
-       upside 155%, ventana Ruta 5 Sur, exit a 5–7 años a valor mercado
-   - "RECOMENDACIÓN" → "BUY / STRONG BUY a precio de oferta"
+Crear `docs/GUIA_TASACION_PROFESIONAL.md` con:
 
-3  JUSTIFICACIÓN DEL VALOR (la nueva, ya OK)
-   - Mantener triangulación de 5 métodos → 89.420 UF
-   - Agregar pequeña nota "Metodología alineada a IVS 2022 (International
-     Valuation Standards): Sales Comparison, Income Capitalisation, Cost,
-     Residual y DCF."
+1. **Propósito y alcance** — qué es una tasación comercial v11 estilo Colliers/JLL.
+2. **Estructura obligatoria de 9–11 páginas**:
+   1. Portada épica (satélite + FMV único + sello IVS)
+   2. Glosario / definiciones
+   3. Identificación del activo (SII, rol, deslindes, polígono)
+   4. Ubicación y contexto de mercado
+   5. Comparables (mínimo 4, con link y fuente)
+   6. Método 1–2 (Comparables A/B)
+   7. Método 3 (Capitalización de rentas)
+   8. Método 4 (Costo de reposición)
+   9. Método 5 (Residual de desarrollo)
+   10. Reconciliación ponderada + FMV final + rango ±5%
+   11. Supuestos, limitaciones, disclaimer, firma
+3. **Reglas duras**:
+   - Nunca incluir precio pedido ni recomendación de compra.
+   - Anclas únicas: FMV y rango. Sin spread, sin ROI.
+   - Cada comparable: dirección/zona, superficie, precio UF, UF/m², fuente, link, fecha.
+   - Cada método: fórmula, inputs (tabla), peso, fuente.
+   - Footer numerado N/total en todas las páginas.
+4. **Estética**:
+   - Paleta dark premium (slate 950 / emerald 500 / amber 400) — coherente con Core memory.
+   - Tipografía: títulos display serif, cuerpo sans humanista.
+   - Mapas con overlay de polígono normalizado (`normalizePolygon`).
+   - QR siempre apuntando a `/tasacion/v/:id` (memoria tasacion-qr-validator-blockchain).
+5. **Pipeline técnico**:
+   - Generador: `reportlab` (páginas nuevas) + `pypdf` (merge con páginas visuales).
+   - QA obligatorio: `pdftoppm -jpeg -r 150` → revisar las N páginas → confirmar que NO aparece "asking", "buy", "spread", "ROI", ni precio de venta.
+   - Validador de coherencia: script que busca strings prohibidos antes de publicar.
+6. **Lenguaje permitido / prohibido** (tabla).
+7. **Checklist final** (10 ítems) que el tasador debe marcar antes de exportar.
+8. **Versionado**: convención `Tasacion_<Predio>_<DDMMYYYY>_v<N>.pdf`.
 
-4  PREDIO EN CONTEXTO  (era pág. 2)
-   - Sin cambios numéricos. Solo footer renumerado.
+---
 
-5–7  ESCENARIOS A / B / C
-   - Encabezado de cada escenario gana fila "Valor estabilizado vs CAPEX":
-       A Compacto:    Valor proy. 78.000 UF · CAPEX 22.000 UF · margen
-       B Packing+Frío: Valor proy. 110.000 UF · CAPEX 36.000 UF · margen
-       C Hub Agroind.: Valor proy. 168.000 UF · CAPEX 62.000 UF · margen
-   - Pie de página de cada escenario: "Compra a 35.000 UF → ROI estimado X%"
+## 3. Entregables
 
-8  SUPUESTOS Y TRAZABILIDAD
-   - Añadir 4ª tabla "Anclas de valor del informe":
-       Valor de mercado, Precio de venta, Spread, Método de ponderación
-   - Mantener tablas CAPEX, conversión y fechas
-   - Ampliar disclaimer: estándar IVS 2022, fuentes Mercado Libre / E&V /
-     Vivax, no sustituye tasación bancaria certificada
+- `/mnt/documents/Tasacion_Teno_16052026_v11_comercial.pdf` (9–11 páginas, sin asking price).
+- `/mnt/documents/Tasacion_Teno_16052026_v11_QA.txt` (resultado del validador de strings).
+- `docs/GUIA_TASACION_PROFESIONAL.md` en el repo.
+- Scripts de generación en `/tmp/build_v11.py` y `/tmp/validate_v11.py`.
 
-9  COMPARATIVO + VERIFICACIÓN  (era 7, ahora 9)
-   - Tabla resumen final: precio entrada vs valor desarrollado por escenario
-   - QR y URL de validación pública intactos
-```
+## 4. Detalles técnicos
+- Partir desde v10.5 como base visual; reescribir solo portada, resumen ejecutivo, escenarios y supuestos.
+- Recalcular ponderación de los 5 métodos sin tocar pesos → confirmar FMV final (≈89.420 UF) y publicar rango ±5% (84.949 – 93.891 UF).
+- Validador grep: `(35\.000|asking|strong buy|spread|ROI|upside|oportunidad de compra)` debe retornar 0 matches.
 
-## Narrativa "consultor experto" (tono)
-
-Sustituir frases tipo listing ("Predio en venta a UF 7.480") por lenguaje de
-*broker's opinion of value* / IVS:
-
-- "Fair Market Value estimado en UF 89.420 según triangulación de 5 métodos."
-- "Asking price actual de UF 35.000 implica un descuento del 60% sobre FMV,
-  justificado por liquidez del vendedor, venta directa sin corretaje y
-  ausencia de habilitación previa."
-- "Recomendación del tasador: posición de entrada con margen de seguridad
-  suficiente para absorber CAPEX de desarrollo en cualquiera de los tres
-  escenarios analizados."
-
-## Cómo lo implemento
-
-1. Regenerar `/tmp/teno_v10/gen.py` (perdido por reset de /tmp) reconstruyendo
-   las 9 páginas con un único bloque `ANCHORS = { fmv_uf: 89420, ask_uf: 35000,
-   spread_pct: 155, … }` y propagarlo a portada, resumen, escenarios y supuestos.
-2. La página 3 "Justificación" se genera en el mismo script (no como insert
-   posterior) para que no haya desincronización.
-3. Output: `/mnt/documents/Tasacion_Teno_16052026_v10.4_coherente.pdf`.
-4. QA obligatorio: renderizar las 9 páginas a JPG, verificar que **el string
-   "7.480" no aparece en ninguna página** y que "89.420" y "35.000" aparecen
-   en portada + resumen + justificación + supuestos + comparativo.
-
-## Riesgo abierto
-
-El KMZ y el polígono real no cambian. Lo que cambia es la **arquitectura de
-valor**, no la geometría. Las imágenes satelitales y overlays de packing se
-mantienen idénticos.
-
-¿Apruebas v10.4 con estas 3 anclas (FMV 89.420 / Ask 35.000 / Spread 155 %)
-y la regeneración completa de las 9 páginas en lugar de parches?
+¿Apruebas para generar v11 + la guía?
