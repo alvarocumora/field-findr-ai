@@ -140,4 +140,25 @@ export function computeMethods(input: MethodInput): MethodsResult {
       { label: 'CAPEX construcción', calc: `${m5SupTechada} × 7,85 UF/m²`, result: `UF ${round(m5Capex).toLocaleString('es-CL')}` },
       { label: 'Margen desarrollador', calc: '18%', result: `UF ${round(m5Margen).toLocaleString('es-CL')}` },
       { label: 'Costos soft', calc: '5% (permisos + gestión)', result: `UF ${round(m5Soft).toLocaleString('es-CL')}` },
-      { label: 'Residual base', calc: 'V_proy − CAPEX − Margen − Soft', result: `UF ${round(m5Residual).toLoc
+      { label: 'Residual base', calc: 'V_proy − CAPEX − Margen − Soft', result: `UF ${round(m5Residual).toLocaleString('es-CL')}` },
+      { label: 'Premio opcionalidad', calc: `× ${optionalityFactor.toFixed(2)}`, result: `UF ${m5.toLocaleString('es-CL')}` },
+    ],
+    source: 'Método Residual RICS Red Book Global 2024 (VPGA 9) · premio opcionalidad Black-Scholes adaptado',
+  };
+
+  const methods: MethodRow[] = [method1, method2, method3, method4, method5];
+  const fmvUF = round(methods.reduce((acc, m) => acc + m.resultUF * m.weight, 0));
+  const minM = Math.min(...methods.map(m => m.resultUF));
+  const maxM = Math.max(...methods.map(m => m.resultUF));
+  const mean = methods.reduce((a, m) => a + m.resultUF, 0) / methods.length;
+  const variance = methods.reduce((a, m) => a + (m.resultUF - mean) ** 2, 0) / methods.length;
+  const coefVarPct = (Math.sqrt(variance) / mean) * 100;
+  return {
+    methods,
+    fmvUF,
+    fmvRangeMinUF: round(fmvUF * 0.95),
+    fmvRangeMaxUF: round(fmvUF * 1.05),
+    ufPerM2: +(fmvUF / areaM2).toFixed(3),
+    dispersion: { min: minM, max: maxM, coefVarPct: +coefVarPct.toFixed(1) },
+  };
+}
