@@ -55,6 +55,12 @@ export interface TasacionData {
   firmaFecha?: string;
   // Idioma del informe
   lang?: TasacionLang;
+  // Imagen satelital del predio (opcional, JPG/PNG dataURL)
+  satelliteImageDataUrl?: string;
+  satelliteCaption?: string;
+  // Permisos / aprobaciones (opcional)
+  ifcAprobado?: boolean;
+  ifcDetalle?: string;
   // Trazabilidad / validación pública
   qrDataUrl?: string;          // PNG dataURL del QR que apunta al validador
   validatorUrl?: string;       // URL pública del validador
