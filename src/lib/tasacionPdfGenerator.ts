@@ -140,7 +140,8 @@ const buildTasacionDoc = (data: TasacionData) => {
 
   // ===== Cover =====
   drawPdfHeaderLogo(doc);
-  y = 40;
+  doc.setTextColor(0, 0, 0); // reset color tras el header (gradiente blanco)
+  y = 50;
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
   doc.text(t.coverTitle, pageW / 2, y, { align: 'center' });
