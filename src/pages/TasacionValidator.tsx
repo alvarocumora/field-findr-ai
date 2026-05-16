@@ -16,6 +16,7 @@ import {
   Check,
   Download,
   ExternalLink,
+  Link2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sha256OfBlob, shortHash } from '@/lib/tasacionHash';
@@ -362,32 +363,61 @@ const ResultBlock = ({
       </div>
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-2 pt-1">
-        {pdfUrl && (
-          <Button
-            size="sm"
-            variant="default"
-            className="gap-2"
-            asChild
-          >
-            <a href={pdfUrl} download target="_blank" rel="noreferrer">
-              <Download className="h-3.5 w-3.5" /> Descargar PDF oficial
-            </a>
-          </Button>
-        )}
-        <Button size="sm" variant="outline" className="gap-2" onClick={() => onOpen(state.id)}>
-          Ver página pública <ArrowRight className="h-3.5 w-3.5" />
-        </Button>
-        <Button size="sm" variant="ghost" className="gap-2" asChild>
-          <a
-            href={`/tasacion/v/${state.id}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <ExternalLink className="h-3.5 w-3.5" /> Abrir en nueva pestaña
-          </a>
-        </Button>
-      </div>
+      {(() => {
+        const publicPath = `/tasacion/v/${state.id}`;
+        const publicUrl =
+          typeof window !== 'undefined'
+            ? `${window.location.origin}${publicPath}`
+            : publicPath;
+        return (
+          <>
+            <div className="rounded-md border bg-background/60 px-2.5 py-1.5 flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Link público verificable
+                </div>
+                <div className="font-mono text-[11px] truncate" title={publicUrl}>
+                  {publicUrl}
+                </div>
+              </div>
+              <CopyButton value={publicUrl} label="Link" />
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {pdfUrl && (
+                <Button size="sm" variant="default" className="gap-2" asChild>
+                  <a href={pdfUrl} download target="_blank" rel="noreferrer">
+                    <Download className="h-3.5 w-3.5" /> Descargar PDF oficial
+                  </a>
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="secondary"
+                className="gap-2"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(publicUrl);
+                    toast.success('Link público copiado');
+                  } catch {
+                    toast.error('No se pudo copiar el link');
+                  }
+                }}
+              >
+                <Link2 className="h-3.5 w-3.5" /> Copiar link
+              </Button>
+              <Button size="sm" variant="outline" className="gap-2" onClick={() => onOpen(state.id)}>
+                Ver página pública <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+              <Button size="sm" variant="ghost" className="gap-2" asChild>
+                <a href={publicPath} target="_blank" rel="noreferrer">
+                  <ExternalLink className="h-3.5 w-3.5" /> Abrir en nueva pestaña
+                </a>
+              </Button>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 };
