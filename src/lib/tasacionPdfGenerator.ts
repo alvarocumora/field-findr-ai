@@ -307,7 +307,7 @@ const buildTasacionDoc = (data: TasacionData) => {
     doc.setTextColor(22, 101, 52);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
-    doc.text('✓ IFC APROBADO – Informe Favorable para la Construcción vigente', margin + 3, y + 6);
+    doc.text('[OK] IFC APROBADO – Informe Favorable para la Construcción vigente', margin + 3, y + 6);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     const ifcLines = doc.splitTextToSize(data.ifcDetalle || 'Predio cuenta con IFC aprobado por la SEREMI de Agricultura, habilitando subdivisión y desarrollo de parcelas de agrado conforme al DL 3.516. Esta condición incrementa significativamente el valor de mercado respecto de un predio agrícola sin permiso.', contentW - 6);
