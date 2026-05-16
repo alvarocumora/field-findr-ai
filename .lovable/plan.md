@@ -1,82 +1,78 @@
 ## Objetivo
 
-Rehacer la tasación de Teno como **v12 "Reporte Light"**: estética limpia tipo informe Colliers/JLL (fondo blanco, tonalidades verdes corporativas), con logo OFERTA TERRENOS y QR de verificación pública. Mantener intacta toda la información de contenido y rigor (FMV ≈ 89.420 UF, 5 métodos, comparables con fuentes, SII, glosario, ubicación, mapa satelital).
+Reorganizar el formato del informe de tasación tomando como referencia la estructura y tablas del PDF Adelphos (René Díaz Mesa, 2016), conservando los diferenciales OFERTA TERRENOS (5 métodos IVS, comparables con link, QR validador, mapa satelital con polígono, glosario y anexo de fuentes).
 
-## Sistema visual (cambio de paleta)
+Versión nueva: **v13 — Reporte Profesional (Adelphos-style)**.
 
-```text
-Fondo principal       #FFFFFF
-Fondo secundario      #F7FAF7  (paneles, tablas zebra)
-Línea divisoria       #E2E8E2
-Texto principal       #0F1F17  (casi negro verdoso)
-Texto secundario      #5A6B61
-Verde primario        #16A34A  (acento principal, KPIs, líneas)
-Verde profundo        #065F46  (títulos, headers de tabla)
-Verde claro           #DCFCE7  (fondos de chip, highlights)
-Ámbar (alertas)       #D97706  (uso mínimo, solo notas)
+## Diagnóstico del formato actual (v12)
+
+- Logo grande y descentrado en la portada, sin header consistente en páginas interiores.
+- KPIs y bloques de color compiten con el contenido tabular → se ve "marketing", no "tasación".
+- Secciones flotan sin numeración ni ficha técnica continua.
+- Tablas con anchos variables y celdas vacías sin tratar.
+
+## Referencia Adelphos (lo que copiamos)
+
+1. **Portada sobria:** título "INFORME DE TASACIÓN" arriba, nombre del predio, propietario + RUT, solicitante + RUT, foto hero, mes/año.
+2. **Header continuo** con identificación del predio en cada página interior.
+3. **Fichas técnico-legales** en tablas 2x2 (etiqueta-valor | etiqueta-valor) con fondo gris claro en headers.
+4. **Secciones numeradas y rotuladas** en mayúsculas: UBICACIÓN / SECTOR / NORMATIVA VIGENTE / PROPIEDAD / EDIFICACIONES / VALOR DE MERCADO / MÉTODOS / PLANOS / AVALÚO FISCAL / FOTOGRAFÍAS.
+5. **Tabla de valor de mercado** con columnas ITEM, ROL, S.MUN., m², $/m², UF/m², Total UF.
+6. **Firma del tasador** + declaración de responsabilidad al cierre del bloque de valor.
+7. **Planos de ubicación** dedicados (loteo + emplazamiento general + foto aérea).
+
+## Lo que mantenemos de OFERTA TERRENOS
+
+- Paleta blanco + verde corporativo (#16A34A / #065F46).
+- Logo OFERTA TERRENOS vectorial.
+- 5 métodos IVS con fórmula, inputs, peso (E&V, Vivax, Income, Cost, Residual).
+- Anclaje único FMV + rango ±5%, sin asking/ROI/BUY.
+- QR de verificación → `/tasacion/v/:folio` + hash SHA-256.
+- Mapa satelital Mapbox con polígono normalizado.
+- Glosario IVS + Anexo de fuentes con links.
+
+## Estructura final v13 (14 páginas)
+
+```
+P1  Portada              Logo header · Título · Predio · Propietario · Solicitante · Foto hero · Fecha · Folio · QR
+P2  Ficha técnico-legal  Identificación + Rol SII + CBR + Avalúo + Destino  (tabla 2x2)
+P3  Sector y Normativa   Descripción del sector + tabla normativa (DL 3.516 / PRC)
+P4  Propiedad            Deslindes (N/S/E/O con metros) + Superficie + Topografía + Servicios
+P5  Plano de ubicación   Mapa loteo + emplazamiento general (2 mapas)
+P6  Vista satelital      Mapbox Z18 con polígono dorado + tabla vértices WGS84
+P7  Valor de mercado     Tabla ITEM/ROL/m²/UF/m²/Total UF + KPI FMV + rango ±5% + firma tasador
+P8  Justificación valor  Síntesis 5 métodos con peso + dispersión + atributos
+P9  Métodos 1-3          Sales Comp A, Sales Comp B, Income (fórmula + inputs + fuente + peso)
+P10 Métodos 4-5          Cost, Residual (fórmula + inputs + fuente + peso)
+P11 Comparables          Tabla ≥6 comparables con ubicación, m², UF, UF/m², fuente + link, fecha
+P12 Avalúo fiscal SII    Captura/datos sii-lookup: rol, avalúo terreno/construcción, destino
+P13 Glosario + Supuestos IVS 2022, alcance, limitaciones, vigencia 90 días
+P14 Anexo de fuentes     Links de los 5 métodos + comparables + disclaimers + QR + hash
 ```
 
-- Tipografía: serif para títulos (DejaVuSerif/Times) + sans para cuerpo (Helvetica).
-- Header de cada página: barra superior fina verde profundo `#065F46` + logo OFERTA TERRENOS a la izquierda + folio a la derecha.
-- Footer: línea verde 0.5pt + 3 líneas (estándar IVS / emisor / folio + paginación).
-- Tablas: header verde profundo con texto blanco, zebra `#F7FAF7`.
-- KPIs: tarjetas blancas con borde 1pt verde y barra de acento superior 3pt verde primario.
+## Sistema visual nuevo
 
-## Logo OFERTA TERRENOS
+- **Header (todas las páginas interiores):** banda blanca de 18mm con logo OFERTA TERRENOS izquierda (28x10mm), título de sección centro, folio + página derecha. Línea verde 0.5mm bajo el header.
+- **Footer:** "OFERTA TERRENOS · Tasación Comercial IVS 2022 · Folio YYYY-MM-DD-PREDIO-V13 · Pág N de TOTAL".
+- **Tablas tipo ficha:** 4 columnas (label-valor-label-valor), header en `#065F46` con texto blanco, filas alternadas blanco/`#F7FAF7`, bordes `#E2E8E2`.
+- **Tipografía:** Helvetica-Bold para etiquetas y headers (8pt), Helvetica para valores (9pt), DejaVuSerif-Bold para títulos de sección (12pt mayúsculas con tracking).
+- **Bloque FMV:** caja verde `#DCFCE7` con borde `#16A34A`, una sola línea grande con FMV en UF y rango ±5% debajo. Sin "$/m² CLP" en portada (queda en sección de valor).
 
-Generar SVG vectorial inline en reportlab (no requiere asset externo):
-- Marca de hoja/terreno estilizada (triángulo + curva) en `#16A34A`
-- Wordmark "OFERTA TERRENOS" en sans bold tracking amplio, negro verdoso
-- Tagline "Inteligencia Territorial" en verde profundo, tracking 2pt
-- Versión compacta (header, 14mm ancho) y versión grande (portada, 60mm ancho)
+## Logo
 
-## QR de verificación
+Mantener el SVG vectorial actual (verde) pero re-proporcionar: icono 8mm + wordmark 20mm + tagline 6mm en una sola línea horizontal. Si el usuario sube un PNG/SVG oficial, lo reemplazamos en `src/assets/`.
 
-- Genera QR (lib `qrcode` + Pillow) apuntando a `https://ofertaterrenos.com/tasacion/v/2026-05-16-TENO-V12`
-- 2 ubicaciones:
-  - **Portada**: QR 28×28mm abajo-derecha con leyenda "Verificar tasación · SHA-256 + blockchain anchor"
-  - **Footer de cada página interior**: mini QR 12×12mm a la derecha del folio
-- Alineado con feature [Tasación QR + Validator](mem://features/tasacion-qr-validator-blockchain)
+## Implementación técnica
 
-## Estructura (11 páginas, mismo contenido)
+- Nuevo generador canónico `/tmp/build_v13.py` (reportlab + qrcode + Pillow + pypdf) clonado desde v12.
+- Helpers nuevos: `header(doc, section_title)`, `fact_table(rows_2x2)`, `value_table(items)`, `method_card(name, formula, inputs, source, weight)`.
+- Reutiliza `/tmp/teno_v10/sat.jpg` y `lots.geojson`; descarga 2do mapa de emplazamiento general (Mapbox Z13).
+- QA: `pdftoppm -jpeg -r 150` → revisión página por página + validador grep contra términos prohibidos (asking, ROI, BUY, spread, upside).
+- Actualiza `docs/GUIA_TASACION_PROFESIONAL.md` agregando sección "12.1 Variante Adelphos-style v13" con las reglas del header continuo, fichas 2x2 y orden de páginas.
+- Output: `/mnt/documents/Tasacion_Teno_16052026_v13_adelphos.pdf`.
 
-Reusar el contenido de v11 reescrito sobre el nuevo sistema visual (no overlay sobre el PDF dark; **reconstrucción completa** para coherencia).
+## Fuera de alcance
 
-1. **Portada** — Hero satelital con overlay verde translúcido, bloque FMV único, rango ±5%, UF/m², logo, QR, sello "IVS 2022".
-2. **Resumen Ejecutivo** — 4 KPIs (FMV, Rango, UF/m², Superficie), síntesis metodológica, conclusión del tasador.
-3. **Glosario** — Términos IVS (FMV, H&BU, BOV, Cap Rate, etc.) en 2 columnas.
-4. **Terreno y Ubicación** — Mapa satelital con polígono normalizado, ficha técnica (superficie, deslindes, accesos, ROL).
-5. **Datos SII** — Avalúo fiscal, ROL, destino, último reavalúo (custom edge function, no Firecrawl).
-6. **Mercado y Comparables** — Tabla de 6–8 comparables con dirección, sup., precio UF, UF/m², fuente, fecha, link/cita.
-7. **Método 1 — Sales Comparison A (E&V)** — fórmula, inputs, peso 25%, resultado 66.500 UF.
-8. **Método 2 — Sales Comparison B (Vivax)** — peso 20%, 103.600 UF.
-9. **Método 3 — Income Capitalisation** — peso 20%, 93.750 UF.
-10. **Método 4 — Cost Approach** — peso 15%, 87.500 UF.
-11. **Método 5 — Residual / Desarrollo** — peso 20%, 98.200 UF.
-12. **Reconciliación y Conclusión** — Tabla ponderada → FMV 89.420 UF, rango 84.950–93.890, sensibilidad ±10%, firma + QR grande.
-13. **Anexo de Fuentes** (ya existente) — links/citas completas.
-
-(13 páginas totales; numeración "Página N de 13".)
-
-## Detalles técnicos
-
-- Script: `/tmp/build_v12.py`, reportlab + qrcode + Pillow + pypdf.
-- Reutiliza imagen satelital existente `/tmp/teno_v10/sat.jpg` (o regenera vía mapbox-static si falta).
-- Polígono normalizado vía `normalizePolygon` (export a GeoJSON ya disponible en `/tmp/teno_v10/lots.geojson`).
-- QR: `qrcode.QRCode(error_correction=ERROR_CORRECT_H)`, módulo verde `#065F46` sobre blanco, padding 2 módulos.
-- QA obligatorio: `pdftoppm -jpeg -r 150` de las 13 páginas y revisión visual; validador grep contra strings prohibidos (asking, ROI, Buy, upside, spread, 35.000) usando `/tmp/validate_v11.py`.
-- Actualizar `docs/GUIA_TASACION_PROFESIONAL.md`: añadir variante **"Reporte Light"** con paleta blanco/verde como tema oficial alternativo al dark, manteniendo todas las reglas IVS.
-
-## Entregables
-
-- `/mnt/documents/Tasacion_Teno_16052026_v12_light.pdf`
-- `/mnt/documents/Tasacion_Teno_16052026_v12_QA.txt` (resumen QA)
-- `/tmp/build_v12.py`
-- Actualización de `docs/GUIA_TASACION_PROFESIONAL.md` con la variante light y reglas de logo/QR.
-- Memoria de proyecto actualizada con la nueva paleta como segunda variante oficial.
-
-## Aspectos fuera de alcance
-
-- No se modifica ningún archivo de `src/` ni componentes de la app.
-- No se cambian los números de la tasación ni los pesos de los métodos.
-- No se reintroduce ningún precio asking, ROI, spread ni lenguaje de "Buy".
+- No se cambian números, pesos, FMV ni metodologías de cálculo (lo de v12 permanece).
+- No se tocan archivos de `src/` (es solo el generador PDF + la guía .md).
+- No se agrega precio de transacción / asking.
