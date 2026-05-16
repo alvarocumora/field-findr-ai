@@ -1,95 +1,82 @@
-# Plan — Tasación v11 (solo FMV) + Guía .md reutilizable
-
 ## Objetivo
-Refactor del informe a **v11 "Tasación Comercial"**: eliminar toda referencia al precio de venta (35.000 UF) y a la lógica "Buy/Strong Buy / spread / ROI inversionista". El documento debe leerse como una **Broker's Opinion of Value (BOV) / informe de tasación profesional** que justifica el **Valor Comercial ≈ 89.420 UF** (o el valor que arroje la ponderación). Mantener intacta la estética épica ya lograda en v10.5.
 
-Además, dejar una **guía maestra en Markdown** dentro del repo para que cualquier tasación futura siga el mismo estándar.
+Rehacer la tasación de Teno como **v12 "Reporte Light"**: estética limpia tipo informe Colliers/JLL (fondo blanco, tonalidades verdes corporativas), con logo OFERTA TERRENOS y QR de verificación pública. Mantener intacta toda la información de contenido y rigor (FMV ≈ 89.420 UF, 5 métodos, comparables con fuentes, SII, glosario, ubicación, mapa satelital).
 
----
+## Sistema visual (cambio de paleta)
 
-## 1. Cambios en el informe (v11)
+```text
+Fondo principal       #FFFFFF
+Fondo secundario      #F7FAF7  (paneles, tablas zebra)
+Línea divisoria       #E2E8E2
+Texto principal       #0F1F17  (casi negro verdoso)
+Texto secundario      #5A6B61
+Verde primario        #16A34A  (acento principal, KPIs, líneas)
+Verde profundo        #065F46  (títulos, headers de tabla)
+Verde claro           #DCFCE7  (fondos de chip, highlights)
+Ámbar (alertas)       #D97706  (uso mínimo, solo notas)
+```
 
-### 1.1 Qué se conserva (no tocar)
-- Portada cinematográfica con satélite + branding.
-- Glosario / definiciones IVS.
-- Página de ubicación con mapa, Ruta 5, contexto Teno.
-- Análisis de mercado comparable.
-- Datos SII (rol, avalúo fiscal, destino, superficie oficial).
-- 5 métodos de valuación con pesos, fórmulas, fuentes (páginas 4–5 de v10.5).
-- Imágenes satelitales, polígono KMZ, overlays.
-- QR a ficha pública del activo.
-- Tabla de propiedades comparables con fuente/link (E&V, Vivax, Portal Inmobiliario, MercadoLibre, etc.).
+- Tipografía: serif para títulos (DejaVuSerif/Times) + sans para cuerpo (Helvetica).
+- Header de cada página: barra superior fina verde profundo `#065F46` + logo OFERTA TERRENOS a la izquierda + folio a la derecha.
+- Footer: línea verde 0.5pt + 3 líneas (estándar IVS / emisor / folio + paginación).
+- Tablas: header verde profundo con texto blanco, zebra `#F7FAF7`.
+- KPIs: tarjetas blancas con borde 1pt verde y barra de acento superior 3pt verde primario.
 
-### 1.2 Qué se elimina
-- Bloque "Asking Price 35.000 UF".
-- "Spread 155%", "Price/Value 0.39", "Strong Buy".
-- ROI 37–73%, "ecuación de negocio Compra + CAPEX".
-- Cualquier lenguaje de listing / oportunidad para inversionista.
-- Recomendación tipo equity research.
+## Logo OFERTA TERRENOS
 
-### 1.3 Qué se reemplaza
-| Página | Antes (v10.5) | Después (v11) |
-|---|---|---|
-| Portada | Dual block FMV 89.420 / Ask 35.000 + "Strong Buy" | Bloque único: **Valor Comercial (FMV) 89.420 UF** + rango de confianza (p.ej. 84.900 – 94.100 UF) + sello "Tasación Comercial – IVS 2022" |
-| Resumen ejecutivo | Tesis de inversión + recomendación BUY | **Opinión de Valor**: 4 KPIs (FMV, UF/m², superficie, destino), síntesis metodológica, conclusión del tasador |
-| Escenarios A/B/C | Valor estabilizado vs CAPEX vs compra 35k | **Escenarios de mayor y mejor uso (Highest & Best Use)**: agroindustrial / logístico / mixto → cada uno con valor desarrollado estimado, sin precio de entrada |
-| Supuestos | Anclas (FMV/Ask/Spread) | Anclas solo de FMV + supuestos de cada método |
-| Comparativo final | Entry price vs developed value | Tabla solo de **valor por escenario de uso** y sensibilidad ±10% |
-| Footer / disclaimer | — | Añadir: "Este informe no constituye oferta de compra ni venta. Precio de transacción se determina entre las partes." |
+Generar SVG vectorial inline en reportlab (no requiere asset externo):
+- Marca de hoja/terreno estilizada (triángulo + curva) en `#16A34A`
+- Wordmark "OFERTA TERRENOS" en sans bold tracking amplio, negro verdoso
+- Tagline "Inteligencia Territorial" en verde profundo, tracking 2pt
+- Versión compacta (header, 14mm ancho) y versión grande (portada, 60mm ancho)
 
-### 1.4 Tono
-Consultor / tasador independiente (Colliers, JLL, Tinsa, Arenas y Cayo). Verbos: *se concluye, se pondera, se estima, se reconcilia*. Nunca: *oportunidad, buy, upside, descuento*.
+## QR de verificación
 
----
+- Genera QR (lib `qrcode` + Pillow) apuntando a `https://ofertaterrenos.com/tasacion/v/2026-05-16-TENO-V12`
+- 2 ubicaciones:
+  - **Portada**: QR 28×28mm abajo-derecha con leyenda "Verificar tasación · SHA-256 + blockchain anchor"
+  - **Footer de cada página interior**: mini QR 12×12mm a la derecha del folio
+- Alineado con feature [Tasación QR + Validator](mem://features/tasacion-qr-validator-blockchain)
 
-## 2. Guía Markdown reutilizable
+## Estructura (11 páginas, mismo contenido)
 
-Crear `docs/GUIA_TASACION_PROFESIONAL.md` con:
+Reusar el contenido de v11 reescrito sobre el nuevo sistema visual (no overlay sobre el PDF dark; **reconstrucción completa** para coherencia).
 
-1. **Propósito y alcance** — qué es una tasación comercial v11 estilo Colliers/JLL.
-2. **Estructura obligatoria de 9–11 páginas**:
-   1. Portada épica (satélite + FMV único + sello IVS)
-   2. Glosario / definiciones
-   3. Identificación del activo (SII, rol, deslindes, polígono)
-   4. Ubicación y contexto de mercado
-   5. Comparables (mínimo 4, con link y fuente)
-   6. Método 1–2 (Comparables A/B)
-   7. Método 3 (Capitalización de rentas)
-   8. Método 4 (Costo de reposición)
-   9. Método 5 (Residual de desarrollo)
-   10. Reconciliación ponderada + FMV final + rango ±5%
-   11. Supuestos, limitaciones, disclaimer, firma
-3. **Reglas duras**:
-   - Nunca incluir precio pedido ni recomendación de compra.
-   - Anclas únicas: FMV y rango. Sin spread, sin ROI.
-   - Cada comparable: dirección/zona, superficie, precio UF, UF/m², fuente, link, fecha.
-   - Cada método: fórmula, inputs (tabla), peso, fuente.
-   - Footer numerado N/total en todas las páginas.
-4. **Estética**:
-   - Paleta dark premium (slate 950 / emerald 500 / amber 400) — coherente con Core memory.
-   - Tipografía: títulos display serif, cuerpo sans humanista.
-   - Mapas con overlay de polígono normalizado (`normalizePolygon`).
-   - QR siempre apuntando a `/tasacion/v/:id` (memoria tasacion-qr-validator-blockchain).
-5. **Pipeline técnico**:
-   - Generador: `reportlab` (páginas nuevas) + `pypdf` (merge con páginas visuales).
-   - QA obligatorio: `pdftoppm -jpeg -r 150` → revisar las N páginas → confirmar que NO aparece "asking", "buy", "spread", "ROI", ni precio de venta.
-   - Validador de coherencia: script que busca strings prohibidos antes de publicar.
-6. **Lenguaje permitido / prohibido** (tabla).
-7. **Checklist final** (10 ítems) que el tasador debe marcar antes de exportar.
-8. **Versionado**: convención `Tasacion_<Predio>_<DDMMYYYY>_v<N>.pdf`.
+1. **Portada** — Hero satelital con overlay verde translúcido, bloque FMV único, rango ±5%, UF/m², logo, QR, sello "IVS 2022".
+2. **Resumen Ejecutivo** — 4 KPIs (FMV, Rango, UF/m², Superficie), síntesis metodológica, conclusión del tasador.
+3. **Glosario** — Términos IVS (FMV, H&BU, BOV, Cap Rate, etc.) en 2 columnas.
+4. **Terreno y Ubicación** — Mapa satelital con polígono normalizado, ficha técnica (superficie, deslindes, accesos, ROL).
+5. **Datos SII** — Avalúo fiscal, ROL, destino, último reavalúo (custom edge function, no Firecrawl).
+6. **Mercado y Comparables** — Tabla de 6–8 comparables con dirección, sup., precio UF, UF/m², fuente, fecha, link/cita.
+7. **Método 1 — Sales Comparison A (E&V)** — fórmula, inputs, peso 25%, resultado 66.500 UF.
+8. **Método 2 — Sales Comparison B (Vivax)** — peso 20%, 103.600 UF.
+9. **Método 3 — Income Capitalisation** — peso 20%, 93.750 UF.
+10. **Método 4 — Cost Approach** — peso 15%, 87.500 UF.
+11. **Método 5 — Residual / Desarrollo** — peso 20%, 98.200 UF.
+12. **Reconciliación y Conclusión** — Tabla ponderada → FMV 89.420 UF, rango 84.950–93.890, sensibilidad ±10%, firma + QR grande.
+13. **Anexo de Fuentes** (ya existente) — links/citas completas.
 
----
+(13 páginas totales; numeración "Página N de 13".)
 
-## 3. Entregables
+## Detalles técnicos
 
-- `/mnt/documents/Tasacion_Teno_16052026_v11_comercial.pdf` (9–11 páginas, sin asking price).
-- `/mnt/documents/Tasacion_Teno_16052026_v11_QA.txt` (resultado del validador de strings).
-- `docs/GUIA_TASACION_PROFESIONAL.md` en el repo.
-- Scripts de generación en `/tmp/build_v11.py` y `/tmp/validate_v11.py`.
+- Script: `/tmp/build_v12.py`, reportlab + qrcode + Pillow + pypdf.
+- Reutiliza imagen satelital existente `/tmp/teno_v10/sat.jpg` (o regenera vía mapbox-static si falta).
+- Polígono normalizado vía `normalizePolygon` (export a GeoJSON ya disponible en `/tmp/teno_v10/lots.geojson`).
+- QR: `qrcode.QRCode(error_correction=ERROR_CORRECT_H)`, módulo verde `#065F46` sobre blanco, padding 2 módulos.
+- QA obligatorio: `pdftoppm -jpeg -r 150` de las 13 páginas y revisión visual; validador grep contra strings prohibidos (asking, ROI, Buy, upside, spread, 35.000) usando `/tmp/validate_v11.py`.
+- Actualizar `docs/GUIA_TASACION_PROFESIONAL.md`: añadir variante **"Reporte Light"** con paleta blanco/verde como tema oficial alternativo al dark, manteniendo todas las reglas IVS.
 
-## 4. Detalles técnicos
-- Partir desde v10.5 como base visual; reescribir solo portada, resumen ejecutivo, escenarios y supuestos.
-- Recalcular ponderación de los 5 métodos sin tocar pesos → confirmar FMV final (≈89.420 UF) y publicar rango ±5% (84.949 – 93.891 UF).
-- Validador grep: `(35\.000|asking|strong buy|spread|ROI|upside|oportunidad de compra)` debe retornar 0 matches.
+## Entregables
 
-¿Apruebas para generar v11 + la guía?
+- `/mnt/documents/Tasacion_Teno_16052026_v12_light.pdf`
+- `/mnt/documents/Tasacion_Teno_16052026_v12_QA.txt` (resumen QA)
+- `/tmp/build_v12.py`
+- Actualización de `docs/GUIA_TASACION_PROFESIONAL.md` con la variante light y reglas de logo/QR.
+- Memoria de proyecto actualizada con la nueva paleta como segunda variante oficial.
+
+## Aspectos fuera de alcance
+
+- No se modifica ningún archivo de `src/` ni componentes de la app.
+- No se cambian los números de la tasación ni los pesos de los métodos.
+- No se reintroduce ningún precio asking, ROI, spread ni lenguaje de "Buy".
