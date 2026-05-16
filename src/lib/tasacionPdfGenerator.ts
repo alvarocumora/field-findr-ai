@@ -273,6 +273,50 @@ const buildTasacionDoc = (data: TasacionData) => {
   kv(L.siiTotal, fmtCLP(data.avaluoFiscalTotal));
   kv(L.siiUnit, `${fmtCLP(data.valorUnitarioSII)} ${t.perM2}`);
 
+  // Imagen satelital + IFC (insertado antes de comparables)
+  if (data.satelliteImageDataUrl) {
+    ensureSpace(110);
+    doc.setFillColor(15, 23, 42);
+    doc.rect(margin, y, contentW, 8, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('VISTA SATELITAL DEL PREDIO (ESRI World Imagery)', margin + 3, y + 5.5);
+    y += 11;
+    doc.setTextColor(0, 0, 0);
+    const imgW = contentW;
+    const imgH = 95;
+    try { doc.addImage(data.satelliteImageDataUrl, 'JPEG', margin, y, imgW, imgH); } catch {}
+    doc.setDrawColor(180);
+    doc.rect(margin, y, imgW, imgH);
+    y += imgH + 3;
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    doc.text(data.satelliteCaption || `Imagen satelital ESRI · ${data.coordenadas}`, margin, y);
+    doc.setTextColor(0);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    y += 6;
+  }
+  if (data.ifcAprobado) {
+    ensureSpace(20);
+    doc.setFillColor(220, 252, 231);
+    doc.setDrawColor(34, 197, 94);
+    doc.rect(margin, y, contentW, 16, 'FD');
+    doc.setTextColor(22, 101, 52);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('✓ IFC APROBADO – Informe Favorable para la Construcción vigente', margin + 3, y + 6);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    const ifcLines = doc.splitTextToSize(data.ifcDetalle || 'Predio cuenta con IFC aprobado por la SEREMI de Agricultura, habilitando subdivisión y desarrollo de parcelas de agrado conforme al DL 3.516. Esta condición incrementa significativamente el valor de mercado respecto de un predio agrícola sin permiso.', contentW - 6);
+    doc.text(ifcLines, margin + 3, y + 11);
+    doc.setTextColor(0);
+    y += 16 + ifcLines.length * 3 + 4;
+    doc.setFontSize(10);
+  }
+
   // 10. Comparables de mercado
   sectionTitle(10);
   para(t.paragraphs.comparablesIntro);
