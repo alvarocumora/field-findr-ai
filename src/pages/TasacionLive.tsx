@@ -121,10 +121,43 @@ const TasacionLive = () => {
         .eq('id', id)
         .maybeSingle();
       if (!alive) return;
-      if (error || !data) {
-        setNotFound(true);
-      } else {
+      if (data && !error) {
         setRow(data as PublicacionRow);
+      } else {
+        // Fallback: static registry (e.g. v21 Teno demo PDFs)
+        const rec = findPublicAppraisalById(id);
+        if (rec) {
+          setRow({
+            id: rec.id,
+            comuna: rec.comuna,
+            region: rec.region,
+            direccion: rec.direccion,
+            rol: rec.rol,
+            valor_uf: rec.valor_uf,
+            valor_clp: rec.valor_clp,
+            valor_m2_uf: rec.valor_m2_uf,
+            superficie_m2: rec.superficie_m2,
+            fecha_emision: rec.fecha_emision,
+            tasador_nombre: rec.tasador_nombre,
+            lang: 'es',
+            pdf_path: '',
+            pdf_sha256: rec.pdf_sha256[0],
+            pdf_final_path: null,
+            pdf_final_sha256: rec.pdf_sha256[1] ?? null,
+            payload_json: null,
+            version: 21,
+            revoked_at: null,
+            revoked_reason: null,
+            blockchain_anchor: null,
+            created_at: rec.fecha_emision,
+            fmv_min_uf: rec.fmv_min_uf,
+            fmv_max_uf: rec.fmv_max_uf,
+            is_static: true,
+            static_notes: rec.notes ?? null,
+          });
+        } else {
+          setNotFound(true);
+        }
       }
       setLoading(false);
     })();
