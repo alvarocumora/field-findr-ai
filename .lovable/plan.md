@@ -1,99 +1,76 @@
-## Objetivo
+# QA v20 (estado real)
 
-Eliminar toda referencia a "Adelphos" (es otra empresa) y dejar **un único estándar de tasación** bajo la marca **OFERTA TERRENOS · Valuation**, alineado a IVS 2022, con dos variantes oficiales (Standard y Extendido). La guía `.md` queda como fuente canónica de estructura + marca.
+Verifiqué los dos PDF abiertos. Resultado:
 
----
+| Elemento | Standard | Extendido | Estado |
+|---|---|---|---|
+| FMV UF 88.000 + rango 82k–94k | ✅ p.1 y p.4 | ✅ p.1 y p.7 | OK |
+| Ficha de predio | ✅ | ✅ | OK |
+| Comparables IFC Ruta 5 Sur | — | ✅ p.3 | OK |
+| Triangulación 5 métodos | — | ✅ p.3 | OK |
+| Due Diligence + Tornado | — | ✅ p.5 | OK |
+| **Imagen satelital + polígono KMZ** | ❌ | ❌ | **FALTA** |
+| **Galería de fotos del predio** | ❌ | ❌ | **FALTA** |
+| **QR de validación embebido** | ❌ (sólo URL texto) | ❌ | **FALTA** |
+| **Link validador + SHA-256 visible** | parcial (URL plano) | parcial | **FALTA** |
+| Chart evolución mercado 2023–26 | — | ❌ | **FALTA** |
+| Páginas reales | 4 (no 11) | 7 (no 16) | reducido |
 
-## 1 · Marca emisora (única, no negociable)
+**Bug visual crítico**: el header `OFERTA TERRENOS · VALUATION` y los títulos H1 (`Informe de Valor Comercial`, `Conclusión`, `Comparables`) renderizan con kerning roto — la `O` parece `0`, la `I` queda separada (`Inform e`). Es un problema del Helvetica-Bold de ReportLab al mezclar con el carácter `·` y con el espaciado extra que aplica el script. Hay que regenerar con una TTF embebida (Inter o Manrope) o ajustar `setCharSpace(0)` y no usar `·` en H1.
 
-| Campo | Valor |
-|---|---|
-| Emisor | **OFERTA TERRENOS · Valuation** |
-| Tagline | "Informe de Valor Comercial · Estándar IVS 2022" |
-| Disclaimer | "No constituye oferta, tasación bancaria certificada ni recomendación de inversión." |
-| Footer línea 2 | `OFERTA TERRENOS · ofertaterrenos.com · Folio <YYYY-MM-DD-PREDIO-Vn>` |
-| Sello | "IVS 2022 · BOV" en portada (esquina sup. derecha) |
-| QR | `/tasacion/v/<folio>` (validador público) |
+El script `/tmp/build_v20.py` ya no existe, así que cualquier corrección parte de un generador nuevo `build_v21.py`.
 
-**Prohibido:** cualquier mención a Adelphos, Field-Findr (en informes externos), o marcas de terceros como emisor.
+# Plan v21 — "FMV 88.000 + verificable + visual"
 
----
+## 1. Generador único y reproducible
+- Nuevo `/tmp/build_v21.py` con dos salidas: `..._v21_standard.pdf` (11 pág) y `..._v21_extendido.pdf` (16 pág).
+- Embeber fuente TTF (Inter Regular/Bold) vía `pdfmetrics.registerFont` para eliminar el kerning roto del Helvetica built-in.
+- Marca emisora intacta: **OFERTA TERRENOS · Valuation**, paleta blanco + verde profundo `#0E5A3A` / acento `#1F8A5B` / dorado discreto `#B5894A`.
 
-## 2 · Identidad visual (blanco + verdes)
+## 2. Restaurar imagen satelital + polígono (en ambas variantes)
+- Stitch ESRI World Imagery z18 alrededor del centroide `-34.83870, -71.10210`.
+- Overlay del polígono real extraído de `Teno-3.kmz` (7,07 ha) con vértices P1–P4 etiquetados y norte/escala.
+- Página 2 del Standard, página 2 del Extendido.
 
-| Token | HEX | Uso |
-|---|---|---|
-| `bg` | `#FFFFFF` | Fondo de página |
-| `bg-soft` | `#F4F8F5` | Bandas, paneles, tablas alternadas |
-| `ink` | `#0B1F17` | Texto principal y títulos |
-| `ink-soft` | `#3E5B4F` | Texto secundario, captions |
-| `line` | `#D6E4DB` | Bordes finos, separadores |
-| `green-deep` | `#0E5A3A` | Verde institucional (banda superior, KPIs hero, polígono) |
-| `green-mid` | `#1F8A5B` | Acento principal, sello IVS, links |
-| `green-soft` | `#C7E8D5` | Highlights de fila, badges |
-| `accent-warn` | `#B5894A` | Solo para "rango de confianza" y vigencia |
+## 3. Galería de contexto del predio (nueva sección)
+- 4 miniaturas en grilla 2×2 con caption: vista aérea, frente a Ruta 5 Sur, polígono sobre ortofoto, contexto regional (mosaico Curicó–Romeral–Molina).
+- Las imágenes se generan en el mismo script desde tiles satelitales + un mapa regional anotado con los comparables (reutiliza la matriz que ya está).
+- Standard: 1 página (pág. 6). Extendido: 2 páginas (pág. 9–10) ampliando a 8 thumbnails con los comparables IFC.
 
-**Tipografía:** Helvetica/Inter (títulos bold), Helvetica (cuerpo), Courier (fórmulas e inputs). 22pt portada · 13pt H1 sección · 10pt cuerpo · 7pt footer.
-**Banda superior:** 6pt sólida en `green-deep` con wordmark blanco "OFERTA TERRENOS · VALUATION" a la izquierda y folio a la derecha, en **todas las páginas**.
-**Polígono satelital:** trazo `green-deep` 2.5pt, relleno `green-mid` α0.25, vértices etiquetados P1–P4 en cápsula blanca.
+## 4. Bloque de validación pública + QR
+Nueva sección final fija en ambos PDF, **antes** del bloque "Certificación":
+- QR (200×200 pt) generado con `qrcode[pil]` apuntando a `https://ofertaterrenos.com/tasacion/v/2026-05-18-TENO-V21`.
+- Junto al QR:
+  - URL completa en mono.
+  - `SHA-256 (payload)` y `SHA-256 (PDF final)` en mono, truncados `abcd1234…ef56`.
+  - Folio único + fecha emisión + vigencia 180 días.
+  - Nota: *"Escaneá para validar autenticidad en el portal público OFERTA TERRENOS"*.
+- El cálculo del SHA-256 del PDF final se hace en dos pasadas: se construye PDF sin hash final → se calcula SHA → se reinyecta texto en la página de validación y se reescribe.
 
----
+## 5. Chart evolución de mercado (sólo extendido)
+- Línea 2023–2026 UF/m² para "Con IFC vigente" vs "Sin IFC" en el corredor Ruta 5 Sur, marcando el punto Teno @ 1,245 UF/m².
+- Página 12 del extendido.
 
-## 3 · Dos variantes oficiales
+## 6. Mejoras de diseño transversales
+- Banda verde superior continua de 28 pt con wordmark + folio (sin spacing roto).
+- Footer 3 líneas: marca · folio + emisión + vigencia · SHA-256 corto del PDF.
+- Tipografía: Inter 9/10/22 (body/secundario/H1), interlineado 1.35.
+- Tablas con filas alternadas `#F4F8F5`, encabezado verde `#0E5A3A` texto blanco.
+- Callouts FMV con borde superior dorado 2pt.
 
-### A. Standard (10–11 páginas) — default
-1. Portada (hero satelital + FMV + rango + 4 KPIs + opinión 8 líneas + folio + QR + sello IVS)
-2. Resumen ejecutivo
-3. Justificación del valor (triangulación 5 métodos)
-4–5. Detalle de los 5 métodos (fórmula, inputs, fuente, peso)
-6. Predio en contexto (polígono real KMZ, vértices WGS84, datos SII)
-7–9. Escenarios H&BU A/B/C (render polígono + layout, CAPEX, valor desarrollado)
-10. Supuestos y trazabilidad
-11. Comparativo H&BU + verificación pública (hash SHA-256 + QR)
+## 7. QA obligatoria antes de entregar
+- `pdftoppm -r 150` de cada página de ambos PDF.
+- Checklist: kerning correcto, satelital visible, QR escaneable (probar decode con `zbarimg`), FMV 88.000 presente, galería con 4/8 imágenes sin cortes, footer con SHA correcto, total 11 / 16 páginas.
+- Validar con `grep` que NO aparezcan `Adelphos`, `Field-Findr`, `ROI`, `asking`, `spread`, `upside`.
 
-### B. Extendido (15+ páginas) — predios premium / mandato institucional
-Standard + bloques adicionales:
-- **12. Análisis de mercado regional** (oferta/demanda, absorción, tendencia UF/m² 24m, gráfico)
-- **13. Comparables ampliados** (mínimo 8 comparables con tabla extendida, mapa de ubicación, foto)
-- **14. Due diligence técnica preliminar** (uso de suelo, restricciones, servidumbres, riesgos SAG/conaf, factibilidades)
-- **15. Sensibilidad y escenarios financieros** (tornado chart sobre FMV: ±cap rate, ±UF/m², ±CAPEX)
-- **16. Anexo cartográfico** (vista regional, vista comunal, vista predial, plano vértices)
+## Entregables
+- `/mnt/documents/Tasacion_Teno_18052026_v21_standard.pdf` (11 pág)
+- `/mnt/documents/Tasacion_Teno_18052026_v21_extendido.pdf` (16 pág)
+- `/tmp/build_v21.py` (generador canónico, reemplaza a v20)
 
-Ambas variantes comparten misma portada, misma paleta, mismo footer, mismo validador.
-
----
-
-## 4 · Actualización del documento guía
-
-Reescribir `docs/GUIA_TASACION_PROFESIONAL.md` (v2.0) con:
-- §1 Propósito · §2 Regla de oro (sin cambios)
-- **§3 Marca emisora (NUEVO)** — tabla de marca, prohibiciones, ejemplos correctos/incorrectos de header y footer
-- **§4 Identidad visual (REEMPLAZA paleta dark)** — tabla de tokens blanco+verdes, tipografía, banda, polígono
-- §5 Estructura Standard (10–11 pág)
-- **§6 Estructura Extendido (NUEVO)** — qué se agrega, cuándo usar
-- §7 Los 5 métodos · §8 Comparables · §9 Pipeline · §10 Validador de coherencia (agregar grep para "adelphos" → debe ser 0) · §11 Lenguaje · §12 Checklist · §13 Versionado · §14 Implementación de referencia (apuntar a nuevo `build_v18.py`)
-
-Actualizar también memoria core: cambiar "Generador canónico: build_v11.py" → `build_v18.py`, y registrar en `mem://design/tasacion-brand-identity` la paleta blanco+verdes.
-
----
-
-## 5 · Regenerar la tasación de Teno bajo el nuevo estándar
-
-- Clonar `build_v17.py` → `build_v18.py`
-- Aplicar paleta blanco+verdes, banda superior `green-deep`, eliminar todo string "Adelphos" / dark premium
-- Mantener polígono KMZ real (4 vértices ya extraídos), galería con las 2 capturas Google Earth + Mapbox satelital
-- Generar **dos** outputs:
-  - `/mnt/documents/Tasacion_Teno_16052026_v18_standard.pdf` (10–11 pág)
-  - `/mnt/documents/Tasacion_Teno_16052026_v18_extendido.pdf` (15+ pág)
-- QA: `pdftoppm` página a página + grep prohibidos (`adelphos|asking|strong buy|spread|upside|ROI`) = 0
-
----
-
-## 6 · Entregables
-
-1. `docs/GUIA_TASACION_PROFESIONAL.md` v2.0 (fuente canónica única)
-2. `mem://design/tasacion-brand-identity` (nueva memoria)
-3. Actualización en `mem://index.md` core (build_v18 + paleta)
-4. `Tasacion_Teno_16052026_v18_standard.pdf`
-5. `Tasacion_Teno_16052026_v18_extendido.pdf`
-6. Eliminar v15, v16, v17 de `/mnt/documents/` para evitar confusión de marca
+## Detalles técnicos
+- Stack: `reportlab`, `Pillow`, `matplotlib`, `qrcode[pil]`, `requests` (tiles ESRI), `hashlib`.
+- Fuente Inter: descargar TTF a `/tmp/fonts/Inter-{Regular,Bold}.ttf` (Google Fonts), registrar en ReportLab.
+- Polígono: parsear `Teno-3.kmz` ya existente; proyectar lon/lat → píxeles del mosaico ESRI (Web Mercator z18) → overlay PIL.
+- QR: `qrcode.make(url, box_size=10, border=2)` → PNG en memoria → `Image` reportlab.
+- Hash en dos pasadas para que el SHA-256 impreso coincida con el PDF entregado: render → SHA del buffer → reescribir página de validación → guardar definitivo.
