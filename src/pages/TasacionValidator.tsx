@@ -21,6 +21,10 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sha256OfBlob, shortHash } from '@/lib/tasacionHash';
+import {
+  findPublicAppraisalById,
+  findPublicAppraisalByHash,
+} from '@/lib/tasacionPublicRegistry';
 import { toast } from 'sonner';
 
 type Found = {
@@ -73,6 +77,22 @@ const TasacionValidator = () => {
   const [byFileState, setByFileState] = useState<LookupResult>({ kind: 'idle' });
   const [uploadedHash, setUploadedHash] = useState<string | null>(null);
 
+  const staticToFound = (rec: ReturnType<typeof findPublicAppraisalById>, matched: string): Found => ({
+    kind: 'found',
+    id: rec!.id,
+    revoked: false,
+    revoked_reason: null,
+    comuna: rec!.comuna,
+    valor_uf: rec!.valor_uf,
+    tasador: rec!.tasador_nombre,
+    fecha: rec!.fecha_emision,
+    matched,
+    pdf_path: null,
+    pdf_final_path: null,
+    pdf_sha256: rec!.pdf_sha256[0] ?? null,
+    pdf_final_sha256: rec!.pdf_sha256[1] ?? null,
+  });
+
   const checkByCode = async () => {
     const id = code.trim();
     if (!id) return;
@@ -82,11 +102,16 @@ const TasacionValidator = () => {
       .select(SELECT_COLS)
       .eq('id', id)
       .maybeSingle();
-    if (error || !data) {
-      setByCodeState({ kind: 'notfound' });
+    if (data && !error) {
+      setByCodeState(toFound(data, 'id'));
       return;
     }
-    setByCodeState(toFound(data, 'id'));
+    const rec = findPublicAppraisalById(id);
+    if (rec) {
+      setByCodeState(staticToFound(rec, 'id (registro público)'));
+      return;
+    }
+    setByCodeState({ kind: 'notfound' });
   };
 
   const checkByFile = async (file: File) => {
@@ -117,8 +142,15 @@ const TasacionValidator = () => {
       setByFileState(toFound(direct, 'pdf'));
       return;
     }
+    // 3) Fallback: static public registry (demo / shipped PDFs)
+    const staticRec = findPublicAppraisalByHash(hash);
+    if (staticRec) {
+      setByFileState(staticToFound(staticRec, 'pdf (registro público)'));
+      return;
+    }
     setByFileState({ kind: 'notfound' });
   };
+
 
   return (
     <div className="min-h-screen bg-background text-foreground py-10 px-4">

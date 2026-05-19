@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sha256OfBlob, shortHash } from '@/lib/tasacionHash';
+import { findPublicAppraisalById, findPublicAppraisalByHash } from '@/lib/tasacionPublicRegistry';
 import { toast } from 'sonner';
 
 interface PublicacionRow {
@@ -50,6 +51,10 @@ interface PublicacionRow {
   revoked_reason: string | null;
   blockchain_anchor: any;
   created_at: string;
+  fmv_min_uf?: number | null;
+  fmv_max_uf?: number | null;
+  is_static?: boolean;
+  static_notes?: string | null;
 }
 
 const fmtUF = (n: number | null | undefined) =>
@@ -116,10 +121,43 @@ const TasacionLive = () => {
         .eq('id', id)
         .maybeSingle();
       if (!alive) return;
-      if (error || !data) {
-        setNotFound(true);
-      } else {
+      if (data && !error) {
         setRow(data as PublicacionRow);
+      } else {
+        // Fallback: static registry (e.g. v21 Teno demo PDFs)
+        const rec = findPublicAppraisalById(id);
+        if (rec) {
+          setRow({
+            id: rec.id,
+            comuna: rec.comuna,
+            region: rec.region,
+            direccion: rec.direccion,
+            rol: rec.rol,
+            valor_uf: rec.valor_uf,
+            valor_clp: rec.valor_clp,
+            valor_m2_uf: rec.valor_m2_uf,
+            superficie_m2: rec.superficie_m2,
+            fecha_emision: rec.fecha_emision,
+            tasador_nombre: rec.tasador_nombre,
+            lang: 'es',
+            pdf_path: '',
+            pdf_sha256: rec.pdf_sha256[0],
+            pdf_final_path: null,
+            pdf_final_sha256: rec.pdf_sha256[1] ?? null,
+            payload_json: null,
+            version: 21,
+            revoked_at: null,
+            revoked_reason: null,
+            blockchain_anchor: null,
+            created_at: rec.fecha_emision,
+            fmv_min_uf: rec.fmv_min_uf,
+            fmv_max_uf: rec.fmv_max_uf,
+            is_static: true,
+            static_notes: rec.notes ?? null,
+          });
+        } else {
+          setNotFound(true);
+        }
       }
       setLoading(false);
     })();
@@ -138,6 +176,10 @@ const TasacionLive = () => {
 
   const downloadOriginal = async () => {
     if (!row) return;
+    if (row.is_static) {
+      toast.info('Descarga el PDF desde la fuente original que recibiste.');
+      return;
+    }
     const path = row.pdf_final_path || row.pdf_path;
     const { data, error } = await supabase.storage.from('tasaciones').createSignedUrl(path, 3600);
     if (error || !data) {
@@ -152,7 +194,10 @@ const TasacionLive = () => {
     setVerifyState('checking');
     const hash = await sha256OfBlob(file);
     setUploadedHash(hash);
-    const expected = [row.pdf_sha256, row.pdf_final_sha256].filter(Boolean);
+    const expected = [row.pdf_sha256, row.pdf_final_sha256].filter(Boolean) as string[];
+    // Also accept any hash known in the static registry for this same id
+    const staticRec = findPublicAppraisalById(row.id);
+    if (staticRec) expected.push(...staticRec.pdf_sha256);
     setVerifyState(expected.includes(hash) ? 'match' : 'mismatch');
   };
 
@@ -266,16 +311,36 @@ const TasacionLive = () => {
               </CardContent>
             </Card>
 
-            {/* Valor comercial */}
+            {/* Valor comercial (Fair Market Value · IVS 2022) */}
             <Card className="bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border-emerald-500/30">
-              <CardContent className="py-6 text-center space-y-1">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">Valor comercial</div>
-                <div className="text-4xl font-bold text-emerald-500">{fmtUF(row.valor_uf)}</div>
+              <CardContent className="py-6 text-center space-y-2">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Fair Market Value · IVS 2022
+                </div>
+                <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">
+                  {fmtUF(row.valor_uf)}
+                </div>
                 <div className="text-sm text-muted-foreground">
                   ≈ {fmtCLP(row.valor_clp)} · {fmtUF(row.valor_m2_uf)}/m²
                 </div>
+                {row.fmv_min_uf != null && row.fmv_max_uf != null && (
+                  <div className="pt-2">
+                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">
+                      Rango de valor razonable
+                    </div>
+                    <div className="inline-flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-3 py-1">
+                      {fmtUF(row.fmv_min_uf)} <span className="text-muted-foreground">—</span> {fmtUF(row.fmv_max_uf)}
+                    </div>
+                    {row.static_notes && (
+                      <p className="text-[11px] text-muted-foreground mt-2 max-w-md mx-auto">
+                        {row.static_notes}
+                      </p>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
+
 
             {/* Trazabilidad */}
             <Card>
