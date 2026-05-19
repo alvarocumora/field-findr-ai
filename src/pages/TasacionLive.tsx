@@ -176,6 +176,10 @@ const TasacionLive = () => {
 
   const downloadOriginal = async () => {
     if (!row) return;
+    if (row.is_static) {
+      toast.info('Descarga el PDF desde la fuente original que recibiste.');
+      return;
+    }
     const path = row.pdf_final_path || row.pdf_path;
     const { data, error } = await supabase.storage.from('tasaciones').createSignedUrl(path, 3600);
     if (error || !data) {
@@ -190,7 +194,10 @@ const TasacionLive = () => {
     setVerifyState('checking');
     const hash = await sha256OfBlob(file);
     setUploadedHash(hash);
-    const expected = [row.pdf_sha256, row.pdf_final_sha256].filter(Boolean);
+    const expected = [row.pdf_sha256, row.pdf_final_sha256].filter(Boolean) as string[];
+    // Also accept any hash known in the static registry for this same id
+    const staticRec = findPublicAppraisalById(row.id);
+    if (staticRec) expected.push(...staticRec.pdf_sha256);
     setVerifyState(expected.includes(hash) ? 'match' : 'mismatch');
   };
 
