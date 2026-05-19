@@ -51,6 +51,10 @@ interface PublicacionRow {
   revoked_reason: string | null;
   blockchain_anchor: any;
   created_at: string;
+  fmv_min_uf?: number | null;
+  fmv_max_uf?: number | null;
+  is_static?: boolean;
+  static_notes?: string | null;
 }
 
 const fmtUF = (n: number | null | undefined) =>
