@@ -311,16 +311,36 @@ const TasacionLive = () => {
               </CardContent>
             </Card>
 
-            {/* Valor comercial */}
+            {/* Valor comercial (Fair Market Value · IVS 2022) */}
             <Card className="bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border-emerald-500/30">
-              <CardContent className="py-6 text-center space-y-1">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">Valor comercial</div>
-                <div className="text-4xl font-bold text-emerald-500">{fmtUF(row.valor_uf)}</div>
+              <CardContent className="py-6 text-center space-y-2">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Fair Market Value · IVS 2022
+                </div>
+                <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">
+                  {fmtUF(row.valor_uf)}
+                </div>
                 <div className="text-sm text-muted-foreground">
                   ≈ {fmtCLP(row.valor_clp)} · {fmtUF(row.valor_m2_uf)}/m²
                 </div>
+                {row.fmv_min_uf != null && row.fmv_max_uf != null && (
+                  <div className="pt-2">
+                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">
+                      Rango de valor razonable
+                    </div>
+                    <div className="inline-flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-3 py-1">
+                      {fmtUF(row.fmv_min_uf)} <span className="text-muted-foreground">—</span> {fmtUF(row.fmv_max_uf)}
+                    </div>
+                    {row.static_notes && (
+                      <p className="text-[11px] text-muted-foreground mt-2 max-w-md mx-auto">
+                        {row.static_notes}
+                      </p>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
+
 
             {/* Trazabilidad */}
             <Card>
