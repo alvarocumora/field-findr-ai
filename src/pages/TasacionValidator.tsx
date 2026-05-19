@@ -21,6 +21,10 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sha256OfBlob, shortHash } from '@/lib/tasacionHash';
+import {
+  findPublicAppraisalById,
+  findPublicAppraisalByHash,
+} from '@/lib/tasacionPublicRegistry';
 import { toast } from 'sonner';
 
 type Found = {
