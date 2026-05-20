@@ -1,0 +1,57 @@
+/* Forestal Valle Escondido — design tokens scoped to .fve-theme */
+.fve-theme {
+  --fve-forest: 137 35% 18%;
+  --fve-forest-deep: 137 40% 12%;
+  --fve-sand: 38 38% 75%;
+  --fve-sand-soft: 38 40% 90%;
+  --fve-charcoal: 0 0% 10%;
+  --fve-offwhite: 40 33% 95%;
+  --fve-gold: 40 47% 50%;
+  --fve-gold-soft: 40 47% 60%;
+  --fve-line: 0 0% 85%;
+
+  background: hsl(var(--fve-offwhite));
+  color: hsl(var(--fve-charcoal));
+  font-family: 'Inter', system-ui, sans-serif;
+  scroll-behavior: smooth;
+}
+
+.fve-theme .font-serif-fve {
+  font-family: 'Fraunces', 'Cormorant Garamond', Georgia, serif;
+  font-feature-settings: 'ss01' on;
+  letter-spacing: -0.01em;
+}
+
+.fve-theme .font-sans-fve {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.fve-theme a { color: inherit; }
+
+.fve-print-only { display: none; }
+
+@media print {
+  @page { margin: 18mm 14mm; }
+  html, body { background: white !important; }
+  .fve-no-print { display: none !important; }
+  .fve-print-only { display: block !important; }
+  .fve-section { break-inside: avoid; page-break-inside: avoid; }
+  .fve-theme { background: white !important; color: #111 !important; }
+  .fve-theme h1, .fve-theme h2, .fve-theme h3 { color: #111 !important; }
+  .fve-print-header {
+    border-bottom: 2px solid #1F3D2B;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+  }
+}
+
+/* Subtle scroll reveal */
+.fve-theme [data-reveal] {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .8s ease, transform .8s ease;
+}
+.fve-theme [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
