@@ -1,76 +1,124 @@
-# QA v20 (estado real)
 
-Verifiqué los dos PDF abiertos. Resultado:
+# Plan — Landing "Forestal Valle Escondido"
 
-| Elemento | Standard | Extendido | Estado |
-|---|---|---|---|
-| FMV UF 88.000 + rango 82k–94k | ✅ p.1 y p.4 | ✅ p.1 y p.7 | OK |
-| Ficha de predio | ✅ | ✅ | OK |
-| Comparables IFC Ruta 5 Sur | — | ✅ p.3 | OK |
-| Triangulación 5 métodos | — | ✅ p.3 | OK |
-| Due Diligence + Tornado | — | ✅ p.5 | OK |
-| **Imagen satelital + polígono KMZ** | ❌ | ❌ | **FALTA** |
-| **Galería de fotos del predio** | ❌ | ❌ | **FALTA** |
-| **QR de validación embebido** | ❌ (sólo URL texto) | ❌ | **FALTA** |
-| **Link validador + SHA-256 visible** | parcial (URL plano) | parcial | **FALTA** |
-| Chart evolución mercado 2023–26 | — | ❌ | **FALTA** |
-| Páginas reales | 4 (no 11) | 7 (no 16) | reducido |
+Sitio single-page institucional en español de Chile, doble audiencia (compradores + analistas bancarios), montado dentro del proyecto existente como rutas públicas nuevas. Sin backend: contacto vía `mailto:`. Print CSS para generar Dossier PDF.
 
-**Bug visual crítico**: el header `OFERTA TERRENOS · VALUATION` y los títulos H1 (`Informe de Valor Comercial`, `Conclusión`, `Comparables`) renderizan con kerning roto — la `O` parece `0`, la `I` queda separada (`Inform e`). Es un problema del Helvetica-Bold de ReportLab al mezclar con el carácter `·` y con el espaciado extra que aplica el script. Hay que regenerar con una TTF embebida (Inter o Manrope) o ajustar `setCharSpace(0)` y no usar `·` en H1.
+## Rutas nuevas (en `src/routes/publicRoutes.tsx`)
 
-El script `/tmp/build_v20.py` ya no existe, así que cualquier corrección parte de un generador nuevo `build_v21.py`.
+- `/forestal-valle-escondido` → `pages/forestal/ForestalLanding.tsx` (single page, scroll suave)
+- `/forestal-valle-escondido/investors` → `pages/forestal/InvestorsLogin.tsx` (mock login, sin auth)
 
-# Plan v21 — "FMV 88.000 + verificable + visual"
+No se toca el Layout global ni el sidebar; estas páginas se renderizan full-bleed sin `Layout` para mantener identidad propia (similar a `ProjectExperience`).
 
-## 1. Generador único y reproducible
-- Nuevo `/tmp/build_v21.py` con dos salidas: `..._v21_standard.pdf` (11 pág) y `..._v21_extendido.pdf` (16 pág).
-- Embeber fuente TTF (Inter Regular/Bold) vía `pdfmetrics.registerFont` para eliminar el kerning roto del Helvetica built-in.
-- Marca emisora intacta: **OFERTA TERRENOS · Valuation**, paleta blanco + verde profundo `#0E5A3A` / acento `#1F8A5B` / dorado discreto `#B5894A`.
+## Design system local (scoped, no rompe el global)
 
-## 2. Restaurar imagen satelital + polígono (en ambas variantes)
-- Stitch ESRI World Imagery z18 alrededor del centroide `-34.83870, -71.10210`.
-- Overlay del polígono real extraído de `Teno-3.kmz` (7,07 ha) con vértices P1–P4 etiquetados y norte/escala.
-- Página 2 del Standard, página 2 del Extendido.
+Tokens propios inyectados vía clase wrapper `.fve-theme` en el root de la landing — define CSS vars locales sin tocar `index.css` global:
 
-## 3. Galería de contexto del predio (nueva sección)
-- 4 miniaturas en grilla 2×2 con caption: vista aérea, frente a Ruta 5 Sur, polígono sobre ortofoto, contexto regional (mosaico Curicó–Romeral–Molina).
-- Las imágenes se generan en el mismo script desde tiles satelitales + un mapa regional anotado con los comparables (reutiliza la matriz que ya está).
-- Standard: 1 página (pág. 6). Extendido: 2 páginas (pág. 9–10) ampliando a 8 thumbnails con los comparables IFC.
+- `--fve-forest: 31 31% 20%` (#1F3D2B aprox HSL)
+- `--fve-sand: 38 38% 75%` (#D9C7A7)
+- `--fve-charcoal: 0 0% 10%` (#1A1A1A)
+- `--fve-offwhite: 40 33% 95%` (#F7F4EE)
+- `--fve-gold: 40 47% 50%` (#B89348)
 
-## 4. Bloque de validación pública + QR
-Nueva sección final fija en ambos PDF, **antes** del bloque "Certificación":
-- QR (200×200 pt) generado con `qrcode[pil]` apuntando a `https://ofertaterrenos.com/tasacion/v/2026-05-18-TENO-V21`.
-- Junto al QR:
-  - URL completa en mono.
-  - `SHA-256 (payload)` y `SHA-256 (PDF final)` en mono, truncados `abcd1234…ef56`.
-  - Folio único + fecha emisión + vigencia 180 días.
-  - Nota: *"Escaneá para validar autenticidad en el portal público OFERTA TERRENOS"*.
-- El cálculo del SHA-256 del PDF final se hace en dos pasadas: se construye PDF sin hash final → se calcula SHA → se reinyecta texto en la página de validación y se reescribe.
+Fuentes vía `<link>` en `index.html` (Fraunces 400/600 + Inter 400/500/600). Clases utilitarias `font-serif-fve` y `font-sans-fve` definidas en un CSS local `forestal.css` importado solo por la landing.
 
-## 5. Chart evolución de mercado (sólo extendido)
-- Línea 2023–2026 UF/m² para "Con IFC vigente" vs "Sin IFC" en el corredor Ruta 5 Sur, marcando el punto Teno @ 1,245 UF/m².
-- Página 12 del extendido.
+## Estructura de archivos
 
-## 6. Mejoras de diseño transversales
-- Banda verde superior continua de 28 pt con wordmark + folio (sin spacing roto).
-- Footer 3 líneas: marca · folio + emisión + vigencia · SHA-256 corto del PDF.
-- Tipografía: Inter 9/10/22 (body/secundario/H1), interlineado 1.35.
-- Tablas con filas alternadas `#F4F8F5`, encabezado verde `#0E5A3A` texto blanco.
-- Callouts FMV con borde superior dorado 2pt.
+```
+src/pages/forestal/
+  ForestalLanding.tsx          # compone las 12 secciones
+  InvestorsLogin.tsx           # mock login
+  forestal.css                 # tokens locales + print CSS
+  data/
+    lotes.ts                   # 15 lotes con precios UF 1.200–2.800
+    faqs.ts                    # 8 Q&A
+    capex.ts                   # tabla CAPEX + fases gantt
+    dueDiligence.ts            # 7 items checklist legal
+  sections/
+    FveNav.tsx                 # nav fijo + "Acceso Inversionistas"
+    FveHero.tsx
+    FveProyecto.tsx
+    FvePlanoMaestro.tsx        # SVG grid lotes + tabla
+    FveUbicacion.tsx           # iframe Google Maps + pills
+    FveInversion.tsx           # gantt + CAPEX (PRINT)
+    FveProyecciones.tsx
+    FveDueDiligence.tsx        # checklist + modal "Solicitar documento" (PRINT)
+    FveDesarrollador.tsx       # (PRINT)
+    FveProceso.tsx
+    FveFaqs.tsx                # shadcn Accordion
+    FveContacto.tsx            # form mailto:
+    FveFooter.tsx
+    DocRequestModal.tsx        # shadcn Dialog reutilizable
+```
 
-## 7. QA obligatoria antes de entregar
-- `pdftoppm -r 150` de cada página de ambos PDF.
-- Checklist: kerning correcto, satelital visible, QR escaneable (probar decode con `zbarimg`), FMV 88.000 presente, galería con 4/8 imágenes sin cortes, footer con SHA correcto, total 11 / 16 páginas.
-- Validar con `grep` que NO aparezcan `Adelphos`, `Field-Findr`, `ROI`, `asking`, `spread`, `upside`.
+Cada sección recibe `id` para scroll anchors. Nav usa `<a href="#proyecto">` con `scroll-behavior: smooth`.
 
-## Entregables
-- `/mnt/documents/Tasacion_Teno_18052026_v21_standard.pdf` (11 pág)
-- `/mnt/documents/Tasacion_Teno_18052026_v21_extendido.pdf` (16 pág)
-- `/tmp/build_v21.py` (generador canónico, reemplaza a v20)
+## Comportamiento clave
 
-## Detalles técnicos
-- Stack: `reportlab`, `Pillow`, `matplotlib`, `qrcode[pil]`, `requests` (tiles ESRI), `hashlib`.
-- Fuente Inter: descargar TTF a `/tmp/fonts/Inter-{Regular,Bold}.ttf` (Google Fonts), registrar en ReportLab.
-- Polígono: parsear `Teno-3.kmz` ya existente; proyectar lon/lat → píxeles del mosaico ESRI (Web Mercator z18) → overlay PIL.
-- QR: `qrcode.make(url, box_size=10, border=2)` → PNG en memoria → `Image` reportlab.
-- Hash en dos pasadas para que el SHA-256 impreso coincida con el PDF entregado: render → SHA del buffer → reescribir página de validación → guardar definitivo.
+- **Hero**: imagen Unsplash full-bleed (`https://images.unsplash.com/...?q=maule+vineyards`), overlay gradient verde→transparente, H1 serif grande, 2 CTAs (gold primario + outline). Strip de confianza debajo en banda arena.
+- **Plano Maestro**: SVG 5×3 grid de rectángulos (15 lotes) con `fill` por estado (disponible/reservado/vendido), hover→tooltip con nro + UF, click→selecciona fila en tabla. Tabla shadcn `Table` con 15 filas hardcoded en `data/lotes.ts`. Leyenda con tres swatches.
+- **Ubicación**: `<iframe>` Google Maps embed centrado en -35.0, -72.0; pills shadcn `Badge` para distancias; grid de servicios cercanos.
+- **Inversión** (sección 5): Gantt simple en CSS grid — 4 filas (fases) × 12 columnas (meses), barras con `background` gold/sand. Tabla CAPEX abajo con 6–8 partidas en UF.
+- **Due Diligence** (sección 7): 7 items con `CheckCircle2` verde, cada uno con botón "Solicitar documento" → abre `DocRequestModal` (shadcn Dialog) con form mailto pre-llenado. Cada item tiene placeholder de referencia ("Ref. doc. físico: ___").
+- **Desarrollador**: card con RUT placeholder (`76.XXX.XXX-K`), métricas, bio corta.
+- **Proceso**: 4 pasos con icons `lucide` (FileSignature, Handshake, ScrollText, Landmark) en línea horizontal con conectores.
+- **FAQs**: shadcn `Accordion` con 8 entradas redactadas (DL 3.516, construcción, urbanización, formas de pago, hipotecario, plusvalía, impuestos, entrega).
+- **Contacto**: form controlado React; submit construye `mailto:ventas@ofertaterrenos.cl?subject=...&body=...` con `window.location.href`. Side panel con datos oficina + email IR separado.
+- **Nav fijo**: `position: sticky top-0`, backdrop-blur, transparente en hero (detect scroll Y > 80), sólido al hacer scroll. Botón "Acceso Inversionistas" link a `/forestal-valle-escondido/investors`.
+
+## Print CSS (`forestal.css`)
+
+```css
+@media print {
+  .fve-no-print { display: none !important; }     /* nav, footer, hero, contacto, faq, ubicación, proyecciones, plano interactivo, proceso */
+  .fve-print-only { display: block !important; }
+  .fve-section { break-inside: avoid; page-break-inside: avoid; }
+  body { background: white; color: black; }
+}
+```
+
+Secciones 2, 5, 7, 8 sin `fve-no-print`; el resto lleva la clase. Header de print con logo + título "Dossier del Proyecto" inyectado vía `fve-print-only`.
+
+## SEO
+
+`index.html` ya es global y cubre el dominio. Para per-route uso `useSEO` (hook existente del proyecto):
+
+- `title`: "Forestal Valle Escondido — Parcelas DL 3.516 Hualañé Maule"
+- `description`: "Parcelación rural bajo DL 3.516 en Hualañé, Región del Maule. Parcelas de 5.000 m² con roles SII individuales, escrituras y derechos de agua."
+- `canonicalUrl`: `https://ofertaterrenos.com/forestal-valle-escondido`
+- `jsonLd`: `RealEstateListing` agregado con datos del proyecto
+- OG image: Unsplash placeholder
+
+## /investors (mock login)
+
+Página simple centrada con card shadcn: logo + título "Acceso Inversionistas", inputs email/password, botón "Ingresar" que solo muestra toast "Próximamente — contacto IR en ir@ofertaterrenos.cl". Sin lógica de auth real. Link "Volver" al landing.
+
+## Datos placeholder (chilenos realistas)
+
+- **Lotes**: numeración A-01…A-15, superficies 5.000–7.500 m², orientaciones N/NE/E/SE, precios UF 1.200–2.800, estados mezcla (10 disp / 3 reservados / 2 vendidos).
+- **Coords**: -35.0489, -71.9876 (Hualañé aprox).
+- **RUTs**: Forestal Valle Escondido SpA RUT 77.123.456-K; Inversiones Bioenergy SpA RUT 76.987.654-3.
+- **CAPEX**: Caminos UF 8.500, Electrificación UF 6.200, Pozo + derechos UF 3.800, Topografía/subdivisión UF 2.400, Escrituración UF 1.800, Comercialización UF 4.500, Contingencia UF 2.300 → Total ~UF 29.500.
+- **Proyecciones**: Velocidad 2 parcelas/mes, ticket promedio UF 1.950, absorción 4.2%.
+
+## Restricciones respetadas
+
+- Sin emojis en UI (solo iconos lucide).
+- Sin fotos stock genéricas: Unsplash con queries específicos del Maule rural.
+- Sin lenguaje de urgencia.
+- Tono institucional en copy (revisión manual al redactar).
+- Mobile-first: nav colapsa a menú hamburguesa shadcn `Sheet`; gantt scroll horizontal en mobile; tabla lotes con scroll-x.
+
+## Fuera de alcance (confirmado)
+
+- No se integra con DB ni RLS — todo hardcoded en `data/`.
+- No se toca el `Layout` global, sidebar, ni rutas existentes salvo añadir 2 rutas en `publicRoutes.tsx`.
+- No se modifica `index.css` global; tokens scoped a `.fve-theme`.
+- Sin auth real en `/investors`.
+
+## Verificación al terminar
+
+- Build pasa (automático).
+- Navegar `/forestal-valle-escondido` en preview: hero carga, scroll smooth a anchors, modal "Solicitar documento" abre, form mailto abre cliente, accordion FAQ funciona, mobile <768 nav colapsa.
+- `Ctrl+P` muestra solo secciones 2/5/7/8 con header Dossier.
+- `/forestal-valle-escondido/investors` renderiza login mock.
