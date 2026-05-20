@@ -29,6 +29,8 @@ import ReservationPending from "@/pages/ReservationPending";
 import VisualScenariosDemo from "@/pages/demo/VisualScenariosDemo";
 import TasacionLive from "@/pages/TasacionLive";
 import TasacionValidator from "@/pages/TasacionValidator";
+import ForestalLanding from "@/pages/forestal/ForestalLanding";
+import InvestorsLogin from "@/pages/forestal/InvestorsLogin";
 
 export const publicRoutes = [
   <Route key="home" path="/" element={<Index />} />,
@@ -60,4 +62,6 @@ export const publicRoutes = [
   <Route key="reservation-pending" path="/reserva/pendiente" element={<ReservationPending />} />,
   <Route key="tasacion-live" path="/tasacion/v/:id" element={<TasacionLive />} />,
   <Route key="tasacion-validar" path="/tasacion/validar" element={<TasacionValidator />} />,
+  <Route key="forestal-landing" path="/forestal-valle-escondido" element={<ForestalLanding />} />,
+  <Route key="forestal-investors" path="/forestal-valle-escondido/investors" element={<InvestorsLogin />} />,
 ];
