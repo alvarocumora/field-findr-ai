@@ -29,6 +29,8 @@ import ReservationPending from "@/pages/ReservationPending";
 import VisualScenariosDemo from "@/pages/demo/VisualScenariosDemo";
 import TasacionLive from "@/pages/TasacionLive";
 import TasacionValidator from "@/pages/TasacionValidator";
+import ForestalLanding from "@/pages/forestal/ForestalLanding";
+import InvestorsLogin from "@/pages/forestal/InvestorsLogin";
 
 export const publicRoutes = [
   <Route key="home" path="/" element={<Index />} />,
