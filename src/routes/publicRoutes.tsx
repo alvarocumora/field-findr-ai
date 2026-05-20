@@ -62,4 +62,6 @@ export const publicRoutes = [
   <Route key="reservation-pending" path="/reserva/pendiente" element={<ReservationPending />} />,
   <Route key="tasacion-live" path="/tasacion/v/:id" element={<TasacionLive />} />,
   <Route key="tasacion-validar" path="/tasacion/validar" element={<TasacionValidator />} />,
+  <Route key="forestal-landing" path="/forestal-valle-escondido" element={<ForestalLanding />} />,
+  <Route key="forestal-investors" path="/forestal-valle-escondido/investors" element={<InvestorsLogin />} />,
 ];
