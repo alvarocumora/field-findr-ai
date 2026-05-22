@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +24,7 @@ import {
   VISUAL_SCENARIO_TYPE_OPTIONS,
 } from '@/config/visualScenarios';
 import type { VisualScenarioEditorInput } from '@/hooks/useVisualScenarios';
+import { uploadVisualScenarioAsset } from '@/lib/visualScenarios';
 import type { VisualScenario } from '@/types/visualScenario';
 
 interface VisualScenarioFormDialogProps {
@@ -84,6 +86,9 @@ const VisualScenarioFormDialog = ({
 
   const [input, setInput] = useState<VisualScenarioEditorInput>(initialInput);
   const [tagText, setTagText] = useState(formatTags(initialInput.tags));
+  const [isUploadingBase, setIsUploadingBase] = useState(false);
+  const [isUploadingOverlay, setIsUploadingOverlay] = useState(false);
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -93,6 +98,44 @@ const VisualScenarioFormDialog = ({
 
   const update = <K extends keyof VisualScenarioEditorInput>(key: K, value: VisualScenarioEditorInput[K]) => {
     setInput((current) => ({ ...current, [key]: value }));
+  };
+
+  const handleUpload = async (
+    file: File | undefined,
+    folder: 'base' | 'overlay' | 'thumbnail',
+  ) => {
+    if (!file) return;
+    if (!input.propertyId.trim()) {
+      toast.error('Ingresa el Property ID antes de subir imágenes');
+      return;
+    }
+
+    const setUploading =
+      folder === 'base'
+        ? setIsUploadingBase
+        : folder === 'overlay'
+          ? setIsUploadingOverlay
+          : setIsUploadingThumbnail;
+
+    try {
+      setUploading(true);
+      const { publicUrl } = await uploadVisualScenarioAsset({
+        propertyId: input.propertyId,
+        file,
+        folder,
+      });
+
+      if (folder === 'base') update('baseImageUrl', publicUrl);
+      if (folder === 'overlay') update('overlayImageUrl', publicUrl);
+      if (folder === 'thumbnail') update('thumbnailUrl', publicUrl);
+
+      toast.success('Imagen subida correctamente');
+    } catch (error) {
+      console.error('Visual scenario asset upload error:', error);
+      toast.error('No se pudo subir la imagen');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -109,6 +152,7 @@ const VisualScenarioFormDialog = ({
   };
 
   const canSubmit = input.propertyId.trim() && input.title.trim();
+  const isBusy = isSubmitting || isUploadingBase || isUploadingOverlay || isUploadingThumbnail;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -195,14 +239,32 @@ const VisualScenarioFormDialog = ({
             <div className="grid gap-2">
               <label className="text-sm font-medium">Imagen base URL</label>
               <Input value={input.baseImageUrl ?? ''} onChange={(event) => update('baseImageUrl', event.target.value)} />
+              <Input
+                type="file"
+                accept="image/*"
+                disabled={isUploadingBase}
+                onChange={(event) => handleUpload(event.target.files?.[0], 'base')}
+              />
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium">Overlay URL</label>
               <Input value={input.overlayImageUrl ?? ''} onChange={(event) => update('overlayImageUrl', event.target.value)} />
+              <Input
+                type="file"
+                accept="image/*"
+                disabled={isUploadingOverlay}
+                onChange={(event) => handleUpload(event.target.files?.[0], 'overlay')}
+              />
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium">Thumbnail URL</label>
               <Input value={input.thumbnailUrl ?? ''} onChange={(event) => update('thumbnailUrl', event.target.value)} />
+              <Input
+                type="file"
+                accept="image/*"
+                disabled={isUploadingThumbnail}
+                onChange={(event) => handleUpload(event.target.files?.[0], 'thumbnail')}
+              />
             </div>
           </div>
 
@@ -237,11 +299,11 @@ const VisualScenarioFormDialog = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isBusy}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={!canSubmit || isSubmitting}>
-            {isSubmitting ? 'Guardando...' : scenario ? 'Guardar cambios' : 'Crear escenario'}
+          <Button onClick={handleSubmit} disabled={!canSubmit || isBusy}>
+            {isBusy ? 'Procesando...' : scenario ? 'Guardar cambios' : 'Crear escenario'}
           </Button>
         </DialogFooter>
       </DialogContent>
