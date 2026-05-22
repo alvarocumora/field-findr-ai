@@ -258,6 +258,26 @@ export const useUpdateVisualScenario = () => {
   });
 };
 
+export const useArchiveVisualScenario = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id }: { id: string; propertyId: string }) => {
+      const { data, error } = await visualScenariosTable()
+        .update({ status: 'archived' })
+        .eq('id', id)
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('No se pudo archivar el escenario visual.');
+
+      return mapVisualScenarioRow(data);
+    },
+    onSuccess: (scenario) => invalidateVisualScenarioQueries(queryClient, scenario.propertyId),
+  });
+};
+
 export const useDeleteVisualScenario = () => {
   const queryClient = useQueryClient();
 
