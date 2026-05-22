@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Boxes, ExternalLink, FileWarning, Layers, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { Archive, Boxes, ExternalLink, FileWarning, Layers, Pencil, Plus, RefreshCw } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,8 @@ import ScenarioTypeBadge from '@/components/visual-scenarios/ScenarioTypeBadge';
 import VisualScenarioFormDialog from '@/components/visual-scenarios/VisualScenarioFormDialog';
 import {
   useAdminVisualScenarios,
+  useArchiveVisualScenario,
   useCreateVisualScenario,
-  useDeleteVisualScenario,
   useUpdateVisualScenario,
   type VisualScenarioEditorInput,
 } from '@/hooks/useVisualScenarios';
@@ -24,7 +24,7 @@ const VisualScenariosAdmin = () => {
   const { data: scenarios = [], isLoading, isError, refetch, isFetching } = useAdminVisualScenarios();
   const createScenario = useCreateVisualScenario();
   const updateScenario = useUpdateVisualScenario();
-  const deleteScenario = useDeleteVisualScenario();
+  const archiveScenario = useArchiveVisualScenario();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState<VisualScenario | null>(null);
 
@@ -60,16 +60,21 @@ const VisualScenariosAdmin = () => {
     }
   };
 
-  const handleDelete = async (scenario: VisualScenario) => {
-    const confirmed = window.confirm(`¿Eliminar el escenario "${scenario.title}"? Esta acción no se puede deshacer.`);
+  const handleArchive = async (scenario: VisualScenario) => {
+    if (scenario.status === 'archived') {
+      toast.info('Este escenario ya está archivado');
+      return;
+    }
+
+    const confirmed = window.confirm(`¿Archivar el escenario "${scenario.title}"? Podrás seguir viéndolo en el panel admin.`);
     if (!confirmed) return;
 
     try {
-      await deleteScenario.mutateAsync({ id: scenario.id, propertyId: scenario.propertyId });
-      toast.success('Escenario eliminado');
+      await archiveScenario.mutateAsync({ id: scenario.id, propertyId: scenario.propertyId });
+      toast.success('Escenario archivado');
     } catch (error) {
-      console.error('Visual scenario delete error:', error);
-      toast.error('No se pudo eliminar el escenario');
+      console.error('Visual scenario archive error:', error);
+      toast.error('No se pudo archivar el escenario');
     }
   };
 
@@ -201,12 +206,12 @@ const VisualScenariosAdmin = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="border-destructive/30 text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDelete(scenario)}
-                          disabled={deleteScenario.isPending}
+                          className="border-amber-500/30 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
+                          onClick={() => handleArchive(scenario)}
+                          disabled={archiveScenario.isPending || scenario.status === 'archived'}
                         >
-                          <Trash2 className="mr-2 h-3.5 w-3.5" />
-                          Eliminar
+                          <Archive className="mr-2 h-3.5 w-3.5" />
+                          {scenario.status === 'archived' ? 'Archivado' : 'Archivar'}
                         </Button>
                       </div>
                     </div>
