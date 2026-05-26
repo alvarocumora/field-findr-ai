@@ -1,5 +1,5716 @@
-// AUTO-GENERATED from /tmp/gen_huellelhue.py - DO NOT EDIT MANUALLY
-// Source: Plano topografico Fundo Hueyelhue (Luis San Juan Sepulveda 2007), UTM 18S WGS84
+// AUTO-GENERADO por scripts/generateHuellelhueLots.ts
+// Motor: src/lib/subdivision/autoSubdivide.ts
+// Perímetro: trazado manual sobre plano FUNDÓ HUEYELHUE (Osorno) + satélite
+// Coordenadas: WGS84 lng,lat · alineadas a línea de costa real
 
-export const HUELLELHUE_DATA = {"lots": [{"type": "Feature", "properties": {"id": "L1-01", "line": 1, "name": "Ocean Front 01", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81825, -40.724985], [-73.818248, -40.724872], [-73.818247, -40.724759], [-73.818245, -40.724647], [-73.818242, -40.724534], [-73.81824, -40.724421], [-73.816356, -40.724402], [-73.816346, -40.724965], [-73.81825, -40.724985]]]}}, {"type": "Feature", "properties": {"id": "L1-02", "line": 1, "name": "Ocean Front 02", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81824, -40.724421], [-73.818237, -40.724309], [-73.818233, -40.724196], [-73.818229, -40.724083], [-73.818224, -40.723971], [-73.818219, -40.723858], [-73.816342, -40.723839], [-73.816332, -40.724402], [-73.81824, -40.724421]]]}}, {"type": "Feature", "properties": {"id": "L1-03", "line": 1, "name": "Ocean Front 03", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.818219, -40.723858], [-73.818213, -40.723745], [-73.818206, -40.723633], [-73.818198, -40.72352], [-73.818189, -40.723407], [-73.818179, -40.723295], [-73.816313, -40.723276], [-73.816303, -40.723838], [-73.818219, -40.723858]]]}}, {"type": "Feature", "properties": {"id": "L1-04", "line": 1, "name": "Ocean Front 04", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.818179, -40.723295], [-73.818168, -40.723182], [-73.818157, -40.723069], [-73.818144, -40.722957], [-73.818129, -40.722844], [-73.818114, -40.722731], [-73.816261, -40.722712], [-73.816251, -40.723275], [-73.818179, -40.723295]]]}}, {"type": "Feature", "properties": {"id": "L1-05", "line": 1, "name": "Ocean Front 05", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.818114, -40.722731], [-73.818098, -40.722618], [-73.81808, -40.722505], [-73.818061, -40.722393], [-73.818041, -40.72228], [-73.81802, -40.722167], [-73.816181, -40.722148], [-73.816172, -40.722711], [-73.818114, -40.722731]]]}}, {"type": "Feature", "properties": {"id": "L1-06", "line": 1, "name": "Ocean Front 06", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81802, -40.722167], [-73.817998, -40.722054], [-73.817974, -40.721941], [-73.81795, -40.721828], [-73.817925, -40.721716], [-73.817898, -40.721603], [-73.816073, -40.721584], [-73.816063, -40.722147], [-73.81802, -40.722167]]]}}, {"type": "Feature", "properties": {"id": "L1-07", "line": 1, "name": "Ocean Front 07", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817898, -40.721603], [-73.817871, -40.72149], [-73.817843, -40.721377], [-73.817814, -40.721264], [-73.817784, -40.721151], [-73.817754, -40.721038], [-73.815939, -40.72102], [-73.815929, -40.721583], [-73.817898, -40.721603]]]}}, {"type": "Feature", "properties": {"id": "L1-08", "line": 1, "name": "Ocean Front 08", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817754, -40.721038], [-73.817723, -40.720925], [-73.817691, -40.720812], [-73.817659, -40.720699], [-73.817627, -40.720587], [-73.817595, -40.720474], [-73.815786, -40.720455], [-73.815776, -40.721018], [-73.817754, -40.721038]]]}}, {"type": "Feature", "properties": {"id": "L1-09", "line": 1, "name": "Ocean Front 09", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817595, -40.720474], [-73.817562, -40.720361], [-73.81753, -40.720248], [-73.817498, -40.720135], [-73.817465, -40.720022], [-73.817434, -40.719909], [-73.815625, -40.71989], [-73.815615, -40.720453], [-73.817595, -40.720474]]]}}, {"type": "Feature", "properties": {"id": "L1-10", "line": 1, "name": "Ocean Front 10", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817434, -40.719909], [-73.817402, -40.719796], [-73.817372, -40.719683], [-73.817342, -40.71957], [-73.817313, -40.719457], [-73.817284, -40.719344], [-73.815468, -40.719326], [-73.815458, -40.719889], [-73.817434, -40.719909]]]}}, {"type": "Feature", "properties": {"id": "L1-11", "line": 1, "name": "Ocean Front 11", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817284, -40.719344], [-73.817257, -40.719231], [-73.817231, -40.719119], [-73.817206, -40.719006], [-73.817183, -40.718893], [-73.817161, -40.71878], [-73.815329, -40.718761], [-73.815319, -40.719324], [-73.817284, -40.719344]]]}}, {"type": "Feature", "properties": {"id": "L1-12", "line": 1, "name": "Ocean Front 12", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817161, -40.71878], [-73.817141, -40.718667], [-73.817122, -40.718554], [-73.817106, -40.718442], [-73.817091, -40.718329], [-73.817078, -40.718216], [-73.815225, -40.718197], [-73.815215, -40.71876], [-73.817161, -40.71878]]]}}, {"type": "Feature", "properties": {"id": "L1-13", "line": 1, "name": "Ocean Front 13", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817078, -40.718216], [-73.817067, -40.718103], [-73.817059, -40.717991], [-73.817053, -40.717878], [-73.817049, -40.717765], [-73.817047, -40.717653], [-73.815166, -40.717634], [-73.815156, -40.718196], [-73.817078, -40.718216]]]}}, {"type": "Feature", "properties": {"id": "L1-14", "line": 1, "name": "Ocean Front 14", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817047, -40.717653], [-73.817048, -40.71754], [-73.817052, -40.717428], [-73.817058, -40.717315], [-73.817066, -40.717203], [-73.817077, -40.71709], [-73.815165, -40.717071], [-73.815155, -40.717633], [-73.817047, -40.717653]]]}}, {"type": "Feature", "properties": {"id": "L1-15", "line": 1, "name": "Ocean Front 15", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817077, -40.71709], [-73.817091, -40.716978], [-73.817107, -40.716865], [-73.817127, -40.716753], [-73.817148, -40.71664], [-73.817173, -40.716528], [-73.815228, -40.716508], [-73.815218, -40.717071], [-73.817077, -40.71709]]]}}, {"type": "Feature", "properties": {"id": "L1-16", "line": 1, "name": "Ocean Front 16", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817173, -40.716528], [-73.8172, -40.716416], [-73.817229, -40.716303], [-73.817261, -40.716191], [-73.817296, -40.716079], [-73.817333, -40.715967], [-73.815356, -40.715946], [-73.815346, -40.716509], [-73.817173, -40.716528]]]}}, {"type": "Feature", "properties": {"id": "L1-17", "line": 1, "name": "Ocean Front 17", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817333, -40.715967], [-73.817372, -40.715855], [-73.817414, -40.715742], [-73.817458, -40.71563], [-73.817504, -40.715518], [-73.817553, -40.715406], [-73.815547, -40.715385], [-73.815537, -40.715948], [-73.817333, -40.715967]]]}}, {"type": "Feature", "properties": {"id": "L1-18", "line": 1, "name": "Ocean Front 18", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817553, -40.715406], [-73.817603, -40.715294], [-73.817655, -40.715182], [-73.817709, -40.71507], [-73.817765, -40.714958], [-73.817822, -40.714846], [-73.815793, -40.714825], [-73.815783, -40.715388], [-73.817553, -40.715406]]]}}, {"type": "Feature", "properties": {"id": "L1-19", "line": 1, "name": "Ocean Front 19", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817822, -40.714846], [-73.81788, -40.714734], [-73.81794, -40.714622], [-73.818001, -40.71451], [-73.818063, -40.714398], [-73.818126, -40.714286], [-73.816082, -40.714265], [-73.816072, -40.714828], [-73.817822, -40.714846]]]}}, {"type": "Feature", "properties": {"id": "L1-20", "line": 1, "name": "Ocean Front 20", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.818126, -40.714286], [-73.81819, -40.714174], [-73.818254, -40.714062], [-73.818319, -40.71395], [-73.818384, -40.713838], [-73.818449, -40.713726], [-73.816398, -40.713705], [-73.816388, -40.714268], [-73.818126, -40.714286]]]}}, {"type": "Feature", "properties": {"id": "L1-21", "line": 1, "name": "Ocean Front 21", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.818449, -40.713726], [-73.818514, -40.713614], [-73.818579, -40.713502], [-73.818644, -40.71339], [-73.818708, -40.713278], [-73.818772, -40.713166], [-73.816723, -40.713145], [-73.816713, -40.713708], [-73.818449, -40.713726]]]}}, {"type": "Feature", "properties": {"id": "L1-22", "line": 1, "name": "Ocean Front 22", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.818772, -40.713166], [-73.818835, -40.713054], [-73.818897, -40.712942], [-73.818958, -40.71283], [-73.819018, -40.712718], [-73.819077, -40.712606], [-73.817039, -40.712586], [-73.817029, -40.713148], [-73.818772, -40.713166]]]}}, {"type": "Feature", "properties": {"id": "L1-23", "line": 1, "name": "Ocean Front 23", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.819077, -40.712606], [-73.819134, -40.712494], [-73.819189, -40.712382], [-73.819243, -40.71227], [-73.819295, -40.712158], [-73.819346, -40.712046], [-73.817328, -40.712025], [-73.817318, -40.712588], [-73.819077, -40.712606]]]}}, {"type": "Feature", "properties": {"id": "L1-24", "line": 1, "name": "Ocean Front 24", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.819346, -40.712046], [-73.819394, -40.711934], [-73.81944, -40.711822], [-73.819484, -40.71171], [-73.819526, -40.711598], [-73.819565, -40.711485], [-73.817574, -40.711465], [-73.817564, -40.712028], [-73.819346, -40.712046]]]}}, {"type": "Feature", "properties": {"id": "L1-25", "line": 1, "name": "Ocean Front 25", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.819565, -40.711485], [-73.819602, -40.711373], [-73.819637, -40.711261], [-73.819669, -40.711149], [-73.819699, -40.711036], [-73.819726, -40.710924], [-73.817765, -40.710904], [-73.817755, -40.711467], [-73.819565, -40.711485]]]}}, {"type": "Feature", "properties": {"id": "L1-26", "line": 1, "name": "Ocean Front 26", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.819726, -40.710924], [-73.81975, -40.710812], [-73.819772, -40.710699], [-73.819791, -40.710587], [-73.819807, -40.710474], [-73.819821, -40.710362], [-73.817893, -40.710342], [-73.817883, -40.710905], [-73.819726, -40.710924]]]}}, {"type": "Feature", "properties": {"id": "L1-27", "line": 1, "name": "Ocean Front 27", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.819821, -40.710362], [-73.819832, -40.710249], [-73.819841, -40.710137], [-73.819847, -40.710024], [-73.81985, -40.709912], [-73.819851, -40.709799], [-73.817955, -40.70978], [-73.817945, -40.710343], [-73.819821, -40.710362]]]}}, {"type": "Feature", "properties": {"id": "L1-28", "line": 1, "name": "Ocean Front 28", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.819851, -40.709799], [-73.81985, -40.709687], [-73.819846, -40.709574], [-73.819839, -40.709461], [-73.819831, -40.709349], [-73.81982, -40.709236], [-73.817954, -40.709217], [-73.817944, -40.70978], [-73.819851, -40.709799]]]}}, {"type": "Feature", "properties": {"id": "L1-29", "line": 1, "name": "Ocean Front 29", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81982, -40.709236], [-73.819807, -40.709123], [-73.819793, -40.70901], [-73.819776, -40.708898], [-73.819757, -40.708785], [-73.819737, -40.708672], [-73.817896, -40.708653], [-73.817886, -40.709216], [-73.81982, -40.709236]]]}}, {"type": "Feature", "properties": {"id": "L1-30", "line": 1, "name": "Ocean Front 30", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.819737, -40.708672], [-73.819715, -40.708559], [-73.819692, -40.708446], [-73.819667, -40.708333], [-73.819641, -40.708221], [-73.819614, -40.708108], [-73.817791, -40.708089], [-73.817781, -40.708652], [-73.819737, -40.708672]]]}}, {"type": "Feature", "properties": {"id": "L1-31", "line": 1, "name": "Ocean Front 31", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.819614, -40.708108], [-73.819586, -40.707995], [-73.819556, -40.707882], [-73.819526, -40.707769], [-73.819496, -40.707656], [-73.819464, -40.707543], [-73.817653, -40.707525], [-73.817643, -40.708088], [-73.819614, -40.708108]]]}}, {"type": "Feature", "properties": {"id": "L1-32", "line": 1, "name": "Ocean Front 32", "category": "ocean_front", "area_ha": 1.0, "ocean_exposure": "Directa - 100%", "privacy": "M\u00e1xima", "conservation": "75% nativo intocado", "architecture": "Caba\u00f1a costera oculta - Japandi coastal"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.819464, -40.707543], [-73.819433, -40.70743], [-73.819401, -40.707317], [-73.819368, -40.707204], [-73.819336, -40.707091], [-73.819303, -40.706978], [-73.817496, -40.70696], [-73.817486, -40.707523], [-73.819464, -40.707543]]]}}, {"type": "Feature", "properties": {"id": "L2-01", "line": 2, "name": "Forest Ocean 01", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.816332, -40.724965], [-73.815148, -40.724953], [-73.815171, -40.723666], [-73.816355, -40.723678], [-73.816332, -40.724965]]]}}, {"type": "Feature", "properties": {"id": "L2-02", "line": 2, "name": "Forest Ocean 02", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.815148, -40.724953], [-73.813964, -40.724941], [-73.813987, -40.723654], [-73.815171, -40.723666], [-73.815148, -40.724953]]]}}, {"type": "Feature", "properties": {"id": "L2-03", "line": 2, "name": "Forest Ocean 03", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.813964, -40.724941], [-73.81278, -40.724928], [-73.812803, -40.723642], [-73.813987, -40.723654], [-73.813964, -40.724941]]]}}, {"type": "Feature", "properties": {"id": "L2-04", "line": 2, "name": "Forest Ocean 04", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81278, -40.724928], [-73.811597, -40.724916], [-73.811619, -40.72363], [-73.812803, -40.723642], [-73.81278, -40.724928]]]}}, {"type": "Feature", "properties": {"id": "L2-05", "line": 2, "name": "Forest Ocean 05", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.816249, -40.723677], [-73.815065, -40.723665], [-73.815088, -40.722378], [-73.816272, -40.72239], [-73.816249, -40.723677]]]}}, {"type": "Feature", "properties": {"id": "L2-06", "line": 2, "name": "Forest Ocean 06", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.815065, -40.723665], [-73.813881, -40.723653], [-73.813904, -40.722366], [-73.815088, -40.722378], [-73.815065, -40.723665]]]}}, {"type": "Feature", "properties": {"id": "L2-07", "line": 2, "name": "Forest Ocean 07", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.813881, -40.723653], [-73.812698, -40.723641], [-73.812721, -40.722354], [-73.813904, -40.722366], [-73.813881, -40.723653]]]}}, {"type": "Feature", "properties": {"id": "L2-08", "line": 2, "name": "Forest Ocean 08", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.812698, -40.723641], [-73.811514, -40.723628], [-73.811537, -40.722342], [-73.812721, -40.722354], [-73.812698, -40.723641]]]}}, {"type": "Feature", "properties": {"id": "L2-09", "line": 2, "name": "Forest Ocean 09", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81603, -40.722388], [-73.814846, -40.722376], [-73.814869, -40.721089], [-73.816053, -40.721101], [-73.81603, -40.722388]]]}}, {"type": "Feature", "properties": {"id": "L2-10", "line": 2, "name": "Forest Ocean 10", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.814846, -40.722376], [-73.813662, -40.722364], [-73.813685, -40.721077], [-73.814869, -40.721089], [-73.814846, -40.722376]]]}}, {"type": "Feature", "properties": {"id": "L2-11", "line": 2, "name": "Forest Ocean 11", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.813662, -40.722364], [-73.812479, -40.722351], [-73.812502, -40.721065], [-73.813685, -40.721077], [-73.813662, -40.722364]]]}}, {"type": "Feature", "properties": {"id": "L2-12", "line": 2, "name": "Forest Ocean 12", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.812479, -40.722351], [-73.811295, -40.722339], [-73.811318, -40.721053], [-73.812502, -40.721065], [-73.812479, -40.722351]]]}}, {"type": "Feature", "properties": {"id": "L2-13", "line": 2, "name": "Forest Ocean 13", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.815689, -40.721098], [-73.814506, -40.721085], [-73.814528, -40.719799], [-73.815712, -40.719811], [-73.815689, -40.721098]]]}}, {"type": "Feature", "properties": {"id": "L2-14", "line": 2, "name": "Forest Ocean 14", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.814506, -40.721085], [-73.813322, -40.721073], [-73.813345, -40.719787], [-73.814528, -40.719799], [-73.814506, -40.721085]]]}}, {"type": "Feature", "properties": {"id": "L2-15", "line": 2, "name": "Forest Ocean 15", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.813322, -40.721073], [-73.812138, -40.721061], [-73.812161, -40.719774], [-73.813345, -40.719787], [-73.813322, -40.721073]]]}}, {"type": "Feature", "properties": {"id": "L2-16", "line": 2, "name": "Forest Ocean 16", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.812138, -40.721061], [-73.810954, -40.721049], [-73.810977, -40.719762], [-73.812161, -40.719774], [-73.812138, -40.721061]]]}}, {"type": "Feature", "properties": {"id": "L2-17", "line": 2, "name": "Forest Ocean 17", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81534, -40.719807], [-73.814156, -40.719795], [-73.814179, -40.718508], [-73.815363, -40.71852], [-73.81534, -40.719807]]]}}, {"type": "Feature", "properties": {"id": "L2-18", "line": 2, "name": "Forest Ocean 18", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.814156, -40.719795], [-73.812973, -40.719783], [-73.812996, -40.718496], [-73.814179, -40.718508], [-73.814156, -40.719795]]]}}, {"type": "Feature", "properties": {"id": "L2-19", "line": 2, "name": "Forest Ocean 19", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.812973, -40.719783], [-73.811789, -40.719771], [-73.811812, -40.718484], [-73.812996, -40.718496], [-73.812973, -40.719783]]]}}, {"type": "Feature", "properties": {"id": "L2-20", "line": 2, "name": "Forest Ocean 20", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.811789, -40.719771], [-73.810605, -40.719758], [-73.810628, -40.718472], [-73.811812, -40.718484], [-73.811789, -40.719771]]]}}, {"type": "Feature", "properties": {"id": "L2-21", "line": 2, "name": "Forest Ocean 21", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.815148, -40.718518], [-73.813964, -40.718506], [-73.813987, -40.717219], [-73.815171, -40.717231], [-73.815148, -40.718518]]]}}, {"type": "Feature", "properties": {"id": "L2-22", "line": 2, "name": "Forest Ocean 22", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.813964, -40.718506], [-73.81278, -40.718494], [-73.812803, -40.717207], [-73.813987, -40.717219], [-73.813964, -40.718506]]]}}, {"type": "Feature", "properties": {"id": "L2-23", "line": 2, "name": "Forest Ocean 23", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81278, -40.718494], [-73.811597, -40.718482], [-73.81162, -40.717195], [-73.812803, -40.717207], [-73.81278, -40.718494]]]}}, {"type": "Feature", "properties": {"id": "L2-24", "line": 2, "name": "Forest Ocean 24", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.811597, -40.718482], [-73.810413, -40.718469], [-73.810436, -40.717183], [-73.81162, -40.717195], [-73.811597, -40.718482]]]}}, {"type": "Feature", "properties": {"id": "L2-25", "line": 2, "name": "Forest Ocean 25", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81525, -40.717232], [-73.814066, -40.71722], [-73.814089, -40.715933], [-73.815272, -40.715946], [-73.81525, -40.717232]]]}}, {"type": "Feature", "properties": {"id": "L2-26", "line": 2, "name": "Forest Ocean 26", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.814066, -40.71722], [-73.812882, -40.717208], [-73.812905, -40.715921], [-73.814089, -40.715933], [-73.814066, -40.71722]]]}}, {"type": "Feature", "properties": {"id": "L2-27", "line": 2, "name": "Forest Ocean 27", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.812882, -40.717208], [-73.811698, -40.717196], [-73.811721, -40.715909], [-73.812905, -40.715921], [-73.812882, -40.717208]]]}}, {"type": "Feature", "properties": {"id": "L2-28", "line": 2, "name": "Forest Ocean 28", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.811698, -40.717196], [-73.810515, -40.717184], [-73.810538, -40.715897], [-73.811721, -40.715909], [-73.811698, -40.717196]]]}}, {"type": "Feature", "properties": {"id": "L2-29", "line": 2, "name": "Forest Ocean 29", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.815683, -40.71595], [-73.814499, -40.715938], [-73.814522, -40.714651], [-73.815706, -40.714663], [-73.815683, -40.71595]]]}}, {"type": "Feature", "properties": {"id": "L2-30", "line": 2, "name": "Forest Ocean 30", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.814499, -40.715938], [-73.813316, -40.715925], [-73.813338, -40.714639], [-73.814522, -40.714651], [-73.814499, -40.715938]]]}}, {"type": "Feature", "properties": {"id": "L2-31", "line": 2, "name": "Forest Ocean 31", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.813316, -40.715925], [-73.812132, -40.715913], [-73.812155, -40.714627], [-73.813338, -40.714639], [-73.813316, -40.715925]]]}}, {"type": "Feature", "properties": {"id": "L2-32", "line": 2, "name": "Forest Ocean 32", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.812132, -40.715913], [-73.810948, -40.715901], [-73.810971, -40.714614], [-73.812155, -40.714627], [-73.812132, -40.715913]]]}}, {"type": "Feature", "properties": {"id": "L2-33", "line": 2, "name": "Forest Ocean 33", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.816358, -40.71467], [-73.815174, -40.714658], [-73.815197, -40.713371], [-73.816381, -40.713383], [-73.816358, -40.71467]]]}}, {"type": "Feature", "properties": {"id": "L2-34", "line": 2, "name": "Forest Ocean 34", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.815174, -40.714658], [-73.813991, -40.714646], [-73.814014, -40.713359], [-73.815197, -40.713371], [-73.815174, -40.714658]]]}}, {"type": "Feature", "properties": {"id": "L2-35", "line": 2, "name": "Forest Ocean 35", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.813991, -40.714646], [-73.812807, -40.714633], [-73.81283, -40.713347], [-73.814014, -40.713359], [-73.813991, -40.714646]]]}}, {"type": "Feature", "properties": {"id": "L2-36", "line": 2, "name": "Forest Ocean 36", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.812807, -40.714633], [-73.811623, -40.714621], [-73.811646, -40.713334], [-73.81283, -40.713347], [-73.812807, -40.714633]]]}}, {"type": "Feature", "properties": {"id": "L2-37", "line": 2, "name": "Forest Ocean 37", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817087, -40.71339], [-73.815904, -40.713378], [-73.815926, -40.712092], [-73.81711, -40.712104], [-73.817087, -40.71339]]]}}, {"type": "Feature", "properties": {"id": "L2-38", "line": 2, "name": "Forest Ocean 38", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.815904, -40.713378], [-73.81472, -40.713366], [-73.814743, -40.712079], [-73.815926, -40.712092], [-73.815904, -40.713378]]]}}, {"type": "Feature", "properties": {"id": "L2-39", "line": 2, "name": "Forest Ocean 39", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81472, -40.713366], [-73.813536, -40.713354], [-73.813559, -40.712067], [-73.814743, -40.712079], [-73.81472, -40.713366]]]}}, {"type": "Feature", "properties": {"id": "L2-40", "line": 2, "name": "Forest Ocean 40", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.813536, -40.713354], [-73.812353, -40.713342], [-73.812375, -40.712055], [-73.813559, -40.712067], [-73.813536, -40.713354]]]}}, {"type": "Feature", "properties": {"id": "L2-41", "line": 2, "name": "Forest Ocean 41", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81766, -40.712109], [-73.816477, -40.712097], [-73.816499, -40.710811], [-73.817683, -40.710823], [-73.81766, -40.712109]]]}}, {"type": "Feature", "properties": {"id": "L2-42", "line": 2, "name": "Forest Ocean 42", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.816477, -40.712097], [-73.815293, -40.712085], [-73.815316, -40.710798], [-73.816499, -40.710811], [-73.816477, -40.712097]]]}}, {"type": "Feature", "properties": {"id": "L2-43", "line": 2, "name": "Forest Ocean 43", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.815293, -40.712085], [-73.814109, -40.712073], [-73.814132, -40.710786], [-73.815316, -40.710798], [-73.815293, -40.712085]]]}}, {"type": "Feature", "properties": {"id": "L2-44", "line": 2, "name": "Forest Ocean 44", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.814109, -40.712073], [-73.812926, -40.712061], [-73.812948, -40.710774], [-73.814132, -40.710786], [-73.814109, -40.712073]]]}}, {"type": "Feature", "properties": {"id": "L2-45", "line": 2, "name": "Forest Ocean 45", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817931, -40.710825], [-73.816747, -40.710813], [-73.81677, -40.709526], [-73.817954, -40.709539], [-73.817931, -40.710825]]]}}, {"type": "Feature", "properties": {"id": "L2-46", "line": 2, "name": "Forest Ocean 46", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.816747, -40.710813], [-73.815564, -40.710801], [-73.815587, -40.709514], [-73.81677, -40.709526], [-73.816747, -40.710813]]]}}, {"type": "Feature", "properties": {"id": "L2-47", "line": 2, "name": "Forest Ocean 47", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.815564, -40.710801], [-73.81438, -40.710789], [-73.814403, -40.709502], [-73.815587, -40.709514], [-73.815564, -40.710801]]]}}, {"type": "Feature", "properties": {"id": "L2-48", "line": 2, "name": "Forest Ocean 48", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81438, -40.710789], [-73.813196, -40.710777], [-73.813219, -40.70949], [-73.814403, -40.709502], [-73.81438, -40.710789]]]}}, {"type": "Feature", "properties": {"id": "L2-49", "line": 2, "name": "Forest Ocean 49", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817873, -40.709538], [-73.81669, -40.709526], [-73.816712, -40.708239], [-73.817896, -40.708251], [-73.817873, -40.709538]]]}}, {"type": "Feature", "properties": {"id": "L2-50", "line": 2, "name": "Forest Ocean 50", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81669, -40.709526], [-73.815506, -40.709513], [-73.815529, -40.708227], [-73.816712, -40.708239], [-73.81669, -40.709526]]]}}, {"type": "Feature", "properties": {"id": "L2-51", "line": 2, "name": "Forest Ocean 51", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.815506, -40.709513], [-73.814322, -40.709501], [-73.814345, -40.708215], [-73.815529, -40.708227], [-73.815506, -40.709513]]]}}, {"type": "Feature", "properties": {"id": "L2-52", "line": 2, "name": "Forest Ocean 52", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.814322, -40.709501], [-73.813139, -40.709489], [-73.813162, -40.708202], [-73.814345, -40.708215], [-73.814322, -40.709501]]]}}, {"type": "Feature", "properties": {"id": "L2-53", "line": 2, "name": "Forest Ocean 53", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.817582, -40.708248], [-73.816398, -40.708236], [-73.816421, -40.706949], [-73.817605, -40.706961], [-73.817582, -40.708248]]]}}, {"type": "Feature", "properties": {"id": "L2-54", "line": 2, "name": "Forest Ocean 54", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.816398, -40.708236], [-73.815215, -40.708224], [-73.815237, -40.706937], [-73.816421, -40.706949], [-73.816398, -40.708236]]]}}, {"type": "Feature", "properties": {"id": "L2-55", "line": 2, "name": "Forest Ocean 55", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.815215, -40.708224], [-73.814031, -40.708211], [-73.814054, -40.706925], [-73.815237, -40.706937], [-73.815215, -40.708224]]]}}, {"type": "Feature", "properties": {"id": "L2-56", "line": 2, "name": "Forest Ocean 56", "category": "forest_ocean", "area_ha": 1.43, "ocean_exposure": "Vista parcial elevada", "privacy": "Alta - inmersi\u00f3n bosque", "conservation": "60% bosque nativo", "architecture": "Eco-residencia elevada - Scandinavian eco"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.814031, -40.708211], [-73.812847, -40.708199], [-73.81287, -40.706913], [-73.814054, -40.706925], [-73.814031, -40.708211]]]}}, {"type": "Feature", "properties": {"id": "L3-01", "line": 3, "name": "Bosque Vivo 01", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.811598, -40.724916], [-73.810415, -40.724904], [-73.810436, -40.723703], [-73.81162, -40.723715], [-73.811598, -40.724916]]]}}, {"type": "Feature", "properties": {"id": "L3-02", "line": 3, "name": "Bosque Vivo 02", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.810415, -40.724904], [-73.809231, -40.724892], [-73.809252, -40.723691], [-73.810436, -40.723703], [-73.810415, -40.724904]]]}}, {"type": "Feature", "properties": {"id": "L3-03", "line": 3, "name": "Bosque Vivo 03", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.809231, -40.724892], [-73.808047, -40.72488], [-73.808068, -40.723679], [-73.809252, -40.723691], [-73.809231, -40.724892]]]}}, {"type": "Feature", "properties": {"id": "L3-04", "line": 3, "name": "Bosque Vivo 04", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808047, -40.72488], [-73.806863, -40.724867], [-73.806884, -40.723666], [-73.808068, -40.723679], [-73.808047, -40.72488]]]}}, {"type": "Feature", "properties": {"id": "L3-05", "line": 3, "name": "Bosque Vivo 05", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.806863, -40.724867], [-73.805679, -40.724855], [-73.805701, -40.723654], [-73.806884, -40.723666], [-73.806863, -40.724867]]]}}, {"type": "Feature", "properties": {"id": "L3-06", "line": 3, "name": "Bosque Vivo 06", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.805679, -40.724855], [-73.804495, -40.724843], [-73.804517, -40.723642], [-73.805701, -40.723654], [-73.805679, -40.724855]]]}}, {"type": "Feature", "properties": {"id": "L3-07", "line": 3, "name": "Bosque Vivo 07", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.811528, -40.723714], [-73.810344, -40.723702], [-73.810366, -40.722501], [-73.81155, -40.722513], [-73.811528, -40.723714]]]}}, {"type": "Feature", "properties": {"id": "L3-08", "line": 3, "name": "Bosque Vivo 08", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.810344, -40.723702], [-73.809161, -40.72369], [-73.809182, -40.722489], [-73.810366, -40.722501], [-73.810344, -40.723702]]]}}, {"type": "Feature", "properties": {"id": "L3-09", "line": 3, "name": "Bosque Vivo 09", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.809161, -40.72369], [-73.807977, -40.723678], [-73.807998, -40.722477], [-73.809182, -40.722489], [-73.809161, -40.72369]]]}}, {"type": "Feature", "properties": {"id": "L3-10", "line": 3, "name": "Bosque Vivo 10", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.807977, -40.723678], [-73.806793, -40.723666], [-73.806814, -40.722465], [-73.807998, -40.722477], [-73.807977, -40.723678]]]}}, {"type": "Feature", "properties": {"id": "L3-11", "line": 3, "name": "Bosque Vivo 11", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.806793, -40.723666], [-73.805609, -40.723653], [-73.80563, -40.722452], [-73.806814, -40.722465], [-73.806793, -40.723666]]]}}, {"type": "Feature", "properties": {"id": "L3-12", "line": 3, "name": "Bosque Vivo 12", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.805609, -40.723653], [-73.804425, -40.723641], [-73.804447, -40.72244], [-73.80563, -40.722452], [-73.805609, -40.723653]]]}}, {"type": "Feature", "properties": {"id": "L3-13", "line": 3, "name": "Bosque Vivo 13", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.811342, -40.722511], [-73.810158, -40.722499], [-73.81018, -40.721298], [-73.811364, -40.72131], [-73.811342, -40.722511]]]}}, {"type": "Feature", "properties": {"id": "L3-14", "line": 3, "name": "Bosque Vivo 14", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.810158, -40.722499], [-73.808975, -40.722487], [-73.808996, -40.721286], [-73.81018, -40.721298], [-73.810158, -40.722499]]]}}, {"type": "Feature", "properties": {"id": "L3-15", "line": 3, "name": "Bosque Vivo 15", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808975, -40.722487], [-73.807791, -40.722475], [-73.807812, -40.721274], [-73.808996, -40.721286], [-73.808975, -40.722487]]]}}, {"type": "Feature", "properties": {"id": "L3-16", "line": 3, "name": "Bosque Vivo 16", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.807791, -40.722475], [-73.806607, -40.722462], [-73.806628, -40.721262], [-73.807812, -40.721274], [-73.807791, -40.722475]]]}}, {"type": "Feature", "properties": {"id": "L3-17", "line": 3, "name": "Bosque Vivo 17", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.806607, -40.722462], [-73.805423, -40.72245], [-73.805445, -40.721249], [-73.806628, -40.721262], [-73.806607, -40.722462]]]}}, {"type": "Feature", "properties": {"id": "L3-18", "line": 3, "name": "Bosque Vivo 18", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.805423, -40.72245], [-73.804239, -40.722438], [-73.804261, -40.721237], [-73.805445, -40.721249], [-73.805423, -40.72245]]]}}, {"type": "Feature", "properties": {"id": "L3-19", "line": 3, "name": "Bosque Vivo 19", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.811041, -40.721307], [-73.809857, -40.721295], [-73.809878, -40.720094], [-73.811062, -40.720106], [-73.811041, -40.721307]]]}}, {"type": "Feature", "properties": {"id": "L3-20", "line": 3, "name": "Bosque Vivo 20", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.809857, -40.721295], [-73.808673, -40.721283], [-73.808694, -40.720082], [-73.809878, -40.720094], [-73.809857, -40.721295]]]}}, {"type": "Feature", "properties": {"id": "L3-21", "line": 3, "name": "Bosque Vivo 21", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808673, -40.721283], [-73.807489, -40.72127], [-73.807511, -40.72007], [-73.808694, -40.720082], [-73.808673, -40.721283]]]}}, {"type": "Feature", "properties": {"id": "L3-22", "line": 3, "name": "Bosque Vivo 22", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.807489, -40.72127], [-73.806305, -40.721258], [-73.806327, -40.720057], [-73.807511, -40.72007], [-73.807489, -40.72127]]]}}, {"type": "Feature", "properties": {"id": "L3-23", "line": 3, "name": "Bosque Vivo 23", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.806305, -40.721258], [-73.805122, -40.721246], [-73.805143, -40.720045], [-73.806327, -40.720057], [-73.806305, -40.721258]]]}}, {"type": "Feature", "properties": {"id": "L3-24", "line": 3, "name": "Bosque Vivo 24", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.805122, -40.721246], [-73.803938, -40.721234], [-73.803959, -40.720033], [-73.805143, -40.720045], [-73.805122, -40.721246]]]}}, {"type": "Feature", "properties": {"id": "L3-25", "line": 3, "name": "Bosque Vivo 25", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.810702, -40.720102], [-73.809518, -40.72009], [-73.809539, -40.718889], [-73.810723, -40.718902], [-73.810702, -40.720102]]]}}, {"type": "Feature", "properties": {"id": "L3-26", "line": 3, "name": "Bosque Vivo 26", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.809518, -40.72009], [-73.808334, -40.720078], [-73.808356, -40.718877], [-73.809539, -40.718889], [-73.809518, -40.72009]]]}}, {"type": "Feature", "properties": {"id": "L3-27", "line": 3, "name": "Bosque Vivo 27", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808334, -40.720078], [-73.80715, -40.720066], [-73.807172, -40.718865], [-73.808356, -40.718877], [-73.808334, -40.720078]]]}}, {"type": "Feature", "properties": {"id": "L3-28", "line": 3, "name": "Bosque Vivo 28", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.80715, -40.720066], [-73.805967, -40.720054], [-73.805988, -40.718853], [-73.807172, -40.718865], [-73.80715, -40.720066]]]}}, {"type": "Feature", "properties": {"id": "L3-29", "line": 3, "name": "Bosque Vivo 29", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.805967, -40.720054], [-73.804783, -40.720041], [-73.804804, -40.71884], [-73.805988, -40.718853], [-73.805967, -40.720054]]]}}, {"type": "Feature", "properties": {"id": "L3-30", "line": 3, "name": "Bosque Vivo 30", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.804783, -40.720041], [-73.803599, -40.720029], [-73.803621, -40.718828], [-73.804804, -40.71884], [-73.804783, -40.720041]]]}}, {"type": "Feature", "properties": {"id": "L3-31", "line": 3, "name": "Bosque Vivo 31", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.810456, -40.718899], [-73.809272, -40.718887], [-73.809293, -40.717686], [-73.810477, -40.717698], [-73.810456, -40.718899]]]}}, {"type": "Feature", "properties": {"id": "L3-32", "line": 3, "name": "Bosque Vivo 32", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.809272, -40.718887], [-73.808088, -40.718874], [-73.80811, -40.717674], [-73.809293, -40.717686], [-73.809272, -40.718887]]]}}, {"type": "Feature", "properties": {"id": "L3-33", "line": 3, "name": "Bosque Vivo 33", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808088, -40.718874], [-73.806904, -40.718862], [-73.806926, -40.717661], [-73.80811, -40.717674], [-73.808088, -40.718874]]]}}, {"type": "Feature", "properties": {"id": "L3-34", "line": 3, "name": "Bosque Vivo 34", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.806904, -40.718862], [-73.805721, -40.71885], [-73.805742, -40.717649], [-73.806926, -40.717661], [-73.806904, -40.718862]]]}}, {"type": "Feature", "properties": {"id": "L3-35", "line": 3, "name": "Bosque Vivo 35", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.805721, -40.71885], [-73.804537, -40.718838], [-73.804558, -40.717637], [-73.805742, -40.717649], [-73.805721, -40.71885]]]}}, {"type": "Feature", "properties": {"id": "L3-36", "line": 3, "name": "Bosque Vivo 36", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.804537, -40.718838], [-73.803353, -40.718825], [-73.803375, -40.717625], [-73.804558, -40.717637], [-73.804537, -40.718838]]]}}, {"type": "Feature", "properties": {"id": "L3-37", "line": 3, "name": "Bosque Vivo 37", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81043, -40.717697], [-73.809246, -40.717685], [-73.809268, -40.716484], [-73.810451, -40.716497], [-73.81043, -40.717697]]]}}, {"type": "Feature", "properties": {"id": "L3-38", "line": 3, "name": "Bosque Vivo 38", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.809246, -40.717685], [-73.808062, -40.717673], [-73.808084, -40.716472], [-73.809268, -40.716484], [-73.809246, -40.717685]]]}}, {"type": "Feature", "properties": {"id": "L3-39", "line": 3, "name": "Bosque Vivo 39", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808062, -40.717673], [-73.806879, -40.717661], [-73.8069, -40.71646], [-73.808084, -40.716472], [-73.808062, -40.717673]]]}}, {"type": "Feature", "properties": {"id": "L3-40", "line": 3, "name": "Bosque Vivo 40", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.806879, -40.717661], [-73.805695, -40.717649], [-73.805716, -40.716448], [-73.8069, -40.71646], [-73.806879, -40.717661]]]}}, {"type": "Feature", "properties": {"id": "L3-41", "line": 3, "name": "Bosque Vivo 41", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.805695, -40.717649], [-73.804511, -40.717636], [-73.804533, -40.716435], [-73.805716, -40.716448], [-73.805695, -40.717649]]]}}, {"type": "Feature", "properties": {"id": "L3-42", "line": 3, "name": "Bosque Vivo 42", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.804511, -40.717636], [-73.803327, -40.717624], [-73.803349, -40.716423], [-73.804533, -40.716435], [-73.804511, -40.717636]]]}}, {"type": "Feature", "properties": {"id": "L3-43", "line": 3, "name": "Bosque Vivo 43", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.810693, -40.716499], [-73.80951, -40.716487], [-73.809531, -40.715286], [-73.810715, -40.715298], [-73.810693, -40.716499]]]}}, {"type": "Feature", "properties": {"id": "L3-44", "line": 3, "name": "Bosque Vivo 44", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.80951, -40.716487], [-73.808326, -40.716475], [-73.808347, -40.715274], [-73.809531, -40.715286], [-73.80951, -40.716487]]]}}, {"type": "Feature", "properties": {"id": "L3-45", "line": 3, "name": "Bosque Vivo 45", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808326, -40.716475], [-73.807142, -40.716462], [-73.807164, -40.715262], [-73.808347, -40.715274], [-73.808326, -40.716475]]]}}, {"type": "Feature", "properties": {"id": "L3-46", "line": 3, "name": "Bosque Vivo 46", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.807142, -40.716462], [-73.805958, -40.71645], [-73.80598, -40.715249], [-73.807164, -40.715262], [-73.807142, -40.716462]]]}}, {"type": "Feature", "properties": {"id": "L3-47", "line": 3, "name": "Bosque Vivo 47", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.805958, -40.71645], [-73.804775, -40.716438], [-73.804796, -40.715237], [-73.80598, -40.715249], [-73.805958, -40.71645]]]}}, {"type": "Feature", "properties": {"id": "L3-48", "line": 3, "name": "Bosque Vivo 48", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.804775, -40.716438], [-73.803591, -40.716426], [-73.803613, -40.715225], [-73.804796, -40.715237], [-73.804775, -40.716438]]]}}, {"type": "Feature", "properties": {"id": "L3-49", "line": 3, "name": "Bosque Vivo 49", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.811221, -40.715303], [-73.810038, -40.715291], [-73.810059, -40.71409], [-73.811243, -40.714102], [-73.811221, -40.715303]]]}}, {"type": "Feature", "properties": {"id": "L3-50", "line": 3, "name": "Bosque Vivo 50", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.810038, -40.715291], [-73.808854, -40.715279], [-73.808875, -40.714078], [-73.810059, -40.71409], [-73.810038, -40.715291]]]}}, {"type": "Feature", "properties": {"id": "L3-51", "line": 3, "name": "Bosque Vivo 51", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808854, -40.715279], [-73.80767, -40.715267], [-73.807692, -40.714066], [-73.808875, -40.714078], [-73.808854, -40.715279]]]}}, {"type": "Feature", "properties": {"id": "L3-52", "line": 3, "name": "Bosque Vivo 52", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.80767, -40.715267], [-73.806486, -40.715255], [-73.806508, -40.714054], [-73.807692, -40.714066], [-73.80767, -40.715267]]]}}, {"type": "Feature", "properties": {"id": "L3-53", "line": 3, "name": "Bosque Vivo 53", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.806486, -40.715255], [-73.805303, -40.715242], [-73.805324, -40.714041], [-73.806508, -40.714054], [-73.806486, -40.715255]]]}}, {"type": "Feature", "properties": {"id": "L3-54", "line": 3, "name": "Bosque Vivo 54", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.805303, -40.715242], [-73.804119, -40.71523], [-73.804141, -40.714029], [-73.805324, -40.714041], [-73.805303, -40.715242]]]}}, {"type": "Feature", "properties": {"id": "L3-55", "line": 3, "name": "Bosque Vivo 55", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.811897, -40.714109], [-73.810713, -40.714097], [-73.810735, -40.712896], [-73.811918, -40.712908], [-73.811897, -40.714109]]]}}, {"type": "Feature", "properties": {"id": "L3-56", "line": 3, "name": "Bosque Vivo 56", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.810713, -40.714097], [-73.809529, -40.714085], [-73.809551, -40.712884], [-73.810735, -40.712896], [-73.810713, -40.714097]]]}}, {"type": "Feature", "properties": {"id": "L3-57", "line": 3, "name": "Bosque Vivo 57", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.809529, -40.714085], [-73.808346, -40.714073], [-73.808367, -40.712872], [-73.809551, -40.712884], [-73.809529, -40.714085]]]}}, {"type": "Feature", "properties": {"id": "L3-58", "line": 3, "name": "Bosque Vivo 58", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808346, -40.714073], [-73.807162, -40.71406], [-73.807184, -40.712859], [-73.808367, -40.712872], [-73.808346, -40.714073]]]}}, {"type": "Feature", "properties": {"id": "L3-59", "line": 3, "name": "Bosque Vivo 59", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.807162, -40.71406], [-73.805978, -40.714048], [-73.806, -40.712847], [-73.807184, -40.712859], [-73.807162, -40.71406]]]}}, {"type": "Feature", "properties": {"id": "L3-60", "line": 3, "name": "Bosque Vivo 60", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.805978, -40.714048], [-73.804795, -40.714036], [-73.804816, -40.712835], [-73.806, -40.712847], [-73.805978, -40.714048]]]}}, {"type": "Feature", "properties": {"id": "L3-61", "line": 3, "name": "Bosque Vivo 61", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81255, -40.712915], [-73.811367, -40.712903], [-73.811388, -40.711702], [-73.812572, -40.711714], [-73.81255, -40.712915]]]}}, {"type": "Feature", "properties": {"id": "L3-62", "line": 3, "name": "Bosque Vivo 62", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.811367, -40.712903], [-73.810183, -40.71289], [-73.810204, -40.71169], [-73.811388, -40.711702], [-73.811367, -40.712903]]]}}, {"type": "Feature", "properties": {"id": "L3-63", "line": 3, "name": "Bosque Vivo 63", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.810183, -40.71289], [-73.808999, -40.712878], [-73.809021, -40.711677], [-73.810204, -40.71169], [-73.810183, -40.71289]]]}}, {"type": "Feature", "properties": {"id": "L3-64", "line": 3, "name": "Bosque Vivo 64", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808999, -40.712878], [-73.807816, -40.712866], [-73.807837, -40.711665], [-73.809021, -40.711677], [-73.808999, -40.712878]]]}}, {"type": "Feature", "properties": {"id": "L3-65", "line": 3, "name": "Bosque Vivo 65", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.807816, -40.712866], [-73.806632, -40.712854], [-73.806653, -40.711653], [-73.807837, -40.711665], [-73.807816, -40.712866]]]}}, {"type": "Feature", "properties": {"id": "L3-66", "line": 3, "name": "Bosque Vivo 66", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.806632, -40.712854], [-73.805448, -40.712842], [-73.80547, -40.711641], [-73.806653, -40.711653], [-73.806632, -40.712854]]]}}, {"type": "Feature", "properties": {"id": "L3-67", "line": 3, "name": "Bosque Vivo 67", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81302, -40.711719], [-73.811836, -40.711706], [-73.811857, -40.710505], [-73.813041, -40.710518], [-73.81302, -40.711719]]]}}, {"type": "Feature", "properties": {"id": "L3-68", "line": 3, "name": "Bosque Vivo 68", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.811836, -40.711706], [-73.810652, -40.711694], [-73.810674, -40.710493], [-73.811857, -40.710505], [-73.811836, -40.711706]]]}}, {"type": "Feature", "properties": {"id": "L3-69", "line": 3, "name": "Bosque Vivo 69", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.810652, -40.711694], [-73.809469, -40.711682], [-73.80949, -40.710481], [-73.810674, -40.710493], [-73.810652, -40.711694]]]}}, {"type": "Feature", "properties": {"id": "L3-70", "line": 3, "name": "Bosque Vivo 70", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.809469, -40.711682], [-73.808285, -40.71167], [-73.808307, -40.710469], [-73.80949, -40.710481], [-73.809469, -40.711682]]]}}, {"type": "Feature", "properties": {"id": "L3-71", "line": 3, "name": "Bosque Vivo 71", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808285, -40.71167], [-73.807102, -40.711658], [-73.807123, -40.710457], [-73.808307, -40.710469], [-73.808285, -40.71167]]]}}, {"type": "Feature", "properties": {"id": "L3-72", "line": 3, "name": "Bosque Vivo 72", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.807102, -40.711658], [-73.805918, -40.711645], [-73.805939, -40.710444], [-73.807123, -40.710457], [-73.807102, -40.711658]]]}}, {"type": "Feature", "properties": {"id": "L3-73", "line": 3, "name": "Bosque Vivo 73", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.813209, -40.710519], [-73.812026, -40.710507], [-73.812047, -40.709306], [-73.813231, -40.709318], [-73.813209, -40.710519]]]}}, {"type": "Feature", "properties": {"id": "L3-74", "line": 3, "name": "Bosque Vivo 74", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.812026, -40.710507], [-73.810842, -40.710495], [-73.810863, -40.709294], [-73.812047, -40.709306], [-73.812026, -40.710507]]]}}, {"type": "Feature", "properties": {"id": "L3-75", "line": 3, "name": "Bosque Vivo 75", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.810842, -40.710495], [-73.809658, -40.710483], [-73.80968, -40.709282], [-73.810863, -40.709294], [-73.810842, -40.710495]]]}}, {"type": "Feature", "properties": {"id": "L3-76", "line": 3, "name": "Bosque Vivo 76", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.809658, -40.710483], [-73.808475, -40.710471], [-73.808496, -40.70927], [-73.80968, -40.709282], [-73.809658, -40.710483]]]}}, {"type": "Feature", "properties": {"id": "L3-77", "line": 3, "name": "Bosque Vivo 77", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808475, -40.710471], [-73.807291, -40.710458], [-73.807313, -40.709257], [-73.808496, -40.70927], [-73.808475, -40.710471]]]}}, {"type": "Feature", "properties": {"id": "L3-78", "line": 3, "name": "Bosque Vivo 78", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.807291, -40.710458], [-73.806107, -40.710446], [-73.806129, -40.709245], [-73.807313, -40.709257], [-73.807291, -40.710458]]]}}, {"type": "Feature", "properties": {"id": "L3-79", "line": 3, "name": "Bosque Vivo 79", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.813119, -40.709317], [-73.811935, -40.709305], [-73.811956, -40.708104], [-73.81314, -40.708116], [-73.813119, -40.709317]]]}}, {"type": "Feature", "properties": {"id": "L3-80", "line": 3, "name": "Bosque Vivo 80", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.811935, -40.709305], [-73.810751, -40.709293], [-73.810773, -40.708092], [-73.811956, -40.708104], [-73.811935, -40.709305]]]}}, {"type": "Feature", "properties": {"id": "L3-81", "line": 3, "name": "Bosque Vivo 81", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.810751, -40.709293], [-73.809568, -40.709281], [-73.809589, -40.70808], [-73.810773, -40.708092], [-73.810751, -40.709293]]]}}, {"type": "Feature", "properties": {"id": "L3-82", "line": 3, "name": "Bosque Vivo 82", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.809568, -40.709281], [-73.808384, -40.709269], [-73.808406, -40.708068], [-73.809589, -40.70808], [-73.809568, -40.709281]]]}}, {"type": "Feature", "properties": {"id": "L3-83", "line": 3, "name": "Bosque Vivo 83", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808384, -40.709269], [-73.807201, -40.709256], [-73.807222, -40.708055], [-73.808406, -40.708068], [-73.808384, -40.709269]]]}}, {"type": "Feature", "properties": {"id": "L3-84", "line": 3, "name": "Bosque Vivo 84", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.807201, -40.709256], [-73.806017, -40.709244], [-73.806039, -40.708043], [-73.807222, -40.708055], [-73.807201, -40.709256]]]}}, {"type": "Feature", "properties": {"id": "L3-85", "line": 3, "name": "Bosque Vivo 85", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.812836, -40.708113], [-73.811653, -40.708101], [-73.811674, -40.7069], [-73.812858, -40.706912], [-73.812836, -40.708113]]]}}, {"type": "Feature", "properties": {"id": "L3-86", "line": 3, "name": "Bosque Vivo 86", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.811653, -40.708101], [-73.810469, -40.708089], [-73.810491, -40.706888], [-73.811674, -40.7069], [-73.811653, -40.708101]]]}}, {"type": "Feature", "properties": {"id": "L3-87", "line": 3, "name": "Bosque Vivo 87", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.810469, -40.708089], [-73.809286, -40.708077], [-73.809307, -40.706876], [-73.810491, -40.706888], [-73.810469, -40.708089]]]}}, {"type": "Feature", "properties": {"id": "L3-88", "line": 3, "name": "Bosque Vivo 88", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.809286, -40.708077], [-73.808102, -40.708064], [-73.808123, -40.706864], [-73.809307, -40.706876], [-73.809286, -40.708077]]]}}, {"type": "Feature", "properties": {"id": "L3-89", "line": 3, "name": "Bosque Vivo 89", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.808102, -40.708064], [-73.806918, -40.708052], [-73.80694, -40.706851], [-73.808123, -40.706864], [-73.808102, -40.708064]]]}}, {"type": "Feature", "properties": {"id": "L3-90", "line": 3, "name": "Bosque Vivo 90", "category": "bosque_vivo", "area_ha": 1.33, "ocean_exposure": "Sin vista - inmersi\u00f3n total", "privacy": "Total - refugio oculto", "conservation": "70% selva regenerativa", "architecture": "Caba\u00f1a hidden - Patagonian contemporary"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.806918, -40.708052], [-73.805735, -40.70804], [-73.805756, -40.706839], [-73.80694, -40.706851], [-73.806918, -40.708052]]]}}, {"type": "Feature", "properties": {"id": "ML-ECO-LODGE", "line": "macro", "name": "Eco Lodge Patag\u00f3nico", "category": "eco_lodge", "area_ha": 30, "ocean_exposure": "Mixta", "privacy": "Comunitaria curada", "conservation": "80% reserva activa", "architecture": "Maestro - charred wood + volcanic stone"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.813834, -40.706922], [-73.799632, -40.706776], [-73.799551, -40.711279], [-73.813754, -40.711426], [-73.813834, -40.706922]]]}}, {"type": "Feature", "properties": {"id": "ML-WELLNESS", "line": "macro", "name": "Wellness Sanctuary", "category": "wellness", "area_ha": 20, "ocean_exposure": "Mixta", "privacy": "Comunitaria curada", "conservation": "80% reserva activa", "architecture": "Maestro - charred wood + volcanic stone"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.799632, -40.706776], [-73.787796, -40.706652], [-73.787698, -40.712056], [-73.799535, -40.71218], [-73.799632, -40.706776]]]}}, {"type": "Feature", "properties": {"id": "ML-GLAMPING", "line": "macro", "name": "Glamping Premium", "category": "glamping", "area_ha": 15, "ocean_exposure": "Mixta", "privacy": "Comunitaria curada", "conservation": "80% reserva activa", "architecture": "Maestro - charred wood + volcanic stone"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.813563, -40.722234], [-73.801724, -40.722112], [-73.801676, -40.724814], [-73.813515, -40.724936], [-73.813563, -40.722234]]]}}, {"type": "Feature", "properties": {"id": "ML-GASTRO", "line": "macro", "name": "Gastronom\u00eda & Comunidad", "category": "gastronomy", "area_ha": 6, "ocean_exposure": "Mixta", "privacy": "Comunitaria curada", "conservation": "80% reserva activa", "architecture": "Maestro - charred wood + volcanic stone"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.801724, -40.722112], [-73.794621, -40.722038], [-73.794573, -40.72474], [-73.801676, -40.724814], [-73.801724, -40.722112]]]}}, {"type": "Feature", "properties": {"id": "ML-RESEARCH", "line": "macro", "name": "Centro Investigaci\u00f3n", "category": "research", "area_ha": 15, "ocean_exposure": "Mixta", "privacy": "Comunitaria curada", "conservation": "80% reserva activa", "architecture": "Maestro - charred wood + volcanic stone"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.79467, -40.719336], [-73.787568, -40.719261], [-73.787469, -40.724665], [-73.794573, -40.72474], [-73.79467, -40.719336]]]}}, {"type": "Feature", "properties": {"id": "RESERVA-NUCLEO", "line": "conservation", "name": "Reserva N\u00facleo Huellelhue", "category": "conservation_core", "area_ha": 250, "ocean_exposure": "N/A", "privacy": "Santuario protegido", "conservation": "100% intocado - corredor biodiverso", "architecture": "Sin construcci\u00f3n - solo senderos y observatorios"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.804517, -40.724843], [-73.787469, -40.724665], [-73.787796, -40.706652], [-73.805574, -40.706837], [-73.804517, -40.724843]]]}}], "perimeter": {"type": "Feature", "properties": {"id": "LOTE-B-PERIMETER"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.81825, -40.724985], [-73.818227, -40.724036], [-73.818159, -40.723087], [-73.818014, -40.722137], [-73.817793, -40.721187], [-73.817526, -40.720236], [-73.81727, -40.719285], [-73.817092, -40.718335], [-73.817053, -40.717386], [-73.817194, -40.716439], [-73.817514, -40.715494], [-73.817979, -40.714551], [-73.818518, -40.713608], [-73.819046, -40.712665], [-73.81948, -40.711722], [-73.819757, -40.710776], [-73.819851, -40.709829], [-73.819773, -40.70888], [-73.819569, -40.707929], [-73.819303, -40.706978], [-73.787796, -40.706652], [-73.787469, -40.724665], [-73.81825, -40.724985]]]}}, "center": [-73.803021, -40.715819], "bbox": [-73.820586, -40.72681, -73.785462, -40.704826], "stats": {"line1": 32, "line2": 56, "line3": 90, "macro": 5, "total_lots": 183}} as const;
-export type LotFeature = (typeof HUELLELHUE_DATA)['lots'][number];
+export const HUELLELHUE_DATA = {
+  "center": [
+    -73.8108,
+    -40.7227
+  ],
+  "perimeter": {
+    "type": "Feature",
+    "properties": {
+      "name": "Lote B · Fundo Hueyelhue",
+      "area_ha": 520
+    },
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -73.8175,
+            -40.7158
+          ],
+          [
+            -73.8138,
+            -40.7155
+          ],
+          [
+            -73.8095,
+            -40.7162
+          ],
+          [
+            -73.8048,
+            -40.7178
+          ],
+          [
+            -73.8025,
+            -40.7205
+          ],
+          [
+            -73.802,
+            -40.7242
+          ],
+          [
+            -73.8045,
+            -40.7278
+          ],
+          [
+            -73.8092,
+            -40.7298
+          ],
+          [
+            -73.8138,
+            -40.7295
+          ],
+          [
+            -73.8172,
+            -40.7268
+          ],
+          [
+            -73.8188,
+            -40.7228
+          ],
+          [
+            -73.819,
+            -40.7195
+          ],
+          [
+            -73.8182,
+            -40.7172
+          ],
+          [
+            -73.8175,
+            -40.7158
+          ]
+        ]
+      ]
+    }
+  },
+  "lots": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-01",
+        "line": 1,
+        "name": "Ocean Front 01",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81858804728346,
+              -40.72401024063687
+            ],
+            [
+              -73.81718926505573,
+              -40.72401024063687
+            ],
+            [
+              -73.81718926505573,
+              -40.72328652071648
+            ],
+            [
+              -73.81858804728346,
+              -40.72328652071648
+            ],
+            [
+              -73.81858804728346,
+              -40.72401024063687
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-02",
+        "line": 1,
+        "name": "Ocean Front 02",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81858804728346,
+              -40.72328652071648
+            ],
+            [
+              -73.81718926505573,
+              -40.72328652071648
+            ],
+            [
+              -73.81718926505573,
+              -40.72256280079609
+            ],
+            [
+              -73.81858804728346,
+              -40.72256280079609
+            ],
+            [
+              -73.81858804728346,
+              -40.72328652071648
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-03",
+        "line": 1,
+        "name": "Ocean Front 03",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81858804728346,
+              -40.72256280079609
+            ],
+            [
+              -73.81718926505573,
+              -40.72256280079609
+            ],
+            [
+              -73.81718926505573,
+              -40.7218390808757
+            ],
+            [
+              -73.81858804728346,
+              -40.7218390808757
+            ],
+            [
+              -73.81858804728346,
+              -40.72256280079609
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-04",
+        "line": 1,
+        "name": "Ocean Front 04",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81858804728346,
+              -40.7218390808757
+            ],
+            [
+              -73.81718926505573,
+              -40.7218390808757
+            ],
+            [
+              -73.81718926505573,
+              -40.72111536095531
+            ],
+            [
+              -73.81858804728346,
+              -40.72111536095531
+            ],
+            [
+              -73.81858804728346,
+              -40.7218390808757
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-05",
+        "line": 1,
+        "name": "Ocean Front 05",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81858804728346,
+              -40.72111536095531
+            ],
+            [
+              -73.81718926505573,
+              -40.72111536095531
+            ],
+            [
+              -73.81718926505573,
+              -40.720391641034915
+            ],
+            [
+              -73.81858804728346,
+              -40.720391641034915
+            ],
+            [
+              -73.81858804728346,
+              -40.72111536095531
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-06",
+        "line": 1,
+        "name": "Ocean Front 06",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81858804728346,
+              -40.720391641034915
+            ],
+            [
+              -73.81718926505573,
+              -40.720391641034915
+            ],
+            [
+              -73.81718926505573,
+              -40.71966792111453
+            ],
+            [
+              -73.81858804728346,
+              -40.71966792111453
+            ],
+            [
+              -73.81858804728346,
+              -40.720391641034915
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-07",
+        "line": 1,
+        "name": "Ocean Front 07",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81858804728346,
+              -40.71966792111453
+            ],
+            [
+              -73.81718926505573,
+              -40.71966792111453
+            ],
+            [
+              -73.81718926505573,
+              -40.718944201194134
+            ],
+            [
+              -73.81858804728346,
+              -40.718944201194134
+            ],
+            [
+              -73.81858804728346,
+              -40.71966792111453
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-08",
+        "line": 1,
+        "name": "Ocean Front 08",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81858804728346,
+              -40.718944201194134
+            ],
+            [
+              -73.81718926505573,
+              -40.718944201194134
+            ],
+            [
+              -73.81718926505573,
+              -40.71822048127375
+            ],
+            [
+              -73.81858804728346,
+              -40.71822048127375
+            ],
+            [
+              -73.81858804728346,
+              -40.718944201194134
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-09",
+        "line": 1,
+        "name": "Ocean Front 09",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.72762884023882
+            ],
+            [
+              -73.81567195271654,
+              -40.72762884023882
+            ],
+            [
+              -73.81567195271654,
+              -40.726905120318435
+            ],
+            [
+              -73.81707073494428,
+              -40.726905120318435
+            ],
+            [
+              -73.81707073494428,
+              -40.72762884023882
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-10",
+        "line": 1,
+        "name": "Ocean Front 10",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.726905120318435
+            ],
+            [
+              -73.81567195271654,
+              -40.726905120318435
+            ],
+            [
+              -73.81567195271654,
+              -40.72618140039804
+            ],
+            [
+              -73.81707073494428,
+              -40.72618140039804
+            ],
+            [
+              -73.81707073494428,
+              -40.726905120318435
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-11",
+        "line": 1,
+        "name": "Ocean Front 11",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.72618140039804
+            ],
+            [
+              -73.81567195271654,
+              -40.72618140039804
+            ],
+            [
+              -73.81567195271654,
+              -40.72545768047765
+            ],
+            [
+              -73.81707073494428,
+              -40.72545768047765
+            ],
+            [
+              -73.81707073494428,
+              -40.72618140039804
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-12",
+        "line": 1,
+        "name": "Ocean Front 12",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.72545768047765
+            ],
+            [
+              -73.81567195271654,
+              -40.72545768047765
+            ],
+            [
+              -73.81567195271654,
+              -40.72473396055726
+            ],
+            [
+              -73.81707073494428,
+              -40.72473396055726
+            ],
+            [
+              -73.81707073494428,
+              -40.72545768047765
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-13",
+        "line": 1,
+        "name": "Ocean Front 13",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.72473396055726
+            ],
+            [
+              -73.81567195271654,
+              -40.72473396055726
+            ],
+            [
+              -73.81567195271654,
+              -40.72401024063687
+            ],
+            [
+              -73.81707073494428,
+              -40.72401024063687
+            ],
+            [
+              -73.81707073494428,
+              -40.72473396055726
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-14",
+        "line": 1,
+        "name": "Ocean Front 14",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.72401024063687
+            ],
+            [
+              -73.81567195271654,
+              -40.72401024063687
+            ],
+            [
+              -73.81567195271654,
+              -40.72328652071648
+            ],
+            [
+              -73.81707073494428,
+              -40.72328652071648
+            ],
+            [
+              -73.81707073494428,
+              -40.72401024063687
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-15",
+        "line": 1,
+        "name": "Ocean Front 15",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.72328652071648
+            ],
+            [
+              -73.81567195271654,
+              -40.72328652071648
+            ],
+            [
+              -73.81567195271654,
+              -40.72256280079609
+            ],
+            [
+              -73.81707073494428,
+              -40.72256280079609
+            ],
+            [
+              -73.81707073494428,
+              -40.72328652071648
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-16",
+        "line": 1,
+        "name": "Ocean Front 16",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.72256280079609
+            ],
+            [
+              -73.81567195271654,
+              -40.72256280079609
+            ],
+            [
+              -73.81567195271654,
+              -40.7218390808757
+            ],
+            [
+              -73.81707073494428,
+              -40.7218390808757
+            ],
+            [
+              -73.81707073494428,
+              -40.72256280079609
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-17",
+        "line": 1,
+        "name": "Ocean Front 17",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.7218390808757
+            ],
+            [
+              -73.81567195271654,
+              -40.7218390808757
+            ],
+            [
+              -73.81567195271654,
+              -40.72111536095531
+            ],
+            [
+              -73.81707073494428,
+              -40.72111536095531
+            ],
+            [
+              -73.81707073494428,
+              -40.7218390808757
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-18",
+        "line": 1,
+        "name": "Ocean Front 18",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.72111536095531
+            ],
+            [
+              -73.81567195271654,
+              -40.72111536095531
+            ],
+            [
+              -73.81567195271654,
+              -40.720391641034915
+            ],
+            [
+              -73.81707073494428,
+              -40.720391641034915
+            ],
+            [
+              -73.81707073494428,
+              -40.72111536095531
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-19",
+        "line": 1,
+        "name": "Ocean Front 19",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.720391641034915
+            ],
+            [
+              -73.81567195271654,
+              -40.720391641034915
+            ],
+            [
+              -73.81567195271654,
+              -40.71966792111453
+            ],
+            [
+              -73.81707073494428,
+              -40.71966792111453
+            ],
+            [
+              -73.81707073494428,
+              -40.720391641034915
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-20",
+        "line": 1,
+        "name": "Ocean Front 20",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.71966792111453
+            ],
+            [
+              -73.81567195271654,
+              -40.71966792111453
+            ],
+            [
+              -73.81567195271654,
+              -40.718944201194134
+            ],
+            [
+              -73.81707073494428,
+              -40.718944201194134
+            ],
+            [
+              -73.81707073494428,
+              -40.71966792111453
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-21",
+        "line": 1,
+        "name": "Ocean Front 21",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.718944201194134
+            ],
+            [
+              -73.81567195271654,
+              -40.718944201194134
+            ],
+            [
+              -73.81567195271654,
+              -40.71822048127375
+            ],
+            [
+              -73.81707073494428,
+              -40.71822048127375
+            ],
+            [
+              -73.81707073494428,
+              -40.718944201194134
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-22",
+        "line": 1,
+        "name": "Ocean Front 22",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.71822048127375
+            ],
+            [
+              -73.81567195271654,
+              -40.71822048127375
+            ],
+            [
+              -73.81567195271654,
+              -40.71749676135335
+            ],
+            [
+              -73.81707073494428,
+              -40.71749676135335
+            ],
+            [
+              -73.81707073494428,
+              -40.71822048127375
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-23",
+        "line": 1,
+        "name": "Ocean Front 23",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.71749676135335
+            ],
+            [
+              -73.81567195271654,
+              -40.71749676135335
+            ],
+            [
+              -73.81567195271654,
+              -40.716773041432965
+            ],
+            [
+              -73.81707073494428,
+              -40.716773041432965
+            ],
+            [
+              -73.81707073494428,
+              -40.71749676135335
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L1-24",
+        "line": 1,
+        "name": "Ocean Front 24",
+        "category": "ocean_front",
+        "area_ha": 0.94,
+        "ocean_exposure": "Directa · 100%",
+        "privacy": "Máxima",
+        "conservation": "75% nativo intocado",
+        "architecture": "Cabaña costera oculta · Japandi coastal"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81707073494428,
+              -40.716773041432965
+            ],
+            [
+              -73.81567195271654,
+              -40.716773041432965
+            ],
+            [
+              -73.81567195271654,
+              -40.71604932151257
+            ],
+            [
+              -73.81707073494428,
+              -40.71604932151257
+            ],
+            [
+              -73.81707073494428,
+              -40.716773041432965
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-01",
+        "line": 2,
+        "name": "Forest Ocean 01",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.729067009827105
+            ],
+            [
+              -73.81251426505573,
+              -40.729067009827105
+            ],
+            [
+              -73.81251426505573,
+              -40.72833401965422
+            ],
+            [
+              -73.8141149101752,
+              -40.72833401965422
+            ],
+            [
+              -73.8141149101752,
+              -40.729067009827105
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-02",
+        "line": 2,
+        "name": "Forest Ocean 02",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.72833401965422
+            ],
+            [
+              -73.81251426505573,
+              -40.72833401965422
+            ],
+            [
+              -73.81251426505573,
+              -40.72760102948133
+            ],
+            [
+              -73.8141149101752,
+              -40.72760102948133
+            ],
+            [
+              -73.8141149101752,
+              -40.72833401965422
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-03",
+        "line": 2,
+        "name": "Forest Ocean 03",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.72760102948133
+            ],
+            [
+              -73.81251426505573,
+              -40.72760102948133
+            ],
+            [
+              -73.81251426505573,
+              -40.726868039308435
+            ],
+            [
+              -73.8141149101752,
+              -40.726868039308435
+            ],
+            [
+              -73.8141149101752,
+              -40.72760102948133
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-04",
+        "line": 2,
+        "name": "Forest Ocean 04",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.726868039308435
+            ],
+            [
+              -73.81251426505573,
+              -40.726868039308435
+            ],
+            [
+              -73.81251426505573,
+              -40.72613504913555
+            ],
+            [
+              -73.8141149101752,
+              -40.72613504913555
+            ],
+            [
+              -73.8141149101752,
+              -40.726868039308435
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-05",
+        "line": 2,
+        "name": "Forest Ocean 05",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.72613504913555
+            ],
+            [
+              -73.81251426505573,
+              -40.72613504913555
+            ],
+            [
+              -73.81251426505573,
+              -40.72540205896266
+            ],
+            [
+              -73.8141149101752,
+              -40.72540205896266
+            ],
+            [
+              -73.8141149101752,
+              -40.72613504913555
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-06",
+        "line": 2,
+        "name": "Forest Ocean 06",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.72540205896266
+            ],
+            [
+              -73.81251426505573,
+              -40.72540205896266
+            ],
+            [
+              -73.81251426505573,
+              -40.724669068789765
+            ],
+            [
+              -73.8141149101752,
+              -40.724669068789765
+            ],
+            [
+              -73.8141149101752,
+              -40.72540205896266
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-07",
+        "line": 2,
+        "name": "Forest Ocean 07",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.724669068789765
+            ],
+            [
+              -73.81251426505573,
+              -40.724669068789765
+            ],
+            [
+              -73.81251426505573,
+              -40.72393607861688
+            ],
+            [
+              -73.8141149101752,
+              -40.72393607861688
+            ],
+            [
+              -73.8141149101752,
+              -40.724669068789765
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-08",
+        "line": 2,
+        "name": "Forest Ocean 08",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.72393607861688
+            ],
+            [
+              -73.81251426505573,
+              -40.72393607861688
+            ],
+            [
+              -73.81251426505573,
+              -40.72320308844399
+            ],
+            [
+              -73.8141149101752,
+              -40.72320308844399
+            ],
+            [
+              -73.8141149101752,
+              -40.72393607861688
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-09",
+        "line": 2,
+        "name": "Forest Ocean 09",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.72320308844399
+            ],
+            [
+              -73.81251426505573,
+              -40.72320308844399
+            ],
+            [
+              -73.81251426505573,
+              -40.722470098271096
+            ],
+            [
+              -73.8141149101752,
+              -40.722470098271096
+            ],
+            [
+              -73.8141149101752,
+              -40.72320308844399
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-10",
+        "line": 2,
+        "name": "Forest Ocean 10",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.722470098271096
+            ],
+            [
+              -73.81251426505573,
+              -40.722470098271096
+            ],
+            [
+              -73.81251426505573,
+              -40.72173710809821
+            ],
+            [
+              -73.8141149101752,
+              -40.72173710809821
+            ],
+            [
+              -73.8141149101752,
+              -40.722470098271096
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-11",
+        "line": 2,
+        "name": "Forest Ocean 11",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.72173710809821
+            ],
+            [
+              -73.81251426505573,
+              -40.72173710809821
+            ],
+            [
+              -73.81251426505573,
+              -40.72100411792532
+            ],
+            [
+              -73.8141149101752,
+              -40.72100411792532
+            ],
+            [
+              -73.8141149101752,
+              -40.72173710809821
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-12",
+        "line": 2,
+        "name": "Forest Ocean 12",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.72100411792532
+            ],
+            [
+              -73.81251426505573,
+              -40.72100411792532
+            ],
+            [
+              -73.81251426505573,
+              -40.72027112775243
+            ],
+            [
+              -73.8141149101752,
+              -40.72027112775243
+            ],
+            [
+              -73.8141149101752,
+              -40.72100411792532
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-13",
+        "line": 2,
+        "name": "Forest Ocean 13",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.72027112775243
+            ],
+            [
+              -73.81251426505573,
+              -40.72027112775243
+            ],
+            [
+              -73.81251426505573,
+              -40.71953813757954
+            ],
+            [
+              -73.8141149101752,
+              -40.71953813757954
+            ],
+            [
+              -73.8141149101752,
+              -40.72027112775243
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-14",
+        "line": 2,
+        "name": "Forest Ocean 14",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.71953813757954
+            ],
+            [
+              -73.81251426505573,
+              -40.71953813757954
+            ],
+            [
+              -73.81251426505573,
+              -40.71880514740665
+            ],
+            [
+              -73.8141149101752,
+              -40.71880514740665
+            ],
+            [
+              -73.8141149101752,
+              -40.71953813757954
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-15",
+        "line": 2,
+        "name": "Forest Ocean 15",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.71880514740665
+            ],
+            [
+              -73.81251426505573,
+              -40.71880514740665
+            ],
+            [
+              -73.81251426505573,
+              -40.71807215723376
+            ],
+            [
+              -73.8141149101752,
+              -40.71807215723376
+            ],
+            [
+              -73.8141149101752,
+              -40.71880514740665
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-16",
+        "line": 2,
+        "name": "Forest Ocean 16",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.71807215723376
+            ],
+            [
+              -73.81251426505573,
+              -40.71807215723376
+            ],
+            [
+              -73.81251426505573,
+              -40.71733916706087
+            ],
+            [
+              -73.8141149101752,
+              -40.71733916706087
+            ],
+            [
+              -73.8141149101752,
+              -40.71807215723376
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-17",
+        "line": 2,
+        "name": "Forest Ocean 17",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.71733916706087
+            ],
+            [
+              -73.81251426505573,
+              -40.71733916706087
+            ],
+            [
+              -73.81251426505573,
+              -40.71660617688798
+            ],
+            [
+              -73.8141149101752,
+              -40.71660617688798
+            ],
+            [
+              -73.8141149101752,
+              -40.71733916706087
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-18",
+        "line": 2,
+        "name": "Forest Ocean 18",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8141149101752,
+              -40.71660617688798
+            ],
+            [
+              -73.81251426505573,
+              -40.71660617688798
+            ],
+            [
+              -73.81251426505573,
+              -40.71587318671509
+            ],
+            [
+              -73.8141149101752,
+              -40.71587318671509
+            ],
+            [
+              -73.8141149101752,
+              -40.71660617688798
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-19",
+        "line": 2,
+        "name": "Forest Ocean 19",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.729067009827105
+            ],
+            [
+              -73.81079508982481,
+              -40.729067009827105
+            ],
+            [
+              -73.81079508982481,
+              -40.72833401965422
+            ],
+            [
+              -73.81239573494427,
+              -40.72833401965422
+            ],
+            [
+              -73.81239573494427,
+              -40.729067009827105
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-20",
+        "line": 2,
+        "name": "Forest Ocean 20",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.72833401965422
+            ],
+            [
+              -73.81079508982481,
+              -40.72833401965422
+            ],
+            [
+              -73.81079508982481,
+              -40.72760102948133
+            ],
+            [
+              -73.81239573494427,
+              -40.72760102948133
+            ],
+            [
+              -73.81239573494427,
+              -40.72833401965422
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-21",
+        "line": 2,
+        "name": "Forest Ocean 21",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.72760102948133
+            ],
+            [
+              -73.81079508982481,
+              -40.72760102948133
+            ],
+            [
+              -73.81079508982481,
+              -40.726868039308435
+            ],
+            [
+              -73.81239573494427,
+              -40.726868039308435
+            ],
+            [
+              -73.81239573494427,
+              -40.72760102948133
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-22",
+        "line": 2,
+        "name": "Forest Ocean 22",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.726868039308435
+            ],
+            [
+              -73.81079508982481,
+              -40.726868039308435
+            ],
+            [
+              -73.81079508982481,
+              -40.72613504913555
+            ],
+            [
+              -73.81239573494427,
+              -40.72613504913555
+            ],
+            [
+              -73.81239573494427,
+              -40.726868039308435
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-23",
+        "line": 2,
+        "name": "Forest Ocean 23",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.72613504913555
+            ],
+            [
+              -73.81079508982481,
+              -40.72613504913555
+            ],
+            [
+              -73.81079508982481,
+              -40.72540205896266
+            ],
+            [
+              -73.81239573494427,
+              -40.72540205896266
+            ],
+            [
+              -73.81239573494427,
+              -40.72613504913555
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-24",
+        "line": 2,
+        "name": "Forest Ocean 24",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.72540205896266
+            ],
+            [
+              -73.81079508982481,
+              -40.72540205896266
+            ],
+            [
+              -73.81079508982481,
+              -40.724669068789765
+            ],
+            [
+              -73.81239573494427,
+              -40.724669068789765
+            ],
+            [
+              -73.81239573494427,
+              -40.72540205896266
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-25",
+        "line": 2,
+        "name": "Forest Ocean 25",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.724669068789765
+            ],
+            [
+              -73.81079508982481,
+              -40.724669068789765
+            ],
+            [
+              -73.81079508982481,
+              -40.72393607861688
+            ],
+            [
+              -73.81239573494427,
+              -40.72393607861688
+            ],
+            [
+              -73.81239573494427,
+              -40.724669068789765
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-26",
+        "line": 2,
+        "name": "Forest Ocean 26",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.72393607861688
+            ],
+            [
+              -73.81079508982481,
+              -40.72393607861688
+            ],
+            [
+              -73.81079508982481,
+              -40.72320308844399
+            ],
+            [
+              -73.81239573494427,
+              -40.72320308844399
+            ],
+            [
+              -73.81239573494427,
+              -40.72393607861688
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-27",
+        "line": 2,
+        "name": "Forest Ocean 27",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.72320308844399
+            ],
+            [
+              -73.81079508982481,
+              -40.72320308844399
+            ],
+            [
+              -73.81079508982481,
+              -40.722470098271096
+            ],
+            [
+              -73.81239573494427,
+              -40.722470098271096
+            ],
+            [
+              -73.81239573494427,
+              -40.72320308844399
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-28",
+        "line": 2,
+        "name": "Forest Ocean 28",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.722470098271096
+            ],
+            [
+              -73.81079508982481,
+              -40.722470098271096
+            ],
+            [
+              -73.81079508982481,
+              -40.72173710809821
+            ],
+            [
+              -73.81239573494427,
+              -40.72173710809821
+            ],
+            [
+              -73.81239573494427,
+              -40.722470098271096
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-29",
+        "line": 2,
+        "name": "Forest Ocean 29",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.72173710809821
+            ],
+            [
+              -73.81079508982481,
+              -40.72173710809821
+            ],
+            [
+              -73.81079508982481,
+              -40.72100411792532
+            ],
+            [
+              -73.81239573494427,
+              -40.72100411792532
+            ],
+            [
+              -73.81239573494427,
+              -40.72173710809821
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-30",
+        "line": 2,
+        "name": "Forest Ocean 30",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.72100411792532
+            ],
+            [
+              -73.81079508982481,
+              -40.72100411792532
+            ],
+            [
+              -73.81079508982481,
+              -40.72027112775243
+            ],
+            [
+              -73.81239573494427,
+              -40.72027112775243
+            ],
+            [
+              -73.81239573494427,
+              -40.72100411792532
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-31",
+        "line": 2,
+        "name": "Forest Ocean 31",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.72027112775243
+            ],
+            [
+              -73.81079508982481,
+              -40.72027112775243
+            ],
+            [
+              -73.81079508982481,
+              -40.71953813757954
+            ],
+            [
+              -73.81239573494427,
+              -40.71953813757954
+            ],
+            [
+              -73.81239573494427,
+              -40.72027112775243
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-32",
+        "line": 2,
+        "name": "Forest Ocean 32",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.71953813757954
+            ],
+            [
+              -73.81079508982481,
+              -40.71953813757954
+            ],
+            [
+              -73.81079508982481,
+              -40.71880514740665
+            ],
+            [
+              -73.81239573494427,
+              -40.71880514740665
+            ],
+            [
+              -73.81239573494427,
+              -40.71953813757954
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-33",
+        "line": 2,
+        "name": "Forest Ocean 33",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.71880514740665
+            ],
+            [
+              -73.81079508982481,
+              -40.71880514740665
+            ],
+            [
+              -73.81079508982481,
+              -40.71807215723376
+            ],
+            [
+              -73.81239573494427,
+              -40.71807215723376
+            ],
+            [
+              -73.81239573494427,
+              -40.71880514740665
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-34",
+        "line": 2,
+        "name": "Forest Ocean 34",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.71807215723376
+            ],
+            [
+              -73.81079508982481,
+              -40.71807215723376
+            ],
+            [
+              -73.81079508982481,
+              -40.71733916706087
+            ],
+            [
+              -73.81239573494427,
+              -40.71733916706087
+            ],
+            [
+              -73.81239573494427,
+              -40.71807215723376
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-35",
+        "line": 2,
+        "name": "Forest Ocean 35",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.71733916706087
+            ],
+            [
+              -73.81079508982481,
+              -40.71733916706087
+            ],
+            [
+              -73.81079508982481,
+              -40.71660617688798
+            ],
+            [
+              -73.81239573494427,
+              -40.71660617688798
+            ],
+            [
+              -73.81239573494427,
+              -40.71733916706087
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L2-36",
+        "line": 2,
+        "name": "Forest Ocean 36",
+        "category": "forest_ocean",
+        "area_ha": 1.09,
+        "ocean_exposure": "Vista filtrada",
+        "privacy": "Alta",
+        "conservation": "70% nativo",
+        "architecture": "Refugio elevado · madera nativa"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81239573494427,
+              -40.71660617688798
+            ],
+            [
+              -73.81079508982481,
+              -40.71660617688798
+            ],
+            [
+              -73.81079508982481,
+              -40.71587318671509
+            ],
+            [
+              -73.81239573494427,
+              -40.71587318671509
+            ],
+            [
+              -73.81239573494427,
+              -40.71660617688798
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-01",
+        "line": 3,
+        "name": "Bosque Vivo 01",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.72921919325133
+            ],
+            [
+              -73.80715258422562,
+              -40.72921919325133
+            ],
+            [
+              -73.80715258422562,
+              -40.72863838650266
+            ],
+            [
+              -73.8084209033955,
+              -40.72863838650266
+            ],
+            [
+              -73.8084209033955,
+              -40.72921919325133
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-02",
+        "line": 3,
+        "name": "Bosque Vivo 02",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.72863838650266
+            ],
+            [
+              -73.80588426505572,
+              -40.72863838650266
+            ],
+            [
+              -73.80588426505572,
+              -40.728057579753994
+            ],
+            [
+              -73.80715258422562,
+              -40.728057579753994
+            ],
+            [
+              -73.80715258422562,
+              -40.72863838650266
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-03",
+        "line": 3,
+        "name": "Bosque Vivo 03",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.72863838650266
+            ],
+            [
+              -73.80715258422562,
+              -40.72863838650266
+            ],
+            [
+              -73.80715258422562,
+              -40.728057579753994
+            ],
+            [
+              -73.8084209033955,
+              -40.728057579753994
+            ],
+            [
+              -73.8084209033955,
+              -40.72863838650266
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-04",
+        "line": 3,
+        "name": "Bosque Vivo 04",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.728057579753994
+            ],
+            [
+              -73.80588426505572,
+              -40.728057579753994
+            ],
+            [
+              -73.80588426505572,
+              -40.72747677300532
+            ],
+            [
+              -73.80715258422562,
+              -40.72747677300532
+            ],
+            [
+              -73.80715258422562,
+              -40.728057579753994
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-05",
+        "line": 3,
+        "name": "Bosque Vivo 05",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.728057579753994
+            ],
+            [
+              -73.80715258422562,
+              -40.728057579753994
+            ],
+            [
+              -73.80715258422562,
+              -40.72747677300532
+            ],
+            [
+              -73.8084209033955,
+              -40.72747677300532
+            ],
+            [
+              -73.8084209033955,
+              -40.728057579753994
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-06",
+        "line": 3,
+        "name": "Bosque Vivo 06",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.72747677300532
+            ],
+            [
+              -73.80588426505572,
+              -40.72747677300532
+            ],
+            [
+              -73.80588426505572,
+              -40.726895966256656
+            ],
+            [
+              -73.80715258422562,
+              -40.726895966256656
+            ],
+            [
+              -73.80715258422562,
+              -40.72747677300532
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-07",
+        "line": 3,
+        "name": "Bosque Vivo 07",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.72747677300532
+            ],
+            [
+              -73.80715258422562,
+              -40.72747677300532
+            ],
+            [
+              -73.80715258422562,
+              -40.726895966256656
+            ],
+            [
+              -73.8084209033955,
+              -40.726895966256656
+            ],
+            [
+              -73.8084209033955,
+              -40.72747677300532
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-08",
+        "line": 3,
+        "name": "Bosque Vivo 08",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.726895966256656
+            ],
+            [
+              -73.80588426505572,
+              -40.726895966256656
+            ],
+            [
+              -73.80588426505572,
+              -40.72631515950798
+            ],
+            [
+              -73.80715258422562,
+              -40.72631515950798
+            ],
+            [
+              -73.80715258422562,
+              -40.726895966256656
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-09",
+        "line": 3,
+        "name": "Bosque Vivo 09",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.726895966256656
+            ],
+            [
+              -73.80715258422562,
+              -40.726895966256656
+            ],
+            [
+              -73.80715258422562,
+              -40.72631515950798
+            ],
+            [
+              -73.8084209033955,
+              -40.72631515950798
+            ],
+            [
+              -73.8084209033955,
+              -40.726895966256656
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-10",
+        "line": 3,
+        "name": "Bosque Vivo 10",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.72631515950798
+            ],
+            [
+              -73.80588426505572,
+              -40.72631515950798
+            ],
+            [
+              -73.80588426505572,
+              -40.72573435275932
+            ],
+            [
+              -73.80715258422562,
+              -40.72573435275932
+            ],
+            [
+              -73.80715258422562,
+              -40.72631515950798
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-11",
+        "line": 3,
+        "name": "Bosque Vivo 11",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.72631515950798
+            ],
+            [
+              -73.80715258422562,
+              -40.72631515950798
+            ],
+            [
+              -73.80715258422562,
+              -40.72573435275932
+            ],
+            [
+              -73.8084209033955,
+              -40.72573435275932
+            ],
+            [
+              -73.8084209033955,
+              -40.72631515950798
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-12",
+        "line": 3,
+        "name": "Bosque Vivo 12",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.72573435275932
+            ],
+            [
+              -73.80588426505572,
+              -40.72573435275932
+            ],
+            [
+              -73.80588426505572,
+              -40.72515354601065
+            ],
+            [
+              -73.80715258422562,
+              -40.72515354601065
+            ],
+            [
+              -73.80715258422562,
+              -40.72573435275932
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-13",
+        "line": 3,
+        "name": "Bosque Vivo 13",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.72573435275932
+            ],
+            [
+              -73.80715258422562,
+              -40.72573435275932
+            ],
+            [
+              -73.80715258422562,
+              -40.72515354601065
+            ],
+            [
+              -73.8084209033955,
+              -40.72515354601065
+            ],
+            [
+              -73.8084209033955,
+              -40.72573435275932
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-14",
+        "line": 3,
+        "name": "Bosque Vivo 14",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.72515354601065
+            ],
+            [
+              -73.80588426505572,
+              -40.72515354601065
+            ],
+            [
+              -73.80588426505572,
+              -40.72457273926198
+            ],
+            [
+              -73.80715258422562,
+              -40.72457273926198
+            ],
+            [
+              -73.80715258422562,
+              -40.72515354601065
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-15",
+        "line": 3,
+        "name": "Bosque Vivo 15",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.72515354601065
+            ],
+            [
+              -73.80715258422562,
+              -40.72515354601065
+            ],
+            [
+              -73.80715258422562,
+              -40.72457273926198
+            ],
+            [
+              -73.8084209033955,
+              -40.72457273926198
+            ],
+            [
+              -73.8084209033955,
+              -40.72515354601065
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-16",
+        "line": 3,
+        "name": "Bosque Vivo 16",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.72457273926198
+            ],
+            [
+              -73.80588426505572,
+              -40.72457273926198
+            ],
+            [
+              -73.80588426505572,
+              -40.723991932513314
+            ],
+            [
+              -73.80715258422562,
+              -40.723991932513314
+            ],
+            [
+              -73.80715258422562,
+              -40.72457273926198
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-17",
+        "line": 3,
+        "name": "Bosque Vivo 17",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.72457273926198
+            ],
+            [
+              -73.80715258422562,
+              -40.72457273926198
+            ],
+            [
+              -73.80715258422562,
+              -40.723991932513314
+            ],
+            [
+              -73.8084209033955,
+              -40.723991932513314
+            ],
+            [
+              -73.8084209033955,
+              -40.72457273926198
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-18",
+        "line": 3,
+        "name": "Bosque Vivo 18",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.723991932513314
+            ],
+            [
+              -73.80588426505572,
+              -40.723991932513314
+            ],
+            [
+              -73.80588426505572,
+              -40.72341112576464
+            ],
+            [
+              -73.80715258422562,
+              -40.72341112576464
+            ],
+            [
+              -73.80715258422562,
+              -40.723991932513314
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-19",
+        "line": 3,
+        "name": "Bosque Vivo 19",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.723991932513314
+            ],
+            [
+              -73.80715258422562,
+              -40.723991932513314
+            ],
+            [
+              -73.80715258422562,
+              -40.72341112576464
+            ],
+            [
+              -73.8084209033955,
+              -40.72341112576464
+            ],
+            [
+              -73.8084209033955,
+              -40.723991932513314
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-20",
+        "line": 3,
+        "name": "Bosque Vivo 20",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.72341112576464
+            ],
+            [
+              -73.80588426505572,
+              -40.72341112576464
+            ],
+            [
+              -73.80588426505572,
+              -40.722830319015976
+            ],
+            [
+              -73.80715258422562,
+              -40.722830319015976
+            ],
+            [
+              -73.80715258422562,
+              -40.72341112576464
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-21",
+        "line": 3,
+        "name": "Bosque Vivo 21",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.72341112576464
+            ],
+            [
+              -73.80715258422562,
+              -40.72341112576464
+            ],
+            [
+              -73.80715258422562,
+              -40.722830319015976
+            ],
+            [
+              -73.8084209033955,
+              -40.722830319015976
+            ],
+            [
+              -73.8084209033955,
+              -40.72341112576464
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-22",
+        "line": 3,
+        "name": "Bosque Vivo 22",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.722830319015976
+            ],
+            [
+              -73.80588426505572,
+              -40.722830319015976
+            ],
+            [
+              -73.80588426505572,
+              -40.72224951226731
+            ],
+            [
+              -73.80715258422562,
+              -40.72224951226731
+            ],
+            [
+              -73.80715258422562,
+              -40.722830319015976
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-23",
+        "line": 3,
+        "name": "Bosque Vivo 23",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.722830319015976
+            ],
+            [
+              -73.80715258422562,
+              -40.722830319015976
+            ],
+            [
+              -73.80715258422562,
+              -40.72224951226731
+            ],
+            [
+              -73.8084209033955,
+              -40.72224951226731
+            ],
+            [
+              -73.8084209033955,
+              -40.722830319015976
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-24",
+        "line": 3,
+        "name": "Bosque Vivo 24",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.72224951226731
+            ],
+            [
+              -73.80588426505572,
+              -40.72224951226731
+            ],
+            [
+              -73.80588426505572,
+              -40.72166870551864
+            ],
+            [
+              -73.80715258422562,
+              -40.72166870551864
+            ],
+            [
+              -73.80715258422562,
+              -40.72224951226731
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-25",
+        "line": 3,
+        "name": "Bosque Vivo 25",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.72224951226731
+            ],
+            [
+              -73.80715258422562,
+              -40.72224951226731
+            ],
+            [
+              -73.80715258422562,
+              -40.72166870551864
+            ],
+            [
+              -73.8084209033955,
+              -40.72166870551864
+            ],
+            [
+              -73.8084209033955,
+              -40.72224951226731
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-26",
+        "line": 3,
+        "name": "Bosque Vivo 26",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.72166870551864
+            ],
+            [
+              -73.80588426505572,
+              -40.72166870551864
+            ],
+            [
+              -73.80588426505572,
+              -40.72108789876997
+            ],
+            [
+              -73.80715258422562,
+              -40.72108789876997
+            ],
+            [
+              -73.80715258422562,
+              -40.72166870551864
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-27",
+        "line": 3,
+        "name": "Bosque Vivo 27",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.72166870551864
+            ],
+            [
+              -73.80715258422562,
+              -40.72166870551864
+            ],
+            [
+              -73.80715258422562,
+              -40.72108789876997
+            ],
+            [
+              -73.8084209033955,
+              -40.72108789876997
+            ],
+            [
+              -73.8084209033955,
+              -40.72166870551864
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-28",
+        "line": 3,
+        "name": "Bosque Vivo 28",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.72108789876997
+            ],
+            [
+              -73.80588426505572,
+              -40.72108789876997
+            ],
+            [
+              -73.80588426505572,
+              -40.7205070920213
+            ],
+            [
+              -73.80715258422562,
+              -40.7205070920213
+            ],
+            [
+              -73.80715258422562,
+              -40.72108789876997
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-29",
+        "line": 3,
+        "name": "Bosque Vivo 29",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.72108789876997
+            ],
+            [
+              -73.80715258422562,
+              -40.72108789876997
+            ],
+            [
+              -73.80715258422562,
+              -40.7205070920213
+            ],
+            [
+              -73.8084209033955,
+              -40.7205070920213
+            ],
+            [
+              -73.8084209033955,
+              -40.72108789876997
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-30",
+        "line": 3,
+        "name": "Bosque Vivo 30",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.7205070920213
+            ],
+            [
+              -73.80588426505572,
+              -40.7205070920213
+            ],
+            [
+              -73.80588426505572,
+              -40.719926285272635
+            ],
+            [
+              -73.80715258422562,
+              -40.719926285272635
+            ],
+            [
+              -73.80715258422562,
+              -40.7205070920213
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-31",
+        "line": 3,
+        "name": "Bosque Vivo 31",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.7205070920213
+            ],
+            [
+              -73.80715258422562,
+              -40.7205070920213
+            ],
+            [
+              -73.80715258422562,
+              -40.719926285272635
+            ],
+            [
+              -73.8084209033955,
+              -40.719926285272635
+            ],
+            [
+              -73.8084209033955,
+              -40.7205070920213
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-32",
+        "line": 3,
+        "name": "Bosque Vivo 32",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.719926285272635
+            ],
+            [
+              -73.80588426505572,
+              -40.719926285272635
+            ],
+            [
+              -73.80588426505572,
+              -40.71934547852396
+            ],
+            [
+              -73.80715258422562,
+              -40.71934547852396
+            ],
+            [
+              -73.80715258422562,
+              -40.719926285272635
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-33",
+        "line": 3,
+        "name": "Bosque Vivo 33",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.719926285272635
+            ],
+            [
+              -73.80715258422562,
+              -40.719926285272635
+            ],
+            [
+              -73.80715258422562,
+              -40.71934547852396
+            ],
+            [
+              -73.8084209033955,
+              -40.71934547852396
+            ],
+            [
+              -73.8084209033955,
+              -40.719926285272635
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-34",
+        "line": 3,
+        "name": "Bosque Vivo 34",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.71934547852396
+            ],
+            [
+              -73.80588426505572,
+              -40.71934547852396
+            ],
+            [
+              -73.80588426505572,
+              -40.7187646717753
+            ],
+            [
+              -73.80715258422562,
+              -40.7187646717753
+            ],
+            [
+              -73.80715258422562,
+              -40.71934547852396
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-35",
+        "line": 3,
+        "name": "Bosque Vivo 35",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.71934547852396
+            ],
+            [
+              -73.80715258422562,
+              -40.71934547852396
+            ],
+            [
+              -73.80715258422562,
+              -40.7187646717753
+            ],
+            [
+              -73.8084209033955,
+              -40.7187646717753
+            ],
+            [
+              -73.8084209033955,
+              -40.71934547852396
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-36",
+        "line": 3,
+        "name": "Bosque Vivo 36",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.7187646717753
+            ],
+            [
+              -73.80588426505572,
+              -40.7187646717753
+            ],
+            [
+              -73.80588426505572,
+              -40.71818386502663
+            ],
+            [
+              -73.80715258422562,
+              -40.71818386502663
+            ],
+            [
+              -73.80715258422562,
+              -40.7187646717753
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-37",
+        "line": 3,
+        "name": "Bosque Vivo 37",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.7187646717753
+            ],
+            [
+              -73.80715258422562,
+              -40.7187646717753
+            ],
+            [
+              -73.80715258422562,
+              -40.71818386502663
+            ],
+            [
+              -73.8084209033955,
+              -40.71818386502663
+            ],
+            [
+              -73.8084209033955,
+              -40.7187646717753
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-38",
+        "line": 3,
+        "name": "Bosque Vivo 38",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.71818386502663
+            ],
+            [
+              -73.80588426505572,
+              -40.71818386502663
+            ],
+            [
+              -73.80588426505572,
+              -40.71760305827796
+            ],
+            [
+              -73.80715258422562,
+              -40.71760305827796
+            ],
+            [
+              -73.80715258422562,
+              -40.71818386502663
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-39",
+        "line": 3,
+        "name": "Bosque Vivo 39",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.71818386502663
+            ],
+            [
+              -73.80715258422562,
+              -40.71818386502663
+            ],
+            [
+              -73.80715258422562,
+              -40.71760305827796
+            ],
+            [
+              -73.8084209033955,
+              -40.71760305827796
+            ],
+            [
+              -73.8084209033955,
+              -40.71818386502663
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-40",
+        "line": 3,
+        "name": "Bosque Vivo 40",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80715258422562,
+              -40.71760305827796
+            ],
+            [
+              -73.80588426505572,
+              -40.71760305827796
+            ],
+            [
+              -73.80588426505572,
+              -40.71702225152929
+            ],
+            [
+              -73.80715258422562,
+              -40.71702225152929
+            ],
+            [
+              -73.80715258422562,
+              -40.71760305827796
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-41",
+        "line": 3,
+        "name": "Bosque Vivo 41",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8084209033955,
+              -40.71760305827796
+            ],
+            [
+              -73.80715258422562,
+              -40.71760305827796
+            ],
+            [
+              -73.80715258422562,
+              -40.71702225152929
+            ],
+            [
+              -73.8084209033955,
+              -40.71702225152929
+            ],
+            [
+              -73.8084209033955,
+              -40.71760305827796
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-42",
+        "line": 3,
+        "name": "Bosque Vivo 42",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.728057579753994
+            ],
+            [
+              -73.80449741577439,
+              -40.728057579753994
+            ],
+            [
+              -73.80449741577439,
+              -40.72747677300532
+            ],
+            [
+              -73.80576573494429,
+              -40.72747677300532
+            ],
+            [
+              -73.80576573494429,
+              -40.728057579753994
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-43",
+        "line": 3,
+        "name": "Bosque Vivo 43",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.72747677300532
+            ],
+            [
+              -73.80449741577439,
+              -40.72747677300532
+            ],
+            [
+              -73.80449741577439,
+              -40.726895966256656
+            ],
+            [
+              -73.80576573494429,
+              -40.726895966256656
+            ],
+            [
+              -73.80576573494429,
+              -40.72747677300532
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-44",
+        "line": 3,
+        "name": "Bosque Vivo 44",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.726895966256656
+            ],
+            [
+              -73.80449741577439,
+              -40.726895966256656
+            ],
+            [
+              -73.80449741577439,
+              -40.72631515950798
+            ],
+            [
+              -73.80576573494429,
+              -40.72631515950798
+            ],
+            [
+              -73.80576573494429,
+              -40.726895966256656
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-45",
+        "line": 3,
+        "name": "Bosque Vivo 45",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.72631515950798
+            ],
+            [
+              -73.80449741577439,
+              -40.72631515950798
+            ],
+            [
+              -73.80449741577439,
+              -40.72573435275932
+            ],
+            [
+              -73.80576573494429,
+              -40.72573435275932
+            ],
+            [
+              -73.80576573494429,
+              -40.72631515950798
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-46",
+        "line": 3,
+        "name": "Bosque Vivo 46",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80449741577439,
+              -40.72631515950798
+            ],
+            [
+              -73.80322909660451,
+              -40.72631515950798
+            ],
+            [
+              -73.80322909660451,
+              -40.72573435275932
+            ],
+            [
+              -73.80449741577439,
+              -40.72573435275932
+            ],
+            [
+              -73.80449741577439,
+              -40.72631515950798
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-47",
+        "line": 3,
+        "name": "Bosque Vivo 47",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.72573435275932
+            ],
+            [
+              -73.80449741577439,
+              -40.72573435275932
+            ],
+            [
+              -73.80449741577439,
+              -40.72515354601065
+            ],
+            [
+              -73.80576573494429,
+              -40.72515354601065
+            ],
+            [
+              -73.80576573494429,
+              -40.72573435275932
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-48",
+        "line": 3,
+        "name": "Bosque Vivo 48",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80449741577439,
+              -40.72573435275932
+            ],
+            [
+              -73.80322909660451,
+              -40.72573435275932
+            ],
+            [
+              -73.80322909660451,
+              -40.72515354601065
+            ],
+            [
+              -73.80449741577439,
+              -40.72515354601065
+            ],
+            [
+              -73.80449741577439,
+              -40.72573435275932
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-49",
+        "line": 3,
+        "name": "Bosque Vivo 49",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.72515354601065
+            ],
+            [
+              -73.80449741577439,
+              -40.72515354601065
+            ],
+            [
+              -73.80449741577439,
+              -40.72457273926198
+            ],
+            [
+              -73.80576573494429,
+              -40.72457273926198
+            ],
+            [
+              -73.80576573494429,
+              -40.72515354601065
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-50",
+        "line": 3,
+        "name": "Bosque Vivo 50",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80449741577439,
+              -40.72515354601065
+            ],
+            [
+              -73.80322909660451,
+              -40.72515354601065
+            ],
+            [
+              -73.80322909660451,
+              -40.72457273926198
+            ],
+            [
+              -73.80449741577439,
+              -40.72457273926198
+            ],
+            [
+              -73.80449741577439,
+              -40.72515354601065
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-51",
+        "line": 3,
+        "name": "Bosque Vivo 51",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.72457273926198
+            ],
+            [
+              -73.80449741577439,
+              -40.72457273926198
+            ],
+            [
+              -73.80449741577439,
+              -40.723991932513314
+            ],
+            [
+              -73.80576573494429,
+              -40.723991932513314
+            ],
+            [
+              -73.80576573494429,
+              -40.72457273926198
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-52",
+        "line": 3,
+        "name": "Bosque Vivo 52",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80449741577439,
+              -40.72457273926198
+            ],
+            [
+              -73.80322909660451,
+              -40.72457273926198
+            ],
+            [
+              -73.80322909660451,
+              -40.723991932513314
+            ],
+            [
+              -73.80449741577439,
+              -40.723991932513314
+            ],
+            [
+              -73.80449741577439,
+              -40.72457273926198
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-53",
+        "line": 3,
+        "name": "Bosque Vivo 53",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.723991932513314
+            ],
+            [
+              -73.80449741577439,
+              -40.723991932513314
+            ],
+            [
+              -73.80449741577439,
+              -40.72341112576464
+            ],
+            [
+              -73.80576573494429,
+              -40.72341112576464
+            ],
+            [
+              -73.80576573494429,
+              -40.723991932513314
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-54",
+        "line": 3,
+        "name": "Bosque Vivo 54",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80449741577439,
+              -40.723991932513314
+            ],
+            [
+              -73.80322909660451,
+              -40.723991932513314
+            ],
+            [
+              -73.80322909660451,
+              -40.72341112576464
+            ],
+            [
+              -73.80449741577439,
+              -40.72341112576464
+            ],
+            [
+              -73.80449741577439,
+              -40.723991932513314
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-55",
+        "line": 3,
+        "name": "Bosque Vivo 55",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.72341112576464
+            ],
+            [
+              -73.80449741577439,
+              -40.72341112576464
+            ],
+            [
+              -73.80449741577439,
+              -40.722830319015976
+            ],
+            [
+              -73.80576573494429,
+              -40.722830319015976
+            ],
+            [
+              -73.80576573494429,
+              -40.72341112576464
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-56",
+        "line": 3,
+        "name": "Bosque Vivo 56",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80449741577439,
+              -40.72341112576464
+            ],
+            [
+              -73.80322909660451,
+              -40.72341112576464
+            ],
+            [
+              -73.80322909660451,
+              -40.722830319015976
+            ],
+            [
+              -73.80449741577439,
+              -40.722830319015976
+            ],
+            [
+              -73.80449741577439,
+              -40.72341112576464
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-57",
+        "line": 3,
+        "name": "Bosque Vivo 57",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.722830319015976
+            ],
+            [
+              -73.80449741577439,
+              -40.722830319015976
+            ],
+            [
+              -73.80449741577439,
+              -40.72224951226731
+            ],
+            [
+              -73.80576573494429,
+              -40.72224951226731
+            ],
+            [
+              -73.80576573494429,
+              -40.722830319015976
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-58",
+        "line": 3,
+        "name": "Bosque Vivo 58",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80449741577439,
+              -40.722830319015976
+            ],
+            [
+              -73.80322909660451,
+              -40.722830319015976
+            ],
+            [
+              -73.80322909660451,
+              -40.72224951226731
+            ],
+            [
+              -73.80449741577439,
+              -40.72224951226731
+            ],
+            [
+              -73.80449741577439,
+              -40.722830319015976
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-59",
+        "line": 3,
+        "name": "Bosque Vivo 59",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.72224951226731
+            ],
+            [
+              -73.80449741577439,
+              -40.72224951226731
+            ],
+            [
+              -73.80449741577439,
+              -40.72166870551864
+            ],
+            [
+              -73.80576573494429,
+              -40.72166870551864
+            ],
+            [
+              -73.80576573494429,
+              -40.72224951226731
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-60",
+        "line": 3,
+        "name": "Bosque Vivo 60",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80449741577439,
+              -40.72224951226731
+            ],
+            [
+              -73.80322909660451,
+              -40.72224951226731
+            ],
+            [
+              -73.80322909660451,
+              -40.72166870551864
+            ],
+            [
+              -73.80449741577439,
+              -40.72166870551864
+            ],
+            [
+              -73.80449741577439,
+              -40.72224951226731
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-61",
+        "line": 3,
+        "name": "Bosque Vivo 61",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.72166870551864
+            ],
+            [
+              -73.80449741577439,
+              -40.72166870551864
+            ],
+            [
+              -73.80449741577439,
+              -40.72108789876997
+            ],
+            [
+              -73.80576573494429,
+              -40.72108789876997
+            ],
+            [
+              -73.80576573494429,
+              -40.72166870551864
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-62",
+        "line": 3,
+        "name": "Bosque Vivo 62",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80449741577439,
+              -40.72166870551864
+            ],
+            [
+              -73.80322909660451,
+              -40.72166870551864
+            ],
+            [
+              -73.80322909660451,
+              -40.72108789876997
+            ],
+            [
+              -73.80449741577439,
+              -40.72108789876997
+            ],
+            [
+              -73.80449741577439,
+              -40.72166870551864
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-63",
+        "line": 3,
+        "name": "Bosque Vivo 63",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.72108789876997
+            ],
+            [
+              -73.80449741577439,
+              -40.72108789876997
+            ],
+            [
+              -73.80449741577439,
+              -40.7205070920213
+            ],
+            [
+              -73.80576573494429,
+              -40.7205070920213
+            ],
+            [
+              -73.80576573494429,
+              -40.72108789876997
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-64",
+        "line": 3,
+        "name": "Bosque Vivo 64",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80449741577439,
+              -40.72108789876997
+            ],
+            [
+              -73.80322909660451,
+              -40.72108789876997
+            ],
+            [
+              -73.80322909660451,
+              -40.7205070920213
+            ],
+            [
+              -73.80449741577439,
+              -40.7205070920213
+            ],
+            [
+              -73.80449741577439,
+              -40.72108789876997
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-65",
+        "line": 3,
+        "name": "Bosque Vivo 65",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.7205070920213
+            ],
+            [
+              -73.80449741577439,
+              -40.7205070920213
+            ],
+            [
+              -73.80449741577439,
+              -40.719926285272635
+            ],
+            [
+              -73.80576573494429,
+              -40.719926285272635
+            ],
+            [
+              -73.80576573494429,
+              -40.7205070920213
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-66",
+        "line": 3,
+        "name": "Bosque Vivo 66",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80449741577439,
+              -40.7205070920213
+            ],
+            [
+              -73.80322909660451,
+              -40.7205070920213
+            ],
+            [
+              -73.80322909660451,
+              -40.719926285272635
+            ],
+            [
+              -73.80449741577439,
+              -40.719926285272635
+            ],
+            [
+              -73.80449741577439,
+              -40.7205070920213
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-67",
+        "line": 3,
+        "name": "Bosque Vivo 67",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.719926285272635
+            ],
+            [
+              -73.80449741577439,
+              -40.719926285272635
+            ],
+            [
+              -73.80449741577439,
+              -40.71934547852396
+            ],
+            [
+              -73.80576573494429,
+              -40.71934547852396
+            ],
+            [
+              -73.80576573494429,
+              -40.719926285272635
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-68",
+        "line": 3,
+        "name": "Bosque Vivo 68",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80449741577439,
+              -40.719926285272635
+            ],
+            [
+              -73.80322909660451,
+              -40.719926285272635
+            ],
+            [
+              -73.80322909660451,
+              -40.71934547852396
+            ],
+            [
+              -73.80449741577439,
+              -40.71934547852396
+            ],
+            [
+              -73.80449741577439,
+              -40.719926285272635
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-69",
+        "line": 3,
+        "name": "Bosque Vivo 69",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.71934547852396
+            ],
+            [
+              -73.80449741577439,
+              -40.71934547852396
+            ],
+            [
+              -73.80449741577439,
+              -40.7187646717753
+            ],
+            [
+              -73.80576573494429,
+              -40.7187646717753
+            ],
+            [
+              -73.80576573494429,
+              -40.71934547852396
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-70",
+        "line": 3,
+        "name": "Bosque Vivo 70",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.7187646717753
+            ],
+            [
+              -73.80449741577439,
+              -40.7187646717753
+            ],
+            [
+              -73.80449741577439,
+              -40.71818386502663
+            ],
+            [
+              -73.80576573494429,
+              -40.71818386502663
+            ],
+            [
+              -73.80576573494429,
+              -40.7187646717753
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "L3-71",
+        "line": 3,
+        "name": "Bosque Vivo 71",
+        "category": "bosque_vivo",
+        "area_ha": 0.69,
+        "ocean_exposure": "Indirecta · sonido",
+        "privacy": "Total inmersión",
+        "conservation": "80% nativo",
+        "architecture": "Cabaña dosel · pasarela"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80576573494429,
+              -40.71818386502663
+            ],
+            [
+              -73.80449741577439,
+              -40.71818386502663
+            ],
+            [
+              -73.80449741577439,
+              -40.71760305827796
+            ],
+            [
+              -73.80576573494429,
+              -40.71760305827796
+            ],
+            [
+              -73.80576573494429,
+              -40.71818386502663
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "M-ECO",
+        "line": "macro",
+        "name": "Eco Lodge",
+        "category": "eco_lodge",
+        "area_ha": 12,
+        "ocean_exposure": "N/A",
+        "privacy": "Operativo",
+        "conservation": "60% nativo",
+        "architecture": "Equipamiento programático · bajo impacto"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8091660035051,
+              -40.72993719920391
+            ],
+            [
+              -73.80506000000001,
+              -40.72993719920391
+            ],
+            [
+              -73.80506000000001,
+              -40.7268034000225
+            ],
+            [
+              -73.8091660035051,
+              -40.7268034000225
+            ],
+            [
+              -73.8091660035051,
+              -40.72993719920391
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "M-WEL",
+        "line": "macro",
+        "name": "Wellness Center",
+        "category": "wellness",
+        "area_ha": 8,
+        "ocean_exposure": "N/A",
+        "privacy": "Operativo",
+        "conservation": "60% nativo",
+        "architecture": "Equipamiento programático · bajo impacto"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80841253782319,
+              -40.7264415400623
+            ],
+            [
+              -73.80506000000001,
+              -40.7264415400623
+            ],
+            [
+              -73.80506000000001,
+              -40.72388280374536
+            ],
+            [
+              -73.80841253782319,
+              -40.72388280374536
+            ],
+            [
+              -73.80841253782319,
+              -40.7264415400623
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "M-GLA",
+        "line": "macro",
+        "name": "Glamping Forest",
+        "category": "glamping",
+        "area_ha": 18,
+        "ocean_exposure": "N/A",
+        "privacy": "Operativo",
+        "conservation": "60% nativo",
+        "architecture": "Equipamiento programático · bajo impacto"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.81008880673478,
+              -40.72352094378516
+            ],
+            [
+              -73.80506000000001,
+              -40.72352094378516
+            ],
+            [
+              -73.80506000000001,
+              -40.719682839309755
+            ],
+            [
+              -73.81008880673478,
+              -40.719682839309755
+            ],
+            [
+              -73.81008880673478,
+              -40.72352094378516
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "M-GAS",
+        "line": "macro",
+        "name": "Gastronomy",
+        "category": "gastronomy",
+        "area_ha": 6,
+        "ocean_exposure": "N/A",
+        "privacy": "Operativo",
+        "conservation": "60% nativo",
+        "architecture": "Equipamiento programático · bajo impacto"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.80796338292203,
+              -40.719320979349554
+            ],
+            [
+              -73.80506000000001,
+              -40.719320979349554
+            ],
+            [
+              -73.80506000000001,
+              -40.7171050486975
+            ],
+            [
+              -73.80796338292203,
+              -40.7171050486975
+            ],
+            [
+              -73.80796338292203,
+              -40.719320979349554
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "M-RES",
+        "line": "macro",
+        "name": "Research Station",
+        "category": "research",
+        "area_ha": 10,
+        "ocean_exposure": "N/A",
+        "privacy": "Operativo",
+        "conservation": "60% nativo",
+        "architecture": "Equipamiento programático · bajo impacto"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8088082512349,
+              -40.716743188737304
+            ],
+            [
+              -73.80506000000001,
+              -40.716743188737304
+            ],
+            [
+              -73.80506000000001,
+              -40.71388243456672
+            ],
+            [
+              -73.8088082512349,
+              -40.71388243456672
+            ],
+            [
+              -73.8088082512349,
+              -40.716743188737304
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "CORE",
+        "line": "conservation",
+        "name": "Reserva Núcleo",
+        "category": "conservation_core",
+        "area_ha": 250,
+        "ocean_exposure": "N/A",
+        "privacy": "Intocada",
+        "conservation": "100% nativo · sin construcción",
+        "architecture": "Sin intervención"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8095,
+              -40.7162
+            ],
+            [
+              -73.8048,
+              -40.7178
+            ],
+            [
+              -73.8025,
+              -40.7205
+            ],
+            [
+              -73.802,
+              -40.7242
+            ],
+            [
+              -73.8045,
+              -40.7278
+            ],
+            [
+              -73.8092,
+              -40.7298
+            ],
+            [
+              -73.80965,
+              -40.7298
+            ],
+            [
+              -73.80965,
+              -40.7162
+            ],
+            [
+              -73.8095,
+              -40.7162
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+} as const;
