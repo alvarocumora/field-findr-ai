@@ -401,7 +401,7 @@ export default function HueMasterplan() {
         <div className="rounded-md overflow-hidden border border-white/8 bg-[#0a1410] shadow-[0_40px_120px_-20px_rgba(0,0,0,0.9)]">
           <div className="grid grid-cols-12 gap-0">
             {/* ───── LEFT SIDEBAR ───── */}
-            <aside className="col-span-12 lg:col-span-3 border-r border-white/8 bg-[#070f0c]/95 backdrop-blur-md p-6 space-y-7">
+            <aside className="order-2 lg:order-1 col-span-12 lg:col-span-3 border-t lg:border-t-0 lg:border-r border-white/8 bg-[#070f0c]/95 backdrop-blur-md p-4 md:p-6 space-y-6 md:space-y-7">
               {/* Brand */}
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 rounded-full bg-[var(--hue-amber)]/15 border border-[var(--hue-amber)]/40 flex items-center justify-center">
@@ -482,7 +482,7 @@ export default function HueMasterplan() {
             </aside>
 
             {/* ───── CENTER MAP ───── */}
-            <div className="col-span-12 lg:col-span-6 relative min-h-[640px] lg:min-h-[820px]">
+            <div className="order-1 lg:order-2 col-span-12 lg:col-span-6 relative min-h-[70vh] max-h-[80vh] lg:max-h-none lg:min-h-[820px]">
               <div ref={containerRef} className="absolute inset-0" />
 
               {/* Cinematic vignette */}
@@ -525,7 +525,7 @@ export default function HueMasterplan() {
             </div>
 
             {/* ───── RIGHT SIDEBAR ───── */}
-            <aside className="col-span-12 lg:col-span-3 border-l border-white/8 bg-[#070f0c]/95 backdrop-blur-md p-6 space-y-7">
+            <aside className="order-3 col-span-12 lg:col-span-3 border-t lg:border-t-0 lg:border-l border-white/8 bg-[#070f0c]/95 backdrop-blur-md p-4 md:p-6 space-y-6 md:space-y-7">
               {/* Leyenda */}
               <div className="space-y-3">
                 <div className="hue-eyebrow text-[10px]">Leyenda</div>
@@ -581,7 +581,7 @@ export default function HueMasterplan() {
           </div>
 
           {/* ───── BOTTOM SECTOR STRIP ───── */}
-          <div className="border-t border-white/8 bg-[#070f0c] px-6 py-5">
+          <div className="border-t border-white/8 bg-[#070f0c] px-4 md:px-6 py-5">
             <div className="hue-eyebrow text-[10px] mb-3">Sectores destacados</div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
               {SECTORS.map((s) => (
