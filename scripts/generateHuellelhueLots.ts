@@ -157,24 +157,35 @@ const band3N = bounds.minY + bounds.h * 0.58; // Bosque Vivo (dosel)
 const lodgeN = bounds.minY + bounds.h * 0.72; // Lodge + equipamiento
 const macroN = bounds.maxY - bounds.h * 0.05;  // Reserva núcleo (recorta borde)
 
-const BANDS = [
-  { name: 'ocean_front',  sY: band1S, nY: band1N },
-  { name: 'forest_ocean', sY: band1N, nY: band2N },
-  { name: 'bosque_vivo',  sY: band2N, nY: band3N },
-];
-
-// Lotes amplios + separación generosa (camino+vegetación entre cabañas)
-const BAND_DIMS: Record<string, { w: number; d: number; gapX: number; gapY: number }> = {
-  ocean_front:  { w: 100, d: 120, gapX: 25, gapY: 20 }, // ~1.2 ha (1.0–1.5 ha) maximizado
-  forest_ocean: { w: 90,  d: 110, gapX: 22, gapY: 18 }, // ~1.0 ha maximizado
-  bosque_vivo:  { w: 100, d: 130, gapX: 25, gapY: 20 }, // ~1.3 ha maximizado
-};
+// ────────────────────────────────────────────────────────────────────────────
+// TRAZADO ORGÁNICO — caminos curvos siguiendo topografía + lotes en abanico
+// perpendiculares a la vía (estilo masterplan resort de referencia)
+// ────────────────────────────────────────────────────────────────────────────
 
 const CATEGORY_META: Record<string, any> = {
   ocean_front:  { line: 1, label: 'Ocean Front',  ocean_exposure: 'Directa · 100%',     privacy: 'Máxima',          conservation: '75% nativo intocado', architecture: 'Cabaña costera oculta · Japandi coastal' },
   forest_ocean: { line: 2, label: 'Forest Ocean', ocean_exposure: 'Vista filtrada',     privacy: 'Alta',            conservation: '70% nativo',          architecture: 'Refugio elevado · madera nativa' },
   bosque_vivo:  { line: 3, label: 'Bosque Vivo',  ocean_exposure: 'Indirecta · sonido', privacy: 'Total inmersión', conservation: '80% nativo',          architecture: 'Cabaña dosel · pasarela' },
 };
+
+// Definición de spines (caminos curvos). yFrac es la posición base (0=costa, 1=interior).
+// amp y freq controlan la sinuosidad del trazado. lotDepth = fondo del lote desde la vía.
+type Spine = {
+  name: 'ocean_front' | 'forest_ocean' | 'bosque_vivo';
+  yFrac: number;
+  amp: number;     // amplitud de la curva (m)
+  freq: number;    // ciclos a lo largo del predio
+  phase: number;   // desfase
+  lotFrontage: number; // frente del lote contra el camino (m)
+  lotDepth: number;    // profundidad del lote (m)
+  bothSides: boolean;  // lotes a ambos lados del camino
+};
+
+const SPINES: Spine[] = [
+  { name: 'ocean_front',  yFrac: 0.24, amp: 60, freq: 2.2, phase: 0.0, lotFrontage: 95,  lotDepth: 130, bothSides: false }, // solo lado costa
+  { name: 'forest_ocean', yFrac: 0.42, amp: 75, freq: 1.8, phase: 0.6, lotFrontage: 90,  lotDepth: 115, bothSides: true  },
+  { name: 'bosque_vivo',  yFrac: 0.60, amp: 90, freq: 1.4, phase: 1.3, lotFrontage: 100, lotDepth: 140, bothSides: true  },
+];
 
 type Feature = { type: 'Feature'; properties: Record<string, any>; geometry: any };
 
@@ -188,66 +199,131 @@ function rotatedLocalToGeoSingle(pt: [number, number]): [number, number] {
 }
 
 const allFeatures: Feature[] = [];
+const roadFeatures: Feature[] = [];
 
-function gridSubdivide(
-  southY: number,
-  northY: number,
-  lotW: number,
-  lotD: number,
-  gapX: number,
-  gapY: number,
-): { polygon: [number, number][]; area: number }[] {
-  const lots: { polygon: [number, number][]; area: number }[] = [];
-  const stepX = lotW + gapX;
-  const stepY = lotD + gapY;
-  // Una sola fila por banda (la banda es fina); centrada en Y
-  const midY = (southY + northY) / 2;
-  const y0Single = midY - lotD / 2;
-  // Permitir hasta 2 filas si la banda es alta
-  const bandH = northY - southY;
-  const rows = bandH >= stepY * 1.6 ? 2 : 1;
-  for (let r = 0; r < rows; r++) {
-    const y0 = rows === 1 ? y0Single : southY + 10 + r * stepY;
-    if (y0 + lotD > northY) continue;
-    for (let x = bounds.minX + 40; x + lotW <= bounds.maxX - 40; x += stepX) {
-      const rect: [number, number][] = [
-        [x, y0], [x + lotW, y0], [x + lotW, y0 + lotD], [x, y0 + lotD], [x, y0],
-      ];
-      const cx = x + lotW / 2, cy = y0 + lotD / 2;
-      const corners: [number, number][] = [[x + 2, y0 + 2], [x + lotW - 2, y0 + 2], [x + 2, y0 + lotD - 2], [x + lotW - 2, y0 + lotD - 2]];
-      const insideCorners = corners.filter((c) => pip(c, perimeterRotated)).length;
-      if (pip([cx, cy], perimeterRotated) && insideCorners === 4) {
-        lots.push({ polygon: rect, area: lotW * lotD });
+// Sample spine curve in rotated local frame
+function sampleSpine(s: Spine, samples: number): { p: [number, number]; t: [number, number]; n: [number, number] }[] {
+  const baseY = bounds.minY + bounds.h * s.yFrac;
+  const xStart = bounds.minX + 60;
+  const xEnd = bounds.maxX - 60;
+  const out: { p: [number, number]; t: [number, number]; n: [number, number] }[] = [];
+  for (let i = 0; i <= samples; i++) {
+    const u = i / samples;
+    const x = xStart + (xEnd - xStart) * u;
+    const y = baseY + Math.sin(u * Math.PI * 2 * s.freq + s.phase) * s.amp
+              + Math.sin(u * Math.PI * 4 * s.freq + s.phase * 1.7) * s.amp * 0.25;
+    // tangent via finite diff
+    const du = 0.001;
+    const x2 = xStart + (xEnd - xStart) * (u + du);
+    const y2 = baseY + Math.sin((u + du) * Math.PI * 2 * s.freq + s.phase) * s.amp
+              + Math.sin((u + du) * Math.PI * 4 * s.freq + s.phase * 1.7) * s.amp * 0.25;
+    const tx = x2 - x, ty = y2 - y;
+    const tl = Math.hypot(tx, ty) || 1;
+    const t: [number, number] = [tx / tl, ty / tl];
+    const n: [number, number] = [-t[1], t[0]]; // normal apuntando "norte" (hacia interior)
+    out.push({ p: [x, y], t, n });
+  }
+  return out;
+}
+
+function quadInside(quad: [number, number][]): boolean {
+  const cx = quad.reduce((s, p) => s + p[0], 0) / 4;
+  const cy = quad.reduce((s, p) => s + p[1], 0) / 4;
+  if (!pip([cx, cy], perimeterRotated)) return false;
+  return quad.every((c) => pip(c, perimeterRotated));
+}
+
+// Bounding-box overlap entre dos quads (simple, rápido)
+function quadsOverlap(a: [number, number][], b: [number, number][]): boolean {
+  const minA = [Math.min(...a.map(p => p[0])), Math.min(...a.map(p => p[1]))];
+  const maxA = [Math.max(...a.map(p => p[0])), Math.max(...a.map(p => p[1]))];
+  const minB = [Math.min(...b.map(p => p[0])), Math.min(...b.map(p => p[1]))];
+  const maxB = [Math.max(...b.map(p => p[0])), Math.max(...b.map(p => p[1]))];
+  const padding = -5; // tolerancia leve para permitir vecindad
+  return !(maxA[0] < minB[0] + padding || minA[0] > maxB[0] - padding ||
+           maxA[1] < minB[1] + padding || minA[1] > maxB[1] - padding);
+}
+
+const placedQuads: [number, number][][] = [];
+const ROAD_HALF_WIDTH = 6; // calle 12 m
+
+for (const spine of SPINES) {
+  // Densidad de samples = longitud aprox / frente lote (resolución)
+  const samples = Math.ceil((bounds.maxX - bounds.minX) / (spine.lotFrontage * 0.6));
+  const pts = sampleSpine(spine, samples);
+
+  // Guardar geometría del camino (centro de la vía)
+  const roadGeo = pts.map(({ p }) => rotatedLocalToGeoSingle(p));
+  roadFeatures.push({
+    type: 'Feature',
+    properties: {
+      id: `R-${spine.name}`, line: 'road', name: `Camino ${spine.name}`,
+      category: 'road',
+      width_m: ROAD_HALF_WIDTH * 2,
+    },
+    geometry: { type: 'LineString', coordinates: roadGeo },
+  });
+
+  // Recorrer la curva acumulando arc-length y colocar lote cada lotFrontage + gap
+  const gap = 8;          // separación lateral entre lotes (m)
+  const step = spine.lotFrontage + gap;
+  let accum = 0, nextTrigger = step / 2, lotIdx = 0;
+  const meta = CATEGORY_META[spine.name];
+
+  for (let i = 1; i < pts.length; i++) {
+    const seg = Math.hypot(pts[i].p[0] - pts[i - 1].p[0], pts[i].p[1] - pts[i - 1].p[1]);
+    accum += seg;
+    while (accum >= nextTrigger) {
+      const { p, t, n } = pts[i];
+      const halfFront = spine.lotFrontage / 2;
+      // dos lados posibles: +n (interior) y -n (costa)
+      const sides: number[] = spine.bothSides ? [+1, -1] : [-1]; // sólo costa para ocean_front
+      for (const sideSign of sides) {
+        const offsetIn = ROAD_HALF_WIDTH; // desde el centro de la vía
+        const offsetOut = ROAD_HALF_WIDTH + spine.lotDepth;
+        // 4 esquinas del cuadrilátero (tangente da el frente, normal el fondo)
+        const c1: [number, number] = [p[0] - t[0] * halfFront + n[0] * offsetIn * sideSign,  p[1] - t[1] * halfFront + n[1] * offsetIn * sideSign];
+        const c2: [number, number] = [p[0] + t[0] * halfFront + n[0] * offsetIn * sideSign,  p[1] + t[1] * halfFront + n[1] * offsetIn * sideSign];
+        const c3: [number, number] = [p[0] + t[0] * halfFront + n[0] * offsetOut * sideSign, p[1] + t[1] * halfFront + n[1] * offsetOut * sideSign];
+        const c4: [number, number] = [p[0] - t[0] * halfFront + n[0] * offsetOut * sideSign, p[1] - t[1] * halfFront + n[1] * offsetOut * sideSign];
+        const quad: [number, number][] = [c1, c2, c3, c4];
+        if (!quadInside(quad)) continue;
+        if (placedQuads.some((q) => quadsOverlap(q, quad))) continue;
+        placedQuads.push(quad);
+        lotIdx += 1;
+        const polyClosed: [number, number][] = [...quad, c1];
+        // Área aprox (Shoelace local)
+        let area = 0;
+        for (let k = 0, j = quad.length - 1; k < quad.length; j = k++) {
+          area += (quad[j][0] + quad[k][0]) * (quad[j][1] - quad[k][1]);
+        }
+        area = Math.abs(area) / 2;
+        const geo = rotatedLocalToGeo(polyClosed);
+        allFeatures.push({
+          type: 'Feature',
+          properties: {
+            id: `L${meta.line}-${String(lotIdx).padStart(3, '0')}`,
+            line: meta.line,
+            name: `${meta.label} ${String(lotIdx).padStart(3, '0')}`,
+            category: spine.name,
+            area_ha: Math.round((area / 10000) * 100) / 100,
+            ocean_exposure: meta.ocean_exposure,
+            privacy: meta.privacy,
+            conservation: meta.conservation,
+            architecture: meta.architecture,
+          },
+          geometry: { type: 'Polygon', coordinates: [geo] },
+        });
       }
+      nextTrigger += step;
     }
   }
-  return lots;
+  console.log(`✓ ${spine.name}: ${lotIdx} lotes (spine ${samples} samples)`);
 }
 
-for (const band of BANDS) {
-  const dims = BAND_DIMS[band.name];
-  const lots = gridSubdivide(band.sY, band.nY, dims.w, dims.d, dims.gapX, dims.gapY);
-  const meta = CATEGORY_META[band.name];
-  lots.forEach((lot, idx) => {
-    const geo = rotatedLocalToGeo(lot.polygon);
-    allFeatures.push({
-      type: 'Feature',
-      properties: {
-        id: `L${meta.line}-${String(idx + 1).padStart(2, '0')}`,
-        line: meta.line,
-        name: `${meta.label} ${String(idx + 1).padStart(2, '0')}`,
-        category: band.name,
-        area_ha: Math.round((lot.area / 10000) * 100) / 100,
-        ocean_exposure: meta.ocean_exposure,
-        privacy: meta.privacy,
-        conservation: meta.conservation,
-        architecture: meta.architecture,
-      },
-      geometry: { type: 'Polygon', coordinates: [geo] },
-    });
-  });
-  console.log(`✓ ${band.name}: ${lots.length} lotes`);
-}
+// Empujar los caminos a la colección final
+allFeatures.push(...roadFeatures);
+
 
 // ────────────────────────────────────────────────────────────────────────────
 // ────────────────────────────────────────────────────────────────────────────

@@ -351,11 +351,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-01",
+        "id": "L1-001",
         "line": 1,
-        "name": "Ocean Front 01",
+        "name": "Ocean Front 001",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.23,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -366,24 +366,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.82037214841093,
-              -40.72935601996059
+              -73.82266898888567,
+              -40.728004711177974
             ],
             [
-              -73.81923335656221,
-              -40.72910514728708
+              -73.82157466399032,
+              -40.72780225311876
             ],
             [
-              -73.81962779101514,
-              -40.72806214476764
+              -73.82121167366105,
+              -40.72894519931837
             ],
             [
-              -73.82076658286384,
-              -40.72831301744115
+              -73.8223059985564,
+              -40.72914765737758
             ],
             [
-              -73.82037214841093,
-              -40.72935601996059
+              -73.82266898888567,
+              -40.728004711177974
             ]
           ]
         ]
@@ -392,11 +392,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-02",
+        "id": "L1-002",
         "line": 1,
-        "name": "Ocean Front 02",
+        "name": "Ocean Front 002",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.24,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -407,24 +407,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.81894865860004,
-              -40.7290424291187
+              -73.82011131409543,
+              -40.72763389678653
             ],
             [
-              -73.81780986675132,
-              -40.72879155644519
+              -73.81899429468208,
+              -40.727525477756636
             ],
             [
-              -73.81820430120425,
-              -40.72774855392575
+              -73.81879990844963,
+              -40.728692126800986
             ],
             [
-              -73.81934309305296,
-              -40.72799942659926
+              -73.81991692786298,
+              -40.72880054583088
             ],
             [
-              -73.81894865860004,
-              -40.7290424291187
+              -73.82011131409543,
+              -40.72763389678653
             ]
           ]
         ]
@@ -433,11 +433,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-03",
+        "id": "L1-003",
         "line": 1,
-        "name": "Ocean Front 03",
+        "name": "Ocean Front 003",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.23,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -448,24 +448,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.81752516878915,
-              -40.72872883827681
+              -73.81815989107724,
+              -40.72744064510861
             ],
             [
-              -73.81638637694044,
-              -40.7284779656033
+              -73.8170476745072,
+              -40.72730651211201
             ],
             [
-              -73.81678081139336,
-              -40.72743496308385
+              -73.8168071852879,
+              -40.72846814492077
             ],
             [
-              -73.81791960324207,
-              -40.72768583575737
+              -73.81791940185795,
+              -40.72860227791737
             ],
             [
-              -73.81752516878915,
-              -40.72872883827681
+              -73.81815989107724,
+              -40.72744064510861
             ]
           ]
         ]
@@ -474,11 +474,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-04",
+        "id": "L1-004",
         "line": 1,
-        "name": "Ocean Front 04",
+        "name": "Ocean Front 004",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.24,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -489,24 +489,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.81610167897826,
-              -40.72841524743492
+              -73.81558679970196,
+              -40.72710576938497
             ],
             [
-              -73.81496288712955,
-              -40.7281643747614
+              -73.81447704886972,
+              -40.726960224791235
             ],
             [
-              -73.81535732158247,
-              -40.72712137224196
+              -73.81421609961332,
+              -40.72811928230844
             ],
             [
-              -73.81649611343119,
-              -40.72737224491548
+              -73.81532585044557,
+              -40.728264826902176
             ],
             [
-              -73.81610167897826,
-              -40.72841524743492
+              -73.81558679970196,
+              -40.72710576938497
             ]
           ]
         ]
@@ -515,11 +515,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-05",
+        "id": "L1-005",
         "line": 1,
-        "name": "Ocean Front 05",
+        "name": "Ocean Front 005",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.24,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -530,24 +530,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.81467818916737,
-              -40.728101656593026
+              -73.81300366480869,
+              -40.72679714489351
             ],
             [
-              -73.81353939731866,
-              -40.72785078391951
+              -73.8118866504387,
+              -40.726688695599236
             ],
             [
-              -73.81393383177159,
-              -40.72680778140007
+              -73.81169220994475,
+              -40.72785533937617
             ],
             [
-              -73.8150726236203,
-              -40.72705865407358
+              -73.81280922431475,
+              -40.72796378867044
             ],
             [
-              -73.81467818916737,
-              -40.728101656593026
+              -73.81300366480869,
+              -40.72679714489351
             ]
           ]
         ]
@@ -556,11 +556,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-06",
+        "id": "L1-006",
         "line": 1,
-        "name": "Ocean Front 06",
+        "name": "Ocean Front 006",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.24,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -571,24 +571,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.81325469935649,
-              -40.72778806575113
+              -73.80730351395897,
+              -40.72569594829616
             ],
             [
-              -73.81211590750777,
-              -40.727537193077616
+              -73.8063362210171,
+              -40.72525600595936
             ],
             [
-              -73.8125103419607,
-              -40.72649419055818
+              -73.80554744128506,
+              -40.72626627612366
             ],
             [
-              -73.8136491338094,
-              -40.72674506323169
+              -73.80651473422694,
+              -40.726706218460464
             ],
             [
-              -73.81325469935649,
-              -40.72778806575113
+              -73.80730351395897,
+              -40.72569594829616
             ]
           ]
         ]
@@ -597,11 +597,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-07",
+        "id": "L1-007",
         "line": 1,
-        "name": "Ocean Front 07",
+        "name": "Ocean Front 007",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.24,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -612,24 +612,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.8118312095456,
-              -40.727474474909236
+              -73.80502083203037,
+              -40.72458666329
             ],
             [
-              -73.81069241769688,
-              -40.727223602235725
+              -73.80406009234737,
+              -40.724138434010484
             ],
             [
-              -73.81108685214981,
-              -40.72618059971629
+              -73.8032564548217,
+              -40.72514185975193
             ],
             [
-              -73.81222564399852,
-              -40.7264314723898
+              -73.8042171945047,
+              -40.725590089031435
             ],
             [
-              -73.8118312095456,
-              -40.727474474909236
+              -73.80502083203037,
+              -40.72458666329
             ]
           ]
         ]
@@ -638,11 +638,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-08",
+        "id": "L1-008",
         "line": 1,
-        "name": "Ocean Front 08",
+        "name": "Ocean Front 008",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.24,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -653,24 +653,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.80756074011293,
-              -40.72653370238356
+              -73.80271750727275,
+              -40.7236389810853
             ],
             [
-              -73.80642194826423,
-              -40.726282829710044
+              -73.80164552426463,
+              -40.72337595361167
             ],
             [
-              -73.80681638271714,
-              -40.725239827190606
+              -73.80117393805251,
+              -40.72449556526483
             ],
             [
-              -73.80795517456586,
-              -40.72549069986412
+              -73.80224592106063,
+              -40.72475859273846
             ],
             [
-              -73.80756074011293,
-              -40.72653370238356
+              -73.80271750727275,
+              -40.7236389810853
             ]
           ]
         ]
@@ -679,11 +679,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-09",
+        "id": "L1-009",
         "line": 1,
-        "name": "Ocean Front 09",
+        "name": "Ocean Front 009",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.23,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -694,24 +694,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.80613725030204,
-              -40.72622011154167
+              -73.80084989904323,
+              -40.72324233570266
             ],
             [
-              -73.80499845845334,
-              -40.72596923886815
+              -73.79973793706799,
+              -40.723106978664966
             ],
             [
-              -73.80539289290626,
-              -40.724926236348715
+              -73.79949525324561,
+              -40.72426834556717
             ],
             [
-              -73.80653168475497,
-              -40.725177109022226
+              -73.80060721522086,
+              -40.72440370260486
             ],
             [
-              -73.80613725030204,
-              -40.72622011154167
+              -73.80084989904323,
+              -40.72324233570266
             ]
           ]
         ]
@@ -720,11 +720,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-10",
+        "id": "L1-010",
         "line": 1,
-        "name": "Ocean Front 10",
+        "name": "Ocean Front 010",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.23,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -735,24 +735,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.80471376049115,
-              -40.72590652069977
+              -73.79825445241087,
+              -40.72296657161103
             ],
             [
-              -73.80357496864245,
-              -40.72565564802626
+              -73.7971394885951,
+              -40.72284645759942
             ],
             [
-              -73.80396940309538,
-              -40.724612645506824
+              -73.79692413424075,
+              -40.72401095971515
             ],
             [
-              -73.80510819494408,
-              -40.724863518180335
+              -73.79803909805652,
+              -40.72413107372677
             ],
             [
-              -73.80471376049115,
-              -40.72590652069977
+              -73.79825445241087,
+              -40.72296657161103
             ]
           ]
         ]
@@ -761,11 +761,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-11",
+        "id": "L1-011",
         "line": 1,
-        "name": "Ocean Front 11",
+        "name": "Ocean Front 011",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.23,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -776,24 +776,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.80329027068028,
-              -40.72559292985788
+              -73.79567185235607,
+              -40.72265681305829
             ],
             [
-              -73.80215147883156,
-              -40.72534205718437
+              -73.79456348391253,
+              -40.72250525631214
             ],
             [
-              -73.80254591328449,
-              -40.72429905466493
+              -73.7942917553708,
+              -40.72366287002056
             ],
             [
-              -73.8036847051332,
-              -40.724549927338444
+              -73.79540012381436,
+              -40.72381442676671
             ],
             [
-              -73.80329027068028,
-              -40.72559292985788
+              -73.79567185235607,
+              -40.72265681305829
             ]
           ]
         ]
@@ -802,11 +802,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-12",
+        "id": "L1-012",
         "line": 1,
-        "name": "Ocean Front 12",
+        "name": "Ocean Front 012",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.24,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -817,24 +817,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.80186678086939,
-              -40.72527933901599
+              -73.79374516621387,
+              -40.72239781756227
             ],
             [
-              -73.80072798902067,
-              -40.72502846634248
+              -73.79263124017191,
+              -40.722272219711414
             ],
             [
-              -73.8011224234736,
-              -40.723985463823034
+              -73.79240605375348,
+              -40.72343563794462
             ],
             [
-              -73.8022612153223,
-              -40.72423633649655
+              -73.79351997979543,
+              -40.72356123579547
             ],
             [
-              -73.80186678086939,
-              -40.72527933901599
+              -73.79374516621387,
+              -40.72239781756227
             ]
           ]
         ]
@@ -843,11 +843,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-13",
+        "id": "L1-013",
         "line": 1,
-        "name": "Ocean Front 13",
+        "name": "Ocean Front 013",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.23,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -858,24 +858,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.8004432910585,
-              -40.7249657481741
+              -73.79114631592849,
+              -40.7221312095668
             ],
             [
-              -73.79930449920978,
-              -40.72471487550058
+              -73.79003220059381,
+              -40.72200659361179
             ],
             [
-              -73.79969893366271,
-              -40.72367187298114
+              -73.78980877463232,
+              -40.723170209548066
             ],
             [
-              -73.80083772551141,
-              -40.72392274565466
+              -73.790922889967,
+              -40.723294825503075
             ],
             [
-              -73.8004432910585,
-              -40.7249657481741
+              -73.79114631592849,
+              -40.7221312095668
             ]
           ]
         ]
@@ -884,11 +884,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-14",
+        "id": "L1-014",
         "line": 1,
-        "name": "Ocean Front 14",
+        "name": "Ocean Front 014",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.24,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -899,24 +899,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79901980124761,
-              -40.72465215733221
+              -73.78984967082866,
+              -40.721987169922734
             ],
             [
-              -73.7978810093989,
-              -40.72440128465869
+              -73.78875128941152,
+              -40.72179794046939
             ],
             [
-              -73.79827544385182,
-              -40.72335828213925
+              -73.7884120168637,
+              -40.72294512342372
             ],
             [
-              -73.79941423570054,
-              -40.72360915481276
+              -73.78951039828084,
+              -40.72313435287706
             ],
             [
-              -73.79901980124761,
-              -40.72465215733221
+              -73.78984967082866,
+              -40.721987169922734
             ]
           ]
         ]
@@ -925,11 +925,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-15",
+        "id": "L1-015",
         "line": 1,
-        "name": "Ocean Front 15",
+        "name": "Ocean Front 015",
         "category": "ocean_front",
-        "area_ha": 1.2,
+        "area_ha": 1.24,
         "ocean_exposure": "Directa · 100%",
         "privacy": "Máxima",
         "conservation": "75% nativo intocado",
@@ -940,24 +940,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79759631143672,
-              -40.72433856649031
+              -73.788574875856,
+              -40.72176369777874
             ],
             [
-              -73.79645751958802,
-              -40.7240876938168
+              -73.78751586985508,
+              -40.72147164863854
             ],
             [
-              -73.79685195404093,
-              -40.72304469129736
+              -73.78699225022751,
+              -40.72257770671074
             ],
             [
-              -73.79799074588965,
-              -40.72329556397087
+              -73.78805125622843,
+              -40.722869755850944
             ],
             [
-              -73.79759631143672,
-              -40.72433856649031
+              -73.788574875856,
+              -40.72176369777874
             ]
           ]
         ]
@@ -966,1446 +966,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L1-16",
-        "line": 1,
-        "name": "Ocean Front 16",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79617282162583,
-              -40.72402497564842
-            ],
-            [
-              -73.79503402977713,
-              -40.72377410297491
-            ],
-            [
-              -73.79542846423004,
-              -40.72273110045547
-            ],
-            [
-              -73.79656725607876,
-              -40.72298197312898
-            ],
-            [
-              -73.79617282162583,
-              -40.72402497564842
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-17",
-        "line": 1,
-        "name": "Ocean Front 17",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79474933181494,
-              -40.72371138480653
-            ],
-            [
-              -73.79361053996624,
-              -40.723460512133016
-            ],
-            [
-              -73.79400497441917,
-              -40.72241750961357
-            ],
-            [
-              -73.79514376626787,
-              -40.72266838228709
-            ],
-            [
-              -73.79474933181494,
-              -40.72371138480653
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-18",
-        "line": 1,
-        "name": "Ocean Front 18",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79332584200407,
-              -40.72339779396464
-            ],
-            [
-              -73.79218705015535,
-              -40.723146921291125
-            ],
-            [
-              -73.79258148460828,
-              -40.72210391877168
-            ],
-            [
-              -73.79372027645698,
-              -40.7223547914452
-            ],
-            [
-              -73.79332584200407,
-              -40.72339779396464
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-19",
-        "line": 1,
-        "name": "Ocean Front 19",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79190235219318,
-              -40.723084203122745
-            ],
-            [
-              -73.79076356034446,
-              -40.72283333044923
-            ],
-            [
-              -73.79115799479739,
-              -40.72179032792979
-            ],
-            [
-              -73.79229678664609,
-              -40.7220412006033
-            ],
-            [
-              -73.79190235219318,
-              -40.723084203122745
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-20",
-        "line": 1,
-        "name": "Ocean Front 20",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79047886238229,
-              -40.72277061228085
-            ],
-            [
-              -73.78934007053357,
-              -40.722519739607336
-            ],
-            [
-              -73.7897345049865,
-              -40.7214767370879
-            ],
-            [
-              -73.79087329683522,
-              -40.72172760976141
-            ],
-            [
-              -73.79047886238229,
-              -40.72277061228085
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-21",
-        "line": 1,
-        "name": "Ocean Front 21",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.7890553725714,
-              -40.722457021438956
-            ],
-            [
-              -73.7879165807227,
-              -40.722206148765444
-            ],
-            [
-              -73.78831101517561,
-              -40.721163146246006
-            ],
-            [
-              -73.78944980702433,
-              -40.72141401891952
-            ],
-            [
-              -73.7890553725714,
-              -40.722457021438956
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-22",
-        "line": 1,
-        "name": "Ocean Front 22",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.78763188276051,
-              -40.722143430597065
-            ],
-            [
-              -73.7864930909118,
-              -40.72189255792355
-            ],
-            [
-              -73.78688752536472,
-              -40.720849555404115
-            ],
-            [
-              -73.78802631721344,
-              -40.72110042807763
-            ],
-            [
-              -73.78763188276051,
-              -40.722143430597065
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-23",
-        "line": 1,
-        "name": "Ocean Front 23",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.82367930156111,
-              -40.7287663653717
-            ],
-            [
-              -73.8225405097124,
-              -40.728515492698186
-            ],
-            [
-              -73.82293494416533,
-              -40.72747249017874
-            ],
-            [
-              -73.82407373601403,
-              -40.72772336285226
-            ],
-            [
-              -73.82367930156111,
-              -40.7287663653717
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-24",
-        "line": 1,
-        "name": "Ocean Front 24",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.82225581175022,
-              -40.728452774529806
-            ],
-            [
-              -73.82111701990151,
-              -40.728201901856295
-            ],
-            [
-              -73.82151145435444,
-              -40.72715889933685
-            ],
-            [
-              -73.82265024620314,
-              -40.72740977201037
-            ],
-            [
-              -73.82225581175022,
-              -40.728452774529806
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-25",
-        "line": 1,
-        "name": "Ocean Front 25",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.82083232193933,
-              -40.728139183687915
-            ],
-            [
-              -73.81969353009062,
-              -40.7278883110144
-            ],
-            [
-              -73.82008796454355,
-              -40.72684530849496
-            ],
-            [
-              -73.82122675639225,
-              -40.72709618116847
-            ],
-            [
-              -73.82083232193933,
-              -40.728139183687915
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-26",
-        "line": 1,
-        "name": "Ocean Front 26",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.81940883212845,
-              -40.727825592846024
-            ],
-            [
-              -73.81827004027973,
-              -40.727574720172505
-            ],
-            [
-              -73.81866447473266,
-              -40.72653171765307
-            ],
-            [
-              -73.81980326658137,
-              -40.72678259032658
-            ],
-            [
-              -73.81940883212845,
-              -40.727825592846024
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-27",
-        "line": 1,
-        "name": "Ocean Front 27",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.81798534231756,
-              -40.727512002004126
-            ],
-            [
-              -73.81684655046885,
-              -40.727261129330614
-            ],
-            [
-              -73.81724098492177,
-              -40.726218126811176
-            ],
-            [
-              -73.81837977677048,
-              -40.72646899948469
-            ],
-            [
-              -73.81798534231756,
-              -40.727512002004126
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-28",
-        "line": 1,
-        "name": "Ocean Front 28",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.81656185250667,
-              -40.727198411162234
-            ],
-            [
-              -73.81542306065796,
-              -40.72694753848872
-            ],
-            [
-              -73.81581749511088,
-              -40.725904535969285
-            ],
-            [
-              -73.8169562869596,
-              -40.726155408642796
-            ],
-            [
-              -73.81656185250667,
-              -40.727198411162234
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-29",
-        "line": 1,
-        "name": "Ocean Front 29",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.81513836269578,
-              -40.72688482032034
-            ],
-            [
-              -73.81399957084707,
-              -40.72663394764683
-            ],
-            [
-              -73.8143940053,
-              -40.72559094512739
-            ],
-            [
-              -73.8155327971487,
-              -40.725841817800905
-            ],
-            [
-              -73.81513836269578,
-              -40.72688482032034
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-30",
-        "line": 1,
-        "name": "Ocean Front 30",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.8137148728849,
-              -40.72657122947845
-            ],
-            [
-              -73.81257608103618,
-              -40.72632035680493
-            ],
-            [
-              -73.81297051548911,
-              -40.725277354285495
-            ],
-            [
-              -73.81410930733782,
-              -40.72552822695901
-            ],
-            [
-              -73.8137148728849,
-              -40.72657122947845
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-31",
-        "line": 1,
-        "name": "Ocean Front 31",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.81229138307401,
-              -40.72625763863656
-            ],
-            [
-              -73.8111525912253,
-              -40.72600676596304
-            ],
-            [
-              -73.81154702567822,
-              -40.724963763443604
-            ],
-            [
-              -73.81268581752693,
-              -40.725214636117116
-            ],
-            [
-              -73.81229138307401,
-              -40.72625763863656
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-32",
-        "line": 1,
-        "name": "Ocean Front 32",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.81086789326312,
-              -40.72594404779466
-            ],
-            [
-              -73.8097291014144,
-              -40.72569317512115
-            ],
-            [
-              -73.81012353586733,
-              -40.72465017260171
-            ],
-            [
-              -73.81126232771604,
-              -40.724901045275224
-            ],
-            [
-              -73.81086789326312,
-              -40.72594404779466
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-33",
-        "line": 1,
-        "name": "Ocean Front 33",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.80944440345223,
-              -40.72563045695277
-            ],
-            [
-              -73.80830561160353,
-              -40.72537958427926
-            ],
-            [
-              -73.80870004605644,
-              -40.72433658175982
-            ],
-            [
-              -73.80983883790516,
-              -40.72458745443333
-            ],
-            [
-              -73.80944440345223,
-              -40.72563045695277
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-34",
-        "line": 1,
-        "name": "Ocean Front 34",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.80802091364134,
-              -40.72531686611088
-            ],
-            [
-              -73.80688212179264,
-              -40.72506599343737
-            ],
-            [
-              -73.80727655624555,
-              -40.72402299091792
-            ],
-            [
-              -73.80841534809427,
-              -40.72427386359144
-            ],
-            [
-              -73.80802091364134,
-              -40.72531686611088
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-35",
-        "line": 1,
-        "name": "Ocean Front 35",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.80659742383045,
-              -40.72500327526899
-            ],
-            [
-              -73.80545863198175,
-              -40.72475240259548
-            ],
-            [
-              -73.80585306643466,
-              -40.72370940007603
-            ],
-            [
-              -73.80699185828338,
-              -40.72396027274955
-            ],
-            [
-              -73.80659742383045,
-              -40.72500327526899
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-36",
-        "line": 1,
-        "name": "Ocean Front 36",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.80517393401956,
-              -40.7246896844271
-            ],
-            [
-              -73.80403514217086,
-              -40.72443881175358
-            ],
-            [
-              -73.80442957662379,
-              -40.72339580923414
-            ],
-            [
-              -73.80556836847249,
-              -40.72364668190765
-            ],
-            [
-              -73.80517393401956,
-              -40.7246896844271
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-37",
-        "line": 1,
-        "name": "Ocean Front 37",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.80375044420869,
-              -40.7243760935852
-            ],
-            [
-              -73.80261165235997,
-              -40.72412522091169
-            ],
-            [
-              -73.8030060868129,
-              -40.72308221839225
-            ],
-            [
-              -73.8041448786616,
-              -40.72333309106576
-            ],
-            [
-              -73.80375044420869,
-              -40.7243760935852
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-38",
-        "line": 1,
-        "name": "Ocean Front 38",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.8023269543978,
-              -40.72406250274331
-            ],
-            [
-              -73.80118816254908,
-              -40.7238116300698
-            ],
-            [
-              -73.80158259700201,
-              -40.72276862755036
-            ],
-            [
-              -73.80272138885071,
-              -40.72301950022387
-            ],
-            [
-              -73.8023269543978,
-              -40.72406250274331
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-39",
-        "line": 1,
-        "name": "Ocean Front 39",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.80090346458691,
-              -40.72374891190142
-            ],
-            [
-              -73.79976467273819,
-              -40.723498039227906
-            ],
-            [
-              -73.80015910719112,
-              -40.72245503670846
-            ],
-            [
-              -73.80129789903984,
-              -40.72270590938198
-            ],
-            [
-              -73.80090346458691,
-              -40.72374891190142
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-40",
-        "line": 1,
-        "name": "Ocean Front 40",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79947997477602,
-              -40.723435321059526
-            ],
-            [
-              -73.79834118292732,
-              -40.723184448386014
-            ],
-            [
-              -73.79873561738023,
-              -40.72214144586657
-            ],
-            [
-              -73.79987440922895,
-              -40.72239231854009
-            ],
-            [
-              -73.79947997477602,
-              -40.723435321059526
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-41",
-        "line": 1,
-        "name": "Ocean Front 41",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79805648496513,
-              -40.723121730217635
-            ],
-            [
-              -73.79691769311643,
-              -40.722870857544116
-            ],
-            [
-              -73.79731212756934,
-              -40.72182785502468
-            ],
-            [
-              -73.79845091941806,
-              -40.72207872769819
-            ],
-            [
-              -73.79805648496513,
-              -40.723121730217635
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-42",
-        "line": 1,
-        "name": "Ocean Front 42",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79663299515424,
-              -40.72280813937574
-            ],
-            [
-              -73.79549420330554,
-              -40.722557266702225
-            ],
-            [
-              -73.79588863775847,
-              -40.72151426418279
-            ],
-            [
-              -73.79702742960717,
-              -40.7217651368563
-            ],
-            [
-              -73.79663299515424,
-              -40.72280813937574
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-43",
-        "line": 1,
-        "name": "Ocean Front 43",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79520950534337,
-              -40.722494548533845
-            ],
-            [
-              -73.79407071349465,
-              -40.722243675860334
-            ],
-            [
-              -73.79446514794758,
-              -40.721200673340896
-            ],
-            [
-              -73.79560393979628,
-              -40.72145154601441
-            ],
-            [
-              -73.79520950534337,
-              -40.722494548533845
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-44",
-        "line": 1,
-        "name": "Ocean Front 44",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79378601553248,
-              -40.722180957691954
-            ],
-            [
-              -73.79264722368376,
-              -40.72193008501844
-            ],
-            [
-              -73.79304165813669,
-              -40.720887082499004
-            ],
-            [
-              -73.79418044998539,
-              -40.721137955172516
-            ],
-            [
-              -73.79378601553248,
-              -40.722180957691954
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-45",
-        "line": 1,
-        "name": "Ocean Front 45",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79236252572159,
-              -40.72186736685006
-            ],
-            [
-              -73.79122373387287,
-              -40.72161649417655
-            ],
-            [
-              -73.7916181683258,
-              -40.720573491657106
-            ],
-            [
-              -73.7927569601745,
-              -40.720824364330625
-            ],
-            [
-              -73.79236252572159,
-              -40.72186736685006
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-46",
-        "line": 1,
-        "name": "Ocean Front 46",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.7909390359107,
-              -40.72155377600817
-            ],
-            [
-              -73.78980024406198,
-              -40.72130290333465
-            ],
-            [
-              -73.79019467851491,
-              -40.720259900815215
-            ],
-            [
-              -73.79133347036363,
-              -40.72051077348873
-            ],
-            [
-              -73.7909390359107,
-              -40.72155377600817
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-47",
-        "line": 1,
-        "name": "Ocean Front 47",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.7895155460998,
-              -40.72124018516628
-            ],
-            [
-              -73.7883767542511,
-              -40.72098931249276
-            ],
-            [
-              -73.78877118870402,
-              -40.719946309973324
-            ],
-            [
-              -73.78990998055274,
-              -40.720197182646835
-            ],
-            [
-              -73.7895155460998,
-              -40.72124018516628
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-48",
-        "line": 1,
-        "name": "Ocean Front 48",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.78809205628892,
-              -40.72092659432438
-            ],
-            [
-              -73.78695326444021,
-              -40.72067572165087
-            ],
-            [
-              -73.78734769889313,
-              -40.71963271913143
-            ],
-            [
-              -73.78848649074185,
-              -40.719883591804944
-            ],
-            [
-              -73.78809205628892,
-              -40.72092659432438
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-49",
-        "line": 1,
-        "name": "Ocean Front 49",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.78666856647803,
-              -40.72061300348249
-            ],
-            [
-              -73.78552977462932,
-              -40.72036213080898
-            ],
-            [
-              -73.78592420908225,
-              -40.71931912828954
-            ],
-            [
-              -73.78706300093096,
-              -40.71957000096305
-            ],
-            [
-              -73.78666856647803,
-              -40.72061300348249
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L1-50",
-        "line": 1,
-        "name": "Ocean Front 50",
-        "category": "ocean_front",
-        "area_ha": 1.2,
-        "ocean_exposure": "Directa · 100%",
-        "privacy": "Máxima",
-        "conservation": "75% nativo intocado",
-        "architecture": "Cabaña costera oculta · Japandi coastal"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.78524507666715,
-              -40.7202994126406
-            ],
-            [
-              -73.78410628481844,
-              -40.72004853996709
-            ],
-            [
-              -73.78450071927136,
-              -40.71900553744764
-            ],
-            [
-              -73.78563951112007,
-              -40.71925641012116
-            ],
-            [
-              -73.78524507666715,
-              -40.7202994126406
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-01",
+        "id": "L2-001",
         "line": 2,
-        "name": "Forest Ocean 01",
+        "name": "Forest Ocean 001",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.04,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2416,24 +981,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.82463439980384,
-              -40.72708896672058
+              -73.82558266585492,
+              -40.72423631793532
             ],
             [
-              -73.82360948714,
-              -40.726863181314414
+              -73.82454764241734,
+              -40.72403922317662
             ],
             [
-              -73.82397105205519,
-              -40.725907095671595
+              -73.824877609521,
+              -40.723029818583065
             ],
             [
-              -73.82499596471902,
-              -40.72613288107776
+              -73.82591263295858,
+              -40.72322691334177
             ],
             [
-              -73.82463439980384,
-              -40.72708896672058
+              -73.82558266585492,
+              -40.72423631793532
             ]
           ]
         ]
@@ -2442,11 +1007,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-02",
+        "id": "L2-002",
         "line": 2,
-        "name": "Forest Ocean 02",
+        "name": "Forest Ocean 002",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.04,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2457,24 +1022,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.82335895293329,
-              -40.72680798932624
+              -73.82554823450498,
+              -40.7243416471103
             ],
             [
-              -73.82233404026944,
-              -40.72658220392008
+              -73.8245132110674,
+              -40.724144552351596
             ],
             [
-              -73.82269560518462,
-              -40.72562611827726
+              -73.82418324396373,
+              -40.72515395694515
             ],
             [
-              -73.82372051784847,
-              -40.72585190368342
+              -73.82521826740133,
+              -40.72535105170385
             ],
             [
-              -73.82335895293329,
-              -40.72680798932624
+              -73.82554823450498,
+              -40.7243416471103
             ]
           ]
         ]
@@ -2483,11 +1048,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-03",
+        "id": "L2-003",
         "line": 2,
-        "name": "Forest Ocean 03",
+        "name": "Forest Ocean 003",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.03,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2498,24 +1063,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.82208350606273,
-              -40.72652701193191
+              -73.82437753665616,
+              -40.724013651682895
             ],
             [
-              -73.82105859339889,
-              -40.72630122652574
+              -73.82332477765928,
+              -40.72388221208289
             ],
             [
-              -73.82142015831407,
-              -40.72534514088292
+              -73.82354482787474,
+              -40.72285551091965
             ],
             [
-              -73.8224450709779,
-              -40.72557092628909
+              -73.82459758687162,
+              -40.722986950519655
             ],
             [
-              -73.82208350606273,
-              -40.72652701193191
+              -73.82437753665616,
+              -40.724013651682895
             ]
           ]
         ]
@@ -2524,11 +1089,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-04",
+        "id": "L2-004",
         "line": 2,
-        "name": "Forest Ocean 04",
+        "name": "Forest Ocean 004",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.03,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2539,24 +1104,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.82080805919217,
-              -40.726246034537574
+              -73.8231304237347,
+              -40.72397326567096
             ],
             [
-              -73.81978314652834,
-              -40.72602024913141
+              -73.82207094977885,
+              -40.723878323597596
             ],
             [
-              -73.82014471144352,
-              -40.72506416348859
+              -73.82191200206674,
+              -40.724911573511505
             ],
             [
-              -73.82116962410736,
-              -40.72528994889475
+              -73.82297147602259,
+              -40.72500651558487
             ],
             [
-              -73.82080805919217,
-              -40.726246034537574
+              -73.8231304237347,
+              -40.72397326567096
             ]
           ]
         ]
@@ -2565,11 +1130,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-05",
+        "id": "L2-005",
         "line": 2,
-        "name": "Forest Ocean 05",
+        "name": "Forest Ocean 005",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.03,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2580,24 +1145,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.81953261232162,
-              -40.725965057143235
+              -73.82190669400873,
+              -40.723757352369816
             ],
             [
-              -73.81850769965779,
-              -40.72573927173707
+              -73.82084615256629,
+              -40.72366962736248
             ],
             [
-              -73.81886926457295,
-              -40.72478318609425
+              -73.82099301779384,
+              -40.72263533638436
             ],
             [
-              -73.8198941772368,
-              -40.725008971500415
+              -73.82205355923628,
+              -40.72272306139169
             ],
             [
-              -73.81953261232162,
-              -40.725965057143235
+              -73.82190669400873,
+              -40.723757352369816
             ]
           ]
         ]
@@ -2606,11 +1171,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-06",
+        "id": "L2-006",
         "line": 2,
-        "name": "Forest Ocean 06",
+        "name": "Forest Ocean 006",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.04,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2621,24 +1186,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.81825716545106,
-              -40.7256840797489
+              -73.8206505465424,
+              -40.72376324137793
             ],
             [
-              -73.81723225278722,
-              -40.72545829434274
+              -73.81959209324852,
+              -40.723661884341496
             ],
             [
-              -73.8175938177024,
-              -40.72450220869992
+              -73.81942240589628,
+              -40.72469413885682
             ],
             [
-              -73.81861873036624,
-              -40.72472799410608
+              -73.82048085919016,
+              -40.72479549589325
             ],
             [
-              -73.81825716545106,
-              -40.7256840797489
+              -73.8206505465424,
+              -40.72376324137793
             ]
           ]
         ]
@@ -2647,11 +1212,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-07",
+        "id": "L2-007",
         "line": 2,
-        "name": "Forest Ocean 07",
+        "name": "Forest Ocean 007",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.04,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2662,24 +1227,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.81698171858051,
-              -40.72540310235456
+              -73.81943760901025,
+              -40.723536496965046
             ],
             [
-              -73.81595680591667,
-              -40.725177316948404
+              -73.81838306533697,
+              -40.72341367370844
             ],
             [
-              -73.81631837083185,
-              -40.724221231305584
+              -73.8185886904612,
+              -40.72238523204302
             ],
             [
-              -73.81734328349569,
-              -40.72444701671174
+              -73.81964323413447,
+              -40.72250805529962
             ],
             [
-              -73.81698171858051,
-              -40.72540310235456
+              -73.81943760901025,
+              -40.723536496965046
             ]
           ]
         ]
@@ -2688,11 +1253,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-08",
+        "id": "L2-008",
         "line": 2,
-        "name": "Forest Ocean 08",
+        "name": "Forest Ocean 008",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.03,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2703,24 +1268,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.81570627170996,
-              -40.72512212496023
+              -73.81880245312064,
+              -40.723574490187794
             ],
             [
-              -73.81468135904612,
-              -40.724896339554064
+              -73.81774988465656,
+              -40.72344216467374
             ],
             [
-              -73.8150429239613,
-              -40.723940253911245
+              -73.817528351284,
+              -40.72446868002024
             ],
             [
-              -73.81606783662514,
-              -40.72416603931741
+              -73.81858091974806,
+              -40.72460100553429
             ],
             [
-              -73.81570627170996,
-              -40.72512212496023
+              -73.81880245312064,
+              -40.723574490187794
             ]
           ]
         ]
@@ -2729,11 +1294,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-09",
+        "id": "L2-009",
         "line": 2,
-        "name": "Forest Ocean 09",
+        "name": "Forest Ocean 009",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.03,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2744,24 +1309,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.8144308248394,
-              -40.72484114756589
+              -73.81636472363274,
+              -40.7232524360313
             ],
             [
-              -73.81340591217555,
-              -40.72461536215973
+              -73.8153137429441,
+              -40.723112952425865
             ],
             [
-              -73.81376747709074,
-              -40.72365927651691
+              -73.81508022581967,
+              -40.72413791929747
             ],
             [
-              -73.81479238975457,
-              -40.72388506192307
+              -73.81613120650832,
+              -40.724277402902906
             ],
             [
-              -73.8144308248394,
-              -40.72484114756589
+              -73.81636472363274,
+              -40.7232524360313
             ]
           ]
         ]
@@ -2770,11 +1335,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-10",
+        "id": "L2-010",
         "line": 2,
-        "name": "Forest Ocean 10",
+        "name": "Forest Ocean 010",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.03,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2785,24 +1350,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.81315537796884,
-              -40.72456017017156
+              -73.81392153010782,
+              -40.72294546326857
             ],
             [
-              -73.812130465305,
-              -40.72433438476539
+              -73.81286540624994,
+              -40.722830821797075
             ],
             [
-              -73.81249203022018,
-              -40.72337829912257
+              -73.81267347869917,
+              -40.72386080453447
             ],
             [
-              -73.81351694288402,
-              -40.72360408452874
+              -73.81372960255705,
+              -40.723975446005966
             ],
             [
-              -73.81315537796884,
-              -40.72456017017156
+              -73.81392153010782,
+              -40.72294546326857
             ]
           ]
         ]
@@ -2811,11 +1376,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-11",
+        "id": "L2-011",
         "line": 2,
-        "name": "Forest Ocean 11",
+        "name": "Forest Ocean 011",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.03,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2826,24 +1391,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.81187993109829,
-              -40.724279192777225
+              -73.80130704828159,
+              -40.71905173270589
             ],
             [
-              -73.81085501843445,
-              -40.72405340737106
+              -73.80030107660791,
+              -40.71878083185446
             ],
             [
-              -73.81121658334963,
-              -40.72309732172824
+              -73.7998475466921,
+              -40.71976190377179
             ],
             [
-              -73.81224149601347,
-              -40.7233231071344
+              -73.80085351836577,
+              -40.720032804623216
             ],
             [
-              -73.81187993109829,
-              -40.724279192777225
+              -73.80130704828159,
+              -40.71905173270589
             ]
           ]
         ]
@@ -2852,11 +1417,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-12",
+        "id": "L2-012",
         "line": 2,
-        "name": "Forest Ocean 12",
+        "name": "Forest Ocean 012",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.04,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2867,24 +1432,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.81060448422774,
-              -40.723998215382885
+              -73.80018384845678,
+              -40.71864086245398
             ],
             [
-              -73.80957957156389,
-              -40.72377242997672
+              -73.7991461166369,
+              -40.71845224612431
             ],
             [
-              -73.80994113647907,
-              -40.7228163443339
+              -73.7994618895393,
+              -40.7174402001862
             ],
             [
-              -73.81096604914292,
-              -40.723042129740065
+              -73.80049962135918,
+              -40.71762881651587
             ],
             [
-              -73.81060448422774,
-              -40.723998215382885
+              -73.80018384845678,
+              -40.71864086245398
             ]
           ]
         ]
@@ -2893,11 +1458,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-13",
+        "id": "L2-013",
         "line": 2,
-        "name": "Forest Ocean 13",
+        "name": "Forest Ocean 013",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.04,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2908,24 +1473,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.80932903735717,
-              -40.72371723798855
+              -73.79897510762702,
+              -40.7184279046402
             ],
             [
-              -73.80830412469334,
-              -40.72349145258239
+              -73.79792117668978,
+              -40.71830205493877
             ],
             [
-              -73.80866568960852,
-              -40.72253536693957
+              -73.79813186855064,
+              -40.717274210842966
             ],
             [
-              -73.80969060227235,
-              -40.72276115234573
+              -73.79918579948787,
+              -40.7174000605444
             ],
             [
-              -73.80932903735717,
-              -40.72371723798855
+              -73.79897510762702,
+              -40.7184279046402
             ]
           ]
         ]
@@ -2934,11 +1499,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-14",
+        "id": "L2-014",
         "line": 2,
-        "name": "Forest Ocean 14",
+        "name": "Forest Ocean 014",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.04,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2949,24 +1514,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.80805359048662,
-              -40.72343626059421
+              -73.79772655217924,
+              -40.71839379957408
             ],
             [
-              -73.80702867782279,
-              -40.723210475188054
+              -73.79666675072252,
+              -40.718301011198044
             ],
             [
-              -73.80739024273797,
-              -40.722254389545235
+              -73.79651140863278,
+              -40.71933458050655
             ],
             [
-              -73.8084151554018,
-              -40.72248017495139
+              -73.7975712100895,
+              -40.71942736888258
             ],
             [
-              -73.80805359048662,
-              -40.72343626059421
+              -73.79772655217924,
+              -40.71839379957408
             ]
           ]
         ]
@@ -2975,11 +1540,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-15",
+        "id": "L2-015",
         "line": 2,
-        "name": "Forest Ocean 15",
+        "name": "Forest Ocean 015",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.03,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -2990,24 +1555,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.80167635613385,
-              -40.722031373622535
+              -73.79650217935821,
+              -40.71818010080426
             ],
             [
-              -73.80065144347,
-              -40.72180558821637
+              -73.79544173757098,
+              -40.71809167679804
             ],
             [
-              -73.80101300838518,
-              -40.72084950257355
+              -73.79558977303076,
+              -40.717057483008446
             ],
             [
-              -73.80203792104902,
-              -40.721075287979716
+              -73.796650214818,
+              -40.71714590701466
             ],
             [
-              -73.80167635613385,
-              -40.722031373622535
+              -73.79650217935821,
+              -40.71818010080426
             ]
           ]
         ]
@@ -3016,11 +1581,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-16",
+        "id": "L2-016",
         "line": 2,
-        "name": "Forest Ocean 16",
+        "name": "Forest Ocean 016",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.03,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -3031,24 +1596,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.80040090926329,
-              -40.7217503962282
+              -73.7952463176904,
+              -40.718184941711385
             ],
             [
-              -73.79937599659945,
-              -40.72152461082204
+              -73.79418823909127,
+              -40.71808133076825
             ],
             [
-              -73.79973756151463,
-              -40.72056852517922
+              -73.79401477835069,
+              -40.71911321986324
             ],
             [
-              -73.80076247417847,
-              -40.72079431058538
+              -73.79507285694982,
+              -40.71921683080637
             ],
             [
-              -73.80040090926329,
-              -40.7217503962282
+              -73.7952463176904,
+              -40.718184941711385
             ]
           ]
         ]
@@ -3057,11 +1622,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-17",
+        "id": "L2-017",
         "line": 2,
-        "name": "Forest Ocean 17",
+        "name": "Forest Ocean 017",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.03,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -3072,24 +1637,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79912546239274,
-              -40.72146941883386
+              -73.79342316419864,
+              -40.717884979733796
             ],
             [
-              -73.7981005497289,
-              -40.721243633427704
+              -73.79237098638554,
+              -40.717750856613044
             ],
             [
-              -73.79846211464408,
-              -40.720287547784885
+              -73.79259552922969,
+              -40.716724722248145
             ],
             [
-              -73.79948702730792,
-              -40.72051333319104
+              -73.7936477070428,
+              -40.7168588453689
             ],
             [
-              -73.79912546239274,
-              -40.72146941883386
+              -73.79342316419864,
+              -40.717884979733796
             ]
           ]
         ]
@@ -3098,11 +1663,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-18",
+        "id": "L2-018",
         "line": 2,
-        "name": "Forest Ocean 18",
+        "name": "Forest Ocean 018",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.04,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -3113,24 +1678,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79785001552219,
-              -40.72118844143953
+              -73.7921794236974,
+              -40.71783459885812
             ],
             [
-              -73.79682510285835,
-              -40.720962656033365
+              -73.79112928847272,
+              -40.71769145384154
             ],
             [
-              -73.79718666777352,
-              -40.720006570390545
+              -73.79088964157985,
+              -40.71871559617605
             ],
             [
-              -73.79821158043737,
-              -40.72023235579671
+              -73.79193977680454,
+              -40.718858741192626
             ],
             [
-              -73.79785001552219,
-              -40.72118844143953
+              -73.7921794236974,
+              -40.71783459885812
             ]
           ]
         ]
@@ -3139,11 +1704,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-19",
+        "id": "L2-019",
         "line": 2,
-        "name": "Forest Ocean 19",
+        "name": "Forest Ocean 019",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.03,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -3154,24 +1719,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79657456865162,
-              -40.72090746404519
+              -73.79098704929525,
+              -40.717560811131065
             ],
             [
-              -73.79554965598778,
-              -40.72068167863903
+              -73.78993581439184,
+              -40.71742244797497
             ],
             [
-              -73.79591122090297,
-              -40.71972559299621
+              -73.79016745571082,
+              -40.7163972331809
             ],
             [
-              -73.7969361335668,
-              -40.71995137840237
+              -73.79121869061424,
+              -40.716535596336996
             ],
             [
-              -73.79657456865162,
-              -40.72090746404519
+              -73.79098704929525,
+              -40.717560811131065
             ]
           ]
         ]
@@ -3180,11 +1745,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-20",
+        "id": "L2-020",
         "line": 2,
-        "name": "Forest Ocean 20",
+        "name": "Forest Ocean 020",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.04,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -3195,24 +1760,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79529912178107,
-              -40.72062648665086
+              -73.78974381614994,
+              -40.71750775770347
             ],
             [
-              -73.79427420911723,
-              -40.72040070124469
+              -73.78868968670528,
+              -40.717382880252025
             ],
             [
-              -73.79463577403241,
-              -40.71944461560187
+              -73.78848062254124,
+              -40.7184109179418
             ],
             [
-              -73.79566068669625,
-              -40.71967040100804
+              -73.78953475198591,
+              -40.71853579539325
             ],
             [
-              -73.79529912178107,
-              -40.72062648665086
+              -73.78974381614994,
+              -40.71750775770347
             ]
           ]
         ]
@@ -3221,11 +1786,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-21",
+        "id": "L2-021",
         "line": 2,
-        "name": "Forest Ocean 21",
+        "name": "Forest Ocean 021",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.04,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -3236,24 +1801,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79402367491052,
-              -40.720345509256525
+              -73.7885383077341,
+              -40.717256675686286
             ],
             [
-              -73.79299876224668,
-              -40.72011972385036
+              -73.78748205992102,
+              -40.71714270140313
             ],
             [
-              -73.79336032716186,
-              -40.71916363820754
+              -73.78767287049534,
+              -40.716112597778675
             ],
             [
-              -73.7943852398257,
-              -40.7193894236137
+              -73.78872911830842,
+              -40.716226572061835
             ],
             [
-              -73.79402367491052,
-              -40.720345509256525
+              -73.7885383077341,
+              -40.717256675686286
             ]
           ]
         ]
@@ -3262,11 +1827,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-22",
+        "id": "L2-022",
         "line": 2,
-        "name": "Forest Ocean 22",
+        "name": "Forest Ocean 022",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.04,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -3277,24 +1842,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79274822803995,
-              -40.720064531862185
+              -73.78728820431006,
+              -40.717233263554384
             ],
             [
-              -73.79172331537612,
-              -40.71983874645602
+              -73.78623285272558,
+              -40.717114551447814
             ],
             [
-              -73.7920848802913,
-              -40.7188826608132
+              -73.78603411030224,
+              -40.718143781027074
             ],
             [
-              -73.79310979295514,
-              -40.719108446219366
+              -73.78708946188672,
+              -40.71826249313364
             ],
             [
-              -73.79274822803995,
-              -40.720064531862185
+              -73.78728820431006,
+              -40.717233263554384
             ]
           ]
         ]
@@ -3303,11 +1868,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-23",
+        "id": "L2-023",
         "line": 2,
-        "name": "Forest Ocean 23",
+        "name": "Forest Ocean 023",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.04,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -3318,24 +1883,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.7914727811694,
-              -40.71978355446785
+              -73.78608601837823,
+              -40.71698936723693
             ],
             [
-              -73.79044786850557,
-              -40.71955776906169
+              -73.78503724576868,
+              -40.71684051651184
             ],
             [
-              -73.79080943342075,
-              -40.71860168341887
+              -73.78528644489988,
+              -40.71581770306508
             ],
             [
-              -73.79183434608458,
-              -40.71882746882503
+              -73.78633521750943,
+              -40.715966553790174
             ],
             [
-              -73.7914727811694,
-              -40.71978355446785
+              -73.78608601837823,
+              -40.71698936723693
             ]
           ]
         ]
@@ -3344,11 +1909,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-24",
+        "id": "L2-024",
         "line": 2,
-        "name": "Forest Ocean 24",
+        "name": "Forest Ocean 024",
         "category": "forest_ocean",
-        "area_ha": 0.99,
+        "area_ha": 1.03,
         "ocean_exposure": "Vista filtrada",
         "privacy": "Alta",
         "conservation": "70% nativo",
@@ -3359,24 +1924,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79019733429885,
-              -40.71950257707351
+              -73.7854495336865,
+              -40.717015971840766
             ],
             [
-              -73.78917242163502,
-              -40.719276791667355
+              -73.78440756595799,
+              -40.71684148873134
             ],
             [
-              -73.7895339865502,
-              -40.718320706024535
+              -73.78411545425176,
+              -40.7178576657311
             ],
             [
-              -73.79055889921403,
-              -40.71854649143069
+              -73.78515742198027,
+              -40.718032148840535
             ],
             [
-              -73.79019733429885,
-              -40.71950257707351
+              -73.7854495336865,
+              -40.717015971840766
             ]
           ]
         ]
@@ -3385,1077 +1950,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L2-25",
-        "line": 2,
-        "name": "Forest Ocean 25",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.7889218874283,
-              -40.71922159967918
-            ],
-            [
-              -73.78789697476445,
-              -40.718995814273015
-            ],
-            [
-              -73.78825853967963,
-              -40.718039728630195
-            ],
-            [
-              -73.78928345234347,
-              -40.71826551403636
-            ],
-            [
-              -73.7889218874283,
-              -40.71922159967918
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-26",
-        "line": 2,
-        "name": "Forest Ocean 26",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.78764644055774,
-              -40.71894062228484
-            ],
-            [
-              -73.7866215278939,
-              -40.71871483687868
-            ],
-            [
-              -73.78698309280908,
-              -40.71775875123586
-            ],
-            [
-              -73.78800800547292,
-              -40.71798453664202
-            ],
-            [
-              -73.78764644055774,
-              -40.71894062228484
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-27",
-        "line": 2,
-        "name": "Forest Ocean 27",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.78637099368719,
-              -40.71865964489051
-            ],
-            [
-              -73.78534608102335,
-              -40.71843385948434
-            ],
-            [
-              -73.78570764593853,
-              -40.71747777384152
-            ],
-            [
-              -73.78673255860237,
-              -40.71770355924769
-            ],
-            [
-              -73.78637099368719,
-              -40.71865964489051
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-28",
-        "line": 2,
-        "name": "Forest Ocean 28",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.78509554681663,
-              -40.718378667496175
-            ],
-            [
-              -73.7840706341528,
-              -40.71815288209001
-            ],
-            [
-              -73.78443219906796,
-              -40.71719679644719
-            ],
-            [
-              -73.78545711173182,
-              -40.71742258185335
-            ],
-            [
-              -73.78509554681663,
-              -40.718378667496175
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-29",
-        "line": 2,
-        "name": "Forest Ocean 29",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.82505512988696,
-              -40.725976430699845
-            ],
-            [
-              -73.82403021722313,
-              -40.72575064529368
-            ],
-            [
-              -73.82439178213829,
-              -40.72479455965086
-            ],
-            [
-              -73.82541669480214,
-              -40.72502034505702
-            ],
-            [
-              -73.82505512988696,
-              -40.725976430699845
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-30",
-        "line": 2,
-        "name": "Forest Ocean 30",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.8237796830164,
-              -40.725695453305505
-            ],
-            [
-              -73.82275477035256,
-              -40.72546966789935
-            ],
-            [
-              -73.82311633526774,
-              -40.72451358225652
-            ],
-            [
-              -73.82414124793158,
-              -40.724739367662686
-            ],
-            [
-              -73.8237796830164,
-              -40.725695453305505
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-31",
-        "line": 2,
-        "name": "Forest Ocean 31",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.82250423614585,
-              -40.72541447591117
-            ],
-            [
-              -73.82147932348201,
-              -40.72518869050501
-            ],
-            [
-              -73.82184088839719,
-              -40.72423260486219
-            ],
-            [
-              -73.82286580106103,
-              -40.72445839026835
-            ],
-            [
-              -73.82250423614585,
-              -40.72541447591117
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-32",
-        "line": 2,
-        "name": "Forest Ocean 32",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.8212287892753,
-              -40.72513349851683
-            ],
-            [
-              -73.82020387661146,
-              -40.724907713110674
-            ],
-            [
-              -73.82056544152664,
-              -40.723951627467855
-            ],
-            [
-              -73.82159035419048,
-              -40.72417741287401
-            ],
-            [
-              -73.8212287892753,
-              -40.72513349851683
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-33",
-        "line": 2,
-        "name": "Forest Ocean 33",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.81995334240474,
-              -40.7248525211225
-            ],
-            [
-              -73.8189284297409,
-              -40.724626735716335
-            ],
-            [
-              -73.81928999465607,
-              -40.723670650073515
-            ],
-            [
-              -73.82031490731991,
-              -40.72389643547968
-            ],
-            [
-              -73.81995334240474,
-              -40.7248525211225
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-34",
-        "line": 2,
-        "name": "Forest Ocean 34",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.81867789553418,
-              -40.72457154372816
-            ],
-            [
-              -73.81765298287034,
-              -40.724345758322
-            ],
-            [
-              -73.81801454778552,
-              -40.72338967267918
-            ],
-            [
-              -73.81903946044936,
-              -40.72361545808534
-            ],
-            [
-              -73.81867789553418,
-              -40.72457154372816
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-35",
-        "line": 2,
-        "name": "Forest Ocean 35",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.81740244866363,
-              -40.72429056633383
-            ],
-            [
-              -73.81637753599979,
-              -40.72406478092766
-            ],
-            [
-              -73.81673910091497,
-              -40.72310869528484
-            ],
-            [
-              -73.81776401357881,
-              -40.72333448069101
-            ],
-            [
-              -73.81740244866363,
-              -40.72429056633383
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-36",
-        "line": 2,
-        "name": "Forest Ocean 36",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.81612700179308,
-              -40.724009588939495
-            ],
-            [
-              -73.81510208912923,
-              -40.72378380353333
-            ],
-            [
-              -73.81546365404441,
-              -40.72282771789051
-            ],
-            [
-              -73.81648856670826,
-              -40.72305350329667
-            ],
-            [
-              -73.81612700179308,
-              -40.724009588939495
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-37",
-        "line": 2,
-        "name": "Forest Ocean 37",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.81485155492251,
-              -40.723728611545155
-            ],
-            [
-              -73.81382664225868,
-              -40.723502826139
-            ],
-            [
-              -73.81418820717386,
-              -40.72254674049617
-            ],
-            [
-              -73.8152131198377,
-              -40.722772525902336
-            ],
-            [
-              -73.81485155492251,
-              -40.723728611545155
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-38",
-        "line": 2,
-        "name": "Forest Ocean 38",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.80082163934641,
-              -40.72063786020746
-            ],
-            [
-              -73.79979672668257,
-              -40.7204120748013
-            ],
-            [
-              -73.80015829159775,
-              -40.71945598915848
-            ],
-            [
-              -73.80118320426159,
-              -40.71968177456464
-            ],
-            [
-              -73.80082163934641,
-              -40.72063786020746
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-39",
-        "line": 2,
-        "name": "Forest Ocean 39",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79954619247586,
-              -40.72035688281313
-            ],
-            [
-              -73.79852127981202,
-              -40.72013109740696
-            ],
-            [
-              -73.7988828447272,
-              -40.71917501176414
-            ],
-            [
-              -73.79990775739104,
-              -40.71940079717031
-            ],
-            [
-              -73.79954619247586,
-              -40.72035688281313
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-40",
-        "line": 2,
-        "name": "Forest Ocean 40",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.7982707456053,
-              -40.720075905418796
-            ],
-            [
-              -73.79724583294146,
-              -40.71985012001263
-            ],
-            [
-              -73.79760739785664,
-              -40.71889403436981
-            ],
-            [
-              -73.79863231052047,
-              -40.71911981977597
-            ],
-            [
-              -73.7982707456053,
-              -40.720075905418796
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-41",
-        "line": 2,
-        "name": "Forest Ocean 41",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79699529873474,
-              -40.719794928024456
-            ],
-            [
-              -73.7959703860709,
-              -40.7195691426183
-            ],
-            [
-              -73.79633195098609,
-              -40.71861305697547
-            ],
-            [
-              -73.79735686364992,
-              -40.718838842381636
-            ],
-            [
-              -73.79699529873474,
-              -40.719794928024456
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-42",
-        "line": 2,
-        "name": "Forest Ocean 42",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79571985186419,
-              -40.71951395063012
-            ],
-            [
-              -73.79469493920035,
-              -40.71928816522396
-            ],
-            [
-              -73.79505650411554,
-              -40.71833207958114
-            ],
-            [
-              -73.79608141677937,
-              -40.718557864987304
-            ],
-            [
-              -73.79571985186419,
-              -40.71951395063012
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-43",
-        "line": 2,
-        "name": "Forest Ocean 43",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79444440499364,
-              -40.71923297323578
-            ],
-            [
-              -73.79341949232979,
-              -40.719007187829625
-            ],
-            [
-              -73.79378105724497,
-              -40.718051102186806
-            ],
-            [
-              -73.79480596990881,
-              -40.718276887592964
-            ],
-            [
-              -73.79444440499364,
-              -40.71923297323578
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-44",
-        "line": 2,
-        "name": "Forest Ocean 44",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79316895812308,
-              -40.71895199584145
-            ],
-            [
-              -73.79214404545924,
-              -40.718726210435285
-            ],
-            [
-              -73.79250561037442,
-              -40.717770124792466
-            ],
-            [
-              -73.79353052303826,
-              -40.71799591019863
-            ],
-            [
-              -73.79316895812308,
-              -40.71895199584145
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-45",
-        "line": 2,
-        "name": "Forest Ocean 45",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79189351125252,
-              -40.71867101844711
-            ],
-            [
-              -73.79086859858869,
-              -40.71844523304095
-            ],
-            [
-              -73.79123016350387,
-              -40.71748914739813
-            ],
-            [
-              -73.7922550761677,
-              -40.71771493280429
-            ],
-            [
-              -73.79189351125252,
-              -40.71867101844711
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-46",
-        "line": 2,
-        "name": "Forest Ocean 46",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.79061806438197,
-              -40.71839004105278
-            ],
-            [
-              -73.78959315171814,
-              -40.71816425564661
-            ],
-            [
-              -73.7899547166333,
-              -40.717208170003794
-            ],
-            [
-              -73.79097962929715,
-              -40.71743395540996
-            ],
-            [
-              -73.79061806438197,
-              -40.71839004105278
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-47",
-        "line": 2,
-        "name": "Forest Ocean 47",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.78934261751141,
-              -40.718109063658446
-            ],
-            [
-              -73.78831770484757,
-              -40.71788327825228
-            ],
-            [
-              -73.78867926976275,
-              -40.71692719260946
-            ],
-            [
-              -73.78970418242659,
-              -40.71715297801562
-            ],
-            [
-              -73.78934261751141,
-              -40.718109063658446
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-48",
-        "line": 2,
-        "name": "Forest Ocean 48",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.78806717064086,
-              -40.717828086264106
-            ],
-            [
-              -73.78704225797702,
-              -40.71760230085795
-            ],
-            [
-              -73.7874038228922,
-              -40.71664621521512
-            ],
-            [
-              -73.78842873555604,
-              -40.71687200062129
-            ],
-            [
-              -73.78806717064086,
-              -40.717828086264106
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-49",
-        "line": 2,
-        "name": "Forest Ocean 49",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.7867917237703,
-              -40.71754710886977
-            ],
-            [
-              -73.78576681110647,
-              -40.71732132346361
-            ],
-            [
-              -73.78612837602165,
-              -40.71636523782079
-            ],
-            [
-              -73.78715328868549,
-              -40.716591023226954
-            ],
-            [
-              -73.7867917237703,
-              -40.71754710886977
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L2-50",
-        "line": 2,
-        "name": "Forest Ocean 50",
-        "category": "forest_ocean",
-        "area_ha": 0.99,
-        "ocean_exposure": "Vista filtrada",
-        "privacy": "Alta",
-        "conservation": "70% nativo",
-        "architecture": "Refugio elevado · madera nativa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -73.78551627689974,
-              -40.717266131475434
-            ],
-            [
-              -73.7844913642359,
-              -40.717040346069275
-            ],
-            [
-              -73.78485292915109,
-              -40.716084260426456
-            ],
-            [
-              -73.78587784181492,
-              -40.716310045832614
-            ],
-            [
-              -73.78551627689974,
-              -40.717266131475434
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-01",
+        "id": "L3-001",
         "line": 3,
-        "name": "Bosque Vivo 01",
+        "name": "Bosque Vivo 001",
         "category": "bosque_vivo",
-        "area_ha": 1.3,
+        "area_ha": 1.4,
         "ocean_exposure": "Indirecta · sonido",
         "privacy": "Total inmersión",
         "conservation": "80% nativo",
@@ -4466,24 +1965,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.82545749981365,
-              -40.72406427800655
+              -73.79903227854943,
+              -40.714304862570096
             ],
             [
-              -73.82431870796495,
-              -40.72381340533304
+              -73.79793117789504,
+              -40.7139700239818
             ],
             [
-              -73.82474601195561,
-              -40.722683485936976
+              -73.79731698643104,
+              -40.71514658598272
             ],
             [
-              -73.82588480380431,
-              -40.72293435861049
+              -73.79841808708544,
+              -40.71548142457101
             ],
             [
-              -73.82545749981365,
-              -40.72406427800655
+              -73.79903227854943,
+              -40.714304862570096
             ]
           ]
         ]
@@ -4492,11 +1991,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L3-02",
+        "id": "L3-002",
         "line": 3,
-        "name": "Bosque Vivo 02",
+        "name": "Bosque Vivo 002",
         "category": "bosque_vivo",
-        "area_ha": 1.3,
+        "area_ha": 1.4,
         "ocean_exposure": "Indirecta · sonido",
         "privacy": "Total inmersión",
         "conservation": "80% nativo",
@@ -4507,24 +2006,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.82403401000276,
-              -40.72375068716466
+              -73.79779865027282,
+              -40.71381868750129
             ],
             [
-              -73.82289521815406,
-              -40.72349981449114
+              -73.79666158334612,
+              -40.71356329773933
             ],
             [
-              -73.82332252214472,
-              -40.722369895095085
+              -73.79713004252996,
+              -40.71234830460214
             ],
             [
-              -73.82446131399344,
-              -40.722620767768596
+              -73.79826710945666,
+              -40.7126036943641
             ],
             [
-              -73.82403401000276,
-              -40.72375068716466
+              -73.79779865027282,
+              -40.71381868750129
             ]
           ]
         ]
@@ -4533,11 +2032,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L3-03",
+        "id": "L3-003",
         "line": 3,
-        "name": "Bosque Vivo 03",
+        "name": "Bosque Vivo 003",
         "category": "bosque_vivo",
-        "area_ha": 1.3,
+        "area_ha": 1.4,
         "ocean_exposure": "Indirecta · sonido",
         "privacy": "Total inmersión",
         "conservation": "80% nativo",
@@ -4548,24 +2047,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.82261052019187,
-              -40.72343709632277
+              -73.79647272616134,
+              -40.71352733316922
             ],
             [
-              -73.82147172834317,
-              -40.72318622364925
+              -73.7953117818956,
+              -40.71334495940317
             ],
             [
-              -73.82189903233383,
-              -40.722056304253194
+              -73.79564630848327,
+              -40.7121044525496
             ],
             [
-              -73.82303782418255,
-              -40.722307176926705
+              -73.79680725274902,
+              -40.71228682631565
             ],
             [
-              -73.82261052019187,
-              -40.72343709632277
+              -73.79647272616134,
+              -40.71352733316922
             ]
           ]
         ]
@@ -4574,11 +2073,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L3-04",
+        "id": "L3-004",
         "line": 3,
-        "name": "Bosque Vivo 04",
+        "name": "Bosque Vivo 004",
         "category": "bosque_vivo",
-        "area_ha": 1.3,
+        "area_ha": 1.4,
         "ocean_exposure": "Indirecta · sonido",
         "privacy": "Total inmersión",
         "conservation": "80% nativo",
@@ -4589,24 +2088,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79983468321768,
-              -40.71841964285249
+              -73.79511450064557,
+              -40.713319988557316
             ],
             [
-              -73.79869589136896,
-              -40.71816877017897
+              -73.79394115929398,
+              -40.713191915561765
             ],
             [
-              -73.79912319535964,
-              -40.71703885078291
+              -73.79417608245812,
+              -40.7119381620172
             ],
             [
-              -73.80026198720834,
-              -40.717289723456425
+              -73.79534942380971,
+              -40.71206623501275
             ],
             [
-              -73.79983468321768,
-              -40.71841964285249
+              -73.79511450064557,
+              -40.713319988557316
             ]
           ]
         ]
@@ -4615,11 +2114,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L3-05",
+        "id": "L3-005",
         "line": 3,
-        "name": "Bosque Vivo 05",
+        "name": "Bosque Vivo 005",
         "category": "bosque_vivo",
-        "area_ha": 1.3,
+        "area_ha": 1.4,
         "ocean_exposure": "Indirecta · sonido",
         "privacy": "Total inmersión",
         "conservation": "80% nativo",
@@ -4630,24 +2129,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79841119340679,
-              -40.71810605201059
+              -73.79372054317348,
+              -40.71328200950304
             ],
             [
-              -73.79727240155808,
-              -40.71785517933708
+              -73.79254230187264,
+              -40.713183569712925
             ],
             [
-              -73.79769970554875,
-              -40.71672525994102
+              -73.7923617346354,
+              -40.71444255901326
             ],
             [
-              -73.79883849739745,
-              -40.71697613261453
+              -73.79353997593626,
+              -40.71454099880337
             ],
             [
-              -73.79841119340679,
-              -40.71810605201059
+              -73.79372054317348,
+              -40.71328200950304
             ]
           ]
         ]
@@ -4656,11 +2155,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L3-06",
+        "id": "L3-006",
         "line": 3,
-        "name": "Bosque Vivo 06",
+        "name": "Bosque Vivo 006",
         "category": "bosque_vivo",
-        "area_ha": 1.3,
+        "area_ha": 1.4,
         "ocean_exposure": "Indirecta · sonido",
         "privacy": "Total inmersión",
         "conservation": "80% nativo",
@@ -4671,24 +2170,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.7969877035959,
-              -40.7177924611687
+              -73.79234964881931,
+              -40.71306082862035
             ],
             [
-              -73.7958489117472,
-              -40.71754158849519
+              -73.79117062846196,
+              -40.71296798139194
             ],
             [
-              -73.79627621573786,
-              -40.716411669099124
+              -73.79134093731267,
+              -40.71170815964428
             ],
             [
-              -73.79741500758657,
-              -40.71666254177264
+              -73.79251995767002,
+              -40.71180100687269
             ],
             [
-              -73.7969877035959,
-              -40.7177924611687
+              -73.79234964881931,
+              -40.71306082862035
             ]
           ]
         ]
@@ -4697,11 +2196,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L3-07",
+        "id": "L3-007",
         "line": 3,
-        "name": "Bosque Vivo 07",
+        "name": "Bosque Vivo 007",
         "category": "bosque_vivo",
-        "area_ha": 1.3,
+        "area_ha": 1.4,
         "ocean_exposure": "Indirecta · sonido",
         "privacy": "Total inmersión",
         "conservation": "80% nativo",
@@ -4712,24 +2211,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79556421378501,
-              -40.71747887032681
+              -73.79094850563848,
+              -40.71306017876447
             ],
             [
-              -73.79442542193631,
-              -40.717227997653296
+              -73.78977134024738,
+              -40.7129545064082
             ],
             [
-              -73.79485272592697,
-              -40.71609807825723
+              -73.78957750637797,
+              -40.71421234606385
             ],
             [
-              -73.79599151777569,
-              -40.71634895093075
+              -73.79075467176906,
+              -40.71431801842012
             ],
             [
-              -73.79556421378501,
-              -40.71747887032681
+              -73.79094850563848,
+              -40.71306017876447
             ]
           ]
         ]
@@ -4738,11 +2237,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L3-08",
+        "id": "L3-008",
         "line": 3,
-        "name": "Bosque Vivo 08",
+        "name": "Bosque Vivo 008",
         "category": "bosque_vivo",
-        "area_ha": 1.3,
+        "area_ha": 1.4,
         "ocean_exposure": "Indirecta · sonido",
         "privacy": "Total inmersión",
         "conservation": "80% nativo",
@@ -4753,24 +2252,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79414072397412,
-              -40.71716527948492
+              -73.78890358496155,
+              -40.71275572208165
             ],
             [
-              -73.79300193212542,
-              -40.7169144068114
+              -73.78773260255113,
+              -40.71261563581121
             ],
             [
-              -73.79342923611608,
-              -40.71578448741534
+              -73.78798956155926,
+              -40.7113644028723
             ],
             [
-              -73.7945680279648,
-              -40.71603536008885
+              -73.78916054396967,
+              -40.71150448914274
             ],
             [
-              -73.79414072397412,
-              -40.71716527948492
+              -73.78890358496155,
+              -40.71275572208165
             ]
           ]
         ]
@@ -4779,11 +2278,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L3-09",
+        "id": "L3-009",
         "line": 3,
-        "name": "Bosque Vivo 09",
+        "name": "Bosque Vivo 009",
         "category": "bosque_vivo",
-        "area_ha": 1.3,
+        "area_ha": 1.4,
         "ocean_exposure": "Indirecta · sonido",
         "privacy": "Total inmersión",
         "conservation": "80% nativo",
@@ -4794,24 +2293,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79271723416325,
-              -40.716851688643025
+              -73.78751595724766,
+              -40.71269756801208
             ],
             [
-              -73.79157844231453,
-              -40.71660081596951
+              -73.78634932015187,
+              -40.71253775142867
             ],
             [
-              -73.7920057463052,
-              -40.71547089657345
+              -73.786056170005,
+              -40.713784341257025
             ],
             [
-              -73.79314453815391,
-              -40.71572176924696
+              -73.78722280710079,
+              -40.71394415784044
             ],
             [
-              -73.79271723416325,
-              -40.716851688643025
+              -73.78751595724766,
+              -40.71269756801208
             ]
           ]
         ]
@@ -4820,11 +2319,11 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L3-10",
+        "id": "L3-010",
         "line": 3,
-        "name": "Bosque Vivo 10",
+        "name": "Bosque Vivo 010",
         "category": "bosque_vivo",
-        "area_ha": 1.3,
+        "area_ha": 1.4,
         "ocean_exposure": "Indirecta · sonido",
         "privacy": "Total inmersión",
         "conservation": "80% nativo",
@@ -4835,24 +2334,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79129374435236,
-              -40.71653809780113
+              -73.78618538435951,
+              -40.71240324534851
             ],
             [
-              -73.79015495250364,
-              -40.716287225127616
+              -73.78502114624679,
+              -40.71223354355091
             ],
             [
-              -73.79058225649432,
-              -40.71515730573156
+              -73.78533242875471,
+              -40.7109895171143
             ],
             [
-              -73.79172104834302,
-              -40.71540817840507
+              -73.78649666686744,
+              -40.711159218911895
             ],
             [
-              -73.79129374435236,
-              -40.71653809780113
+              -73.78618538435951,
+              -40.71240324534851
             ]
           ]
         ]
@@ -4861,40 +2360,310 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L3-11",
-        "line": 3,
-        "name": "Bosque Vivo 11",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
+        "id": "R-ocean_front",
+        "line": "road",
+        "name": "Camino ocean_front",
+        "category": "road",
+        "width_m": 12
       },
       "geometry": {
-        "type": "Polygon",
+        "type": "LineString",
         "coordinates": [
           [
-            [
-              -73.78987025454147,
-              -40.716224506959236
-            ],
-            [
-              -73.78873146269275,
-              -40.715973634285724
-            ],
-            [
-              -73.78915876668343,
-              -40.71484371488966
-            ],
-            [
-              -73.79029755853213,
-              -40.71509458756318
-            ],
-            [
-              -73.78987025454147,
-              -40.716224506959236
-            ]
+            -73.8262851308429,
+            -40.72937878489054
+          ],
+          [
+            -73.82571746790278,
+            -40.729095173330705
+          ],
+          [
+            -73.82514589454809,
+            -40.728821902075126
+          ],
+          [
+            -73.82456691391175,
+            -40.728568217884884
+          ],
+          [
+            -73.82397780264218,
+            -40.72834132211517
+          ],
+          [
+            -73.82337687112535,
+            -40.72814568261017
+          ],
+          [
+            -73.82276359157774,
+            -40.72798269498716
+          ],
+          [
+            -73.82213857983781,
+            -40.727850730785306
+          ],
+          [
+            -73.82150343676129,
+            -40.72774555686383
+          ],
+          [
+            -73.8208604742473,
+            -40.727661059870854
+          ],
+          [
+            -73.820212366406,
+            -40.72759016866034
+          ],
+          [
+            -73.81956177606102,
+            -40.727525841931076
+          ],
+          [
+            -73.8189110093224,
+            -40.72746198163932
+          ],
+          [
+            -73.81826174604069,
+            -40.7273941457584
+          ],
+          [
+            -73.81761488229465,
+            -40.727319964788364
+          ],
+          [
+            -73.81697050435484,
+            -40.72723921060407
+          ],
+          [
+            -73.81632799420407,
+            -40.727153517427595
+          ],
+          [
+            -73.8156862474513,
+            -40.727065805598805
+          ],
+          [
+            -73.81504396809767,
+            -40.726979502125765
+          ],
+          [
+            -73.814399993439,
+            -40.726897681545715
+          ],
+          [
+            -73.81375359801109,
+            -40.7268222622026
+          ],
+          [
+            -73.81310472852884,
+            -40.726753384998254
+          ],
+          [
+            -73.81245413180034,
+            -40.726689075148975
+          ],
+          [
+            -73.8118033531859,
+            -40.72662524626043
+          ],
+          [
+            -73.81115460209185,
+            -40.72655605600232
+          ],
+          [
+            -73.81051050054016,
+            -40.726474570965266
+          ],
+          [
+            -73.80987374824106,
+            -40.726373652309015
+          ],
+          [
+            -73.80924675032296,
+            -40.726246940155576
+          ],
+          [
+            -73.80863126010773,
+            -40.72608979819808
+          ],
+          [
+            -73.80802808814177,
+            -40.725900083109856
+          ],
+          [
+            -73.80743692023687,
+            -40.725678625698336
+          ],
+          [
+            -73.80685627270644,
+            -40.72542934927402
+          ],
+          [
+            -73.80628359433271,
+            -40.725159000018856
+          ],
+          [
+            -73.80571550448578,
+            -40.72487651732815
+          ],
+          [
+            -73.80514813806167,
+            -40.72459212169139
+          ],
+          [
+            -73.80457755315159,
+            -40.72431623669294
+          ],
+          [
+            -73.80400014867638,
+            -40.72405838466188
+          ],
+          [
+            -73.80341303784083,
+            -40.72382619914704
+          ],
+          [
+            -73.80281432937637,
+            -40.72362468122747
+          ],
+          [
+            -73.80220328128617,
+            -40.723455792964494
+          ],
+          [
+            -73.80158030938968,
+            -40.72331843480726
+          ],
+          [
+            -73.80094685290945,
+            -40.72320880102136
+          ],
+          [
+            -73.8003051188474,
+            -40.72312105563448
+          ],
+          [
+            -73.79965774322343,
+            -40.72304822822261
+          ],
+          [
+            -73.79900741811402,
+            -40.722983200131324
+          ],
+          [
+            -73.7983565373241,
+            -40.72291964142526
+          ],
+          [
+            -73.79770690993473,
+            -40.722852768353725
+          ],
+          [
+            -73.79705958043446,
+            -40.722779818976996
+          ],
+          [
+            -73.79641477818993,
+            -40.722700186781154
+          ],
+          [
+            -73.7957719999312,
+            -40.72261520256222
+          ],
+          [
+            -73.7951302094516,
+            -40.72252760636021
+          ],
+          [
+            -73.79448812163164,
+            -40.72244079641494
+          ],
+          [
+            -73.79384452563227,
+            -40.722357974546576
+          ],
+          [
+            -73.7931985964122,
+            -40.722281322410694
+          ],
+          [
+            -73.79255014542012,
+            -40.722211338593326
+          ],
+          [
+            -73.79189977015209,
+            -40.72214644313641
+          ],
+          [
+            -73.79124887698818,
+            -40.72208291715085
+          ],
+          [
+            -73.79059957022861,
+            -40.72201519623839
+          ],
+          [
+            -73.78995441989636,
+            -40.72193648449043
+          ],
+          [
+            -73.78931613885307,
+            -40.72183960829048
+          ],
+          [
+            -73.78868721350833,
+            -40.72171799282884
+          ],
+          [
+            -73.78806953991528,
+            -40.72156662437454
+          ],
+          [
+            -73.78746411723648,
+            -40.721382860843384
+          ],
+          [
+            -73.78687084337332,
+            -40.72116697221457
+          ],
+          [
+            -73.78628844396617,
+            -40.720922328275655
+          ],
+          [
+            -73.78571454788234,
+            -40.72065519900975
+          ],
+          [
+            -73.78514590225161,
+            -40.720374185977384
+          ],
+          [
+            -73.78457870090051,
+            -40.72008935383828
+          ],
+          [
+            -73.78400898437903,
+            -40.719811172560995
+          ],
+          [
+            -73.78343305987183,
+            -40.71954940705245
+          ],
+          [
+            -73.7828478865331,
+            -40.719312098217195
+          ],
+          [
+            -73.78225137657027,
+            -40.719104766802616
+          ],
+          [
+            -73.78164257404946,
+            -40.718929940583365
+          ],
+          [
+            -73.78102169026864,
+            -40.71878706082451
           ]
         ]
       }
@@ -4902,40 +2671,326 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L3-12",
-        "line": 3,
-        "name": "Bosque Vivo 12",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
+        "id": "R-forest_ocean",
+        "line": "road",
+        "name": "Camino forest_ocean",
+        "category": "road",
+        "width_m": 12
       },
       "geometry": {
-        "type": "Polygon",
+        "type": "LineString",
         "coordinates": [
           [
-            [
-              -73.78844676473058,
-              -40.715910916117345
-            ],
-            [
-              -73.78730797288188,
-              -40.71566004344383
-            ],
-            [
-              -73.78773527687254,
-              -40.71453012404777
-            ],
-            [
-              -73.78887406872124,
-              -40.71478099672129
-            ],
-            [
-              -73.78844676473058,
-              -40.715910916117345
-            ]
+            -73.82791579640282,
+            -40.72506681803584
+          ],
+          [
+            -73.82736051561172,
+            -40.724843175125656
+          ],
+          [
+            -73.8267965215071,
+            -40.724642572819235
+          ],
+          [
+            -73.82622311287368,
+            -40.7244668653393
+          ],
+          [
+            -73.82564012968709,
+            -40.72431647583806
+          ],
+          [
+            -73.82504793846115,
+            -40.72419043514346
+          ],
+          [
+            -73.82444737880986,
+            -40.72408652306536
+          ],
+          [
+            -73.8238396762769,
+            -40.72400149890011
+          ],
+          [
+            -73.82322632922943,
+            -40.72393140051737
+          ],
+          [
+            -73.82260897968088,
+            -40.723871885943126
+          ],
+          [
+            -73.82198927912768,
+            -40.72381858812747
+          ],
+          [
+            -73.8213687607539,
+            -40.72376745287371
+          ],
+          [
+            -73.82074872865797,
+            -40.72371503175605
+          ],
+          [
+            -73.82013017314861,
+            -40.72365870610239
+          ],
+          [
+            -73.81951371878526,
+            -40.72359682439108
+          ],
+          [
+            -73.81889960890626,
+            -40.72352874316277
+          ],
+          [
+            -73.81828772715151,
+            -40.72345477010835
+          ],
+          [
+            -73.81767765322289,
+            -40.72337601662164
+          ],
+          [
+            -73.81706874711911,
+            -40.723294175057156
+          ],
+          [
+            -73.81646025358978,
+            -40.72321124252258
+          ],
+          [
+            -73.81585141679057,
+            -40.723129217696155
+          ],
+          [
+            -73.81524159424089,
+            -40.723049799488415
+          ],
+          [
+            -73.81463035926117,
+            -40.72297411616758
+          ],
+          [
+            -73.8140175820927,
+            -40.72290251085453
+          ],
+          [
+            -73.81340348179022,
+            -40.72283440430305
+          ],
+          [
+            -73.81278864356354,
+            -40.722768249043604
+          ],
+          [
+            -73.81217399930452,
+            -40.72270158087569
+          ],
+          [
+            -73.81156077230763,
+            -40.72263116504334
+          ],
+          [
+            -73.81095039039111,
+            -40.72255322596861
+          ],
+          [
+            -73.81034437447614,
+            -40.72246374188157
+          ],
+          [
+            -73.80974421193521,
+            -40.72235877972506
+          ],
+          [
+            -73.80915122548184,
+            -40.72223484184938
+          ],
+          [
+            -73.80856644891404,
+            -40.72208919458377
+          ],
+          [
+            -73.80799052059245,
+            -40.72192014991201
+          ],
+          [
+            -73.80742360416632,
+            -40.721727275096654
+          ],
+          [
+            -73.80686534386827,
+            -40.72151151089285
+          ],
+          [
+            -73.80631485886914,
+            -40.72127518647608
+          ],
+          [
+            -73.80577077795417,
+            -40.721021927747735
+          ],
+          [
+            -73.80523131242828,
+            -40.720756464551975
+          ],
+          [
+            -73.80469436196395,
+            -40.720484350782115
+          ],
+          [
+            -73.80415764534406,
+            -40.72021161865772
+          ],
+          [
+            -73.80361884595754,
+            -40.71994439399047
+          ],
+          [
+            -73.80307576065829,
+            -40.71968850255676
+          ],
+          [
+            -73.80252644030216,
+            -40.71944909847599
+          ],
+          [
+            -73.80196931095976,
+            -40.71923034368761
+          ],
+          [
+            -73.80140326640613,
+            -40.719035163380894
+          ],
+          [
+            -73.80082772487513,
+            -40.71886509591927
+          ],
+          [
+            -73.80024264603509,
+            -40.71872024795179
+          ],
+          [
+            -73.79964850743889,
+            -40.718599356685914
+          ],
+          [
+            -73.79904624304793,
+            -40.718499952448745
+          ],
+          [
+            -73.79843714953957,
+            -40.718418606437965
+          ],
+          [
+            -73.79782276871984,
+            -40.71835124165787
+          ],
+          [
+            -73.79720475625557,
+            -40.71829348003084
+          ],
+          [
+            -73.79658474795455,
+            -40.71824099599232
+          ],
+          [
+            -73.79596423487538,
+            -40.718189846738
+          ],
+          [
+            -73.79534445763821,
+            -40.71813675169767
+          ],
+          [
+            -73.79472632851643,
+            -40.718079298547906
+          ],
+          [
+            -73.79411038737314,
+            -40.71801605972943
+          ],
+          [
+            -73.793496794483,
+            -40.71794661142814
+          ],
+          [
+            -73.79288536001326,
+            -40.71787145561854
+          ],
+          [
+            -73.79227560670738,
+            -40.71779185430953
+          ],
+          [
+            -73.79166685940122,
+            -40.71770959283672
+          ],
+          [
+            -73.79105835265531,
+            -40.71762669525071
+          ],
+          [
+            -73.79044934620951,
+            -40.717545119020535
+          ],
+          [
+            -73.78983923729419,
+            -40.71746645804909
+          ],
+          [
+            -73.78922765912313,
+            -40.717391682228715
+          ],
+          [
+            -73.78861455612044,
+            -40.71732093851868
+          ],
+          [
+            -73.78800022849325,
+            -40.71725343308164
+          ],
+          [
+            -73.78738534147402,
+            -40.71718740684423
+          ],
+          [
+            -73.78677089768773,
+            -40.71712020856653
+          ],
+          [
+            -73.78615817437907,
+            -40.71704846083207
+          ],
+          [
+            -73.78554863037965,
+            -40.71696830605421
+          ],
+          [
+            -73.784943790433,
+            -40.71687571235563
+          ],
+          [
+            -73.7843451165871,
+            -40.71676681364476
+          ],
+          [
+            -73.7837538776295,
+            -40.716638254868265
+          ],
+          [
+            -73.7831710278655,
+            -40.716487512557805
+          ],
+          [
+            -73.78259710589471,
+            -40.716313162495226
+          ],
+          [
+            -73.78203216247732,
+            -40.71611507045536
           ]
         ]
       }
@@ -4943,573 +2998,294 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
-        "id": "L3-13",
-        "line": 3,
-        "name": "Bosque Vivo 13",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
+        "id": "R-bosque_vivo",
+        "line": "road",
+        "name": "Camino bosque_vivo",
+        "category": "road",
+        "width_m": 12
       },
       "geometry": {
-        "type": "Polygon",
+        "type": "LineString",
         "coordinates": [
           [
-            [
-              -73.78702327491969,
-              -40.71559732527545
-            ],
-            [
-              -73.78588448307099,
-              -40.71534645260194
-            ],
-            [
-              -73.78631178706165,
-              -40.71421653320588
-            ],
-            [
-              -73.78745057891037,
-              -40.71446740587939
-            ],
-            [
-              -73.78702327491969,
-              -40.71559732527545
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-14",
-        "line": 3,
-        "name": "Bosque Vivo 14",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+            -73.82950743814261,
+            -40.7208580418188
+          ],
           [
-            [
-              -73.7855997851088,
-              -40.71528373443356
-            ],
-            [
-              -73.7844609932601,
-              -40.715032861760044
-            ],
-            [
-              -73.78488829725076,
-              -40.71390294236399
-            ],
-            [
-              -73.78602708909948,
-              -40.7141538150375
-            ],
-            [
-              -73.7855997851088,
-              -40.71528373443356
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-15",
-        "line": 3,
-        "name": "Bosque Vivo 15",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+            -73.82884300919906,
+            -40.720726848655076
+          ],
           [
-            [
-              -73.8273740326907,
-              -40.72307411569914
-            ],
-            [
-              -73.82623524084198,
-              -40.72282324302563
-            ],
-            [
-              -73.82666254483266,
-              -40.721693323629566
-            ],
-            [
-              -73.82780133668136,
-              -40.721944196303085
-            ],
-            [
-              -73.8273740326907,
-              -40.72307411569914
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-16",
-        "line": 3,
-        "name": "Bosque Vivo 16",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+            -73.82817083385838,
+            -40.72061613927941
+          ],
           [
-            [
-              -73.79890423647295,
-              -40.716802298861296
-            ],
-            [
-              -73.79776544462423,
-              -40.71655142618778
-            ],
-            [
-              -73.79819274861491,
-              -40.71542150679172
-            ],
-            [
-              -73.79933154046361,
-              -40.71567237946523
-            ],
-            [
-              -73.79890423647295,
-              -40.716802298861296
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-17",
-        "line": 3,
-        "name": "Bosque Vivo 17",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+            -73.82749190066507,
+            -40.72052329968477
+          ],
           [
-            [
-              -73.79748074666206,
-              -40.7164887080194
-            ],
-            [
-              -73.79634195481334,
-              -40.716237835345886
-            ],
-            [
-              -73.79676925880402,
-              -40.71510791594983
-            ],
-            [
-              -73.79790805065272,
-              -40.71535878862334
-            ],
-            [
-              -73.79748074666206,
-              -40.7164887080194
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-18",
-        "line": 3,
-        "name": "Bosque Vivo 18",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+            -73.82680740262344,
+            -40.720445175211445
+          ],
           [
-            [
-              -73.79605725685117,
-              -40.71617511717751
-            ],
-            [
-              -73.79491846500247,
-              -40.715924244503995
-            ],
-            [
-              -73.79534576899313,
-              -40.71479432510793
-            ],
-            [
-              -73.79648456084183,
-              -40.71504519778145
-            ],
-            [
-              -73.79605725685117,
-              -40.71617511717751
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-19",
-        "line": 3,
-        "name": "Bosque Vivo 19",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+            -73.82611866147892,
+            -40.72037827076967
+          ],
           [
-            [
-              -73.79463376704028,
-              -40.715861526335615
-            ],
-            [
-              -73.79349497519158,
-              -40.715610653662104
-            ],
-            [
-              -73.79392227918224,
-              -40.71448073426604
-            ],
-            [
-              -73.79506107103096,
-              -40.71473160693956
-            ],
-            [
-              -73.79463376704028,
-              -40.715861526335615
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-20",
-        "line": 3,
-        "name": "Bosque Vivo 20",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+            -73.82542704742565,
+            -40.72031896315683
+          ],
           [
-            [
-              -73.79321027722939,
-              -40.715547935493724
-            ],
-            [
-              -73.79207148538069,
-              -40.715297062820206
-            ],
-            [
-              -73.79249878937135,
-              -40.71416714342415
-            ],
-            [
-              -73.79363758122007,
-              -40.71441801609766
-            ],
-            [
-              -73.79321027722939,
-              -40.715547935493724
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-21",
-        "line": 3,
-        "name": "Bosque Vivo 21",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+            -73.82473389934793,
+            -40.72026371196284
+          ],
           [
-            [
-              -73.7917867874185,
-              -40.71523434465183
-            ],
-            [
-              -73.7906479955698,
-              -40.714983471978314
-            ],
-            [
-              -73.79107529956046,
-              -40.71385355258226
-            ],
-            [
-              -73.79221409140918,
-              -40.71410442525577
-            ],
-            [
-              -73.7917867874185,
-              -40.71523434465183
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-22",
-        "line": 3,
-        "name": "Bosque Vivo 22",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+            -73.82404045060926,
+            -40.72020925580627
+          ],
           [
-            [
-              -73.79036329760763,
-              -40.714920753809935
-            ],
-            [
-              -73.78922450575891,
-              -40.71466988113642
-            ],
-            [
-              -73.78965180974957,
-              -40.713539961740366
-            ],
-            [
-              -73.79079060159829,
-              -40.71379083441388
-            ],
-            [
-              -73.79036329760763,
-              -40.714920753809935
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-23",
-        "line": 3,
-        "name": "Bosque Vivo 23",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+            -73.82334776498651,
+            -40.72015278174323
+          ],
           [
-            [
-              -73.78893980779674,
-              -40.71460716296804
-            ],
-            [
-              -73.78780101594802,
-              -40.71435629029453
-            ],
-            [
-              -73.7882283199387,
-              -40.71322637089847
-            ],
-            [
-              -73.7893671117874,
-              -40.71347724357199
-            ],
-            [
-              -73.78893980779674,
-              -40.71460716296804
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-24",
-        "line": 3,
-        "name": "Bosque Vivo 24",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+            -73.82265668663739,
+            -40.72009205756856
+          ],
           [
-            [
-              -73.78751631798585,
-              -40.71429357212615
-            ],
-            [
-              -73.78637752613713,
-              -40.71404269945264
-            ],
-            [
-              -73.7868048301278,
-              -40.71291278005658
-            ],
-            [
-              -73.78794362197651,
-              -40.713163652730096
-            ],
-            [
-              -73.78751631798585,
-              -40.71429357212615
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-25",
-        "line": 3,
-        "name": "Bosque Vivo 25",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+            -73.82196780703174,
+            -40.72002551925939
+          ],
           [
-            [
-              -73.78609282817496,
-              -40.71397998128426
-            ],
-            [
-              -73.78495403632625,
-              -40.71372910861075
-            ],
-            [
-              -73.78538134031692,
-              -40.712599189214686
-            ],
-            [
-              -73.78652013216562,
-              -40.7128500618882
-            ],
-            [
-              -73.78609282817496,
-              -40.71397998128426
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "L3-26",
-        "line": 3,
-        "name": "Bosque Vivo 26",
-        "category": "bosque_vivo",
-        "area_ha": 1.3,
-        "ocean_exposure": "Indirecta · sonido",
-        "privacy": "Total inmersión",
-        "conservation": "80% nativo",
-        "architecture": "Cabaña dosel · pasarela"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
+            -73.82128145063554,
+            -40.71995230883066
+          ],
           [
-            [
-              -73.78466933836407,
-              -40.71366639044237
-            ],
-            [
-              -73.78353054651537,
-              -40.71341551776885
-            ],
-            [
-              -73.78395785050603,
-              -40.712285598372794
-            ],
-            [
-              -73.78509664235474,
-              -40.712536471046306
-            ],
-            [
-              -73.78466933836407,
-              -40.71366639044237
-            ]
+            -73.82059767988525,
+            -40.71987226118175
+          ],
+          [
+            -73.81991631870933,
+            -40.71978584189844
+          ],
+          [
+            -73.81923699262883,
+            -40.719694041214936
+          ],
+          [
+            -73.8185591823783,
+            -40.719598232224165
+          ],
+          [
+            -73.81788228710256,
+            -40.71950000376669
+          ],
+          [
+            -73.8172056925624,
+            -40.71940098007453
+          ],
+          [
+            -73.81652883946262,
+            -40.71930264009123
+          ],
+          [
+            -73.81585128702027,
+            -40.71920614937866
+          ],
+          [
+            -73.81517276721773,
+            -40.719112216655326
+          ],
+          [
+            -73.81449322581523,
+            -40.71902098534747
+          ],
+          [
+            -73.81381284708611,
+            -40.71893196818132
+          ],
+          [
+            -73.81313206033131,
+            -40.718844029956976
+          ],
+          [
+            -73.8124515274526,
+            -40.718755420408435
+          ],
+          [
+            -73.81177211213922,
+            -40.71866385568327
+          ],
+          [
+            -73.81109483246593,
+            -40.71856664368779
+          ],
+          [
+            -73.81042079982998,
+            -40.71846084555559
+          ],
+          [
+            -73.80975114809841,
+            -40.718343463003556
+          ],
+          [
+            -73.8090869575301,
+            -40.718211639504524
+          ],
+          [
+            -73.80842917843668,
+            -40.7180628621506
+          ],
+          [
+            -73.8077785596237,
+            -40.71789515087628
+          ],
+          [
+            -73.80713558640282,
+            -40.717707222372546
+          ],
+          [
+            -73.80650043240354,
+            -40.717498617511154
+          ],
+          [
+            -73.80587292857288,
+            -40.71726978331861
+          ],
+          [
+            -73.8052525516886,
+            -40.717022103350935
+          ],
+          [
+            -73.80463843349212,
+            -40.71675787354306
+          ],
+          [
+            -73.80402939025203,
+            -40.71648022403454
+          ],
+          [
+            -73.80342397127741,
+            -40.71619299088543
+          ],
+          [
+            -73.80282052369957,
+            -40.71590054477436
+          ],
+          [
+            -73.80221726980409,
+            -40.71560758650924
+          ],
+          [
+            -73.80161239239273,
+            -40.71531892130513
+          ],
+          [
+            -73.80100412313575,
+            -40.715039225154015
+          ],
+          [
+            -73.80039082867528,
+            -40.71477281714212
+          ],
+          [
+            -73.79977108937024,
+            -40.714523451224416
+          ],
+          [
+            -73.79914376602791,
+            -40.71429413976685
+          ],
+          [
+            -73.79850805071355,
+            -40.714087019190195
+          ],
+          [
+            -73.7978634987241,
+            -40.713903265422175
+          ],
+          [
+            -73.7972100399873,
+            -40.713743063754755
+          ],
+          [
+            -73.79654796943095,
+            -40.7136056343108
+          ],
+          [
+            -73.7958779171747,
+            -40.71348931086563
+          ],
+          [
+            -73.79520080064636,
+            -40.71339166746619
+          ],
+          [
+            -73.79451776183417,
+            -40.71330968435431
+          ],
+          [
+            -73.79383009378847,
+            -40.71323994231868
+          ],
+          [
+            -73.79313916111894,
+            -40.71317883292368
+          ],
+          [
+            -73.79244631956165,
+            -40.713122771198144
+          ],
+          [
+            -73.79175283968989,
+            -40.71306839736676
+          ],
+          [
+            -73.79105983951688,
+            -40.713012755068576
+          ],
+          [
+            -73.79036823010877,
+            -40.71295343517252
+          ],
+          [
+            -73.78967867743388,
+            -40.712888676659446
+          ],
+          [
+            -73.78899158257802,
+            -40.712817418938656
+          ],
+          [
+            -73.78830708122742,
+            -40.71273930321524
+          ],
+          [
+            -73.78762506204012,
+            -40.71265462391057
+          ],
+          [
+            -73.7869452022775,
+            -40.71256423444202
+          ],
+          [
+            -73.7862670179304,
+            -40.71246941467429
+          ],
+          [
+            -73.78558992462425,
+            -40.71237170986842
+          ],
+          [
+            -73.78491330488409,
+            -40.7122727528126
+          ],
+          [
+            -73.78423657693232,
+            -40.71217408190057
+          ],
+          [
+            -73.78355926010188,
+            -40.712076968159664
           ]
         ]
       }
