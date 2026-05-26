@@ -31,6 +31,7 @@ import TasacionLive from "@/pages/TasacionLive";
 import TasacionValidator from "@/pages/TasacionValidator";
 import ForestalLanding from "@/pages/forestal/ForestalLanding";
 import InvestorsLogin from "@/pages/forestal/InvestorsLogin";
+import HuellelhueLanding from "@/pages/huellelhue/HuellelhueLanding";
 
 export const publicRoutes = [
   <Route key="home" path="/" element={<Index />} />,
@@ -64,4 +65,5 @@ export const publicRoutes = [
   <Route key="tasacion-validar" path="/tasacion/validar" element={<TasacionValidator />} />,
   <Route key="forestal-landing" path="/forestal-valle-escondido" element={<ForestalLanding />} />,
   <Route key="forestal-investors" path="/forestal-valle-escondido/investors" element={<InvestorsLogin />} />,
+  <Route key="huellelhue" path="/huellelhue" element={<HuellelhueLanding />} />,
 ];
