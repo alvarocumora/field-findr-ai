@@ -1499,11 +1499,52 @@ export const HUELLELHUE_DATA = {
     {
       "type": "Feature",
       "properties": {
+        "id": "M-ECO",
+        "line": "macro",
+        "name": "Huellelhue Lodge",
+        "category": "eco_lodge",
+        "area_ha": 10,
+        "ocean_exposure": "Vista interior",
+        "privacy": "Operativo · acceso huéspedes",
+        "conservation": "70% nativo · construcción bajo dosel",
+        "architecture": "Lodge principal · 28 suites · spa · biblioteca · restaurante"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.7983420478346,
+              -40.71524864832836
+            ],
+            [
+              -73.79410537016075,
+              -40.714315320033066
+            ],
+            [
+              -73.79498888230246,
+              -40.71197905000664
+            ],
+            [
+              -73.79922555997629,
+              -40.71291237830194
+            ],
+            [
+              -73.7983420478346,
+              -40.71524864832836
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
         "id": "M-WEL",
         "line": "macro",
         "name": "Wellness & Sauna Mar",
         "category": "wellness",
-        "area_ha": 6,
+        "area_ha": 5,
         "ocean_exposure": "Directa · sauna mar",
         "privacy": "Operativo · acceso huéspedes",
         "conservation": "70% nativo · construcción bajo dosel",
@@ -1514,24 +1555,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.7986227039821,
-              -40.71531047609623
+              -73.79882137508575,
+              -40.71535424278719
             ],
             [
-              -73.7953409875673,
-              -40.71458752310738
+              -73.79582559157288,
+              -40.714694280020524
             ],
             [
-              -73.79602535312951,
-              -40.71277785612646
+              -73.79645032899954,
+              -40.713042287642146
             ],
             [
-              -73.7993070695443,
-              -40.7135008091153
+              -73.79944611251241,
+              -40.71370225040882
             ],
             [
-              -73.7986227039821,
-              -40.71531047609623
+              -73.79882137508575,
+              -40.71535424278719
             ]
           ]
         ]
@@ -1544,7 +1585,7 @@ export const HUELLELHUE_DATA = {
         "line": "macro",
         "name": "Glamping Selva",
         "category": "glamping",
-        "area_ha": 10,
+        "area_ha": 8,
         "ocean_exposure": "Vista interior",
         "privacy": "Operativo · acceso huéspedes",
         "conservation": "70% nativo · construcción bajo dosel",
@@ -1555,24 +1596,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.7983209523929,
-              -40.71524400106129
+              -73.79843895096609,
+              -40.715269995818424
             ],
             [
-              -73.79408427471907,
-              -40.714310672766004
+              -73.7946495512551,
+              -40.71443520161298
             ],
             [
-              -73.79496778686077,
-              -40.71197440273957
+              -73.79543978853822,
+              -40.71234557817582
             ],
             [
-              -73.7992044645346,
-              -40.71290773103487
+              -73.7992291882492,
+              -40.71318037238127
             ],
             [
-              -73.7983209523929,
-              -40.71524400106129
+              -73.79843895096609,
+              -40.715269995818424
             ]
           ]
         ]
@@ -1585,7 +1626,7 @@ export const HUELLELHUE_DATA = {
         "line": "macro",
         "name": "Centro Investigación",
         "category": "research",
-        "area_ha": 4,
+        "area_ha": 3,
         "ocean_exposure": "Vista interior",
         "privacy": "Operativo · acceso huéspedes",
         "conservation": "70% nativo · construcción bajo dosel",
@@ -1596,24 +1637,24 @@ export const HUELLELHUE_DATA = {
         "coordinates": [
           [
             [
-              -73.79010120413842,
-              -40.713433213407214
+              -73.78992171098771,
+              -40.71339367156588
             ],
             [
-              -73.78742169390617,
-              -40.712842924763656
+              -73.78760118705688,
+              -40.71288246660499
             ],
             [
-              -73.7879804760478,
-              -40.71136533786111
+              -73.78808510658672,
+              -40.71160283881109
             ],
             [
-              -73.79065998628008,
-              -40.711955626504675
+              -73.79040563051755,
+              -40.71211404377198
             ],
             [
-              -73.79010120413842,
-              -40.713433213407214
+              -73.78992171098771,
+              -40.71339367156588
             ]
           ]
         ]
@@ -1683,6 +1724,42 @@ export const HUELLELHUE_DATA = {
           [
             -73.78416977310634,
             -40.72103632592559
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "S-INT",
+        "line": "trail",
+        "name": "Sendero Reserva Núcleo",
+        "category": "trail",
+        "difficulty": "Moderado",
+        "length_km": 4.2,
+        "ocean_exposure": "-",
+        "privacy": "Comunitario",
+        "conservation": "Trazado de bajo impacto · superficie permeable",
+        "architecture": "Pasarela de madera nativa flotante"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -73.79790350703688,
+            -40.709764178194476
+          ],
+          [
+            -73.79862909100318,
+            -40.709445166239426
+          ],
+          [
+            -73.79829476386377,
+            -40.71032922706662
+          ],
+          [
+            -73.79790350703688,
+            -40.709764178194476
           ]
         ]
       }
