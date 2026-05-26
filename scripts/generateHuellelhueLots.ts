@@ -77,11 +77,30 @@ const bounds = (() => {
 // Banda 1 (Ocean Front) = costa, Banda 2 (Forest Ocean), Banda 3 (Bosque Vivo)
 // ────────────────────────────────────────────────────────────────────────────
 function bandPolygon(southY: number, northY: number): [number, number][] {
-  // Clamp perimeter por Y dentro de [southY, northY]
-  return perimeterRotated.map(([x, y]) => [
-    x,
-    Math.max(southY, Math.min(northY, y)),
-  ] as [number, number]);
+  // Rectángulo de la banda (en frame rotado); luego filtramos lotes por perímetro real
+  return [
+    [bounds.minX, southY],
+    [bounds.maxX, southY],
+    [bounds.maxX, northY],
+    [bounds.minX, northY],
+    [bounds.minX, southY],
+  ];
+}
+
+// Point-in-polygon (ray casting)
+function pip(pt: [number, number], poly: [number, number][]): boolean {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if (((yi > pt[1]) !== (yj > pt[1])) && pt[0] < ((xj - xi) * (pt[1] - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+function centroidOf(poly: [number, number][]): [number, number] {
+  let sx = 0, sy = 0;
+  for (const [x, y] of poly) { sx += x; sy += y; }
+  return [sx / poly.length, sy / poly.length];
 }
 
 const band1S = bounds.minY;
