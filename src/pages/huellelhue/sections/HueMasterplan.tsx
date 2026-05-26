@@ -180,19 +180,73 @@ export default function HueMasterplan() {
         },
       });
 
-      // Perimeter
+      // Perímetro real KMZ — overlay de verificación (halo + línea brillante)
       const perim = HUELLELHUE_DATA.perimeter as unknown as GeoJSON.Feature;
       map.addSource('perimeter', { type: 'geojson', data: perim });
+      map.addLayer({
+        id: 'perimeter-halo',
+        type: 'line',
+        source: 'perimeter',
+        paint: {
+          'line-color': '#ffd166',
+          'line-width': 8,
+          'line-opacity': 0.18,
+          'line-blur': 4,
+        },
+      });
       map.addLayer({
         id: 'perimeter-line',
         type: 'line',
         source: 'perimeter',
         paint: {
-          'line-color': '#c9a86b',
+          'line-color': '#ffd166',
           'line-width': 2.5,
-          'line-opacity': 0.85,
+          'line-opacity': 0.95,
         },
       });
+
+      // Centroides — verificación visual
+      const centroidsFC: GeoJSON.FeatureCollection = {
+        type: 'FeatureCollection',
+        features: HUELLELHUE_DATA.lots
+          .filter((l: any) => l.properties.category !== 'conservation_core')
+          .map((l: any) => {
+            const ring = l.geometry.coordinates[0] as [number, number][];
+            let sx = 0, sy = 0;
+            for (const [x, y] of ring) { sx += x; sy += y; }
+            const n = ring.length;
+            return {
+              type: 'Feature' as const,
+              properties: { category: l.properties.category, id: l.properties.id },
+              geometry: { type: 'Point' as const, coordinates: [sx / n, sy / n] },
+            };
+          }),
+      };
+      map.addSource('centroids', { type: 'geojson', data: centroidsFC });
+      map.addLayer({
+        id: 'centroids-dot',
+        type: 'circle',
+        source: 'centroids',
+        paint: {
+          'circle-radius': 3,
+          'circle-color': [
+            'match', ['get', 'category'],
+            'ocean_front', '#5fb6ff',
+            'forest_ocean', '#7fdb8a',
+            'bosque_vivo', '#c7d97a',
+            '#ffd166',
+          ],
+          'circle-stroke-color': '#000',
+          'circle-stroke-width': 1,
+          'circle-opacity': 0.95,
+        },
+      });
+
+      // Ajustar cámara al perímetro real para verificación
+      const coords = (perim.geometry as any).coordinates[0] as [number, number][];
+      const b = new mapboxgl.LngLatBounds();
+      coords.forEach((c) => b.extend(c));
+      map.fitBounds(b, { padding: 60, pitch: 50, bearing: -20, duration: 0 });
 
       // Hover state
       let hoveredId: number | null = null;
