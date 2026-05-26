@@ -150,9 +150,9 @@ function pip(pt: [number, number], poly: [number, number][]): boolean {
 // BANDAS PARALELAS A LA COSTA — Y crece desde la costa (Y-min) al interior (Y-max)
 // ────────────────────────────────────────────────────────────────────────────
 const band1S = bounds.minY;
-const band1N = bounds.minY + bounds.h * 0.30; // Ocean Front
-const band2N = bounds.minY + bounds.h * 0.58; // Forest Ocean
-const band3N = bounds.minY + bounds.h * 0.82; // Bosque Vivo
+const band1N = bounds.minY + bounds.h * 0.28; // Ocean Front
+const band2N = bounds.minY + bounds.h * 0.50; // Forest Ocean
+const band3N = bounds.minY + bounds.h * 0.68; // Bosque Vivo
 const macroN = bounds.maxY;                    // Macrolotes + Reserva al interior
 
 const BANDS = [
@@ -162,9 +162,9 @@ const BANDS = [
 ];
 
 const BAND_DIMS: Record<string, { w: number; d: number }> = {
-  ocean_front:  { w: 130, d: 160 }, // ~2.1 ha — premium frente mar
-  forest_ocean: { w: 110, d: 140 }, // ~1.5 ha
-  bosque_vivo:  { w: 100, d: 120 }, // ~1.2 ha
+  ocean_front:  { w: 160, d: 200 }, // ~3.2 ha — premium frente mar
+  forest_ocean: { w: 130, d: 160 }, // ~2.1 ha
+  bosque_vivo:  { w: 110, d: 140 }, // ~1.5 ha
 };
 
 const CATEGORY_META: Record<string, any> = {
