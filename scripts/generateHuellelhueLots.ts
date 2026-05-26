@@ -398,16 +398,14 @@ POIS.forEach((p) => {
 
 
 // ────────────────────────────────────────────────────────────────────────────
-// RESERVA NÚCLEO — muestreo de la franja interior recortada por el perímetro
+// RESERVA NÚCLEO — toda la franja interior (≥75% predio sin construcción)
 // ────────────────────────────────────────────────────────────────────────────
-const coreYS = band3N + 5;
+const coreYS = lodgeN + 5;
 const corePoly: [number, number][] = [];
-const sampleStep = bounds.w / 60;
-// Borde sur: caminar bounds.minX → bounds.maxX en y = coreYS, recortando al perímetro
+const sampleStep = bounds.w / 80;
 for (let x = bounds.minX; x <= bounds.maxX; x += sampleStep) {
   if (pip([x, coreYS], perimeterRotated)) corePoly.push([x, coreYS]);
 }
-// Borde norte: caminar de vuelta siguiendo el perímetro real
 const interiorTop = perimeterRotated.filter((p) => p[1] > coreYS).sort((a, b) => b[0] - a[0]);
 corePoly.push(...interiorTop);
 if (corePoly.length >= 4) {
@@ -415,10 +413,11 @@ if (corePoly.length >= 4) {
   allFeatures.push({
     type: 'Feature',
     properties: {
-      id: 'CORE', line: 'conservation', name: 'Reserva Núcleo',
-      category: 'conservation_core', area_ha: 120,
+      id: 'CORE', line: 'conservation', name: 'Reserva Núcleo Huellelhue',
+      category: 'conservation_core', area_ha: 320,
       ocean_exposure: 'N/A', privacy: 'Intocada',
-      conservation: '100% nativo · sin construcción', architecture: 'Sin intervención',
+      conservation: '100% nativo · sin construcción · servidumbre ecológica perpetua',
+      architecture: 'Sin intervención · solo senderos permeables',
     },
     geometry: { type: 'Polygon', coordinates: [rotatedLocalToGeo(corePoly)] },
   });
