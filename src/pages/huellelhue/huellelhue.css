@@ -1,0 +1,173 @@
+/* HUELLELHUE - Cinematic scoped styles */
+
+.hue-root {
+  --hue-ocean: #0a2540;
+  --hue-ocean-deep: #051528;
+  --hue-forest: #1a3a2a;
+  --hue-forest-mid: #2d5a3d;
+  --hue-moss: #4a6b3e;
+  --hue-fog: rgba(220, 230, 235, 0.08);
+  --hue-mist: rgba(180, 200, 210, 0.12);
+  --hue-bone: #e8e3d8;
+  --hue-bone-dim: #b8b1a3;
+  --hue-amber: #c9a86b;
+  --hue-line-1: #1e6091;  /* ocean blue */
+  --hue-line-2: #3a7d44;  /* rainforest green */
+  --hue-line-3: #5a6b35;  /* moss/olive */
+  --hue-macro: #c9a86b;   /* amber */
+  --hue-conserv: #0d2818; /* deep reserve */
+
+  background: #050908;
+  color: var(--hue-bone);
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+.hue-root h1, .hue-root h2, .hue-root h3, .hue-root .serif {
+  font-family: 'Fraunces', 'Cormorant Garamond', Georgia, serif;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+.hue-grain::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  opacity: 0.08;
+  mix-blend-mode: overlay;
+}
+
+@keyframes hue-fog-drift {
+  0%   { transform: translate(-5%, 0) scale(1.2); opacity: 0.4; }
+  50%  { transform: translate(5%, -2%) scale(1.3); opacity: 0.7; }
+  100% { transform: translate(-5%, 0) scale(1.2); opacity: 0.4; }
+}
+.hue-fog {
+  position: absolute;
+  inset: -10%;
+  background: radial-gradient(ellipse at 30% 40%, rgba(200,220,225,0.18), transparent 60%),
+              radial-gradient(ellipse at 70% 60%, rgba(180,200,210,0.12), transparent 55%);
+  animation: hue-fog-drift 22s ease-in-out infinite;
+  pointer-events: none;
+  filter: blur(40px);
+}
+
+@keyframes hue-rain {
+  to { background-position: 0 200vh; }
+}
+.hue-rain {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    100deg,
+    transparent 0,
+    transparent 18px,
+    rgba(180,200,220,0.06) 18px,
+    rgba(180,200,220,0.06) 19px
+  );
+  animation: hue-rain 1.8s linear infinite;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+@keyframes hue-ocean-shimmer {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 0.85; }
+}
+.hue-ocean-overlay {
+  background: linear-gradient(180deg, transparent, rgba(10,37,64,0.65));
+  animation: hue-ocean-shimmer 6s ease-in-out infinite;
+}
+
+.hue-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--hue-bone-dim), transparent);
+  opacity: 0.3;
+}
+
+.hue-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--hue-amber);
+  font-weight: 500;
+}
+
+.hue-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(12px);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--hue-bone);
+}
+
+.hue-map-container {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  min-height: 600px;
+  background: #050908;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px -20px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+
+.hue-map-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.75) 100%);
+  z-index: 2;
+}
+
+.hue-cursor-glow {
+  position: fixed;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,107,0.08), transparent 70%);
+  pointer-events: none;
+  z-index: 50;
+  transform: translate(-50%, -50%);
+  transition: transform 0.15s ease-out;
+  mix-blend-mode: screen;
+}
+
+/* Custom Mapbox popup */
+.mapboxgl-popup.hue-popup .mapboxgl-popup-content {
+  background: rgba(5,12,8,0.92);
+  backdrop-filter: blur(20px);
+  color: var(--hue-bone);
+  border: 1px solid rgba(201,168,107,0.25);
+  border-radius: 2px;
+  padding: 0;
+  box-shadow: 0 20px 60px -10px rgba(0,0,0,0.9);
+  font-family: 'Inter', sans-serif;
+  min-width: 280px;
+}
+.mapboxgl-popup.hue-popup .mapboxgl-popup-tip { display: none; }
+.mapboxgl-popup.hue-popup .mapboxgl-popup-close-button {
+  color: var(--hue-bone);
+  font-size: 22px;
+  padding: 4px 10px;
+  z-index: 2;
+}
+
+/* Mapbox base dark customization */
+.hue-map-container .mapboxgl-ctrl-bottom-left,
+.hue-map-container .mapboxgl-ctrl-bottom-right {
+  opacity: 0.4;
+}
+.hue-map-container .mapboxgl-canvas {
+  filter: saturate(0.85) contrast(1.05);
+}
