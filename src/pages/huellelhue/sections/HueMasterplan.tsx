@@ -581,7 +581,7 @@ export default function HueMasterplan() {
           </div>
 
           {/* ───── BOTTOM SECTOR STRIP ───── */}
-          <div className="border-t border-white/8 bg-[#070f0c] px-6 py-5">
+          <div className="border-t border-white/8 bg-[#070f0c] px-4 md:px-6 py-5">
             <div className="hue-eyebrow text-[10px] mb-3">Sectores destacados</div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
               {SECTORS.map((s) => (
