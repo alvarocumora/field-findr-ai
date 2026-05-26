@@ -250,25 +250,24 @@ for (const band of BANDS) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// MACROLOTES — banda interior, alineada al eje principal
+// ────────────────────────────────────────────────────────────────────────────
+// LODGE + EQUIPAMIENTO — banda lodgeN, lodge protagonista cerca de costa
 // ────────────────────────────────────────────────────────────────────────────
 const MACROS = [
-  { id: 'M-ECO', name: 'Eco Lodge',        category: 'eco_lodge',  area: 8 },
-  { id: 'M-WEL', name: 'Wellness Center',  category: 'wellness',   area: 6 },
-  { id: 'M-GLA', name: 'Glamping Forest',  category: 'glamping',   area: 10 },
-  { id: 'M-GAS', name: 'Gastronomy',       category: 'gastronomy', area: 4 },
+  { id: 'M-ECO', name: 'Huellelhue Lodge',     category: 'eco_lodge',  area: 14, narrative: 'Lodge principal · 28 suites · spa · biblioteca · restaurante' },
+  { id: 'M-WEL', name: 'Wellness & Sauna Mar', category: 'wellness',   area: 6,  narrative: 'Sauna sobre mar · piscina caldeada · ritual mapuche' },
+  { id: 'M-GLA', name: 'Glamping Selva',       category: 'glamping',   area: 10, narrative: '12 domos elevados · plataformas de madera nativa' },
+  { id: 'M-RES', name: 'Centro Investigación', category: 'research',   area: 4,  narrative: 'Estación científica · monitoreo biodiversidad · alianza universitaria' },
 ];
 
-// Buscar posiciones interiores válidas escaneando la banda interior
 function findMacroSlot(sideX: number, sideY: number, startXFrac: number): { x1: number; y1: number } | null {
-  const yMin = band3N + 10;
-  const yMax = macroN - 10;
+  const yMin = band3N + 20;
+  const yMax = lodgeN - 5;
   const xStart = bounds.minX + bounds.w * startXFrac;
-  // Buscar en una ventana ±25% del bounds.w alrededor de startXFrac
-  for (let xOff = 0; xOff < bounds.w * 0.5; xOff += 20) {
+  for (let xOff = 0; xOff < bounds.w * 0.6; xOff += 15) {
     for (const xSign of [1, -1]) {
       const x1 = xStart + xSign * xOff - sideX / 2;
-      for (let y1 = yMin; y1 + sideY <= yMax; y1 += 25) {
+      for (let y1 = yMin; y1 + sideY <= yMax; y1 += 20) {
         const corners: [number, number][] = [
           [x1, y1], [x1 + sideX, y1], [x1 + sideX, y1 + sideY], [x1, y1 + sideY],
           [x1 + sideX / 2, y1 + sideY / 2],
@@ -281,7 +280,7 @@ function findMacroSlot(sideX: number, sideY: number, startXFrac: number): { x1: 
 }
 
 MACROS.forEach((m, i) => {
-  const sideY = Math.sqrt(m.area * 10000) * 0.9;
+  const sideY = Math.sqrt(m.area * 10000) * 0.85;
   const sideX = (m.area * 10000) / sideY;
   const slot = findMacroSlot(sideX, sideY, (i + 0.5) / MACROS.length);
   if (!slot) {
@@ -296,13 +295,107 @@ MACROS.forEach((m, i) => {
     type: 'Feature',
     properties: {
       id: m.id, line: 'macro', name: m.name, category: m.category, area_ha: m.area,
-      ocean_exposure: 'N/A', privacy: 'Operativo', conservation: '60% nativo',
-      architecture: 'Equipamiento programático · bajo impacto',
+      ocean_exposure: m.category === 'wellness' ? 'Directa · sauna mar' : 'Vista interior',
+      privacy: 'Operativo · acceso huéspedes',
+      conservation: '70% nativo · construcción bajo dosel',
+      architecture: m.narrative,
     },
     geometry: { type: 'Polygon', coordinates: [geo] },
   });
   console.log(`✓ macro ${m.id}: colocado`);
 });
+
+// ────────────────────────────────────────────────────────────────────────────
+// SENDEROS (LineStrings) — red de trekking conectando lodge, costa, miradores
+// ────────────────────────────────────────────────────────────────────────────
+type TrailDef = { id: string; name: string; difficulty: string; length_km: number; pts: [number, number][] };
+
+const trailDefs: TrailDef[] = [
+  {
+    id: 'S-COSTA', name: 'Sendero Costero del Pacífico', difficulty: 'Fácil', length_km: 3.2,
+    // Línea ondulante a lo largo de la franja Ocean Front
+    pts: Array.from({ length: 14 }, (_, i) => {
+      const t = i / 13;
+      const x = bounds.minX + 80 + t * (bounds.w - 160);
+      const y = band1S + 30 + Math.sin(t * Math.PI * 3) * 25;
+      return [x, y] as [number, number];
+    }),
+  },
+  {
+    id: 'S-INT', name: 'Sendero Reserva Núcleo', difficulty: 'Moderado', length_km: 5.8,
+    // Loop interior por la conservación
+    pts: Array.from({ length: 16 }, (_, i) => {
+      const t = i / 15;
+      const angle = t * Math.PI * 2;
+      const cx = bounds.minX + bounds.w * 0.5;
+      const cy = lodgeN + (macroN - lodgeN) * 0.55;
+      const rx = bounds.w * 0.32;
+      const ry = (macroN - lodgeN) * 0.32;
+      return [cx + Math.cos(angle) * rx, cy + Math.sin(angle) * ry] as [number, number];
+    }),
+  },
+  {
+    id: 'S-LODGE', name: 'Conexión Lodge → Playa', difficulty: 'Fácil', length_km: 1.4,
+    // Diagonal desde el centro de lodgeN bajando a costa
+    pts: Array.from({ length: 10 }, (_, i) => {
+      const t = i / 9;
+      const x = bounds.minX + bounds.w * (0.42 + t * 0.06);
+      const y = lodgeN - t * (lodgeN - band1S - 20);
+      return [x, y] as [number, number];
+    }),
+  },
+  {
+    id: 'S-MIR', name: 'Sendero Miradores', difficulty: 'Moderado', length_km: 2.6,
+    pts: Array.from({ length: 12 }, (_, i) => {
+      const t = i / 11;
+      const x = bounds.minX + bounds.w * (0.65 + Math.sin(t * Math.PI) * 0.15);
+      const y = band3N + t * (lodgeN - band3N);
+      return [x, y] as [number, number];
+    }),
+  },
+];
+
+// Miradores (POIs) en cabos prominentes
+const POIS = [
+  { id: 'MIR-1', name: 'Mirador Punta Cholihueco', xFrac: 0.18, yOffset: 40 },
+  { id: 'MIR-2', name: 'Mirador Estuario',         xFrac: 0.78, yOffset: 60 },
+  { id: 'MIR-3', name: 'Mirador Bosque Alto',      xFrac: 0.52, yOffset: lodgeN - band1S + 80 },
+];
+
+trailDefs.forEach((t) => {
+  // Filtrar puntos dentro del perímetro y conectar los segmentos válidos
+  const valid = t.pts.filter((p) => pip(p, perimeterRotated));
+  if (valid.length < 3) return;
+  const geo = valid.map((p) => rotatedLocalToGeoSingle(p));
+  allFeatures.push({
+    type: 'Feature',
+    properties: {
+      id: t.id, line: 'trail', name: t.name, category: 'trail',
+      difficulty: t.difficulty, length_km: t.length_km,
+      ocean_exposure: '-', privacy: 'Comunitario',
+      conservation: 'Trazado de bajo impacto · superficie permeable',
+      architecture: 'Pasarela de madera nativa flotante',
+    },
+    geometry: { type: 'LineString', coordinates: geo },
+  });
+  console.log(`✓ sendero ${t.id}: ${valid.length} pts · ${t.length_km} km`);
+});
+
+POIS.forEach((p) => {
+  const pt: [number, number] = [bounds.minX + bounds.w * p.xFrac, band1S + p.yOffset];
+  if (!pip(pt, perimeterRotated)) return;
+  allFeatures.push({
+    type: 'Feature',
+    properties: {
+      id: p.id, line: 'poi', name: p.name, category: 'viewpoint',
+      ocean_exposure: 'Panorámica 180°', privacy: 'Comunitario',
+      conservation: 'Plataforma elevada · sin remoción de vegetación',
+      architecture: 'Mirador de madera y acero corten',
+    },
+    geometry: { type: 'Point', coordinates: rotatedLocalToGeoSingle(pt) },
+  });
+});
+
 
 // ────────────────────────────────────────────────────────────────────────────
 // RESERVA NÚCLEO — muestreo de la franja interior recortada por el perímetro
