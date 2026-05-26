@@ -147,13 +147,15 @@ function pip(pt: [number, number], poly: [number, number][]): boolean {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// BANDAS PARALELAS A LA COSTA — Y crece desde la costa (Y-min) al interior (Y-max)
+// BANDAS PARALELAS A LA COSTA — filosofía RESERVA: bandas residenciales finas,
+// conservación dominante (≥75% superficie), lodge protagonista, senderos
 // ────────────────────────────────────────────────────────────────────────────
 const band1S = bounds.minY;
-const band1N = bounds.minY + bounds.h * 0.28; // Ocean Front
-const band2N = bounds.minY + bounds.h * 0.50; // Forest Ocean
-const band3N = bounds.minY + bounds.h * 0.68; // Bosque Vivo
-const macroN = bounds.maxY;                    // Macrolotes + Reserva al interior
+const band1N = bounds.minY + bounds.h * 0.18; // Ocean Front (franja costa)
+const band2N = bounds.minY + bounds.h * 0.32; // Forest Ocean (elevado)
+const band3N = bounds.minY + bounds.h * 0.44; // Bosque Vivo (dosel)
+const lodgeN = bounds.minY + bounds.h * 0.58; // Lodge + equipamiento
+const macroN = bounds.maxY;                    // Reserva núcleo
 
 const BANDS = [
   { name: 'ocean_front',  sY: band1S, nY: band1N },
@@ -161,10 +163,11 @@ const BANDS = [
   { name: 'bosque_vivo',  sY: band2N, nY: band3N },
 ];
 
-const BAND_DIMS: Record<string, { w: number; d: number }> = {
-  ocean_front:  { w: 160, d: 200 }, // ~3.2 ha — premium frente mar
-  forest_ocean: { w: 130, d: 160 }, // ~2.1 ha
-  bosque_vivo:  { w: 110, d: 140 }, // ~1.5 ha
+// Lotes amplios + separación generosa (camino+vegetación entre cabañas)
+const BAND_DIMS: Record<string, { w: number; d: number; gapX: number; gapY: number }> = {
+  ocean_front:  { w: 180, d: 220, gapX: 120, gapY: 60 }, // ~4.0 ha + buffer denso
+  forest_ocean: { w: 150, d: 180, gapX: 90,  gapY: 50 }, // ~2.7 ha
+  bosque_vivo:  { w: 130, d: 150, gapX: 80,  gapY: 40 }, // ~2.0 ha
 };
 
 const CATEGORY_META: Record<string, any> = {
@@ -173,11 +176,15 @@ const CATEGORY_META: Record<string, any> = {
   bosque_vivo:  { line: 3, label: 'Bosque Vivo',  ocean_exposure: 'Indirecta · sonido', privacy: 'Total inmersión', conservation: '80% nativo',          architecture: 'Cabaña dosel · pasarela' },
 };
 
-type Feature = { type: 'Feature'; properties: Record<string, any>; geometry: { type: 'Polygon'; coordinates: [number, number][][] } };
+type Feature = { type: 'Feature'; properties: Record<string, any>; geometry: any };
 
 function rotatedLocalToGeo(poly: [number, number][]): [number, number][] {
   const unrotated = poly.map((p) => rotate(p, COAST_ANGLE_RAD));
   return localToGeo(unrotated, CENTER_LNG, CENTER_LAT);
+}
+function rotatedLocalToGeoSingle(pt: [number, number]): [number, number] {
+  const u = rotate(pt, COAST_ANGLE_RAD);
+  return localToGeo([u], CENTER_LNG, CENTER_LAT)[0];
 }
 
 const allFeatures: Feature[] = [];
@@ -187,28 +194,30 @@ function gridSubdivide(
   northY: number,
   lotW: number,
   lotD: number,
+  gapX: number,
+  gapY: number,
 ): { polygon: [number, number][]; area: number }[] {
   const lots: { polygon: [number, number][]; area: number }[] = [];
-  const roadGap = 8;
+  const stepX = lotW + gapX;
+  const stepY = lotD + gapY;
+  // Una sola fila por banda (la banda es fina); centrada en Y
   const midY = (southY + northY) / 2;
-  for (let x = bounds.minX; x + lotW <= bounds.maxX; x += lotW) {
-    for (const side of [-1, 1]) {
-      let y0 = side === -1 ? midY - roadGap / 2 - lotD : midY + roadGap / 2;
-      while (
-        (side === -1 && y0 >= southY) ||
-        (side === 1 && y0 + lotD <= northY)
-      ) {
-        const rect: [number, number][] = [
-          [x, y0], [x + lotW, y0], [x + lotW, y0 + lotD], [x, y0 + lotD], [x, y0],
-        ];
-        const cx = x + lotW / 2, cy = y0 + lotD / 2;
-        // Verificar centroide Y 3 esquinas dentro del polígono real
-        const corners: [number, number][] = [[x + 2, y0 + 2], [x + lotW - 2, y0 + 2], [x + 2, y0 + lotD - 2], [x + lotW - 2, y0 + lotD - 2]];
-        const insideCorners = corners.filter((c) => pip(c, perimeterRotated)).length;
-        if (pip([cx, cy], perimeterRotated) && insideCorners >= 3) {
-          lots.push({ polygon: rect, area: lotW * lotD });
-        }
-        y0 += side * lotD;
+  const y0Single = midY - lotD / 2;
+  // Permitir hasta 2 filas si la banda es alta
+  const bandH = northY - southY;
+  const rows = bandH >= stepY * 1.6 ? 2 : 1;
+  for (let r = 0; r < rows; r++) {
+    const y0 = rows === 1 ? y0Single : southY + 10 + r * stepY;
+    if (y0 + lotD > northY) continue;
+    for (let x = bounds.minX + 40; x + lotW <= bounds.maxX - 40; x += stepX) {
+      const rect: [number, number][] = [
+        [x, y0], [x + lotW, y0], [x + lotW, y0 + lotD], [x, y0 + lotD], [x, y0],
+      ];
+      const cx = x + lotW / 2, cy = y0 + lotD / 2;
+      const corners: [number, number][] = [[x + 2, y0 + 2], [x + lotW - 2, y0 + 2], [x + 2, y0 + lotD - 2], [x + lotW - 2, y0 + lotD - 2]];
+      const insideCorners = corners.filter((c) => pip(c, perimeterRotated)).length;
+      if (pip([cx, cy], perimeterRotated) && insideCorners === 4) {
+        lots.push({ polygon: rect, area: lotW * lotD });
       }
     }
   }
@@ -217,7 +226,7 @@ function gridSubdivide(
 
 for (const band of BANDS) {
   const dims = BAND_DIMS[band.name];
-  const lots = gridSubdivide(band.sY, band.nY, dims.w, dims.d);
+  const lots = gridSubdivide(band.sY, band.nY, dims.w, dims.d, dims.gapX, dims.gapY);
   const meta = CATEGORY_META[band.name];
   lots.forEach((lot, idx) => {
     const geo = rotatedLocalToGeo(lot.polygon);
