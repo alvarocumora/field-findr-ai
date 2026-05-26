@@ -19,11 +19,11 @@ const COLOR_MAP: Record<string, string> = {
 };
 
 const LEGEND = [
-  { color: '#1e6091', label: 'Ocean Front Reserve', sub: '32 lotes · ~1 ha' },
-  { color: '#3a7d44', label: 'Forest Ocean Residences', sub: '56 lotes · 0,5-1 ha' },
-  { color: '#5a6b35', label: 'Bosque Vivo', sub: '90 lotes · 0,5-1 ha' },
-  { color: '#c9a86b', label: 'Macrolotes Operativos', sub: '5 zonas · 6-30 ha' },
-  { color: '#0d2818', label: 'Reserva Núcleo', sub: '250 ha intocadas' },
+  { color: '#1e6091', label: 'Ocean Front Reserve', sub: '24 lotes · ~3,2 ha' },
+  { color: '#3a7d44', label: 'Forest Ocean Residences', sub: '42 lotes · ~2,1 ha' },
+  { color: '#5a6b35', label: 'Bosque Vivo', sub: '28 lotes · ~1,5 ha' },
+  { color: '#c9a86b', label: 'Macrolotes Operativos', sub: '3 zonas · 6-10 ha' },
+  { color: '#0d2818', label: 'Reserva Núcleo', sub: '~120 ha intocadas' },
 ];
 
 export default function HueMasterplan() {
@@ -180,19 +180,73 @@ export default function HueMasterplan() {
         },
       });
 
-      // Perimeter
+      // Perímetro real KMZ — overlay de verificación (halo + línea brillante)
       const perim = HUELLELHUE_DATA.perimeter as unknown as GeoJSON.Feature;
       map.addSource('perimeter', { type: 'geojson', data: perim });
+      map.addLayer({
+        id: 'perimeter-halo',
+        type: 'line',
+        source: 'perimeter',
+        paint: {
+          'line-color': '#ffd166',
+          'line-width': 8,
+          'line-opacity': 0.18,
+          'line-blur': 4,
+        },
+      });
       map.addLayer({
         id: 'perimeter-line',
         type: 'line',
         source: 'perimeter',
         paint: {
-          'line-color': '#c9a86b',
+          'line-color': '#ffd166',
           'line-width': 2.5,
-          'line-opacity': 0.85,
+          'line-opacity': 0.95,
         },
       });
+
+      // Centroides — verificación visual
+      const centroidsFC: GeoJSON.FeatureCollection = {
+        type: 'FeatureCollection',
+        features: HUELLELHUE_DATA.lots
+          .filter((l: any) => l.properties.category !== 'conservation_core')
+          .map((l: any) => {
+            const ring = l.geometry.coordinates[0] as [number, number][];
+            let sx = 0, sy = 0;
+            for (const [x, y] of ring) { sx += x; sy += y; }
+            const n = ring.length;
+            return {
+              type: 'Feature' as const,
+              properties: { category: l.properties.category, id: l.properties.id },
+              geometry: { type: 'Point' as const, coordinates: [sx / n, sy / n] },
+            };
+          }),
+      };
+      map.addSource('centroids', { type: 'geojson', data: centroidsFC });
+      map.addLayer({
+        id: 'centroids-dot',
+        type: 'circle',
+        source: 'centroids',
+        paint: {
+          'circle-radius': 3,
+          'circle-color': [
+            'match', ['get', 'category'],
+            'ocean_front', '#5fb6ff',
+            'forest_ocean', '#7fdb8a',
+            'bosque_vivo', '#c7d97a',
+            '#ffd166',
+          ],
+          'circle-stroke-color': '#000',
+          'circle-stroke-width': 1,
+          'circle-opacity': 0.95,
+        },
+      });
+
+      // Ajustar cámara al perímetro real para verificación
+      const coords = (perim.geometry as any).coordinates[0] as [number, number][];
+      const b = new mapboxgl.LngLatBounds();
+      coords.forEach((c) => b.extend(c));
+      map.fitBounds(b, { padding: 60, pitch: 50, bearing: -20, duration: 0 });
 
       // Hover state
       let hoveredId: number | null = null;
@@ -358,9 +412,9 @@ export default function HueMasterplan() {
           {/* Stats overlay */}
           <div className="absolute right-4 top-4 z-10 hidden md:flex gap-px bg-black/65 backdrop-blur-md border border-white/10">
             {[
-              { l: 'Lotes residenciales', v: '178' },
-              { l: 'Macrolotes', v: '5' },
-              { l: 'Reserva', v: '250 ha' },
+              { l: 'Lotes residenciales', v: '94' },
+              { l: 'Macrolotes', v: '3' },
+              { l: 'Reserva', v: '120 ha' },
             ].map((s) => (
               <div key={s.l} className="px-5 py-3">
                 <div className="serif text-2xl text-[var(--hue-bone)]">{s.v}</div>
