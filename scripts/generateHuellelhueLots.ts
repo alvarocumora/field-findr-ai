@@ -150,12 +150,12 @@ function pip(pt: [number, number], poly: [number, number][]): boolean {
 // BANDAS PARALELAS A LA COSTA — filosofía RESERVA: bandas residenciales finas,
 // conservación dominante (≥75% superficie), lodge protagonista, senderos
 // ────────────────────────────────────────────────────────────────────────────
-const band1S = bounds.minY;
-const band1N = bounds.minY + bounds.h * 0.18; // Ocean Front (franja costa)
-const band2N = bounds.minY + bounds.h * 0.32; // Forest Ocean (elevado)
-const band3N = bounds.minY + bounds.h * 0.44; // Bosque Vivo (dosel)
-const lodgeN = bounds.minY + bounds.h * 0.58; // Lodge + equipamiento
-const macroN = bounds.maxY;                    // Reserva núcleo
+const band1S = bounds.minY + bounds.h * 0.18; // saltar borde extremo
+const band1N = bounds.minY + bounds.h * 0.32; // Ocean Front (franja costa)
+const band2N = bounds.minY + bounds.h * 0.46; // Forest Ocean (elevado)
+const band3N = bounds.minY + bounds.h * 0.58; // Bosque Vivo (dosel)
+const lodgeN = bounds.minY + bounds.h * 0.72; // Lodge + equipamiento
+const macroN = bounds.maxY - bounds.h * 0.05;  // Reserva núcleo (recorta borde)
 
 const BANDS = [
   { name: 'ocean_front',  sY: band1S, nY: band1N },
