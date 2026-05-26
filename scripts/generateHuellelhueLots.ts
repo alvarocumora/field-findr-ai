@@ -1,49 +1,111 @@
 /**
- * Huellelhue Lote B — Generador de lotes alineado a costa real.
+ * Huellelhue Lote B — Generador de lotes alineado al KMZ real (LOTE_B.kmz).
  *
- * Perímetro: cabeza de tierra al NORTE de Playa Rada de Ranú,
- * entre la barra de arena (NW) y el promontorio (SE), con la costa
- * Pacífico al SW (bearing ~ -33° desde el este).
- *
- * Las bandas se generan en frame rotado para que queden PARALELAS a la costa.
+ * Perímetro: 80 vértices extraídos de LOTE_B.kmz (WGS84).
+ * Superficie real: ~420 ha.
+ * Eje principal del predio (PCA): +16.1° desde el este → rotamos -16.1°
+ * para que la costa quede paralela al eje X y las bandas perpendiculares.
  *
  * Run:  bun scripts/generateHuellelhueLots.ts
  */
 
 import { writeFileSync } from 'node:fs';
-import { autoSubdivide, localToGeo } from '../src/lib/subdivision/autoSubdivide';
+import { localToGeo } from '../src/lib/subdivision/autoSubdivide';
 
 // ────────────────────────────────────────────────────────────────────────────
-// PERÍMETRO REAL LOTE B (WGS84 lng,lat) — cabeza de tierra norte de Rada Ranú
-// Trazado siguiendo línea de costa visible en satélite
+// PERÍMETRO REAL LOTE B (extraído de LOTE_B.kmz) — 80 vértices WGS84 lng,lat
 // ────────────────────────────────────────────────────────────────────────────
 const PERIMETER_LNGLAT: [number, number][] = [
-  // —— línea de costa SW (de NW a SE, frente al Pacífico) ——
-  [-73.8128, -40.7150], // NW · inicio barra
-  [-73.8108, -40.7158],
-  [-73.8088, -40.7170],
-  [-73.8062, -40.7185], // costa Rada Ranú N
-  [-73.8038, -40.7202],
-  [-73.8018, -40.7218],
-  [-73.7995, -40.7232], // promontorio SE
-  // —— borde interior NE (~1.5 km tierra adentro para dar profundidad) ——
-  [-73.7920, -40.7180],
-  [-73.7945, -40.7130],
-  [-73.7985, -40.7090],
-  [-73.8035, -40.7060],
-  [-73.8090, -40.7050],
-  [-73.8128, -40.7080],
-  [-73.8128, -40.7150], // cierre
+  [-73.80230143377744, -40.70669115985267],
+  [-73.80165214430748, -40.70692722614966],
+  [-73.80077735017468, -40.70758282360492],
+  [-73.79991056487496, -40.70912053734718],
+  [-73.79933350829586, -40.71096047591571],
+  [-73.7991875128806, -40.71232954954984],
+  [-73.79968794463002, -40.71477328788006],
+  [-73.80016917603784, -40.71596043651066],
+  [-73.80071025211247, -40.71751976870151],
+  [-73.80228390878509, -40.72001304431407],
+  [-73.80257476848533, -40.72112309601897],
+  [-73.80270431218015, -40.72133064496944],
+  [-73.80488634524296, -40.72194201703542],
+  [-73.80527000098446, -40.7221319754716],
+  [-73.8057257088712, -40.7224187972984],
+  [-73.8069599949127, -40.72237123383568],
+  [-73.8078624893068, -40.72203320500672],
+  [-73.80906810373727, -40.72236530577222],
+  [-73.80994972632264, -40.72262611865839],
+  [-73.81152973289973, -40.72256859741115],
+  [-73.81305291672753, -40.7223568083621],
+  [-73.813837971825, -40.72218179087646],
+  [-73.81487481049709, -40.72192446435347],
+  [-73.81561117469441, -40.7222397916237],
+  [-73.81745564780846, -40.72222750360904],
+  [-73.81998224661864, -40.72200159113727],
+  [-73.82115153645634, -40.72171052822421],
+  [-73.82276471986454, -40.7217912503893],
+  [-73.82348693355415, -40.72207574898402],
+  [-73.82428612632036, -40.72215868684125],
+  [-73.82570085619935, -40.72189216650258],
+  [-73.82697438034565, -40.72148844770954],
+  [-73.82750583049675, -40.72121298049919],
+  [-73.8282031513679, -40.7211730909659],
+  [-73.82904541540236, -40.72138811875332],
+  [-73.8298301822118, -40.72196191719103],
+  [-73.82848269930082, -40.72283785821639],
+  [-73.8274014148495, -40.72355631717444],
+  [-73.82691021578867, -40.72417987324874],
+  [-73.8263469553635, -40.7251501055262],
+  [-73.82679754422442, -40.7258677463396],
+  [-73.82593209575627, -40.72626858165208],
+  [-73.82579940866886, -40.72660380873655],
+  [-73.82551898397122, -40.72755225957325],
+  [-73.82574549255551, -40.72846330657176],
+  [-73.82585329433296, -40.72865973949039],
+  [-73.81244211993544, -40.73168304700658],
+  [-73.81176611734877, -40.73055746113312],
+  [-73.81117152856305, -40.72976925176837],
+  [-73.81037436634486, -40.72887929201181],
+  [-73.80974713244991, -40.72801488503625],
+  [-73.80945580296637, -40.72695123676434],
+  [-73.80936776437763, -40.72667805592505],
+  [-73.8086387043701, -40.72659390691841],
+  [-73.80308521818704, -40.72793802915761],
+  [-73.80166265921132, -40.72671076597632],
+  [-73.79974757434897, -40.72612067293578],
+  [-73.7987746440776, -40.72503820702731],
+  [-73.79736318468308, -40.72501097574016],
+  [-73.79694143363064, -40.72539937200322],
+  [-73.79598373298256, -40.7258523562034],
+  [-73.79462261061161, -40.72752207544753],
+  [-73.79340720588985, -40.72724179971375],
+  [-73.79207893540196, -40.72733928159764],
+  [-73.79179833855862, -40.72641149991462],
+  [-73.79119124043524, -40.72556159980808],
+  [-73.79038420794662, -40.72524393837843],
+  [-73.78984761127374, -40.72454276451379],
+  [-73.78909726910045, -40.72378116046198],
+  [-73.78769371224647, -40.72356035627687],
+  [-73.78686791520167, -40.72247548305945],
+  [-73.78568322884827, -40.72118925316136],
+  [-73.78344320990135, -40.72105574876726],
+  [-73.78353620696393, -40.71018062044125],
+  [-73.78987804677442, -40.71019085552191],
+  [-73.79435801096834, -40.70929977221016],
+  [-73.7953869957574, -40.70923904707819],
+  [-73.79767705347997, -40.70752475741548],
+  [-73.79898759319052, -40.70701950123114],
+  [-73.80073016102541, -40.70666945608362],
 ];
 
-// Centro
-const CENTER_LNG = -73.8035;
-const CENTER_LAT = -40.7145;
+// Centro real (centroide medio del KMZ)
+const CENTER_LNG = -73.80755360651344;
+const CENTER_LAT = -40.721487003381824;
 
-// Ángulo de la costa (bearing NW→SE) → rotamos para que costa quede paralela al eje X
-// vector costa: (-73.7995 - (-73.8128), -40.7232 - (-40.7150)) = (+0.0133, -0.0082)
-// en metros: (~1124, -912) → atan2 = -39° del este
-const COAST_ANGLE_DEG = -39;
+// Eje principal del predio calculado por PCA sobre los 80 vértices.
+// Long axis dominante a +16.1° del este → rotamos -16.1° para alinearla al eje X.
+// La "costa" (Rada de Ranú al SW) queda en el lado Y-min del frame rotado.
+const COAST_ANGLE_DEG = 16.1;
 const COAST_ANGLE_RAD = (COAST_ANGLE_DEG * Math.PI) / 180;
 
 function geoToLocal([lng, lat]: [number, number]): [number, number] {
@@ -58,12 +120,11 @@ function rotate([x, y]: [number, number], angle: number): [number, number] {
   return [x * c - y * s, x * s + y * c];
 }
 
-// Frame rotado: costa paralela al eje X (Y negativo = mar, Y positivo = interior)
+// Frame rotado: long axis del predio paralela al eje X
 const perimeterRotated = PERIMETER_LNGLAT.map((p) =>
   rotate(geoToLocal(p), -COAST_ANGLE_RAD)
 );
 
-// Bounds en frame rotado
 const bounds = (() => {
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   for (const [x, y] of perimeterRotated) {
@@ -73,22 +134,9 @@ const bounds = (() => {
   return { minX, maxX, minY, maxY, w: maxX - minX, h: maxY - minY };
 })();
 
-// ────────────────────────────────────────────────────────────────────────────
-// BANDAS PARALELAS A LA COSTA (offset perpendicular = eje Y)
-// Banda 1 (Ocean Front) = costa, Banda 2 (Forest Ocean), Banda 3 (Bosque Vivo)
-// ────────────────────────────────────────────────────────────────────────────
-function bandPolygon(southY: number, northY: number): [number, number][] {
-  // Rectángulo de la banda (en frame rotado); luego filtramos lotes por perímetro real
-  return [
-    [bounds.minX, southY],
-    [bounds.maxX, southY],
-    [bounds.maxX, northY],
-    [bounds.minX, northY],
-    [bounds.minX, southY],
-  ];
-}
+console.log(`Bounds rotados: w=${bounds.w.toFixed(0)}m h=${bounds.h.toFixed(0)}m`);
 
-// Point-in-polygon (ray casting)
+// Point-in-polygon
 function pip(pt: [number, number], poly: [number, number][]): boolean {
   let inside = false;
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -98,54 +146,50 @@ function pip(pt: [number, number], poly: [number, number][]): boolean {
   return inside;
 }
 
-function centroidOf(poly: [number, number][]): [number, number] {
-  let sx = 0, sy = 0;
-  for (const [x, y] of poly) { sx += x; sy += y; }
-  return [sx / poly.length, sy / poly.length];
-}
-
+// ────────────────────────────────────────────────────────────────────────────
+// BANDAS PARALELAS A LA COSTA — Y crece desde la costa (Y-min) al interior (Y-max)
+// ────────────────────────────────────────────────────────────────────────────
 const band1S = bounds.minY;
-const band1N = bounds.minY + bounds.h * 0.28; // 28% costa
-const band2N = bounds.minY + bounds.h * 0.58; // +30%
-const band3N = bounds.minY + bounds.h * 0.85; // +27%
-const macroN = bounds.maxY;                    // interior NE
+const band1N = bounds.minY + bounds.h * 0.28; // Ocean Front
+const band2N = bounds.minY + bounds.h * 0.50; // Forest Ocean
+const band3N = bounds.minY + bounds.h * 0.68; // Bosque Vivo
+const macroN = bounds.maxY;                    // Macrolotes + Reserva al interior
 
 const BANDS = [
-  { name: 'ocean_front',  poly: bandPolygon(band1S, band1N), targetLots: 30, minLotArea: 9000,  minFrontage: 70 },
-  { name: 'forest_ocean', poly: bandPolygon(band1N, band2N), targetLots: 50, minLotArea: 6000,  minFrontage: 55 },
-  { name: 'bosque_vivo',  poly: bandPolygon(band2N, band3N), targetLots: 80, minLotArea: 5500,  minFrontage: 55 },
+  { name: 'ocean_front',  sY: band1S, nY: band1N },
+  { name: 'forest_ocean', sY: band1N, nY: band2N },
+  { name: 'bosque_vivo',  sY: band2N, nY: band3N },
 ];
 
+const BAND_DIMS: Record<string, { w: number; d: number }> = {
+  ocean_front:  { w: 160, d: 200 }, // ~3.2 ha — premium frente mar
+  forest_ocean: { w: 130, d: 160 }, // ~2.1 ha
+  bosque_vivo:  { w: 110, d: 140 }, // ~1.5 ha
+};
+
 const CATEGORY_META: Record<string, any> = {
-  ocean_front:  { line: 1, label: 'Ocean Front',  ocean_exposure: 'Directa · 100%',   privacy: 'Máxima',          conservation: '75% nativo intocado', architecture: 'Cabaña costera oculta · Japandi coastal' },
-  forest_ocean: { line: 2, label: 'Forest Ocean', ocean_exposure: 'Vista filtrada',   privacy: 'Alta',            conservation: '70% nativo',          architecture: 'Refugio elevado · madera nativa' },
+  ocean_front:  { line: 1, label: 'Ocean Front',  ocean_exposure: 'Directa · 100%',     privacy: 'Máxima',          conservation: '75% nativo intocado', architecture: 'Cabaña costera oculta · Japandi coastal' },
+  forest_ocean: { line: 2, label: 'Forest Ocean', ocean_exposure: 'Vista filtrada',     privacy: 'Alta',            conservation: '70% nativo',          architecture: 'Refugio elevado · madera nativa' },
   bosque_vivo:  { line: 3, label: 'Bosque Vivo',  ocean_exposure: 'Indirecta · sonido', privacy: 'Total inmersión', conservation: '80% nativo',          architecture: 'Cabaña dosel · pasarela' },
 };
 
-// ────────────────────────────────────────────────────────────────────────────
-// EJECUTAR MOTOR Y ROTAR DE VUELTA
-// ────────────────────────────────────────────────────────────────────────────
 type Feature = { type: 'Feature'; properties: Record<string, any>; geometry: { type: 'Polygon'; coordinates: [number, number][][] } };
 
 function rotatedLocalToGeo(poly: [number, number][]): [number, number][] {
-  // 1. rotar de vuelta al frame norte-este
   const unrotated = poly.map((p) => rotate(p, COAST_ANGLE_RAD));
-  // 2. metros → geo
   return localToGeo(unrotated, CENTER_LNG, CENTER_LAT);
 }
 
 const allFeatures: Feature[] = [];
 
-// Grid simple en frame rotado, filtrado por perímetro real
 function gridSubdivide(
   southY: number,
   northY: number,
   lotW: number,
   lotD: number,
-  bandName: string,
-): { lots: { polygon: [number, number][]; area: number }[] } {
+): { polygon: [number, number][]; area: number }[] {
   const lots: { polygon: [number, number][]; area: number }[] = [];
-  const roadGap = 7; // calle central
+  const roadGap = 8;
   const midY = (southY + northY) / 2;
   for (let x = bounds.minX; x + lotW <= bounds.maxX; x += lotW) {
     for (const side of [-1, 1]) {
@@ -157,29 +201,25 @@ function gridSubdivide(
         const rect: [number, number][] = [
           [x, y0], [x + lotW, y0], [x + lotW, y0 + lotD], [x, y0 + lotD], [x, y0],
         ];
-        // centroide debe estar dentro del perímetro real
         const cx = x + lotW / 2, cy = y0 + lotD / 2;
-        if (pip([cx, cy], perimeterRotated)) lots.push({ polygon: rect, area: lotW * lotD });
+        // Verificar centroide Y 3 esquinas dentro del polígono real
+        const corners: [number, number][] = [[x + 2, y0 + 2], [x + lotW - 2, y0 + 2], [x + 2, y0 + lotD - 2], [x + lotW - 2, y0 + lotD - 2]];
+        const insideCorners = corners.filter((c) => pip(c, perimeterRotated)).length;
+        if (pip([cx, cy], perimeterRotated) && insideCorners >= 3) {
+          lots.push({ polygon: rect, area: lotW * lotD });
+        }
         y0 += side * lotD;
       }
     }
   }
-  return { lots };
+  return lots;
 }
-
-const BAND_DIMS: Record<string, { w: number; d: number }> = {
-  ocean_front:  { w: 80, d: 110 }, // ~1 ha cabaña aislada
-  forest_ocean: { w: 70, d: 90 },  // ~0.6 ha
-  bosque_vivo:  { w: 65, d: 85 },  // ~0.55 ha
-};
 
 for (const band of BANDS) {
   const dims = BAND_DIMS[band.name];
-  const sY = band.name === 'ocean_front' ? band1S : band.name === 'forest_ocean' ? band1N : band2N;
-  const nY = band.name === 'ocean_front' ? band1N : band.name === 'forest_ocean' ? band2N : band3N;
-  const result = gridSubdivide(sY, nY, dims.w, dims.d, band.name);
+  const lots = gridSubdivide(band.sY, band.nY, dims.w, dims.d);
   const meta = CATEGORY_META[band.name];
-  result.lots.forEach((lot, idx) => {
+  lots.forEach((lot, idx) => {
     const geo = rotatedLocalToGeo(lot.polygon);
     allFeatures.push({
       type: 'Feature',
@@ -197,29 +237,50 @@ for (const band of BANDS) {
       geometry: { type: 'Polygon', coordinates: [geo] },
     });
   });
-  console.log(`✓ ${band.name}: ${result.lots.length} lotes`);
+  console.log(`✓ ${band.name}: ${lots.length} lotes`);
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// MACROLOTES — banda interior NE (paralela a costa)
+// MACROLOTES — banda interior, alineada al eje principal
 // ────────────────────────────────────────────────────────────────────────────
 const MACROS = [
-  { id: 'M-ECO', name: 'Eco Lodge',        category: 'eco_lodge',  area: 12 },
-  { id: 'M-WEL', name: 'Wellness Center',  category: 'wellness',   area: 8 },
-  { id: 'M-GLA', name: 'Glamping Forest',  category: 'glamping',   area: 18 },
-  { id: 'M-GAS', name: 'Gastronomy',       category: 'gastronomy', area: 6 },
-  { id: 'M-RES', name: 'Research Station', category: 'research',   area: 10 },
+  { id: 'M-ECO', name: 'Eco Lodge',        category: 'eco_lodge',  area: 8 },
+  { id: 'M-WEL', name: 'Wellness Center',  category: 'wellness',   area: 6 },
+  { id: 'M-GLA', name: 'Glamping Forest',  category: 'glamping',   area: 10 },
+  { id: 'M-GAS', name: 'Gastronomy',       category: 'gastronomy', area: 4 },
 ];
 
-const macroYBase = band3N + 20;
-const macroXSpan = bounds.w / MACROS.length;
+// Buscar posiciones interiores válidas escaneando la banda interior
+function findMacroSlot(sideX: number, sideY: number, startXFrac: number): { x1: number; y1: number } | null {
+  const yMin = band3N + 10;
+  const yMax = macroN - 10;
+  const xStart = bounds.minX + bounds.w * startXFrac;
+  // Buscar en una ventana ±25% del bounds.w alrededor de startXFrac
+  for (let xOff = 0; xOff < bounds.w * 0.5; xOff += 20) {
+    for (const xSign of [1, -1]) {
+      const x1 = xStart + xSign * xOff - sideX / 2;
+      for (let y1 = yMin; y1 + sideY <= yMax; y1 += 25) {
+        const corners: [number, number][] = [
+          [x1, y1], [x1 + sideX, y1], [x1 + sideX, y1 + sideY], [x1, y1 + sideY],
+          [x1 + sideX / 2, y1 + sideY / 2],
+        ];
+        if (corners.every((c) => pip(c, perimeterRotated))) return { x1, y1 };
+      }
+    }
+  }
+  return null;
+}
+
 MACROS.forEach((m, i) => {
-  const sideY = Math.sqrt(m.area * 10000) * 0.9; // achatado
+  const sideY = Math.sqrt(m.area * 10000) * 0.9;
   const sideX = (m.area * 10000) / sideY;
-  const x1 = bounds.minX + i * macroXSpan + (macroXSpan - sideX) / 2;
-  const x2 = x1 + sideX;
-  const y1 = macroYBase;
-  const y2 = Math.min(y1 + sideY, macroN - 5);
+  const slot = findMacroSlot(sideX, sideY, (i + 0.5) / MACROS.length);
+  if (!slot) {
+    console.log(`  ⚠ macro ${m.id} sin slot interior — omitido`);
+    return;
+  }
+  const { x1, y1 } = slot;
+  const x2 = x1 + sideX, y2 = y1 + sideY;
   const localRot: [number, number][] = [[x1, y1], [x2, y1], [x2, y2], [x1, y2], [x1, y1]];
   const geo = rotatedLocalToGeo(localRot);
   allFeatures.push({
@@ -231,53 +292,56 @@ MACROS.forEach((m, i) => {
     },
     geometry: { type: 'Polygon', coordinates: [geo] },
   });
+  console.log(`✓ macro ${m.id}: colocado`);
 });
 
 // ────────────────────────────────────────────────────────────────────────────
-// RESERVA NÚCLEO (interior alto NE, fuera del lote pero referencial)
+// RESERVA NÚCLEO — muestreo de la franja interior recortada por el perímetro
 // ────────────────────────────────────────────────────────────────────────────
-// Solo si quedó superficie interior libre, no la generamos a la fuerza.
-// Para mantener compatibilidad con el front, agregamos polígono pequeño en NE.
-const coreLocalRot: [number, number][] = [
-  [bounds.minX, macroN - 30],
-  [bounds.maxX, macroN - 30],
-  [bounds.maxX, macroN],
-  [bounds.minX, macroN],
-  [bounds.minX, macroN - 30],
-];
-allFeatures.push({
-  type: 'Feature',
-  properties: {
-    id: 'CORE', line: 'conservation', name: 'Reserva Núcleo',
-    category: 'conservation_core', area_ha: 250,
-    ocean_exposure: 'N/A', privacy: 'Intocada',
-    conservation: '100% nativo · sin construcción', architecture: 'Sin intervención',
-  },
-  geometry: { type: 'Polygon', coordinates: [rotatedLocalToGeo(coreLocalRot).concat([rotatedLocalToGeo(coreLocalRot)[0]])] },
-});
-
-// ────────────────────────────────────────────────────────────────────────────
-// PERÍMETRO LOTE B
-// ────────────────────────────────────────────────────────────────────────────
-const perimeterClosed = [...PERIMETER_LNGLAT];
-if (perimeterClosed[0][0] !== perimeterClosed.at(-1)![0] || perimeterClosed[0][1] !== perimeterClosed.at(-1)![1]) {
-  perimeterClosed.push(perimeterClosed[0]);
+const coreYS = band3N + 5;
+const corePoly: [number, number][] = [];
+const sampleStep = bounds.w / 60;
+// Borde sur: caminar bounds.minX → bounds.maxX en y = coreYS, recortando al perímetro
+for (let x = bounds.minX; x <= bounds.maxX; x += sampleStep) {
+  if (pip([x, coreYS], perimeterRotated)) corePoly.push([x, coreYS]);
 }
+// Borde norte: caminar de vuelta siguiendo el perímetro real
+const interiorTop = perimeterRotated.filter((p) => p[1] > coreYS).sort((a, b) => b[0] - a[0]);
+corePoly.push(...interiorTop);
+if (corePoly.length >= 4) {
+  corePoly.push(corePoly[0]);
+  allFeatures.push({
+    type: 'Feature',
+    properties: {
+      id: 'CORE', line: 'conservation', name: 'Reserva Núcleo',
+      category: 'conservation_core', area_ha: 120,
+      ocean_exposure: 'N/A', privacy: 'Intocada',
+      conservation: '100% nativo · sin construcción', architecture: 'Sin intervención',
+    },
+    geometry: { type: 'Polygon', coordinates: [rotatedLocalToGeo(corePoly)] },
+  });
+  console.log(`✓ reserva núcleo: ${corePoly.length} vértices`);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// PERÍMETRO LOTE B (cerrado)
+// ────────────────────────────────────────────────────────────────────────────
+const perimeterClosed = [...PERIMETER_LNGLAT, PERIMETER_LNGLAT[0]];
 
 const data = {
   center: [CENTER_LNG, CENTER_LAT],
   perimeter: {
     type: 'Feature',
-    properties: { name: 'Lote B · Fundo Hueyelhue', area_ha: 455 },
+    properties: { name: 'Lote B · Fundo Hueyelhue', area_ha: 420 },
     geometry: { type: 'Polygon', coordinates: [perimeterClosed] },
   },
   lots: allFeatures,
 };
 
 const out = `// AUTO-GENERADO por scripts/generateHuellelhueLots.ts
-// Motor: src/lib/subdivision/autoSubdivide.ts
-// Perímetro: cabeza de tierra norte de Playa Rada de Ranú, costa Pacífico al SW
-// Bandas paralelas a la costa (rotación ${COAST_ANGLE_DEG}° vs eje E-W)
+// Fuente perímetro: LOTE_B.kmz (80 vértices WGS84)
+// Eje principal PCA: +${COAST_ANGLE_DEG}° desde el este
+// Superficie real Lote B: ~420 ha
 // Coordenadas: WGS84 lng,lat
 
 export const HUELLELHUE_DATA = ${JSON.stringify(data, null, 2)} as const;
