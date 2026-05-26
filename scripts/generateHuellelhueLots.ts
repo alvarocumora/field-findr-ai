@@ -328,6 +328,26 @@ for (const spine of SPINES) {
   console.log(`✓ ${spine.name}: ${lotIdx} lotes (spine ${samples} samples)`);
 }
 
+// === CAP ETAPA 1: priorizar Ocean Front → Forest Ocean → Bosque Vivo ===
+const linePriority: Record<string, number> = { ocean_front: 1, forest_ocean: 2, bosque_vivo: 3 };
+const resLots = allFeatures.filter(f => linePriority[f.properties.category] !== undefined);
+const otherFeatures = allFeatures.filter(f => linePriority[f.properties.category] === undefined);
+resLots.sort((a, b) => linePriority[a.properties.category] - linePriority[b.properties.category]);
+const keptLots = resLots.slice(0, MAX_LOTS_ETAPA_1);
+// Re-numerar secuencialmente dentro de cada línea
+const lineCounters: Record<number, number> = {};
+for (const f of keptLots) {
+  const ln = f.properties.line as number;
+  lineCounters[ln] = (lineCounters[ln] || 0) + 1;
+  const n = String(lineCounters[ln]).padStart(3, '0');
+  const label = CATEGORY_META[f.properties.category as keyof typeof CATEGORY_META].label;
+  f.properties.id = `L${ln}-${n}`;
+  f.properties.name = `${label} ${n}`;
+}
+console.log(`✂︎ Etapa 1: ${keptLots.length}/${resLots.length} lotes (${resLots.length - keptLots.length} reservados como macrolotes para etapa 2)`);
+allFeatures.length = 0;
+allFeatures.push(...keptLots, ...otherFeatures);
+
 // Empujar los caminos a la colección final
 allFeatures.push(...roadFeatures);
 
