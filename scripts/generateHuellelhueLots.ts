@@ -135,29 +135,57 @@ function rotatedLocalToGeo(poly: [number, number][]): [number, number][] {
 
 const allFeatures: Feature[] = [];
 
+// Grid simple en frame rotado, filtrado por perímetro real
+function gridSubdivide(
+  southY: number,
+  northY: number,
+  lotW: number,
+  lotD: number,
+  bandName: string,
+): { lots: { polygon: [number, number][]; area: number }[] } {
+  const lots: { polygon: [number, number][]; area: number }[] = [];
+  const roadGap = 7; // calle central
+  const midY = (southY + northY) / 2;
+  for (let x = bounds.minX; x + lotW <= bounds.maxX; x += lotW) {
+    for (const side of [-1, 1]) {
+      let y0 = side === -1 ? midY - roadGap / 2 - lotD : midY + roadGap / 2;
+      while (
+        (side === -1 && y0 >= southY) ||
+        (side === 1 && y0 + lotD <= northY)
+      ) {
+        const rect: [number, number][] = [
+          [x, y0], [x + lotW, y0], [x + lotW, y0 + lotD], [x, y0 + lotD], [x, y0],
+        ];
+        // todos los corners deben estar dentro del perímetro real
+        const inside = rect.slice(0, 4).every((p) => pip(p, perimeterRotated));
+        if (inside) lots.push({ polygon: rect, area: lotW * lotD });
+        y0 += side * lotD;
+      }
+    }
+  }
+  return { lots };
+}
+
+const BAND_DIMS: Record<string, { w: number; d: number }> = {
+  ocean_front:  { w: 80, d: 110 }, // ~1 ha cabaña aislada
+  forest_ocean: { w: 70, d: 90 },  // ~0.6 ha
+  bosque_vivo:  { w: 65, d: 85 },  // ~0.55 ha
+};
+
 for (const band of BANDS) {
-  const result = autoSubdivide(band.poly, {
-    minLotArea: band.minLotArea,
-    roadPercentage: 7,
-    greenPercentage: 4,
-    minFrontage: band.minFrontage,
-    roadWidth: 7,
-    targetLots: band.targetLots,
-  });
+  const dims = BAND_DIMS[band.name];
+  const sY = band.name === 'ocean_front' ? band1S : band.name === 'forest_ocean' ? band1N : band2N;
+  const nY = band.name === 'ocean_front' ? band1N : band.name === 'forest_ocean' ? band2N : band3N;
+  const result = gridSubdivide(sY, nY, dims.w, dims.d, band.name);
   const meta = CATEGORY_META[band.name];
-  let kept = 0;
-  result.lots.forEach((lot) => {
-    // filtrar por perímetro real (centroide del lote dentro del polígono rotado)
-    if (!pip(centroidOf(lot.polygon), perimeterRotated)) return;
-    kept++;
+  result.lots.forEach((lot, idx) => {
     const geo = rotatedLocalToGeo(lot.polygon);
-    if (geo[0][0] !== geo[geo.length - 1][0] || geo[0][1] !== geo[geo.length - 1][1]) geo.push(geo[0]);
     allFeatures.push({
       type: 'Feature',
       properties: {
-        id: `L${meta.line}-${String(kept).padStart(2, '0')}`,
+        id: `L${meta.line}-${String(idx + 1).padStart(2, '0')}`,
         line: meta.line,
-        name: `${meta.label} ${String(kept).padStart(2, '0')}`,
+        name: `${meta.label} ${String(idx + 1).padStart(2, '0')}`,
         category: band.name,
         area_ha: Math.round((lot.area / 10000) * 100) / 100,
         ocean_exposure: meta.ocean_exposure,
@@ -168,7 +196,7 @@ for (const band of BANDS) {
       geometry: { type: 'Polygon', coordinates: [geo] },
     });
   });
-  console.log(`✓ ${band.name}: ${kept}/${result.lots.length} lotes (dentro del perímetro)`);
+  console.log(`✓ ${band.name}: ${result.lots.length} lotes`);
 }
 
 // ────────────────────────────────────────────────────────────────────────────
