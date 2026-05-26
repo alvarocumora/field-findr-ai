@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import './huellelhue.css';
 import HueHero from './sections/HueHero';
+import HueFicha from './sections/HueFicha';
 import HueLines from './sections/HueLines';
 import HueMasterplan from './sections/HueMasterplan';
 import HueEcosystem from './sections/HueEcosystem';
@@ -38,6 +39,7 @@ export default function HuellelhueLanding() {
   return (
     <div className="hue-root hue-grain">
       <HueHero />
+      <HueFicha />
       <HueLines />
       <HueMasterplan />
       <HueEcosystem />
