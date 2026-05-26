@@ -525,7 +525,7 @@ export default function HueMasterplan() {
             </div>
 
             {/* ───── RIGHT SIDEBAR ───── */}
-            <aside className="col-span-12 lg:col-span-3 border-l border-white/8 bg-[#070f0c]/95 backdrop-blur-md p-6 space-y-7">
+            <aside className="order-3 col-span-12 lg:col-span-3 border-t lg:border-t-0 lg:border-l border-white/8 bg-[#070f0c]/95 backdrop-blur-md p-4 md:p-6 space-y-6 md:space-y-7">
               {/* Leyenda */}
               <div className="space-y-3">
                 <div className="hue-eyebrow text-[10px]">Leyenda</div>
