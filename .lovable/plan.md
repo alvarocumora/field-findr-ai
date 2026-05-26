@@ -1,124 +1,43 @@
+# Regeneración del masterplan con el KMZ real de Lote B
 
-# Plan — Landing "Forestal Valle Escondido"
+## Contexto
+El KMZ `LOTE_B.kmz` contiene el polígono real del predio:
+- 81 vértices de perímetro
+- Bounding box: lon `-73.8298 … -73.7834`, lat `-40.7317 … -40.7067`
+- Superficie real: **≈ 420 ha** (no 1.820 ha como estaba estimado)
 
-Sitio single-page institucional en español de Chile, doble audiencia (compradores + analistas bancarios), montado dentro del proyecto existente como rutas públicas nuevas. Sin backend: contacto vía `mailto:`. Print CSS para generar Dossier PDF.
+El perímetro actual en `scripts/generateHuellelhueLots.ts` es una aproximación de 12 vértices que no coincide con la geometría real. Hay que reemplazarlo por el polígono exacto del KMZ y volver a generar los lotes alineados a la costa real frente a Playa Rada de Ranú.
 
-## Rutas nuevas (en `src/routes/publicRoutes.tsx`)
+## Pasos
 
-- `/forestal-valle-escondido` → `pages/forestal/ForestalLanding.tsx` (single page, scroll suave)
-- `/forestal-valle-escondido/investors` → `pages/forestal/InvestorsLogin.tsx` (mock login, sin auth)
+1. **Extraer el perímetro real del KMZ**
+   - Parsear `user-uploads://LOTE_B.kmz` (copiar a `/tmp`, descomprimir, leer `doc.kml`).
+   - Guardar los 81 vértices `[lng, lat]` como `PERIMETER_LNGLAT` en `scripts/generateHuellelhueLots.ts`.
+   - Recalcular centroide y bearing dominante de la costa (ajuste de rotación de bandas) a partir del propio polígono.
 
-No se toca el Layout global ni el sidebar; estas páginas se renderizan full-bleed sin `Layout` para mantener identidad propia (similar a `ProjectExperience`).
+2. **Reescribir el generador (`scripts/generateHuellelhueLots.ts`)**
+   - Mantener el `gridSubdivide` con test punto-en-polígono usando el nuevo perímetro de 81 vértices.
+   - Recalibrar el conteo de lotes a la superficie real (~420 ha, no 1.820):
+     - Ocean Front: ~20 lotes (~1 ha)
+     - Forest Ocean: ~55 lotes (~0,6 ha)
+     - Bosque Vivo: ~40 lotes (~0,55 ha)
+     - 3–4 Macrolotes (Eco Lodge, Wellness, Glamping, Gastronomy)
+     - Reserva Núcleo en el sector interior con mayor pendiente/distancia a costa
+   - Calcular el bearing de las bandas como la orientación promedio del tramo costero del polígono (los vértices del lado oeste), no un −39° fijo.
 
-## Design system local (scoped, no rompe el global)
+3. **Regenerar `src/pages/huellelhue/data/lots.ts`**
+   - Ejecutar `bun scripts/generateHuellelhueLots.ts` para reescribir `HUELLELHUE_DATA` con el GeoJSON real.
+   - Actualizar el `center` exportado al centroide real del KMZ.
 
-Tokens propios inyectados vía clase wrapper `.fve-theme` en el root de la landing — define CSS vars locales sin tocar `index.css` global:
+4. **Ajustar la ficha y totales en la UI**
+   - En `HueMasterplan.tsx`, `HueFicha.tsx` y cualquier copy donde aparezca "1.820 ha", cambiar a la superficie real (~420 ha) y al nuevo desglose de lotes.
+   - Verificar que el `fitBounds` del mapa Mapbox use los nuevos bounds del polígono.
 
-- `--fve-forest: 31 31% 20%` (#1F3D2B aprox HSL)
-- `--fve-sand: 38 38% 75%` (#D9C7A7)
-- `--fve-charcoal: 0 0% 10%` (#1A1A1A)
-- `--fve-offwhite: 40 33% 95%` (#F7F4EE)
-- `--fve-gold: 40 47% 50%` (#B89348)
+5. **Verificación**
+   - Abrir el preview, comprobar visualmente que el polígono y los lotes encajan con la costa de Rada de Ranú.
+   - Confirmar totales (cantidad de lotes y hectáreas) en consola al final del script.
 
-Fuentes vía `<link>` en `index.html` (Fraunces 400/600 + Inter 400/500/600). Clases utilitarias `font-serif-fve` y `font-sans-fve` definidas en un CSS local `forestal.css` importado solo por la landing.
-
-## Estructura de archivos
-
-```
-src/pages/forestal/
-  ForestalLanding.tsx          # compone las 12 secciones
-  InvestorsLogin.tsx           # mock login
-  forestal.css                 # tokens locales + print CSS
-  data/
-    lotes.ts                   # 15 lotes con precios UF 1.200–2.800
-    faqs.ts                    # 8 Q&A
-    capex.ts                   # tabla CAPEX + fases gantt
-    dueDiligence.ts            # 7 items checklist legal
-  sections/
-    FveNav.tsx                 # nav fijo + "Acceso Inversionistas"
-    FveHero.tsx
-    FveProyecto.tsx
-    FvePlanoMaestro.tsx        # SVG grid lotes + tabla
-    FveUbicacion.tsx           # iframe Google Maps + pills
-    FveInversion.tsx           # gantt + CAPEX (PRINT)
-    FveProyecciones.tsx
-    FveDueDiligence.tsx        # checklist + modal "Solicitar documento" (PRINT)
-    FveDesarrollador.tsx       # (PRINT)
-    FveProceso.tsx
-    FveFaqs.tsx                # shadcn Accordion
-    FveContacto.tsx            # form mailto:
-    FveFooter.tsx
-    DocRequestModal.tsx        # shadcn Dialog reutilizable
-```
-
-Cada sección recibe `id` para scroll anchors. Nav usa `<a href="#proyecto">` con `scroll-behavior: smooth`.
-
-## Comportamiento clave
-
-- **Hero**: imagen Unsplash full-bleed (`https://images.unsplash.com/...?q=maule+vineyards`), overlay gradient verde→transparente, H1 serif grande, 2 CTAs (gold primario + outline). Strip de confianza debajo en banda arena.
-- **Plano Maestro**: SVG 5×3 grid de rectángulos (15 lotes) con `fill` por estado (disponible/reservado/vendido), hover→tooltip con nro + UF, click→selecciona fila en tabla. Tabla shadcn `Table` con 15 filas hardcoded en `data/lotes.ts`. Leyenda con tres swatches.
-- **Ubicación**: `<iframe>` Google Maps embed centrado en -35.0, -72.0; pills shadcn `Badge` para distancias; grid de servicios cercanos.
-- **Inversión** (sección 5): Gantt simple en CSS grid — 4 filas (fases) × 12 columnas (meses), barras con `background` gold/sand. Tabla CAPEX abajo con 6–8 partidas en UF.
-- **Due Diligence** (sección 7): 7 items con `CheckCircle2` verde, cada uno con botón "Solicitar documento" → abre `DocRequestModal` (shadcn Dialog) con form mailto pre-llenado. Cada item tiene placeholder de referencia ("Ref. doc. físico: ___").
-- **Desarrollador**: card con RUT placeholder (`76.XXX.XXX-K`), métricas, bio corta.
-- **Proceso**: 4 pasos con icons `lucide` (FileSignature, Handshake, ScrollText, Landmark) en línea horizontal con conectores.
-- **FAQs**: shadcn `Accordion` con 8 entradas redactadas (DL 3.516, construcción, urbanización, formas de pago, hipotecario, plusvalía, impuestos, entrega).
-- **Contacto**: form controlado React; submit construye `mailto:ventas@ofertaterrenos.cl?subject=...&body=...` con `window.location.href`. Side panel con datos oficina + email IR separado.
-- **Nav fijo**: `position: sticky top-0`, backdrop-blur, transparente en hero (detect scroll Y > 80), sólido al hacer scroll. Botón "Acceso Inversionistas" link a `/forestal-valle-escondido/investors`.
-
-## Print CSS (`forestal.css`)
-
-```css
-@media print {
-  .fve-no-print { display: none !important; }     /* nav, footer, hero, contacto, faq, ubicación, proyecciones, plano interactivo, proceso */
-  .fve-print-only { display: block !important; }
-  .fve-section { break-inside: avoid; page-break-inside: avoid; }
-  body { background: white; color: black; }
-}
-```
-
-Secciones 2, 5, 7, 8 sin `fve-no-print`; el resto lleva la clase. Header de print con logo + título "Dossier del Proyecto" inyectado vía `fve-print-only`.
-
-## SEO
-
-`index.html` ya es global y cubre el dominio. Para per-route uso `useSEO` (hook existente del proyecto):
-
-- `title`: "Forestal Valle Escondido — Parcelas DL 3.516 Hualañé Maule"
-- `description`: "Parcelación rural bajo DL 3.516 en Hualañé, Región del Maule. Parcelas de 5.000 m² con roles SII individuales, escrituras y derechos de agua."
-- `canonicalUrl`: `https://ofertaterrenos.com/forestal-valle-escondido`
-- `jsonLd`: `RealEstateListing` agregado con datos del proyecto
-- OG image: Unsplash placeholder
-
-## /investors (mock login)
-
-Página simple centrada con card shadcn: logo + título "Acceso Inversionistas", inputs email/password, botón "Ingresar" que solo muestra toast "Próximamente — contacto IR en ir@ofertaterrenos.cl". Sin lógica de auth real. Link "Volver" al landing.
-
-## Datos placeholder (chilenos realistas)
-
-- **Lotes**: numeración A-01…A-15, superficies 5.000–7.500 m², orientaciones N/NE/E/SE, precios UF 1.200–2.800, estados mezcla (10 disp / 3 reservados / 2 vendidos).
-- **Coords**: -35.0489, -71.9876 (Hualañé aprox).
-- **RUTs**: Forestal Valle Escondido SpA RUT 77.123.456-K; Inversiones Bioenergy SpA RUT 76.987.654-3.
-- **CAPEX**: Caminos UF 8.500, Electrificación UF 6.200, Pozo + derechos UF 3.800, Topografía/subdivisión UF 2.400, Escrituración UF 1.800, Comercialización UF 4.500, Contingencia UF 2.300 → Total ~UF 29.500.
-- **Proyecciones**: Velocidad 2 parcelas/mes, ticket promedio UF 1.950, absorción 4.2%.
-
-## Restricciones respetadas
-
-- Sin emojis en UI (solo iconos lucide).
-- Sin fotos stock genéricas: Unsplash con queries específicos del Maule rural.
-- Sin lenguaje de urgencia.
-- Tono institucional en copy (revisión manual al redactar).
-- Mobile-first: nav colapsa a menú hamburguesa shadcn `Sheet`; gantt scroll horizontal en mobile; tabla lotes con scroll-x.
-
-## Fuera de alcance (confirmado)
-
-- No se integra con DB ni RLS — todo hardcoded en `data/`.
-- No se toca el `Layout` global, sidebar, ni rutas existentes salvo añadir 2 rutas en `publicRoutes.tsx`.
-- No se modifica `index.css` global; tokens scoped a `.fve-theme`.
-- Sin auth real en `/investors`.
-
-## Verificación al terminar
-
-- Build pasa (automático).
-- Navegar `/forestal-valle-escondido` en preview: hero carga, scroll smooth a anchors, modal "Solicitar documento" abre, form mailto abre cliente, accordion FAQ funciona, mobile <768 nav colapsa.
-- `Ctrl+P` muestra solo secciones 2/5/7/8 con header Dossier.
-- `/forestal-valle-escondido/investors` renderiza login mock.
+## Notas técnicas
+- El KMZ original queda como referencia en `/tmp/kmz/`; no se copia al repo (es un dato de origen, no asset web).
+- No se toca la arquitectura del sitio ni los assets visuales — sólo geometría, conteos y copys numéricos.
+- No se modifica `src/integrations/supabase/*` ni rutas existentes.
