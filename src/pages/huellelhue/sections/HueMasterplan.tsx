@@ -86,7 +86,7 @@ export default function HueMasterplan() {
         features: HUELLELHUE_DATA.lots.map((l, idx) => ({
           ...l,
           id: idx,
-        })) as GeoJSON.Feature[],
+        })) as unknown as GeoJSON.Feature[],
       };
       map.addSource('lots', { type: 'geojson', data: fc, generateId: false });
 
@@ -181,7 +181,7 @@ export default function HueMasterplan() {
       });
 
       // Perimeter
-      const perim = HUELLELHUE_DATA.perimeter as GeoJSON.Feature;
+      const perim = HUELLELHUE_DATA.perimeter as unknown as GeoJSON.Feature;
       map.addSource('perimeter', { type: 'geojson', data: perim });
       map.addLayer({
         id: 'perimeter-line',
