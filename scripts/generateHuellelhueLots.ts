@@ -322,15 +322,14 @@ const trailDefs: TrailDef[] = [
     }),
   },
   {
-    id: 'S-INT', name: 'Sendero Reserva Núcleo', difficulty: 'Moderado', length_km: 5.8,
-    // Loop interior por la conservación
-    pts: Array.from({ length: 16 }, (_, i) => {
-      const t = i / 15;
+    id: 'S-INT', name: 'Sendero Reserva Núcleo', difficulty: 'Moderado', length_km: 4.2,
+    pts: Array.from({ length: 20 }, (_, i) => {
+      const t = i / 19;
       const angle = t * Math.PI * 2;
       const cx = bounds.minX + bounds.w * 0.5;
-      const cy = lodgeN + (macroN - lodgeN) * 0.55;
-      const rx = bounds.w * 0.32;
-      const ry = (macroN - lodgeN) * 0.32;
+      const cy = lodgeN + (macroN - lodgeN) * 0.45;
+      const rx = bounds.w * 0.22;
+      const ry = Math.min((macroN - lodgeN) * 0.28, bounds.h * 0.08);
       return [cx + Math.cos(angle) * rx, cy + Math.sin(angle) * ry] as [number, number];
     }),
   },
