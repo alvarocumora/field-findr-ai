@@ -181,12 +181,16 @@ type Spine = {
   bothSides: boolean;  // lotes a ambos lados del camino
 };
 
+// === ETAPA 1: máximo 80 lotes residenciales ===
+// El resto del predio (Lote B 420 ha + 1.200 ha colindantes de conservación) queda
+// como MACROLOTES de reserva para una 2ª subdivisión posterior (DL 3.516 etapa 2).
+const MAX_LOTS_ETAPA_1 = 80;
+
 const SPINES: Spine[] = [
-  { name: 'ocean_front',  yFrac: 0.20, amp: 55, freq: 2.4, phase: 0.0, lotFrontage: 80, lotDepth: 125, bothSides: false },
-  { name: 'ocean_front',  yFrac: 0.32, amp: 65, freq: 2.0, phase: 0.4, lotFrontage: 80, lotDepth: 115, bothSides: true  },
-  { name: 'forest_ocean', yFrac: 0.44, amp: 70, freq: 1.9, phase: 0.8, lotFrontage: 75, lotDepth: 110, bothSides: true  },
-  { name: 'forest_ocean', yFrac: 0.54, amp: 80, freq: 1.6, phase: 1.1, lotFrontage: 75, lotDepth: 110, bothSides: true  },
-  { name: 'bosque_vivo',  yFrac: 0.64, amp: 90, freq: 1.4, phase: 1.5, lotFrontage: 85, lotDepth: 125, bothSides: true  },
+  { name: 'ocean_front',  yFrac: 0.22, amp: 55, freq: 2.4, phase: 0.0, lotFrontage: 100, lotDepth: 130, bothSides: false },
+  { name: 'ocean_front',  yFrac: 0.36, amp: 65, freq: 2.0, phase: 0.4, lotFrontage: 95,  lotDepth: 120, bothSides: true  },
+  { name: 'forest_ocean', yFrac: 0.50, amp: 75, freq: 1.8, phase: 0.9, lotFrontage: 95,  lotDepth: 115, bothSides: true  },
+  { name: 'bosque_vivo',  yFrac: 0.64, amp: 90, freq: 1.4, phase: 1.5, lotFrontage: 110, lotDepth: 135, bothSides: true  },
 ];
 
 
