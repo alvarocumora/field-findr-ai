@@ -401,7 +401,7 @@ export default function HueMasterplan() {
         <div className="rounded-md overflow-hidden border border-white/8 bg-[#0a1410] shadow-[0_40px_120px_-20px_rgba(0,0,0,0.9)]">
           <div className="grid grid-cols-12 gap-0">
             {/* ───── LEFT SIDEBAR ───── */}
-            <aside className="col-span-12 lg:col-span-3 border-r border-white/8 bg-[#070f0c]/95 backdrop-blur-md p-6 space-y-7">
+            <aside className="order-2 lg:order-1 col-span-12 lg:col-span-3 border-t lg:border-t-0 lg:border-r border-white/8 bg-[#070f0c]/95 backdrop-blur-md p-4 md:p-6 space-y-6 md:space-y-7">
               {/* Brand */}
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 rounded-full bg-[var(--hue-amber)]/15 border border-[var(--hue-amber)]/40 flex items-center justify-center">
