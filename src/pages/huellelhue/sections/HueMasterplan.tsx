@@ -10,20 +10,23 @@ const COLOR_MAP: Record<string, string> = {
   ocean_front: '#1e6091',
   forest_ocean: '#3a7d44',
   bosque_vivo: '#5a6b35',
-  eco_lodge: '#c9a86b',
-  wellness: '#d4b78a',
+  eco_lodge: '#d4a574',
+  wellness: '#c9a86b',
   glamping: '#b89460',
-  gastronomy: '#a07d4f',
   research: '#8b6a44',
   conservation_core: '#0d2818',
+  trail: '#e8d28a',
+  viewpoint: '#ffd166',
 };
 
 const LEGEND = [
-  { color: '#1e6091', label: 'Ocean Front Reserve', sub: '24 lotes · ~3,2 ha' },
-  { color: '#3a7d44', label: 'Forest Ocean Residences', sub: '42 lotes · ~2,1 ha' },
-  { color: '#5a6b35', label: 'Bosque Vivo', sub: '28 lotes · ~1,5 ha' },
-  { color: '#c9a86b', label: 'Macrolotes Operativos', sub: '3 zonas · 6-10 ha' },
-  { color: '#0d2818', label: 'Reserva Núcleo', sub: '~120 ha intocadas' },
+  { color: '#1e6091', label: 'Ocean Front Reserve', sub: '10 lotes · 4 ha c/u' },
+  { color: '#3a7d44', label: 'Forest Ocean Residences', sub: '10 lotes · 2,7 ha' },
+  { color: '#5a6b35', label: 'Bosque Vivo', sub: '8 lotes · 2 ha' },
+  { color: '#d4a574', label: 'Huellelhue Lodge', sub: '28 suites · spa · biblioteca' },
+  { color: '#c9a86b', label: 'Wellness · Glamping · Research', sub: '3 equipamientos · 16 ha' },
+  { color: '#e8d28a', label: 'Senderos', sub: '4 trazados · 11 km totales' },
+  { color: '#0d2818', label: 'Reserva Núcleo', sub: '320 ha · 76% del predio' },
 ];
 
 export default function HueMasterplan() {
