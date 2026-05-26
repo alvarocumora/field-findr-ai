@@ -157,9 +157,9 @@ function gridSubdivide(
         const rect: [number, number][] = [
           [x, y0], [x + lotW, y0], [x + lotW, y0 + lotD], [x, y0 + lotD], [x, y0],
         ];
-        // todos los corners deben estar dentro del perímetro real
-        const inside = rect.slice(0, 4).every((p) => pip(p, perimeterRotated));
-        if (inside) lots.push({ polygon: rect, area: lotW * lotD });
+        // centroide debe estar dentro del perímetro real
+        const cx = x + lotW / 2, cy = y0 + lotD / 2;
+        if (pip([cx, cy], perimeterRotated)) lots.push({ polygon: rect, area: lotW * lotD });
         y0 += side * lotD;
       }
     }
