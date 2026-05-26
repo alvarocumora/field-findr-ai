@@ -157,18 +157,25 @@ export default function HueMasterplan() {
         },
       });
 
-      // Macrolots
+      // Macrolots (con paleta por categoría, lodge destacado)
       map.addLayer({
         id: 'lots-macro-fill',
         type: 'fill',
         source: 'lots',
         filter: ['==', ['get', 'line'], 'macro'],
         paint: {
-          'fill-color': '#c9a86b',
+          'fill-color': [
+            'match', ['get', 'category'],
+            'eco_lodge', '#d4a574',
+            'wellness',  '#c9a86b',
+            'glamping',  '#b89460',
+            'research',  '#8b6a44',
+            '#c9a86b',
+          ],
           'fill-opacity': [
             'case',
-            ['boolean', ['feature-state', 'hover'], false], 0.6,
-            0.35,
+            ['boolean', ['feature-state', 'hover'], false], 0.75,
+            0.5,
           ],
         },
       });
@@ -178,41 +185,79 @@ export default function HueMasterplan() {
         source: 'lots',
         filter: ['==', ['get', 'line'], 'macro'],
         paint: {
-          'line-color': '#c9a86b',
-          'line-width': 1.4,
+          'line-color': '#e8d28a',
+          'line-width': 1.6,
         },
       });
 
-      // Perímetro real KMZ — overlay de verificación (halo + línea brillante)
+      // SENDEROS (LineString) — pasarela de madera punteada cálida
+      map.addLayer({
+        id: 'trails-line',
+        type: 'line',
+        source: 'lots',
+        filter: ['==', ['get', 'category'], 'trail'],
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+          'line-color': '#e8d28a',
+          'line-width': 2.4,
+          'line-opacity': 0.85,
+          'line-dasharray': [1.5, 1.8],
+        },
+      });
+
+      // MIRADORES / POIs (Point)
+      map.addLayer({
+        id: 'pois-dot',
+        type: 'circle',
+        source: 'lots',
+        filter: ['==', ['get', 'category'], 'viewpoint'],
+        paint: {
+          'circle-radius': 6,
+          'circle-color': '#ffd166',
+          'circle-stroke-color': '#1a1208',
+          'circle-stroke-width': 2,
+        },
+      });
+      map.addLayer({
+        id: 'pois-label',
+        type: 'symbol',
+        source: 'lots',
+        filter: ['==', ['get', 'category'], 'viewpoint'],
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': 11,
+          'text-offset': [0, 1.4],
+          'text-anchor': 'top',
+          'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+        },
+        paint: {
+          'text-color': '#ffd166',
+          'text-halo-color': '#000',
+          'text-halo-width': 1.2,
+        },
+      });
+
+      // Perímetro real KMZ
       const perim = HUELLELHUE_DATA.perimeter as unknown as GeoJSON.Feature;
       map.addSource('perimeter', { type: 'geojson', data: perim });
       map.addLayer({
         id: 'perimeter-halo',
         type: 'line',
         source: 'perimeter',
-        paint: {
-          'line-color': '#ffd166',
-          'line-width': 8,
-          'line-opacity': 0.18,
-          'line-blur': 4,
-        },
+        paint: { 'line-color': '#ffd166', 'line-width': 8, 'line-opacity': 0.18, 'line-blur': 4 },
       });
       map.addLayer({
         id: 'perimeter-line',
         type: 'line',
         source: 'perimeter',
-        paint: {
-          'line-color': '#ffd166',
-          'line-width': 2.5,
-          'line-opacity': 0.95,
-        },
+        paint: { 'line-color': '#ffd166', 'line-width': 2.5, 'line-opacity': 0.95 },
       });
 
-      // Centroides — verificación visual
+      // Centroides (solo polígonos residenciales)
       const centroidsFC: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
         features: HUELLELHUE_DATA.lots
-          .filter((l: any) => l.properties.category !== 'conservation_core')
+          .filter((l: any) => l.geometry?.type === 'Polygon' && ['ocean_front', 'forest_ocean', 'bosque_vivo'].includes(l.properties.category))
           .map((l: any) => {
             const ring = l.geometry.coordinates[0] as [number, number][];
             let sx = 0, sy = 0;
@@ -245,7 +290,7 @@ export default function HueMasterplan() {
         },
       });
 
-      // Ajustar cámara al perímetro real para verificación
+      // Ajustar cámara al perímetro real
       const coords = (perim.geometry as any).coordinates[0] as [number, number][];
       const b = new mapboxgl.LngLatBounds();
       coords.forEach((c) => b.extend(c));
