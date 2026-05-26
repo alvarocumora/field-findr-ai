@@ -296,26 +296,32 @@ MACROS.forEach((m, i) => {
 });
 
 // ────────────────────────────────────────────────────────────────────────────
-// RESERVA NÚCLEO — sector interior (banda más al norte/interior)
+// RESERVA NÚCLEO — muestreo de la franja interior recortada por el perímetro
 // ────────────────────────────────────────────────────────────────────────────
-const coreYS = macroN - 60;
-const coreLocalRot: [number, number][] = [
-  [bounds.minX, coreYS],
-  [bounds.maxX, coreYS],
-  [bounds.maxX, macroN],
-  [bounds.minX, macroN],
-  [bounds.minX, coreYS],
-];
-allFeatures.push({
-  type: 'Feature',
-  properties: {
-    id: 'CORE', line: 'conservation', name: 'Reserva Núcleo',
-    category: 'conservation_core', area_ha: 80,
-    ocean_exposure: 'N/A', privacy: 'Intocada',
-    conservation: '100% nativo · sin construcción', architecture: 'Sin intervención',
-  },
-  geometry: { type: 'Polygon', coordinates: [rotatedLocalToGeo(coreLocalRot)] },
-});
+const coreYS = band3N + 5;
+const corePoly: [number, number][] = [];
+const sampleStep = bounds.w / 60;
+// Borde sur: caminar bounds.minX → bounds.maxX en y = coreYS, recortando al perímetro
+for (let x = bounds.minX; x <= bounds.maxX; x += sampleStep) {
+  if (pip([x, coreYS], perimeterRotated)) corePoly.push([x, coreYS]);
+}
+// Borde norte: caminar de vuelta siguiendo el perímetro real
+const interiorTop = perimeterRotated.filter((p) => p[1] > coreYS).sort((a, b) => b[0] - a[0]);
+corePoly.push(...interiorTop);
+if (corePoly.length >= 4) {
+  corePoly.push(corePoly[0]);
+  allFeatures.push({
+    type: 'Feature',
+    properties: {
+      id: 'CORE', line: 'conservation', name: 'Reserva Núcleo',
+      category: 'conservation_core', area_ha: 120,
+      ocean_exposure: 'N/A', privacy: 'Intocada',
+      conservation: '100% nativo · sin construcción', architecture: 'Sin intervención',
+    },
+    geometry: { type: 'Polygon', coordinates: [rotatedLocalToGeo(corePoly)] },
+  });
+  console.log(`✓ reserva núcleo: ${corePoly.length} vértices`);
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // PERÍMETRO LOTE B (cerrado)
