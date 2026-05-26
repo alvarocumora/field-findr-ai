@@ -165,9 +165,9 @@ const BANDS = [
 
 // Lotes amplios + separación generosa (camino+vegetación entre cabañas)
 const BAND_DIMS: Record<string, { w: number; d: number; gapX: number; gapY: number }> = {
-  ocean_front:  { w: 180, d: 220, gapX: 120, gapY: 60 }, // ~4.0 ha + buffer denso
-  forest_ocean: { w: 150, d: 180, gapX: 90,  gapY: 50 }, // ~2.7 ha
-  bosque_vivo:  { w: 130, d: 150, gapX: 80,  gapY: 40 }, // ~2.0 ha
+  ocean_front:  { w: 80,  d: 100, gapX: 60, gapY: 40 }, // ~0.8 ha (0.5–1.0 ha)
+  forest_ocean: { w: 75,  d: 95,  gapX: 55, gapY: 35 }, // ~0.7 ha (0.5–1.0 ha)
+  bosque_vivo:  { w: 110, d: 140, gapX: 70, gapY: 45 }, // ~1.5 ha (1.0–2.0 ha)
 };
 
 const CATEGORY_META: Record<string, any> = {
