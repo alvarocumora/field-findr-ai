@@ -19,11 +19,11 @@ const COLOR_MAP: Record<string, string> = {
 };
 
 const LEGEND = [
-  { color: '#1e6091', label: 'Ocean Front Reserve', sub: '32 lotes · ~1 ha' },
-  { color: '#3a7d44', label: 'Forest Ocean Residences', sub: '56 lotes · 0,5-1 ha' },
-  { color: '#5a6b35', label: 'Bosque Vivo', sub: '90 lotes · 0,5-1 ha' },
-  { color: '#c9a86b', label: 'Macrolotes Operativos', sub: '5 zonas · 6-30 ha' },
-  { color: '#0d2818', label: 'Reserva Núcleo', sub: '250 ha intocadas' },
+  { color: '#1e6091', label: 'Ocean Front Reserve', sub: '24 lotes · ~3,2 ha' },
+  { color: '#3a7d44', label: 'Forest Ocean Residences', sub: '42 lotes · ~2,1 ha' },
+  { color: '#5a6b35', label: 'Bosque Vivo', sub: '28 lotes · ~1,5 ha' },
+  { color: '#c9a86b', label: 'Macrolotes Operativos', sub: '3 zonas · 6-10 ha' },
+  { color: '#0d2818', label: 'Reserva Núcleo', sub: '~120 ha intocadas' },
 ];
 
 export default function HueMasterplan() {
