@@ -10,20 +10,23 @@ const COLOR_MAP: Record<string, string> = {
   ocean_front: '#1e6091',
   forest_ocean: '#3a7d44',
   bosque_vivo: '#5a6b35',
-  eco_lodge: '#c9a86b',
-  wellness: '#d4b78a',
+  eco_lodge: '#d4a574',
+  wellness: '#c9a86b',
   glamping: '#b89460',
-  gastronomy: '#a07d4f',
   research: '#8b6a44',
   conservation_core: '#0d2818',
+  trail: '#e8d28a',
+  viewpoint: '#ffd166',
 };
 
 const LEGEND = [
-  { color: '#1e6091', label: 'Ocean Front Reserve', sub: '24 lotes · ~3,2 ha' },
-  { color: '#3a7d44', label: 'Forest Ocean Residences', sub: '42 lotes · ~2,1 ha' },
-  { color: '#5a6b35', label: 'Bosque Vivo', sub: '28 lotes · ~1,5 ha' },
-  { color: '#c9a86b', label: 'Macrolotes Operativos', sub: '3 zonas · 6-10 ha' },
-  { color: '#0d2818', label: 'Reserva Núcleo', sub: '~120 ha intocadas' },
+  { color: '#1e6091', label: 'Ocean Front Reserve', sub: '10 lotes · 4 ha c/u' },
+  { color: '#3a7d44', label: 'Forest Ocean Residences', sub: '10 lotes · 2,7 ha' },
+  { color: '#5a6b35', label: 'Bosque Vivo', sub: '8 lotes · 2 ha' },
+  { color: '#d4a574', label: 'Huellelhue Lodge', sub: '28 suites · spa · biblioteca' },
+  { color: '#c9a86b', label: 'Wellness · Glamping · Research', sub: '3 equipamientos · 16 ha' },
+  { color: '#e8d28a', label: 'Senderos', sub: '4 trazados · 11 km totales' },
+  { color: '#0d2818', label: 'Reserva Núcleo', sub: '320 ha · 76% del predio' },
 ];
 
 export default function HueMasterplan() {
@@ -154,18 +157,25 @@ export default function HueMasterplan() {
         },
       });
 
-      // Macrolots
+      // Macrolots (con paleta por categoría, lodge destacado)
       map.addLayer({
         id: 'lots-macro-fill',
         type: 'fill',
         source: 'lots',
         filter: ['==', ['get', 'line'], 'macro'],
         paint: {
-          'fill-color': '#c9a86b',
+          'fill-color': [
+            'match', ['get', 'category'],
+            'eco_lodge', '#d4a574',
+            'wellness',  '#c9a86b',
+            'glamping',  '#b89460',
+            'research',  '#8b6a44',
+            '#c9a86b',
+          ],
           'fill-opacity': [
             'case',
-            ['boolean', ['feature-state', 'hover'], false], 0.6,
-            0.35,
+            ['boolean', ['feature-state', 'hover'], false], 0.75,
+            0.5,
           ],
         },
       });
@@ -175,41 +185,79 @@ export default function HueMasterplan() {
         source: 'lots',
         filter: ['==', ['get', 'line'], 'macro'],
         paint: {
-          'line-color': '#c9a86b',
-          'line-width': 1.4,
+          'line-color': '#e8d28a',
+          'line-width': 1.6,
         },
       });
 
-      // Perímetro real KMZ — overlay de verificación (halo + línea brillante)
+      // SENDEROS (LineString) — pasarela de madera punteada cálida
+      map.addLayer({
+        id: 'trails-line',
+        type: 'line',
+        source: 'lots',
+        filter: ['==', ['get', 'category'], 'trail'],
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+          'line-color': '#e8d28a',
+          'line-width': 2.4,
+          'line-opacity': 0.85,
+          'line-dasharray': [1.5, 1.8],
+        },
+      });
+
+      // MIRADORES / POIs (Point)
+      map.addLayer({
+        id: 'pois-dot',
+        type: 'circle',
+        source: 'lots',
+        filter: ['==', ['get', 'category'], 'viewpoint'],
+        paint: {
+          'circle-radius': 6,
+          'circle-color': '#ffd166',
+          'circle-stroke-color': '#1a1208',
+          'circle-stroke-width': 2,
+        },
+      });
+      map.addLayer({
+        id: 'pois-label',
+        type: 'symbol',
+        source: 'lots',
+        filter: ['==', ['get', 'category'], 'viewpoint'],
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': 11,
+          'text-offset': [0, 1.4],
+          'text-anchor': 'top',
+          'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+        },
+        paint: {
+          'text-color': '#ffd166',
+          'text-halo-color': '#000',
+          'text-halo-width': 1.2,
+        },
+      });
+
+      // Perímetro real KMZ
       const perim = HUELLELHUE_DATA.perimeter as unknown as GeoJSON.Feature;
       map.addSource('perimeter', { type: 'geojson', data: perim });
       map.addLayer({
         id: 'perimeter-halo',
         type: 'line',
         source: 'perimeter',
-        paint: {
-          'line-color': '#ffd166',
-          'line-width': 8,
-          'line-opacity': 0.18,
-          'line-blur': 4,
-        },
+        paint: { 'line-color': '#ffd166', 'line-width': 8, 'line-opacity': 0.18, 'line-blur': 4 },
       });
       map.addLayer({
         id: 'perimeter-line',
         type: 'line',
         source: 'perimeter',
-        paint: {
-          'line-color': '#ffd166',
-          'line-width': 2.5,
-          'line-opacity': 0.95,
-        },
+        paint: { 'line-color': '#ffd166', 'line-width': 2.5, 'line-opacity': 0.95 },
       });
 
-      // Centroides — verificación visual
+      // Centroides (solo polígonos residenciales)
       const centroidsFC: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
         features: HUELLELHUE_DATA.lots
-          .filter((l: any) => l.properties.category !== 'conservation_core')
+          .filter((l: any) => l.geometry?.type === 'Polygon' && ['ocean_front', 'forest_ocean', 'bosque_vivo'].includes(l.properties.category))
           .map((l: any) => {
             const ring = l.geometry.coordinates[0] as [number, number][];
             let sx = 0, sy = 0;
@@ -242,7 +290,7 @@ export default function HueMasterplan() {
         },
       });
 
-      // Ajustar cámara al perímetro real para verificación
+      // Ajustar cámara al perímetro real
       const coords = (perim.geometry as any).coordinates[0] as [number, number][];
       const b = new mapboxgl.LngLatBounds();
       coords.forEach((c) => b.extend(c));
@@ -412,9 +460,9 @@ export default function HueMasterplan() {
           {/* Stats overlay */}
           <div className="absolute right-4 top-4 z-10 hidden md:flex gap-px bg-black/65 backdrop-blur-md border border-white/10">
             {[
-              { l: 'Lotes residenciales', v: '94' },
-              { l: 'Macrolotes', v: '3' },
-              { l: 'Reserva', v: '120 ha' },
+              { l: 'Residencias', v: '28' },
+              { l: 'Senderos', v: '11 km' },
+              { l: 'Reserva', v: '320 ha' },
             ].map((s) => (
               <div key={s.l} className="px-5 py-3">
                 <div className="serif text-2xl text-[var(--hue-bone)]">{s.v}</div>

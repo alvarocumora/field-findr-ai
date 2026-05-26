@@ -147,13 +147,15 @@ function pip(pt: [number, number], poly: [number, number][]): boolean {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// BANDAS PARALELAS A LA COSTA — Y crece desde la costa (Y-min) al interior (Y-max)
+// BANDAS PARALELAS A LA COSTA — filosofía RESERVA: bandas residenciales finas,
+// conservación dominante (≥75% superficie), lodge protagonista, senderos
 // ────────────────────────────────────────────────────────────────────────────
-const band1S = bounds.minY;
-const band1N = bounds.minY + bounds.h * 0.28; // Ocean Front
-const band2N = bounds.minY + bounds.h * 0.50; // Forest Ocean
-const band3N = bounds.minY + bounds.h * 0.68; // Bosque Vivo
-const macroN = bounds.maxY;                    // Macrolotes + Reserva al interior
+const band1S = bounds.minY + bounds.h * 0.18; // saltar borde extremo
+const band1N = bounds.minY + bounds.h * 0.32; // Ocean Front (franja costa)
+const band2N = bounds.minY + bounds.h * 0.46; // Forest Ocean (elevado)
+const band3N = bounds.minY + bounds.h * 0.58; // Bosque Vivo (dosel)
+const lodgeN = bounds.minY + bounds.h * 0.72; // Lodge + equipamiento
+const macroN = bounds.maxY - bounds.h * 0.05;  // Reserva núcleo (recorta borde)
 
 const BANDS = [
   { name: 'ocean_front',  sY: band1S, nY: band1N },
@@ -161,10 +163,11 @@ const BANDS = [
   { name: 'bosque_vivo',  sY: band2N, nY: band3N },
 ];
 
-const BAND_DIMS: Record<string, { w: number; d: number }> = {
-  ocean_front:  { w: 160, d: 200 }, // ~3.2 ha — premium frente mar
-  forest_ocean: { w: 130, d: 160 }, // ~2.1 ha
-  bosque_vivo:  { w: 110, d: 140 }, // ~1.5 ha
+// Lotes amplios + separación generosa (camino+vegetación entre cabañas)
+const BAND_DIMS: Record<string, { w: number; d: number; gapX: number; gapY: number }> = {
+  ocean_front:  { w: 180, d: 220, gapX: 120, gapY: 60 }, // ~4.0 ha + buffer denso
+  forest_ocean: { w: 150, d: 180, gapX: 90,  gapY: 50 }, // ~2.7 ha
+  bosque_vivo:  { w: 130, d: 150, gapX: 80,  gapY: 40 }, // ~2.0 ha
 };
 
 const CATEGORY_META: Record<string, any> = {
@@ -173,11 +176,15 @@ const CATEGORY_META: Record<string, any> = {
   bosque_vivo:  { line: 3, label: 'Bosque Vivo',  ocean_exposure: 'Indirecta · sonido', privacy: 'Total inmersión', conservation: '80% nativo',          architecture: 'Cabaña dosel · pasarela' },
 };
 
-type Feature = { type: 'Feature'; properties: Record<string, any>; geometry: { type: 'Polygon'; coordinates: [number, number][][] } };
+type Feature = { type: 'Feature'; properties: Record<string, any>; geometry: any };
 
 function rotatedLocalToGeo(poly: [number, number][]): [number, number][] {
   const unrotated = poly.map((p) => rotate(p, COAST_ANGLE_RAD));
   return localToGeo(unrotated, CENTER_LNG, CENTER_LAT);
+}
+function rotatedLocalToGeoSingle(pt: [number, number]): [number, number] {
+  const u = rotate(pt, COAST_ANGLE_RAD);
+  return localToGeo([u], CENTER_LNG, CENTER_LAT)[0];
 }
 
 const allFeatures: Feature[] = [];
@@ -187,28 +194,30 @@ function gridSubdivide(
   northY: number,
   lotW: number,
   lotD: number,
+  gapX: number,
+  gapY: number,
 ): { polygon: [number, number][]; area: number }[] {
   const lots: { polygon: [number, number][]; area: number }[] = [];
-  const roadGap = 8;
+  const stepX = lotW + gapX;
+  const stepY = lotD + gapY;
+  // Una sola fila por banda (la banda es fina); centrada en Y
   const midY = (southY + northY) / 2;
-  for (let x = bounds.minX; x + lotW <= bounds.maxX; x += lotW) {
-    for (const side of [-1, 1]) {
-      let y0 = side === -1 ? midY - roadGap / 2 - lotD : midY + roadGap / 2;
-      while (
-        (side === -1 && y0 >= southY) ||
-        (side === 1 && y0 + lotD <= northY)
-      ) {
-        const rect: [number, number][] = [
-          [x, y0], [x + lotW, y0], [x + lotW, y0 + lotD], [x, y0 + lotD], [x, y0],
-        ];
-        const cx = x + lotW / 2, cy = y0 + lotD / 2;
-        // Verificar centroide Y 3 esquinas dentro del polígono real
-        const corners: [number, number][] = [[x + 2, y0 + 2], [x + lotW - 2, y0 + 2], [x + 2, y0 + lotD - 2], [x + lotW - 2, y0 + lotD - 2]];
-        const insideCorners = corners.filter((c) => pip(c, perimeterRotated)).length;
-        if (pip([cx, cy], perimeterRotated) && insideCorners >= 3) {
-          lots.push({ polygon: rect, area: lotW * lotD });
-        }
-        y0 += side * lotD;
+  const y0Single = midY - lotD / 2;
+  // Permitir hasta 2 filas si la banda es alta
+  const bandH = northY - southY;
+  const rows = bandH >= stepY * 1.6 ? 2 : 1;
+  for (let r = 0; r < rows; r++) {
+    const y0 = rows === 1 ? y0Single : southY + 10 + r * stepY;
+    if (y0 + lotD > northY) continue;
+    for (let x = bounds.minX + 40; x + lotW <= bounds.maxX - 40; x += stepX) {
+      const rect: [number, number][] = [
+        [x, y0], [x + lotW, y0], [x + lotW, y0 + lotD], [x, y0 + lotD], [x, y0],
+      ];
+      const cx = x + lotW / 2, cy = y0 + lotD / 2;
+      const corners: [number, number][] = [[x + 2, y0 + 2], [x + lotW - 2, y0 + 2], [x + 2, y0 + lotD - 2], [x + lotW - 2, y0 + lotD - 2]];
+      const insideCorners = corners.filter((c) => pip(c, perimeterRotated)).length;
+      if (pip([cx, cy], perimeterRotated) && insideCorners === 4) {
+        lots.push({ polygon: rect, area: lotW * lotD });
       }
     }
   }
@@ -217,7 +226,7 @@ function gridSubdivide(
 
 for (const band of BANDS) {
   const dims = BAND_DIMS[band.name];
-  const lots = gridSubdivide(band.sY, band.nY, dims.w, dims.d);
+  const lots = gridSubdivide(band.sY, band.nY, dims.w, dims.d, dims.gapX, dims.gapY);
   const meta = CATEGORY_META[band.name];
   lots.forEach((lot, idx) => {
     const geo = rotatedLocalToGeo(lot.polygon);
@@ -241,25 +250,24 @@ for (const band of BANDS) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// MACROLOTES — banda interior, alineada al eje principal
+// ────────────────────────────────────────────────────────────────────────────
+// LODGE + EQUIPAMIENTO — banda lodgeN, lodge protagonista cerca de costa
 // ────────────────────────────────────────────────────────────────────────────
 const MACROS = [
-  { id: 'M-ECO', name: 'Eco Lodge',        category: 'eco_lodge',  area: 8 },
-  { id: 'M-WEL', name: 'Wellness Center',  category: 'wellness',   area: 6 },
-  { id: 'M-GLA', name: 'Glamping Forest',  category: 'glamping',   area: 10 },
-  { id: 'M-GAS', name: 'Gastronomy',       category: 'gastronomy', area: 4 },
+  { id: 'M-ECO', name: 'Huellelhue Lodge',     category: 'eco_lodge',  area: 10, narrative: 'Lodge principal · 28 suites · spa · biblioteca · restaurante' },
+  { id: 'M-WEL', name: 'Wellness & Sauna Mar', category: 'wellness',   area: 5,  narrative: 'Sauna sobre mar · piscina caldeada · ritual mapuche' },
+  { id: 'M-GLA', name: 'Glamping Selva',       category: 'glamping',   area: 8,  narrative: '12 domos elevados · plataformas de madera nativa' },
+  { id: 'M-RES', name: 'Centro Investigación', category: 'research',   area: 3,  narrative: 'Estación científica · monitoreo biodiversidad · alianza universitaria' },
 ];
 
-// Buscar posiciones interiores válidas escaneando la banda interior
 function findMacroSlot(sideX: number, sideY: number, startXFrac: number): { x1: number; y1: number } | null {
-  const yMin = band3N + 10;
-  const yMax = macroN - 10;
+  const yMin = band3N + 20;
+  const yMax = lodgeN - 5;
   const xStart = bounds.minX + bounds.w * startXFrac;
-  // Buscar en una ventana ±25% del bounds.w alrededor de startXFrac
-  for (let xOff = 0; xOff < bounds.w * 0.5; xOff += 20) {
+  for (let xOff = 0; xOff < bounds.w * 0.6; xOff += 15) {
     for (const xSign of [1, -1]) {
       const x1 = xStart + xSign * xOff - sideX / 2;
-      for (let y1 = yMin; y1 + sideY <= yMax; y1 += 25) {
+      for (let y1 = yMin; y1 + sideY <= yMax; y1 += 20) {
         const corners: [number, number][] = [
           [x1, y1], [x1 + sideX, y1], [x1 + sideX, y1 + sideY], [x1, y1 + sideY],
           [x1 + sideX / 2, y1 + sideY / 2],
@@ -272,7 +280,7 @@ function findMacroSlot(sideX: number, sideY: number, startXFrac: number): { x1: 
 }
 
 MACROS.forEach((m, i) => {
-  const sideY = Math.sqrt(m.area * 10000) * 0.9;
+  const sideY = Math.sqrt(m.area * 10000) * 0.85;
   const sideX = (m.area * 10000) / sideY;
   const slot = findMacroSlot(sideX, sideY, (i + 0.5) / MACROS.length);
   if (!slot) {
@@ -287,8 +295,10 @@ MACROS.forEach((m, i) => {
     type: 'Feature',
     properties: {
       id: m.id, line: 'macro', name: m.name, category: m.category, area_ha: m.area,
-      ocean_exposure: 'N/A', privacy: 'Operativo', conservation: '60% nativo',
-      architecture: 'Equipamiento programático · bajo impacto',
+      ocean_exposure: m.category === 'wellness' ? 'Directa · sauna mar' : 'Vista interior',
+      privacy: 'Operativo · acceso huéspedes',
+      conservation: '70% nativo · construcción bajo dosel',
+      architecture: m.narrative,
     },
     geometry: { type: 'Polygon', coordinates: [geo] },
   });
@@ -296,16 +306,105 @@ MACROS.forEach((m, i) => {
 });
 
 // ────────────────────────────────────────────────────────────────────────────
-// RESERVA NÚCLEO — muestreo de la franja interior recortada por el perímetro
+// SENDEROS (LineStrings) — red de trekking conectando lodge, costa, miradores
 // ────────────────────────────────────────────────────────────────────────────
-const coreYS = band3N + 5;
+type TrailDef = { id: string; name: string; difficulty: string; length_km: number; pts: [number, number][] };
+
+const trailDefs: TrailDef[] = [
+  {
+    id: 'S-COSTA', name: 'Sendero Costero del Pacífico', difficulty: 'Fácil', length_km: 3.2,
+    // Línea ondulante a lo largo de la franja Ocean Front
+    pts: Array.from({ length: 14 }, (_, i) => {
+      const t = i / 13;
+      const x = bounds.minX + 80 + t * (bounds.w - 160);
+      const y = band1S + 30 + Math.sin(t * Math.PI * 3) * 25;
+      return [x, y] as [number, number];
+    }),
+  },
+  {
+    id: 'S-INT', name: 'Sendero Reserva Núcleo', difficulty: 'Moderado', length_km: 4.2,
+    pts: Array.from({ length: 20 }, (_, i) => {
+      const t = i / 19;
+      const angle = t * Math.PI * 2;
+      const cx = bounds.minX + bounds.w * 0.5;
+      const cy = lodgeN + (macroN - lodgeN) * 0.45;
+      const rx = bounds.w * 0.22;
+      const ry = Math.min((macroN - lodgeN) * 0.28, bounds.h * 0.08);
+      return [cx + Math.cos(angle) * rx, cy + Math.sin(angle) * ry] as [number, number];
+    }),
+  },
+  {
+    id: 'S-LODGE', name: 'Conexión Lodge → Playa', difficulty: 'Fácil', length_km: 1.4,
+    // Diagonal desde el centro de lodgeN bajando a costa
+    pts: Array.from({ length: 10 }, (_, i) => {
+      const t = i / 9;
+      const x = bounds.minX + bounds.w * (0.42 + t * 0.06);
+      const y = lodgeN - t * (lodgeN - band1S - 20);
+      return [x, y] as [number, number];
+    }),
+  },
+  {
+    id: 'S-MIR', name: 'Sendero Miradores', difficulty: 'Moderado', length_km: 2.6,
+    pts: Array.from({ length: 12 }, (_, i) => {
+      const t = i / 11;
+      const x = bounds.minX + bounds.w * (0.65 + Math.sin(t * Math.PI) * 0.15);
+      const y = band3N + t * (lodgeN - band3N);
+      return [x, y] as [number, number];
+    }),
+  },
+];
+
+// Miradores (POIs) en cabos prominentes
+const POIS = [
+  { id: 'MIR-1', name: 'Mirador Punta Cholihueco', xFrac: 0.18, yOffset: 40 },
+  { id: 'MIR-2', name: 'Mirador Estuario',         xFrac: 0.78, yOffset: 60 },
+  { id: 'MIR-3', name: 'Mirador Bosque Alto',      xFrac: 0.52, yOffset: lodgeN - band1S + 80 },
+];
+
+trailDefs.forEach((t) => {
+  // Filtrar puntos dentro del perímetro y conectar los segmentos válidos
+  const valid = t.pts.filter((p) => pip(p, perimeterRotated));
+  if (valid.length < 3) return;
+  const geo = valid.map((p) => rotatedLocalToGeoSingle(p));
+  allFeatures.push({
+    type: 'Feature',
+    properties: {
+      id: t.id, line: 'trail', name: t.name, category: 'trail',
+      difficulty: t.difficulty, length_km: t.length_km,
+      ocean_exposure: '-', privacy: 'Comunitario',
+      conservation: 'Trazado de bajo impacto · superficie permeable',
+      architecture: 'Pasarela de madera nativa flotante',
+    },
+    geometry: { type: 'LineString', coordinates: geo },
+  });
+  console.log(`✓ sendero ${t.id}: ${valid.length} pts · ${t.length_km} km`);
+});
+
+POIS.forEach((p) => {
+  const pt: [number, number] = [bounds.minX + bounds.w * p.xFrac, band1S + p.yOffset];
+  if (!pip(pt, perimeterRotated)) return;
+  allFeatures.push({
+    type: 'Feature',
+    properties: {
+      id: p.id, line: 'poi', name: p.name, category: 'viewpoint',
+      ocean_exposure: 'Panorámica 180°', privacy: 'Comunitario',
+      conservation: 'Plataforma elevada · sin remoción de vegetación',
+      architecture: 'Mirador de madera y acero corten',
+    },
+    geometry: { type: 'Point', coordinates: rotatedLocalToGeoSingle(pt) },
+  });
+});
+
+
+// ────────────────────────────────────────────────────────────────────────────
+// RESERVA NÚCLEO — toda la franja interior (≥75% predio sin construcción)
+// ────────────────────────────────────────────────────────────────────────────
+const coreYS = lodgeN + 5;
 const corePoly: [number, number][] = [];
-const sampleStep = bounds.w / 60;
-// Borde sur: caminar bounds.minX → bounds.maxX en y = coreYS, recortando al perímetro
+const sampleStep = bounds.w / 80;
 for (let x = bounds.minX; x <= bounds.maxX; x += sampleStep) {
   if (pip([x, coreYS], perimeterRotated)) corePoly.push([x, coreYS]);
 }
-// Borde norte: caminar de vuelta siguiendo el perímetro real
 const interiorTop = perimeterRotated.filter((p) => p[1] > coreYS).sort((a, b) => b[0] - a[0]);
 corePoly.push(...interiorTop);
 if (corePoly.length >= 4) {
@@ -313,10 +412,11 @@ if (corePoly.length >= 4) {
   allFeatures.push({
     type: 'Feature',
     properties: {
-      id: 'CORE', line: 'conservation', name: 'Reserva Núcleo',
-      category: 'conservation_core', area_ha: 120,
+      id: 'CORE', line: 'conservation', name: 'Reserva Núcleo Huellelhue',
+      category: 'conservation_core', area_ha: 320,
       ocean_exposure: 'N/A', privacy: 'Intocada',
-      conservation: '100% nativo · sin construcción', architecture: 'Sin intervención',
+      conservation: '100% nativo · sin construcción · servidumbre ecológica perpetua',
+      architecture: 'Sin intervención · solo senderos permeables',
     },
     geometry: { type: 'Polygon', coordinates: [rotatedLocalToGeo(corePoly)] },
   });
