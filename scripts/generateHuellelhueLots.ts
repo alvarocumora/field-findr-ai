@@ -162,9 +162,9 @@ const BANDS = [
 ];
 
 const BAND_DIMS: Record<string, { w: number; d: number }> = {
-  ocean_front:  { w: 90, d: 115 }, // ~1.0 ha
-  forest_ocean: { w: 75, d: 95 },  // ~0.7 ha
-  bosque_vivo:  { w: 70, d: 85 },  // ~0.6 ha
+  ocean_front:  { w: 130, d: 160 }, // ~2.1 ha — premium frente mar
+  forest_ocean: { w: 110, d: 140 }, // ~1.5 ha
+  bosque_vivo:  { w: 100, d: 120 }, // ~1.2 ha
 };
 
 const CATEGORY_META: Record<string, any> = {
