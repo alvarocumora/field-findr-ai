@@ -250,20 +250,37 @@ const MACROS = [
   { id: 'M-GAS', name: 'Gastronomy',       category: 'gastronomy', area: 4 },
 ];
 
-const macroYBase = band3N + 15;
-const macroXSpan = bounds.w / MACROS.length;
+// Buscar posiciones interiores válidas escaneando la banda interior
+function findMacroSlot(sideX: number, sideY: number, startXFrac: number): { x1: number; y1: number } | null {
+  const yMin = band3N + 10;
+  const yMax = macroN - 10;
+  const xStart = bounds.minX + bounds.w * startXFrac;
+  // Buscar en una ventana ±25% del bounds.w alrededor de startXFrac
+  for (let xOff = 0; xOff < bounds.w * 0.5; xOff += 20) {
+    for (const xSign of [1, -1]) {
+      const x1 = xStart + xSign * xOff - sideX / 2;
+      for (let y1 = yMin; y1 + sideY <= yMax; y1 += 25) {
+        const corners: [number, number][] = [
+          [x1, y1], [x1 + sideX, y1], [x1 + sideX, y1 + sideY], [x1, y1 + sideY],
+          [x1 + sideX / 2, y1 + sideY / 2],
+        ];
+        if (corners.every((c) => pip(c, perimeterRotated))) return { x1, y1 };
+      }
+    }
+  }
+  return null;
+}
+
 MACROS.forEach((m, i) => {
   const sideY = Math.sqrt(m.area * 10000) * 0.9;
   const sideX = (m.area * 10000) / sideY;
-  const x1 = bounds.minX + i * macroXSpan + (macroXSpan - sideX) / 2;
-  const x2 = x1 + sideX;
-  const y1 = macroYBase;
-  const y2 = Math.min(y1 + sideY, macroN - 5);
-  const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
-  if (!pip([cx, cy], perimeterRotated)) {
-    console.log(`  ⚠ macro ${m.id} fuera del perímetro — omitido`);
+  const slot = findMacroSlot(sideX, sideY, (i + 0.5) / MACROS.length);
+  if (!slot) {
+    console.log(`  ⚠ macro ${m.id} sin slot interior — omitido`);
     return;
   }
+  const { x1, y1 } = slot;
+  const x2 = x1 + sideX, y2 = y1 + sideY;
   const localRot: [number, number][] = [[x1, y1], [x2, y1], [x2, y2], [x1, y2], [x1, y1]];
   const geo = rotatedLocalToGeo(localRot);
   allFeatures.push({
@@ -275,6 +292,7 @@ MACROS.forEach((m, i) => {
     },
     geometry: { type: 'Polygon', coordinates: [geo] },
   });
+  console.log(`✓ macro ${m.id}: colocado`);
 });
 
 // ────────────────────────────────────────────────────────────────────────────
