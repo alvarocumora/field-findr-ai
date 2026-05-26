@@ -460,9 +460,9 @@ export default function HueMasterplan() {
           {/* Stats overlay */}
           <div className="absolute right-4 top-4 z-10 hidden md:flex gap-px bg-black/65 backdrop-blur-md border border-white/10">
             {[
-              { l: 'Lotes residenciales', v: '94' },
-              { l: 'Macrolotes', v: '3' },
-              { l: 'Reserva', v: '120 ha' },
+              { l: 'Residencias', v: '28' },
+              { l: 'Senderos', v: '11 km' },
+              { l: 'Reserva', v: '320 ha' },
             ].map((s) => (
               <div key={s.l} className="px-5 py-3">
                 <div className="serif text-2xl text-[var(--hue-bone)]">{s.v}</div>
