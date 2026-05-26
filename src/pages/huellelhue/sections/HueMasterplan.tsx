@@ -482,7 +482,7 @@ export default function HueMasterplan() {
             </aside>
 
             {/* ───── CENTER MAP ───── */}
-            <div className="col-span-12 lg:col-span-6 relative min-h-[640px] lg:min-h-[820px]">
+            <div className="order-1 lg:order-2 col-span-12 lg:col-span-6 relative min-h-[70vh] max-h-[80vh] lg:max-h-none lg:min-h-[820px]">
               <div ref={containerRef} className="absolute inset-0" />
 
               {/* Cinematic vignette */}
