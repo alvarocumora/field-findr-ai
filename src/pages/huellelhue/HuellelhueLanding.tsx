@@ -26,7 +26,7 @@ export default function HuellelhueLanding() {
     const meta = document.createElement('meta');
     meta.name = 'description';
     meta.content =
-      'Huellelhue · 1.820 hectáreas de selva valdiviana costera con 1,7 km de frente Pacífico. Reserva privada de bosque y mar en Río Negro, Región de Los Lagos. Por Patagonia Reserve.';
+      'Huellelhue · 420 hectáreas de selva valdiviana costera con 1,7 km de frente Pacífico. Reserva privada de bosque y mar en Río Negro, Región de Los Lagos. Por Patagonia Reserve.';
     document.head.appendChild(meta);
 
     return () => {

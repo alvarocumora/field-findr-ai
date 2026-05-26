@@ -17,7 +17,7 @@ const GALLERY = [
 ];
 
 const FICHA = [
-  { icon: Ruler, label: 'Superficie total', value: '1.820 ha' },
+  { icon: Ruler, label: 'Superficie total', value: '420 ha' },
   { icon: Waves, label: 'Frente Pacífico', value: '1,7 km' },
   { icon: TreePine, label: 'Conservación', value: '65% · 250 ha núcleo' },
   { icon: Mountain, label: 'Topografía', value: '0 — 480 m s.n.m.' },

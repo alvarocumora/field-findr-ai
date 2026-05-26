@@ -45,7 +45,7 @@ export default function HueHero() {
             Reserva Bosque & Mar
           </p>
           <p className="mt-8 max-w-xl text-[15px] leading-relaxed text-[var(--hue-bone)]/70">
-            1.820 hectáreas de selva valdiviana costera con 1,7 km de frente Pacífico.
+            420 hectáreas de selva valdiviana costera con 1,7 km de frente Pacífico.
             Una de las últimas reservas privadas de bosque húmedo templado del planeta.
           </p>
         </motion.div>
@@ -61,7 +61,7 @@ export default function HueHero() {
             <ChevronDown className="h-5 w-5 text-[var(--hue-amber)] animate-bounce" />
           </div>
           <div className="hidden md:flex gap-8 text-right">
-            <Stat label="Hectáreas" value="1.820" />
+            <Stat label="Hectáreas" value="420" />
             <Stat label="Frente Pacífico" value="1,7 km" />
             <Stat label="Conservación" value="65%" />
           </div>
