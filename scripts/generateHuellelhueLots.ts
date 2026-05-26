@@ -20,24 +20,25 @@ import { autoSubdivide, localToGeo } from '../src/lib/subdivision/autoSubdivide'
 const PERIMETER_LNGLAT: [number, number][] = [
   // —— línea de costa SW (de NW a SE, frente al Pacífico) ——
   [-73.8128, -40.7150], // NW · inicio barra
-  [-73.8108, -40.7158], // costa
-  [-73.8088, -40.7170], // costa
+  [-73.8108, -40.7158],
+  [-73.8088, -40.7170],
   [-73.8062, -40.7185], // costa Rada Ranú N
-  [-73.8038, -40.7202], // costa Rada Ranú centro
-  [-73.8018, -40.7218], // costa Rada Ranú S
+  [-73.8038, -40.7202],
+  [-73.8018, -40.7218],
   [-73.7995, -40.7232], // promontorio SE
-  // —— borde interior NE (de SE de vuelta a NW, ~700m tierra adentro) ——
-  [-73.7965, -40.7202], // ridge SE
-  [-73.7988, -40.7172], // ridge E
-  [-73.8018, -40.7148], // ridge NE
-  [-73.8055, -40.7128], // límite N
-  [-73.8095, -40.7122], // límite NW interior
+  // —— borde interior NE (~1.5 km tierra adentro para dar profundidad) ——
+  [-73.7920, -40.7180],
+  [-73.7945, -40.7130],
+  [-73.7985, -40.7090],
+  [-73.8035, -40.7060],
+  [-73.8090, -40.7050],
+  [-73.8128, -40.7080],
   [-73.8128, -40.7150], // cierre
 ];
 
 // Centro
-const CENTER_LNG = -73.8055;
-const CENTER_LAT = -40.7185;
+const CENTER_LNG = -73.8035;
+const CENTER_LAT = -40.7145;
 
 // Ángulo de la costa (bearing NW→SE) → rotamos para que costa quede paralela al eje X
 // vector costa: (-73.7995 - (-73.8128), -40.7232 - (-40.7150)) = (+0.0133, -0.0082)
