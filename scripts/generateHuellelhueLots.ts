@@ -145,15 +145,19 @@ for (const band of BANDS) {
     targetLots: band.targetLots,
   });
   const meta = CATEGORY_META[band.name];
-  result.lots.forEach((lot, idx) => {
+  let kept = 0;
+  result.lots.forEach((lot) => {
+    // filtrar por perímetro real (centroide del lote dentro del polígono rotado)
+    if (!pip(centroidOf(lot.polygon), perimeterRotated)) return;
+    kept++;
     const geo = rotatedLocalToGeo(lot.polygon);
     if (geo[0][0] !== geo[geo.length - 1][0] || geo[0][1] !== geo[geo.length - 1][1]) geo.push(geo[0]);
     allFeatures.push({
       type: 'Feature',
       properties: {
-        id: `L${meta.line}-${String(idx + 1).padStart(2, '0')}`,
+        id: `L${meta.line}-${String(kept).padStart(2, '0')}`,
         line: meta.line,
-        name: `${meta.label} ${String(idx + 1).padStart(2, '0')}`,
+        name: `${meta.label} ${String(kept).padStart(2, '0')}`,
         category: band.name,
         area_ha: Math.round((lot.area / 10000) * 100) / 100,
         ocean_exposure: meta.ocean_exposure,
@@ -164,7 +168,7 @@ for (const band of BANDS) {
       geometry: { type: 'Polygon', coordinates: [geo] },
     });
   });
-  console.log(`✓ ${band.name}: ${result.lots.length} lotes`);
+  console.log(`✓ ${band.name}: ${kept}/${result.lots.length} lotes (dentro del perímetro)`);
 }
 
 // ────────────────────────────────────────────────────────────────────────────
