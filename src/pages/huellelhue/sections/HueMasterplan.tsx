@@ -190,6 +190,24 @@ export default function HueMasterplan() {
         },
       });
 
+      // CAMINOS PRINCIPALES (LineString) — trazado vehicular curvo
+      map.addLayer({
+        id: 'roads-casing',
+        type: 'line',
+        source: 'lots',
+        filter: ['==', ['get', 'category'], 'road'],
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#1a1208', 'line-width': 8, 'line-opacity': 0.6 },
+      });
+      map.addLayer({
+        id: 'roads-line',
+        type: 'line',
+        source: 'lots',
+        filter: ['==', ['get', 'category'], 'road'],
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#f4e4c1', 'line-width': 4.5, 'line-opacity': 0.95 },
+      });
+
       // SENDEROS (LineString) — pasarela de madera punteada cálida
       map.addLayer({
         id: 'trails-line',
@@ -204,6 +222,7 @@ export default function HueMasterplan() {
           'line-dasharray': [1.5, 1.8],
         },
       });
+
 
       // MIRADORES / POIs (Point)
       map.addLayer({
