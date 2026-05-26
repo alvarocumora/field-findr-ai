@@ -1,16 +1,17 @@
 import { motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import heroImg from '@/assets/huellelhue/river-mouth.jpeg';
 
 export default function HueHero() {
   return (
     <section className="relative h-screen min-h-[700px] w-full overflow-hidden">
       {/* Layered cinematic background */}
-      <div
+      <motion.div
+        initial={{ scale: 1.12 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 8, ease: [0.16, 1, 0.3, 1] }}
         className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?auto=format&fit=crop&w=2400&q=90')",
-        }}
+        style={{ backgroundImage: `url(${heroImg})` }}
       />
       {/* Atmospheric layers */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/90" />
