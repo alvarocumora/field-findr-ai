@@ -254,10 +254,10 @@ for (const band of BANDS) {
 // LODGE + EQUIPAMIENTO — banda lodgeN, lodge protagonista cerca de costa
 // ────────────────────────────────────────────────────────────────────────────
 const MACROS = [
-  { id: 'M-ECO', name: 'Huellelhue Lodge',     category: 'eco_lodge',  area: 14, narrative: 'Lodge principal · 28 suites · spa · biblioteca · restaurante' },
-  { id: 'M-WEL', name: 'Wellness & Sauna Mar', category: 'wellness',   area: 6,  narrative: 'Sauna sobre mar · piscina caldeada · ritual mapuche' },
-  { id: 'M-GLA', name: 'Glamping Selva',       category: 'glamping',   area: 10, narrative: '12 domos elevados · plataformas de madera nativa' },
-  { id: 'M-RES', name: 'Centro Investigación', category: 'research',   area: 4,  narrative: 'Estación científica · monitoreo biodiversidad · alianza universitaria' },
+  { id: 'M-ECO', name: 'Huellelhue Lodge',     category: 'eco_lodge',  area: 10, narrative: 'Lodge principal · 28 suites · spa · biblioteca · restaurante' },
+  { id: 'M-WEL', name: 'Wellness & Sauna Mar', category: 'wellness',   area: 5,  narrative: 'Sauna sobre mar · piscina caldeada · ritual mapuche' },
+  { id: 'M-GLA', name: 'Glamping Selva',       category: 'glamping',   area: 8,  narrative: '12 domos elevados · plataformas de madera nativa' },
+  { id: 'M-RES', name: 'Centro Investigación', category: 'research',   area: 3,  narrative: 'Estación científica · monitoreo biodiversidad · alianza universitaria' },
 ];
 
 function findMacroSlot(sideX: number, sideY: number, startXFrac: number): { x1: number; y1: number } | null {
