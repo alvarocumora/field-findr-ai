@@ -1,43 +1,57 @@
-# Regeneración del masterplan con el KMZ real de Lote B
+# Playa Álvaro — Plataforma inmobiliaria premium
 
-## Contexto
-El KMZ `LOTE_B.kmz` contiene el polígono real del predio:
-- 81 vértices de perímetro
-- Bounding box: lon `-73.8298 … -73.7834`, lat `-40.7317 … -40.7067`
-- Superficie real: **≈ 420 ha** (no 1.820 ha como estaba estimado)
+KMZ analizado: **286 placemarks, ~87 lotes** (LOTE-71…78 confirmados con superficies 5/10/20 ha), 1.171 LineStrings (sin polígonos explícitos), 176 puntos. Hay que reconstruir polígonos con el parser KMZ existente (4 estrategias en `src/lib/kmz/`), igual que Forestal/Huellelhue.
 
-El perímetro actual en `scripts/generateHuellelhueLots.ts` es una aproximación de 12 vértices que no coincide con la geometría real. Hay que reemplazarlo por el polígono exacto del KMZ y volver a generar los lotes alineados a la costa real frente a Playa Rada de Ranú.
+Estética: **clon visual de Huellelhue** (dark + verde bosque, Swiss typography, glassmorphism). Tour 3D: **R3F procedural + Mapbox DEM**. Datos: **estáticos en landing + seed en DB**.
 
-## Pasos
+Por el tamaño, lo divido en 5 fases entregables. Cada fase deja la app funcional y se aprueba por separado.
 
-1. **Extraer el perímetro real del KMZ**
-   - Parsear `user-uploads://LOTE_B.kmz` (copiar a `/tmp`, descomprimir, leer `doc.kml`).
-   - Guardar los 81 vértices `[lng, lat]` como `PERIMETER_LNGLAT` en `scripts/generateHuellelhueLots.ts`.
-   - Recalcular centroide y bearing dominante de la costa (ajuste de rotación de bandas) a partir del propio polígono.
+## Fase 1 — Ingesta KMZ + datos canónicos (esta iteración)
 
-2. **Reescribir el generador (`scripts/generateHuellelhueLots.ts`)**
-   - Mantener el `gridSubdivide` con test punto-en-polígono usando el nuevo perímetro de 81 vértices.
-   - Recalibrar el conteo de lotes a la superficie real (~420 ha, no 1.820):
-     - Ocean Front: ~20 lotes (~1 ha)
-     - Forest Ocean: ~55 lotes (~0,6 ha)
-     - Bosque Vivo: ~40 lotes (~0,55 ha)
-     - 3–4 Macrolotes (Eco Lodge, Wellness, Glamping, Gastronomy)
-     - Reserva Núcleo en el sector interior con mayor pendiente/distancia a costa
-   - Calcular el bearing de las bandas como la orientación promedio del tramo costero del polígono (los vértices del lado oeste), no un −39° fijo.
+1. Script `scripts/generatePlayaAlvaroLots.ts` que:
+   - Lee `/tmp/playa_alvaro.kmz` con `kmzParser` (extrae LineStrings, ensambla polígonos cerrados por LOTE-XX, calcula área por Shoelace, normaliza con `normalizePolygon`).
+   - Empareja cada polígono con su nombre `LOTE-XX` y su superficie (`9.47HA`, etc.) usando el orden de placemarks adyacentes.
+   - Detecta los **POIs** (Points) → playa, miradores, accesos, áreas comunes.
+   - Genera `src/pages/playaAlvaro/data/lots.ts` y `pois.ts` (estáticos, versionados).
+2. QA: imprime conteo de lotes, área total, lotes huérfanos.
 
-3. **Regenerar `src/pages/huellelhue/data/lots.ts`**
-   - Ejecutar `bun scripts/generateHuellelhueLots.ts` para reescribir `HUELLELHUE_DATA` con el GeoJSON real.
-   - Actualizar el `center` exportado al centroide real del KMZ.
+## Fase 2 — Landing comercial (estilo Huellelhue)
 
-4. **Ajustar la ficha y totales en la UI**
-   - En `HueMasterplan.tsx`, `HueFicha.tsx` y cualquier copy donde aparezca "1.820 ha", cambiar a la superficie real (~420 ha) y al nuevo desglose de lotes.
-   - Verificar que el `fitBounds` del mapa Mapbox use los nuevos bounds del polígono.
+Ruta `/playa-alvaro` con secciones clonadas:
+- `PaHero` (video drone placeholder + CTA)
+- `PaEcosystem` / `PaConservation` (narrativa)
+- `PaMasterplan` ⇐ **núcleo**: Mapbox satélite + 87 polígonos coloreados por estado (Emerald/Amber/Slate), numeración, hover ficha lateral, filtros por superficie y precio, leyenda, donut de distribución, barra de escala, panel "Etapa 1 / macrolotes".
+- `PaFicha` (tabla técnica del predio matriz)
+- `PaContact` + `PaFooter`
+Reusa `huellelhue.css` con tokens propios.
 
-5. **Verificación**
-   - Abrir el preview, comprobar visualmente que el polígono y los lotes encajan con la costa de Rada de Ranú.
-   - Confirmar totales (cantidad de lotes y hectáreas) en consola al final del script.
+## Fase 3 — Tour Virtual 3D (R3F + DEM)
 
-## Notas técnicas
-- El KMZ original queda como referencia en `/tmp/kmz/`; no se copia al repo (es un dato de origen, no asset web).
-- No se toca la arquitectura del sitio ni los assets visuales — sólo geometría, conteos y copys numéricos.
-- No se modifica `src/integrations/supabase/*` ni rutas existentes.
+- Componente `PaTour3D` con `@react-three/fiber@^8.18` + `@react-three/drei@^9.122` + `three@>=0.133`.
+- Terreno: tile Mapbox Terrain-RGB del bounding box, UV 1:1 sobre PlaneGeometry segmentado.
+- Overlay: polígonos de lotes extruidos por estado (Threebox-style, MeshStandardMaterial).
+- POIs: playa, miradores, accesos como sprites navegables; cámara orbital + recorrido scripted ("flyTo POI").
+- Modo VR: WebXR (`<XR>` de drei) opcional para Meta Quest.
+- Cross-fade desde el mapa 2D (patrón ya documentado en mem `cinematic-geospatial-navigation`).
+
+## Fase 4 — IA Comercial + Reserva online
+
+- Edge function `pa-assistant` (Lovable AI Gateway, `google/gemini-2.5-flash`) entrenada con `lots.ts + pois.ts + FAQ` como system prompt.
+- Chat flotante en la landing con `react-markdown`, historial completo por mensaje.
+- Cotización automática: precio/m² por estado y superficie.
+- Reserva online: reusa flujo existente `create-reservation-payment` (Mercado Pago) — botón "Reservar" en la ficha de lote.
+
+## Fase 5 — Seed DB + CRM
+
+- Migración: crea `project` "Playa Álvaro" + 87 `lots` con polígonos/precios/estado desde `lots.ts` (script de seed con `supabase--insert`).
+- Activa CRM existente: leads del chat IA y formularios entran a `leads`, scoring automático (trigger ya existe), pipeline Kanban (`/asesor/leads`), reservas → `reservations` → `closing_steps` → firma electrónica → dashboard de ventas (todo ya implementado en el SaaS).
+
+## Detalles técnicos
+
+- **Parser KMZ**: extraer LineStrings sin Polygons obliga a usar la "Strategy 3" del parser (cerrar anillos por proximidad). El KMZ tiene placemarks emparejados `AECC_PARCEL_SEGMENT → LOTE-XX → 9.47HA`; mapear nombre+área por índice de aparición.
+- **Memoria**: actualizar `mem://index.md` con `mem://features/playa-alvaro-project` (estructura, datos, polígonos).
+- **Sin nuevos secretos**: Mapbox y Lovable AI ya configurados.
+
+## Qué hago en el siguiente turno (al aprobar)
+
+Solo la **Fase 1**: parser, `lots.ts`, `pois.ts` y un smoke test que confirma los 87 lotes. Sin tocar UI todavía. Después seguimos fase por fase para que puedas revisar cada entregable.
