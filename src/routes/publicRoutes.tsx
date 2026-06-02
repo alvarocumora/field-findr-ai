@@ -32,6 +32,7 @@ import TasacionValidator from "@/pages/TasacionValidator";
 import ForestalLanding from "@/pages/forestal/ForestalLanding";
 import InvestorsLogin from "@/pages/forestal/InvestorsLogin";
 import HuellelhueLanding from "@/pages/huellelhue/HuellelhueLanding";
+import PlayaAlvaroLanding from "@/pages/playaAlvaro/PlayaAlvaroLanding";
 
 export const publicRoutes = [
   <Route key="home" path="/" element={<Index />} />,
@@ -66,4 +67,5 @@ export const publicRoutes = [
   <Route key="forestal-landing" path="/forestal-valle-escondido" element={<ForestalLanding />} />,
   <Route key="forestal-investors" path="/forestal-valle-escondido/investors" element={<InvestorsLogin />} />,
   <Route key="huellelhue" path="/huellelhue" element={<HuellelhueLanding />} />,
+  <Route key="playa-alvaro" path="/playa-alvaro" element={<PlayaAlvaroLanding />} />,
 ];
