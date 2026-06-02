@@ -3,6 +3,7 @@ import '../huellelhue/huellelhue.css';
 import PaHero from './sections/PaHero';
 import PaFicha from './sections/PaFicha';
 import PaMasterplan from './sections/PaMasterplan';
+import PaTour3D from './sections/PaTour3D';
 import PaEcosystem from './sections/PaEcosystem';
 import PaContact from './sections/PaContact';
 import PaFooter from './sections/PaFooter';
@@ -46,6 +47,7 @@ export default function PlayaAlvaroLanding() {
       <PaHero />
       <PaFicha />
       <PaMasterplan />
+      <PaTour3D />
       <PaEcosystem />
       <PaContact />
       <PaFooter />
