@@ -26,7 +26,7 @@ const BUNDLE_FILES = {
   zip: {
     label: 'ZIP completo',
     url: '/dd-luc/uso-fondos/uso-fondos-respaldos.zip',
-    sha256: 'cf210d86c9ae41916f759069e7253488ad6381f65d06a0abe8ad23ee71d6610c',
+    sha256: 'a5ffa6ca2c16386cc238245c370bcd01b5acf86d69264b68e020812f6a4dd07a',
     filename: 'uso-fondos-respaldos.zip',
   },
   csv: {
@@ -38,7 +38,7 @@ const BUNDLE_FILES = {
   json: {
     label: 'JSON manifest',
     url: '/dd-luc/uso-fondos/uso-fondos-manifest.json',
-    sha256: '38ce9f1df2ad07995d3f05eceee63a7dd653a5e54eed89a3c6d32ad82a30af26',
+    sha256: 'be0b734e77e3d508dc31b4b3051cef803558cf1385149eb6ded423f2a58b1ad7',
     filename: 'uso-fondos-manifest.json',
   },
 } as const;
