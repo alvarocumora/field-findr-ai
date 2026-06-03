@@ -142,30 +142,36 @@ export default function FveUsoFondos() {
             <p className="text-xs text-[hsl(var(--fve-charcoal))]/60 mt-1">
               Equivalencias CLP↔EUR (FX 1.040), mapeo LUC, % facilidad y respaldos por línea.
             </p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[hsl(var(--fve-charcoal))]/45 mt-2 flex items-center gap-1.5">
+              <ShieldCheck className="w-3 h-3" />
+              Verificación SHA-256 al descargar · checksums en CHECKSUMS.txt
+            </p>
           </div>
           <div className="flex flex-wrap gap-2 fve-no-print">
-            <a
-              href="/dd-luc/uso-fondos/uso-fondos-respaldos.zip"
-              download
-              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] px-4 py-2.5 font-medium"
-              style={{ background: 'hsl(var(--fve-forest-deep))', color: 'white' }}
-            >
-              <Package className="w-4 h-4" /> ZIP completo
-            </a>
-            <a
-              href="/dd-luc/uso-fondos/uso-fondos-trazabilidad.csv"
-              download
-              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] px-4 py-2.5 border border-[hsl(var(--fve-forest-deep))]/30 text-[hsl(var(--fve-forest-deep))] hover:bg-[hsl(var(--fve-forest))] hover:text-white hover:border-[hsl(var(--fve-forest))] transition-colors"
-            >
-              <FileSpreadsheet className="w-4 h-4" /> CSV
-            </a>
-            <a
-              href="/dd-luc/uso-fondos/uso-fondos-manifest.json"
-              download
-              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] px-4 py-2.5 border border-[hsl(var(--fve-forest-deep))]/30 text-[hsl(var(--fve-forest-deep))] hover:bg-[hsl(var(--fve-forest))] hover:text-white hover:border-[hsl(var(--fve-forest))] transition-colors"
-            >
-              <FileJson className="w-4 h-4" /> JSON
-            </a>
+            {(['zip', 'csv', 'json'] as BundleKey[]).map((k) => {
+              const meta = BUNDLE_FILES[k];
+              const Icon = k === 'zip' ? Package : k === 'csv' ? FileSpreadsheet : FileJson;
+              const isPrimary = k === 'zip';
+              const isBusy = busy === k;
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => downloadAndVerify(k, setBusy)}
+                  title={`SHA-256: ${meta.sha256}`}
+                  className={
+                    isPrimary
+                      ? 'inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] px-4 py-2.5 font-medium disabled:opacity-60'
+                      : 'inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] px-4 py-2.5 border border-[hsl(var(--fve-forest-deep))]/30 text-[hsl(var(--fve-forest-deep))] hover:bg-[hsl(var(--fve-forest))] hover:text-white hover:border-[hsl(var(--fve-forest))] transition-colors disabled:opacity-60'
+                  }
+                  style={isPrimary ? { background: 'hsl(var(--fve-forest-deep))', color: 'white' } : undefined}
+                >
+                  {isBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />}
+                  {isBusy ? 'Verificando…' : meta.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
