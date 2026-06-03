@@ -213,6 +213,36 @@ export type Database = {
         }
         Relationships: []
       }
+      cached_listings: {
+        Row: {
+          cache_key: string
+          created_at: string
+          expires_at: string
+          fetched_at: string
+          id: string
+          payload: Json
+          source_portals: string[]
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          expires_at: string
+          fetched_at?: string
+          id?: string
+          payload: Json
+          source_portals?: string[]
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          expires_at?: string
+          fetched_at?: string
+          id?: string
+          payload?: Json
+          source_portals?: string[]
+        }
+        Relationships: []
+      }
       closing_steps: {
         Row: {
           assigned_to: string | null
