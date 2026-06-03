@@ -10,6 +10,7 @@ import FveUbicacion from './sections/FveUbicacion';
 import FveInversion from './sections/FveInversion';
 import FveProyecciones from './sections/FveProyecciones';
 import FveDueDiligence from './sections/FveDueDiligence';
+import FveUsoFondos from './sections/FveUsoFondos';
 import FveDesarrollador from './sections/FveDesarrollador';
 import FveProceso from './sections/FveProceso';
 import FveFaqs from './sections/FveFaqs';
