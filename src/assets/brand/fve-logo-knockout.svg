@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+  <g transform="translate(8,8)">
+    <polygon points="32,2 62,32 32,62 2,32" fill="#C9A84C"/>
+    <path d="M16 44 L32 16 L48 44 M22 40 L32 26 L42 40 M28 36 L32 31 L36 36" fill="none" stroke="#0F2A1D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="30.5" y="44" width="3" height="8" fill="#0F2A1D"/>
+  </g>
+  <g transform="translate(88,32)" font-family="Georgia, 'Times New Roman', serif" fill="#FFFFFF">
+    <text x="0" y="0" font-size="18" font-weight="400" letter-spacing="1.5">FORESTAL</text>
+    <text x="0" y="20" font-size="13" font-weight="400" letter-spacing="3.5" opacity="0.9">VALLE · ESCONDIDO</text>
+  </g>
+  <g transform="translate(88,64)" font-family="Helvetica, Arial, sans-serif" fill="#C9A84C">
+    <text x="0" y="0" font-size="7" letter-spacing="2.2">MASTER LOTEO LA PALMILLA · REGIÓN DEL MAULE</text>
+  </g>
+</svg>
