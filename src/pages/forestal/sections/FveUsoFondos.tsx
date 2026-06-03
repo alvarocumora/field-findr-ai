@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Lock, FileSpreadsheet } from 'lucide-react';
+import { Download, Lock, FileSpreadsheet, Package, FileJson } from 'lucide-react';
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from '@/components/ui/accordion';
