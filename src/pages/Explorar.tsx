@@ -287,6 +287,13 @@ const Explorar = () => {
         </div>
       </div>
 
+      {/* ===== REAL LISTINGS — external LATAM portals ===== */}
+      <RealListingsSection
+        title="Terrenos de portales externos"
+        subtitle="Agregamos avisos públicos de Portalinmobiliario, Mercado Libre y Yapo en tiempo real"
+        limit={24}
+      />
+
       {/* Property Preview Sheet */}
       <PropertyPreviewSheet
         listing={previewListing}
