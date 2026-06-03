@@ -96,8 +96,10 @@ async function downloadAndVerify(key: BundleKey, setBusy: (k: BundleKey | null) 
 export default function FveUsoFondos() {
   const [open, setOpen] = useState(false);
   const [docTitle, setDocTitle] = useState('');
+  const [busy, setBusy] = useState<BundleKey | null>(null);
 
   const totalItems = PARTIDAS.reduce((s, p) => s + p.items.length, 0);
+
 
   return (
     <section
