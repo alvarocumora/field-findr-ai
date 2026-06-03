@@ -72,6 +72,7 @@ export default function ForestalLanding() {
       <FveInversion />
       <FveProyecciones />
       <FveDueDiligence />
+      <FveUsoFondos />
       <FveDesarrollador />
       <FveProceso />
       <FveFaqs />
