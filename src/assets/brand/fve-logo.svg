@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+  <!-- Forestal Valle Escondido lockup -->
+  <!-- Monogram: gold diamond with stylised V/tree -->
+  <g transform="translate(8,8)">
+    <rect x="0" y="0" width="64" height="64" fill="none"/>
+    <!-- diamond -->
+    <polygon points="32,2 62,32 32,62 2,32" fill="#C9A84C"/>
+    <polygon points="32,2 62,32 32,62 2,32" fill="none" stroke="#1F3D2B" stroke-width="1"/>
+    <!-- stylised tree V -->
+    <path d="M16 44 L32 16 L48 44 M22 40 L32 26 L42 40 M28 36 L32 31 L36 36" fill="none" stroke="#1F3D2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- trunk -->
+    <rect x="30.5" y="44" width="3" height="8" fill="#1F3D2B"/>
+  </g>
+  <!-- Wordmark -->
+  <g transform="translate(88,32)" font-family="Georgia, 'Times New Roman', serif" fill="#1F3D2B">
+    <text x="0" y="0" font-size="18" font-weight="400" letter-spacing="1.5">FORESTAL</text>
+    <text x="0" y="20" font-size="13" font-weight="400" letter-spacing="3.5" fill="#1F3D2B" opacity="0.85">VALLE · ESCONDIDO</text>
+  </g>
+  <!-- Tagline -->
+  <g transform="translate(88,64)" font-family="Helvetica, Arial, sans-serif" fill="#5B6E2A">
+    <text x="0" y="0" font-size="7" letter-spacing="2.2">MASTER LOTEO LA PALMILLA · REGIÓN DEL MAULE</text>
+  </g>
+</svg>
