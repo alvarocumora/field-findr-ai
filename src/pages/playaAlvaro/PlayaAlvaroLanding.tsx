@@ -5,6 +5,7 @@ import PaFicha from './sections/PaFicha';
 import PaMasterplan from './sections/PaMasterplan';
 import PaTour3D from './sections/PaTour3D';
 import PaEcosystem from './sections/PaEcosystem';
+import PaComparables from './sections/PaComparables';
 import PaContact from './sections/PaContact';
 import PaFooter from './sections/PaFooter';
 
@@ -49,6 +50,7 @@ export default function PlayaAlvaroLanding() {
       <PaMasterplan />
       <PaTour3D />
       <PaEcosystem />
+      <PaComparables />
       <PaContact />
       <PaFooter />
     </div>
