@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Download, Lock, FileSpreadsheet, Package, FileJson } from 'lucide-react';
+import { Download, Lock, FileSpreadsheet, Package, FileJson, ShieldCheck, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from '@/components/ui/accordion';
@@ -19,6 +20,78 @@ const NAT_COLOR: Record<UsoFondosItem['naturaleza'], string> = {
   PIPELINE: '#8A6E2F',
   RESERVA: '#4A3B66',
 };
+
+// SHA-256 generados en build con `sha256sum` sobre /public/dd-luc/uso-fondos/*
+const BUNDLE_FILES = {
+  zip: {
+    label: 'ZIP completo',
+    url: '/dd-luc/uso-fondos/uso-fondos-respaldos.zip',
+    sha256: 'cf210d86c9ae41916f759069e7253488ad6381f65d06a0abe8ad23ee71d6610c',
+    filename: 'uso-fondos-respaldos.zip',
+  },
+  csv: {
+    label: 'CSV trazabilidad',
+    url: '/dd-luc/uso-fondos/uso-fondos-trazabilidad.csv',
+    sha256: 'd34a1d11be6073c71a8b2ddb8f44f472c0813021588ad4441e22e93d05253f3d',
+    filename: 'uso-fondos-trazabilidad.csv',
+  },
+  json: {
+    label: 'JSON manifest',
+    url: '/dd-luc/uso-fondos/uso-fondos-manifest.json',
+    sha256: '38ce9f1df2ad07995d3f05eceee63a7dd653a5e54eed89a3c6d32ad82a30af26',
+    filename: 'uso-fondos-manifest.json',
+  },
+} as const;
+
+type BundleKey = keyof typeof BUNDLE_FILES;
+
+async function sha256Hex(buf: ArrayBuffer): Promise<string> {
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function downloadAndVerify(key: BundleKey, setBusy: (k: BundleKey | null) => void) {
+  const meta = BUNDLE_FILES[key];
+  setBusy(key);
+  const toastId = toast.loading(`Verificando integridad · ${meta.label}…`);
+  try {
+    const res = await fetch(meta.url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const buf = await res.arrayBuffer();
+    const digest = await sha256Hex(buf);
+    if (digest !== meta.sha256) {
+      toast.error('Checksum no coincide · descarga abortada', {
+        id: toastId,
+        description: `esperado ${meta.sha256.slice(0, 12)}… · recibido ${digest.slice(0, 12)}…`,
+      });
+      return;
+    }
+    const blob = new Blob([buf]);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = meta.filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast.success(`Integridad verificada · ${meta.label}`, {
+      id: toastId,
+      description: `SHA-256 ${meta.sha256.slice(0, 16)}… · ${(buf.byteLength / 1024).toFixed(1)} KB`,
+      duration: 5000,
+    });
+  } catch (e: any) {
+    toast.error('No se pudo descargar el archivo', {
+      id: toastId,
+      description: e?.message ?? 'error de red',
+    });
+  } finally {
+    setBusy(null);
+  }
+}
+
 
 export default function FveUsoFondos() {
   const [open, setOpen] = useState(false);
