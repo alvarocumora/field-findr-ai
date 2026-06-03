@@ -1,77 +1,65 @@
+## Objetivo
 
-# Propiedades reales scrapeadas en landings
+Reemplazar el actual bloque "Due Diligence" (7 items legales chilenos) en la landing de Forestal Valle Escondido con el **checklist LUC Financing completo** del Excel adjunto (42 items en 9 categorías), y entregar **un PDF descargable pre-generado por cada item del checklist**, accesible públicamente desde la landing.
 
-Traer ~100 terrenos reales desde Portalinmobiliario, Yapo y Mercado Libre Inmuebles (LATAM) vía una edge function que scrapea bajo demanda con caché, y mostrarlos en la home `/`, `/explorar` y `/playa-alvaro`.
+## Entregables
 
-## Arquitectura
+1. **Nuevo data set tipado** `src/pages/forestal/data/dueDiligenceLUC.ts` con los 42 items extraídos del Excel: `id`, `numero`, `nivel` (1 / 2 / sección), `categoria`, `titulo`, `descripcion`, `estado`, `pdfUrl`.
+2. **42 PDFs pre-generados** subidos al storage público, uno por item. Cada PDF tendrá:
+   - Marca **OFERTA TERRENOS · LUC Financing Due Diligence**
+   - Header: número + categoría + nivel
+   - Cuerpo: descripción completa del requerimiento (texto íntegro del Excel)
+   - Footer: cliente (Forestal Valle Escondida SpA), fecha, clasificación confidencial, contacto IR
+   - Paleta blanco + verdes (consistente con tasaciones y la landing FVE)
+3. **Sección rediseñada** `FveDueDiligence.tsx`:
+   - Header navega "06 · Due Diligence Package · LUC Financing"
+   - Resumen ejecutivo (9 categorías como pills, % de completitud, contador 42 documentos)
+   - **Acordeón por categoría** (Corporativa, Histórico Financiero, Uso de Fondos, Cronograma, Viabilidad, Modelo Financiero, Tracción Comercial, Estructura Financiación, Holding)
+   - Cada item como fila con: número, badge de nivel (1 principal / 2 sub), título, descripción truncada, **botón "Descargar PDF"** + botón "Solicitar documento real" (mantiene `DocRequestModal` existente para el archivo confidencial real).
+4. **Mantener** los 7 antecedentes legales chilenos (SAG, MINVU, CBR, SII, servidumbre, CGE, DGA) como **bloque complementario** "Antecedentes Legales Chile" dentro de la sección Viabilidad (item #25 Licencias y Permisos), no se pierden.
+
+## Arquitectura técnica
 
 ```text
-Browser ──► useRealListings() ──► edge: scrape-real-listings ──► Firecrawl ──► portales
-                  │                          │
-                  │                          └─► cache 6h en tabla `cached_listings`
-                  ▼
-          PropertyCard / PropertyGrid / Mapa
+src/pages/forestal/
+├── data/
+│   ├── dueDiligence.ts          (legacy, se mantiene para subset chileno)
+│   └── dueDiligenceLUC.ts       (NEW — 42 items + categorías)
+└── sections/
+    ├── FveDueDiligence.tsx      (rewrite — acordeón + descargas)
+    └── DocRequestModal.tsx      (sin cambios)
+
+scripts/
+└── generateLucDDPdfs.ts          (NEW — script Node/Python para emitir 42 PDFs)
+
+public/dd-luc/                    (NEW — 42 PDFs estáticos servidos por Vite)
+├── 01-business-plan.pdf
+├── 02-web.pdf
+├── ...
+└── 42-balance-matriz.pdf
 ```
 
-## Fases
+### Generación de PDFs
+- Script standalone (`/tmp/gen_luc_dd.py` con reportlab) que lee `dueDiligenceLUC.ts` (o el Excel original) y emite 42 PDFs con la misma identidad visual que las tasaciones (blanco + verdes #1F3D2B / #C9A84C).
+- Cada PDF: 2 páginas máx — portada + descripción + checklist de subitems si aplica.
+- Salida copiada a `public/dd-luc/` para servir estáticamente (no requiere edge function ni storage privado).
+- QA visual obligatorio: convertir cada PDF a imagen y revisar muestras antes de entregar.
 
-### 1. Backend — edge function `scrape-real-listings`
-- Input: `{ country?, region?, type?, limit? }` (default `limit=100`, mix LATAM).
-- Estrategia por portal (Firecrawl `/search` + `/scrape` con `formats: ['markdown', { type:'json', schema }]`):
-  - **Portalinmobiliario CL**: terrenos Los Ríos, Los Lagos, Araucanía, Metropolitana.
-  - **Mercado Libre Inmuebles**: AR, CO, MX (categoría terrenos).
-  - **Yapo CL**: complemento clasificados.
-- Normaliza a shape `Listing` (title, price, currency, area_m2, lat, lng, region, country, type='terreno', image_url, source_url, source_portal).
-- Geocoding fallback con Mapbox cuando el portal no entrega coords.
-- Cache: tabla `cached_listings` (TTL 6 h, key = hash(filtros)).
-- CORS + Zod validation + rate-limit en memoria.
+### UI/UX
+- Acordeón con `@/components/ui/accordion` (shadcn ya disponible).
+- Badges: Nivel 1 = `bg-[hsl(var(--fve-forest))] text-white`, Nivel 2 = `border-[hsl(var(--fve-gold))]/40`.
+- Indicador de completitud por categoría (X de Y documentos disponibles).
+- Print-friendly: `fve-no-print` en botones.
 
-### 2. DB — tabla cache (migración)
-```sql
-CREATE TABLE public.cached_listings (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  cache_key text UNIQUE NOT NULL,
-  payload jsonb NOT NULL,
-  source_portals text[] NOT NULL,
-  fetched_at timestamptz DEFAULT now(),
-  expires_at timestamptz NOT NULL
-);
-GRANT SELECT ON public.cached_listings TO anon, authenticated;
-GRANT ALL ON public.cached_listings TO service_role;
-ALTER TABLE public.cached_listings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "public read cache" ON public.cached_listings FOR SELECT USING (true);
-```
-(escritura solo service_role desde la edge function)
+## Fuera de alcance
+- No tocar `FveHero`, `FveInversion`, ni el resto de la landing.
+- No persistir en Supabase (PDFs estáticos en `public/`).
+- No proteger acceso (es público según decisión).
+- No traducir al inglés (mantener español del Excel).
 
-### 3. Frontend — hook + integración
-- `src/hooks/useRealListings.ts`: React Query → invoca edge function, devuelve `Listing[]` compatible con componentes actuales.
-- **Home `/` (Index.tsx)**: nueva sección "Terrenos reales en venta ahora" con `PropertyGrid` (12 destacados + link a explorar).
-- **Explorar `/explorar`**: toggle "Incluir terrenos de portales externos" que mergea reales + DB; badge `source_portal` en cada card.
-- **Playa Álvaro**: sección `PaComparables` debajo de `PaFicha` mostrando 6 terrenos costeros similares (filtro region=Los Ríos/Los Lagos).
-
-### 4. UI — atribución y badge
-- `PropertyCard` muestra badge "Portalinmobiliario" / "Mercado Libre" cuando `source_portal` está presente.
-- CTA "Ver en portal original" → abre `source_url` en nueva pestaña (cumplimiento legal de atribución).
-
-## Detalles técnicos
-
-- **Conector Firecrawl**: requiere link via `standard_connectors--connect` (connector_id: `firecrawl`). El `FIRECRAWL_API_KEY` queda disponible para la edge function.
-- **No persiste en `listings` real** — se mantiene separación: `listings` = inventario propio OFERTA TERRENOS; `cached_listings` = índice externo informativo.
-- **Rate limit**: máx 1 scrape completo cada 6 h por filtro; usuarios subsecuentes leen del cache.
-- **Imágenes**: se usan URLs originales del portal (no se re-hostea para evitar copyright).
-
-## Archivos a crear/editar
-
-- `supabase/functions/scrape-real-listings/index.ts` (nuevo)
-- `supabase/migrations/<ts>_cached_listings.sql` (nuevo)
-- `src/hooks/useRealListings.ts` (nuevo)
-- `src/components/RealListingsSection.tsx` (nuevo, reutilizable)
-- `src/components/PropertyCard.tsx` (badge `source_portal` + CTA externo)
-- `src/pages/Index.tsx` (insertar sección)
-- `src/pages/Explorar.tsx` (toggle merge externos)
-- `src/pages/playaAlvaro/sections/PaComparables.tsx` (nuevo)
-- `src/pages/playaAlvaro/PlayaAlvaroLanding.tsx` (insertar `PaComparables`)
-
-## Prerrequisito
-
-Conectar **Firecrawl** como connector antes de implementar la edge function. Sin esa key, el scrape no funciona.
+## Próximos pasos
+Tras aprobar este plan, en build mode:
+1. Extraer los 42 items del Excel a TS tipado.
+2. Generar los 42 PDFs con script reportlab y colocarlos en `public/dd-luc/`.
+3. Reescribir `FveDueDiligence.tsx` con el acordeón.
+4. QA visual de muestras de PDFs + revisión de la sección en preview.
