@@ -26,7 +26,7 @@ const BUNDLE_FILES = {
   zip: {
     label: 'ZIP completo',
     url: '/dd-luc/uso-fondos/uso-fondos-respaldos.zip',
-    sha256: 'a5ffa6ca2c16386cc238245c370bcd01b5acf86d69264b68e020812f6a4dd07a',
+    sha256: '559f5fd49a084616fc2045fe1823ac2ea9f73ec188b98bdb5222d6a12677587c',
     filename: 'uso-fondos-respaldos.zip',
   },
   csv: {
