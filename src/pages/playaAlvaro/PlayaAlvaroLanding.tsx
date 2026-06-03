@@ -50,6 +50,7 @@ export default function PlayaAlvaroLanding() {
       <PaMasterplan />
       <PaTour3D />
       <PaEcosystem />
+      <PaComparables />
       <PaContact />
       <PaFooter />
     </div>
