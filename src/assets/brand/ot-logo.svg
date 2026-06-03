@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 80" width="340" height="80">
+  <!-- OFERTA TERRENOS · Investor Relations lockup -->
+  <defs>
+    <linearGradient id="otGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22C55E"/>
+      <stop offset="100%" stop-color="#0EA5E9"/>
+    </linearGradient>
+  </defs>
+  <!-- Monogram: hexagon with O -->
+  <g transform="translate(8,8)">
+    <!-- hexagon -->
+    <polygon points="32,2 58,17 58,47 32,62 6,47 6,17" fill="url(#otGrad)"/>
+    <polygon points="32,2 58,17 58,47 32,62 6,47 6,17" fill="none" stroke="#0F1B2D" stroke-width="0.8" opacity="0.4"/>
+    <!-- O letter -->
+    <circle cx="32" cy="32" r="14" fill="none" stroke="#FFFFFF" stroke-width="3.2"/>
+    <!-- inner accent -->
+    <rect x="29.5" y="18" width="5" height="4" fill="#FFFFFF"/>
+  </g>
+  <!-- Wordmark -->
+  <g transform="translate(88,30)" font-family="Helvetica, Arial, sans-serif" fill="#0F1B2D">
+    <text x="0" y="0" font-size="17" font-weight="700" letter-spacing="1.8">OFERTA TERRENOS</text>
+    <text x="0" y="18" font-size="9" font-weight="400" letter-spacing="3.2" fill="#0F1B2D" opacity="0.7">INVESTOR · RELATIONS</text>
+  </g>
+  <!-- URL -->
+  <g transform="translate(88,62)" font-family="Helvetica, Arial, sans-serif" fill="#22C55E">
+    <text x="0" y="0" font-size="8" font-weight="600" letter-spacing="1.5">ofertaterrenos.com</text>
+  </g>
+</svg>
