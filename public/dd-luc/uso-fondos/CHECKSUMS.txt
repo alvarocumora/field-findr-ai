@@ -1,0 +1,3 @@
+cf210d86c9ae41916f759069e7253488ad6381f65d06a0abe8ad23ee71d6610c  uso-fondos-respaldos.zip
+38ce9f1df2ad07995d3f05eceee63a7dd653a5e54eed89a3c6d32ad82a30af26  uso-fondos-manifest.json
+d34a1d11be6073c71a8b2ddb8f44f472c0813021588ad4441e22e93d05253f3d  uso-fondos-trazabilidad.csv
