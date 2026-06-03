@@ -15,6 +15,7 @@ import { Listing, getPricePerM2 } from '@/hooks/useListings';
 import { useFlattenedListings } from '@/hooks/useInfiniteListings';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Layers, CreditCard } from 'lucide-react';
+import RealListingsSection from '@/components/RealListingsSection';
 
 const Explorar = () => {
   const navigate = useNavigate();
