@@ -107,3 +107,12 @@ export const LOTES_DESTACADOS: Lote[] = [
   { numero: 'C-10-27', etapa: 'C', superficie: 14_000, orientacion: 'E',  precioCLP_M: 21.0, estado: 'disponible', rolSII: '08088-027' },
   { numero: 'C-10-34', etapa: 'C', superficie: 12_400, orientacion: 'NE', precioCLP_M: 19.4, estado: 'disponible', rolSII: '08088-034' },
 ];
+
+// — Aliases retro-compatibles para secciones legacy (Contacto, Proyecto) —
+// Exponen los lotes destacados con el campo `precioUF` derivado del precio CLP (FX ≈ UF $ 38.500).
+const UF_CLP = 38_500;
+export const LOTES = LOTES_DESTACADOS.map((l) => ({
+  ...l,
+  precioUF: Math.round((l.precioCLP_M * 1_000_000) / UF_CLP),
+}));
+export const SUPERFICIE_TOTAL_HA = FASE1_SUPERFICIE_HA;
