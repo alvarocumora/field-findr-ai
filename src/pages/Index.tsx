@@ -12,6 +12,7 @@ import RegionStatsCards from '@/components/landing/RegionStatsCards';
 import FeaturedListings from '@/components/landing/FeaturedListings';
 import HowItWorksFlow from '@/components/landing/HowItWorksFlow';
 import ConversationalSearch from '@/components/explore/ConversationalSearch';
+import RealListingsSection from '@/components/RealListingsSection';
 
 const CartographicHero = lazy(() => import('@/components/landing/CartographicHero'));
 const ScrollytellingSection = lazy(() => import('@/components/landing/ScrollytellingSection'));
