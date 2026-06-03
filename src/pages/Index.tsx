@@ -44,6 +44,9 @@ const Index = () => {
       {/* ===== FEATURED LISTINGS ===== */}
       <FeaturedListings />
 
+      {/* ===== REAL LISTINGS — scraped LATAM portals ===== */}
+      <RealListingsSection limit={16} />
+
       {/* ===== HOW IT WORKS ===== */}
       <HowItWorksFlow />
 
