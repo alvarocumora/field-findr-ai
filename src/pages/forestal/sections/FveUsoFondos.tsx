@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Lock, FileSpreadsheet } from 'lucide-react';
+import { Download, Lock, FileSpreadsheet, Package, FileJson } from 'lucide-react';
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from '@/components/ui/accordion';
@@ -52,6 +52,45 @@ export default function FveUsoFondos() {
               supuestos, unidades de costo, proveedores referenciales y los documentos originales
               (cotizaciones, contratos, presupuestos) que se aportan bajo NDA.
             </p>
+          </div>
+        </div>
+
+        {/* Bundle downloads */}
+        <div className="mb-10 border border-[hsl(var(--fve-forest-deep))]/15 bg-[hsl(var(--fve-forest-deep))]/[0.03] p-5 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.22em] text-[hsl(var(--fve-gold))] mb-1.5">
+              Data room · descarga consolidada
+            </p>
+            <p className="font-serif-fve text-lg text-[hsl(var(--fve-forest-deep))] leading-snug">
+              ZIP con las {totalItems} fichas PDF + manifiesto JSON/CSV de trazabilidad
+            </p>
+            <p className="text-xs text-[hsl(var(--fve-charcoal))]/60 mt-1">
+              Equivalencias CLP↔EUR (FX 1.040), mapeo LUC, % facilidad y respaldos por línea.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 fve-no-print">
+            <a
+              href="/dd-luc/uso-fondos/uso-fondos-respaldos.zip"
+              download
+              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] px-4 py-2.5 font-medium"
+              style={{ background: 'hsl(var(--fve-forest-deep))', color: 'white' }}
+            >
+              <Package className="w-4 h-4" /> ZIP completo
+            </a>
+            <a
+              href="/dd-luc/uso-fondos/uso-fondos-trazabilidad.csv"
+              download
+              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] px-4 py-2.5 border border-[hsl(var(--fve-forest-deep))]/30 text-[hsl(var(--fve-forest-deep))] hover:bg-[hsl(var(--fve-forest))] hover:text-white hover:border-[hsl(var(--fve-forest))] transition-colors"
+            >
+              <FileSpreadsheet className="w-4 h-4" /> CSV
+            </a>
+            <a
+              href="/dd-luc/uso-fondos/uso-fondos-manifest.json"
+              download
+              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] px-4 py-2.5 border border-[hsl(var(--fve-forest-deep))]/30 text-[hsl(var(--fve-forest-deep))] hover:bg-[hsl(var(--fve-forest))] hover:text-white hover:border-[hsl(var(--fve-forest))] transition-colors"
+            >
+              <FileJson className="w-4 h-4" /> JSON
+            </a>
           </div>
         </div>
 
