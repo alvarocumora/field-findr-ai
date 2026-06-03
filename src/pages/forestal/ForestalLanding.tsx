@@ -11,6 +11,7 @@ import FveInversion from './sections/FveInversion';
 import FveProyecciones from './sections/FveProyecciones';
 import FveDueDiligence from './sections/FveDueDiligence';
 import FveUsoFondos from './sections/FveUsoFondos';
+import FveCronograma from './sections/FveCronograma';
 import FveDesarrollador from './sections/FveDesarrollador';
 import FveProceso from './sections/FveProceso';
 import FveFaqs from './sections/FveFaqs';
@@ -19,17 +20,18 @@ import FveFooter from './sections/FveFooter';
 
 export default function ForestalLanding() {
   useSEO({
-    title: 'Forestal Valle Escondido — Parcelas DL 3.516 Hualañé Maule',
+    title: 'Forestal Valle Escondido · Master Loteo La Palmilla — 177 parcelas DL 3.516 Hualañé',
     description:
-      'Parcelación rural bajo DL 3.516 en Hualañé, Región del Maule. Parcelas desde 5.000 m² con roles SII individuales, escrituras inscribibles y derechos de agua DGA.',
+      'Master Loteo La Palmilla — Caone (Hualañé, Maule). 177 parcelas Fase 1 con rol SII propio bajo DL 3.516, en programa de 600 lotes. Subdivisión SAG vigente, CIP municipal y dominio inscrito en CBR Licantén.',
     canonicalUrl: 'https://ofertaterrenos.com/forestal-valle-escondido',
     url: 'https://ofertaterrenos.com/forestal-valle-escondido',
     type: 'website',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'RealEstateListing',
-      name: 'Forestal Valle Escondido',
-      description: 'Parcelación rural bajo DL 3.516 en Hualañé, Región del Maule. 15 parcelas desde 5.000 m².',
+      name: 'Forestal Valle Escondido — Master Loteo La Palmilla',
+      description:
+        '177 parcelas Fase 1 (hijuelas 7, 8 y 10) bajo DL 3.516 en Hualañé. Programa total: 600 lotes. GDV Fase 1: CLP $ 2.303M.',
       url: 'https://ofertaterrenos.com/forestal-valle-escondido',
       address: {
         '@type': 'PostalAddress',
@@ -73,6 +75,7 @@ export default function ForestalLanding() {
       <FveProyecciones />
       <FveDueDiligence />
       <FveUsoFondos />
+      <FveCronograma />
       <FveDesarrollador />
       <FveProceso />
       <FveFaqs />
