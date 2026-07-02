@@ -1,10 +1,16 @@
 // Edge function: scrape real terrenos from LATAM portals via Firecrawl.
 // Returns up to ~100 normalized listings, cached 6h in `cached_listings`.
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-api-version',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+};
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v2';
 const TTL_HOURS = 6;
+
 
 type RealListing = {
   id: string;
