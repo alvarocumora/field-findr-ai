@@ -1,0 +1,1 @@
+DELETE FROM public.listings WHERE is_demo = true;

@@ -22,7 +22,7 @@ const Explorar = () => {
   const isMobile = useIsMobile();
 
   // View mode for mobile
-  const [mobileViewMode, setMobileViewMode] = useState<'list' | 'swipe'>('list');
+  const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>('swipe');
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');

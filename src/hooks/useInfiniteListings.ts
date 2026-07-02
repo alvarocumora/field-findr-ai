@@ -18,6 +18,7 @@ export const useInfiniteListings = (filters?: ListingFilters) => {
         .from('listings')
         .select('*', { count: 'exact' })
         .eq('status', 'active')
+        .eq('is_demo', false)
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
         .range(pageParam, pageParam + PAGE_SIZE - 1);

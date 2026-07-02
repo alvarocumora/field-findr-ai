@@ -62,6 +62,7 @@ export const useListings = (filters?: ListingFilters) => {
         .from('listings')
         .select('*')
         .eq('status', 'active')
+        .eq('is_demo', false)
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false });
 
@@ -138,6 +139,7 @@ export const useFeaturedListings = (limit = 8) => {
         .from('listings')
         .select('*')
         .eq('status', 'active')
+        .eq('is_demo', false)
         .eq('featured', true)
         .order('created_at', { ascending: false })
         .limit(limit);
