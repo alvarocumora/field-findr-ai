@@ -71,7 +71,7 @@ const Explorar = () => {
     bounds: mapBounds ?? undefined,
   });
 
-  // Client-side search + tag filter
+  // Client-side search + tag/slope/valuation filter
   const filteredListings = useMemo(() => {
     let result = [...listings];
     if (searchQuery) {
@@ -86,10 +86,33 @@ const Explorar = () => {
     if (selectedTags.length > 0) {
       result = result.filter(l => selectedTags.some(tag => l.tags.includes(tag)));
     }
+    // Slope filter — matches tag conventions (plano/suave/fuerte or topografia-*)
+    if (selectedSlopes.length > 0) {
+      const slopeSynonyms: Record<string, string[]> = {
+        flat: ['plano', 'topografia-plana', 'pendiente-plana', 'slope-flat'],
+        slight: ['suave', 'topografia-suave', 'pendiente-suave', 'slope-slight'],
+        steep: ['fuerte', 'topografia-fuerte', 'pendiente-fuerte', 'slope-steep'],
+      };
+      result = result.filter(l =>
+        selectedSlopes.some(s => (slopeSynonyms[s] || [s]).some(tag => l.tags.includes(tag)))
+      );
+    }
+    // Valuation / plusvalía filter — matches plusvalia-* or valuation-* tags
+    if (selectedValuation.length > 0) {
+      const valSynonyms: Record<string, string[]> = {
+        low: ['plusvalia-baja', 'valuation-low'],
+        medium: ['plusvalia-media', 'valuation-medium'],
+        high: ['plusvalia-alta', 'valuation-high'],
+      };
+      result = result.filter(l =>
+        selectedValuation.some(v => (valSynonyms[v] || [v]).some(tag => l.tags.includes(tag)))
+      );
+    }
     return result;
-  }, [listings, searchQuery, selectedTags]);
+  }, [listings, searchQuery, selectedTags, selectedSlopes, selectedValuation]);
 
   const activeFiltersCount = selectedTypes.length + selectedRegions.length + selectedCountries.length + selectedTags.length +
+    selectedSlopes.length + selectedValuation.length +
     (priceRange[0] > 0 || priceRange[1] < 5000000000 ? 1 : 0) +
     (areaRange[0] > 0 || areaRange[1] < 1000000 ? 1 : 0);
 
