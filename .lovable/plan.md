@@ -1,54 +1,99 @@
-
 ## Objetivo
 
-1. Eliminar todos los datos seed/demo del explorador (BD + frontend).
-2. En `/explorar` móvil, **Swipe** pasa a ser la vista por defecto.
-3. Arreglar los fallos del mapa/explorar (carga en blanco, sin resultados, errores JS).
+Dejar OFERTA TERRENOS lista para producción en **ofertaterrenos.com**: QA funcional end‑to‑end de todas las rutas, importar propiedades reales vía scraper, auditoría de seguridad, SEO/sitemap actualizados, y publicación final.
 
 ---
 
-## 1. Eliminar seed / dejar solo propiedades reales
+## Fase 1 — QA funcional completo
 
-**Base de datos (Supabase)**
-- Estado actual: `listings` tiene 21 filas — **20 con `is_demo=true`** y solo 1 real.
-- Migración: `DELETE FROM public.listings WHERE is_demo = true;` (borra en cascada `favorites`, `price_history`, etc. gracias a FKs existentes).
-- Además: `DELETE FROM public.lots WHERE project_id IN (SELECT id FROM projects WHERE name ILIKE '%demo%' OR name ILIKE '%mock%');` (revisar antes; si no hay match no borra nada).
+Recorro con Playwright cada ruta clave y arreglo lo que falle. Cuento con red viva de dev; capturo screenshot + consola en cada paso.
 
-**Frontend — filtrar demo siempre**
-- `src/hooks/useListings.ts` y `src/hooks/useInfiniteListings.ts`: añadir por defecto `.eq('is_demo', false)` en toda query de listings.
-- `src/pages/Explorar.tsx`: fusionar los resultados de `useRealListings` (scraper `scrape-real-listings`) con los reales de Supabase. Cuando la BD quede vacía tras el DELETE, el explorador mostrará únicamente los del scraper.
-- Arreglar edge function `scrape-real-listings`: los logs muestran `TypeError: results.map is not a function` — el parser de Firecrawl asume `results` array pero a veces viene `{ data: [...] }` o error. Añadir guard `Array.isArray(results) ? results : results?.data ?? []` y manejo de `Bad Gateway`.
+**Rutas a validar:**
 
-## 2. Swipe como opción principal en móvil
+```text
+Públicas         /  /explorar  /propiedad/:id  /pais/:code  /region/:slug
+                 /ciudad/:slug  /oportunidades  /pricing  /blog  /contact
+Marketplace      /comparar  /alertas  /referrals  /mi-terreno  /buyer-quiz
+Landing brand    /forestal-valle-escondido  /huellelhue  /playa-alvaro
+Auth             /auth  /reset-password  /profile
+Tasación         /tasacion/v/:id  /tasacion/validar
+Reservas         /reservation-{success,pending,error}
+Dashboard        /asesor/* (leads, listings, reservations, closing, reports)
+Admin            /admin/users  /admin/visual-scenarios
+```
 
-- `src/pages/Explorar.tsx` línea 25: cambiar `useState<'list' | 'swipe'>('list')` → `useState<'list' | 'swipe' | 'map'>('swipe')`.
-- Añadir botón `Mapa` al toggle (además de Lista y Swipe) — hoy solo hay list/swipe en móvil, el mapa fullscreen queda dentro de `MobileExploreView` (list mode).
-- Orden visual del segmented control móvil: **Swipe · Lista · Mapa**.
-- En SwipeExplorer, asegurar que consume `filteredListings` (reales) y no fuentes mock.
+**Checks por vista:** carga sin error rojo en consola, mapa con token válido, filtros aplican a lista + mapa + swipe, imágenes cargan, PDFs se generan, formularios envían.
 
-## 3. Arreglos mapa / explorar
+## Fase 2 — Datos reales vía scraper
 
-Reproducir con Playwright en `/explorar` móvil (440×799) y capturar consola. Fallos conocidos a corregir:
+- Ejecutar `scrape-real-listings` (Firecrawl v2, ya fue endurecido) apuntando a Portalinmobiliario / MercadoLibre / Yapo para terrenos LATAM.
+- Insertar como `is_demo=false`, `status='active'`, `source='external'`.
+- Meta: ≥30 propiedades reales cargadas antes de publicar.
+- Programar cron `pg_cron` diario para mantener el inventario fresco.
 
-- **Mapa pantalla en blanco:** validar en `EnhancedMap` que `useMapboxToken` resuelva antes de `new mapboxgl.Map(...)`; si `token` falta, mostrar `MapErrorState` con retry (hoy ya existe pero no se dispara si `container` no está montado por el bottom-sheet). Forzar `map.resize()` cuando cambia el snap del bottom sheet.
-- **Sin marcadores:** tras eliminar demos + filtro `is_demo=false`, verificar que los listings reales tienen `lat`/`lng` no nulos; los que no, ocultarlos del mapa (ya se hace) pero contarlos en el badge "Sin geolocalización".
-- **Crashes JS:** el `import mapboxgl` en `PropertyMap.tsx` está bien; revisar `MobileExploreView` que no crashee cuando `listings=[]` (mostrar empty state con CTA "Ver todo Chile").
-- **Búsqueda mejorada:**
-  - Debounce 300 ms en `searchQuery`.
-  - Autocomplete usando la edge function `search-autocomplete` que ya existe (chips de sugerencias).
-  - Buscar también en `city`, `address`, `tags`.
-  - Botón "Limpiar" visible cuando hay query.
+## Fase 3 — Correcciones frontales previsibles
 
-## Archivos afectados
+Basado en los últimos reportes:
 
-- **Migración**: nuevo archivo Supabase migration (DELETE demos).
-- **Hooks**: `src/hooks/useListings.ts`, `src/hooks/useInfiniteListings.ts`.
-- **Pages**: `src/pages/Explorar.tsx`.
-- **Componentes**: `src/components/explore/MobileExploreView.tsx`, `SwipeExplorer.tsx`, `FloatingSearchBar.tsx`, `ExploreMapPanel.tsx`.
-- **Edge function**: `supabase/functions/scrape-real-listings/index.ts` (fix parser Firecrawl).
+- `EnhancedMap` — fallback claro con `MapErrorState` cuando `useMapboxToken` falla; retry manual.
+- `MobileExploreView` — empty state con CTA "Ver todas" cuando `listings.length===0`.
+- `FloatingSearchBar` — debounce 300ms + botón limpiar.
+- `PropertyDetail` — placeholder gráfico si `images[0]` es nulo, evitando 404 en `<img>`.
+- `Explorar` — asegurar que slope/valuación siga filtrando en swipe (ya integrado en lista/mapa).
+- `Auth` — configurar Google OAuth (`configure_social_auth`) con `redirect_uri = window.location.origin`.
 
-## Validación
+## Fase 4 — SEO, sitemap y metadata
 
-- Playwright en `/explorar` móvil: al cargar debe abrir Swipe con propiedades reales; toggle a Mapa muestra marcadores sin errores; toggle a Lista muestra tarjetas.
-- `psql -c "SELECT COUNT(*) FROM listings"` → debe reflejar solo reales tras la migración.
-- Consola sin errores rojos.
+- `index.html`: title/description reales de OFERTA TERRENOS, `og:*`, `twitter:card`, JSON‑LD `Organization`.
+- Per‑route con `react-helmet-async` en `/propiedad/:id`, `/ciudad/:slug`, `/region/:slug`, `/pais/:code`, landings brand.
+- `public/robots.txt` con `Sitemap: https://ofertaterrenos.com/sitemap.xml`.
+- Sitemap: verificar que la edge `sitemap` incluya listings reales + landings.
+- Correr `seo--trigger_scan` + `security--run_security_scan` antes de publicar.
+
+## Fase 5 — Seguridad
+
+- `supabase--linter` + `security--run_security_scan`.
+- Cerrar findings críticos (RLS, `USING(true)` en tablas sensibles, funciones sin `search_path`).
+- Activar HIBP password check en auth.
+- Confirmar buckets storage con RLS coherente.
+
+## Fase 6 — Publicación
+
+1. `publish_settings--get_publish_settings` → confirmar visibility `public`.
+2. `security--get_scan_results` → 0 findings críticos.
+3. `preview_ui--publish` con `website_info_status: added_or_updated`.
+4. Confirmar propagación en `ofertaterrenos.com` (custom domain ya conectado).
+
+---
+
+## Detalles técnicos
+
+**Playwright QA:** scripts en `/tmp/browser/qa-<ruta>/` con sesión Supabase inyectada (agente + comprador). Screenshots + consola por paso. Un solo script por rol.
+
+**Scraper:** invocar `scrape-real-listings` con `{ countries: ['CL','AR','MX','CO'], limit: 40, tags: ['terreno','parcela','campo'] }`. Validar `lat/lng` presentes antes de insertar (descartar filas sin geocoding).
+
+**Cron scraper:**
+```sql
+select cron.schedule('scrape-real-listings-daily','0 6 * * *', $$
+  select net.http_post(url:='.../functions/v1/scrape-real-listings',
+    headers:='{"apikey":"<anon>"}'::jsonb) $$);
+```
+
+**SEO helper:** crear `src/components/seo/PageSEO.tsx` reutilizable (title/desc/canonical/JSON‑LD).
+
+**Findings de seguridad esperados:** revisar `payments`, `credit_payments`, `transaction_documents`, `api_keys`, `webhook_deliveries` — deben negar acceso a `anon`.
+
+---
+
+## Entregables
+
+- Reporte QA por ruta (pasa / falla / arreglado).
+- ≥30 listings reales cargados.
+- 0 findings críticos de seguridad.
+- Sitio publicado y accesible en https://ofertaterrenos.com.
+
+## Riesgos
+
+- **Firecrawl sin créditos** → si `402`, aviso al usuario para top‑up (conector managed).
+- **Rutas dashboard requieren rol** → uso sesión inyectada `LOVABLE_BROWSER_SUPABASE_*`.
+- **Publicación cachea metadata social** → aviso al usuario que previews sociales tardan en refrescar.
