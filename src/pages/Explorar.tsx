@@ -22,7 +22,7 @@ const Explorar = () => {
   const isMobile = useIsMobile();
 
   // View mode for mobile
-  const [mobileViewMode, setMobileViewMode] = useState<'list' | 'swipe'>('list');
+  const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>('swipe');
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -157,7 +157,15 @@ const Explorar = () => {
         <StickyHeader />
 
         {/* Mobile view mode toggle */}
-        <div className="flex items-center gap-2 px-4 py-2 border-b">
+        <div className="flex items-center gap-2 px-4 py-2 border-b overflow-x-auto">
+          <Button
+            variant={mobileViewMode === 'swipe' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setMobileViewMode('swipe')}
+          >
+            <CreditCard className="h-4 w-4 mr-1" />
+            Swipe
+          </Button>
           <Button
             variant={mobileViewMode === 'list' ? 'default' : 'outline'}
             size="sm"
@@ -167,12 +175,12 @@ const Explorar = () => {
             Lista
           </Button>
           <Button
-            variant={mobileViewMode === 'swipe' ? 'default' : 'outline'}
+            variant={mobileViewMode === 'map' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setMobileViewMode('swipe')}
+            onClick={() => setMobileViewMode('map')}
           >
-            <CreditCard className="h-4 w-4 mr-1" />
-            Swipe
+            <Layers className="h-4 w-4 mr-1" />
+            Mapa
           </Button>
         </div>
 

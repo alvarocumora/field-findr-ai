@@ -1,78 +1,54 @@
+
 ## Objetivo
 
-Regenerar los **62 PDFs** del data room (43 LUC Due Diligence + 19 Uso de Fondos) con identidad visual profesional y co-branding **Forestal Valle Escondido** (emisor) + **OFERTA TERRENOS** (plataforma/IR), incluyendo logos SVG diseñados ad-hoc.
+1. Eliminar todos los datos seed/demo del explorador (BD + frontend).
+2. En `/explorar` móvil, **Swipe** pasa a ser la vista por defecto.
+3. Arreglar los fallos del mapa/explorar (carga en blanco, sin resultados, errores JS).
 
-## 1 · Diseño de logos (SVG vectorial)
+---
 
-Dos marcas escalables, embebibles tanto en PDF (vía reportlab `drawing`) como en la web:
+## 1. Eliminar seed / dejar solo propiedades reales
 
-**Forestal Valle Escondido** — `src/assets/brand/fve-logo.svg`
-- Monograma: rombo dorado (`#C9A84C`) con una "V" angular de árbol estilizado dentro.
-- Wordmark: "FORESTAL · VALLE · ESCONDIDO" en serif (DM Serif Display fallback Times), tracking ancho.
-- Tagline opcional: "Master Loteo La Palmilla · Región del Maule".
-- Versiones: full color sobre fondo claro, knockout blanco sobre fondo forest (`#1F3D2B`), y monograma solo.
+**Base de datos (Supabase)**
+- Estado actual: `listings` tiene 21 filas — **20 con `is_demo=true`** y solo 1 real.
+- Migración: `DELETE FROM public.listings WHERE is_demo = true;` (borra en cascada `favorites`, `price_history`, etc. gracias a FKs existentes).
+- Además: `DELETE FROM public.lots WHERE project_id IN (SELECT id FROM projects WHERE name ILIKE '%demo%' OR name ILIKE '%mock%');` (revisar antes; si no hay match no borra nada).
 
-**OFERTA TERRENOS · Investor Relations** — `src/assets/brand/ot-logo.svg`
-- Monograma: hexágono verde gradient (`#22C55E` → `#0EA5E9`, paleta marketplace del Core Memory) con una "O" geométrica.
-- Wordmark: "OFERTA TERRENOS" sans-serif geométrico (Space Grotesk fallback Helvetica) + sublabel "Investor Relations" en caps tracking.
-- Versiones: full color, knockout, monograma.
+**Frontend — filtrar demo siempre**
+- `src/hooks/useListings.ts` y `src/hooks/useInfiniteListings.ts`: añadir por defecto `.eq('is_demo', false)` en toda query de listings.
+- `src/pages/Explorar.tsx`: fusionar los resultados de `useRealListings` (scraper `scrape-real-listings`) con los reales de Supabase. Cuando la BD quede vacía tras el DELETE, el explorador mostrará únicamente los del scraper.
+- Arreglar edge function `scrape-real-listings`: los logs muestran `TypeError: results.map is not a function` — el parser de Firecrawl asume `results` array pero a veces viene `{ data: [...] }` o error. Añadir guard `Array.isArray(results) ? results : results?.data ?? []` y manejo de `Bad Gateway`.
 
-Los dos logos co-existen en cada PDF como **lockup**: FVE arriba-izquierda (emisor del documento), OT abajo-derecha en footer (plataforma que respalda).
+## 2. Swipe como opción principal en móvil
 
-## 2 · Generador PDF profesional unificado (`/tmp/gen_pdf_v3.py`)
+- `src/pages/Explorar.tsx` línea 25: cambiar `useState<'list' | 'swipe'>('list')` → `useState<'list' | 'swipe' | 'map'>('swipe')`.
+- Añadir botón `Mapa` al toggle (además de Lista y Swipe) — hoy solo hay list/swipe en móvil, el mapa fullscreen queda dentro de `MobileExploreView` (list mode).
+- Orden visual del segmented control móvil: **Swipe · Lista · Mapa**.
+- En SwipeExplorer, asegurar que consume `filteredListings` (reales) y no fuentes mock.
 
-Reemplaza `gen_luc_v2.py` y `gen_uso_fondos.py` con un solo motor que produce ambas familias usando un layout coherente.
+## 3. Arreglos mapa / explorar
 
-**Layout cover (página 1):**
-- Banda superior `#1F3D2B` 30% alto con logo FVE knockout + número de documento (DOC NN/43 ó UF NN/19).
-- Título en serif 36pt sobre fondo crema (`#F5F1E8`).
-- Subtítulo con categoría LUC / partida.
-- **KPI Box** dorado: monto (CLP/EUR), % facilidad, naturaleza (CAPEX/OPEX), mapeo LUC.
-- Bloque "Emisor" con datos legales (Forestal Valle Escondido SpA, RUT, Gerente, Domicilio).
-- Footer cover: logo OT lockup + URL `ofertaterrenos.com/forestal-valle-escondido` + fecha emisión + SHA-256 del PDF (auto-calculado y reinyectado).
+Reproducir con Playwright en `/explorar` móvil (440×799) y capturar consola. Fallos conocidos a corregir:
 
-**Layout páginas interiores:**
-- Header reducido: rombo dorado + "FORESTAL VALLE ESCONDIDO · DOC NN" + número de página.
-- Cuerpo de dos columnas: meta-card lateral (categoría, nivel, naturaleza, monto si aplica) + flujo principal con headings, viñetas, bloques "Nota" y "Cómo entregar".
-- Footer fijo en cada página: línea dorada + "Confidencial · OFERTA TERRENOS · Investor Relations" + paginación.
+- **Mapa pantalla en blanco:** validar en `EnhancedMap` que `useMapboxToken` resuelva antes de `new mapboxgl.Map(...)`; si `token` falta, mostrar `MapErrorState` con retry (hoy ya existe pero no se dispara si `container` no está montado por el bottom-sheet). Forzar `map.resize()` cuando cambia el snap del bottom sheet.
+- **Sin marcadores:** tras eliminar demos + filtro `is_demo=false`, verificar que los listings reales tienen `lat`/`lng` no nulos; los que no, ocultarlos del mapa (ya se hace) pero contarlos en el badge "Sin geolocalización".
+- **Crashes JS:** el `import mapboxgl` en `PropertyMap.tsx` está bien; revisar `MobileExploreView` que no crashee cuando `listings=[]` (mostrar empty state con CTA "Ver todo Chile").
+- **Búsqueda mejorada:**
+  - Debounce 300 ms en `searchQuery`.
+  - Autocomplete usando la edge function `search-autocomplete` que ya existe (chips de sugerencias).
+  - Buscar también en `city`, `address`, `tags`.
+  - Botón "Limpiar" visible cuando hay query.
 
-**Mejoras técnicas:**
-- Render del SVG con `svglib` + `reportlab.graphics` (sin depender de Inkscape).
-- Tipografías: registro de Noto Serif (serif) y Noto Sans (sans) vía `pdfmetrics.registerFont` para evitar cajas negras en acentos.
-- Metadata XMP completa: Title, Author=Forestal Valle Escondido SpA, Subject=LUC Financing DD, Keywords con categoría, Creator=OFERTA TERRENOS · IR.
-- Marca de agua diagonal sutil "BORRADOR · NO VINCULANTE" en gris 8% sobre páginas internas (configurable por item).
+## Archivos afectados
 
-## 3 · Pipeline de regeneración
+- **Migración**: nuevo archivo Supabase migration (DELETE demos).
+- **Hooks**: `src/hooks/useListings.ts`, `src/hooks/useInfiniteListings.ts`.
+- **Pages**: `src/pages/Explorar.tsx`.
+- **Componentes**: `src/components/explore/MobileExploreView.tsx`, `SwipeExplorer.tsx`, `FloatingSearchBar.tsx`, `ExploreMapPanel.tsx`.
+- **Edge function**: `supabase/functions/scrape-real-listings/index.ts` (fix parser Firecrawl).
 
-```text
-1. Exportar /tmp/luc.json y /tmp/uso_fondos.json desde TS  (bun export script)
-2. /tmp/gen_pdf_v3.py --kind luc --json /tmp/luc.json --out public/dd-luc/
-3. /tmp/gen_pdf_v3.py --kind uf  --json /tmp/uso_fondos.json --out public/dd-luc/uso-fondos/
-4. Recalcular sha256 de los 3 archivos del bundle UF
-5. Reempaquetar uso-fondos-respaldos.zip
-6. Actualizar BUNDLE_FILES[].sha256 en FveUsoFondos.tsx
-7. QA visual: pdftoppm de muestras (01, 08-sección, 17, 27, 39-sección) +
-   uso-fondos uf-01, uf-09, uf-17 → inspección de cover, logos, kpi box,
-   página interior, footer, watermark
-```
+## Validación
 
-## 4 · Uso de los logos en la web (bonus)
-
-Reemplazar el rombo dorado actual en `FveNav.tsx` por el monograma FVE SVG inline (mantener color por currentColor para que respete dark/light). Sin tocar lógica de scroll ni layout.
-
-## 5 · QA y entregables
-
-- 62 PDFs regenerados en `public/dd-luc/**`.
-- 2 logos en `src/assets/brand/`.
-- Script canónico en `/tmp/gen_pdf_v3.py` (referencia, no se versiona).
-- ZIP + manifest JSON/CSV + CHECKSUMS.txt actualizados.
-- Verificación visual obligatoria: cada PDF debe mostrar (a) ambos logos legibles, (b) KPI box sin clipping, (c) acentos y caracteres `↔ · €` renderizados (sin cajas negras), (d) paginación correcta, (e) ningún elemento fuera de la página.
-
-## Detalles técnicos
-
-- Lib: `reportlab` (Platypus + Canvas custom) + `svglib` para SVG → flowable.
-- Fuentes: descarga `NotoSerif-Regular/Bold` y `NotoSans-Regular/Bold` desde Google Fonts → registro en VFS reportlab.
-- Paleta canónica: forest `#1F3D2B` · forest-deep `#0F2A1D` · gold `#C9A84C` · cream `#F5F1E8` · marketplace-green `#22C55E` · marketplace-blue `#0EA5E9` (estos dos últimos solo para el monograma OT).
-- Tamaño A4 (210×297mm), márgenes 18mm.
-- Watermark: configurable via campo opcional `borrador: true` en data (default false para no romper expectativa).
-- No cambio el schema TS: solo regenero PDFs y agrego dos imports SVG.
+- Playwright en `/explorar` móvil: al cargar debe abrir Swipe con propiedades reales; toggle a Mapa muestra marcadores sin errores; toggle a Lista muestra tarjetas.
+- `psql -c "SELECT COUNT(*) FROM listings"` → debe reflejar solo reales tras la migración.
+- Consola sin errores rojos.

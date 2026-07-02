@@ -57,9 +57,19 @@ async function firecrawlSearch(query: string, apiKey: string): Promise<string[]>
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, limit: 8 }),
     });
-    const j = await r.json();
-    const results = (j?.data ?? j?.web ?? []) as Array<{ url: string }>;
-    return results.map((r) => r.url).filter(Boolean).slice(0, 8);
+    const text = await r.text();
+    if (!r.ok) {
+      console.error('search http error', r.status, query, text.slice(0, 200));
+      return [];
+    }
+    let j: any;
+    try { j = JSON.parse(text); } catch { return []; }
+    const raw = j?.data ?? j?.web ?? j?.results ?? [];
+    const results = Array.isArray(raw) ? raw : (Array.isArray(raw?.results) ? raw.results : []);
+    return results
+      .map((it: any) => (typeof it === 'string' ? it : it?.url))
+      .filter((u: unknown): u is string => typeof u === 'string' && u.length > 0)
+      .slice(0, 8);
   } catch (e) {
     console.error('search failed', query, e);
     return [];
