@@ -165,7 +165,7 @@ const StickyHeader = () => {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-popover border border-border shadow-lg z-50">
+                <DropdownMenuContent align="end" className="w-56 bg-popover border border-border shadow-lg z-modal">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium">{user.user_metadata?.first_name || 'Usuario'}</p>
