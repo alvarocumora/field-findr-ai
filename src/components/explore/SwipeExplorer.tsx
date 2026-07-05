@@ -353,7 +353,13 @@ const SwipeExplorer = ({
               Restaurar descartados ({dismissedIds.size})
             </Button>
           )}
+          {advancedFiltersCount > 0 && (
+            <Button variant="ghost" onClick={clearAdvancedFilters}>
+              Limpiar filtros avanzados ({advancedFiltersCount})
+            </Button>
+          )}
         </div>
+        {FiltersSheet}
       </div>
     );
   }
