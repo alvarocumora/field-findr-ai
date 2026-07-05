@@ -153,6 +153,9 @@ const SwipeExplorer = ({
   // Reset index when category or advanced filters change
   useEffect(() => { setCurrentIndex(0); }, [category, selectedRegions, priceRange, pricePerM2Range]);
 
+  // Emit filtered deck upward so the parent (map, badges, etc.) can sync.
+  useEffect(() => { onDeckChange?.(filtered); }, [filtered, onDeckChange]);
+
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
