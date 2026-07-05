@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo, useEffect, type MutableRefObject } from 'react';
-import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from 'framer-motion';
+import { useState, useCallback, useMemo, useEffect, useRef, type MutableRefObject } from 'react';
+import { motion, useMotionValue, useTransform, animate, PanInfo, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import {
   Heart, X, MessageCircle, MapPin, Maximize2, ChevronLeft, Undo2, Sparkles, Scale,
   ArrowRight, SlidersHorizontal,
 } from 'lucide-react';
-import { Listing, getListingTypeLabel } from '@/hooks/useListings';
+import { Listing, getListingTypeLabel, getPricePerM2, formatPriceShort } from '@/hooks/useListings';
 import { useNavigate } from 'react-router-dom';
 import InvestmentScoreBadge from '@/components/explore/InvestmentScoreBadge';
 import { cn } from '@/lib/utils';
@@ -80,6 +80,8 @@ const SwipeExplorer = ({
   const [history, setHistory] = useState<Listing[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [confirmed, setConfirmed] = useState<{ listing: Listing; action: 'favorite' | 'dismiss' } | null>(null);
+  // Photo index inside the current card (tap left/right zones to navigate).
+  const [imgIndex, setImgIndex] = useState(0);
 
   // Advanced filters (region + price + price/m²)
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -155,6 +157,10 @@ const SwipeExplorer = ({
   // Reset index when category or advanced filters change
   useEffect(() => { setCurrentIndex(0); }, [category, selectedRegions, priceRange, pricePerM2Range]);
 
+  // Reset photo index whenever the top card changes
+  const currentId = filtered[currentIndex]?.id;
+  useEffect(() => { setImgIndex(0); }, [currentId]);
+
   // Emit filtered deck upward so the parent (map, badges, etc.) can sync.
   useEffect(() => { onDeckChange?.(filtered); }, [filtered, onDeckChange]);
 
@@ -184,13 +190,33 @@ const SwipeExplorer = ({
     x.set(0); y.set(0);
   }, [onFavorite, onDismiss, onContact, x, y]);
 
+  // Fly the card off-screen in the action's direction before advancing —
+  // button taps and threshold releases used to snap-swap with no motion.
+  const animatingRef = useRef(false);
+  const flyOut = useCallback((listing: Listing, action: 'favorite' | 'dismiss' | 'contact') => {
+    if (animatingRef.current) return;
+    animatingRef.current = true;
+    const target = action === 'favorite'
+      ? { x: 640, y: 40 }
+      : action === 'dismiss'
+        ? { x: -640, y: 40 }
+        : { x: 0, y: -760 };
+    Promise.all([
+      animate(x, target.x, { duration: 0.28, ease: [0.32, 0.72, 0, 1] }),
+      animate(y, target.y, { duration: 0.28, ease: [0.32, 0.72, 0, 1] }),
+    ]).then(() => {
+      advance(listing, action);
+      animatingRef.current = false;
+    });
+  }, [x, y, advance]);
+
   const handleDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const current = filtered[currentIndex];
     if (!current) return;
-    if (info.offset.x > SWIPE_THRESHOLD) advance(current, 'favorite');
-    else if (info.offset.x < -SWIPE_THRESHOLD) advance(current, 'dismiss');
-    else if (info.offset.y < -SWIPE_THRESHOLD) advance(current, 'contact');
-  }, [filtered, currentIndex, advance]);
+    if (info.offset.x > SWIPE_THRESHOLD) flyOut(current, 'favorite');
+    else if (info.offset.x < -SWIPE_THRESHOLD) flyOut(current, 'dismiss');
+    else if (info.offset.y < -SWIPE_THRESHOLD) flyOut(current, 'contact');
+  }, [filtered, currentIndex, flyOut]);
 
   const handleUndo = useCallback(() => {
     if (history.length === 0) return;
@@ -210,15 +236,15 @@ const SwipeExplorer = ({
       const current = filtered[currentIndex];
       if (!current) return;
       switch (e.key) {
-        case 'ArrowRight': e.preventDefault(); advance(current, 'favorite'); break;
-        case 'ArrowLeft': e.preventDefault(); advance(current, 'dismiss'); break;
-        case 'ArrowUp': e.preventDefault(); advance(current, 'contact'); break;
+        case 'ArrowRight': e.preventDefault(); flyOut(current, 'favorite'); break;
+        case 'ArrowLeft': e.preventDefault(); flyOut(current, 'dismiss'); break;
+        case 'ArrowUp': e.preventDefault(); flyOut(current, 'contact'); break;
         case 'z': case 'Z': case 'Backspace': e.preventDefault(); handleUndo(); break;
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [filtered, currentIndex, advance, handleUndo, confirmed, filtersOpen]);
+  }, [filtered, currentIndex, flyOut, handleUndo, confirmed, filtersOpen]);
 
   // Expose an imperative "unDismiss(id)" to parents so they can revert a dismiss
   // from an undo snackbar without needing to know internal state.
@@ -508,7 +534,9 @@ const SwipeExplorer = ({
 
   const current = filtered[currentIndex];
   const next = filtered[currentIndex + 1];
-  const imageUrl = current.images?.[0] || '/placeholder.svg';
+  const images = (current.images ?? []).filter(Boolean);
+  const imageUrl = images[Math.min(imgIndex, Math.max(images.length - 1, 0))] || '/placeholder.svg';
+  const pricePerM2 = getPricePerM2(current.price, current.area_m2);
 
   return (
     <div className="relative flex flex-col h-full">
@@ -557,9 +585,44 @@ const SwipeExplorer = ({
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
+                {/* Photo navigation — Tinder-style tap zones + dots */}
+                {images.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Foto anterior"
+                      className="absolute inset-y-0 left-0 w-1/3"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setImgIndex(i => (i - 1 + images.length) % images.length);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      aria-label="Foto siguiente"
+                      className="absolute inset-y-0 right-0 w-1/3"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setImgIndex(i => (i + 1) % images.length);
+                      }}
+                    />
+                    <div className="absolute top-2 inset-x-4 flex gap-1">
+                      {images.map((_, i) => (
+                        <span
+                          key={i}
+                          className={cn(
+                            'h-[3px] flex-1 rounded-full transition-colors',
+                            i === imgIndex ? 'bg-white/95' : 'bg-white/35',
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+
                 <motion.div
                   style={{ opacity: favoriteOpacity }}
-                  className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center"
+                  className="pointer-events-none absolute inset-0 bg-emerald-500/20 flex items-center justify-center"
                 >
                   <div className="border-4 border-emerald-500 text-emerald-500 rounded-2xl px-6 py-2 rotate-[-15deg] font-black text-3xl">
                     ME GUSTA
@@ -567,7 +630,7 @@ const SwipeExplorer = ({
                 </motion.div>
                 <motion.div
                   style={{ opacity: dismissOpacity }}
-                  className="absolute inset-0 bg-red-500/20 flex items-center justify-center"
+                  className="pointer-events-none absolute inset-0 bg-red-500/20 flex items-center justify-center"
                 >
                   <div className="border-4 border-red-500 text-red-500 rounded-2xl px-6 py-2 rotate-[15deg] font-black text-3xl">
                     NOPE
@@ -575,7 +638,7 @@ const SwipeExplorer = ({
                 </motion.div>
                 <motion.div
                   style={{ opacity: contactOpacity }}
-                  className="absolute inset-0 bg-blue-500/20 flex items-center justify-center"
+                  className="pointer-events-none absolute inset-0 bg-blue-500/20 flex items-center justify-center"
                 >
                   <MessageCircle className="h-20 w-20 text-blue-500" />
                 </motion.div>
@@ -601,12 +664,19 @@ const SwipeExplorer = ({
                   <span className="text-2xl font-bold text-primary">
                     {formatPrice(current.price, (current as any).currency ?? 'CLP')}
                   </span>
-                  {current.area_m2 && (
-                    <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Maximize2 className="h-4 w-4" />
-                      {current.area_m2.toLocaleString()} m²
-                    </span>
-                  )}
+                  <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {pricePerM2 !== null && (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">
+                        {formatPriceShort(pricePerM2)}/m²
+                      </span>
+                    )}
+                    {current.area_m2 && (
+                      <span className="flex items-center gap-1">
+                        <Maximize2 className="h-4 w-4" />
+                        {current.area_m2.toLocaleString()} m²
+                      </span>
+                    )}
+                  </span>
                 </div>
                 {current.description && (
                   <p className="text-sm text-muted-foreground line-clamp-2">{current.description}</p>
@@ -630,7 +700,7 @@ const SwipeExplorer = ({
           {/* Nope */}
           <button
             type="button"
-            onClick={() => advance(current, 'dismiss')}
+            onClick={() => flyOut(current, 'dismiss')}
             className="group flex flex-col items-center gap-1"
             aria-label="Descartar"
           >
@@ -645,7 +715,7 @@ const SwipeExplorer = ({
           {/* Contactar */}
           <button
             type="button"
-            onClick={() => advance(current, 'contact')}
+            onClick={() => flyOut(current, 'contact')}
             className="group flex flex-col items-center gap-1"
             aria-label="Contactar"
           >
@@ -687,7 +757,7 @@ const SwipeExplorer = ({
           {/* Me gusta */}
           <button
             type="button"
-            onClick={() => advance(current, 'favorite')}
+            onClick={() => flyOut(current, 'favorite')}
             className="group flex flex-col items-center gap-1"
             aria-label="Me gusta"
           >
