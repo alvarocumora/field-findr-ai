@@ -459,6 +459,7 @@ const ExploreListPanel = ({
           onAreaRangeChange={onAreaRangeChange}
           onClearFilters={onClearFilters}
           activeFiltersCount={activeFiltersCount}
+          resultsCount={displayCount}
           showAISearch={showAISearch}
           onToggleAISearch={onToggleAISearch}
           className="!bg-transparent !border-0 !backdrop-blur-0"
