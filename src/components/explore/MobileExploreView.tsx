@@ -168,6 +168,7 @@ const MobileExploreView = (props: MobileExploreViewProps) => {
               isInCompare={isInCompare ?? (() => false)}
               onBack={() => onModeChange('list')}
               onDeckChange={onSwipeDeckChange}
+              undoDismissRef={undoDismissRef}
             />
           </div>
         )}
