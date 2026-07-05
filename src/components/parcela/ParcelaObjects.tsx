@@ -1126,6 +1126,7 @@ export const ParcelaObject3D = ({ obj, isSelected, onClick }: ObjectProps) => {
   return (
     <group
       ref={ref}
+      name={obj.id}
       position={obj.position}
       rotation={[0, obj.rotation, 0]}
       scale={[obj.scale, obj.scale, obj.scale]}

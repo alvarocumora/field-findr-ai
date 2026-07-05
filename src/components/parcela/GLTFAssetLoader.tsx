@@ -40,6 +40,7 @@ export const GLTFAssetObject = ({ obj, isSelected, onClick }: GLTFAssetLoaderPro
   return (
     <group
       ref={ref}
+      name={obj.id}
       position={obj.position}
       rotation={[0, obj.rotation, 0]}
       scale={[obj.scale, obj.scale, obj.scale]}
