@@ -111,6 +111,9 @@ const Explorar = () => {
     return result;
   }, [listings, searchQuery, selectedTags, selectedSlopes, selectedValuation]);
 
+  // Progressive rendering: defer the heavy map listings so filter updates stay responsive
+  const deferredMapListings = useDeferredValue(filteredListings);
+
   const activeFiltersCount = selectedTypes.length + selectedRegions.length + selectedCountries.length + selectedTags.length +
     selectedSlopes.length + selectedValuation.length +
     (priceRange[0] > 0 || priceRange[1] < 5000000000 ? 1 : 0) +
