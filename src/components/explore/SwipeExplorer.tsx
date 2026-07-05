@@ -382,6 +382,7 @@ const SwipeExplorer = ({
             )}
           </div>
         </div>
+        {FiltersSheet}
       </div>
     );
   }
