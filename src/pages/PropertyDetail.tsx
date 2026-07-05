@@ -34,6 +34,7 @@ import { useSEO, buildPropertyJsonLd } from '@/hooks/useSEO';
 import { useListingApproval } from '@/hooks/usePropertyApprovals';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { VisualScenario } from '@/types/visualScenario';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 
 import {
   Heart,
@@ -78,6 +79,7 @@ const PropertyDetail = () => {
   const { toggle, isLoading: isFavoriteLoading } = useToggleFavorite();
   const { data: favoriteIds = [] } = useFavoriteIds();
   const [designerOpen, setDesignerOpen] = useState(false);
+  const { token: mapboxToken } = useMapboxToken();
 
   const isFavorite = listing ? favoriteIds.includes(listing.id) : false;
   const similarListings = allListings.filter(l => l.id !== id).slice(0, 3);
@@ -183,12 +185,14 @@ const PropertyDetail = () => {
     });
   };
 
-  const handleScenarioExportPdf = (scenario: VisualScenario) => {
+  const handleScenarioExportPdf = async (scenario: VisualScenario) => {
     try {
-      generateScenarioPdf(scenario, {
+      toast.info('Generando PDF del escenario…');
+      await generateScenarioPdf(scenario, {
         listingTitle: listing?.title,
         listingLocation: listing ? `${listing.location}, ${listing.region}` : undefined,
         pageUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+        mapboxToken: mapboxToken ?? undefined,
       });
       toast.success('PDF del escenario descargado');
     } catch (e) {
