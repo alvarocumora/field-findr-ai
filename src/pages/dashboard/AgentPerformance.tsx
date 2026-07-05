@@ -19,6 +19,7 @@ import {
   useAgentCommissions, useCommissionSummary, useAgentPerformanceGoals,
   useCreateGoal, useCreateCommission,
 } from '@/hooks/useAgentPerformance';
+import { useMarkCommissionPaid } from '@/hooks/useAgentCommissions';
 
 const formatCurrency = (v: number) => {
   if (v >= 1000000000) return `$${(v / 1000000000).toFixed(1)}B`;
