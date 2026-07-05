@@ -4,7 +4,11 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import {
   Heart, X, MessageCircle, MapPin, Maximize2, ChevronLeft, Undo2, Sparkles, Scale,
+  ArrowRight,
 } from 'lucide-react';
 import { Listing, getListingTypeLabel } from '@/hooks/useListings';
 import { useNavigate } from 'react-router-dom';
@@ -66,6 +70,7 @@ const SwipeExplorer = ({
   });
   const [history, setHistory] = useState<Listing[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [confirmed, setConfirmed] = useState<{ listing: Listing; action: 'favorite' | 'dismiss' } | null>(null);
 
   useEffect(() => {
     try { sessionStorage.setItem(DISMISSED_KEY, JSON.stringify([...dismissedIds])); } catch {}
@@ -92,6 +97,7 @@ const SwipeExplorer = ({
     if (action === 'dismiss') { onDismiss?.(listing); setDismissedIds(prev => new Set(prev).add(listing.id)); }
     if (action === 'contact') onContact?.(listing);
     if ('vibrate' in navigator) navigator.vibrate(action === 'favorite' ? 20 : 10);
+    if (action === 'favorite' || action === 'dismiss') setConfirmed({ listing, action });
     setCurrentIndex(i => i + 1);
     x.set(0); y.set(0);
   }, [onFavorite, onDismiss, onContact, x, y]);
@@ -373,6 +379,88 @@ const SwipeExplorer = ({
           ← Descartar • ↑ Contactar • Favorito → • ⚖ Comparar
         </p>
       </div>
+
+      <Dialog open={!!confirmed} onOpenChange={(o) => !o && setConfirmed(null)}>
+        <DialogContent className="max-w-md p-0 overflow-hidden">
+          {confirmed && (
+            <>
+              <div className="relative h-48">
+                <img
+                  src={confirmed.listing.images?.[0] || '/placeholder.svg'}
+                  alt={confirmed.listing.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute top-3 left-3 flex gap-2">
+                  <Badge
+                    className={cn(
+                      "backdrop-blur-sm font-bold",
+                      confirmed.action === 'favorite'
+                        ? "bg-emerald-500/90 text-white"
+                        : "bg-red-500/90 text-white"
+                    )}
+                  >
+                    {confirmed.action === 'favorite' ? '❤ ME GUSTA' : '✕ DESCARTADO'}
+                  </Badge>
+                  <InvestmentScoreBadge listing={confirmed.listing} />
+                </div>
+                <div className="absolute bottom-3 left-4 right-4 text-white">
+                  <h3 className="font-bold text-lg line-clamp-1 drop-shadow-lg">
+                    {confirmed.listing.title}
+                  </h3>
+                  <div className="flex items-center gap-1 text-xs opacity-90">
+                    <MapPin className="h-3 w-3" />
+                    <span className="line-clamp-1">{confirmed.listing.location}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="p-5 space-y-3">
+                <DialogHeader className="space-y-1 text-left">
+                  <DialogTitle className="text-base">
+                    {confirmed.action === 'favorite'
+                      ? '¡Guardado en tus favoritos!'
+                      : 'Descartado de tu feed'}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs">
+                    Revisa el detalle completo del terreno y su Investment Score.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-bold text-primary text-lg">
+                    {formatPrice(confirmed.listing.price, (confirmed.listing as any).currency ?? 'CLP')}
+                  </span>
+                  {confirmed.listing.area_m2 && (
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Maximize2 className="h-4 w-4" />
+                      {confirmed.listing.area_m2.toLocaleString()} m²
+                    </span>
+                  )}
+                </div>
+                <DialogFooter className="flex-col sm:flex-row gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    onClick={() => setConfirmed(null)}
+                  >
+                    Seguir explorando
+                  </Button>
+                  <Button
+                    className="w-full sm:w-auto gap-1"
+                    onClick={() => {
+                      const id = confirmed.listing.id;
+                      setConfirmed(null);
+                      navigate(`/propiedad/${id}`);
+                    }}
+                  >
+                    Ver ficha completa
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </DialogFooter>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
