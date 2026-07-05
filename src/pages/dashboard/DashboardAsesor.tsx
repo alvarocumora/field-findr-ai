@@ -1,7 +1,7 @@
-import { 
+import {
   Users, Building2, MessageSquare, Phone, Target, Clock,
   ChevronRight, Plus, DollarSign, Loader2, Flame, Bell, BellRing,
-  CalendarClock, AlertTriangle, TrendingUp
+  CalendarClock, AlertTriangle, TrendingUp, CreditCard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -170,6 +170,14 @@ const DashboardAsesor = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              className="rounded-xl gap-2"
+              onClick={() => navigate('/subscription')}
+            >
+              <CreditCard className="h-4 w-4" />
+              Mi Plan
+            </Button>
             <LeadFormDialog
               trigger={
                 <Button variant="outline" className="rounded-xl gap-2">
