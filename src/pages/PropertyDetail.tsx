@@ -29,7 +29,10 @@ import { mockVisualScenarios } from '@/data/mockVisualScenarios';
 import { generatePropertyPdf } from '@/lib/propertyPdfGenerator';
 import { cn } from '@/lib/utils';
 import { useSEO, buildPropertyJsonLd } from '@/hooks/useSEO';
+import { useListingApproval } from '@/hooks/usePropertyApprovals';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { VisualScenario } from '@/types/visualScenario';
+
 import {
   Heart,
   MapPin,
