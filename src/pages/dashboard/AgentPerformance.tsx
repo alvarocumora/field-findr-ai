@@ -19,6 +19,7 @@ import {
   useAgentCommissions, useCommissionSummary, useAgentPerformanceGoals,
   useCreateGoal, useCreateCommission,
 } from '@/hooks/useAgentPerformance';
+import { useMarkCommissionPaid } from '@/hooks/useAgentCommissions';
 
 const formatCurrency = (v: number) => {
   if (v >= 1000000000) return `$${(v / 1000000000).toFixed(1)}B`;
@@ -108,6 +109,7 @@ const AgentPerformance = () => {
   const { data: commissions, isLoading: commissionsLoading } = useAgentCommissions();
   const { data: summary, isLoading: summaryLoading } = useCommissionSummary();
   const { data: goals, isLoading: goalsLoading } = useAgentPerformanceGoals();
+  const markPaid = useMarkCommissionPaid();
 
   const kpis = [
     { label: 'Comisiones Total', value: summary ? formatCurrency(summary.total) : '-', icon: DollarSign, color: 'text-emerald-500' },
@@ -211,6 +213,7 @@ const AgentPerformance = () => {
                       <TableHead className="text-right">Tasa</TableHead>
                       <TableHead className="text-right">Comisión</TableHead>
                       <TableHead>Estado</TableHead>
+                      <TableHead className="text-right">Acción</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -223,6 +226,24 @@ const AgentPerformance = () => {
                         <TableCell className="text-right text-sm">{Number(c.commission_rate)}%</TableCell>
                         <TableCell className="text-right text-sm font-bold text-primary">{formatCurrency(Number(c.commission_amount))}</TableCell>
                         <TableCell>{statusBadge(c.status)}</TableCell>
+                        <TableCell className="text-right">
+                          {c.status === 'pending' ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1"
+                              disabled={markPaid.isPending}
+                              onClick={() => markPaid.mutate(c.id)}
+                            >
+                              {markPaid.isPending && markPaid.variables === c.id
+                                ? <Loader2 className="h-3 w-3 animate-spin" />
+                                : <CheckCircle className="h-3 w-3" />}
+                              Marcar pagada
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
