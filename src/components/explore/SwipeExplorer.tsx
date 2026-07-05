@@ -340,6 +340,22 @@ const SwipeExplorer = ({
         >
           <MessageCircle className="h-5 w-5" />
         </Button>
+        {onAddToCompare && (
+          <Button
+            variant="outline"
+            size="icon"
+            className={cn(
+              "h-12 w-12 rounded-full border-2 bg-background shadow-lg transition-colors",
+              isInCompare?.(current.id)
+                ? "border-primary text-primary bg-primary/10"
+                : "border-amber-500 text-amber-500"
+            )}
+            onClick={(e) => { e.stopPropagation(); onAddToCompare(current); }}
+            title={isInCompare?.(current.id) ? 'Ya en comparador' : 'Agregar al comparador'}
+          >
+            <Scale className="h-5 w-5" />
+          </Button>
+        )}
         <Button
           variant="outline"
           size="icon"
@@ -354,7 +370,7 @@ const SwipeExplorer = ({
 
       <div className="absolute bottom-2 left-0 right-0 text-center pointer-events-none">
         <p className="text-[10px] text-muted-foreground">
-          ← Descartar • ↑ Contactar • Favorito →
+          ← Descartar • ↑ Contactar • Favorito → • ⚖ Comparar
         </p>
       </div>
     </div>
