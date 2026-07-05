@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { rateLimit, clientIp, tooManyRequests } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,9 +12,18 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Public, unauthenticated API — throttle per client IP.
+  if (!rateLimit(`public-api:${clientIp(req)}`, { limit: 60, windowMs: 60_000 })) {
+    return tooManyRequests(corsHeaders);
+  }
+
+  // Use the anon key so RLS applies: the endpoint only serves public data
+  // ("Anyone can view active listings/projects/lots" policies). With the
+  // service role a future column/filter change could silently leak private
+  // rows; under RLS it cannot.
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get("SUPABASE_ANON_KEY")!
   );
 
   try {

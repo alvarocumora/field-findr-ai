@@ -47,13 +47,27 @@ con correcciones aplicadas. Este documento resume qué cambió y qué queda pend
 - `.env` **removido del control de versiones** y añadido a `.gitignore` (se mantiene `.env.example`).
 - ESLint: corregidos escapes innecesarios en `sii-lookup`. (`mcp/index.ts` es autogenerado — no se edita.)
 
+## 5. Seguridad — ronda 2 (aplicada)
+
+- **Rate limiting** (`_shared/rateLimit.ts`, sliding-window en memoria por IP, best-effort):
+  `ai-natural-search` 10/min, `scrape-real-listings` 10/5min, `public-api` 60/min,
+  `submit-interest` 5/min.
+- **`submit-interest`**: valida que el proyecto pertenezca al `projectOwnerId` y que el lote
+  pertenezca al proyecto; valida formato de UUID/email; recorta longitudes; ya no filtra
+  `error.message` interno al cliente.
+- **`public-api`**: pasa de `service_role` a la **anon key** — RLS aplica (las políticas
+  "Anyone can view active ..." cubren los datos públicos servidos), de modo que un cambio
+  futuro de columnas/filtros no puede filtrar filas privadas.
+- **`scrape-real-listings`**: whitelist de `country` y saneo de `region`/`limit` para impedir
+  la explosión de claves de caché que salteaba el caché de 6h.
+- **`ai-natural-search`**: saneo del valor derivado del LLM interpolado en `.or()` de PostgREST
+  (inyección de filtros); límite de 500 chars en el query.
+
 ## Pendientes recomendados (no aplicados)
 
-- **Rate limiting / auth** en `ai-natural-search` y `scrape-real-listings` (endpoints públicos que
-  consumen créditos de LLM/Firecrawl).
-- **Validar propiedad** de `project_id`/`user_id` en `submit-interest` y la `x-api-key` en `public-api`.
 - **`npm audit`**: 28 vulnerabilidades (1 crítica en `jsPDF`, alta en `react-router`). Requiere
   actualizar dependencias con QA (algunas son major).
-- Tipar los `any` de las edge functions (191+ en `src`, varios en `supabase/functions`).
+- Tipar los `any` restantes (190+ en `src`).
 - Cobertura de **tests** (actualmente 0 archivos de test).
 - Diferir libs pesadas aún presentes en el grafo eager de la landing (`three`, `jspdf`, `recharts`).
+- Rate limiting duro (persistente en Postgres/KV) si el best-effort en memoria resulta insuficiente.

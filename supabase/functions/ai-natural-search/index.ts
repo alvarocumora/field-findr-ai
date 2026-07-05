@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { rateLimit, clientIp, tooManyRequests } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,10 +10,16 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Each call spends LLM credits and the endpoint is public (verify_jwt=false),
+  // so damp abusive loops per client IP.
+  if (!rateLimit(`ai-search:${clientIp(req)}`, { limit: 10, windowMs: 60_000 })) {
+    return tooManyRequests(corsHeaders);
+  }
+
   try {
     const { query } = await req.json();
-    if (!query) {
-      return new Response(JSON.stringify({ error: "Query is required" }), {
+    if (!query || typeof query !== "string" || query.length > 500) {
+      return new Response(JSON.stringify({ error: "Query is required (max 500 chars)" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -81,7 +88,11 @@ Responde SOLO con el JSON de la herramienta, sin texto adicional.`
 
     const aiData = await aiResponse.json();
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    let filters: any = {};
+    let filters: Record<string, unknown> & {
+      search_terms?: string; region?: string; city?: string; property_type?: string;
+      max_price?: number; min_price?: number; min_area_m2?: number; max_area_m2?: number;
+      explanation?: string;
+    } = {};
 
     if (toolCall?.function?.arguments) {
       filters = JSON.parse(toolCall.function.arguments);
@@ -104,7 +115,12 @@ Responde SOLO con el JSON de la herramienta, sin texto adicional.`
     if (filters.min_area_m2) dbQuery = dbQuery.gte("area_m2", filters.min_area_m2);
     if (filters.max_area_m2) dbQuery = dbQuery.lte("area_m2", filters.max_area_m2);
     if (filters.region) dbQuery = dbQuery.ilike("region", `%${filters.region}%`);
-    if (filters.city) dbQuery = dbQuery.or(`city.ilike.%${filters.city}%,location.ilike.%${filters.city}%`);
+    if (filters.city) {
+      // Strip PostgREST .or() syntax chars — the value is LLM-derived from user
+      // text, so an adversarial query could otherwise inject extra conditions.
+      const city = String(filters.city).replace(/[(),.]/g, " ").trim().slice(0, 60);
+      if (city) dbQuery = dbQuery.or(`city.ilike.%${city}%,location.ilike.%${city}%`);
+    }
     if (filters.property_type) dbQuery = dbQuery.ilike("type", `%${filters.property_type}%`);
 
     const { data: listings, error: dbError } = await dbQuery;
