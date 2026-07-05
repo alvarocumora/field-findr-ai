@@ -308,6 +308,7 @@ const Explorar = () => {
           compareCount={compareList.length}
           isInCompare={isInCompare}
           onSwipeDeckChange={setSwipeDeck}
+          undoDismissRef={undoDismissRef}
         />
 
         <PropertyPreviewSheet
