@@ -82,12 +82,15 @@ const PRICE_MAX = 5000000000;
 const AREA_MAX = 1000000;
 
 const getAvailableRegions = (selectedCountries: string[]): string[] => {
-  if (selectedCountries.length === 0) {
-    return LATAM_COUNTRIES.flatMap((c) => c.regions.slice(0, 3));
-  }
-  return LATAM_COUNTRIES
-    .filter((c) => selectedCountries.includes(c.name))
-    .flatMap((c) => c.regions);
+  // Regions only make sense within a country — mixing "first 3 regions of every
+  // LATAM country" produced an arbitrary list with duplicates (e.g. Amazonas
+  // exists in Perú and Colombia). With no country selected we show a hint instead.
+  if (selectedCountries.length === 0) return [];
+  return [...new Set(
+    LATAM_COUNTRIES
+      .filter((c) => selectedCountries.includes(c.name))
+      .flatMap((c) => c.regions),
+  )];
 };
 
 const typeLabel = (v: string) =>

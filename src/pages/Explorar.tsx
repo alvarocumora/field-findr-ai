@@ -16,7 +16,6 @@ import { useFlattenedListings } from '@/hooks/useInfiniteListings';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTabletOrBelow } from '@/hooks/use-tablet';
 import { CreditCard } from 'lucide-react';
-import RealListingsSection from '@/components/RealListingsSection';
 import { useAddFavorite, useRemoveFavorite } from '@/hooks/useFavorites';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
 import { useCompare } from '@/hooks/useCompare';
@@ -415,13 +414,6 @@ const Explorar = () => {
           )}
         </div>
       </div>
-
-      {/* ===== REAL LISTINGS — external LATAM portals ===== */}
-      <RealListingsSection
-        title="Terrenos de portales externos"
-        subtitle="Agregamos avisos públicos de Portalinmobiliario, Mercado Libre y Yapo en tiempo real"
-        limit={24}
-      />
 
       {/* Property Preview Sheet */}
       <PropertyPreviewSheet
