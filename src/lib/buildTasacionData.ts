@@ -100,7 +100,7 @@ export function buildTasacionData(listing: ListingLike, ufRate: number = UF_REF)
   return {
     fecha: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }),
     solicitante: 'Propietario del predio',
-    tasador: 'Field-Findr AI · Departamento de Tasaciones',
+    tasador: 'OFERTA TERRENOS · Valuation',
     proposito: 'Determinar valor comercial referencial para venta directa, garantía bancaria o evaluación de inversión.',
     rol: listing.rol || 'Por verificar en SII',
     inscripcionCBR: `CBR ${listing.city || listing.region || 'comuna'} (por verificar)`,

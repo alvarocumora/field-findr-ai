@@ -4,6 +4,7 @@ import GeoEnrichmentPanel from '@/components/map/GeoEnrichmentPanel';
 import InvestmentScoreWidget from '@/components/property/InvestmentScoreWidget';
 import ConceptRenderGallery from '@/components/property/ConceptRenderGallery';
 import TasacionTeno from '@/components/property/TasacionTeno';
+import PublishedTasacionBanner from '@/components/property/PublishedTasacionBanner';
 import ListingDesigner3DDialog from '@/components/property/ListingDesigner3DDialog';
 import { lazy, Suspense } from 'react';
 const TenoCinematicHero = lazy(() => import('@/components/property/teno-hero/TenoCinematicHero'));
@@ -412,6 +413,7 @@ const PropertyDetail = () => {
             )}
 
             {/* Tasación Comercial — generada para cualquier propiedad */}
+            <PublishedTasacionBanner listingId={listing?.id} />
             <TasacionTeno listing={isTeno ? undefined : listing} />
 
             {/* Visual Scenarios — conditional preview */}

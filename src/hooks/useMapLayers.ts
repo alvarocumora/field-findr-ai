@@ -27,18 +27,14 @@ const generateHeatmapData = (listings: Listing[]): GeoJSON.FeatureCollection => 
     if (listing.lat && listing.lng && listing.area_m2 && listing.area_m2 > 0) {
       const pricePerM2 = listing.price / listing.area_m2;
       const weight = Math.max(0.1, (pricePerM2 - minPrice) / range);
+      // One real, deterministic point per listing — synthetic jittered points
+      // used to be injected here, which diluted the actual price/m2 signal
+      // and made the heatmap change on every render.
       points.push({
         type: 'Feature',
         properties: { weight, pricePerM2: Math.round(pricePerM2), title: listing.title },
         geometry: { type: 'Point', coordinates: [listing.lng, listing.lat] },
       });
-      for (let i = 0; i < 3; i++) {
-        points.push({
-          type: 'Feature',
-          properties: { weight: weight * (0.5 + Math.random() * 0.3) },
-          geometry: { type: 'Point', coordinates: [listing.lng + (Math.random() - 0.5) * 0.02, listing.lat + (Math.random() - 0.5) * 0.02] },
-        });
-      }
     }
   });
 

@@ -54,6 +54,8 @@ const Explorar = () => {
 
   // Map bounds for spatial filtering
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
+  // Draw-to-search: [lng,lat][] ring drawn on the map, or null.
+  const [drawnPolygon, setDrawnPolygon] = useState<number[][] | null>(null);
 
   // Listing interaction
   const [hoveredListing, setHoveredListing] = useState<Listing | null>(null);
@@ -124,8 +126,21 @@ const Explorar = () => {
         selectedValuation.some(v => (valSynonyms[v] || [v]).some(tag => l.tags.includes(tag)))
       );
     }
+    // Draw-to-search: keep only listings inside the drawn polygon (ray casting)
+    if (drawnPolygon && drawnPolygon.length >= 3) {
+      const inside = (lng: number, lat: number) => {
+        let ok = false;
+        for (let i = 0, j = drawnPolygon.length - 1; i < drawnPolygon.length; j = i++) {
+          const [xi, yi] = drawnPolygon[i];
+          const [xj, yj] = drawnPolygon[j];
+          if (yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) ok = !ok;
+        }
+        return ok;
+      };
+      result = result.filter(l => l.lat != null && l.lng != null && inside(Number(l.lng), Number(l.lat)));
+    }
     return result;
-  }, [listings, searchQuery, selectedTags, selectedSlopes, selectedValuation]);
+  }, [listings, searchQuery, selectedTags, selectedSlopes, selectedValuation, drawnPolygon]);
 
   // Reset swipe-derived deck whenever upstream filters or listings change,
   // so it doesn't shadow the map with a stale subset.
@@ -159,7 +174,7 @@ const Explorar = () => {
   const clearFilters = useCallback(() => {
     setSelectedTypes([]); setSelectedRegions([]); setSelectedCountries([]);
     setSelectedTags([]); setPriceRange([0, 5000000000]); setAreaRange([0, 1000000]);
-    setSearchQuery(''); setMapBounds(null);
+    setSearchQuery(''); setMapBounds(null); setDrawnPolygon(null);
     setSelectedSlopes([]); setSelectedValuation([]);
   }, []);
 
@@ -417,7 +432,20 @@ const Explorar = () => {
             onListingHover={setHoveredListing}
             onListingClick={handleListingClick}
             onBoundsSearch={handleBoundsSearch}
+            onPolygonSearch={setDrawnPolygon}
           />
+          {drawnPolygon && !swipeDeckIds && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-map-overlay flex items-center gap-2 rounded-full bg-emerald-600/95 text-white shadow-lg backdrop-blur px-3 py-1.5 text-xs font-medium animate-in fade-in slide-in-from-top-2">
+              <span>Área dibujada · {filteredListings.length} terreno{filteredListings.length === 1 ? '' : 's'} dentro</span>
+              <button
+                type="button"
+                onClick={() => setDrawnPolygon(null)}
+                className="ml-1 rounded-full hover:bg-white/20 px-2 py-0.5 text-[10px] uppercase tracking-wide"
+              >
+                Quitar filtro
+              </button>
+            </div>
+          )}
           {swipeDeckIds && (
             <div className="absolute top-3 left-1/2 -translate-x-1/2 z-map-overlay flex items-center gap-2 rounded-full bg-primary/95 text-primary-foreground shadow-lg backdrop-blur px-3 py-1.5 text-xs font-medium animate-in fade-in slide-in-from-top-2">
               <CreditCard className="h-3.5 w-3.5" />
