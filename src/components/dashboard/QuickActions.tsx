@@ -22,55 +22,30 @@ interface QuickAction {
 
 interface QuickActionsProps {
   className?: string;
+  isAdmin?: boolean;
 }
 
-const actions: QuickAction[] = [
-  {
-    id: 'new-project',
-    label: 'Nuevo Proyecto',
-    icon: Plus,
-    route: '/asesor/projects',
-    variant: 'default',
-  },
-  {
-    id: 'leads',
-    label: 'CRM Leads',
-    icon: Users,
-    route: '/asesor/leads',
-    variant: 'outline',
-  },
-  {
-    id: 'projects',
-    label: 'Mis Proyectos',
-    icon: FolderKanban,
-    route: '/asesor/projects',
-    variant: 'outline',
-  },
-  {
-    id: 'view-map',
-    label: 'Explorar Mapa',
-    icon: Map,
-    route: '/explorar',
-    variant: 'outline',
-  },
-  {
-    id: 'calculator',
-    label: 'Calculadoras',
-    icon: Calculator,
-    route: '/asesor/analytics',
-    variant: 'outline',
-  },
-  {
-    id: 'reports',
-    label: 'Reportes',
-    icon: BarChart3,
-    route: '/asesor/reports',
-    variant: 'outline',
-  },
+const agentActions: QuickAction[] = [
+  { id: 'new-project', label: 'Nuevo Proyecto', icon: Plus, route: '/asesor/projects', variant: 'default' },
+  { id: 'leads', label: 'CRM Leads', icon: Users, route: '/asesor/leads', variant: 'outline' },
+  { id: 'projects', label: 'Mis Proyectos', icon: FolderKanban, route: '/asesor/projects', variant: 'outline' },
+  { id: 'view-map', label: 'Explorar Mapa', icon: Map, route: '/explorar', variant: 'outline' },
+  { id: 'calculator', label: 'Analytics', icon: Calculator, route: '/asesor/analytics', variant: 'outline' },
+  { id: 'reports', label: 'Reportes', icon: BarChart3, route: '/asesor/reports', variant: 'outline' },
 ];
 
-export const QuickActions = ({ className }: QuickActionsProps) => {
+const adminActions: QuickAction[] = [
+  { id: 'approvals', label: 'Aprobaciones', icon: Plus, route: '/admin/approvals', variant: 'default' },
+  { id: 'users', label: 'Usuarios', icon: Users, route: '/admin/users', variant: 'outline' },
+  { id: 'agents', label: 'Asesores', icon: FolderKanban, route: '/admin/agents', variant: 'outline' },
+  { id: 'audit', label: 'Auditoría', icon: Map, route: '/admin/audit', variant: 'outline' },
+  { id: 'financial', label: 'Financiero', icon: Calculator, route: '/admin/financial', variant: 'outline' },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3, route: '/admin/analytics', variant: 'outline' },
+];
+
+export const QuickActions = ({ className, isAdmin = false }: QuickActionsProps) => {
   const navigate = useNavigate();
+  const actions = isAdmin ? adminActions : agentActions;
 
   return (
     <Card className={cn('overflow-hidden', className)}>
