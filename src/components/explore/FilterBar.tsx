@@ -152,6 +152,7 @@ const FilterBar = ({
   onAreaRangeChange,
   onClearFilters,
   activeFiltersCount,
+  resultsCount,
   showAISearch = false,
   onToggleAISearch,
   className,
