@@ -140,3 +140,42 @@ export const useLots = (projectId?: string) => {
     stats,
   };
 };
+
+export interface AdjustLotPricesData {
+  projectId: string;
+  mode: 'percent' | 'per_sqm' | 'delta';
+  value: number;
+  /** Restrict to a status ('available' by default); null = all lots. */
+  onlyStatus?: string | null;
+}
+
+/**
+ * Bulk price adjustment for a project's lots via the adjust_lot_prices RPC
+ * (percent increase/decrease, price per m², or fixed delta). Returns the
+ * number of lots updated.
+ */
+export const useAdjustLotPrices = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ projectId, mode, value, onlyStatus = 'available' }: AdjustLotPricesData) => {
+      // RPC added by migration 20260705210000 — not yet in generated types.
+      const { data, error } = await (supabase.rpc as CallableFunction)('adjust_lot_prices', {
+        p_project_id: projectId,
+        p_mode: mode,
+        p_value: value,
+        p_only_status: onlyStatus,
+      });
+      if (error) throw error;
+      return data as number;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['lots'] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success(`Precios actualizados en ${count} lote${count === 1 ? '' : 's'}`);
+    },
+    onError: (error: Error) => {
+      toast.error('Error al ajustar precios', { description: error.message });
+    },
+  });
+};

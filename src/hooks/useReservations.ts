@@ -202,6 +202,98 @@ export const useCancelReservation = () => {
   });
 };
 
+/**
+ * Flip stale pending_payment reservations past their expires_at to 'expired'
+ * (a DB trigger releases the lots). Runs server-side via RPC; also scheduled
+ * with pg_cron — calling it on manager load is the client-side fallback.
+ */
+export const useExpireStaleReservations = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      // RPC added by migration 20260705210000 — not yet in generated types.
+      const { data, error } = await (supabase.rpc as CallableFunction)('expire_stale_reservations');
+      if (error) throw error;
+      return data as number;
+    },
+    onSuccess: (expiredCount) => {
+      if (expiredCount > 0) {
+        queryClient.invalidateQueries({ queryKey: ['reservations'] });
+        queryClient.invalidateQueries({ queryKey: ['lots'] });
+        toast.info(`${expiredCount} reserva${expiredCount === 1 ? '' : 's'} vencida${expiredCount === 1 ? '' : 's'} liberada${expiredCount === 1 ? '' : 's'}`);
+      }
+    },
+  });
+};
+
+/** Extend a pending reservation's expiry by N hours (project owner only). */
+export const useExtendReservation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ reservationId, hours = 48 }: { reservationId: string; hours?: number }) => {
+      const { data, error } = await (supabase.rpc as CallableFunction)('extend_reservation', {
+        p_reservation_id: reservationId,
+        p_hours: hours,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: (newExpiry) => {
+      queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      toast.success('Reserva extendida', {
+        description: `Nuevo vencimiento: ${new Date(newExpiry).toLocaleString('es-CL')}`,
+      });
+    },
+    onError: (error: Error) => {
+      toast.error('Error al extender', { description: error.message });
+    },
+  });
+};
+
+export interface RegisterSaleData {
+  reservationId: string;
+  saleAmount: number;
+  commissionRate?: number | null;
+  notes?: string | null;
+}
+
+/**
+ * Atomic reservation → sale conversion: marks the reservation converted (the
+ * DB trigger sets the lot sold + sale_date), records the final negotiated
+ * price on the lot, and creates the agent commission when a rate is given.
+ */
+export const useRegisterSale = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ reservationId, saleAmount, commissionRate, notes }: RegisterSaleData) => {
+      const { data, error } = await (supabase.rpc as CallableFunction)('register_sale', {
+        p_reservation_id: reservationId,
+        p_sale_amount: saleAmount,
+        p_commission_rate: commissionRate ?? null,
+        p_notes: notes ?? null,
+      });
+      if (error) throw error;
+      return data as string | null; // commission id (null when no commission)
+    },
+    onSuccess: (_commissionId, { commissionRate }) => {
+      queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      queryClient.invalidateQueries({ queryKey: ['lots'] });
+      queryClient.invalidateQueries({ queryKey: ['agent-commissions'] });
+      toast.success('Venta registrada', {
+        description: commissionRate
+          ? 'Lote vendido y comisión generada'
+          : 'Lote marcado como vendido',
+      });
+    },
+    onError: (error: Error) => {
+      toast.error('Error al registrar la venta', { description: error.message });
+    },
+  });
+};
+
 export const useReservationStats = (projectId?: string) => {
   return useQuery({
     queryKey: ['reservation-stats', projectId],

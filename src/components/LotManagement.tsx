@@ -6,12 +6,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MapPin, Plus, Search, Filter, Grid3X3, List, Loader2 } from 'lucide-react';
+import { MapPin, Plus, Search, Filter, Grid3X3, List, Loader2, TrendingUp } from 'lucide-react';
 import Map from './Map';
 import { useLots, Lot, LotInsert } from '@/hooks/useLots';
 import { useProjects } from '@/hooks/useProjects';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { LotForm } from './lots/LotForm';
+import BulkPriceAdjustDialog from './lots/BulkPriceAdjustDialog';
 import { LotCard } from './lots/LotCard';
 import { LotTable } from './lots/LotTable';
 import { LotStats } from './lots/LotStats';
@@ -27,6 +28,7 @@ const LotManagement = () => {
   const [projectFilter, setProjectFilter] = useState<string>('all');
   
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showBulkPrice, setShowBulkPrice] = useState(false);
   const [editingLot, setEditingLot] = useState<Lot | null>(null);
   const [deletingLot, setDeletingLot] = useState<Lot | null>(null);
 
@@ -85,6 +87,16 @@ const LotManagement = () => {
           <h1 className="text-3xl font-bold tracking-tight">Gestión de Lotes</h1>
           <p className="text-muted-foreground">Administra el inventario de parcelas y lotes</p>
         </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            className="gap-2"
+            disabled={projects.length === 0 || lots.length === 0}
+            onClick={() => setShowBulkPrice(true)}
+          >
+            <TrendingUp className="h-4 w-4" />
+            Ajustar precios
+          </Button>
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
             <Button className="gap-2" disabled={projects.length === 0}>
@@ -104,7 +116,16 @@ const LotManagement = () => {
             />
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      <BulkPriceAdjustDialog
+        open={showBulkPrice}
+        onOpenChange={setShowBulkPrice}
+        projects={projects}
+        lots={lots}
+        defaultProjectId={projectFilter !== 'all' ? projectFilter : undefined}
+      />
 
       {/* Stats */}
       <LotStats stats={stats} />
