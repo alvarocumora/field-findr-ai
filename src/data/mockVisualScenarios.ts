@@ -1,4 +1,6 @@
 import type { VisualScenario } from '@/types/visualScenario';
+import industrialPackingImg from '@/assets/scenarios/industrial-packing.jpg';
+import ruralLotsImg from '@/assets/scenarios/rural-lots.jpg';
 
 export const MOCK_PROPERTY_ID = 'mock-property-industrial-maule';
 
