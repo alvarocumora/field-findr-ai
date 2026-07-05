@@ -28,6 +28,7 @@ import { AIInvestmentCopilot } from '@/components/ai/AIInvestmentCopilot';
 import { VisualScenarioViewer } from '@/components/visual-scenarios';
 import { mockVisualScenarios } from '@/data/mockVisualScenarios';
 import { generatePropertyPdf } from '@/lib/propertyPdfGenerator';
+import { generateScenarioPdf } from '@/lib/scenarioPdfGenerator';
 import { cn } from '@/lib/utils';
 import { useSEO, buildPropertyJsonLd } from '@/hooks/useSEO';
 import { useListingApproval } from '@/hooks/usePropertyApprovals';
@@ -177,15 +178,24 @@ const PropertyDetail = () => {
   };
 
   const handleScenarioAnalyze = (scenario: VisualScenario) => {
-    toast.info('Análisis IA de escenario pendiente de integración', {
-      description: `Escenario seleccionado: ${scenario.title}`,
+    toast.info('Considera este escenario en tu análisis', {
+      description: `Usa el botón "Analizar con IA" del panel derecho para evaluar "${scenario.title}" sobre este terreno.`,
     });
   };
 
   const handleScenarioExportPdf = (scenario: VisualScenario) => {
-    toast.info('PDF de escenario pendiente de integración', {
-      description: `Ficha solicitada: ${scenario.title}`,
-    });
+    try {
+      generateScenarioPdf(scenario, {
+        listingTitle: listing?.title,
+        listingLocation: listing ? `${listing.location}, ${listing.region}` : undefined,
+        pageUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+      });
+      toast.success('PDF del escenario descargado');
+    } catch (e) {
+      toast.error('No se pudo generar el PDF', {
+        description: e instanceof Error ? e.message : 'Error desconocido',
+      });
+    }
   };
 
   return (
