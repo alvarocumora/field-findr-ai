@@ -15,9 +15,9 @@ export const mockVisualScenarios: VisualScenario[] = [
     description:
       'Propuesta visual preliminar para un packing frutícola con galpón principal, cámaras de frío, patio de maniobras, oficinas y áreas de circulación interior.',
     assets: {
-      baseImageUrl: '/placeholder.svg',
-      overlayImageUrl: '/placeholder.svg',
-      thumbnailUrl: '/placeholder.svg',
+      baseImageUrl: industrialPackingImg,
+      overlayImageUrl: industrialPackingImg,
+      thumbnailUrl: industrialPackingImg,
       modelRegistryKeys: ['warehouse', 'street_lamp', 'tree_pine'],
     },
     geometry: {
@@ -87,9 +87,9 @@ export const mockVisualScenarios: VisualScenario[] = [
     description:
       'Escenario preliminar para parcelación rural con caminos interiores, áreas comunes y lotes de agrado. Requiere revisión normativa antes de cualquier uso comercial.',
     assets: {
-      baseImageUrl: '/placeholder.svg',
-      overlayImageUrl: '/placeholder.svg',
-      thumbnailUrl: '/placeholder.svg',
+      baseImageUrl: ruralLotsImg,
+      overlayImageUrl: ruralLotsImg,
+      thumbnailUrl: ruralLotsImg,
       modelRegistryKeys: ['house_a', 'house_b', 'tree_oak'],
     },
     geometry: {
