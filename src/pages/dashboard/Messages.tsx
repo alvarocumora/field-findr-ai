@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageSquare, Send, ArrowLeft, Inbox } from 'lucide-react';
-import { useMessages, type Thread } from '@/hooks/useMessages';
+import { useMessages, useThreadMessages, type Thread } from '@/hooks/useMessages';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -13,7 +13,7 @@ import { es } from 'date-fns/locale';
 
 const Messages = () => {
   const { user } = useAuth();
-  const { threads, isLoading, useThreadMessages, sendMessage, markThreadRead } = useMessages();
+  const { threads, isLoading, sendMessage, markThreadRead } = useMessages();
   const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);

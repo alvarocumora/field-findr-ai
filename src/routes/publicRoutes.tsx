@@ -1,38 +1,41 @@
+import { lazy } from "react";
 import { Route } from "react-router-dom";
 
-import Index from "@/pages/Index";
-import Auth from "@/pages/Auth";
-import Tools from "@/pages/Tools";
-import Explorar from "@/pages/Explorar";
-import PropertyDetail from "@/pages/PropertyDetail";
-import ProjectDetail from "@/pages/ProjectDetail";
-import Install from "@/pages/Install";
-import Pricing from "@/pages/Pricing";
-import Referrals from "@/pages/Referrals";
-import IntelligentSearch from "@/components/IntelligentSearch";
-import RegionLanding from "@/pages/RegionLanding";
-import CountryLanding from "@/pages/CountryLanding";
-import CityLanding from "@/pages/CityLanding";
-import Contact from "@/pages/Contact";
-import Comparar from "@/pages/Comparar";
-import Alertas from "@/pages/Alertas";
-import Blog from "@/pages/Blog";
-import Oportunidades from "@/pages/Oportunidades";
-import BuyerQuiz from "@/pages/BuyerQuiz";
-import ProjectExperience from "@/pages/ProjectExperience";
-import ResetPassword from "@/pages/ResetPassword";
-import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
-import SubscriptionFailure from "@/pages/SubscriptionFailure";
-import ReservationSuccess from "@/pages/ReservationSuccess";
-import ReservationError from "@/pages/ReservationError";
-import ReservationPending from "@/pages/ReservationPending";
-import VisualScenariosDemo from "@/pages/demo/VisualScenariosDemo";
-import TasacionLive from "@/pages/TasacionLive";
-import TasacionValidator from "@/pages/TasacionValidator";
-import ForestalLanding from "@/pages/forestal/ForestalLanding";
-import InvestorsLogin from "@/pages/forestal/InvestorsLogin";
-import HuellelhueLanding from "@/pages/huellelhue/HuellelhueLanding";
-import PlayaAlvaroLanding from "@/pages/playaAlvaro/PlayaAlvaroLanding";
+// Pages are lazy-loaded so each route ships its own chunk instead of bloating
+// the shared entry bundle. A top-level <Suspense> in AppRouter covers them.
+const Index = lazy(() => import("@/pages/Index"));
+const Auth = lazy(() => import("@/pages/Auth"));
+const Tools = lazy(() => import("@/pages/Tools"));
+const Explorar = lazy(() => import("@/pages/Explorar"));
+const PropertyDetail = lazy(() => import("@/pages/PropertyDetail"));
+const ProjectDetail = lazy(() => import("@/pages/ProjectDetail"));
+const Install = lazy(() => import("@/pages/Install"));
+const Pricing = lazy(() => import("@/pages/Pricing"));
+const Referrals = lazy(() => import("@/pages/Referrals"));
+const IntelligentSearch = lazy(() => import("@/components/IntelligentSearch"));
+const RegionLanding = lazy(() => import("@/pages/RegionLanding"));
+const CountryLanding = lazy(() => import("@/pages/CountryLanding"));
+const CityLanding = lazy(() => import("@/pages/CityLanding"));
+const Contact = lazy(() => import("@/pages/Contact"));
+const Comparar = lazy(() => import("@/pages/Comparar"));
+const Alertas = lazy(() => import("@/pages/Alertas"));
+const Blog = lazy(() => import("@/pages/Blog"));
+const Oportunidades = lazy(() => import("@/pages/Oportunidades"));
+const BuyerQuiz = lazy(() => import("@/pages/BuyerQuiz"));
+const ProjectExperience = lazy(() => import("@/pages/ProjectExperience"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const SubscriptionSuccess = lazy(() => import("@/pages/SubscriptionSuccess"));
+const SubscriptionFailure = lazy(() => import("@/pages/SubscriptionFailure"));
+const ReservationSuccess = lazy(() => import("@/pages/ReservationSuccess"));
+const ReservationError = lazy(() => import("@/pages/ReservationError"));
+const ReservationPending = lazy(() => import("@/pages/ReservationPending"));
+const VisualScenariosDemo = lazy(() => import("@/pages/demo/VisualScenariosDemo"));
+const TasacionLive = lazy(() => import("@/pages/TasacionLive"));
+const TasacionValidator = lazy(() => import("@/pages/TasacionValidator"));
+const ForestalLanding = lazy(() => import("@/pages/forestal/ForestalLanding"));
+const InvestorsLogin = lazy(() => import("@/pages/forestal/InvestorsLogin"));
+const HuellelhueLanding = lazy(() => import("@/pages/huellelhue/HuellelhueLanding"));
+const PlayaAlvaroLanding = lazy(() => import("@/pages/playaAlvaro/PlayaAlvaroLanding"));
 
 export const publicRoutes = [
   <Route key="home" path="/" element={<Index />} />,

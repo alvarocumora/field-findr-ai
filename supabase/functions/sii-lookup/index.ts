@@ -74,12 +74,12 @@ async function scrapeSII(rol: string): Promise<SIIData> {
       return match ? match[1].trim() : null;
     };
 
-    const comuna = extractField(/Comuna\s*[:\-]?\s*<[^>]*>([^<]+)/i);
-    const direccion = extractField(/Direcci[oó]n\s*[:\-]?\s*<[^>]*>([^<]+)/i);
-    const avaluoStr = extractField(/Aval[uú]o\s*(?:Fiscal|Total)\s*[:\-]?\s*[\$]?\s*([\d.,]+)/i);
-    const superfTerr = extractField(/Superficie\s*Terreno\s*[:\-]?\s*([\d.,]+)/i);
-    const superfConst = extractField(/Superficie\s*Construida?\s*[:\-]?\s*([\d.,]+)/i);
-    const destino = extractField(/Destina?ci[oó]n\s*[:\-]?\s*<[^>]*>([^<]+)/i);
+    const comuna = extractField(/Comuna\s*[:-]?\s*<[^>]*>([^<]+)/i);
+    const direccion = extractField(/Direcci[oó]n\s*[:-]?\s*<[^>]*>([^<]+)/i);
+    const avaluoStr = extractField(/Aval[uú]o\s*(?:Fiscal|Total)\s*[:-]?\s*[$]?\s*([\d.,]+)/i);
+    const superfTerr = extractField(/Superficie\s*Terreno\s*[:-]?\s*([\d.,]+)/i);
+    const superfConst = extractField(/Superficie\s*Construida?\s*[:-]?\s*([\d.,]+)/i);
+    const destino = extractField(/Destina?ci[oó]n\s*[:-]?\s*<[^>]*>([^<]+)/i);
 
     // If we got meaningful data, return it
     if (comuna || direccion || avaluoStr) {

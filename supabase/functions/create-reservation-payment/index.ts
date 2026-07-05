@@ -50,7 +50,10 @@ serve(async (req) => {
     }
 
     const body: ReservationRequest = await req.json();
-    const { lot_id, buyer_name, buyer_email, buyer_phone, buyer_rut, reservation_amount = 500000, notes } = body;
+    // NOTE: reservation_amount is intentionally NOT read from the client — the
+    // amount is derived server-side from the project's reservation_deposit to
+    // prevent price manipulation (reserving a lot for an arbitrary amount).
+    const { lot_id, buyer_name, buyer_email, buyer_phone, buyer_rut, notes } = body;
 
     if (!lot_id || !buyer_name || !buyer_email) {
       return new Response(
@@ -75,7 +78,8 @@ serve(async (req) => {
         projects (
           id,
           name,
-          user_id
+          user_id,
+          reservation_deposit
         )
       `)
       .eq("id", lot_id)
@@ -85,6 +89,15 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Lot not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Server-authoritative reservation amount (never trust the client body).
+    const reservation_amount = Number((lot as any).projects?.reservation_deposit) || 500000;
+    if (!(reservation_amount > 0)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid reservation amount configuration" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

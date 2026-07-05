@@ -1,12 +1,14 @@
+import { lazy } from "react";
 import { Route } from "react-router-dom";
 
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import BuyerLayout from "@/components/layouts/BuyerLayout";
-import BuyerHome from "@/pages/BuyerHome";
-import Favorites from "@/components/Favorites";
-import MiTerreno from "@/pages/MiTerreno";
-import Profile from "@/pages/Profile";
-import Subscription from "@/pages/Subscription";
+
+const BuyerHome = lazy(() => import("@/pages/BuyerHome"));
+const Favorites = lazy(() => import("@/components/Favorites"));
+const MiTerreno = lazy(() => import("@/pages/MiTerreno"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const Subscription = lazy(() => import("@/pages/Subscription"));
 
 export const buyerRoutes = [
   <Route

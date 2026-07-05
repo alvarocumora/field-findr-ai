@@ -108,4 +108,33 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Split heavy, page-specific vendor libraries into their own cacheable
+        // chunks so they don't bloat the shared entry chunk (was ~7.3 MB).
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (id.includes('mapbox-gl') || id.includes('@mapbox')) return 'vendor-mapbox';
+          if (
+            id.includes('/three/') ||
+            id.includes('@react-three') ||
+            id.includes('troika') ||
+            id.includes('three-mesh-bvh') ||
+            id.includes('three-stdlib')
+          ) return 'vendor-three';
+          if (id.includes('@photo-sphere-viewer') || id.includes('photo-sphere')) return 'vendor-psv';
+          if (id.includes('recharts') || id.includes('/d3-') || id.includes('victory-vendor')) return 'vendor-charts';
+          if (
+            id.includes('jspdf') ||
+            id.includes('jszip') ||
+            id.includes('html2canvas') ||
+            id.includes('canvg') ||
+            id.includes('qrcode')
+          ) return 'vendor-docs';
+          if (id.includes('@turf') || id.includes('togeojson')) return 'vendor-geo';
+        },
+      },
+    },
+  },
 }));

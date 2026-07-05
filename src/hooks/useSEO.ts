@@ -54,6 +54,10 @@ const removeJsonLd = () => {
 };
 
 export const useSEO = ({ title, description, image, url, type = 'website', canonicalUrl, jsonLd }: SEOProps) => {
+  // Serialize jsonLd so an inline object/array passed by the caller doesn't
+  // create a new reference every render (which would re-run the effect and
+  // rewrite the DOM on each render).
+  const jsonLdKey = jsonLd ? JSON.stringify(jsonLd) : '';
   useEffect(() => {
     const prevTitle = document.title;
     const suffix = ' | Ofertaterrenos.com';
@@ -83,15 +87,16 @@ export const useSEO = ({ title, description, image, url, type = 'website', canon
       setCanonical(canonicalUrl);
     }
 
-    if (jsonLd) {
-      setJsonLd(jsonLd);
+    if (jsonLdKey) {
+      setJsonLd(JSON.parse(jsonLdKey));
     }
 
     return () => {
       document.title = prevTitle;
       removeJsonLd();
     };
-  }, [title, description, image, url, type, canonicalUrl, jsonLd]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, description, image, url, type, canonicalUrl, jsonLdKey]);
 };
 
 // Helper to build RealEstateListing JSON-LD

@@ -79,24 +79,6 @@ export const useMessages = () => {
 
   const totalUnread = threads.reduce((sum, t) => sum + t.unread_count, 0);
 
-  // Get messages for a specific thread
-  const useThreadMessages = (threadId: string | null) => {
-    return useQuery({
-      queryKey: ['thread-messages', threadId],
-      queryFn: async () => {
-        if (!threadId) return [];
-        const { data, error } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('thread_id', threadId)
-          .order('created_at', { ascending: true });
-        if (error) throw error;
-        return (data || []) as Message[];
-      },
-      enabled: !!threadId,
-    });
-  };
-
   // Send a message
   const sendMessage = useMutation({
     mutationFn: async ({ threadId, recipientId, content, listingId }: {
@@ -141,7 +123,7 @@ export const useMessages = () => {
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel('messages-realtime')
+      .channel(`messages-realtime-${user.id}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
@@ -164,8 +146,26 @@ export const useMessages = () => {
     threads,
     totalUnread,
     isLoading: messagesQuery.isLoading,
-    useThreadMessages,
     sendMessage,
     markThreadRead,
   };
+};
+
+// Get messages for a specific thread. Standalone hook so its identity is stable
+// and it obeys the Rules of Hooks (previously nested inside useMessages).
+export const useThreadMessages = (threadId: string | null) => {
+  return useQuery({
+    queryKey: ['thread-messages', threadId],
+    queryFn: async () => {
+      if (!threadId) return [];
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('thread_id', threadId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return (data || []) as Message[];
+    },
+    enabled: !!threadId,
+  });
 };

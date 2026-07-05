@@ -218,10 +218,13 @@ export const usePolygonDrawing = ({
 
   // Start drawing mode
   const startDrawing = useCallback(() => {
-    if (!draw.current || !map) return;
+    if (!map) return;
 
+    // initializeDraw() lazily creates draw.current on first use, so it must
+    // run before we touch draw.current — otherwise the first draw never starts.
     initializeDraw();
-    
+    if (!draw.current) return;
+
     setIsDrawingMode(true);
     setCurrentMode('draw');
     draw.current.changeMode('draw_polygon');

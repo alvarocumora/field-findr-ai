@@ -7,8 +7,50 @@ const corsHeaders = {
 };
 
 const MERCADOPAGO_ACCESS_TOKEN = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
+const MERCADOPAGO_WEBHOOK_SECRET = Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+/**
+ * Verify the MercadoPago webhook HMAC signature.
+ * See https://www.mercadopago.com/developers/en/docs/your-integrations/notifications/webhooks
+ * Manifest: `id:<data.id>;request-id:<x-request-id>;ts:<ts>;`
+ */
+async function verifyMercadoPagoSignature(req: Request, dataId: string): Promise<boolean> {
+  const xSignature = req.headers.get("x-signature");
+  const xRequestId = req.headers.get("x-request-id");
+  if (!xSignature) return false;
+
+  // x-signature looks like: "ts=1704908010,v1=<hex>"
+  const parts = Object.fromEntries(
+    xSignature.split(",").map((kv) => kv.split("=").map((s) => s.trim()) as [string, string])
+  );
+  const ts = parts["ts"];
+  const v1 = parts["v1"];
+  if (!ts || !v1) return false;
+
+  // Alphanumeric data.id must be lowercased per MP spec.
+  const id = /[a-zA-Z]/.test(dataId) ? dataId.toLowerCase() : dataId;
+  const manifest = `id:${id};request-id:${xRequestId};ts:${ts};`;
+
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(MERCADOPAGO_WEBHOOK_SECRET!),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sigBuf = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(manifest));
+  const computed = Array.from(new Uint8Array(sigBuf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  // Constant-time-ish comparison
+  if (computed.length !== v1.length) return false;
+  let diff = 0;
+  for (let i = 0; i < computed.length; i++) diff |= computed.charCodeAt(i) ^ v1.charCodeAt(i);
+  return diff === 0;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -24,7 +66,25 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("Webhook received:", JSON.stringify(body, null, 2));
+
+    // Signature verification. data.id can arrive as a query param (?data.id=)
+    // or in the body; the manifest uses the query value when present.
+    const url = new URL(req.url);
+    const dataIdForSig = url.searchParams.get("data.id") || String(body?.data?.id ?? "");
+    if (MERCADOPAGO_WEBHOOK_SECRET) {
+      const valid = await verifyMercadoPagoSignature(req, dataIdForSig);
+      if (!valid) {
+        console.warn("Rejected webhook: invalid signature");
+        return new Response(JSON.stringify({ error: "Invalid signature" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else {
+      console.warn("MERCADOPAGO_WEBHOOK_SECRET not set — skipping signature verification (insecure).");
+    }
+
+    console.log("Webhook received, type:", body?.type);
 
     // MercadoPago sends different types of notifications
     if (body.type === "payment" && body.data?.id) {
@@ -49,7 +109,9 @@ serve(async (req) => {
       }
 
       const payment = await paymentResponse.json();
-      console.log("Payment details:", JSON.stringify(payment, null, 2));
+      // Avoid logging the full payment object (contains buyer PII). Log only
+      // the non-sensitive fields needed for debugging.
+      console.log("Payment fetched:", JSON.stringify({ id: paymentId, status: payment.status }));
 
       // Parse external reference
       let externalRef: { 
