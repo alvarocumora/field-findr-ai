@@ -68,6 +68,8 @@ con correcciones aplicadas. Este documento resume qué cambió y qué queda pend
 - **`npm audit`**: 28 vulnerabilidades (1 crítica en `jsPDF`, alta en `react-router`). Requiere
   actualizar dependencias con QA (algunas son major).
 - Tipar los `any` restantes (190+ en `src`).
-- Cobertura de **tests** (actualmente 0 archivos de test).
+- Cobertura de **tests**: infraestructura vitest + jsdom + RTL montada (`npm test`), con 17 tests
+  sobre amortización de créditos, rate limiter, mensajes de WhatsApp y el diálogo de conversión
+  a venta. Ampliar hacia hooks de datos y edge functions.
 - Diferir libs pesadas aún presentes en el grafo eager de la landing (`three`, `jspdf`, `recharts`).
 - Rate limiting duro (persistente en Postgres/KV) si el best-effort en memoria resulta insuficiente.
