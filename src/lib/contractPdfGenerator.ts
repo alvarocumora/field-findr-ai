@@ -17,6 +17,8 @@ interface ContractPDFData {
   paidAt?: string;
   createdAt: string;
   generatedAt: Date;
+  /** Buyer's digital signature (PNG data URL) — drawn over the buyer line. */
+  signatureDataUrl?: string;
 }
 
 const formatCurrency = (value: number, currency = 'CLP'): string =>
@@ -126,7 +128,16 @@ const addWatermark = (doc: jsPDF) => {
   });
 };
 
-export const generateContractPDF = (data: ContractPDFData): void => {
+export interface ContractPDFResult {
+  blob: Blob;
+  contractNum: string;
+  fileName: string;
+}
+
+export const generateContractPDF = (
+  data: ContractPDFData,
+  options?: { output?: 'save' | 'blob' },
+): ContractPDFResult | void => {
   const doc = new jsPDF();
   const pw = doc.internal.pageSize.getWidth();
   const contractNum = `PROM-${data.reservationId.slice(0, 8).toUpperCase()}`;
@@ -372,6 +383,13 @@ export const generateContractPDF = (data: ContractPDFData): void => {
   const sigX2 = pw / 2 + 12;
   const sigW = pw / 2 - 40;
 
+  // Buyer's digital signature drawn above the line (when provided)
+  if (data.signatureDataUrl) {
+    try {
+      doc.addImage(data.signatureDataUrl, 'PNG', sigX1 + sigW / 2 - 25, y - 4, 50, 22);
+    } catch { /* invalid image data — leave the line blank */ }
+  }
+
   // Signature lines
   doc.setDrawColor(...DARK);
   doc.setLineWidth(0.4);
@@ -404,7 +422,11 @@ export const generateContractPDF = (data: ContractPDFData): void => {
     addFooterToPage(doc, contractNum, p, totalPages);
   }
 
-  doc.save(`promesa-ofertaterrenos-${data.lotNumber.toLowerCase().replace(/\s+/g, '-')}-${contractNum}.pdf`);
+  const fileName = `promesa-ofertaterrenos-${data.lotNumber.toLowerCase().replace(/\s+/g, '-')}-${contractNum}.pdf`;
+  if (options?.output === 'blob') {
+    return { blob: doc.output('blob'), contractNum, fileName };
+  }
+  doc.save(fileName);
 };
 
 export type { ContractPDFData };

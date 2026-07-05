@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAllClosingSteps, useUpdateClosingStep, STEP_LABELS, ClosingStepStatus } from '@/hooks/useClosingSteps';
+import { useAllClosingSteps, useUpdateClosingStep, useSignContract, STEP_LABELS, ClosingStepStatus } from '@/hooks/useClosingSteps';
 import { ClosingTimeline } from './ClosingTimeline';
 import ContractSigningDialog from '@/components/signature/ContractSigningDialog';
 import { TransactionDocuments } from './TransactionDocuments';
-import { FileText, ChevronDown, ArrowRight, Pen } from 'lucide-react';
+import { FileText, ChevronDown, ArrowRight, Pen, FileCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 const STATUS_NEXT: Record<string, ClosingStepStatus> = {
@@ -19,8 +19,17 @@ const STATUS_NEXT: Record<string, ClosingStepStatus> = {
 const ClosingManager = () => {
   const { data: allSteps = [], isLoading } = useAllClosingSteps();
   const updateStep = useUpdateClosingStep();
+  const signContract = useSignContract();
   const [filter, setFilter] = useState('all');
-  const [signingData, setSigningData] = useState<{ open: boolean; projectName: string; lotNumber: string; buyerName: string; amount: string } | null>(null);
+  const [signingData, setSigningData] = useState<{
+    open: boolean;
+    stepId: string;
+    reservation: any;
+    projectName: string;
+    lotNumber: string;
+    buyerName: string;
+    amount: string;
+  } | null>(null);
 
   // Group by reservation
   const grouped = allSteps.reduce((acc, step) => {
@@ -122,23 +131,43 @@ const ClosingManager = () => {
                         </Button>
                       ))}
                     {/* Signing button for promesa step */}
-                    {group.steps.some(s => s.step_type === 'promesa' && (s.status === 'in_progress' || s.status === 'pending')) && (
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="gap-1 text-xs rounded-lg"
-                        onClick={() => setSigningData({
-                          open: true,
-                          projectName: project?.name || 'Proyecto',
-                          lotNumber: lot?.lot_number || 'N/A',
-                          buyerName: res?.buyer_name || 'Comprador',
-                          amount: `$${(res?.reservation_amount || 0).toLocaleString('es-CL')}`,
-                        })}
-                      >
-                        <Pen className="h-3 w-3" />
-                        Firmar contrato
-                      </Button>
-                    )}
+                    {(() => {
+                      const promesaStep = group.steps.find(s => s.step_type === 'promesa');
+                      if (!promesaStep) return null;
+                      if (promesaStep.document_url) {
+                        return (
+                          <Button size="sm" variant="outline" className="gap-1 text-xs rounded-lg text-green-600 border-green-500/30" asChild>
+                            <a href={promesaStep.document_url} target="_blank" rel="noopener noreferrer">
+                              <FileCheck className="h-3 w-3" />
+                              Ver contrato firmado
+                            </a>
+                          </Button>
+                        );
+                      }
+                      if (promesaStep.status === 'in_progress' || promesaStep.status === 'pending') {
+                        return (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="gap-1 text-xs rounded-lg"
+                            disabled={signContract.isPending}
+                            onClick={() => setSigningData({
+                              open: true,
+                              stepId: promesaStep.id,
+                              reservation: res,
+                              projectName: project?.name || 'Proyecto',
+                              lotNumber: lot?.lot_number || 'N/A',
+                              buyerName: res?.buyer_name || 'Comprador',
+                              amount: `$${(res?.reservation_amount || 0).toLocaleString('es-CL')}`,
+                            })}
+                          >
+                            <Pen className="h-3 w-3" />
+                            Firmar contrato
+                          </Button>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                 </CardContent>
               </Card>
@@ -153,7 +182,44 @@ const ClosingManager = () => {
           onOpenChange={(open) => !open && setSigningData(null)}
           contractData={signingData}
           onSign={(dataUrl) => {
-            toast.success('Firma registrada exitosamente');
+            const res = signingData.reservation;
+            const lot = res?.lots;
+            const project = lot?.projects;
+            signContract.mutate(
+              {
+                stepId: signingData.stepId,
+                reservationId: res.id,
+                contractData: {
+                  projectName: project?.name || 'Proyecto',
+                  projectLocation: [project?.location || project?.city, project?.region].filter(Boolean).join(', '),
+                  projectRol: project?.rol_number || undefined,
+                  lotNumber: lot?.lot_number || 'N/A',
+                  lotArea: Number(lot?.area || 0),
+                  lotPrice: lot?.price != null ? Number(lot.price) : null,
+                  buyerName: res?.buyer_name || 'Comprador',
+                  buyerRut: res?.buyer_rut || undefined,
+                  buyerEmail: res?.buyer_email || '',
+                  buyerPhone: res?.buyer_phone || undefined,
+                  reservationId: res.id,
+                  reservationAmount: Number(res?.reservation_amount || 0),
+                  currency: res?.currency || 'CLP',
+                  paidAt: res?.paid_at || undefined,
+                  createdAt: res?.created_at || new Date().toISOString(),
+                  generatedAt: new Date(),
+                  signatureDataUrl: dataUrl,
+                },
+              },
+              {
+                onSuccess: ({ contractNum }) => {
+                  toast.success('Contrato firmado y archivado', {
+                    description: `${contractNum} guardado en la carpeta documental`,
+                  });
+                },
+                onError: (e: Error) => {
+                  toast.error('Error al archivar el contrato', { description: e.message });
+                },
+              },
+            );
           }}
         />
       )}

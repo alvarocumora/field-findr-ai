@@ -39,6 +39,20 @@ export function CreateCreditDialog({ trigger }: Props) {
     : null;
 
   const selectedRes = paidReservations.find(r => r.id === reservationId);
+  const senaAmount = Number(selectedRes?.reservation_amount || 0);
+
+  // Selecting a reservation prefills the price with the lot's list price and
+  // credits the paid seña toward the down payment (arras confirmatorias —
+  // the deposit is part of the price, so it starts as the pie).
+  const handleSelectReservation = (id: string) => {
+    setReservationId(id);
+    const res = paidReservations.find(r => r.id === id);
+    if (!res) return;
+    const lotPrice = Number(res.lots?.price || 0);
+    if (lotPrice > 0) setTotalAmount(String(lotPrice));
+    const sena = Number(res.reservation_amount || 0);
+    if (sena > 0) setDownPayment(String(sena));
+  };
 
   const handleSubmit = async () => {
     if (!user || !reservationId || !totalAmount || financed <= 0) {
@@ -79,7 +93,7 @@ export function CreateCreditDialog({ trigger }: Props) {
         <div className="space-y-4">
           <div>
             <Label>Reservación Pagada</Label>
-            <Select value={reservationId} onValueChange={setReservationId}>
+            <Select value={reservationId} onValueChange={handleSelectReservation}>
               <SelectTrigger><SelectValue placeholder="Seleccionar reserva" /></SelectTrigger>
               <SelectContent>
                 {paidReservations.map((r: any) => (
@@ -104,6 +118,16 @@ export function CreateCreditDialog({ trigger }: Props) {
             <div>
               <Label>Pie ({currency})</Label>
               <Input type="number" value={downPayment} onChange={e => setDownPayment(e.target.value)} placeholder="10000000" />
+              {senaAmount > 0 && Number(downPayment) >= senaAmount && (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Incluye seña pagada de {formatPriceLatam(senaAmount, currency)}
+                </p>
+              )}
+              {senaAmount > 0 && Number(downPayment) > 0 && Number(downPayment) < senaAmount && (
+                <p className="text-[11px] text-amber-600 mt-1">
+                  El pie es menor que la seña ya pagada ({formatPriceLatam(senaAmount, currency)})
+                </p>
+              )}
             </div>
           </div>
 
