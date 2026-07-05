@@ -123,6 +123,30 @@ const MobileExploreView = ({
         onSnapPointChange={setBottomSheetSnap}
       />
 
+      {/* Empty state overlay when no results and not loading */}
+      {!isLoading && listings.length === 0 && (
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20 max-w-[92%] w-[340px] bg-background/95 backdrop-blur-xl border border-border/40 rounded-2xl p-4 shadow-lg text-center animate-fade-in">
+          <div className="mx-auto h-12 w-12 rounded-2xl bg-muted/60 flex items-center justify-center mb-2">
+            <MapPin className="h-6 w-6 text-muted-foreground/60" />
+          </div>
+          <h4 className="text-sm font-semibold mb-1">Sin resultados en esta zona</h4>
+          <p className="text-xs text-muted-foreground mb-3">
+            Ajusta filtros o mueve el mapa para encontrar terrenos.
+          </p>
+          <div className="flex gap-2 justify-center">
+            {activeFiltersCount > 0 && (
+              <Button size="sm" variant="outline" onClick={onClearFilters} className="rounded-xl">
+                Limpiar filtros
+              </Button>
+            )}
+            <Button size="sm" onClick={() => navigate('/explorar')} className="rounded-xl">
+              Ver todas
+            </Button>
+          </div>
+        </div>
+      )}
+
+
       {/* Filters Sheet */}
       <MobileFilterSheet
         isOpen={isFiltersOpen}
