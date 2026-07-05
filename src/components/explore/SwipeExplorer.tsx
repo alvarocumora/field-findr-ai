@@ -138,13 +138,26 @@ const SwipeExplorer = ({
   );
 
   const Header = (
-    <div className="flex items-center justify-between p-4 pb-2">
+    <div className="flex items-center justify-between p-4 pb-2 gap-2">
       <Button variant="ghost" size="icon" onClick={onBack}>
         <ChevronLeft className="h-5 w-5" />
       </Button>
-      <span className="text-sm text-muted-foreground">
-        {Math.min(currentIndex + 1, filtered.length)} / {filtered.length}
-      </span>
+      <div className="flex items-center gap-2 flex-1 justify-center">
+        <span className="text-sm text-muted-foreground">
+          {Math.min(currentIndex + 1, filtered.length)} / {filtered.length}
+        </span>
+        {compareCount >= 2 && onOpenCompare && (
+          <Button
+            size="sm"
+            variant="default"
+            className="rounded-full h-7 px-3 gap-1 animate-in fade-in slide-in-from-top-1"
+            onClick={onOpenCompare}
+          >
+            <Scale className="h-3.5 w-3.5" />
+            Comparar ({compareCount})
+          </Button>
+        )}
+      </div>
       <Button variant="ghost" size="icon" onClick={handleUndo} disabled={history.length === 0}>
         <Undo2 className="h-5 w-5" />
       </Button>
