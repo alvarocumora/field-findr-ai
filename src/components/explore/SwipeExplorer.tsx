@@ -637,6 +637,8 @@ const SwipeExplorer = ({
           )}
         </DialogContent>
       </Dialog>
+
+      {FiltersSheet}
     </div>
   );
 };
