@@ -763,12 +763,64 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
         </SectionCard>
 
         <SectionCard n={11} icon={Calculator} title={t.sections[11]}>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Se aplica el <strong>Método Comparativo de Mercado</strong>, contrastando el valor SII del predio con
-            transacciones de inmuebles equivalentes en la zona. Factores de ajuste: (i) frente a Ruta 5,
-            (ii) superficie y forma, (iii) servicios básicos, (iv) zonificación industrial vigente, y
-            (v) potencial productivo (packing, agroindustria, logística, cadena de frío).
-          </p>
+          {d.metodosIVS ? (
+            <>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                Valoración conforme a <strong>IVS 2022</strong> (International Valuation Standards) mediante
+                cinco métodos ponderados: comparativo de mercado (A y B), renta capitalizada,
+                costo de reposición y residual de desarrollo (H&amp;BU).
+              </p>
+              <div className="overflow-x-auto rounded-lg border border-border/40">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-muted/50 text-muted-foreground">
+                      <th className="px-2 py-2 text-left font-medium">#</th>
+                      <th className="px-2 py-2 text-left font-medium">Método</th>
+                      <th className="px-2 py-2 text-right font-medium">Peso</th>
+                      <th className="px-2 py-2 text-right font-medium">Valor UF</th>
+                      <th className="px-2 py-2 text-right font-medium">Ponderado</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/30">
+                    {d.metodosIVS.methods.map((m) => (
+                      <tr key={m.id}>
+                        <td className="px-2 py-1.5 text-muted-foreground">{m.id}</td>
+                        <td className="px-2 py-1.5">
+                          <span className="font-medium">{m.name}</span>
+                          <span className="block text-[10px] text-muted-foreground font-mono">{m.formula}</span>
+                        </td>
+                        <td className="px-2 py-1.5 text-right tabular-nums">{Math.round(m.weight * 100)}%</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums">{m.resultUF.toLocaleString('es-CL')}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums font-semibold">
+                          {Math.round(m.resultUF * m.weight).toLocaleString('es-CL')}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="bg-emerald-500/10">
+                      <td colSpan={4} className="px-2 py-2 font-semibold text-emerald-600">
+                        FMV ponderado (Fair Market Value)
+                      </td>
+                      <td className="px-2 py-2 text-right font-bold text-emerald-600 tabular-nums">
+                        UF {d.metodosIVS.fmvUF.toLocaleString('es-CL')}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-2">
+                Rango de negociación ±5%: UF {d.metodosIVS.fmvRangeMinUF.toLocaleString('es-CL')} –{' '}
+                UF {d.metodosIVS.fmvRangeMaxUF.toLocaleString('es-CL')} · Dispersión entre métodos:{' '}
+                {d.metodosIVS.dispersion.coefVarPct.toFixed(1)}% (CV) · {d.metodosIVS.ufPerM2.toFixed(3)} UF/m²
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Se aplica el <strong>Método Comparativo de Mercado</strong>, contrastando el valor SII del predio con
+              transacciones de inmuebles equivalentes en la zona. Factores de ajuste: (i) frente a Ruta 5,
+              (ii) superficie y forma, (iii) servicios básicos, (iv) zonificación industrial vigente, y
+              (v) potencial productivo (packing, agroindustria, logística, cadena de frío).
+            </p>
+          )}
         </SectionCard>
 
         <SectionCard n={12} icon={Trophy} title={t.sections[12]}>

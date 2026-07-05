@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import type { MethodsResult } from './tasacionMethodsV12';
 import { drawPdfHeaderLogo, drawPdfFooter } from './pdfBrandHeader';
 import { getT, type TasacionLang } from './tasacionI18n';
 
@@ -58,6 +59,8 @@ export interface TasacionData {
   // Imagen satelital del predio (opcional, JPG/PNG dataURL)
   satelliteImageDataUrl?: string;
   satelliteCaption?: string;
+  // Valoración IVS 2022 — cinco métodos ponderados (GUIA_TASACION_PROFESIONAL §4)
+  metodosIVS?: MethodsResult;
   // Permisos / aprobaciones (opcional)
   ifcAprobado?: boolean;
   ifcDetalle?: string;
@@ -348,6 +351,50 @@ const buildTasacionDoc = (data: TasacionData) => {
   // 11. Metodología
   sectionTitle(11);
   para(t.paragraphs.methodology);
+
+  if (data.metodosIVS) {
+    const mv = data.metodosIVS;
+    ensureSpace(12 + mv.methods.length * 7 + 22);
+    // Table header
+    doc.setFillColor(230, 230, 230);
+    doc.rect(margin, y, contentW, 7, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.text('#', margin + 2, y + 5);
+    doc.text('Método (IVS 2022)', margin + 8, y + 5);
+    doc.text('Peso', margin + 118, y + 5);
+    doc.text('Valor UF', margin + 138, y + 5);
+    doc.text('Ponderado UF', margin + 162, y + 5);
+    y += 7;
+    doc.setFont('helvetica', 'normal');
+    for (const m of mv.methods) {
+      doc.text(String(m.id), margin + 2, y + 5);
+      doc.text(m.name.slice(0, 62), margin + 8, y + 5);
+      doc.text(`${Math.round(m.weight * 100)}%`, margin + 118, y + 5);
+      doc.text(m.resultUF.toLocaleString('es-CL'), margin + 138, y + 5);
+      doc.text(Math.round(m.resultUF * m.weight).toLocaleString('es-CL'), margin + 162, y + 5);
+      y += 7;
+    }
+    // FMV row
+    doc.setFillColor(220, 252, 231);
+    doc.rect(margin, y, contentW, 8, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('FMV ponderado (Fair Market Value)', margin + 2, y + 5.5);
+    doc.text(`UF ${mv.fmvUF.toLocaleString('es-CL')}`, margin + 162, y + 5.5);
+    y += 11;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    doc.text(
+      `Rango ±5%: UF ${mv.fmvRangeMinUF.toLocaleString('es-CL')} – UF ${mv.fmvRangeMaxUF.toLocaleString('es-CL')} · ` +
+      `Dispersión entre métodos: ${mv.dispersion.coefVarPct.toFixed(1)}% (CV) · ${mv.ufPerM2.toFixed(3)} UF/m²`,
+      margin, y + 3,
+    );
+    doc.setTextColor(0);
+    doc.setFontSize(10);
+    y += 8;
+  }
 
   // 12. Conclusión
   sectionTitle(12);

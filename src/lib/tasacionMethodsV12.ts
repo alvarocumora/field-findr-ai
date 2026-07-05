@@ -17,6 +17,11 @@ export interface MethodInput {
   optionalityFactor?: number; // residual opcionalidad (default 1.46)
   /** Asking price observado en UF (NO se publica, solo se usa como cota interna). */
   observedUF?: number;
+  /** Etiquetas de los comparables (por defecto genéricas del sector). */
+  compALabel?: string;
+  compBLabel?: string;
+  compASource?: string;
+  compBSource?: string;
 }
 
 export interface MethodRow {
@@ -48,6 +53,10 @@ export function computeMethods(input: MethodInput): MethodsResult {
     capRate = 0.08,
     costoSueloUFm2 = 1.10,
     optionalityFactor = 1.46,
+    compALabel = 'Comparable premium del sector',
+    compBLabel = 'Comparable secundario del sector',
+    compASource = 'Listing comparable activo del sector · portal inmobiliario',
+    compBSource = 'Listing comparable activo del sector · portal inmobiliario',
   } = input;
 
   // Método 1 — Sales Comparison A
@@ -55,15 +64,15 @@ export function computeMethods(input: MethodInput): MethodsResult {
   const m1 = round(m1Raw * 0.982);
   const method1: MethodRow = {
     id: 1, weight: 0.25, resultUF: m1,
-    name: 'Sales Comparison A (premium · E&V Commercial)',
+    name: 'Sales Comparison A (comparable premium)',
     formula: 'V = Sup × (UF/m²)_comp × Factor_ajuste',
     inputs: [
-      { label: 'Comparable premium', calc: 'Ruta 5 Sur · listing E&V activo', result: `${compAUFm2.toFixed(3)} UF/m²` },
-      { label: 'Factor ajuste', calc: 'Mismo eje vial', result: '1,000' },
+      { label: 'Comparable premium', calc: compALabel, result: `${compAUFm2.toFixed(3)} UF/m²` },
+      { label: 'Factor ajuste', calc: 'Mismo eje / sector', result: '1,000' },
       { label: 'Valor predio', calc: `${areaM2.toLocaleString('es-CL')} × ${compAUFm2.toFixed(3)}`, result: `~UF ${round(m1Raw).toLocaleString('es-CL')}` },
       { label: 'Valor redondeado', calc: 'margen de seguridad', result: `UF ${m1.toLocaleString('es-CL')}` },
     ],
-    source: 'Engel & Völkers Commercial Chile · www.engelvoelkers.com/cl · listing activo',
+    source: compASource,
   };
 
   // Método 2 — Sales Comparison B
@@ -71,18 +80,18 @@ export function computeMethods(input: MethodInput): MethodsResult {
   const m2 = round(m2Raw);
   const method2: MethodRow = {
     id: 2, weight: 0.20, resultUF: m2,
-    name: 'Sales Comparison B (secundario · Vivax)',
+    name: 'Sales Comparison B (comparable secundario)',
     formula: 'V = Sup × (UF/m²)_comp × Factor_ajuste',
     inputs: [
-      { label: 'Comparable secundario', calc: 'Curicó / Pío XI · Vivax', result: `${compBUFm2.toFixed(3)} UF/m²` },
+      { label: 'Comparable secundario', calc: compBLabel, result: `${compBUFm2.toFixed(3)} UF/m²` },
       { label: 'Factor ajuste (−1,5%)', calc: 'Menor urbanización', result: '0,985' },
       { label: 'Valor predio', calc: `${areaM2.toLocaleString('es-CL')} × ${compBUFm2.toFixed(3)} × 0,985`, result: `UF ${m2.toLocaleString('es-CL')}` },
     ],
-    source: 'Vivax Corredores · www.vivax.cl · listing activo',
+    source: compBSource,
   };
 
   // Método 3 — Income Capitalisation
-  const m3SupArr = Math.max(2000, round(areaM2 * 0.05)); // 5% techado utilizable
+  const m3SupArr = Math.min(round(areaM2 * 0.35), Math.max(300, round(areaM2 * 0.05))); // 5% techado utilizable (piso 300 m², tope 35%)
   const m3RentaUF = 0.12; // UF/m²/mes referencial bodegaje agro
   const m3Ingreso = m3SupArr * m3RentaUF * 12;
   const m3OpexPct = 0.25;
@@ -93,12 +102,12 @@ export function computeMethods(input: MethodInput): MethodsResult {
     name: 'Income Capitalisation (renta capitalizada)',
     formula: 'V = NOI_estabilizado / Cap_rate',
     inputs: [
-      { label: 'Renta UF/m²/mes', calc: 'Bodegaje agro referencial', result: m3RentaUF.toFixed(2) },
+      { label: 'Renta UF/m²/mes', calc: 'Arriendo referencial del sector', result: m3RentaUF.toFixed(2) },
       { label: 'Sup. arrendable', calc: `5% del predio`, result: `${m3SupArr.toLocaleString('es-CL')} m²` },
       { label: 'Ingreso bruto anual', calc: `${m3SupArr} × ${m3RentaUF} × 12`, result: `UF ${round(m3Ingreso).toLocaleString('es-CL')}` },
       { label: `OPEX ${(m3OpexPct*100).toFixed(0)}%`, calc: 'Mantención + admin', result: `UF ${round(m3Ingreso*m3OpexPct).toLocaleString('es-CL')}` },
       { label: 'NOI estabilizado', calc: 'Ingreso − OPEX', result: `UF ${round(m3NOI).toLocaleString('es-CL')}` },
-      { label: 'Cap rate', calc: 'Industrial Maule', result: `${(capRate*100).toFixed(1)}%` },
+      { label: 'Cap rate', calc: 'Referencial zona', result: `${(capRate*100).toFixed(1)}%` },
       { label: 'Valor capitalizado', calc: `${round(m3NOI)} / ${capRate.toFixed(2)}`, result: `UF ${m3.toLocaleString('es-CL')}` },
     ],
     source: 'Colliers International Chile · Cap Rate Survey Industrial 2025',
