@@ -77,17 +77,79 @@ const SwipeExplorer = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [confirmed, setConfirmed] = useState<{ listing: Listing; action: 'favorite' | 'dismiss' } | null>(null);
 
+  // Advanced filters (region + price + price/m²)
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectedRegions, setSelectedRegions] = useState<Set<string>>(new Set());
+  const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
+  const [pricePerM2Range, setPricePerM2Range] = useState<[number, number] | null>(null);
+
   useEffect(() => {
     try { sessionStorage.setItem(DISMISSED_KEY, JSON.stringify([...dismissedIds])); } catch {}
   }, [dismissedIds]);
 
+  // Data-driven bounds from incoming listings
+  const { regionOptions, priceBounds, pricePerM2Bounds } = useMemo(() => {
+    const regions = new Set<string>();
+    let pMin = Infinity, pMax = -Infinity;
+    let ppmMin = Infinity, ppmMax = -Infinity;
+    for (const l of listings) {
+      if (l.region) regions.add(l.region);
+      if (typeof l.price === 'number') {
+        pMin = Math.min(pMin, l.price);
+        pMax = Math.max(pMax, l.price);
+      }
+      if (l.area_m2 && l.price && l.area_m2 > 0) {
+        const ppm = l.price / l.area_m2;
+        ppmMin = Math.min(ppmMin, ppm);
+        ppmMax = Math.max(ppmMax, ppm);
+      }
+    }
+    return {
+      regionOptions: [...regions].sort(),
+      priceBounds: [Number.isFinite(pMin) ? Math.floor(pMin) : 0, Number.isFinite(pMax) ? Math.ceil(pMax) : 1_000_000_000] as [number, number],
+      pricePerM2Bounds: [Number.isFinite(ppmMin) ? Math.floor(ppmMin) : 0, Number.isFinite(ppmMax) ? Math.ceil(ppmMax) : 1_000_000] as [number, number],
+    };
+  }, [listings]);
+
+  const effectivePriceRange = priceRange ?? priceBounds;
+  const effectivePpmRange = pricePerM2Range ?? pricePerM2Bounds;
+
   const filtered = useMemo(
-    () => listings.filter(CATEGORY_FILTERS[category]).filter(l => !dismissedIds.has(l.id)),
-    [listings, category, dismissedIds]
+    () =>
+      listings
+        .filter(CATEGORY_FILTERS[category])
+        .filter(l => !dismissedIds.has(l.id))
+        .filter(l => selectedRegions.size === 0 || (l.region && selectedRegions.has(l.region)))
+        .filter(l => l.price >= effectivePriceRange[0] && l.price <= effectivePriceRange[1])
+        .filter(l => {
+          if (!l.area_m2 || l.area_m2 <= 0) return true;
+          const ppm = l.price / l.area_m2;
+          return ppm >= effectivePpmRange[0] && ppm <= effectivePpmRange[1];
+        }),
+    [listings, category, dismissedIds, selectedRegions, effectivePriceRange, effectivePpmRange]
   );
 
-  // Reset index when category changes
-  useEffect(() => { setCurrentIndex(0); }, [category]);
+  const advancedFiltersCount =
+    selectedRegions.size +
+    (priceRange && (priceRange[0] > priceBounds[0] || priceRange[1] < priceBounds[1]) ? 1 : 0) +
+    (pricePerM2Range && (pricePerM2Range[0] > pricePerM2Bounds[0] || pricePerM2Range[1] < pricePerM2Bounds[1]) ? 1 : 0);
+
+  const clearAdvancedFilters = () => {
+    setSelectedRegions(new Set());
+    setPriceRange(null);
+    setPricePerM2Range(null);
+  };
+
+  const toggleRegion = (r: string) => {
+    setSelectedRegions(prev => {
+      const n = new Set(prev);
+      n.has(r) ? n.delete(r) : n.add(r);
+      return n;
+    });
+  };
+
+  // Reset index when category or advanced filters change
+  useEffect(() => { setCurrentIndex(0); }, [category, selectedRegions, priceRange, pricePerM2Range]);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
