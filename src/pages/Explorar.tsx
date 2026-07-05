@@ -17,7 +17,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTabletOrBelow } from '@/hooks/use-tablet';
 import { CreditCard } from 'lucide-react';
 import RealListingsSection from '@/components/RealListingsSection';
-import { useAddFavorite } from '@/hooks/useFavorites';
+import { useAddFavorite, useRemoveFavorite } from '@/hooks/useFavorites';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
 import { useCompare } from '@/hooks/useCompare';
 import { whatsapp } from '@/lib/whatsappUtils';
@@ -28,8 +28,11 @@ const Explorar = () => {
   const isMobile = useIsMobile();
   const isTabletOrBelow = useIsTabletOrBelow();
   const addFavorite = useAddFavorite();
+  const removeFavorite = useRemoveFavorite();
   const { track } = useTrackEvent();
   const { addToCompare, compareList, isInCompare, setCompareOpen } = useCompare();
+  // Imperative handle exposed by SwipeExplorer so we can revert a dismiss from an undo toast.
+  const undoDismissRef = useRef<((id: string) => void) | null>(null);
 
   // View mode for mobile
   const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>('swipe');
@@ -247,7 +250,16 @@ const Explorar = () => {
               onSuccess: () =>
                 toast.success('Guardado en favoritos', {
                   description: l.title,
-                  action: { label: 'Ver favoritos', onClick: () => navigate('/favoritos') },
+                  duration: 5000,
+                  action: {
+                    label: 'Deshacer',
+                    onClick: () => {
+                      removeFavorite.mutate(l.id, {
+                        onSuccess: () => toast('Se quitó de favoritos', { duration: 2000 }),
+                      });
+                      track('swipe_favorite_undo', { listing_id: l.id });
+                    },
+                  },
                 }),
             });
             track('swipe_favorite', { listing_id: l.id });
@@ -257,7 +269,15 @@ const Explorar = () => {
             track('swipe_dismiss', { listing_id: l.id });
             toast('Descartado', {
               description: l.title,
-              duration: 2000,
+              duration: 5000,
+              action: {
+                label: 'Deshacer',
+                onClick: () => {
+                  undoDismissRef.current?.(l.id);
+                  track('swipe_dismiss_undo', { listing_id: l.id });
+                  toast('Descarte revertido', { duration: 2000 });
+                },
+              },
             });
           }}
           onSwipeContact={(l) => {
@@ -288,6 +308,7 @@ const Explorar = () => {
           compareCount={compareList.length}
           isInCompare={isInCompare}
           onSwipeDeckChange={setSwipeDeck}
+          undoDismissRef={undoDismissRef}
         />
 
         <PropertyPreviewSheet
@@ -425,13 +446,36 @@ const Explorar = () => {
               onFavorite={(l) => {
                 addFavorite.mutate(l.id, {
                   onSuccess: () =>
-                    toast.success('Guardado en favoritos', { description: l.title }),
+                    toast.success('Guardado en favoritos', {
+                      description: l.title,
+                      duration: 5000,
+                      action: {
+                        label: 'Deshacer',
+                        onClick: () => {
+                          removeFavorite.mutate(l.id, {
+                            onSuccess: () => toast('Se quitó de favoritos', { duration: 2000 }),
+                          });
+                          track('swipe_favorite_undo', { listing_id: l.id });
+                        },
+                      },
+                    }),
                 });
                 track('swipe_favorite', { listing_id: l.id });
               }}
               onDismiss={(l) => {
                 track('swipe_dismiss', { listing_id: l.id });
-                toast('Descartado', { description: l.title, duration: 2000 });
+                toast('Descartado', {
+                  description: l.title,
+                  duration: 5000,
+                  action: {
+                    label: 'Deshacer',
+                    onClick: () => {
+                      undoDismissRef.current?.(l.id);
+                      track('swipe_dismiss_undo', { listing_id: l.id });
+                      toast('Descarte revertido', { duration: 2000 });
+                    },
+                  },
+                });
               }}
               onContact={(l) => {
                 const url = whatsapp.listingInquiry({
@@ -457,6 +501,7 @@ const Explorar = () => {
               isInCompare={isInCompare}
               onBack={() => setDesktopSwipe(false)}
               onDeckChange={setSwipeDeck}
+              undoDismissRef={undoDismissRef}
             />
           </div>
         </div>

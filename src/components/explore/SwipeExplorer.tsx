@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, type MutableRefObject } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +32,8 @@ interface SwipeExplorerProps {
   onBack?: () => void;
   /** Emits the filtered deck (category + advanced filters + dismissed) whenever it changes. */
   onDeckChange?: (deck: Listing[]) => void;
+  /** Ref receives an `unDismiss(id)` function so parents can revert a dismiss (e.g. from an undo toast). */
+  undoDismissRef?: MutableRefObject<((id: string) => void) | null>;
 }
 
 type CategoryKey = 'todos' | 'campos' | 'parcelas' | 'loteos';
@@ -65,7 +67,7 @@ const DISMISSED_KEY = 'swipe:dismissed-ids';
 const SwipeExplorer = ({
   listings, onFavorite, onDismiss, onContact,
   onAddToCompare, onOpenCompare, compareCount = 0, isInCompare,
-  onBack, onDeckChange,
+  onBack, onDeckChange, undoDismissRef,
 }: SwipeExplorerProps) => {
   const navigate = useNavigate();
   const [category, setCategory] = useState<CategoryKey>('todos');
@@ -189,6 +191,30 @@ const SwipeExplorer = ({
     setDismissedIds(prev => { const n = new Set(prev); n.delete(last.id); return n; });
     setCurrentIndex(i => Math.max(0, i - 1));
   }, [history]);
+
+  // Expose an imperative "unDismiss(id)" to parents so they can revert a dismiss
+  // from an undo snackbar without needing to know internal state.
+  const unDismiss = useCallback((id: string) => {
+    setDismissedIds(prev => {
+      if (!prev.has(id)) return prev;
+      const n = new Set(prev);
+      n.delete(id);
+      return n;
+    });
+    setHistory(h => {
+      const idx = [...h].reverse().findIndex(l => l.id === id);
+      if (idx === -1) return h;
+      const realIdx = h.length - 1 - idx;
+      return [...h.slice(0, realIdx), ...h.slice(realIdx + 1)];
+    });
+    setCurrentIndex(i => Math.max(0, i - 1));
+  }, []);
+
+  useEffect(() => {
+    if (!undoDismissRef) return;
+    undoDismissRef.current = unDismiss;
+    return () => { if (undoDismissRef) undoDismissRef.current = null; };
+  }, [undoDismissRef, unDismiss]);
 
   const formatPrice = (price: number, currency = 'CLP') => {
     if (currency === 'UF') return `UF ${price.toLocaleString('es-CL')}`;
