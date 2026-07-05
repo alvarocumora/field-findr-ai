@@ -220,8 +220,8 @@ const Explorar = () => {
           <div className="flex-1">
             <SwipeExplorer
               listings={filteredListings}
-              onFavorite={(l) => console.log('Favorite:', l.id)}
-              onDismiss={(l) => console.log('Dismiss:', l.id)}
+              onFavorite={(l) => { addFavorite.mutate(l.id); track.track?.('swipe_favorite', { listing_id: l.id }); }}
+              onDismiss={(l) => { track.track?.('swipe_dismiss', { listing_id: l.id }); }}
               onContact={(l) => navigate(`/propiedad/${l.id}`)}
               onBack={() => setMobileViewMode('list')}
             />
