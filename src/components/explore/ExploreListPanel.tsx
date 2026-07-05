@@ -298,7 +298,9 @@ const ExploreListPanel = ({
     return result;
   }, [tabFilteredListings, territorialFilter]);
 
-  const sortedListings = sortListings(territorialFilteredListings, sortBy);
+  const sortedListingsRaw = useMemo(() => sortListings(territorialFilteredListings, sortBy), [territorialFilteredListings, sortBy]);
+  // Defer expensive re-render when filters change quickly (progressive rendering)
+  const sortedListings = useDeferredValue(sortedListingsRaw);
 
   // Smart summary
   const displayCount = totalCount ?? listings.length;
