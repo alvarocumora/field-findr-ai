@@ -103,10 +103,16 @@ const PropertyApprovalQueue = () => {
                     </Badge>
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                     <span className="flex items-center gap-1"><DollarSign className="h-3 w-3" />{formatPrice(listing.price, listing.currency)}</span>
                     <span>{listing.area_m2} m²</span>
                     <span>{listing.type}</span>
+                    <Button asChild size="sm" variant="ghost" className="ml-auto h-7 gap-1">
+                      <Link to={`/propiedad/${listing.id}`} target="_blank" rel="noreferrer">
+                        <ExternalLink className="h-3 w-3" /> Ver detalle
+                      </Link>
+                    </Button>
+
                   </div>
 
                   <Textarea
