@@ -15,31 +15,39 @@ interface PlanConfig {
   features: string[];
 }
 
+// Prices aligned to LATAM_PRICES (CLP) in src/hooks/useSubscription.ts
 const PLANS: Record<string, PlanConfig> = {
+  starter: {
+    name: "Plan Starter",
+    price: 75000,
+    currency: "CLP",
+    features: ["Hasta 30 lotes", "3 proyectos", "CRM básico"],
+  },
+  growth: {
+    name: "Plan Growth",
+    price: 168750,
+    currency: "CLP",
+    features: ["Hasta 150 lotes", "10 proyectos", "CRM + Lead Scoring AI"],
+  },
+  scale: {
+    name: "Plan Scale",
+    price: 300000,
+    currency: "CLP",
+    features: ["Hasta 500 lotes", "50 proyectos", "Equipo multi-agente"],
+  },
+  enterprise: {
+    name: "Plan Enterprise",
+    price: 562500,
+    currency: "CLP",
+    features: ["Lotes ilimitados", "White-label", "SSO / SAML"],
+  },
+  // Legacy aliases
   professional: {
     name: "Plan Profesional",
     price: 49990,
     currency: "CLP",
-    features: [
-      "Hasta 50 publicaciones activas",
-      "LandScore AI completo",
-      "CRM integrado",
-      "Alertas en tiempo real",
-      "Soporte prioritario"
-    ]
+    features: ["Hasta 50 publicaciones", "CRM integrado"],
   },
-  enterprise: {
-    name: "Plan Empresa",
-    price: 149990,
-    currency: "CLP",
-    features: [
-      "Publicaciones ilimitadas",
-      "BuildCheck AI",
-      "API de datos",
-      "White-label",
-      "Soporte dedicado 24/7"
-    ]
-  }
 };
 
 serve(async (req) => {
