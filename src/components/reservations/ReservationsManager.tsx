@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useExpireStaleReservations, useExtendReservation } from '@/hooks/useReservations';
 import ConvertToSaleDialog from './ConvertToSaleDialog';
+import BuyerJourneySheet from './BuyerJourneySheet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@ const ReservationsManager = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [convertTarget, setConvertTarget] = useState<any>(null);
+  const [journeyReservationId, setJourneyReservationId] = useState<string | null>(null);
 
   const expireStale = useExpireStaleReservations();
   const extendReservation = useExtendReservation();
@@ -250,7 +252,14 @@ const ReservationsManager = () => {
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-semibold text-foreground">{reservation.buyer_name}</h4>
+                            <button
+                              type="button"
+                              onClick={() => setJourneyReservationId(reservation.id)}
+                              className="font-semibold text-foreground hover:text-primary hover:underline underline-offset-2 transition-colors text-left"
+                              title="Ver historia del comprador"
+                            >
+                              {reservation.buyer_name}
+                            </button>
                             <Badge variant="outline" className={config.className}>
                               {config.label}
                             </Badge>
@@ -366,6 +375,12 @@ const ReservationsManager = () => {
           )}
         </ScrollArea>
       </Card>
+
+      <BuyerJourneySheet
+        reservationId={journeyReservationId}
+        open={!!journeyReservationId}
+        onOpenChange={(open) => !open && setJourneyReservationId(null)}
+      />
 
       <ConvertToSaleDialog
         open={!!convertTarget}
