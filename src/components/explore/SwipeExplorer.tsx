@@ -30,6 +30,8 @@ interface SwipeExplorerProps {
   compareCount?: number;
   isInCompare?: (id: string) => boolean;
   onBack?: () => void;
+  /** Emits the filtered deck (category + advanced filters + dismissed) whenever it changes. */
+  onDeckChange?: (deck: Listing[]) => void;
 }
 
 type CategoryKey = 'todos' | 'campos' | 'parcelas' | 'loteos';
