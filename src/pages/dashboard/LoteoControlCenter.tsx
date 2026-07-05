@@ -509,6 +509,15 @@ const LoteoControlCenter = () => {
         projectLocation={[activeProject?.city, activeProject?.region].filter(Boolean).join(', ')}
         reservationDeposit={(activeProject as any)?.reservation_deposit ?? null}
       />
+
+      <BulkPriceAdjustDialog
+        open={bulkPriceOpen}
+        onOpenChange={setBulkPriceOpen}
+        projects={projects}
+        lots={lots}
+        defaultProjectId={activeProjectId}
+      />
+
     </div>
   );
 };
