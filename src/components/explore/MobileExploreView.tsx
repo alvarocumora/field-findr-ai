@@ -99,6 +99,7 @@ const MobileExploreView = (props: MobileExploreViewProps) => {
     compareCount,
     isInCompare,
     onSwipeDeckChange,
+    undoDismissRef,
   } = props;
 
   const navigate = useNavigate();
