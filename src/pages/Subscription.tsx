@@ -43,6 +43,7 @@ const Subscription = () => {
     enabled: !!user,
   });
 
+  const queryClient = useQueryClient();
   const currentPlan = subscription?.plan_type || 'free';
   const planDetails = PLAN_DETAILS[currentPlan as PlanType];
   const isActive = subscription?.status === 'active';
@@ -50,6 +51,45 @@ const Subscription = () => {
   const handleUpgrade = (planType: PlanType) => {
     createCheckout(planType);
   };
+
+  // Cancel: mark as cancel_at_period_end, keep active until period ends
+  const cancelMutation = useMutation({
+    mutationFn: async () => {
+      if (!subscription) throw new Error('No hay suscripción activa');
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ cancel_at_period_end: true })
+        .eq('id', subscription.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: 'Suscripción cancelada', description: 'Mantendrás acceso hasta el final del período pagado.' });
+      queryClient.invalidateQueries({ queryKey: ['subscription', user?.id] });
+    },
+    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
+  // Reactivate: undo cancel_at_period_end
+  const reactivateMutation = useMutation({
+    mutationFn: async () => {
+      if (!subscription) throw new Error('No hay suscripción');
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ cancel_at_period_end: false })
+        .eq('id', subscription.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: 'Suscripción reactivada', description: 'Se renovará automáticamente al final del período.' });
+      queryClient.invalidateQueries({ queryKey: ['subscription', user?.id] });
+    },
+    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
+  // Other paid plans available to switch to
+  const CHANGEABLE_PLANS: PlanType[] = ['starter', 'growth', 'scale', 'enterprise'];
+  const otherPlans = CHANGEABLE_PLANS.filter((p) => p !== currentPlan);
+
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
