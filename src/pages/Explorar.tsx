@@ -18,12 +18,14 @@ import { Layers, CreditCard } from 'lucide-react';
 import RealListingsSection from '@/components/RealListingsSection';
 import { useAddFavorite } from '@/hooks/useFavorites';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
+import { useCompare } from '@/hooks/useCompare';
 
 const Explorar = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const addFavorite = useAddFavorite();
   const { track } = useTrackEvent();
+  const { addToCompare, compareList, isInCompare, setCompareOpen } = useCompare();
 
   // View mode for mobile
   const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>('swipe');
