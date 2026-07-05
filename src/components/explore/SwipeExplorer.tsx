@@ -7,8 +7,13 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger,
+} from '@/components/ui/sheet';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
+import {
   Heart, X, MessageCircle, MapPin, Maximize2, ChevronLeft, Undo2, Sparkles, Scale,
-  ArrowRight,
+  ArrowRight, SlidersHorizontal,
 } from 'lucide-react';
 import { Listing, getListingTypeLabel } from '@/hooks/useListings';
 import { useNavigate } from 'react-router-dom';
