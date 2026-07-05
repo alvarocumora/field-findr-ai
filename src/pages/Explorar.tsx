@@ -28,8 +28,11 @@ const Explorar = () => {
   const isMobile = useIsMobile();
   const isTabletOrBelow = useIsTabletOrBelow();
   const addFavorite = useAddFavorite();
+  const removeFavorite = useRemoveFavorite();
   const { track } = useTrackEvent();
   const { addToCompare, compareList, isInCompare, setCompareOpen } = useCompare();
+  // Imperative handle exposed by SwipeExplorer so we can revert a dismiss from an undo toast.
+  const undoDismissRef = useRef<((id: string) => void) | null>(null);
 
   // View mode for mobile
   const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>('swipe');
