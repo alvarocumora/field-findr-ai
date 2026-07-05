@@ -37,6 +37,11 @@ interface PropertyPreviewSheetProps {
   onOpenChange: (open: boolean) => void;
   onViewDetails?: (listing: Listing) => void;
   similarListings?: Listing[];
+  /**
+   * When `inline`, render as a column (no modal overlay, no portal) so the
+   * preview docks between list + map on desktop instead of covering the map.
+   */
+  inline?: boolean;
 }
 
 const PropertyPreviewSheet = ({
@@ -45,6 +50,7 @@ const PropertyPreviewSheet = ({
   onOpenChange,
   onViewDetails,
   similarListings = [],
+  inline = false,
 }: PropertyPreviewSheetProps) => {
   const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
