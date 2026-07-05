@@ -79,6 +79,7 @@ const PropertyDetail = () => {
   const { toggle, isLoading: isFavoriteLoading } = useToggleFavorite();
   const { data: favoriteIds = [] } = useFavoriteIds();
   const [designerOpen, setDesignerOpen] = useState(false);
+  const { token: mapboxToken } = useMapboxToken();
 
   const isFavorite = listing ? favoriteIds.includes(listing.id) : false;
   const similarListings = allListings.filter(l => l.id !== id).slice(0, 3);
