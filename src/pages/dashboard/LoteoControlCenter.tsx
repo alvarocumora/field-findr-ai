@@ -42,6 +42,8 @@ import {
 } from '@/hooks/useReservations';
 import { useAgentCommissions, useMarkCommissionPaid } from '@/hooks/useAgentCommissions';
 import ConvertToSaleDialog from '@/components/reservations/ConvertToSaleDialog';
+import LotQuoteDialog from '@/components/lots/LotQuoteDialog';
+import type { Lot } from '@/hooks/useLots';
 import { cn } from '@/lib/utils';
 
 const formatCLP = (n: number) =>
@@ -70,6 +72,7 @@ const LoteoControlCenter = () => {
   const { projects, isLoading: projectsLoading } = useProjects();
   const [projectId, setProjectId] = useState<string>('');
   const [convertTarget, setConvertTarget] = useState<any>(null);
+  const [quoteLot, setQuoteLot] = useState<Lot | null>(null);
 
   const activeProjectId = projectId || projects[0]?.id || '';
   const activeProject = projects.find((p) => p.id === activeProjectId);
@@ -386,22 +389,26 @@ const LoteoControlCenter = () => {
               {sortedLots.map((lot) => (
                 <Tooltip key={lot.id}>
                   <TooltipTrigger asChild>
-                    <span
+                    <button
+                      type="button"
+                      onClick={() => setQuoteLot(lot)}
                       className={cn(
-                        'inline-flex h-8 min-w-8 px-1.5 items-center justify-center rounded-md text-[11px] font-semibold text-white cursor-default transition-colors',
+                        'inline-flex h-8 min-w-8 px-1.5 items-center justify-center rounded-md text-[11px] font-semibold text-white transition-colors',
                         LOT_STATUS_STYLE[lot.status ?? 'available'] ?? LOT_STATUS_STYLE.available,
                       )}
                     >
                       {lot.lot_number}
-                    </span>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs">
                     <p className="font-semibold">{lot.name || `Lote ${lot.lot_number}`}</p>
                     <p>{Number(lot.area).toLocaleString('es-CL')} m² · {lot.price ? formatCLP(Number(lot.price)) : 'Sin precio'}</p>
-                    {lot.status === 'sold' && lot.sale_date && (
+                    {lot.status === 'sold' && lot.sale_date ? (
                       <p className="text-muted-foreground">
                         Vendido {format(new Date(lot.sale_date), 'dd/MM/yyyy', { locale: es })}
                       </p>
+                    ) : (
+                      <p className="text-muted-foreground">Click para cotizar</p>
                     )}
                   </TooltipContent>
                 </Tooltip>
@@ -476,6 +483,15 @@ const LoteoControlCenter = () => {
           }
         }}
         reservation={convertTarget}
+      />
+
+      <LotQuoteDialog
+        open={!!quoteLot}
+        onOpenChange={(open) => !open && setQuoteLot(null)}
+        lot={quoteLot}
+        projectName={activeProject?.name ?? ''}
+        projectLocation={[activeProject?.city, activeProject?.region].filter(Boolean).join(', ')}
+        reservationDeposit={(activeProject as any)?.reservation_deposit ?? null}
       />
     </div>
   );

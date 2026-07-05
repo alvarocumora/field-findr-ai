@@ -26,6 +26,16 @@ interface QuotePDFData {
   // Meta
   generatedAt: Date;
   validUntil: Date;
+
+  // Seller-side extras (all optional — used by the internal quote tool)
+  /** Prepared-for buyer name shown under the header. */
+  buyerName?: string;
+  /** Original list price; when it differs from lotPrice a discount line is shown. */
+  listPrice?: number;
+  /** Reservation deposit ("seña") that secures the lot. */
+  reservationAmount?: number;
+  /** Contact line for the selling agent (name/email/phone). */
+  sellerContact?: string;
 }
 
 const formatCurrency = (value: number): string => {
@@ -65,7 +75,7 @@ export const generateQuotePDF = (data: QuotePDFData): void => {
   doc.text(`N° ${quoteNumber}`, pageWidth - 20, 22, { align: 'right' });
   doc.text(formatDate(data.generatedAt), pageWidth - 20, 30, { align: 'right' });
   
-  yPos = 50;
+  yPos = 46;
   
   // Project Section
   doc.setTextColor(...darkColor);
@@ -88,20 +98,30 @@ export const generateQuotePDF = (data: QuotePDFData): void => {
   doc.text('Ubicación:', 20, yPos);
   doc.setTextColor(...darkColor);
   doc.text(data.projectLocation, 60, yPos);
-  
+
+  if (data.buyerName) {
+    yPos += 6;
+    doc.setTextColor(...grayColor);
+    doc.text('Preparada para:', 20, yPos);
+    doc.setTextColor(...darkColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text(data.buyerName, 60, yPos);
+    doc.setFont('helvetica', 'normal');
+  }
+
   yPos += 15;
   
   // Lot Details Box
   doc.setFillColor(...lightGray);
-  doc.roundedRect(20, yPos, pageWidth - 40, 45, 3, 3, 'F');
+  doc.roundedRect(20, yPos, pageWidth - 40, 38, 3, 3, 'F');
   
-  yPos += 10;
+  yPos += 8;
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...primaryColor);
   doc.text(`Lote ${data.lotNumber}`, 30, yPos);
   
-  yPos += 10;
+  yPos += 9;
   doc.setFontSize(10);
   doc.setTextColor(...darkColor);
   doc.setFont('helvetica', 'normal');
@@ -123,7 +143,7 @@ export const generateQuotePDF = (data: QuotePDFData): void => {
   doc.setFont('helvetica', 'bold');
   doc.text(formatCurrency(data.pricePerSqm), col2 + 28, yPos);
   
-  yPos += 8;
+  yPos += 7;
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...grayColor);
   doc.text('Precio:', col1, yPos);
@@ -131,8 +151,21 @@ export const generateQuotePDF = (data: QuotePDFData): void => {
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.text(formatCurrency(data.lotPrice), col1 + 30, yPos);
-  
-  yPos += 25;
+
+  // Discount vs list price (seller tool)
+  if (data.listPrice && data.listPrice !== data.lotPrice) {
+    const discountPct = Math.round(((data.listPrice - data.lotPrice) / data.listPrice) * 100);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...grayColor);
+    doc.text(
+      `Precio lista: ${formatCurrency(data.listPrice)} (${discountPct > 0 ? `-${discountPct}%` : `+${Math.abs(discountPct)}%`})`,
+      col2,
+      yPos,
+    );
+  }
+
+  yPos += 16;
   
   // Financing Section Title
   doc.setTextColor(...darkColor);
@@ -140,11 +173,14 @@ export const generateQuotePDF = (data: QuotePDFData): void => {
   doc.setFont('helvetica', 'bold');
   doc.text('Simulación de Financiamiento', 20, yPos);
   
-  yPos += 12;
+  yPos += 10;
   
   // Financing Parameters
   doc.setFontSize(10);
   const paramData = [
+    ...(data.reservationAmount
+      ? [['Reserva (seña):', `${formatCurrency(data.reservationAmount)} — se abona al pie`]]
+      : []),
     ['Pie inicial:', `${data.downPaymentPercent}% (${formatCurrency(data.downPayment)})`],
     ['Monto a financiar:', formatCurrency(data.financedAmount)],
     ['Plazo:', `${data.termMonths} meses (${(data.termMonths / 12).toFixed(1)} años)`],
@@ -161,29 +197,29 @@ export const generateQuotePDF = (data: QuotePDFData): void => {
     yPos += 7;
   });
   
-  yPos += 8;
+  yPos += 6;
   
   // Results Box
   doc.setFillColor(...primaryColor);
-  doc.roundedRect(20, yPos, pageWidth - 40, 50, 3, 3, 'F');
+  doc.roundedRect(20, yPos, pageWidth - 40, 42, 3, 3, 'F');
   
-  yPos += 15;
+  yPos += 12;
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.text('Cuota mensual estimada', pageWidth / 2, yPos, { align: 'center' });
   
-  yPos += 12;
+  yPos += 10;
   doc.setFontSize(24);
   doc.setFont('helvetica', 'bold');
   doc.text(formatCurrency(data.monthlyPayment), pageWidth / 2, yPos, { align: 'center' });
   
-  yPos += 15;
+  yPos += 12;
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.text(`CAE estimado: ${data.cae.toFixed(1)}%`, pageWidth / 2, yPos, { align: 'center' });
   
-  yPos += 25;
+  yPos += 14;
   
   // Summary Table
   doc.setTextColor(...darkColor);
@@ -227,13 +263,19 @@ export const generateQuotePDF = (data: QuotePDFData): void => {
   doc.setTextColor(...primaryColor);
   doc.text(formatCurrency(data.totalCost), pageWidth - 25, yPos + 4, { align: 'right' });
   
-  yPos += 25;
+  yPos += 10;
   
   // Validity
   doc.setTextColor(...grayColor);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'italic');
   doc.text(`Esta cotización es válida hasta el ${formatDate(data.validUntil)}`, 20, yPos);
+
+  if (data.sellerContact) {
+    yPos += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Contacto: ${data.sellerContact}`, 20, yPos);
+  }
   
   // Footer
   const footerY = doc.internal.pageSize.getHeight() - 20;
@@ -251,7 +293,7 @@ export const generateQuotePDF = (data: QuotePDFData): void => {
   );
   
   doc.text(
-    'Field Findr - Plataforma de Inversión en Terrenos | www.fieldfindr.cl',
+    'OfertaTerrenos — Plataforma de Inversión en Terrenos | ofertaterrenos.com',
     pageWidth / 2,
     footerY + 10,
     { align: 'center' }

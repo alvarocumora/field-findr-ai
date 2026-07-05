@@ -71,6 +71,42 @@ export const whatsapp = {
     return buildWaUrl(phone, msg);
   },
 
+  /** Resumen de cotizacion para enviar al comprador (herramienta del vendedor) */
+  quoteSummary({
+    buyerName,
+    projectName,
+    lotNumber,
+    lotArea,
+    salePrice,
+    reservationAmount,
+    downPayment,
+    termMonths,
+    monthlyPayment,
+    phone,
+  }: {
+    buyerName?: string;
+    projectName: string;
+    lotNumber: string;
+    lotArea: number;
+    salePrice: number;
+    reservationAmount?: number | null;
+    downPayment?: number | null;
+    termMonths?: number | null;
+    monthlyPayment?: number | null;
+    phone?: string;
+  }): string {
+    let msg = buyerName ? `Hola ${buyerName}, ` : 'Hola, ';
+    msg += `te env\u00edo la cotizaci\u00f3n del *Lote ${lotNumber}* en *${projectName}*:\n\n`;
+    msg += `\u{1F4D0} Superficie: ${lotArea.toLocaleString('es-CL')} m\u00b2\n`;
+    msg += `\u{1F4B0} Precio: ${formatPrice(salePrice)}\n`;
+    if (reservationAmount) msg += `\u{1F512} Reserva (se\u00f1a): ${formatPrice(reservationAmount)}\n`;
+    if (downPayment && termMonths && monthlyPayment) {
+      msg += `\u{1F3E6} Pie: ${formatPrice(downPayment)} + ${termMonths} cuotas de ${formatPrice(monthlyPayment)}\n`;
+    }
+    msg += `\n\u00bfTe gustar\u00eda reservarlo o agendar una visita? Quedo atento/a.`;
+    return buildWaUrl(phone, msg);
+  },
+
   /** Recordatorio de pago */
   paymentReminder(phone: string, buyerName: string, amount: number, currency = 'CLP', dueDate: string): string {
     const msg = `Estimado/a ${buyerName}, le recordamos que tiene un pago programado de ${formatPrice(amount, currency)} con vencimiento el ${dueDate}.\n\n¿Necesita asistencia con el proceso de pago?`;
