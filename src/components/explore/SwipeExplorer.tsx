@@ -4,7 +4,11 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import {
   Heart, X, MessageCircle, MapPin, Maximize2, ChevronLeft, Undo2, Sparkles, Scale,
+  ArrowRight,
 } from 'lucide-react';
 import { Listing, getListingTypeLabel } from '@/hooks/useListings';
 import { useNavigate } from 'react-router-dom';
