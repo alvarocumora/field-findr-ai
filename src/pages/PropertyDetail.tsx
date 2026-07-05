@@ -28,6 +28,7 @@ import { AIInvestmentCopilot } from '@/components/ai/AIInvestmentCopilot';
 import { VisualScenarioViewer } from '@/components/visual-scenarios';
 import { mockVisualScenarios } from '@/data/mockVisualScenarios';
 import { generatePropertyPdf } from '@/lib/propertyPdfGenerator';
+import { generateScenarioPdf } from '@/lib/scenarioPdfGenerator';
 import { cn } from '@/lib/utils';
 import { useSEO, buildPropertyJsonLd } from '@/hooks/useSEO';
 import { useListingApproval } from '@/hooks/usePropertyApprovals';
