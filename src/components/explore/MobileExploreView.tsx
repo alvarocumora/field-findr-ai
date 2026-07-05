@@ -64,6 +64,7 @@ interface MobileExploreViewProps {
   compareCount?: number;
   isInCompare?: (id: string) => boolean;
   onSwipeDeckChange?: (deck: Listing[] | null) => void;
+  undoDismissRef?: React.MutableRefObject<((id: string) => void) | null>;
 }
 
 const MODES: { key: MobileExploreMode; label: string; icon: typeof CreditCard }[] = [
