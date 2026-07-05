@@ -243,14 +243,46 @@ const Explorar = () => {
           onListingClick={handleListingClick}
           onListingPreview={setPreviewListing}
           onSwipeFavorite={(l) => {
-            addFavorite.mutate(l.id);
+            addFavorite.mutate(l.id, {
+              onSuccess: () =>
+                toast.success('Guardado en favoritos', {
+                  description: l.title,
+                  action: { label: 'Ver favoritos', onClick: () => navigate('/favoritos') },
+                }),
+            });
             track('swipe_favorite', { listing_id: l.id });
           }}
-          onSwipeDismiss={(l) => track('swipe_dismiss', { listing_id: l.id })}
-          onSwipeContact={(l) => navigate(`/propiedad/${l.id}`)}
+          onSwipeDismiss={(l) => {
+            // The card is auto-hidden by SwipeExplorer's dismissedIds set
+            track('swipe_dismiss', { listing_id: l.id });
+            toast('Descartado', {
+              description: l.title,
+              duration: 2000,
+            });
+          }}
+          onSwipeContact={(l) => {
+            // Open WhatsApp with a contextual inquiry for this listing
+            const url = whatsapp.listingInquiry({
+              title: l.title,
+              price: l.price,
+              currency: (l as any).currency ?? 'CLP',
+              area: l.area_m2 ?? null,
+              location: l.location,
+              phone: (l as any).contact_phone ?? (l as any).owner_phone ?? undefined,
+            });
+            window.open(url, '_blank', 'noopener,noreferrer');
+            track('swipe_contact', { listing_id: l.id, channel: 'whatsapp' });
+          }}
           onSwipeAddToCompare={(l) => {
             addToCompare(l);
             track('swipe_compare', { listing_id: l.id });
+            toast.success('Añadido al comparador', {
+              description: `${compareList.length + 1} propiedades en comparación`,
+              action:
+                compareList.length + 1 >= 2
+                  ? { label: 'Comparar', onClick: () => setCompareOpen(true) }
+                  : undefined,
+            });
           }}
           onSwipeOpenCompare={() => setCompareOpen(true)}
           compareCount={compareList.length}
