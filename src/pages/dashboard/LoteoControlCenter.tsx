@@ -43,7 +43,9 @@ import {
 import { useAgentCommissions, useMarkCommissionPaid } from '@/hooks/useAgentCommissions';
 import ConvertToSaleDialog from '@/components/reservations/ConvertToSaleDialog';
 import LotQuoteDialog from '@/components/lots/LotQuoteDialog';
+import BulkPriceAdjustDialog from '@/components/lots/BulkPriceAdjustDialog';
 import type { Lot } from '@/hooks/useLots';
+import { Percent } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const formatCLP = (n: number) =>
@@ -73,6 +75,7 @@ const LoteoControlCenter = () => {
   const [projectId, setProjectId] = useState<string>('');
   const [convertTarget, setConvertTarget] = useState<any>(null);
   const [quoteLot, setQuoteLot] = useState<Lot | null>(null);
+  const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
 
   const activeProjectId = projectId || projects[0]?.id || '';
   const activeProject = projects.find((p) => p.id === activeProjectId);
@@ -213,18 +216,31 @@ const LoteoControlCenter = () => {
             Centro de comando de ventas y reservas por proyecto
           </p>
         </div>
-        <Select value={activeProjectId} onValueChange={setProjectId}>
-          <SelectTrigger className="w-full sm:w-[260px] rounded-xl">
-            <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
-            <SelectValue placeholder="Selecciona proyecto" />
-          </SelectTrigger>
-          <SelectContent>
-            {projects.map((p) => (
-              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setBulkPriceOpen(true)}
+            disabled={!activeProjectId}
+            className="rounded-xl"
+          >
+            <Percent className="h-4 w-4 mr-1.5" />
+            Ajustar precios
+          </Button>
+          <Select value={activeProjectId} onValueChange={setProjectId}>
+            <SelectTrigger className="w-full sm:w-[260px] rounded-xl">
+              <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Selecciona proyecto" />
+            </SelectTrigger>
+            <SelectContent>
+              {projects.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
 
       {/* KPI row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -493,6 +509,15 @@ const LoteoControlCenter = () => {
         projectLocation={[activeProject?.city, activeProject?.region].filter(Boolean).join(', ')}
         reservationDeposit={(activeProject as any)?.reservation_deposit ?? null}
       />
+
+      <BulkPriceAdjustDialog
+        open={bulkPriceOpen}
+        onOpenChange={setBulkPriceOpen}
+        projects={projects}
+        lots={lots}
+        defaultProjectId={activeProjectId}
+      />
+
     </div>
   );
 };
