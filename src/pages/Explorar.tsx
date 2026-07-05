@@ -121,8 +121,20 @@ const Explorar = () => {
     return result;
   }, [listings, searchQuery, selectedTags, selectedSlopes, selectedValuation]);
 
+  // Reset swipe-derived deck whenever upstream filters or listings change,
+  // so it doesn't shadow the map with a stale subset.
+  useEffect(() => { setSwipeDeck(null); }, [filteredListings]);
+
+  // The map should reflect the same deck that SwipeExplorer is showing.
+  // When a swipe deck is emitted, use it; otherwise fall back to full filtered.
+  const mapSourceListings = swipeDeck ?? filteredListings;
+  const swipeDeckIds = useMemo(
+    () => (swipeDeck ? new Set(swipeDeck.map(l => l.id)) : null),
+    [swipeDeck]
+  );
+
   // Progressive rendering: defer the heavy map listings so filter updates stay responsive
-  const deferredMapListings = useDeferredValue(filteredListings);
+  const deferredMapListings = useDeferredValue(mapSourceListings);
 
   const activeFiltersCount = selectedTypes.length + selectedRegions.length + selectedCountries.length + selectedTags.length +
     selectedSlopes.length + selectedValuation.length +
