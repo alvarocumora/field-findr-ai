@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "oferta-terrenos-mcp",
+      "version": "0.1.0",
+      "title": "OFERTA TERRENOS"
+    },
+    "tools": [
+      {
+        "name": "search_listings",
+        "title": "Search land listings",
+        "description": "Search approved (public) land listings on OFERTA TERRENOS. Filter by free-text query, city/region, price range (CLP), and area range (m²).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Free text matched against title/description."
+            },
+            "city": {
+              "type": "string",
+              "description": "City name filter (partial match)."
+            },
+            "region": {
+              "type": "string",
+              "description": "Region filter (partial match)."
+            },
+            "minPrice": {
+              "type": "number",
+              "description": "Minimum price in CLP."
+            },
+            "maxPrice": {
+              "type": "number",
+              "description": "Maximum price in CLP."
+            },
+            "minAreaM2": {
+              "type": "number",
+              "description": "Minimum surface area in m²."
+            },
+            "maxAreaM2": {
+              "type": "number",
+              "description": "Maximum surface area in m²."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Max results (default 10, max 50)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_listing",
+        "title": "Get listing details",
+        "description": "Fetch full details for a single approved land listing by its ID.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Listing UUID."
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_projects",
+        "title": "List active projects",
+        "description": "List active land development projects (loteos) with lot availability summary.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Max results (default 10)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
