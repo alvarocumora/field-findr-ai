@@ -389,6 +389,17 @@ const Explorar = () => {
           />
         </div>
 
+        {/* Inline preview panel — docks between list and map (no map overlay) */}
+        <PropertyPreviewSheet
+          inline
+          listing={previewListing}
+          open={!!previewListing}
+          onOpenChange={(open) => !open && setPreviewListing(null)}
+          onViewDetails={handleViewDetails}
+          similarListings={similarListings}
+        />
+
+
         {/* Right panel – map fills remaining space */}
         <div className="flex-1 min-w-0 relative">
           <ExploreMapPanel
