@@ -23,7 +23,7 @@ const Explorar = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const addFavorite = useAddFavorite();
-  const track = useTrackEvent();
+  const { track } = useTrackEvent();
 
   // View mode for mobile
   const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>('swipe');
@@ -220,8 +220,8 @@ const Explorar = () => {
           <div className="flex-1">
             <SwipeExplorer
               listings={filteredListings}
-              onFavorite={(l) => { addFavorite.mutate(l.id); track.track?.('swipe_favorite', { listing_id: l.id }); }}
-              onDismiss={(l) => { track.track?.('swipe_dismiss', { listing_id: l.id }); }}
+              onFavorite={(l) => { addFavorite.mutate(l.id); track('swipe_favorite', { listing_id: l.id }); }}
+              onDismiss={(l) => { track('swipe_dismiss', { listing_id: l.id }); }}
               onContact={(l) => navigate(`/propiedad/${l.id}`)}
               onBack={() => setMobileViewMode('list')}
             />
