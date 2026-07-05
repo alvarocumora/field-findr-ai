@@ -114,7 +114,29 @@ export default defineConfig(({ mode }) => ({
         // Split heavy, page-specific vendor libraries into their own cacheable
         // chunks so they don't bloat the shared entry chunk (was ~7.3 MB).
         manualChunks(id) {
+          // Vite virtual helpers (\0vite/preload-helper etc.) must live in a
+          // chunk that loads first: jspdf's internal dynamic import('canvg')
+          // made rollup place the preload helper INSIDE vendor-pdf, forcing
+          // the entry to preload jspdf on every page just to reach it.
+          if (id.includes('vite/preload-helper') || id.includes('vite/modulepreload-polyfill')) {
+            return 'vendor-react';
+          }
           if (!id.includes('node_modules')) return;
+          // Pin the framework to its own chunk FIRST: without this, rollup can
+          // hoist react/react-dom into whichever vendor chunk references them
+          // earliest (it landed inside vendor-charts), forcing the entry —
+          // and therefore every page — to preload charts/three/docs.
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/scheduler/') ||
+            id.includes('node_modules/react-is/') ||
+            // Tiny helpers shared between the app and the heavy libs — pin
+            // them here too or they get hoisted into charts/docs the same way.
+            id.includes('node_modules/clsx/') ||
+            id.includes('node_modules/tslib/') ||
+            id.includes('node_modules/@babel/runtime/')
+          ) return 'vendor-react';
           if (id.includes('mapbox-gl') || id.includes('@mapbox')) return 'vendor-mapbox';
           if (
             id.includes('/three/') ||
@@ -125,13 +147,10 @@ export default defineConfig(({ mode }) => ({
           ) return 'vendor-three';
           if (id.includes('@photo-sphere-viewer') || id.includes('photo-sphere')) return 'vendor-psv';
           if (id.includes('recharts') || id.includes('/d3-') || id.includes('victory-vendor')) return 'vendor-charts';
-          if (
-            id.includes('jspdf') ||
-            id.includes('jszip') ||
-            id.includes('html2canvas') ||
-            id.includes('canvg') ||
-            id.includes('qrcode')
-          ) return 'vendor-docs';
+          if (id.includes('jspdf')) return 'vendor-pdf';
+          if (id.includes('jszip')) return 'vendor-zip';
+          if (id.includes('html2canvas') || id.includes('canvg')) return 'vendor-h2c';
+          if (id.includes('qrcode')) return 'vendor-qr';
           if (id.includes('@turf') || id.includes('togeojson')) return 'vendor-geo';
         },
       },
