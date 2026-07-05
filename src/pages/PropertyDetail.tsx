@@ -34,6 +34,7 @@ import { useSEO, buildPropertyJsonLd } from '@/hooks/useSEO';
 import { useListingApproval } from '@/hooks/usePropertyApprovals';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { VisualScenario } from '@/types/visualScenario';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 
 import {
   Heart,
