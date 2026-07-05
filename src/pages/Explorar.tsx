@@ -446,13 +446,36 @@ const Explorar = () => {
               onFavorite={(l) => {
                 addFavorite.mutate(l.id, {
                   onSuccess: () =>
-                    toast.success('Guardado en favoritos', { description: l.title }),
+                    toast.success('Guardado en favoritos', {
+                      description: l.title,
+                      duration: 5000,
+                      action: {
+                        label: 'Deshacer',
+                        onClick: () => {
+                          removeFavorite.mutate(l.id, {
+                            onSuccess: () => toast('Se quitó de favoritos', { duration: 2000 }),
+                          });
+                          track('swipe_favorite_undo', { listing_id: l.id });
+                        },
+                      },
+                    }),
                 });
                 track('swipe_favorite', { listing_id: l.id });
               }}
               onDismiss={(l) => {
                 track('swipe_dismiss', { listing_id: l.id });
-                toast('Descartado', { description: l.title, duration: 2000 });
+                toast('Descartado', {
+                  description: l.title,
+                  duration: 5000,
+                  action: {
+                    label: 'Deshacer',
+                    onClick: () => {
+                      undoDismissRef.current?.(l.id);
+                      track('swipe_dismiss_undo', { listing_id: l.id });
+                      toast('Descarte revertido', { duration: 2000 });
+                    },
+                  },
+                });
               }}
               onContact={(l) => {
                 const url = whatsapp.listingInquiry({
