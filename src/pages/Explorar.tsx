@@ -200,75 +200,61 @@ const Explorar = () => {
     return filteredListings.filter(l => l.id !== previewListing.id && l.type === previewListing.type).slice(0, 3);
   }, [previewListing, filteredListings]);
 
-  // ── MOBILE VIEW ──
-  if (isMobile) {
+  // ── MOBILE + TABLET UNIFIED VIEW ──
+  if (isTabletOrBelow) {
     return (
       <div className="min-h-screen bg-background flex flex-col pb-16">
         <StickyHeader />
 
-        {/* Mobile view mode toggle */}
-        <div className="flex items-center gap-2 px-4 py-2 border-b overflow-x-auto">
-          <Button
-            variant={mobileViewMode === 'swipe' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setMobileViewMode('swipe')}
-          >
-            <CreditCard className="h-4 w-4 mr-1" />
-            Swipe
-          </Button>
-          <Button
-            variant={mobileViewMode === 'list' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setMobileViewMode('list')}
-          >
-            <Layers className="h-4 w-4 mr-1" />
-            Lista
-          </Button>
-          <Button
-            variant={mobileViewMode === 'map' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setMobileViewMode('map')}
-          >
-            <Layers className="h-4 w-4 mr-1" />
-            Mapa
-          </Button>
-        </div>
-
-        {mobileViewMode === 'swipe' ? (
-          <div className="flex-1">
-            <SwipeExplorer
-              listings={filteredListings}
-              onFavorite={(l) => { addFavorite.mutate(l.id); track('swipe_favorite', { listing_id: l.id }); }}
-              onDismiss={(l) => { track('swipe_dismiss', { listing_id: l.id }); }}
-              onContact={(l) => navigate(`/propiedad/${l.id}`)}
-              onAddToCompare={(l) => { addToCompare(l); track('swipe_compare', { listing_id: l.id }); }}
-              onOpenCompare={() => setCompareOpen(true)}
-              compareCount={compareList.length}
-              isInCompare={isInCompare}
-              onBack={() => setMobileViewMode('list')}
-              onDeckChange={setSwipeDeck}
-            />
-          </div>
-        ) : (
-          <MobileExploreView
-            listings={filteredListings}
-            isLoading={isLoading}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            selectedTypes={selectedTypes}
-            selectedRegions={selectedRegions}
-            selectedTags={selectedTags}
-            priceRange={priceRange}
-            areaRange={areaRange}
-            onToggleType={toggleType}
-            onToggleRegion={toggleRegion}
-            onToggleTag={toggleTag}
-            onPriceRangeChange={setPriceRange}
-            onAreaRangeChange={setAreaRange}
-            onClearFilters={clearFilters}
-            activeFiltersCount={activeFiltersCount}
-          />
-        )}
+        <MobileExploreView
+          mode={mobileViewMode}
+          onModeChange={setMobileViewMode}
+          listings={filteredListings}
+          totalCount={totalCount}
+          isLoading={isLoading}
+          hasMore={!!hasMore}
+          isLoadingMore={!!isLoadingMore}
+          onLoadMore={() => loadMore()}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedTypes={selectedTypes}
+          selectedRegions={selectedRegions}
+          selectedCountries={selectedCountries}
+          selectedTags={selectedTags}
+          priceRange={priceRange}
+          areaRange={areaRange}
+          onToggleType={toggleType}
+          onToggleRegion={toggleRegion}
+          onToggleCountry={toggleCountry}
+          onToggleTag={toggleTag}
+          onPriceRangeChange={setPriceRange}
+          onAreaRangeChange={setAreaRange}
+          onClearFilters={clearFilters}
+          activeFiltersCount={activeFiltersCount}
+          selectedSlopes={selectedSlopes}
+          onToggleSlope={toggleSlope}
+          selectedValuation={selectedValuation}
+          onToggleValuation={toggleValuation}
+          hoveredListing={hoveredListing}
+          selectedListing={selectedListing}
+          onListingHover={setHoveredListing}
+          onListingClick={handleListingClick}
+          onListingPreview={setPreviewListing}
+          onSwipeFavorite={(l) => {
+            addFavorite.mutate(l.id);
+            track('swipe_favorite', { listing_id: l.id });
+          }}
+          onSwipeDismiss={(l) => track('swipe_dismiss', { listing_id: l.id })}
+          onSwipeContact={(l) => navigate(`/propiedad/${l.id}`)}
+          onSwipeAddToCompare={(l) => {
+            addToCompare(l);
+            track('swipe_compare', { listing_id: l.id });
+          }}
+          onSwipeOpenCompare={() => setCompareOpen(true)}
+          compareCount={compareList.length}
+          isInCompare={isInCompare}
+          onSwipeDeckChange={setSwipeDeck}
+        />
 
         <PropertyPreviewSheet
           listing={previewListing}
@@ -282,6 +268,9 @@ const Explorar = () => {
       </div>
     );
   }
+
+  // isMobile-only variable kept for future breakpoint tweaks; suppress unused warning
+  void isMobile;
 
   // ── DESKTOP SPLIT-VIEW ──
   return (
