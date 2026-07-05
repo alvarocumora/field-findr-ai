@@ -1,11 +1,12 @@
-import { Badge } from '@/components/ui/badge';
-import { CalendarClock } from 'lucide-react';
+import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 interface DashboardHeaderProps {
   title?: string;
   subtitle?: string;
   userName?: string;
+  roleLabel?: string;
+  actions?: ReactNode;
   className?: string;
 }
 
@@ -13,7 +14,9 @@ export const DashboardHeader = ({
   title = 'Dashboard Ejecutivo',
   subtitle = 'Vista general de tu negocio de parcelas',
   userName,
-  className
+  roleLabel,
+  actions,
+  className,
 }: DashboardHeaderProps) => {
   const greeting = () => {
     const hour = new Date().getHours();
@@ -23,15 +26,23 @@ export const DashboardHeader = ({
   };
 
   return (
-    <div className={cn(
-      'flex flex-col sm:flex-row sm:items-center justify-between gap-4',
-      'pb-6 border-b border-border/50',
-      className
-    )}>
+    <div
+      className={cn(
+        'flex flex-col lg:flex-row lg:items-end justify-between gap-4',
+        'pb-6 border-b border-border/50',
+        className,
+      )}
+    >
       <div className="space-y-1">
         {userName && (
           <p className="text-sm text-muted-foreground animate-fade-in">
-            {greeting()}, <span className="font-medium text-foreground">{userName}</span>
+            {greeting()},{' '}
+            <span className="font-medium text-foreground">{userName}</span>
+            {roleLabel && (
+              <span className="ml-2 inline-flex items-center rounded-full border border-border/70 bg-muted/40 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                {roleLabel}
+              </span>
+            )}
           </p>
         )}
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight animate-fade-in stagger-1">
@@ -41,13 +52,10 @@ export const DashboardHeader = ({
           {subtitle}
         </p>
       </div>
-      
-      <div className="flex items-center gap-2 animate-fade-in stagger-3">
-        <Badge variant="outline" className="gap-1.5 text-xs text-muted-foreground">
-          <CalendarClock className="h-3.5 w-3.5" />
-          Este mes
-        </Badge>
-      </div>
+
+      {actions && (
+        <div className="animate-fade-in stagger-3">{actions}</div>
+      )}
     </div>
   );
 };

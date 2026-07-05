@@ -2,44 +2,93 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-export const useDashboardKPIs = () => {
+export type DateRange = { from: Date; to: Date };
+
+const rangeKey = (r?: DateRange) =>
+  r ? `${r.from.toISOString()}_${r.to.toISOString()}` : 'default';
+
+// Given a range, compute the immediately previous range of equal length
+const previousRange = (r: DateRange): DateRange => {
+  const durationMs = r.to.getTime() - r.from.getTime();
+  const prevTo = new Date(r.from.getTime() - 1);
+  const prevFrom = new Date(prevTo.getTime() - durationMs);
+  return { from: prevFrom, to: prevTo };
+};
+
+const defaultRange = (): DateRange => {
+  const from = new Date();
+  from.setDate(1);
+  from.setHours(0, 0, 0, 0);
+  const to = new Date();
+  to.setHours(23, 59, 59, 999);
+  return { from, to };
+};
+
+const pctChange = (current: number, previous: number): number | null => {
+  if (previous === 0) return current > 0 ? 100 : null;
+  return Math.round(((current - previous) / previous) * 100);
+};
+
+export const useDashboardKPIs = (range?: DateRange) => {
   const { user } = useAuth();
+  const r = range ?? defaultRange();
+  const prev = previousRange(r);
 
   return useQuery({
-    queryKey: ['dashboard-kpis', user?.id],
+    queryKey: ['dashboard-kpis', user?.id, rangeKey(r)],
     queryFn: async () => {
       if (!user) return null;
 
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
+      // Sales in current + previous period
+      const [{ data: soldCurrent }, { data: soldPrev }] = await Promise.all([
+        supabase
+          .from('lots')
+          .select('price, sale_date')
+          .eq('user_id', user.id)
+          .eq('status', 'sold')
+          .gte('sale_date', r.from.toISOString())
+          .lte('sale_date', r.to.toISOString()),
+        supabase
+          .from('lots')
+          .select('price, sale_date')
+          .eq('user_id', user.id)
+          .eq('status', 'sold')
+          .gte('sale_date', prev.from.toISOString())
+          .lte('sale_date', prev.to.toISOString()),
+      ]);
 
-      // Get sold lots this month with prices
-      const { data: soldLots } = await supabase
-        .from('lots')
-        .select('price, sale_date')
-        .eq('user_id', user.id)
-        .eq('status', 'sold')
-        .gte('sale_date', startOfMonth.toISOString());
+      const monthlyRevenue = soldCurrent?.reduce((s, l) => s + (l.price || 0), 0) || 0;
+      const prevRevenue = soldPrev?.reduce((s, l) => s + (l.price || 0), 0) || 0;
+      const soldCount = soldCurrent?.length || 0;
+      const prevSoldCount = soldPrev?.length || 0;
 
-      const monthlyRevenue = soldLots?.reduce((sum, l) => sum + (l.price || 0), 0) || 0;
-      const soldCount = soldLots?.length || 0;
+      // Leads created in each period
+      const [{ count: leadsCurrent }, { count: leadsPrev }, { count: activeLeadsTotal }] = await Promise.all([
+        supabase
+          .from('leads')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('created_at', r.from.toISOString())
+          .lte('created_at', r.to.toISOString()),
+        supabase
+          .from('leads')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('created_at', prev.from.toISOString())
+          .lte('created_at', prev.to.toISOString()),
+        supabase
+          .from('leads')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .not('status', 'eq', 'converted'),
+      ]);
 
-      // Get active leads count
-      const { count: activeLeads } = await supabase
-        .from('leads')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .not('status', 'eq', 'converted');
-
-      // Get paid reservations count
       const { count: activeReservations } = await supabase
         .from('reservations')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('status', 'paid');
 
-      // Get lots summary
       const { data: allLots } = await supabase
         .from('lots')
         .select('status, price')
@@ -49,19 +98,24 @@ export const useDashboardKPIs = () => {
       const availableLots = allLots?.filter(l => l.status === 'available').length || 0;
       const reservedLots = allLots?.filter(l => l.status === 'reserved').length || 0;
       const allSold = allLots?.filter(l => l.status === 'sold').length || 0;
-      const conversionRate = totalLots > 0 
-        ? Math.round(((allSold + reservedLots) / totalLots) * 100) 
+      const conversionRate = totalLots > 0
+        ? Math.round(((allSold + reservedLots) / totalLots) * 100)
         : 0;
 
       return {
         monthlyRevenue,
         soldCount,
-        activeLeads: activeLeads || 0,
+        activeLeads: activeLeadsTotal || 0,
+        leadsInRange: leadsCurrent || 0,
         activeReservations: activeReservations || 0,
         totalLots,
         availableLots,
         reservedLots,
         conversionRate,
+        // deltas vs previous period
+        revenueDelta: pctChange(monthlyRevenue, prevRevenue),
+        soldDelta: pctChange(soldCount, prevSoldCount),
+        leadsDelta: pctChange(leadsCurrent || 0, leadsPrev || 0),
       };
     },
     enabled: !!user,
@@ -76,7 +130,6 @@ export const useUpcomingFollowUps = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      const now = new Date().toISOString();
       const inThreeDays = new Date();
       inThreeDays.setDate(inThreeDays.getDate() + 3);
 
@@ -103,7 +156,6 @@ export const useDashboardActivity = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      // Get recent reservations
       const { data: reservations } = await supabase
         .from('reservations')
         .select('id, buyer_name, status, created_at, reservation_amount, lot_id')
@@ -111,7 +163,6 @@ export const useDashboardActivity = () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      // Get recent leads
       const { data: leads } = await supabase
         .from('leads')
         .select('id, first_name, last_name, status, created_at, project_id')
@@ -119,7 +170,6 @@ export const useDashboardActivity = () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      // Get recently sold lots
       const { data: soldLots } = await supabase
         .from('lots')
         .select('id, lot_number, name, price, sale_date, project_id')
@@ -139,7 +189,6 @@ export const useDashboardActivity = () => {
 
       const activities: Activity[] = [];
 
-      // Map reservations to activities
       reservations?.forEach(r => {
         const statusMap: Record<string, { type: Activity['type']; status: Activity['status']; label: string }> = {
           paid: { type: 'payment', status: 'success', label: 'Reserva pagada' },
@@ -159,7 +208,6 @@ export const useDashboardActivity = () => {
         });
       });
 
-      // Map leads
       leads?.forEach(l => {
         activities.push({
           id: `lead-${l.id}`,
@@ -171,7 +219,6 @@ export const useDashboardActivity = () => {
         });
       });
 
-      // Map sold lots
       soldLots?.forEach(l => {
         activities.push({
           id: `sale-${l.id}`,
@@ -183,7 +230,6 @@ export const useDashboardActivity = () => {
         });
       });
 
-      // Sort by timestamp descending
       return activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 8);
     },
     enabled: !!user,
@@ -282,13 +328,11 @@ export const useProjectSalesDistribution = () => {
 
       if (!lots || lots.length === 0) return [];
 
-      // Group by project
       const grouped: Record<string, number> = {};
       lots.forEach(l => {
         grouped[l.project_id] = (grouped[l.project_id] || 0) + 1;
       });
 
-      // Get project names
       const projectIds = Object.keys(grouped);
       const { data: projects } = await supabase
         .from('projects')
