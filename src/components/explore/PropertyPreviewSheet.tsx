@@ -111,13 +111,9 @@ const PropertyPreviewSheet = ({
     }
   };
 
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent 
-        side="right" 
-        className="w-full sm:max-w-md p-0 border-l border-border/30 bg-background/95 backdrop-blur-xl"
-      >
-        {/* Image Gallery with swipe */}
+  const body = (
+    <>
+      {/* Image Gallery with swipe */}
         <div 
           className="relative h-56 bg-muted"
           onTouchStart={handleTouchStart}
