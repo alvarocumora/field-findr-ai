@@ -321,6 +321,25 @@ const PropertyPreviewSheet = ({
             </>
           )}
         </div>
+    </>
+  );
+
+  if (inline) {
+    if (!open) return null;
+    return (
+      <aside className="relative h-full w-[380px] flex-shrink-0 border-r border-border/30 bg-background/95 backdrop-blur-xl overflow-hidden flex flex-col animate-in slide-in-from-left-4 duration-300">
+        {body}
+      </aside>
+    );
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-md p-0 border-l border-border/30 bg-background/95 backdrop-blur-xl"
+      >
+        {body}
       </SheetContent>
     </Sheet>
   );
