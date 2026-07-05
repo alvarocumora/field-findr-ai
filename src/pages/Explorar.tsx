@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, useDeferredValue, lazy, Suspense } from 'react';
+import { useState, useMemo, useCallback, useRef, useDeferredValue, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StickyHeader from '@/components/navigation/StickyHeader';
 import ExploreListPanel from '@/components/explore/ExploreListPanel';
@@ -31,6 +31,8 @@ const Explorar = () => {
   const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>('swipe');
   // Desktop: overlay swipe mode
   const [desktopSwipe, setDesktopSwipe] = useState(false);
+  // Deck emitted by SwipeExplorer (category + advanced filters). Null = no swipe sync.
+  const [swipeDeck, setSwipeDeck] = useState<Listing[] | null>(null);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -119,8 +121,20 @@ const Explorar = () => {
     return result;
   }, [listings, searchQuery, selectedTags, selectedSlopes, selectedValuation]);
 
+  // Reset swipe-derived deck whenever upstream filters or listings change,
+  // so it doesn't shadow the map with a stale subset.
+  useEffect(() => { setSwipeDeck(null); }, [filteredListings]);
+
+  // The map should reflect the same deck that SwipeExplorer is showing.
+  // When a swipe deck is emitted, use it; otherwise fall back to full filtered.
+  const mapSourceListings = swipeDeck ?? filteredListings;
+  const swipeDeckIds = useMemo(
+    () => (swipeDeck ? new Set(swipeDeck.map(l => l.id)) : null),
+    [swipeDeck]
+  );
+
   // Progressive rendering: defer the heavy map listings so filter updates stay responsive
-  const deferredMapListings = useDeferredValue(filteredListings);
+  const deferredMapListings = useDeferredValue(mapSourceListings);
 
   const activeFiltersCount = selectedTypes.length + selectedRegions.length + selectedCountries.length + selectedTags.length +
     selectedSlopes.length + selectedValuation.length +
@@ -230,6 +244,7 @@ const Explorar = () => {
               compareCount={compareList.length}
               isInCompare={isInCompare}
               onBack={() => setMobileViewMode('list')}
+              onDeckChange={setSwipeDeck}
             />
           </div>
         ) : (
@@ -331,6 +346,19 @@ const Explorar = () => {
             onListingClick={handleListingClick}
             onBoundsSearch={handleBoundsSearch}
           />
+          {swipeDeckIds && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full bg-primary/95 text-primary-foreground shadow-lg backdrop-blur px-3 py-1.5 text-xs font-medium animate-in fade-in slide-in-from-top-2">
+              <CreditCard className="h-3.5 w-3.5" />
+              <span>Sincronizado con Swipe · {swipeDeckIds.size} coinciden</span>
+              <button
+                type="button"
+                onClick={() => setSwipeDeck(null)}
+                className="ml-1 rounded-full hover:bg-primary-foreground/20 px-2 py-0.5 text-[10px] uppercase tracking-wide"
+              >
+                Ver todo
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -377,6 +405,7 @@ const Explorar = () => {
               compareCount={compareList.length}
               isInCompare={isInCompare}
               onBack={() => setDesktopSwipe(false)}
+              onDeckChange={setSwipeDeck}
             />
           </div>
         </div>

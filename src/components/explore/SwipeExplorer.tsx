@@ -30,6 +30,8 @@ interface SwipeExplorerProps {
   compareCount?: number;
   isInCompare?: (id: string) => boolean;
   onBack?: () => void;
+  /** Emits the filtered deck (category + advanced filters + dismissed) whenever it changes. */
+  onDeckChange?: (deck: Listing[]) => void;
 }
 
 type CategoryKey = 'todos' | 'campos' | 'parcelas' | 'loteos';
@@ -63,7 +65,7 @@ const DISMISSED_KEY = 'swipe:dismissed-ids';
 const SwipeExplorer = ({
   listings, onFavorite, onDismiss, onContact,
   onAddToCompare, onOpenCompare, compareCount = 0, isInCompare,
-  onBack,
+  onBack, onDeckChange,
 }: SwipeExplorerProps) => {
   const navigate = useNavigate();
   const [category, setCategory] = useState<CategoryKey>('todos');
@@ -150,6 +152,9 @@ const SwipeExplorer = ({
 
   // Reset index when category or advanced filters change
   useEffect(() => { setCurrentIndex(0); }, [category, selectedRegions, priceRange, pricePerM2Range]);
+
+  // Emit filtered deck upward so the parent (map, badges, etc.) can sync.
+  useEffect(() => { onDeckChange?.(filtered); }, [filtered, onDeckChange]);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
