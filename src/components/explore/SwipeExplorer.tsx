@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Heart, X, MessageCircle, MapPin, Maximize2, ChevronLeft, Undo2, Sparkles,
+  Heart, X, MessageCircle, MapPin, Maximize2, ChevronLeft, Undo2, Sparkles, Scale,
 } from 'lucide-react';
 import { Listing, getListingTypeLabel } from '@/hooks/useListings';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +16,10 @@ interface SwipeExplorerProps {
   onFavorite?: (listing: Listing) => void;
   onDismiss?: (listing: Listing) => void;
   onContact?: (listing: Listing) => void;
+  onAddToCompare?: (listing: Listing) => void;
+  onOpenCompare?: () => void;
+  compareCount?: number;
+  isInCompare?: (id: string) => boolean;
   onBack?: () => void;
 }
 
@@ -47,7 +51,11 @@ const CATEGORY_LABELS: Record<CategoryKey, string> = {
 const SWIPE_THRESHOLD = 100;
 const DISMISSED_KEY = 'swipe:dismissed-ids';
 
-const SwipeExplorer = ({ listings, onFavorite, onDismiss, onContact, onBack }: SwipeExplorerProps) => {
+const SwipeExplorer = ({
+  listings, onFavorite, onDismiss, onContact,
+  onAddToCompare, onOpenCompare, compareCount = 0, isInCompare,
+  onBack,
+}: SwipeExplorerProps) => {
   const navigate = useNavigate();
   const [category, setCategory] = useState<CategoryKey>('todos');
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
