@@ -32,6 +32,8 @@ interface SwipeExplorerProps {
   onBack?: () => void;
   /** Emits the filtered deck (category + advanced filters + dismissed) whenever it changes. */
   onDeckChange?: (deck: Listing[]) => void;
+  /** Ref receives an `unDismiss(id)` function so parents can revert a dismiss (e.g. from an undo toast). */
+  undoDismissRef?: MutableRefObject<((id: string) => void) | null>;
 }
 
 type CategoryKey = 'todos' | 'campos' | 'parcelas' | 'loteos';
