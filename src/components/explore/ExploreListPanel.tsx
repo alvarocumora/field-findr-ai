@@ -476,44 +476,20 @@ const ExploreListPanel = ({
             </div>
 
           ) : (
-            <div className={viewLayout === 'grid' ? 'grid grid-cols-2 gap-2' : 'space-y-1'}>
-              {sortedListings.map((listing, index) => (
-                <div
-                  key={listing.id}
-                  className="animate-fade-in"
-                  style={{ animationDelay: `${Math.min(index * 20, 100)}ms` }}
-                >
-                  <QuickPropertyCard
-                    listing={listing}
-                    isHovered={hoveredListing?.id === listing.id}
-                    isSelected={selectedListing?.id === listing.id}
-                    onHover={onListingHover}
-                    onClick={onListingClick}
-                    onPreview={onListingPreview}
-                    layout={viewLayout === 'grid' ? 'vertical' : 'horizontal'}
-                  />
-                </div>
-              ))}
-
-              {/* Infinite scroll sentinel */}
-              <div ref={sentinelRef} className="py-1" />
-
-              {/* Loading more indicator */}
-              {isLoadingMore && (
-                <div className="space-y-1">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <ListingSkeleton key={`more-${i}`} />
-                  ))}
-                </div>
-              )}
-
-              {/* End of results */}
-              {!hasMore && sortedListings.length > 0 && (
-                <p className="text-center text-xs text-muted-foreground py-4">
-                  Mostrando {sortedListings.length} de {displayCount} resultados
-                </p>
-              )}
-            </div>
+            <VirtualizedListings
+              listings={sortedListings}
+              scrollParentRef={scrollContainerRef}
+              viewLayout={viewLayout}
+              hoveredListing={hoveredListing}
+              selectedListing={selectedListing}
+              onListingHover={onListingHover}
+              onListingClick={onListingClick}
+              onListingPreview={onListingPreview}
+              sentinelRef={sentinelRef}
+              isLoadingMore={isLoadingMore}
+              hasMore={hasMore}
+              displayCount={displayCount}
+            />
           )}
         </div>
       </div>
