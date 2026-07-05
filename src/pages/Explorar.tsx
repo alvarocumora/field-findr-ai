@@ -312,7 +312,7 @@ const Explorar = () => {
         {/* Right panel – map fills remaining space */}
         <div className="flex-1 min-w-0 relative">
           <ExploreMapPanel
-            listings={filteredListings}
+            listings={deferredMapListings}
             hoveredListing={hoveredListing}
             selectedListing={selectedListing}
             onListingHover={setHoveredListing}
