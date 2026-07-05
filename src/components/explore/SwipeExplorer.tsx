@@ -570,56 +570,84 @@ const SwipeExplorer = ({
         </AnimatePresence>
       </div>
 
-      <div className="absolute bottom-20 left-0 right-0 flex justify-center gap-4 pb-4">
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-14 w-14 rounded-full border-2 border-red-500 text-red-500 bg-background shadow-lg"
-          onClick={() => advance(current, 'dismiss')}
-        >
-          <X className="h-6 w-6" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-12 w-12 rounded-full border-2 border-blue-500 text-blue-500 bg-background shadow-lg"
-          onClick={() => advance(current, 'contact')}
-        >
-          <MessageCircle className="h-5 w-5" />
-        </Button>
-        {onAddToCompare && (
-          <Button
-            variant="outline"
-            size="icon"
-            className={cn(
-              "h-12 w-12 rounded-full border-2 bg-background shadow-lg transition-colors",
-              isInCompare?.(current.id)
-                ? "border-primary text-primary bg-primary/10"
-                : "border-amber-500 text-amber-500"
-            )}
-            onClick={(e) => { e.stopPropagation(); onAddToCompare(current); }}
-            title={isInCompare?.(current.id) ? 'Ya en comparador' : 'Agregar al comparador'}
+      {/* Sticky action bar — labeled circles, non-overlapping, safe-area aware */}
+      <div className="absolute inset-x-0 bottom-0 z-10 px-4 pt-3 pb-4 bg-gradient-to-t from-background via-background/95 to-background/0 pointer-events-none">
+        <div className="mx-auto max-w-md flex items-end justify-around gap-2 pointer-events-auto">
+          {/* Nope */}
+          <button
+            type="button"
+            onClick={() => advance(current, 'dismiss')}
+            className="group flex flex-col items-center gap-1"
+            aria-label="Descartar"
           >
-            <Scale className="h-5 w-5" />
-          </Button>
-        )}
-        <Button
-          variant="outline"
-          size="icon"
-          className={cn(
-            "h-14 w-14 rounded-full border-2 border-emerald-500 text-emerald-500 bg-background shadow-lg",
+            <span className="h-14 w-14 rounded-full bg-background border-2 border-red-500/70 text-red-500 shadow-lg flex items-center justify-center transition-transform group-hover:scale-105 group-active:scale-95">
+              <X className="h-6 w-6" strokeWidth={2.5} />
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Nope
+            </span>
+          </button>
+
+          {/* Contactar */}
+          <button
+            type="button"
+            onClick={() => advance(current, 'contact')}
+            className="group flex flex-col items-center gap-1"
+            aria-label="Contactar"
+          >
+            <span className="h-12 w-12 rounded-full bg-background border-2 border-sky-500/70 text-sky-500 shadow-lg flex items-center justify-center transition-transform group-hover:scale-105 group-active:scale-95">
+              <MessageCircle className="h-5 w-5" strokeWidth={2.5} />
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Contactar
+            </span>
+          </button>
+
+          {/* Comparar */}
+          {onAddToCompare && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToCompare(current);
+              }}
+              className="group flex flex-col items-center gap-1"
+              aria-label={isInCompare?.(current.id) ? 'Ya en comparador' : 'Comparar'}
+            >
+              <span
+                className={cn(
+                  'h-12 w-12 rounded-full bg-background border-2 shadow-lg flex items-center justify-center transition-transform group-hover:scale-105 group-active:scale-95',
+                  isInCompare?.(current.id)
+                    ? 'border-primary text-primary bg-primary/10'
+                    : 'border-amber-500/70 text-amber-500',
+                )}
+              >
+                <Scale className="h-5 w-5" strokeWidth={2.5} />
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {isInCompare?.(current.id) ? 'Añadido' : 'Comparar'}
+              </span>
+            </button>
           )}
-          onClick={() => advance(current, 'favorite')}
-        >
-          <Heart className="h-6 w-6" />
-        </Button>
+
+          {/* Me gusta */}
+          <button
+            type="button"
+            onClick={() => advance(current, 'favorite')}
+            className="group flex flex-col items-center gap-1"
+            aria-label="Me gusta"
+          >
+            <span className="h-14 w-14 rounded-full bg-background border-2 border-emerald-500/70 text-emerald-500 shadow-lg flex items-center justify-center transition-transform group-hover:scale-105 group-active:scale-95">
+              <Heart className="h-6 w-6" strokeWidth={2.5} />
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Me gusta
+            </span>
+          </button>
+        </div>
       </div>
 
-      <div className="absolute bottom-2 left-0 right-0 text-center pointer-events-none">
-        <p className="text-[10px] text-muted-foreground">
-          ← Descartar • ↑ Contactar • Favorito → • ⚖ Comparar
-        </p>
-      </div>
+
 
       <Dialog open={!!confirmed} onOpenChange={(o) => !o && setConfirmed(null)}>
         <DialogContent className="max-w-md p-0 overflow-hidden">
