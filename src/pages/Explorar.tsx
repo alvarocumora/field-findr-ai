@@ -20,6 +20,8 @@ import RealListingsSection from '@/components/RealListingsSection';
 import { useAddFavorite } from '@/hooks/useFavorites';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
 import { useCompare } from '@/hooks/useCompare';
+import { whatsapp } from '@/lib/whatsappUtils';
+import { toast } from 'sonner';
 
 const Explorar = () => {
   const navigate = useNavigate();
