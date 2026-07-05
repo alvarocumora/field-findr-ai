@@ -47,6 +47,7 @@ interface FilterBarProps {
   onAreaRangeChange: (range: [number, number]) => void;
   onClearFilters: () => void;
   activeFiltersCount: number;
+  resultsCount?: number;
   showAISearch?: boolean;
   onToggleAISearch?: () => void;
   className?: string;
