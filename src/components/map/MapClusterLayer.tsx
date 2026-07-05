@@ -1,136 +1,128 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, type MutableRefObject } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { Listing, formatPrice } from '@/hooks/useListings';
+import { Listing } from '@/hooks/useListings';
 
-interface MapClusterLayerProps {
-  map: mapboxgl.Map | null;
+/**
+ * Native Mapbox clustering for large result sets. DOM price-pill markers
+ * (useMapMarkers) stay the richer experience for small sets; above the
+ * threshold EnhancedMap swaps to these canvas layers, which handle thousands
+ * of points without DOM cost.
+ *
+ * Click resolution goes through a ref (not a closure) so clicks always
+ * resolve against the CURRENT listings — the previous implementation
+ * captured the first listings array forever.
+ */
+
+const SOURCE_ID = 'listings-cluster';
+const LAYER_IDS = ['clusters', 'cluster-count', 'unclustered-point', 'unclustered-price'];
+
+// Matches useMapMarkers typeColors / the MapLegend shown in /explorar.
+const TYPE_COLOR_MATCH: mapboxgl.Expression = [
+  'match',
+  ['get', 'type'],
+  'parcela_rural', '#22c55e',
+  'campo_agricola', '#84cc16',
+  'terreno_urbano', '#3b82f6',
+  'sitio_industrial', '#f59e0b',
+  'terreno_costero', '#06b6d4',
+  'terreno_montana', '#8b5cf6',
+  'inversion', '#ec4899',
+  '#10b981',
+];
+
+interface ClusterHandlers {
   listings: Listing[];
-  onClusterClick?: (features: Listing[]) => void;
-  onMarkerClick?: (listing: Listing) => void;
+  onListingClick?: (listing: Listing) => void;
 }
 
-const statusColors = {
-  active: '#10b981',
-  reserved: '#f59e0b',
-  sold: '#ef4444',
-};
+const toGeoJSON = (listings: Listing[]): GeoJSON.FeatureCollection => ({
+  type: 'FeatureCollection',
+  features: listings
+    .filter((l) => l.lat && l.lng)
+    .map((listing) => ({
+      type: 'Feature' as const,
+      properties: {
+        id: listing.id,
+        price: listing.price,
+        type: listing.type,
+      },
+      geometry: {
+        type: 'Point' as const,
+        coordinates: [listing.lng!, listing.lat!],
+      },
+    })),
+});
 
-export const setupClusterLayers = (
+const addLayersAndHandlers = (
   map: mapboxgl.Map,
-  listings: Listing[],
-  onMarkerClick?: (listing: Listing) => void
+  handlersRef: MutableRefObject<ClusterHandlers>,
 ) => {
-  // Create GeoJSON source for clustering
-  const geojsonData: GeoJSON.FeatureCollection = {
-    type: 'FeatureCollection',
-    features: listings
-      .filter(l => l.lat && l.lng)
-      .map(listing => ({
-        type: 'Feature' as const,
-        properties: {
-          id: listing.id,
-          title: listing.title,
-          price: listing.price,
-          status: listing.status,
-          type: listing.type,
-          area_m2: listing.area_m2,
-        },
-        geometry: {
-          type: 'Point' as const,
-          coordinates: [listing.lng!, listing.lat!],
-        },
-      })),
-  };
-
-  // Check if source already exists
-  if (map.getSource('listings-cluster')) {
-    (map.getSource('listings-cluster') as mapboxgl.GeoJSONSource).setData(geojsonData);
-    return;
-  }
-
-  // Add source with clustering enabled
-  map.addSource('listings-cluster', {
+  map.addSource(SOURCE_ID, {
     type: 'geojson',
-    data: geojsonData,
+    data: toGeoJSON(handlersRef.current.listings),
     cluster: true,
     clusterMaxZoom: 14,
     clusterRadius: 50,
-    clusterProperties: {
-      sum_price: ['+', ['get', 'price']],
-      count_active: ['+', ['case', ['==', ['get', 'status'], 'active'], 1, 0]],
-    },
   });
 
-  // Cluster circles layer
   map.addLayer({
     id: 'clusters',
     type: 'circle',
-    source: 'listings-cluster',
+    source: SOURCE_ID,
     filter: ['has', 'point_count'],
     paint: {
       'circle-color': [
         'step',
         ['get', 'point_count'],
-        '#10b981', // Green for small clusters
-        5, '#3b82f6', // Blue for medium
-        10, '#8b5cf6', // Purple for large
-        25, '#f59e0b', // Orange for very large
+        '#10b981',
+        10, '#3b82f6',
+        25, '#8b5cf6',
+        50, '#f59e0b',
       ],
       'circle-radius': [
         'step',
         ['get', 'point_count'],
-        20,
-        5, 25,
-        10, 30,
-        25, 40,
+        18,
+        10, 24,
+        25, 30,
+        50, 38,
       ],
       'circle-stroke-width': 3,
-      'circle-stroke-color': 'rgba(255, 255, 255, 0.8)',
+      'circle-stroke-color': 'rgba(255, 255, 255, 0.85)',
     },
   });
 
-  // Cluster count label
   map.addLayer({
     id: 'cluster-count',
     type: 'symbol',
-    source: 'listings-cluster',
+    source: SOURCE_ID,
     filter: ['has', 'point_count'],
     layout: {
       'text-field': '{point_count_abbreviated}',
       'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-      'text-size': 14,
+      'text-size': 13,
+      'text-allow-overlap': true,
     },
-    paint: {
-      'text-color': '#ffffff',
-    },
+    paint: { 'text-color': '#ffffff' },
   });
 
-  // Individual point layer (unclustered)
   map.addLayer({
     id: 'unclustered-point',
     type: 'circle',
-    source: 'listings-cluster',
+    source: SOURCE_ID,
     filter: ['!', ['has', 'point_count']],
     paint: {
-      'circle-color': [
-        'match',
-        ['get', 'status'],
-        'active', statusColors.active,
-        'reserved', statusColors.reserved,
-        'sold', statusColors.sold,
-        statusColors.active,
-      ],
-      'circle-radius': 10,
-      'circle-stroke-width': 3,
+      'circle-color': TYPE_COLOR_MATCH,
+      'circle-radius': 9,
+      'circle-stroke-width': 2.5,
       'circle-stroke-color': 'rgba(255, 255, 255, 0.9)',
     },
   });
 
-  // Price label for unclustered points
   map.addLayer({
     id: 'unclustered-price',
     type: 'symbol',
-    source: 'listings-cluster',
+    source: SOURCE_ID,
     filter: ['!', ['has', 'point_count']],
     layout: {
       'text-field': [
@@ -139,7 +131,7 @@ export const setupClusterLayers = (
         [
           'case',
           ['>=', ['get', 'price'], 1000000000],
-          ['concat', ['to-string', ['round', ['/', ['get', 'price'], 1000000000]]], 'B'],
+          ['concat', ['to-string', ['round', ['/', ['get', 'price'], 100000000]]], ''],
           ['>=', ['get', 'price'], 1000000],
           ['concat', ['to-string', ['round', ['/', ['get', 'price'], 1000000]]], 'M'],
           ['to-string', ['round', ['/', ['get', 'price'], 1000]]],
@@ -147,8 +139,9 @@ export const setupClusterLayers = (
       ],
       'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
       'text-size': 11,
-      'text-offset': [0, -2],
+      'text-offset': [0, -1.6],
       'text-anchor': 'bottom',
+      'text-optional': true,
     },
     paint: {
       'text-color': '#1e293b',
@@ -157,20 +150,19 @@ export const setupClusterLayers = (
     },
   });
 
-  // Click handlers
+  // ── Interactions (registered once per style; resolve via ref) ──
   map.on('click', 'clusters', (e) => {
     const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
     if (!features.length) return;
-
     const clusterId = features[0].properties?.cluster_id;
-    const source = map.getSource('listings-cluster') as mapboxgl.GeoJSONSource;
-
+    const source = map.getSource(SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
+    if (!source) return;
     source.getClusterExpansionZoom(clusterId, (err, zoom) => {
       if (err) return;
       const geometry = features[0].geometry as GeoJSON.Point;
       map.easeTo({
         center: geometry.coordinates as [number, number],
-        zoom: zoom || 14,
+        zoom: (zoom ?? 14) + 0.5,
         duration: 500,
       });
     });
@@ -178,63 +170,85 @@ export const setupClusterLayers = (
 
   map.on('click', 'unclustered-point', (e) => {
     const features = map.queryRenderedFeatures(e.point, { layers: ['unclustered-point'] });
-    if (!features.length || !onMarkerClick) return;
-
-    const listingId = features[0].properties?.id;
-    const listing = listings.find(l => l.id === listingId);
-    if (listing) {
-      onMarkerClick(listing);
-    }
+    const listingId = features[0]?.properties?.id;
+    if (!listingId) return;
+    const { listings, onListingClick } = handlersRef.current;
+    const listing = listings.find((l) => l.id === listingId);
+    if (listing) onListingClick?.(listing);
   });
 
-  // Cursor changes
-  map.on('mouseenter', 'clusters', () => {
-    map.getCanvas().style.cursor = 'pointer';
-  });
-
-  map.on('mouseleave', 'clusters', () => {
-    map.getCanvas().style.cursor = '';
-  });
-
-  map.on('mouseenter', 'unclustered-point', () => {
-    map.getCanvas().style.cursor = 'pointer';
-  });
-
-  map.on('mouseleave', 'unclustered-point', () => {
-    map.getCanvas().style.cursor = '';
-  });
-};
-
-export const removeClusterLayers = (map: mapboxgl.Map) => {
-  const layers = ['clusters', 'cluster-count', 'unclustered-point', 'unclustered-price'];
-  
-  layers.forEach(layer => {
-    if (map.getLayer(layer)) {
-      map.removeLayer(layer);
-    }
-  });
-
-  if (map.getSource('listings-cluster')) {
-    map.removeSource('listings-cluster');
+  for (const layer of ['clusters', 'unclustered-point']) {
+    map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
   }
 };
 
-export default function MapClusterLayer({
+export const removeClusterLayers = (map: mapboxgl.Map) => {
+  for (const layer of LAYER_IDS) {
+    if (map.getLayer(layer)) map.removeLayer(layer);
+  }
+  if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
+};
+
+interface UseMapClusteringOptions {
+  map: MutableRefObject<mapboxgl.Map | null>;
+  styleLoadedRef: MutableRefObject<boolean>;
+  isLoading: boolean;
+  listings: Listing[];
+  enabled: boolean;
+  onListingClick?: (listing: Listing) => void;
+}
+
+/**
+ * Keeps the cluster source/layers in sync with `listings` while `enabled`,
+ * removing them otherwise. Survives style changes (re-adds on style.load).
+ */
+export const useMapClustering = ({
   map,
+  styleLoadedRef,
+  isLoading,
   listings,
-  onMarkerClick,
-}: MapClusterLayerProps) {
+  enabled,
+  onListingClick,
+}: UseMapClusteringOptions) => {
+  const handlersRef = useRef<ClusterHandlers>({ listings, onListingClick });
   useEffect(() => {
-    if (!map || !map.isStyleLoaded()) return;
+    handlersRef.current = { listings, onListingClick };
+  });
 
-    setupClusterLayers(map, listings, onMarkerClick);
+  const enabledRef = useRef(enabled);
+  useEffect(() => { enabledRef.current = enabled; });
 
-    return () => {
-      if (map && map.isStyleLoaded()) {
-        removeClusterLayers(map);
+  // Sync source/layers with enabled + listings.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || isLoading || !styleLoadedRef.current) return;
+
+    if (!enabled) {
+      removeClusterLayers(m);
+      return;
+    }
+
+    const source = m.getSource(SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
+    if (source) {
+      source.setData(toGeoJSON(listings));
+      console.debug('[cluster] setData', listings.length);
+    } else {
+      addLayersAndHandlers(m, handlersRef);
+      console.debug('[cluster] layers added', listings.length);
+    }
+  }, [map, isLoading, styleLoadedRef, listings, enabled]);
+
+  // Re-add after a style change wipes custom layers (map mode switch).
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    const onStyleLoad = () => {
+      if (enabledRef.current && !m.getSource(SOURCE_ID)) {
+        addLayersAndHandlers(m, handlersRef);
       }
     };
-  }, [map, listings, onMarkerClick]);
-
-  return null;
-}
+    m.on('style.load', onStyleLoad);
+    return () => { m.off('style.load', onStyleLoad); };
+  }, [map, isLoading]);
+};

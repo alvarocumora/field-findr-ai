@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useTouchGestures } from '@/hooks/useTouchGestures';
 import { useMapInstance, MapBoundsData } from '@/hooks/useMapInstance';
 import { useMapMarkers } from '@/hooks/useMapMarkers';
+import { useMapClustering } from './MapClusterLayer';
 import { useMapLayers } from '@/hooks/useMapLayers';
 import CompactMapControls from './CompactMapControls';
 import MapToolsDrawer from './MapToolsDrawer';
@@ -32,6 +33,11 @@ interface EnhancedMapProps {
   className?: string;
   showDrawTools?: boolean;
 }
+
+// Above this many results, DOM price-pill markers get replaced by native
+// canvas clustering (one DOM node per listing doesn't scale).
+const CLUSTER_THRESHOLD = 60;
+const EMPTY_LISTINGS: Listing[] = [];
 
 const EnhancedMap = ({
   listings,
@@ -87,11 +93,14 @@ const EnhancedMap = ({
     isLoading,
   });
 
-  // ── 3. Markers ──
+  // ── 3. Markers vs clustering ──
+  const clusterMode = listings.length > CLUSTER_THRESHOLD;
+
   useMapMarkers({
     map,
     popupRef,
-    listings,
+    // In cluster mode the DOM markers are removed (diffing against empty).
+    listings: clusterMode ? EMPTY_LISTINGS : listings,
     hoveredListing,
     selectedListing,
     onListingHover,
@@ -99,6 +108,15 @@ const EnhancedMap = ({
     isLoading,
     infoLayers: layersHook.infoLayers,
     fetchIsochrone: layersHook.fetchIsochrone,
+  });
+
+  useMapClustering({
+    map,
+    styleLoadedRef,
+    isLoading,
+    listings,
+    enabled: clusterMode,
+    onListingClick,
   });
 
   // ── Touch gestures ──
