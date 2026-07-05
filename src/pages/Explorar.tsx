@@ -501,6 +501,7 @@ const Explorar = () => {
               isInCompare={isInCompare}
               onBack={() => setDesktopSwipe(false)}
               onDeckChange={setSwipeDeck}
+              undoDismissRef={undoDismissRef}
             />
           </div>
         </div>
