@@ -18,12 +18,14 @@ import { Layers, CreditCard } from 'lucide-react';
 import RealListingsSection from '@/components/RealListingsSection';
 import { useAddFavorite } from '@/hooks/useFavorites';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
+import { useCompare } from '@/hooks/useCompare';
 
 const Explorar = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const addFavorite = useAddFavorite();
   const { track } = useTrackEvent();
+  const { addToCompare, compareList, isInCompare, setCompareOpen } = useCompare();
 
   // View mode for mobile
   const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>('swipe');
@@ -223,6 +225,10 @@ const Explorar = () => {
               onFavorite={(l) => { addFavorite.mutate(l.id); track('swipe_favorite', { listing_id: l.id }); }}
               onDismiss={(l) => { track('swipe_dismiss', { listing_id: l.id }); }}
               onContact={(l) => navigate(`/propiedad/${l.id}`)}
+              onAddToCompare={(l) => { addToCompare(l); track('swipe_compare', { listing_id: l.id }); }}
+              onOpenCompare={() => setCompareOpen(true)}
+              compareCount={compareList.length}
+              isInCompare={isInCompare}
               onBack={() => setMobileViewMode('list')}
             />
           </div>
@@ -366,6 +372,10 @@ const Explorar = () => {
               onFavorite={(l) => { addFavorite.mutate(l.id); track('swipe_favorite', { listing_id: l.id }); }}
               onDismiss={(l) => { track('swipe_dismiss', { listing_id: l.id }); }}
               onContact={(l) => { setDesktopSwipe(false); navigate(`/propiedad/${l.id}`); }}
+              onAddToCompare={(l) => { addToCompare(l); track('swipe_compare', { listing_id: l.id }); }}
+              onOpenCompare={() => { setDesktopSwipe(false); setCompareOpen(true); }}
+              compareCount={compareList.length}
+              isInCompare={isInCompare}
               onBack={() => setDesktopSwipe(false)}
             />
           </div>

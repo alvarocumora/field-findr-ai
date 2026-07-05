@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Heart, X, MessageCircle, MapPin, Maximize2, ChevronLeft, Undo2, Sparkles,
+  Heart, X, MessageCircle, MapPin, Maximize2, ChevronLeft, Undo2, Sparkles, Scale,
 } from 'lucide-react';
 import { Listing, getListingTypeLabel } from '@/hooks/useListings';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +16,10 @@ interface SwipeExplorerProps {
   onFavorite?: (listing: Listing) => void;
   onDismiss?: (listing: Listing) => void;
   onContact?: (listing: Listing) => void;
+  onAddToCompare?: (listing: Listing) => void;
+  onOpenCompare?: () => void;
+  compareCount?: number;
+  isInCompare?: (id: string) => boolean;
   onBack?: () => void;
 }
 
@@ -47,7 +51,11 @@ const CATEGORY_LABELS: Record<CategoryKey, string> = {
 const SWIPE_THRESHOLD = 100;
 const DISMISSED_KEY = 'swipe:dismissed-ids';
 
-const SwipeExplorer = ({ listings, onFavorite, onDismiss, onContact, onBack }: SwipeExplorerProps) => {
+const SwipeExplorer = ({
+  listings, onFavorite, onDismiss, onContact,
+  onAddToCompare, onOpenCompare, compareCount = 0, isInCompare,
+  onBack,
+}: SwipeExplorerProps) => {
   const navigate = useNavigate();
   const [category, setCategory] = useState<CategoryKey>('todos');
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
@@ -130,13 +138,26 @@ const SwipeExplorer = ({ listings, onFavorite, onDismiss, onContact, onBack }: S
   );
 
   const Header = (
-    <div className="flex items-center justify-between p-4 pb-2">
+    <div className="flex items-center justify-between p-4 pb-2 gap-2">
       <Button variant="ghost" size="icon" onClick={onBack}>
         <ChevronLeft className="h-5 w-5" />
       </Button>
-      <span className="text-sm text-muted-foreground">
-        {Math.min(currentIndex + 1, filtered.length)} / {filtered.length}
-      </span>
+      <div className="flex items-center gap-2 flex-1 justify-center">
+        <span className="text-sm text-muted-foreground">
+          {Math.min(currentIndex + 1, filtered.length)} / {filtered.length}
+        </span>
+        {compareCount >= 2 && onOpenCompare && (
+          <Button
+            size="sm"
+            variant="default"
+            className="rounded-full h-7 px-3 gap-1 animate-in fade-in slide-in-from-top-1"
+            onClick={onOpenCompare}
+          >
+            <Scale className="h-3.5 w-3.5" />
+            Comparar ({compareCount})
+          </Button>
+        )}
+      </div>
       <Button variant="ghost" size="icon" onClick={handleUndo} disabled={history.length === 0}>
         <Undo2 className="h-5 w-5" />
       </Button>
@@ -319,6 +340,22 @@ const SwipeExplorer = ({ listings, onFavorite, onDismiss, onContact, onBack }: S
         >
           <MessageCircle className="h-5 w-5" />
         </Button>
+        {onAddToCompare && (
+          <Button
+            variant="outline"
+            size="icon"
+            className={cn(
+              "h-12 w-12 rounded-full border-2 bg-background shadow-lg transition-colors",
+              isInCompare?.(current.id)
+                ? "border-primary text-primary bg-primary/10"
+                : "border-amber-500 text-amber-500"
+            )}
+            onClick={(e) => { e.stopPropagation(); onAddToCompare(current); }}
+            title={isInCompare?.(current.id) ? 'Ya en comparador' : 'Agregar al comparador'}
+          >
+            <Scale className="h-5 w-5" />
+          </Button>
+        )}
         <Button
           variant="outline"
           size="icon"
@@ -333,7 +370,7 @@ const SwipeExplorer = ({ listings, onFavorite, onDismiss, onContact, onBack }: S
 
       <div className="absolute bottom-2 left-0 right-0 text-center pointer-events-none">
         <p className="text-[10px] text-muted-foreground">
-          ← Descartar • ↑ Contactar • Favorito →
+          ← Descartar • ↑ Contactar • Favorito → • ⚖ Comparar
         </p>
       </div>
     </div>
