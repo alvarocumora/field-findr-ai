@@ -339,14 +339,22 @@ const Explorar = () => {
     <div className="h-screen flex flex-col bg-background">
       <StickyHeader />
 
-      {/* AI Search overlay */}
+      {/* AI Search — floating card, not a full-width bar */}
       {showAISearch && (
-        <div className="fixed top-header left-0 right-0 z-overlay bg-background/95 backdrop-blur-xl border-b border-border/30 p-4">
-          <div className="max-w-2xl mx-auto">
+        <div
+          className="fixed inset-0 z-overlay flex items-start justify-center pt-[calc(var(--header-h,64px)+16px)] px-4"
+          onClick={() => setShowAISearch(false)}
+        >
+          <div className="absolute inset-0 bg-background/40 backdrop-blur-sm" aria-hidden="true" />
+          <div
+            className="relative w-full max-w-2xl rounded-2xl border border-border/40 bg-background/95 shadow-2xl p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <EnhancedAISearch onApplyFilters={handleAIFilters} className="w-full" />
           </div>
         </div>
       )}
+
 
       {/* Split view: List (380px fixed) + Map (rest) */}
       <div className="flex-1 flex pt-header min-h-0">
