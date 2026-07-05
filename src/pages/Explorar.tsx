@@ -244,6 +244,7 @@ const Explorar = () => {
               compareCount={compareList.length}
               isInCompare={isInCompare}
               onBack={() => setMobileViewMode('list')}
+              onDeckChange={setSwipeDeck}
             />
           </div>
         ) : (
