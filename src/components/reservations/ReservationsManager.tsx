@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useExpireStaleReservations, useExtendReservation } from '@/hooks/useReservations';
+import ConvertToSaleDialog from './ConvertToSaleDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -60,6 +62,25 @@ const ReservationsManager = () => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [convertTarget, setConvertTarget] = useState<any>(null);
+
+  const expireStale = useExpireStaleReservations();
+  const extendReservation = useExtendReservation();
+
+  // Server-side expiry sweep on load (fallback to the pg_cron schedule):
+  // flips stale pending reservations to 'expired' so their lots free up.
+  const sweptRef = useRef(false);
+  useEffect(() => {
+    if (user && !sweptRef.current) {
+      sweptRef.current = true;
+      expireStale.mutate(undefined, {
+        onSuccess: (count) => {
+          if (count > 0) queryClient.invalidateQueries({ queryKey: ['admin-reservations'] });
+        },
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const { data: reservations = [], isLoading } = useQuery({
     queryKey: ['admin-reservations', user?.id],
@@ -118,21 +139,6 @@ const ReservationsManager = () => {
       toast.success('Pago confirmado manualmente');
     },
     onError: () => toast.error('Error al confirmar el pago'),
-  });
-
-  const convertMutation = useMutation({
-    mutationFn: async (reservationId: string) => {
-      const { error } = await supabase
-        .from('reservations')
-        .update({ status: 'converted' as ReservationStatus, converted_at: new Date().toISOString() })
-        .eq('id', reservationId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-reservations'] });
-      toast.success('Reserva convertida a venta');
-    },
-    onError: () => toast.error('Error al convertir la reserva'),
   });
 
   const filtered = reservations.filter((r: any) => {
@@ -282,24 +288,43 @@ const ReservationsManager = () => {
                       {/* Actions */}
                       <div className="flex items-center gap-2 shrink-0">
                         {reservation.status === 'pending_payment' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-green-600 border-green-500/30 hover:bg-green-500/10"
-                            onClick={() => confirmMutation.mutate(reservation.id)}
-                            disabled={confirmMutation.isPending}
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-1" />
-                            Confirmar Pago
-                          </Button>
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 border-green-500/30 hover:bg-green-500/10"
+                              onClick={() => confirmMutation.mutate(reservation.id)}
+                              disabled={confirmMutation.isPending}
+                            >
+                              <CheckCircle2 className="h-4 w-4 mr-1" />
+                              Confirmar Pago
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                extendReservation.mutate(
+                                  { reservationId: reservation.id, hours: 48 },
+                                  {
+                                    onSuccess: () =>
+                                      queryClient.invalidateQueries({ queryKey: ['admin-reservations'] }),
+                                  },
+                                )
+                              }
+                              disabled={extendReservation.isPending}
+                              title="Extender vencimiento 48 horas"
+                            >
+                              <RefreshCw className="h-4 w-4 mr-1" />
+                              +48h
+                            </Button>
+                          </>
                         )}
                         {reservation.status === 'paid' && (
                           <Button
                             size="sm"
                             variant="outline"
                             className="text-blue-600 border-blue-500/30 hover:bg-blue-500/10"
-                            onClick={() => convertMutation.mutate(reservation.id)}
-                            disabled={convertMutation.isPending}
+                            onClick={() => setConvertTarget(reservation)}
                           >
                             <ArrowUpRight className="h-4 w-4 mr-1" />
                             Convertir a Venta
@@ -341,6 +366,17 @@ const ReservationsManager = () => {
           )}
         </ScrollArea>
       </Card>
+
+      <ConvertToSaleDialog
+        open={!!convertTarget}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConvertTarget(null);
+            queryClient.invalidateQueries({ queryKey: ['admin-reservations'] });
+          }
+        }}
+        reservation={convertTarget}
+      />
     </div>
   );
 };
