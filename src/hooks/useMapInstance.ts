@@ -17,6 +17,8 @@ interface UseMapInstanceOptions {
   showDrawTools?: boolean;
   onBoundsChange?: (bounds: MapBoundsData) => void;
   onPolygonDrawn?: (polygon: number[][], area: number) => void;
+  /** Fired when the user deletes the drawn polygon with the draw controls. */
+  onPolygonCleared?: () => void;
 }
 
 const calculatePolygonArea = (coordinates: number[][]): number => {
@@ -45,7 +47,7 @@ export function useMapInstance(
   containerRef: MutableRefObject<HTMLDivElement | null>,
   options: UseMapInstanceOptions = {}
 ) {
-  const { showDrawTools = true, onBoundsChange, onPolygonDrawn } = options;
+  const { showDrawTools = true, onBoundsChange, onPolygonDrawn, onPolygonCleared } = options;
 
   const map = useRef<mapboxgl.Map | null>(null);
   const draw = useRef<MapboxDraw | null>(null);
@@ -60,8 +62,10 @@ export function useMapInstance(
   // callbacks in refs so map events don't fire stale closures over parent state.
   const onBoundsChangeRef = useRef(onBoundsChange);
   const onPolygonDrawnRef = useRef(onPolygonDrawn);
+  const onPolygonClearedRef = useRef(onPolygonCleared);
   useEffect(() => { onBoundsChangeRef.current = onBoundsChange; });
   useEffect(() => { onPolygonDrawnRef.current = onPolygonDrawn; });
+  useEffect(() => { onPolygonClearedRef.current = onPolygonCleared; });
 
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -215,6 +219,7 @@ export function useMapInstance(
       map.current.on('draw.delete', () => {
         setDrawnArea(null);
         setIsDrawing(false);
+        onPolygonClearedRef.current?.();
       });
     }
 

@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 const TENO_TASACION: TasacionData = {
   fecha: new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }),
   solicitante: 'Propietario del predio',
-  tasador: 'Field-Findr AI · Departamento de Tasaciones',
+  tasador: 'OFERTA TERRENOS · Valuation',
   proposito: 'Determinar valor comercial referencial para venta directa, garantía bancaria o evaluación de inversión.',
   rol: 'Por verificar en SII',
   inscripcionCBR: 'CBR Curicó (por inscribir referencia comprador)',
@@ -346,7 +346,7 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
       </CardHeader>
 
       <CardContent className="p-4 md:p-6 space-y-4">
-        <TasacionQRPanel buildPdfData={buildPdfData} />
+        <TasacionQRPanel buildPdfData={buildPdfData} listingId={listing?.id ?? null} />
         {shareUrl && (
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium">
@@ -844,7 +844,7 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
         </SectionCard>
 
         <p className="text-[11px] text-muted-foreground italic text-center pt-2">
-          Tasación comercial referencial generada por Field-Findr AI. Para uso bancario o judicial se requiere
+          Tasación comercial referencial generada por OFERTA TERRENOS · Valuation. Para uso bancario o judicial se requiere
           ratificación por tasador acreditado y antecedentes registrales actualizados (CBR, SII, DOM).
         </p>
       </CardContent>

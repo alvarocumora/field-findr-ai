@@ -27,6 +27,7 @@ interface EnhancedMapProps {
   onListingHover?: (listing: Listing | null) => void;
   onListingClick?: (listing: Listing) => void;
   onPolygonDrawn?: (polygon: number[][], area: number) => void;
+  onPolygonCleared?: () => void;
   onBoundsChange?: (bounds: MapBoundsData) => void;
   className?: string;
   showDrawTools?: boolean;
@@ -39,6 +40,7 @@ const EnhancedMap = ({
   onListingHover,
   onListingClick,
   onPolygonDrawn,
+  onPolygonCleared,
   onBoundsChange,
   className = '',
   showDrawTools = true,
@@ -73,6 +75,7 @@ const EnhancedMap = ({
     showDrawTools,
     onBoundsChange,
     onPolygonDrawn,
+    onPolygonCleared,
   });
 
   // ── 2. GIS Layers ──
