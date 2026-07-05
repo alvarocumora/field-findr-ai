@@ -22,44 +22,45 @@
           "openWorldHint": false
         },
         "inputSchema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "query": {
-              "description": "Free text matched against title/description.",
-              "type": "string"
+              "type": "string",
+              "description": "Free text matched against title/description."
             },
             "city": {
-              "description": "City name filter (partial match).",
-              "type": "string"
+              "type": "string",
+              "description": "City name filter (partial match)."
             },
             "region": {
-              "description": "Region filter (partial match).",
-              "type": "string"
+              "type": "string",
+              "description": "Region filter (partial match)."
             },
             "minPrice": {
-              "description": "Minimum price in CLP.",
-              "type": "number"
+              "type": "number",
+              "description": "Minimum price in CLP."
             },
             "maxPrice": {
-              "description": "Maximum price in CLP.",
-              "type": "number"
+              "type": "number",
+              "description": "Maximum price in CLP."
             },
             "minAreaM2": {
-              "description": "Minimum surface area in m².",
-              "type": "number"
+              "type": "number",
+              "description": "Minimum surface area in m²."
             },
             "maxAreaM2": {
-              "description": "Maximum surface area in m².",
-              "type": "number"
+              "type": "number",
+              "description": "Maximum surface area in m²."
             },
             "limit": {
-              "description": "Max results (default 10, max 50).",
               "type": "integer",
               "minimum": 1,
-              "maximum": 50
+              "maximum": 50,
+              "description": "Max results (default 10, max 50)."
             }
-          }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
       },
@@ -73,19 +74,19 @@
           "openWorldHint": false
         },
         "inputSchema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
               "description": "Listing UUID."
             }
           },
           "required": [
             "id"
-          ]
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
       },
@@ -99,16 +100,17 @@
           "openWorldHint": false
         },
         "inputSchema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "limit": {
-              "description": "Max results (default 10).",
               "type": "integer",
               "minimum": 1,
-              "maximum": 50
+              "maximum": 50,
+              "description": "Max results (default 10)."
             }
-          }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
       }
