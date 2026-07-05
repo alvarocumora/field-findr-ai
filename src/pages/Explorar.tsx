@@ -422,10 +422,36 @@ const Explorar = () => {
           <div className="w-full max-w-md h-[90vh] max-h-[800px]">
             <SwipeExplorer
               listings={filteredListings}
-              onFavorite={(l) => { addFavorite.mutate(l.id); track('swipe_favorite', { listing_id: l.id }); }}
-              onDismiss={(l) => { track('swipe_dismiss', { listing_id: l.id }); }}
-              onContact={(l) => { setDesktopSwipe(false); navigate(`/propiedad/${l.id}`); }}
-              onAddToCompare={(l) => { addToCompare(l); track('swipe_compare', { listing_id: l.id }); }}
+              onFavorite={(l) => {
+                addFavorite.mutate(l.id, {
+                  onSuccess: () =>
+                    toast.success('Guardado en favoritos', { description: l.title }),
+                });
+                track('swipe_favorite', { listing_id: l.id });
+              }}
+              onDismiss={(l) => {
+                track('swipe_dismiss', { listing_id: l.id });
+                toast('Descartado', { description: l.title, duration: 2000 });
+              }}
+              onContact={(l) => {
+                const url = whatsapp.listingInquiry({
+                  title: l.title,
+                  price: l.price,
+                  currency: (l as any).currency ?? 'CLP',
+                  area: l.area_m2 ?? null,
+                  location: l.location,
+                  phone: (l as any).contact_phone ?? (l as any).owner_phone ?? undefined,
+                });
+                window.open(url, '_blank', 'noopener,noreferrer');
+                track('swipe_contact', { listing_id: l.id, channel: 'whatsapp' });
+              }}
+              onAddToCompare={(l) => {
+                addToCompare(l);
+                track('swipe_compare', { listing_id: l.id });
+                toast.success('Añadido al comparador', {
+                  description: `${compareList.length + 1} propiedades en comparación`,
+                });
+              }}
               onOpenCompare={() => { setDesktopSwipe(false); setCompareOpen(true); }}
               compareCount={compareList.length}
               isInCompare={isInCompare}
