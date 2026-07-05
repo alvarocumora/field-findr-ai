@@ -1,30 +1,36 @@
-import { useState } from 'react';
-import { 
-  ChevronDown, 
-  X, 
-  SlidersHorizontal, 
+import { useMemo, useState } from 'react';
+import {
+  SlidersHorizontal,
   Sparkles,
+  X,
   MapPin,
+  Globe,
   Tag,
-  Globe
+  Ruler,
+  DollarSign,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+} from '@/components/ui/sheet';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { formatPrice } from '@/hooks/useListings';
 import { cn } from '@/lib/utils';
-import { LATAM_COUNTRIES, getCountryByName } from '@/lib/latam';
+import { LATAM_COUNTRIES } from '@/lib/latam';
 
 interface FilterBarProps {
   selectedTypes: string[];
@@ -56,17 +62,6 @@ const PROPERTY_TYPES = [
   { value: 'inversion', label: 'Inversión' },
 ];
 
-// Dynamic regions based on selected countries
-const getAvailableRegions = (selectedCountries: string[]): string[] => {
-  if (selectedCountries.length === 0) {
-    // Show all top regions across all countries
-    return LATAM_COUNTRIES.flatMap(c => c.regions.slice(0, 3));
-  }
-  return LATAM_COUNTRIES
-    .filter(c => selectedCountries.includes(c.name))
-    .flatMap(c => c.regions);
-};
-
 const TAGS = [
   { value: 'agua', label: 'Agua' },
   { value: 'luz', label: 'Luz' },
@@ -77,10 +72,69 @@ const TAGS = [
 
 const PRICE_PRESETS = [
   { label: '< $50M', range: [0, 50000000] as [number, number] },
-  { label: '$50M - $200M', range: [50000000, 200000000] as [number, number] },
-  { label: '$200M - $500M', range: [200000000, 500000000] as [number, number] },
+  { label: '$50M–$200M', range: [50000000, 200000000] as [number, number] },
+  { label: '$200M–$500M', range: [200000000, 500000000] as [number, number] },
   { label: '> $500M', range: [500000000, 5000000000] as [number, number] },
 ];
+
+const PRICE_MAX = 5000000000;
+const AREA_MAX = 1000000;
+
+const getAvailableRegions = (selectedCountries: string[]): string[] => {
+  if (selectedCountries.length === 0) {
+    return LATAM_COUNTRIES.flatMap((c) => c.regions.slice(0, 3));
+  }
+  return LATAM_COUNTRIES
+    .filter((c) => selectedCountries.includes(c.name))
+    .flatMap((c) => c.regions);
+};
+
+const typeLabel = (v: string) =>
+  PROPERTY_TYPES.find((t) => t.value === v)?.label ?? v;
+const tagLabel = (v: string) => TAGS.find((t) => t.value === v)?.label ?? v;
+
+// Reusable chip pill for the active-filters row
+const Chip = ({
+  children,
+  onRemove,
+  icon: Icon,
+}: {
+  children: React.ReactNode;
+  onRemove: () => void;
+  icon?: React.ComponentType<{ className?: string }>;
+}) => (
+  <button
+    type="button"
+    onClick={onRemove}
+    className="group inline-flex items-center gap-1.5 h-7 pl-2.5 pr-1.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-medium hover:bg-primary/15 transition-colors"
+  >
+    {Icon && <Icon className="h-3 w-3 opacity-70" />}
+    <span className="max-w-[140px] truncate">{children}</span>
+    <span className="ml-0.5 grid place-items-center h-4 w-4 rounded-full bg-primary/20 group-hover:bg-primary/30">
+      <X className="h-2.5 w-2.5" />
+    </span>
+  </button>
+);
+
+const SectionTitle = ({
+  icon: Icon,
+  children,
+  count,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  count?: number;
+}) => (
+  <span className="flex items-center gap-2 text-sm">
+    <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+    <span className="font-medium">{children}</span>
+    {!!count && (
+      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">
+        {count}
+      </span>
+    )}
+  </span>
+);
 
 const FilterBar = ({
   selectedTypes,
@@ -101,311 +155,370 @@ const FilterBar = ({
   onToggleAISearch,
   className,
 }: FilterBarProps) => {
-  const availableRegions = getAvailableRegions(selectedCountries);
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
+  const availableRegions = useMemo(
+    () => getAvailableRegions(selectedCountries),
+    [selectedCountries],
+  );
 
-  const getTypeLabel = () => {
-    if (selectedTypes.length === 0) return 'Tipo';
-    if (selectedTypes.length === 1) {
-      return PROPERTY_TYPES.find(t => t.value === selectedTypes[0])?.label || 'Tipo';
-    }
-    return `${selectedTypes.length} tipos`;
+  const hasPriceFilter = priceRange[0] > 0 || priceRange[1] < PRICE_MAX;
+  const hasAreaFilter = areaRange[0] > 0 || areaRange[1] < AREA_MAX;
+
+  const priceChipLabel = () => {
+    if (!hasPriceFilter) return null;
+    const min = priceRange[0] > 0 ? formatPrice(priceRange[0]) : '$0';
+    const max = priceRange[1] < PRICE_MAX ? formatPrice(priceRange[1]) : '∞';
+    return `${min} – ${max}`;
   };
-
-  const getRegionLabel = () => {
-    if (selectedRegions.length === 0) return 'Región';
-    if (selectedRegions.length === 1) return selectedRegions[0];
-    return `${selectedRegions.length} regiones`;
+  const areaChipLabel = () => {
+    if (!hasAreaFilter) return null;
+    const min = `${areaRange[0].toLocaleString()} m²`;
+    const max =
+      areaRange[1] < AREA_MAX
+        ? `${areaRange[1].toLocaleString()} m²`
+        : '∞';
+    return `${min} – ${max}`;
   };
-
-  const getPriceLabel = () => {
-    const hasMin = priceRange[0] > 0;
-    const hasMax = priceRange[1] < 5000000000;
-    if (!hasMin && !hasMax) return 'Precio';
-    if (hasMin && hasMax) return `${formatPrice(priceRange[0])} – ${formatPrice(priceRange[1])}`;
-    if (hasMin) return `Desde ${formatPrice(priceRange[0])}`;
-    return `Hasta ${formatPrice(priceRange[1])}`;
-  };
-
-  const hasPriceFilter = priceRange[0] > 0 || priceRange[1] < 5000000000;
 
   return (
     <div className={cn('bg-background/80 backdrop-blur-xl border-b border-border/30', className)}>
-      <Collapsible open={expanded} onOpenChange={setExpanded}>
-        {/* Collapsed bar */}
-        <div className="px-4 py-2">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            {/* Type Filter */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    'h-9 rounded-xl gap-1 flex-shrink-0 border-border/50',
-                    selectedTypes.length > 0 && 'border-primary/30 bg-primary/5'
-                  )}
-                >
-                  {getTypeLabel()}
-                  <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-2" align="start">
-                <div className="space-y-1">
-                  {PROPERTY_TYPES.map((type) => (
-                    <label
-                      key={type.value}
-                      className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                    >
-                      <Checkbox
-                        checked={selectedTypes.includes(type.value)}
-                        onCheckedChange={() => onToggleType(type.value)}
-                      />
-                      <span className="text-sm">{type.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
+      {/* Row 1 — primary controls */}
+      <div className="px-4 py-2 flex items-center gap-2">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                'h-9 rounded-xl gap-2 border-border/60 font-medium',
+                activeFiltersCount > 0 && 'border-primary/40 bg-primary/5 text-primary',
+              )}
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filtros
+              {activeFiltersCount > 0 && (
+                <Badge className="h-5 min-w-5 px-1.5 text-[10px] rounded-full">
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </Button>
+          </SheetTrigger>
 
-            {/* Country Filter */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    'h-9 rounded-xl gap-1 flex-shrink-0 border-border/50',
-                    selectedCountries.length > 0 && 'border-primary/30 bg-primary/5'
-                  )}
-                >
-                  <Globe className="h-3.5 w-3.5" />
-                  {selectedCountries.length === 0 ? 'País' : selectedCountries.length === 1 
-                    ? LATAM_COUNTRIES.find(c => c.name === selectedCountries[0])?.flag + ' ' + selectedCountries[0]
-                    : `${selectedCountries.length} países`}
-                  <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-2" align="start">
-                <div className="space-y-1">
-                  {LATAM_COUNTRIES.map((country) => (
-                    <label
-                      key={country.code}
-                      className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                    >
-                      <Checkbox
-                        checked={selectedCountries.includes(country.name)}
-                        onCheckedChange={() => onToggleCountry(country.name)}
-                      />
-                      <span className="text-sm">{country.flag} {country.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {/* Region Filter */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    'h-9 rounded-xl gap-1 flex-shrink-0 border-border/50',
-                    selectedRegions.length > 0 && 'border-primary/30 bg-primary/5'
-                  )}
-                >
-                  <MapPin className="h-3.5 w-3.5" />
-                  {getRegionLabel()}
-                  <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64 p-2" align="start">
-                <div className="space-y-1 max-h-64 overflow-y-auto">
-                  {availableRegions.map((region) => (
-                    <label
-                      key={region}
-                      className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-muted"
-                    >
-                      <Checkbox
-                        checked={selectedRegions.includes(region)}
-                        onCheckedChange={() => onToggleRegion(region)}
-                      />
-                      <span className="text-sm">{region}</span>
-                    </label>
-                  ))}
-                  {availableRegions.length === 0 && (
-                    <p className="text-xs text-muted-foreground p-2">Selecciona un país primero</p>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {/* Price Filter - with presets */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    'h-9 rounded-xl gap-1 flex-shrink-0 border-border/50',
-                    hasPriceFilter && 'border-primary/30 bg-primary/5'
-                  )}
-                >
-                  {getPriceLabel()}
-                  <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-72 p-4" align="start">
-                <div className="space-y-4">
-                  <h4 className="text-sm font-medium">Rango de precio</h4>
-                  
-                  {/* Quick presets */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {PRICE_PRESETS.map((preset) => {
-                      const isActive = priceRange[0] === preset.range[0] && priceRange[1] === preset.range[1];
-                      return (
-                        <Badge
-                          key={preset.label}
-                          variant={isActive ? 'default' : 'outline'}
-                          className={cn(
-                            'cursor-pointer text-xs transition-colors',
-                            isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-                          )}
-                          onClick={() => onPriceRangeChange(isActive ? [0, 5000000000] : preset.range)}
-                        >
-                          {preset.label}
-                        </Badge>
-                      );
-                    })}
-                  </div>
-
-                  <Slider
-                    value={[Math.log10(priceRange[0] + 1), Math.log10(priceRange[1])]}
-                    min={0}
-                    max={10}
-                    step={0.1}
-                    onValueChange={([min, max]) => {
-                      onPriceRangeChange([
-                        Math.round(Math.pow(10, min) - 1),
-                        Math.round(Math.pow(10, max))
-                      ]);
-                    }}
-                    className="py-4"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground font-medium">
-                    <span>{formatPrice(priceRange[0])}</span>
-                    <span>{formatPrice(priceRange[1])}</span>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {/* More Filters Toggle */}
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 rounded-xl gap-1 flex-shrink-0 border-border/50"
-              >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Más filtros</span>
-                {activeFiltersCount > 3 && (
-                  <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
-                    +{activeFiltersCount - 3}
+          <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
+            <SheetHeader className="px-5 py-4 border-b border-border/40">
+              <SheetTitle className="flex items-center gap-2 text-base">
+                <SlidersHorizontal className="h-4 w-4" />
+                Filtros
+                {activeFiltersCount > 0 && (
+                  <Badge variant="secondary" className="ml-1 text-[10px]">
+                    {activeFiltersCount} activos
                   </Badge>
                 )}
-              </Button>
-            </CollapsibleTrigger>
+              </SheetTitle>
+            </SheetHeader>
 
-            {/* AI Search Toggle */}
-            {onToggleAISearch && (
-              <Button
-                variant={showAISearch ? 'default' : 'outline'}
-                size="sm"
-                onClick={onToggleAISearch}
-                className="h-9 rounded-xl gap-1 flex-shrink-0"
+            <div className="flex-1 overflow-y-auto px-5 py-2">
+              <Accordion
+                type="multiple"
+                defaultValue={['tipo', 'ubicacion', 'precio']}
+                className="w-full"
               >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">IA</span>
-              </Button>
-            )}
+                {/* Tipo */}
+                <AccordionItem value="tipo">
+                  <AccordionTrigger className="py-3">
+                    <SectionTitle icon={Building2} count={selectedTypes.length}>
+                      Tipo de terreno
+                    </SectionTitle>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="flex flex-wrap gap-1.5 pt-1 pb-3">
+                      {PROPERTY_TYPES.map((t) => {
+                        const active = selectedTypes.includes(t.value);
+                        return (
+                          <button
+                            key={t.value}
+                            type="button"
+                            onClick={() => onToggleType(t.value)}
+                            className={cn(
+                              'px-3 h-8 rounded-full text-xs font-medium border transition-colors',
+                              active
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-background border-border/60 hover:bg-muted',
+                            )}
+                          >
+                            {t.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
-            {/* Spacer */}
-            <div className="flex-1" />
+                {/* Ubicación (país + región) */}
+                <AccordionItem value="ubicacion">
+                  <AccordionTrigger className="py-3">
+                    <SectionTitle
+                      icon={MapPin}
+                      count={selectedCountries.length + selectedRegions.length}
+                    >
+                      Ubicación
+                    </SectionTitle>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4 pt-1 pb-3">
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-2 text-xs font-medium text-muted-foreground">
+                          <Globe className="h-3 w-3" /> País
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {LATAM_COUNTRIES.map((c) => {
+                            const active = selectedCountries.includes(c.name);
+                            return (
+                              <button
+                                key={c.code}
+                                type="button"
+                                onClick={() => onToggleCountry(c.name)}
+                                className={cn(
+                                  'px-3 h-8 rounded-full text-xs font-medium border transition-colors inline-flex items-center gap-1.5',
+                                  active
+                                    ? 'bg-primary text-primary-foreground border-primary'
+                                    : 'bg-background border-border/60 hover:bg-muted',
+                                )}
+                              >
+                                <span>{c.flag}</span> {c.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
 
-            {/* Clear Filters */}
-            {activeFiltersCount > 0 && (
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-2 text-xs font-medium text-muted-foreground">
+                          <MapPin className="h-3 w-3" /> Región
+                        </div>
+                        {availableRegions.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">
+                            Selecciona un país para ver sus regiones.
+                          </p>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-1 max-h-56 overflow-y-auto pr-1">
+                            {availableRegions.map((r) => (
+                              <label
+                                key={r}
+                                className="flex items-center gap-2 p-1.5 rounded-lg cursor-pointer hover:bg-muted text-xs"
+                              >
+                                <Checkbox
+                                  checked={selectedRegions.includes(r)}
+                                  onCheckedChange={() => onToggleRegion(r)}
+                                />
+                                <span className="truncate">{r}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Precio */}
+                <AccordionItem value="precio">
+                  <AccordionTrigger className="py-3">
+                    <SectionTitle icon={DollarSign} count={hasPriceFilter ? 1 : 0}>
+                      Precio
+                    </SectionTitle>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4 pt-1 pb-3">
+                      <div className="flex flex-wrap gap-1.5">
+                        {PRICE_PRESETS.map((p) => {
+                          const active =
+                            priceRange[0] === p.range[0] && priceRange[1] === p.range[1];
+                          return (
+                            <button
+                              key={p.label}
+                              type="button"
+                              onClick={() =>
+                                onPriceRangeChange(active ? [0, PRICE_MAX] : p.range)
+                              }
+                              className={cn(
+                                'px-3 h-7 rounded-full text-xs font-medium border transition-colors',
+                                active
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'bg-background border-border/60 hover:bg-muted',
+                              )}
+                            >
+                              {p.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <Slider
+                        value={[Math.log10(priceRange[0] + 1), Math.log10(priceRange[1])]}
+                        min={0}
+                        max={10}
+                        step={0.1}
+                        onValueChange={([min, max]) =>
+                          onPriceRangeChange([
+                            Math.round(Math.pow(10, min) - 1),
+                            Math.round(Math.pow(10, max)),
+                          ])
+                        }
+                        className="py-2"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground font-medium">
+                        <span>{formatPrice(priceRange[0])}</span>
+                        <span>{formatPrice(priceRange[1])}</span>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Superficie */}
+                <AccordionItem value="superficie">
+                  <AccordionTrigger className="py-3">
+                    <SectionTitle icon={Ruler} count={hasAreaFilter ? 1 : 0}>
+                      Superficie
+                    </SectionTitle>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-3 pt-1 pb-3">
+                      <Slider
+                        value={[Math.log10(areaRange[0] + 1), Math.log10(areaRange[1])]}
+                        min={0}
+                        max={6}
+                        step={0.1}
+                        onValueChange={([min, max]) =>
+                          onAreaRangeChange([
+                            Math.round(Math.pow(10, min) - 1),
+                            Math.round(Math.pow(10, max)),
+                          ])
+                        }
+                        className="py-2"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{areaRange[0].toLocaleString()} m²</span>
+                        <span>{areaRange[1].toLocaleString()} m²</span>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Características */}
+                <AccordionItem value="tags" className="border-b-0">
+                  <AccordionTrigger className="py-3">
+                    <SectionTitle icon={Tag} count={selectedTags.length}>
+                      Características
+                    </SectionTitle>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="flex flex-wrap gap-1.5 pt-1 pb-3">
+                      {TAGS.map((t) => {
+                        const active = selectedTags.includes(t.value);
+                        return (
+                          <button
+                            key={t.value}
+                            type="button"
+                            onClick={() => onToggleTag(t.value)}
+                            className={cn(
+                              'px-3 h-8 rounded-full text-xs font-medium border transition-colors',
+                              active
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-background border-border/60 hover:bg-muted',
+                            )}
+                          >
+                            {t.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+
+            <SheetFooter className="px-5 py-3 border-t border-border/40 flex-row gap-2 sm:justify-between">
               <Button
                 variant="ghost"
                 size="sm"
+                disabled={activeFiltersCount === 0}
                 onClick={onClearFilters}
-                className="h-9 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
               >
-                <X className="h-3.5 w-3.5 mr-1" />
-                Limpiar
+                <X className="h-3.5 w-3.5 mr-1" /> Limpiar
               </Button>
-            )}
-          </div>
+              <Button size="sm" onClick={() => setOpen(false)} className="flex-1 sm:flex-none">
+                Ver resultados
+              </Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+
+        {onToggleAISearch && (
+          <Button
+            variant={showAISearch ? 'default' : 'outline'}
+            size="sm"
+            onClick={onToggleAISearch}
+            className="h-9 rounded-xl gap-1.5 border-border/60"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">IA</span>
+          </Button>
+        )}
+
+        <div className="flex-1" />
+
+        {activeFiltersCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClearFilters}
+            className="h-9 rounded-xl text-muted-foreground hover:text-destructive"
+          >
+            <X className="h-3.5 w-3.5 mr-1" />
+            <span className="hidden sm:inline">Limpiar</span>
+          </Button>
+        )}
+      </div>
+
+      {/* Row 2 — active-filter chips */}
+      {activeFiltersCount > 0 && (
+        <div className="px-4 pb-2.5 flex flex-wrap gap-1.5">
+          {selectedTypes.map((v) => (
+            <Chip key={`t-${v}`} icon={Building2} onRemove={() => onToggleType(v)}>
+              {typeLabel(v)}
+            </Chip>
+          ))}
+          {selectedCountries.map((v) => (
+            <Chip key={`c-${v}`} icon={Globe} onRemove={() => onToggleCountry(v)}>
+              {v}
+            </Chip>
+          ))}
+          {selectedRegions.map((v) => (
+            <Chip key={`r-${v}`} icon={MapPin} onRemove={() => onToggleRegion(v)}>
+              {v}
+            </Chip>
+          ))}
+          {hasPriceFilter && (
+            <Chip
+              icon={DollarSign}
+              onRemove={() => onPriceRangeChange([0, PRICE_MAX])}
+            >
+              {priceChipLabel()}
+            </Chip>
+          )}
+          {hasAreaFilter && (
+            <Chip icon={Ruler} onRemove={() => onAreaRangeChange([0, AREA_MAX])}>
+              {areaChipLabel()}
+            </Chip>
+          )}
+          {selectedTags.map((v) => (
+            <Chip key={`g-${v}`} icon={Tag} onRemove={() => onToggleTag(v)}>
+              {tagLabel(v)}
+            </Chip>
+          ))}
         </div>
-
-        {/* Expanded section */}
-        <CollapsibleContent>
-          <div className="px-4 py-4 border-t border-border/30">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Area Range */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                  Superficie (m²)
-                </h4>
-                <Slider
-                  value={[Math.log10(areaRange[0] + 1), Math.log10(areaRange[1])]}
-                  min={0}
-                  max={6}
-                  step={0.1}
-                  onValueChange={([min, max]) => {
-                    onAreaRangeChange([
-                      Math.round(Math.pow(10, min) - 1),
-                      Math.round(Math.pow(10, max))
-                    ]);
-                  }}
-                  className="py-2"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{areaRange[0].toLocaleString()} m²</span>
-                  <span>{areaRange[1].toLocaleString()} m²</span>
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div className="space-y-3 md:col-span-2">
-                <h4 className="text-sm font-medium flex items-center gap-2">
-                  <Tag className="h-3.5 w-3.5" />
-                  Características
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {TAGS.map((tag) => (
-                    <Badge
-                      key={tag.value}
-                      variant={selectedTags.includes(tag.value) ? 'default' : 'outline'}
-                      className={cn(
-                        'cursor-pointer transition-all',
-                        selectedTags.includes(tag.value)
-                          ? 'bg-primary text-primary-foreground'
-                          : 'hover:bg-muted'
-                      )}
-                      onClick={() => onToggleTag(tag.value)}
-                    >
-                      {tag.label}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+      )}
     </div>
   );
 };
