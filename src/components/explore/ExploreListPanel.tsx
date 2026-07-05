@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo, useDeferredValue } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown, LayoutGrid, List, Wheat, Factory, Truck, Zap, Home, Droplets, Car, ShieldCheck } from 'lucide-react';
+import { Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown, LayoutGrid, List, Wheat, Factory, Truck, Zap, Home, Droplets, Car, ShieldCheck, X, Mountain, TrendingUp, Compass } from 'lucide-react';
 import SearchAutocomplete from '@/components/search/SearchAutocomplete';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,20 @@ const APTITUDE_OPTIONS = [
   { key: 'energetico', label: 'Energético', icon: Zap },
   { key: 'residencial', label: 'Residencial', icon: Home },
 ];
+
+/**
+ * Micro-caps section label + hair line separator.
+ * Used inside the search command panel to group filters cleanly.
+ */
+const SectionLabel = ({ icon: Icon, children }: { icon?: React.ComponentType<{ className?: string }>; children: React.ReactNode }) => (
+  <div className="flex items-center gap-2">
+    {Icon && <Icon className="h-3 w-3 text-muted-foreground/70" />}
+    <span className="text-[10px] uppercase tracking-[0.14em] font-semibold text-muted-foreground/80">
+      {children}
+    </span>
+    <div className="h-px flex-1 bg-border/40" />
+  </div>
+);
 
 const TerritorialFilters = ({ onFilterChange }: { listings: Listing[]; onFilterChange: (filter: TerritorialFilterState) => void }) => {
   const [filter, setFilter] = useState<TerritorialFilterState>({
@@ -437,47 +451,85 @@ const ExploreListPanel = ({
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Search Header */}
-      <div className="p-4 pb-2 space-y-3 border-b border-border/20">
-        <SearchAutocomplete
-          onSearchChange={onSearchChange}
-          placeholder="Buscar terrenos, ubicaciones..."
-        />
+      {/* ═══════════════════════════════════════════════════════════════
+          Search Command Panel — "command center" direction
+          One outer glass card that stacks: search+actions row,
+          labeled filter sections separated by hair-lines,
+          and a compact stats/clear footer.
+          ═══════════════════════════════════════════════════════════════ */}
+      <div className="p-3 pb-2 border-b border-border/20">
+        <div className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-lg shadow-background/40 overflow-hidden">
+          {/* Row 1 — Search input + Filtros + IA (rendered by FilterBar) */}
+          <div className="p-2.5 flex flex-col gap-2 border-b border-border/40">
+            <SearchAutocomplete
+              onSearchChange={onSearchChange}
+              placeholder="Buscar por ciudad, comuna o coordenadas..."
+            />
+            <FilterBar
+              selectedTypes={selectedTypes}
+              onToggleType={onToggleType}
+              selectedRegions={selectedRegions}
+              onToggleRegion={onToggleRegion}
+              selectedCountries={selectedCountries}
+              onToggleCountry={onToggleCountry}
+              selectedTags={selectedTags}
+              onToggleTag={onToggleTag}
+              priceRange={priceRange}
+              onPriceRangeChange={onPriceRangeChange}
+              areaRange={areaRange}
+              onAreaRangeChange={onAreaRangeChange}
+              onClearFilters={onClearFilters}
+              activeFiltersCount={activeFiltersCount}
+              resultsCount={displayCount}
+              showAISearch={showAISearch}
+              onToggleAISearch={onToggleAISearch}
+              className="!bg-transparent !border-0 !backdrop-blur-0 [&>div:first-child]:!px-0 [&>div:first-child]:!py-0 [&>div:nth-child(2)]:!px-0"
+            />
+          </div>
 
-        {/* Compact Filters */}
-        <FilterBar
-          selectedTypes={selectedTypes}
-          onToggleType={onToggleType}
-          selectedRegions={selectedRegions}
-          onToggleRegion={onToggleRegion}
-          selectedCountries={selectedCountries}
-          onToggleCountry={onToggleCountry}
-          selectedTags={selectedTags}
-          onToggleTag={onToggleTag}
-          priceRange={priceRange}
-          onPriceRangeChange={onPriceRangeChange}
-          areaRange={areaRange}
-          onAreaRangeChange={onAreaRangeChange}
-          onClearFilters={onClearFilters}
-          activeFiltersCount={activeFiltersCount}
-          resultsCount={displayCount}
-          showAISearch={showAISearch}
-          onToggleAISearch={onToggleAISearch}
-          className="!bg-transparent !border-0 !backdrop-blur-0"
-        />
+          {/* Body — grouped, labeled sections */}
+          <div className="p-3.5 space-y-4">
+            {/* Aptitud territorial (type + attributes) */}
+            <section className="flex flex-col gap-2.5">
+              <SectionLabel icon={Compass}>Aptitud territorial</SectionLabel>
+              <TerritorialFilters listings={listings} onFilterChange={setTerritorialFilter} />
+            </section>
 
-        {/* Valuation & Topography Filters */}
-        {onToggleSlope && onToggleValuation && (
-          <ValuationFilters
-            selectedSlopes={selectedSlopes}
-            onToggleSlope={onToggleSlope}
-            selectedValuation={selectedValuation}
-            onToggleValuation={onToggleValuation}
-          />
-        )}
+            {/* Topografía & Plusvalía */}
+            {onToggleSlope && onToggleValuation && (
+              <section className="flex flex-col gap-2.5">
+                <SectionLabel icon={Mountain}>Topografía & plusvalía</SectionLabel>
+                <ValuationFilters
+                  selectedSlopes={selectedSlopes}
+                  onToggleSlope={onToggleSlope}
+                  selectedValuation={selectedValuation}
+                  onToggleValuation={onToggleValuation}
+                />
+              </section>
+            )}
+          </div>
 
-        {/* Territorial Aptitude Filters */}
-        <TerritorialFilters listings={listings} onFilterChange={setTerritorialFilter} />
+          {/* Footer — result count + clear all */}
+          <div className="px-3.5 py-2 border-t border-border/40 bg-muted/20 flex items-center justify-between">
+            <p className="text-[11px] text-muted-foreground font-medium">
+              <span className="text-primary font-semibold tabular-nums">
+                {displayCount.toLocaleString()}
+              </span>{' '}
+              terreno{displayCount === 1 ? '' : 's'}
+              {summary ? ` desde ${formatPriceShort(summary.minPrice)}` : ''}
+            </p>
+            {activeFiltersCount > 0 && (
+              <button
+                type="button"
+                onClick={onClearFilters}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors"
+              >
+                <X className="h-3 w-3" />
+                Limpiar todo
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Summary + Tabs + Sort */}
