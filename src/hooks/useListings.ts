@@ -191,13 +191,17 @@ export const useCreateListing = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['listings'] });
+      const inReview = (data as { status?: string })?.status === 'pending_review';
       toast({
-        title: 'Propiedad publicada',
-        description: 'Tu propiedad ha sido publicada exitosamente.',
+        title: inReview ? 'Enviada a revisión' : 'Propiedad publicada',
+        description: inReview
+          ? 'Nuestro equipo revisará tu propiedad y la aprobará en breve. Recibirás una notificación.'
+          : 'Tu propiedad ha sido publicada exitosamente.',
       });
     },
+
     onError: (error) => {
       toast({
         title: 'Error',
