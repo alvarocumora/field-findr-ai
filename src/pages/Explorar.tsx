@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Listing, getPricePerM2 } from '@/hooks/useListings';
 import { useFlattenedListings } from '@/hooks/useInfiniteListings';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsTabletOrBelow } from '@/hooks/use-tablet';
 import { Layers, CreditCard } from 'lucide-react';
 import RealListingsSection from '@/components/RealListingsSection';
 import { useAddFavorite } from '@/hooks/useFavorites';
