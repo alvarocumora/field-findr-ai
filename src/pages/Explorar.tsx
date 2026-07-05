@@ -426,14 +426,9 @@ const Explorar = () => {
         </div>
       </div>
 
-      {/* Property Preview Sheet */}
-      <PropertyPreviewSheet
-        listing={previewListing}
-        open={!!previewListing}
-        onOpenChange={(open) => !open && setPreviewListing(null)}
-        onViewDetails={handleViewDetails}
-        similarListings={similarListings}
-      />
+      {/* Property Preview (inline column above already handles desktop) */}
+
+
 
       {/* Compare */}
       <CompareFloatingBar />
