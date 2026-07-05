@@ -347,7 +347,7 @@ const Explorar = () => {
             onBoundsSearch={handleBoundsSearch}
           />
           {swipeDeckIds && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full bg-primary/95 text-primary-foreground shadow-lg backdrop-blur px-3 py-1.5 text-xs font-medium animate-in fade-in slide-in-from-top-2">
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-map-overlay flex items-center gap-2 rounded-full bg-primary/95 text-primary-foreground shadow-lg backdrop-blur px-3 py-1.5 text-xs font-medium animate-in fade-in slide-in-from-top-2">
               <CreditCard className="h-3.5 w-3.5" />
               <span>Sincronizado con Swipe · {swipeDeckIds.size} coinciden</span>
               <button
