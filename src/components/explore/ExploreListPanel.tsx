@@ -569,36 +569,38 @@ const ExploreListPanel = ({
               ))}
             </div>
           ) : sortedListings.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-              <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-                <MapPin className="h-8 w-8 text-muted-foreground/50" />
-              </div>
-              <h4 className="text-sm font-semibold text-foreground mb-1">Sin resultados</h4>
-              <p className="text-xs text-muted-foreground max-w-[220px] mb-4">
-                Ajusta los filtros o mueve el mapa para encontrar propiedades en esta zona.
-              </p>
-              {activeFiltersCount > 0 && (
-                <Button size="sm" variant="outline" onClick={onClearFilters} className="rounded-xl">
-                  Limpiar filtros ({activeFiltersCount})
-                </Button>
-              )}
-            </div>
-
-          ) : (
-            <VirtualizedListings
-              listings={sortedListings}
-              scrollParentRef={scrollContainerRef}
-              viewLayout={viewLayout}
-              hoveredListing={hoveredListing}
-              selectedListing={selectedListing}
-              onListingHover={onListingHover}
-              onListingClick={onListingClick}
-              onListingPreview={onListingPreview}
-              sentinelRef={sentinelRef}
-              isLoadingMore={isLoadingMore}
-              hasMore={hasMore}
-              displayCount={displayCount}
+            <EmptyResultsState
+              activeFiltersCount={activeFiltersCount}
+              onClearFilters={onClearFilters}
+              onSelectRegion={(region) => {
+                if (!selectedRegions.includes(region)) {
+                  onClearFilters();
+                  onToggleRegion(region);
+                }
+              }}
             />
+          ) : (
+            <>
+              <FewResultsHint
+                count={sortedListings.length}
+                activeFiltersCount={activeFiltersCount}
+                onClearFilters={onClearFilters}
+              />
+              <VirtualizedListings
+                listings={sortedListings}
+                scrollParentRef={scrollContainerRef}
+                viewLayout={viewLayout}
+                hoveredListing={hoveredListing}
+                selectedListing={selectedListing}
+                onListingHover={onListingHover}
+                onListingClick={onListingClick}
+                onListingPreview={onListingPreview}
+                sentinelRef={sentinelRef}
+                isLoadingMore={isLoadingMore}
+                hasMore={hasMore}
+                displayCount={displayCount}
+              />
+            </>
           )}
         </div>
       </div>
