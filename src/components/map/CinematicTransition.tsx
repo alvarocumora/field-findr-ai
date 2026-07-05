@@ -112,7 +112,7 @@ const CinematicTransition = ({
       {/* Crossfade overlay */}
       {(phase === 'crossfade' || phase === 'returning') && (
         <motion.div
-          className="absolute inset-0 z-40 bg-background"
+          className="absolute inset-0 z-overlay bg-background"
           initial={{ opacity: 0 }}
           animate={{ opacity: phase === 'crossfade' ? 1 : 0 }}
           exit={{ opacity: 0 }}
@@ -123,7 +123,7 @@ const CinematicTransition = ({
       {/* Flying indicator */}
       {phase === 'flying' && (
         <motion.div
-          className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center"
+          className="absolute inset-0 z-map-overlay pointer-events-none flex items-center justify-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -142,7 +142,7 @@ const CinematicTransition = ({
       {/* 3D Canvas overlay */}
       {show3D && (
         <motion.div
-          className="absolute inset-0 z-50 dark"
+          className="absolute inset-0 z-modal dark"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

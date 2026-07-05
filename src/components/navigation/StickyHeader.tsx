@@ -92,7 +92,7 @@ const StickyHeader = () => {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        "fixed top-0 left-0 right-0 z-header transition-all duration-300",
         isScrolled
           ? "glass border-b border-border/50 shadow-lg shadow-black/5"
           : "bg-transparent"
@@ -165,7 +165,7 @@ const StickyHeader = () => {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-popover border border-border shadow-lg z-50">
+                <DropdownMenuContent align="end" className="w-56 bg-popover border border-border shadow-lg z-modal">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium">{user.user_metadata?.first_name || 'Usuario'}</p>

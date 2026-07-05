@@ -99,6 +99,23 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
+			zIndex: {
+				// Semantic layering tokens — mirror CSS vars in index.css.
+				// Prefer these over ad-hoc z-[123]. See docs/UI_LAYERING.md.
+				base:        'var(--z-base)',
+				content:     'var(--z-content)',
+				'map-overlay': 'var(--z-map-overlay)',
+				sticky:      'var(--z-sticky)',
+				header:      'var(--z-header)',
+				fab:         'var(--z-fab)',
+				overlay:     'var(--z-overlay)',
+				modal:       'var(--z-modal)',
+				toast:       'var(--z-toast)',
+				tour:        'var(--z-tour)',
+			},
+			spacing: {
+				header: 'var(--header-h)',
+			},
 			keyframes: {
 				'accordion-down': {
 					from: { height: '0' },

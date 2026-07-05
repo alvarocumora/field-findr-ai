@@ -288,7 +288,7 @@ const Explorar = () => {
 
       {/* AI Search overlay */}
       {showAISearch && (
-        <div className="fixed top-16 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/30 p-4">
+        <div className="fixed top-header left-0 right-0 z-overlay bg-background/95 backdrop-blur-xl border-b border-border/30 p-4">
           <div className="max-w-2xl mx-auto">
             <EnhancedAISearch onApplyFilters={handleAIFilters} className="w-full" />
           </div>
@@ -296,7 +296,7 @@ const Explorar = () => {
       )}
 
       {/* Split view: List (380px fixed) + Map (rest) */}
-      <div className="flex-1 flex pt-16 min-h-0">
+      <div className="flex-1 flex pt-header min-h-0">
         {/* Left panel – scrollable list */}
         <div className="w-[420px] min-w-[380px] flex-shrink-0 border-r border-border/30">
           <ExploreListPanel
@@ -347,7 +347,7 @@ const Explorar = () => {
             onBoundsSearch={handleBoundsSearch}
           />
           {swipeDeckIds && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full bg-primary/95 text-primary-foreground shadow-lg backdrop-blur px-3 py-1.5 text-xs font-medium animate-in fade-in slide-in-from-top-2">
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-map-overlay flex items-center gap-2 rounded-full bg-primary/95 text-primary-foreground shadow-lg backdrop-blur px-3 py-1.5 text-xs font-medium animate-in fade-in slide-in-from-top-2">
               <CreditCard className="h-3.5 w-3.5" />
               <span>Sincronizado con Swipe · {swipeDeckIds.size} coinciden</span>
               <button
@@ -382,10 +382,10 @@ const Explorar = () => {
       <CompareFloatingBar />
       <CompareSheet />
 
-      {/* Desktop Swipe FAB */}
+      {/* Desktop Swipe FAB — sits above CompareFloatingBar via safe stack */}
       <Button
         onClick={() => setDesktopSwipe(true)}
-        className="fixed bottom-6 right-6 z-40 h-14 px-6 rounded-full shadow-2xl gap-2"
+        className="fixed right-6 z-fab bottom-safe-compare h-14 px-6 rounded-full shadow-2xl gap-2"
       >
         <CreditCard className="h-5 w-5" />
         Modo Swipe
@@ -393,7 +393,7 @@ const Explorar = () => {
 
       {/* Desktop Swipe Overlay */}
       {desktopSwipe && (
-        <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-xl flex items-center justify-center">
+        <div className="fixed inset-0 z-modal bg-background/95 backdrop-blur-xl flex items-center justify-center">
           <div className="w-full max-w-md h-[90vh] max-h-[800px]">
             <SwipeExplorer
               listings={filteredListings}
