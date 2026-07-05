@@ -288,7 +288,7 @@ const Explorar = () => {
 
       {/* AI Search overlay */}
       {showAISearch && (
-        <div className="fixed top-16 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/30 p-4">
+        <div className="fixed top-header left-0 right-0 z-overlay bg-background/95 backdrop-blur-xl border-b border-border/30 p-4">
           <div className="max-w-2xl mx-auto">
             <EnhancedAISearch onApplyFilters={handleAIFilters} className="w-full" />
           </div>
