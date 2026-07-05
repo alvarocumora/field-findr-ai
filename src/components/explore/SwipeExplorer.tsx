@@ -192,6 +192,30 @@ const SwipeExplorer = ({
     setCurrentIndex(i => Math.max(0, i - 1));
   }, [history]);
 
+  // Expose an imperative "unDismiss(id)" to parents so they can revert a dismiss
+  // from an undo snackbar without needing to know internal state.
+  const unDismiss = useCallback((id: string) => {
+    setDismissedIds(prev => {
+      if (!prev.has(id)) return prev;
+      const n = new Set(prev);
+      n.delete(id);
+      return n;
+    });
+    setHistory(h => {
+      const idx = [...h].reverse().findIndex(l => l.id === id);
+      if (idx === -1) return h;
+      const realIdx = h.length - 1 - idx;
+      return [...h.slice(0, realIdx), ...h.slice(realIdx + 1)];
+    });
+    setCurrentIndex(i => Math.max(0, i - 1));
+  }, []);
+
+  useEffect(() => {
+    if (!undoDismissRef) return;
+    undoDismissRef.current = unDismiss;
+    return () => { if (undoDismissRef) undoDismissRef.current = null; };
+  }, [undoDismissRef, unDismiss]);
+
   const formatPrice = (price: number, currency = 'CLP') => {
     if (currency === 'UF') return `UF ${price.toLocaleString('es-CL')}`;
     return new Intl.NumberFormat('es-CL', { style: 'currency', currency, maximumFractionDigits: 0 }).format(price);
