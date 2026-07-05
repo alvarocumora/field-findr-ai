@@ -97,6 +97,7 @@ const SwipeExplorer = ({
     if (action === 'dismiss') { onDismiss?.(listing); setDismissedIds(prev => new Set(prev).add(listing.id)); }
     if (action === 'contact') onContact?.(listing);
     if ('vibrate' in navigator) navigator.vibrate(action === 'favorite' ? 20 : 10);
+    if (action === 'favorite' || action === 'dismiss') setConfirmed({ listing, action });
     setCurrentIndex(i => i + 1);
     x.set(0); y.set(0);
   }, [onFavorite, onDismiss, onContact, x, y]);
