@@ -392,6 +392,7 @@ const Explorar = () => {
               compareCount={compareList.length}
               isInCompare={isInCompare}
               onBack={() => setDesktopSwipe(false)}
+              onDeckChange={setSwipeDeck}
             />
           </div>
         </div>
