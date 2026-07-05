@@ -142,7 +142,7 @@ const CinematicTransition = ({
       {/* 3D Canvas overlay */}
       {show3D && (
         <motion.div
-          className="absolute inset-0 z-50 dark"
+          className="absolute inset-0 z-modal dark"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
