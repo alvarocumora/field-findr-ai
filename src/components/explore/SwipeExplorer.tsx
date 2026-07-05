@@ -70,6 +70,7 @@ const SwipeExplorer = ({
   });
   const [history, setHistory] = useState<Listing[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [confirmed, setConfirmed] = useState<{ listing: Listing; action: 'favorite' | 'dismiss' } | null>(null);
 
   useEffect(() => {
     try { sessionStorage.setItem(DISMISSED_KEY, JSON.stringify([...dismissedIds])); } catch {}
