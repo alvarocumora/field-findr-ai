@@ -1,6 +1,11 @@
 // Edge function: scrape real terrenos from LATAM portals via Firecrawl.
 // Returns up to ~100 normalized listings, cached 6h in `cached_listings`.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { rateLimit, clientIp, tooManyRequests } from '../_shared/rateLimit.ts';
+
+// Allowed values for cache-key inputs — free-text params would let callers
+// mint unlimited cache keys and bypass the 6h cache to drain Firecrawl credits.
+const ALLOWED_COUNTRIES = new Set(['all', 'chile', 'argentina', 'peru', 'perú', 'colombia', 'mexico', 'méxico']);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -68,12 +73,12 @@ async function firecrawlSearch(query: string, apiKey: string): Promise<string[]>
       console.error('search http error', r.status, query, text.slice(0, 200));
       return [];
     }
-    let j: any;
+    let j: { data?: unknown; web?: unknown; results?: unknown };
     try { j = JSON.parse(text); } catch { return []; }
-    const raw = j?.data ?? j?.web ?? j?.results ?? [];
+    const raw = (j?.data ?? j?.web ?? j?.results ?? []) as { results?: unknown[] } | unknown[];
     const results = Array.isArray(raw) ? raw : (Array.isArray(raw?.results) ? raw.results : []);
     return results
-      .map((it: any) => (typeof it === 'string' ? it : it?.url))
+      .map((it: unknown) => (typeof it === 'string' ? it : (it as { url?: string })?.url))
       .filter((u: unknown): u is string => typeof u === 'string' && u.length > 0)
       .slice(0, 8);
   } catch (e) {
@@ -114,10 +119,17 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Cache misses hit the paid Firecrawl API — throttle per client IP.
+  if (!rateLimit(`scrape:${clientIp(req)}`, { limit: 10, windowMs: 300_000 })) {
+    return tooManyRequests(corsHeaders);
+  }
+
   const url = new URL(req.url);
-  const country = url.searchParams.get('country') ?? 'all';
-  const region = url.searchParams.get('region');
-  const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '60', 10), 100);
+  const countryRaw = (url.searchParams.get('country') ?? 'all').toLowerCase();
+  const country = ALLOWED_COUNTRIES.has(countryRaw) ? countryRaw : 'all';
+  const regionRaw = url.searchParams.get('region');
+  const region = regionRaw ? regionRaw.slice(0, 40).replace(/[^\p{L}\p{N} '-]/gu, '') : null;
+  const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') ?? '60', 10) || 60, 1), 100);
   const key = cacheKey({ country, region, limit, v: 1 });
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
