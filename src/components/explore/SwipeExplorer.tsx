@@ -231,10 +231,112 @@ const SwipeExplorer = ({
           </Button>
         )}
       </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setFiltersOpen(true)}
+        className="relative"
+        aria-label="Filtros"
+      >
+        <SlidersHorizontal className="h-5 w-5" />
+        {advancedFiltersCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+            {advancedFiltersCount}
+          </span>
+        )}
+      </Button>
       <Button variant="ghost" size="icon" onClick={handleUndo} disabled={history.length === 0}>
         <Undo2 className="h-5 w-5" />
       </Button>
     </div>
+  );
+
+  const formatCLP = (n: number) =>
+    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
+
+  const FiltersSheet = (
+    <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+      <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
+        <SheetHeader className="text-left">
+          <SheetTitle>Filtros avanzados</SheetTitle>
+          <SheetDescription>
+            Refina el deck por región, precio total y precio por m².
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="space-y-6 py-6">
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold">Región</Label>
+            {regionOptions.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Sin regiones en los resultados actuales.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {regionOptions.map(r => {
+                  const active = selectedRegions.has(r);
+                  return (
+                    <Button
+                      key={r}
+                      type="button"
+                      variant={active ? 'default' : 'outline'}
+                      size="sm"
+                      className="rounded-full h-8"
+                      onClick={() => toggleRegion(r)}
+                    >
+                      {r}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">Precio total</Label>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {formatCLP(effectivePriceRange[0])} – {formatCLP(effectivePriceRange[1])}
+              </span>
+            </div>
+            <Slider
+              min={priceBounds[0]}
+              max={priceBounds[1]}
+              step={Math.max(1, Math.round((priceBounds[1] - priceBounds[0]) / 100))}
+              value={[effectivePriceRange[0], effectivePriceRange[1]]}
+              onValueChange={(v) => setPriceRange([v[0], v[1]] as [number, number])}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">Precio por m²</Label>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {formatCLP(effectivePpmRange[0])} – {formatCLP(effectivePpmRange[1])} /m²
+              </span>
+            </div>
+            <Slider
+              min={pricePerM2Bounds[0]}
+              max={pricePerM2Bounds[1]}
+              step={Math.max(1, Math.round((pricePerM2Bounds[1] - pricePerM2Bounds[0]) / 100))}
+              value={[effectivePpmRange[0], effectivePpmRange[1]]}
+              onValueChange={(v) => setPricePerM2Range([v[0], v[1]] as [number, number])}
+            />
+          </div>
+
+          <div className="rounded-lg bg-muted/50 p-3 text-xs">
+            <span className="font-semibold">{filtered.length}</span> propiedades coinciden con estos filtros.
+          </div>
+        </div>
+
+        <SheetFooter className="flex-row gap-2">
+          <Button variant="outline" className="flex-1" onClick={clearAdvancedFilters}>
+            Limpiar
+          </Button>
+          <Button className="flex-1" onClick={() => setFiltersOpen(false)}>
+            Aplicar
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 
   if (filtered.length === 0) {
