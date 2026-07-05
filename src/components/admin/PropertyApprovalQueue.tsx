@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -7,9 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { CheckCircle2, XCircle, Building2, MapPin, DollarSign, Clock } from 'lucide-react';
+import { CheckCircle2, XCircle, Building2, MapPin, DollarSign, Clock, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatPrice } from '@/hooks/useListings';
+
 
 const PropertyApprovalQueue = () => {
   const { user } = useAuth();
