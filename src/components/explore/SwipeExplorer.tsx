@@ -7,8 +7,13 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger,
+} from '@/components/ui/sheet';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
+import {
   Heart, X, MessageCircle, MapPin, Maximize2, ChevronLeft, Undo2, Sparkles, Scale,
-  ArrowRight,
+  ArrowRight, SlidersHorizontal,
 } from 'lucide-react';
 import { Listing, getListingTypeLabel } from '@/hooks/useListings';
 import { useNavigate } from 'react-router-dom';
@@ -72,17 +77,79 @@ const SwipeExplorer = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [confirmed, setConfirmed] = useState<{ listing: Listing; action: 'favorite' | 'dismiss' } | null>(null);
 
+  // Advanced filters (region + price + price/m²)
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectedRegions, setSelectedRegions] = useState<Set<string>>(new Set());
+  const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
+  const [pricePerM2Range, setPricePerM2Range] = useState<[number, number] | null>(null);
+
   useEffect(() => {
     try { sessionStorage.setItem(DISMISSED_KEY, JSON.stringify([...dismissedIds])); } catch {}
   }, [dismissedIds]);
 
+  // Data-driven bounds from incoming listings
+  const { regionOptions, priceBounds, pricePerM2Bounds } = useMemo(() => {
+    const regions = new Set<string>();
+    let pMin = Infinity, pMax = -Infinity;
+    let ppmMin = Infinity, ppmMax = -Infinity;
+    for (const l of listings) {
+      if (l.region) regions.add(l.region);
+      if (typeof l.price === 'number') {
+        pMin = Math.min(pMin, l.price);
+        pMax = Math.max(pMax, l.price);
+      }
+      if (l.area_m2 && l.price && l.area_m2 > 0) {
+        const ppm = l.price / l.area_m2;
+        ppmMin = Math.min(ppmMin, ppm);
+        ppmMax = Math.max(ppmMax, ppm);
+      }
+    }
+    return {
+      regionOptions: [...regions].sort(),
+      priceBounds: [Number.isFinite(pMin) ? Math.floor(pMin) : 0, Number.isFinite(pMax) ? Math.ceil(pMax) : 1_000_000_000] as [number, number],
+      pricePerM2Bounds: [Number.isFinite(ppmMin) ? Math.floor(ppmMin) : 0, Number.isFinite(ppmMax) ? Math.ceil(ppmMax) : 1_000_000] as [number, number],
+    };
+  }, [listings]);
+
+  const effectivePriceRange = priceRange ?? priceBounds;
+  const effectivePpmRange = pricePerM2Range ?? pricePerM2Bounds;
+
   const filtered = useMemo(
-    () => listings.filter(CATEGORY_FILTERS[category]).filter(l => !dismissedIds.has(l.id)),
-    [listings, category, dismissedIds]
+    () =>
+      listings
+        .filter(CATEGORY_FILTERS[category])
+        .filter(l => !dismissedIds.has(l.id))
+        .filter(l => selectedRegions.size === 0 || (l.region && selectedRegions.has(l.region)))
+        .filter(l => l.price >= effectivePriceRange[0] && l.price <= effectivePriceRange[1])
+        .filter(l => {
+          if (!l.area_m2 || l.area_m2 <= 0) return true;
+          const ppm = l.price / l.area_m2;
+          return ppm >= effectivePpmRange[0] && ppm <= effectivePpmRange[1];
+        }),
+    [listings, category, dismissedIds, selectedRegions, effectivePriceRange, effectivePpmRange]
   );
 
-  // Reset index when category changes
-  useEffect(() => { setCurrentIndex(0); }, [category]);
+  const advancedFiltersCount =
+    selectedRegions.size +
+    (priceRange && (priceRange[0] > priceBounds[0] || priceRange[1] < priceBounds[1]) ? 1 : 0) +
+    (pricePerM2Range && (pricePerM2Range[0] > pricePerM2Bounds[0] || pricePerM2Range[1] < pricePerM2Bounds[1]) ? 1 : 0);
+
+  const clearAdvancedFilters = () => {
+    setSelectedRegions(new Set());
+    setPriceRange(null);
+    setPricePerM2Range(null);
+  };
+
+  const toggleRegion = (r: string) => {
+    setSelectedRegions(prev => {
+      const n = new Set(prev);
+      n.has(r) ? n.delete(r) : n.add(r);
+      return n;
+    });
+  };
+
+  // Reset index when category or advanced filters change
+  useEffect(() => { setCurrentIndex(0); }, [category, selectedRegions, priceRange, pricePerM2Range]);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -164,10 +231,112 @@ const SwipeExplorer = ({
           </Button>
         )}
       </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setFiltersOpen(true)}
+        className="relative"
+        aria-label="Filtros"
+      >
+        <SlidersHorizontal className="h-5 w-5" />
+        {advancedFiltersCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+            {advancedFiltersCount}
+          </span>
+        )}
+      </Button>
       <Button variant="ghost" size="icon" onClick={handleUndo} disabled={history.length === 0}>
         <Undo2 className="h-5 w-5" />
       </Button>
     </div>
+  );
+
+  const formatCLP = (n: number) =>
+    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
+
+  const FiltersSheet = (
+    <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+      <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
+        <SheetHeader className="text-left">
+          <SheetTitle>Filtros avanzados</SheetTitle>
+          <SheetDescription>
+            Refina el deck por región, precio total y precio por m².
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="space-y-6 py-6">
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold">Región</Label>
+            {regionOptions.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Sin regiones en los resultados actuales.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {regionOptions.map(r => {
+                  const active = selectedRegions.has(r);
+                  return (
+                    <Button
+                      key={r}
+                      type="button"
+                      variant={active ? 'default' : 'outline'}
+                      size="sm"
+                      className="rounded-full h-8"
+                      onClick={() => toggleRegion(r)}
+                    >
+                      {r}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">Precio total</Label>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {formatCLP(effectivePriceRange[0])} – {formatCLP(effectivePriceRange[1])}
+              </span>
+            </div>
+            <Slider
+              min={priceBounds[0]}
+              max={priceBounds[1]}
+              step={Math.max(1, Math.round((priceBounds[1] - priceBounds[0]) / 100))}
+              value={[effectivePriceRange[0], effectivePriceRange[1]]}
+              onValueChange={(v) => setPriceRange([v[0], v[1]] as [number, number])}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">Precio por m²</Label>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {formatCLP(effectivePpmRange[0])} – {formatCLP(effectivePpmRange[1])} /m²
+              </span>
+            </div>
+            <Slider
+              min={pricePerM2Bounds[0]}
+              max={pricePerM2Bounds[1]}
+              step={Math.max(1, Math.round((pricePerM2Bounds[1] - pricePerM2Bounds[0]) / 100))}
+              value={[effectivePpmRange[0], effectivePpmRange[1]]}
+              onValueChange={(v) => setPricePerM2Range([v[0], v[1]] as [number, number])}
+            />
+          </div>
+
+          <div className="rounded-lg bg-muted/50 p-3 text-xs">
+            <span className="font-semibold">{filtered.length}</span> propiedades coinciden con estos filtros.
+          </div>
+        </div>
+
+        <SheetFooter className="flex-row gap-2">
+          <Button variant="outline" className="flex-1" onClick={clearAdvancedFilters}>
+            Limpiar
+          </Button>
+          <Button className="flex-1" onClick={() => setFiltersOpen(false)}>
+            Aplicar
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 
   if (filtered.length === 0) {
@@ -184,7 +353,13 @@ const SwipeExplorer = ({
               Restaurar descartados ({dismissedIds.size})
             </Button>
           )}
+          {advancedFiltersCount > 0 && (
+            <Button variant="ghost" onClick={clearAdvancedFilters}>
+              Limpiar filtros avanzados ({advancedFiltersCount})
+            </Button>
+          )}
         </div>
+        {FiltersSheet}
       </div>
     );
   }
@@ -207,6 +382,7 @@ const SwipeExplorer = ({
             )}
           </div>
         </div>
+        {FiltersSheet}
       </div>
     );
   }
@@ -461,6 +637,8 @@ const SwipeExplorer = ({
           )}
         </DialogContent>
       </Dialog>
+
+      {FiltersSheet}
     </div>
   );
 };
