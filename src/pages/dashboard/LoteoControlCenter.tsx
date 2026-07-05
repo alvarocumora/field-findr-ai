@@ -75,6 +75,7 @@ const LoteoControlCenter = () => {
   const [projectId, setProjectId] = useState<string>('');
   const [convertTarget, setConvertTarget] = useState<any>(null);
   const [quoteLot, setQuoteLot] = useState<Lot | null>(null);
+  const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
 
   const activeProjectId = projectId || projects[0]?.id || '';
   const activeProject = projects.find((p) => p.id === activeProjectId);
