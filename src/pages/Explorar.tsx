@@ -17,7 +17,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTabletOrBelow } from '@/hooks/use-tablet';
 import { CreditCard } from 'lucide-react';
 import RealListingsSection from '@/components/RealListingsSection';
-import { useAddFavorite } from '@/hooks/useFavorites';
+import { useAddFavorite, useRemoveFavorite } from '@/hooks/useFavorites';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
 import { useCompare } from '@/hooks/useCompare';
 import { whatsapp } from '@/lib/whatsappUtils';
