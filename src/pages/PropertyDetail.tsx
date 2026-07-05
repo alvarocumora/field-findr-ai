@@ -185,12 +185,14 @@ const PropertyDetail = () => {
     });
   };
 
-  const handleScenarioExportPdf = (scenario: VisualScenario) => {
+  const handleScenarioExportPdf = async (scenario: VisualScenario) => {
     try {
-      generateScenarioPdf(scenario, {
+      toast.info('Generando PDF del escenario…');
+      await generateScenarioPdf(scenario, {
         listingTitle: listing?.title,
         listingLocation: listing ? `${listing.location}, ${listing.region}` : undefined,
         pageUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+        mapboxToken: mapboxToken ?? undefined,
       });
       toast.success('PDF del escenario descargado');
     } catch (e) {
