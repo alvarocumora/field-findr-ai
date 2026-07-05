@@ -65,7 +65,7 @@ const DISMISSED_KEY = 'swipe:dismissed-ids';
 const SwipeExplorer = ({
   listings, onFavorite, onDismiss, onContact,
   onAddToCompare, onOpenCompare, compareCount = 0, isInCompare,
-  onBack,
+  onBack, onDeckChange,
 }: SwipeExplorerProps) => {
   const navigate = useNavigate();
   const [category, setCategory] = useState<CategoryKey>('todos');
