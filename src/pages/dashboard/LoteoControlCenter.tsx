@@ -216,18 +216,31 @@ const LoteoControlCenter = () => {
             Centro de comando de ventas y reservas por proyecto
           </p>
         </div>
-        <Select value={activeProjectId} onValueChange={setProjectId}>
-          <SelectTrigger className="w-full sm:w-[260px] rounded-xl">
-            <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
-            <SelectValue placeholder="Selecciona proyecto" />
-          </SelectTrigger>
-          <SelectContent>
-            {projects.map((p) => (
-              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setBulkPriceOpen(true)}
+            disabled={!activeProjectId}
+            className="rounded-xl"
+          >
+            <Percent className="h-4 w-4 mr-1.5" />
+            Ajustar precios
+          </Button>
+          <Select value={activeProjectId} onValueChange={setProjectId}>
+            <SelectTrigger className="w-full sm:w-[260px] rounded-xl">
+              <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Selecciona proyecto" />
+            </SelectTrigger>
+            <SelectContent>
+              {projects.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
 
       {/* KPI row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
