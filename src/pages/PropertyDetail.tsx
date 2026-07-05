@@ -85,9 +85,13 @@ const PropertyDetail = () => {
   // Permisos: visible solo si el listing está activo/aprobado, o si lo ve su dueño (cualquier estado)
   const isListingOwner = !!user && !!listing && listing.user_id === user.id;
   const isListingPublished = listing?.status === 'active';
+  const { data: approval } = useListingApproval(isListingOwner ? listing?.id : undefined);
   const showPackingDesigner =
     (hasPackingTag || isTeno) && (isListingPublished || isListingOwner);
-  const visualScenarios = isTeno ? mockVisualScenarios : [];
+  // Gate para TODO contenido 3D / visual scenarios
+  const canShow3D = isListingPublished || isListingOwner;
+  const visualScenarios = isTeno && canShow3D ? mockVisualScenarios : [];
+
 
   const propertyJsonLd = listing ? buildPropertyJsonLd({
     id: listing.id,
