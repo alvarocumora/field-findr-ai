@@ -184,15 +184,52 @@ const Subscription = () => {
               {currentPlan === 'free' && (
                 <Button onClick={() => handleUpgrade('starter')} disabled={checkoutLoading}>
                   <Crown className="h-4 w-4 mr-2" />
-                  Mejorar a Starter
+                  Comenzar con Starter
                 </Button>
               )}
-              {(currentPlan === 'starter' || currentPlan === 'free') && (
-                <Button onClick={() => handleUpgrade('growth')} disabled={checkoutLoading} variant={currentPlan === 'free' ? 'outline' : 'default'}>
-                  <ArrowUpRight className="h-4 w-4 mr-2" />
-                  {currentPlan === 'free' ? 'Ver Growth' : 'Mejorar a Growth'}
+
+              {isActive && currentPlan !== 'free' && !subscription?.cancel_at_period_end && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" className="text-destructive hover:text-destructive">
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Cancelar suscripción
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Cancelar tu suscripción?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Mantendrás acceso a las funciones de {planDetails.name} hasta el{' '}
+                        {subscription?.current_period_end &&
+                          format(new Date(subscription.current_period_end), "d 'de' MMMM, yyyy", { locale: es })}
+                        . Después tu cuenta volverá al plan gratuito.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Volver</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => cancelMutation.mutate()}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Sí, cancelar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+
+              {subscription?.cancel_at_period_end && (
+                <Button
+                  variant="default"
+                  onClick={() => reactivateMutation.mutate()}
+                  disabled={reactivateMutation.isPending}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Reactivar suscripción
                 </Button>
               )}
+
               <Button variant="outline" asChild>
                 <Link to="/pricing">Ver todos los planes</Link>
               </Button>
@@ -205,14 +242,59 @@ const Subscription = () => {
                 <div>
                   <p className="font-medium text-destructive">Suscripción cancelada</p>
                   <p className="text-sm text-muted-foreground">
-                    Tu plan seguirá activo hasta {subscription.current_period_end && 
+                    Tu plan seguirá activo hasta {subscription.current_period_end &&
                       format(new Date(subscription.current_period_end), "d 'de' MMMM, yyyy", { locale: es })}
+                    . Puedes reactivarla en cualquier momento antes de esa fecha.
                   </p>
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Change Plan */}
+        {otherPlans.length > 0 && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
+                <CardTitle className="text-lg">Cambiar de plan</CardTitle>
+              </div>
+              <CardDescription>
+                Al confirmar te redirigimos al checkout de Mercado Pago. Tu plan se activará automáticamente cuando el pago sea aprobado.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {otherPlans.map((p) => {
+                  const target = PLAN_DETAILS[p];
+                  return (
+                    <div
+                      key={p}
+                      className="flex items-center justify-between gap-3 p-4 rounded-lg border hover:border-primary/40 transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium text-foreground">{target.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          ${target.price.toLocaleString('es-CL')} <span className="text-xs">/mes</span>
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleUpgrade(p)}
+                        disabled={checkoutLoading}
+                      >
+                        Cambiar
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
 
         {/* Payment History */}
         <Card>
