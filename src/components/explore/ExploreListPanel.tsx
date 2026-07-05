@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect, useMemo, useDeferredValue } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown, LayoutGrid, List, Wheat, Factory, Truck, Zap, Home, Droplets, Car, ShieldCheck, X, Mountain, TrendingUp, Compass } from 'lucide-react';
+import { Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown, LayoutGrid, List, Wheat, Factory, Truck, Zap, Home, Droplets, Car, ShieldCheck, X, Mountain, TrendingUp, Compass, ChevronDown } from 'lucide-react';
 import SearchAutocomplete from '@/components/search/SearchAutocomplete';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -358,6 +359,9 @@ const ExploreListPanel = ({
   const [territorialFilter, setTerritorialFilter] = useState<TerritorialFilterState>({
     aptitudes: [], hasWater: null, hasRoad: null, legalStatus: null,
   });
+  // Territorial/topography filters are collapsed by default so results stay
+  // above the fold (they previously pushed every listing off-screen on mobile).
+  const [territorialOpen, setTerritorialOpen] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -442,6 +446,14 @@ const ExploreListPanel = ({
     return best;
   }, [listings]);
 
+  const territorialActiveCount =
+    territorialFilter.aptitudes.length +
+    (territorialFilter.hasWater === true ? 1 : 0) +
+    (territorialFilter.hasRoad === true ? 1 : 0) +
+    (territorialFilter.legalStatus ? 1 : 0) +
+    selectedSlopes.length +
+    selectedValuation.length;
+
   const featuredCount = listings.filter(l => l.featured).length;
   const recentCount = listings.filter(l => {
     const oneWeekAgo = new Date();
@@ -487,63 +499,66 @@ const ExploreListPanel = ({
             />
           </div>
 
-          {/* Body — grouped, labeled sections */}
-          <div className="p-3.5 space-y-4">
-            {/* Aptitud territorial (type + attributes) */}
-            <section className="flex flex-col gap-2.5">
-              <SectionLabel icon={Compass}>Aptitud territorial</SectionLabel>
-              <TerritorialFilters listings={listings} onFilterChange={setTerritorialFilter} />
-            </section>
-
-            {/* Topografía & Plusvalía */}
-            {onToggleSlope && onToggleValuation && (
-              <section className="flex flex-col gap-2.5">
-                <SectionLabel icon={Mountain}>Topografía & plusvalía</SectionLabel>
-                <ValuationFilters
-                  selectedSlopes={selectedSlopes}
-                  onToggleSlope={onToggleSlope}
-                  selectedValuation={selectedValuation}
-                  onToggleValuation={onToggleValuation}
-                />
-              </section>
-            )}
-          </div>
-
-          {/* Footer — result count + clear all */}
-          <div className="px-3.5 py-2 border-t border-border/40 bg-muted/20 flex items-center justify-between">
-            <p className="text-[11px] text-muted-foreground font-medium">
-              <span className="text-primary font-semibold tabular-nums">
-                {displayCount.toLocaleString()}
-              </span>{' '}
-              terreno{displayCount === 1 ? '' : 's'}
-              {summary ? ` desde ${formatPriceShort(summary.minPrice)}` : ''}
-            </p>
-            {activeFiltersCount > 0 && (
+          {/* Body — territorial filters, collapsed by default to keep results
+              above the fold. The trigger shows a badge with active count. */}
+          <Collapsible open={territorialOpen} onOpenChange={setTerritorialOpen}>
+            <CollapsibleTrigger asChild>
               <button
                 type="button"
-                onClick={onClearFilters}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors"
+                className="w-full px-3.5 py-2.5 flex items-center gap-2 text-left hover:bg-muted/30 transition-colors"
               >
-                <X className="h-3 w-3" />
-                Limpiar todo
+                <Compass className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs font-medium text-foreground">
+                  Aptitud, topografía y plusvalía
+                </span>
+                {territorialActiveCount > 0 && (
+                  <span className="h-4 min-w-4 px-1 rounded-full bg-primary/15 text-primary text-[10px] font-semibold inline-flex items-center justify-center">
+                    {territorialActiveCount}
+                  </span>
+                )}
+                <ChevronDown
+                  className={cn(
+                    'ml-auto h-3.5 w-3.5 text-muted-foreground transition-transform',
+                    territorialOpen && 'rotate-180',
+                  )}
+                />
               </button>
-            )}
-          </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-3.5 pb-3.5 pt-1 space-y-4">
+                <section className="flex flex-col gap-2.5">
+                  <SectionLabel icon={Compass}>Aptitud territorial</SectionLabel>
+                  <TerritorialFilters listings={listings} onFilterChange={setTerritorialFilter} />
+                </section>
+
+                {onToggleSlope && onToggleValuation && (
+                  <section className="flex flex-col gap-2.5">
+                    <SectionLabel icon={Mountain}>Topografía & plusvalía</SectionLabel>
+                    <ValuationFilters
+                      selectedSlopes={selectedSlopes}
+                      onToggleSlope={onToggleSlope}
+                      selectedValuation={selectedValuation}
+                      onToggleValuation={onToggleValuation}
+                    />
+                  </section>
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </div>
 
       {/* Summary + Tabs + Sort */}
       <div className="px-4 py-2 space-y-2 border-b border-border/10">
         {/* Summary */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-foreground">{displayCount}</span>
-            <span className="text-sm text-muted-foreground">
-              terrenos{summary ? ` desde ${formatPriceShort(summary.minPrice)}` : ''}
-              {summary && summary.regionCount > 1 ? ` en ${summary.regionCount} regiones` : ''}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="min-w-0 truncate text-sm text-muted-foreground">
+            <span className="text-base font-bold text-foreground tabular-nums">{displayCount}</span>{' '}
+            terreno{displayCount === 1 ? '' : 's'}
+            {summary ? ` desde ${formatPriceShort(summary.minPrice)}` : ''}
+            {summary && summary.regionCount > 1 ? ` en ${summary.regionCount} regiones` : ''}
+          </p>
+          <div className="flex items-center gap-2 flex-shrink-0">
             <ToggleGroup type="single" value={viewLayout} onValueChange={(v) => v && setViewLayout(v as 'compact' | 'grid')} size="sm">
               <ToggleGroupItem value="compact" aria-label="Lista"><List className="h-3 w-3" /></ToggleGroupItem>
               <ToggleGroupItem value="grid" aria-label="Grid"><LayoutGrid className="h-3 w-3" /></ToggleGroupItem>
