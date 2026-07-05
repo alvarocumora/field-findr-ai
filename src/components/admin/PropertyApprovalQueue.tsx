@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -7,9 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { CheckCircle2, XCircle, Building2, MapPin, DollarSign, Clock } from 'lucide-react';
+import { CheckCircle2, XCircle, Building2, MapPin, DollarSign, Clock, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatPrice } from '@/hooks/useListings';
+
 
 const PropertyApprovalQueue = () => {
   const { user } = useAuth();
@@ -32,30 +34,27 @@ const PropertyApprovalQueue = () => {
 
   const updateApproval = useMutation({
     mutationFn: async ({ id, status, reason }: { id: string; status: 'approved' | 'rejected'; reason?: string }) => {
+      // El trigger sync_listing_status_from_approval se encarga de actualizar listings.status
+      // y de notificar al dueño automáticamente.
       const { error } = await supabase
         .from('property_approvals')
         .update({
           status: status as any,
           reviewer_id: user?.id,
           reviewed_at: new Date().toISOString(),
-          ...(reason ? { rejection_reason: reason } : {}),
+          rejection_reason: status === 'rejected' ? (reason ?? null) : null,
         } as any)
         .eq('id', id);
       if (error) throw error;
-
-      if (status === 'approved') {
-        const approval = approvals.find(a => a.id === id);
-        if (approval?.listing_id) {
-          await supabase.from('listings').update({ status: 'active' }).eq('id', approval.listing_id);
-        }
-      }
     },
-    onSuccess: () => {
+    onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: ['property-approvals'] });
-      toast.success('Propiedad actualizada');
+      queryClient.invalidateQueries({ queryKey: ['listings'] });
+      toast.success(vars.status === 'approved' ? 'Propiedad aprobada · dueño notificado' : 'Propiedad rechazada · dueño notificado');
     },
     onError: () => toast.error('Error al actualizar'),
   });
+
 
   const pendingCount = approvals.length;
 
@@ -104,10 +103,16 @@ const PropertyApprovalQueue = () => {
                     </Badge>
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                     <span className="flex items-center gap-1"><DollarSign className="h-3 w-3" />{formatPrice(listing.price, listing.currency)}</span>
                     <span>{listing.area_m2} m²</span>
                     <span>{listing.type}</span>
+                    <Button asChild size="sm" variant="ghost" className="ml-auto h-7 gap-1">
+                      <Link to={`/propiedad/${listing.id}`} target="_blank" rel="noreferrer">
+                        <ExternalLink className="h-3 w-3" /> Ver detalle
+                      </Link>
+                    </Button>
+
                   </div>
 
                   <Textarea

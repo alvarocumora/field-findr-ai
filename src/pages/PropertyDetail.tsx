@@ -29,7 +29,10 @@ import { mockVisualScenarios } from '@/data/mockVisualScenarios';
 import { generatePropertyPdf } from '@/lib/propertyPdfGenerator';
 import { cn } from '@/lib/utils';
 import { useSEO, buildPropertyJsonLd } from '@/hooks/useSEO';
+import { useListingApproval } from '@/hooks/usePropertyApprovals';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { VisualScenario } from '@/types/visualScenario';
+
 import {
   Heart,
   MapPin,
@@ -82,9 +85,13 @@ const PropertyDetail = () => {
   // Permisos: visible solo si el listing está activo/aprobado, o si lo ve su dueño (cualquier estado)
   const isListingOwner = !!user && !!listing && listing.user_id === user.id;
   const isListingPublished = listing?.status === 'active';
+  const { data: approval } = useListingApproval(isListingOwner ? listing?.id : undefined);
   const showPackingDesigner =
     (hasPackingTag || isTeno) && (isListingPublished || isListingOwner);
-  const visualScenarios = isTeno ? mockVisualScenarios : [];
+  // Gate para TODO contenido 3D / visual scenarios
+  const canShow3D = isListingPublished || isListingOwner;
+  const visualScenarios = isTeno && canShow3D ? mockVisualScenarios : [];
+
 
   const propertyJsonLd = listing ? buildPropertyJsonLd({
     id: listing.id,
@@ -213,6 +220,44 @@ const PropertyDetail = () => {
           )}
           <span className="text-foreground truncate max-w-[200px]">{listing.title}</span>
         </nav>
+
+        {/* Banner de estado — visible sólo al dueño cuando la propiedad no está aprobada */}
+        {isListingOwner && !isListingPublished && (
+          <Alert
+            className={cn(
+              'mb-6 border-l-4',
+              listing.status === 'rejected'
+                ? 'border-destructive bg-destructive/5'
+                : 'border-amber-500 bg-amber-500/5'
+            )}
+          >
+            {listing.status === 'rejected' ? (
+              <AlertCircle className="h-5 w-5 text-destructive" />
+            ) : (
+              <Clock className="h-5 w-5 text-amber-500" />
+            )}
+            <AlertTitle className="font-semibold">
+              {listing.status === 'rejected'
+                ? 'Publicación rechazada'
+                : 'En revisión'}
+            </AlertTitle>
+            <AlertDescription className="mt-1 text-sm">
+              {listing.status === 'rejected' ? (
+                <>
+                  Motivo: {approval?.rejection_reason || 'No se especificó motivo.'}
+                  {' · '}Edita tu propiedad para reenviarla a revisión.
+                </>
+              ) : (
+                <>
+                  Nuestro equipo está revisando tu propiedad. Sólo tú puedes verla en este momento;
+                  el marketplace, mapa 3D y visualizaciones se activan al aprobarla.
+                </>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
+
 
         <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
           {/* Main Content */}

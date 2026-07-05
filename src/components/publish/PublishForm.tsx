@@ -196,13 +196,14 @@ const PublishForm = () => {
         subdivision_eligible: formData.subdivision_eligible,
         images: formData.images,
         user_id: user.id,
-        status: 'active',
+        status: 'pending_review',
         legal_status: 'pending',
       });
-      navigate('/explorar');
+      navigate('/mi-terreno');
     } catch {
       // Error handled by mutation
     }
+
   };
 
   const canAdvance = validateStep(currentStep);
