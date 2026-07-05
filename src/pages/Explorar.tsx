@@ -31,6 +31,8 @@ const Explorar = () => {
   const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>('swipe');
   // Desktop: overlay swipe mode
   const [desktopSwipe, setDesktopSwipe] = useState(false);
+  // Deck emitted by SwipeExplorer (category + advanced filters). Null = no swipe sync.
+  const [swipeDeck, setSwipeDeck] = useState<Listing[] | null>(null);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
