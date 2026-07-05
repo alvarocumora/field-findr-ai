@@ -1875,6 +1875,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_lot_prices: {
+        Args: {
+          p_mode: string
+          p_only_status?: string
+          p_project_id: string
+          p_value: number
+        }
+        Returns: number
+      }
+      expire_stale_reservations: { Args: never; Returns: number }
+      extend_reservation: {
+        Args: { p_hours?: number; p_reservation_id: string }
+        Returns: string
+      }
       find_tasacion_by_hash: {
         Args: { _hash: string }
         Returns: {
@@ -1897,7 +1911,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_commission_paid: {
+        Args: { p_commission_id: string }
+        Returns: string
+      }
       mark_overdue_payments: { Args: never; Returns: undefined }
+      register_sale: {
+        Args: {
+          p_commission_rate?: number
+          p_notes?: string
+          p_reservation_id: string
+          p_sale_amount: number
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "buyer" | "agent" | "admin"
