@@ -34,6 +34,20 @@ const APTITUDE_OPTIONS = [
   { key: 'residencial', label: 'Residencial', icon: Home },
 ];
 
+/**
+ * Micro-caps section label + hair line separator.
+ * Used inside the search command panel to group filters cleanly.
+ */
+const SectionLabel = ({ icon: Icon, children }: { icon?: React.ComponentType<{ className?: string }>; children: React.ReactNode }) => (
+  <div className="flex items-center gap-2">
+    {Icon && <Icon className="h-3 w-3 text-muted-foreground/70" />}
+    <span className="text-[10px] uppercase tracking-[0.14em] font-semibold text-muted-foreground/80">
+      {children}
+    </span>
+    <div className="h-px flex-1 bg-border/40" />
+  </div>
+);
+
 const TerritorialFilters = ({ onFilterChange }: { listings: Listing[]; onFilterChange: (filter: TerritorialFilterState) => void }) => {
   const [filter, setFilter] = useState<TerritorialFilterState>({
     aptitudes: [], hasWater: null, hasRoad: null, legalStatus: null,
