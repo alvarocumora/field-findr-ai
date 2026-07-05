@@ -347,6 +347,30 @@ const Explorar = () => {
       {/* Compare */}
       <CompareFloatingBar />
       <CompareSheet />
+
+      {/* Desktop Swipe FAB */}
+      <Button
+        onClick={() => setDesktopSwipe(true)}
+        className="fixed bottom-6 right-6 z-40 h-14 px-6 rounded-full shadow-2xl gap-2"
+      >
+        <CreditCard className="h-5 w-5" />
+        Modo Swipe
+      </Button>
+
+      {/* Desktop Swipe Overlay */}
+      {desktopSwipe && (
+        <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-xl flex items-center justify-center">
+          <div className="w-full max-w-md h-[90vh] max-h-[800px]">
+            <SwipeExplorer
+              listings={filteredListings}
+              onFavorite={(l) => { addFavorite.mutate(l.id); track('swipe_favorite', { listing_id: l.id }); }}
+              onDismiss={(l) => { track('swipe_dismiss', { listing_id: l.id }); }}
+              onContact={(l) => { setDesktopSwipe(false); navigate(`/propiedad/${l.id}`); }}
+              onBack={() => setDesktopSwipe(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
