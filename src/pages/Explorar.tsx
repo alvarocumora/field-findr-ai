@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, useDeferredValue, lazy, Suspense } from 'react';
+import { useState, useMemo, useCallback, useRef, useDeferredValue, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StickyHeader from '@/components/navigation/StickyHeader';
 import ExploreListPanel from '@/components/explore/ExploreListPanel';
