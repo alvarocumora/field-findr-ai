@@ -109,6 +109,7 @@ const AgentPerformance = () => {
   const { data: commissions, isLoading: commissionsLoading } = useAgentCommissions();
   const { data: summary, isLoading: summaryLoading } = useCommissionSummary();
   const { data: goals, isLoading: goalsLoading } = useAgentPerformanceGoals();
+  const markPaid = useMarkCommissionPaid();
 
   const kpis = [
     { label: 'Comisiones Total', value: summary ? formatCurrency(summary.total) : '-', icon: DollarSign, color: 'text-emerald-500' },
