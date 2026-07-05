@@ -34,6 +34,7 @@ const APIPortal = lazy(() => import("@/pages/dashboard/APIPortal"));
 const LandOpportunities = lazy(() => import("@/pages/dashboard/LandOpportunities"));
 const Contacts = lazy(() => import("@/pages/dashboard/Contacts"));
 const OpportunityDetail = lazy(() => import("@/pages/dashboard/OpportunityDetail"));
+const LoteoControlCenter = lazy(() => import("@/pages/dashboard/LoteoControlCenter"));
 
 const agentElement = (children: ReactNode) => (
   <DashboardLayout requiredRole="agent">
@@ -58,6 +59,7 @@ export const agentRoutes = [
   <Route key="asesor-leads" path="/asesor/leads" element={agentElement(<LeadManagement />)} />,
   <Route key="asesor-projects" path="/asesor/projects" element={agentElement(<ProjectsManagement />)} />,
   <Route key="asesor-lots" path="/asesor/lots" element={agentElement(<LotManagement />)} />,
+  <Route key="asesor-loteos" path="/asesor/loteos" element={agentElement(<LoteoControlCenter />)} />,
   <Route key="asesor-analytics" path="/asesor/analytics" element={agentElement(<BusinessIntelligence />)} />,
   <Route key="asesor-crm" path="/asesor/crm" element={agentElement(<CRMSystem />)} />,
   <Route key="asesor-sales" path="/asesor/sales" element={agentElement(<SalesManagement />)} />,
