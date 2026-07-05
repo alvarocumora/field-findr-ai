@@ -464,10 +464,16 @@ const ExploreListPanel = ({
                 <MapPin className="h-8 w-8 text-muted-foreground/50" />
               </div>
               <h4 className="text-sm font-semibold text-foreground mb-1">Sin resultados</h4>
-              <p className="text-xs text-muted-foreground max-w-[200px]">
-                Ajusta los filtros o mueve el mapa para encontrar propiedades
+              <p className="text-xs text-muted-foreground max-w-[220px] mb-4">
+                Ajusta los filtros o mueve el mapa para encontrar propiedades en esta zona.
               </p>
+              {activeFiltersCount > 0 && (
+                <Button size="sm" variant="outline" onClick={onClearFilters} className="rounded-xl">
+                  Limpiar filtros ({activeFiltersCount})
+                </Button>
+              )}
             </div>
+
           ) : (
             <div className={viewLayout === 'grid' ? 'grid grid-cols-2 gap-2' : 'space-y-1'}>
               {sortedListings.map((listing, index) => (
