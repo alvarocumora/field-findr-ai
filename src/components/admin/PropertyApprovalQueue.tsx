@@ -34,30 +34,27 @@ const PropertyApprovalQueue = () => {
 
   const updateApproval = useMutation({
     mutationFn: async ({ id, status, reason }: { id: string; status: 'approved' | 'rejected'; reason?: string }) => {
+      // El trigger sync_listing_status_from_approval se encarga de actualizar listings.status
+      // y de notificar al dueño automáticamente.
       const { error } = await supabase
         .from('property_approvals')
         .update({
           status: status as any,
           reviewer_id: user?.id,
           reviewed_at: new Date().toISOString(),
-          ...(reason ? { rejection_reason: reason } : {}),
+          rejection_reason: status === 'rejected' ? (reason ?? null) : null,
         } as any)
         .eq('id', id);
       if (error) throw error;
-
-      if (status === 'approved') {
-        const approval = approvals.find(a => a.id === id);
-        if (approval?.listing_id) {
-          await supabase.from('listings').update({ status: 'active' }).eq('id', approval.listing_id);
-        }
-      }
     },
-    onSuccess: () => {
+    onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: ['property-approvals'] });
-      toast.success('Propiedad actualizada');
+      queryClient.invalidateQueries({ queryKey: ['listings'] });
+      toast.success(vars.status === 'approved' ? 'Propiedad aprobada · dueño notificado' : 'Propiedad rechazada · dueño notificado');
     },
     onError: () => toast.error('Error al actualizar'),
   });
+
 
   const pendingCount = approvals.length;
 
