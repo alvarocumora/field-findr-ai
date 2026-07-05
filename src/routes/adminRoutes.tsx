@@ -1,20 +1,21 @@
-import { Suspense, type ReactNode } from "react";
+import { Suspense, lazy, type ReactNode } from "react";
 import { Route } from "react-router-dom";
 
 import DashboardLayout from "@/components/layouts/DashboardLayout";
-import AdminUsers from "@/pages/AdminUsers";
-import AgentManagement from "@/components/AgentManagement";
-import PropertyApprovalQueue from "@/components/admin/PropertyApprovalQueue";
-import DocumentCenter from "@/components/admin/DocumentCenter";
-import AuditLog from "@/pages/dashboard/AuditLog";
-import ReservationsManager from "@/components/reservations/ReservationsManager";
-import CreditManager from "@/components/credits/CreditManager";
-import BusinessIntelligence from "@/components/BusinessIntelligence";
-import FinancialDashboard from "@/pages/dashboard/FinancialDashboard";
-import ProjectsManagement from "@/components/ProjectsManagement";
-import VisualScenariosAdmin from "@/pages/admin/VisualScenariosAdmin";
 import { DashboardAdmin } from "@/pages/dashboard";
 import { PageLoader } from "./routeUtils";
+
+const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
+const AgentManagement = lazy(() => import("@/components/AgentManagement"));
+const PropertyApprovalQueue = lazy(() => import("@/components/admin/PropertyApprovalQueue"));
+const DocumentCenter = lazy(() => import("@/components/admin/DocumentCenter"));
+const AuditLog = lazy(() => import("@/pages/dashboard/AuditLog"));
+const ReservationsManager = lazy(() => import("@/components/reservations/ReservationsManager"));
+const CreditManager = lazy(() => import("@/components/credits/CreditManager"));
+const BusinessIntelligence = lazy(() => import("@/components/BusinessIntelligence"));
+const FinancialDashboard = lazy(() => import("@/pages/dashboard/FinancialDashboard"));
+const ProjectsManagement = lazy(() => import("@/components/ProjectsManagement"));
+const VisualScenariosAdmin = lazy(() => import("@/pages/admin/VisualScenariosAdmin"));
 
 const adminElement = (children: ReactNode) => (
   <DashboardLayout requiredRole="admin">

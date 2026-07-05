@@ -132,6 +132,14 @@ const Explorar = () => {
   // so it doesn't shadow the map with a stale subset.
   useEffect(() => { setSwipeDeck(null); }, [filteredListings]);
 
+  // Close the desktop swipe overlay with the Escape key.
+  useEffect(() => {
+    if (!desktopSwipe) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setDesktopSwipe(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [desktopSwipe]);
+
   // The map should reflect the same deck that SwipeExplorer is showing.
   // When a swipe deck is emitted, use it; otherwise fall back to full filtered.
   const mapSourceListings = swipeDeck ?? filteredListings;
@@ -439,8 +447,17 @@ const Explorar = () => {
 
       {/* Desktop Swipe Overlay */}
       {desktopSwipe && (
-        <div className="fixed inset-0 z-modal bg-background/95 backdrop-blur-xl flex items-center justify-center">
-          <div className="w-full max-w-md h-[90vh] max-h-[800px]">
+        <div
+          className="fixed inset-0 z-modal bg-background/95 backdrop-blur-xl flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Modo Swipe"
+          onClick={() => setDesktopSwipe(false)}
+        >
+          <div
+            className="w-full max-w-md h-[90vh] max-h-[800px]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <SwipeExplorer
               listings={filteredListings}
               onFavorite={(l) => {
@@ -503,6 +520,16 @@ const Explorar = () => {
               onDeckChange={setSwipeDeck}
               undoDismissRef={undoDismissRef}
             />
+          </div>
+          <div
+            className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 hidden md:flex items-center gap-3 text-[11px] text-muted-foreground"
+            aria-hidden="true"
+          >
+            <span>← Descartar</span>
+            <span>→ Me gusta</span>
+            <span>↑ Contactar</span>
+            <span>Z Deshacer</span>
+            <span>Esc Cerrar</span>
           </div>
         </div>
       )}

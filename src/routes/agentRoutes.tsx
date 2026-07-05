@@ -1,38 +1,39 @@
-import { Suspense, type ReactNode } from "react";
+import { Suspense, lazy, type ReactNode } from "react";
 import { Route } from "react-router-dom";
 
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
-import Tools from "@/pages/Tools";
-import Profile from "@/pages/Profile";
-import PublishProperty from "@/components/PublishProperty";
-import PropertyInventory from "@/components/PropertyInventory";
-import LeadManagement from "@/components/LeadManagement";
-import ProjectsManagement from "@/components/ProjectsManagement";
-import LotManagement from "@/components/LotManagement";
-import CRMSystem from "@/components/CRMSystem";
-import SalesManagement from "@/components/SalesManagement";
-import BusinessIntelligence from "@/components/BusinessIntelligence";
-import ReservationsManager from "@/components/reservations/ReservationsManager";
-import CreditManager from "@/components/credits/CreditManager";
-import ClosingManager from "@/components/closing/ClosingManager";
-import EnterpriseSettings from "@/components/enterprise/EnterpriseSettings";
-import ExecutiveDashboard from "@/pages/dashboard/ExecutiveDashboard";
-import FinancialDashboard from "@/pages/dashboard/FinancialDashboard";
-import AgentPerformance from "@/pages/dashboard/AgentPerformance";
-import Messages from "@/pages/dashboard/Messages";
-import SalesPipeline from "@/pages/dashboard/SalesPipeline";
-import MultiProjectDashboard from "@/pages/dashboard/MultiProjectDashboard";
-import PaymentManagement from "@/pages/dashboard/PaymentManagement";
-import Reports from "@/pages/dashboard/Reports";
-import NotificationCenter from "@/pages/NotificationCenter";
-import DemandHeatmapDashboard from "@/pages/dashboard/DemandHeatmapDashboard";
-import APIPortal from "@/pages/dashboard/APIPortal";
-import LandOpportunities from "@/pages/dashboard/LandOpportunities";
-import Contacts from "@/pages/dashboard/Contacts";
-import OpportunityDetail from "@/pages/dashboard/OpportunityDetail";
 import { DashboardAsesor } from "@/pages/dashboard";
 import { PageLoader } from "./routeUtils";
+
+const Tools = lazy(() => import("@/pages/Tools"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const PublishProperty = lazy(() => import("@/components/PublishProperty"));
+const PropertyInventory = lazy(() => import("@/components/PropertyInventory"));
+const LeadManagement = lazy(() => import("@/components/LeadManagement"));
+const ProjectsManagement = lazy(() => import("@/components/ProjectsManagement"));
+const LotManagement = lazy(() => import("@/components/LotManagement"));
+const CRMSystem = lazy(() => import("@/components/CRMSystem"));
+const SalesManagement = lazy(() => import("@/components/SalesManagement"));
+const BusinessIntelligence = lazy(() => import("@/components/BusinessIntelligence"));
+const ReservationsManager = lazy(() => import("@/components/reservations/ReservationsManager"));
+const CreditManager = lazy(() => import("@/components/credits/CreditManager"));
+const ClosingManager = lazy(() => import("@/components/closing/ClosingManager"));
+const EnterpriseSettings = lazy(() => import("@/components/enterprise/EnterpriseSettings"));
+const ExecutiveDashboard = lazy(() => import("@/pages/dashboard/ExecutiveDashboard"));
+const FinancialDashboard = lazy(() => import("@/pages/dashboard/FinancialDashboard"));
+const AgentPerformance = lazy(() => import("@/pages/dashboard/AgentPerformance"));
+const Messages = lazy(() => import("@/pages/dashboard/Messages"));
+const SalesPipeline = lazy(() => import("@/pages/dashboard/SalesPipeline"));
+const MultiProjectDashboard = lazy(() => import("@/pages/dashboard/MultiProjectDashboard"));
+const PaymentManagement = lazy(() => import("@/pages/dashboard/PaymentManagement"));
+const Reports = lazy(() => import("@/pages/dashboard/Reports"));
+const NotificationCenter = lazy(() => import("@/pages/NotificationCenter"));
+const DemandHeatmapDashboard = lazy(() => import("@/pages/dashboard/DemandHeatmapDashboard"));
+const APIPortal = lazy(() => import("@/pages/dashboard/APIPortal"));
+const LandOpportunities = lazy(() => import("@/pages/dashboard/LandOpportunities"));
+const Contacts = lazy(() => import("@/pages/dashboard/Contacts"));
+const OpportunityDetail = lazy(() => import("@/pages/dashboard/OpportunityDetail"));
 
 const agentElement = (children: ReactNode) => (
   <DashboardLayout requiredRole="agent">

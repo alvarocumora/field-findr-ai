@@ -158,6 +158,14 @@ const SwipeExplorer = ({
   // Emit filtered deck upward so the parent (map, badges, etc.) can sync.
   useEffect(() => { onDeckChange?.(filtered); }, [filtered, onDeckChange]);
 
+  // Preload the next few card images so swiping doesn't flash a blank card.
+  useEffect(() => {
+    for (let i = currentIndex + 1; i <= currentIndex + 3; i++) {
+      const url = filtered[i]?.images?.[0];
+      if (url) { const img = new Image(); img.src = url; }
+    }
+  }, [filtered, currentIndex]);
+
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
@@ -176,7 +184,7 @@ const SwipeExplorer = ({
     x.set(0); y.set(0);
   }, [onFavorite, onDismiss, onContact, x, y]);
 
-  const handleDragEnd = useCallback((_: any, info: PanInfo) => {
+  const handleDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const current = filtered[currentIndex];
     if (!current) return;
     if (info.offset.x > SWIPE_THRESHOLD) advance(current, 'favorite');
@@ -191,6 +199,26 @@ const SwipeExplorer = ({
     setDismissedIds(prev => { const n = new Set(prev); n.delete(last.id); return n; });
     setCurrentIndex(i => Math.max(0, i - 1));
   }, [history]);
+
+  // Keyboard controls (desktop): ←/→/↑ act like swipes, Z/Backspace undoes.
+  // Ignored while a dialog/sheet is open or focus is in a form field.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (confirmed || filtersOpen) return;
+      const target = e.target as HTMLElement | null;
+      if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+      const current = filtered[currentIndex];
+      if (!current) return;
+      switch (e.key) {
+        case 'ArrowRight': e.preventDefault(); advance(current, 'favorite'); break;
+        case 'ArrowLeft': e.preventDefault(); advance(current, 'dismiss'); break;
+        case 'ArrowUp': e.preventDefault(); advance(current, 'contact'); break;
+        case 'z': case 'Z': case 'Backspace': e.preventDefault(); handleUndo(); break;
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [filtered, currentIndex, advance, handleUndo, confirmed, filtersOpen]);
 
   // Expose an imperative "unDismiss(id)" to parents so they can revert a dismiss
   // from an undo snackbar without needing to know internal state.

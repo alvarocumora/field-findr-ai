@@ -56,6 +56,13 @@ export function useMapInstance(
   const showDrawToolsRef = useRef(showDrawTools);
   useEffect(() => { showDrawToolsRef.current = showDrawTools; });
 
+  // The init effect below runs once (deps: token only). Keep the latest
+  // callbacks in refs so map events don't fire stale closures over parent state.
+  const onBoundsChangeRef = useRef(onBoundsChange);
+  const onPolygonDrawnRef = useRef(onPolygonDrawn);
+  useEffect(() => { onBoundsChangeRef.current = onBoundsChange; });
+  useEffect(() => { onPolygonDrawnRef.current = onPolygonDrawn; });
+
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawnArea, setDrawnArea] = useState<number | null>(null);
@@ -176,7 +183,7 @@ export function useMapInstance(
         if (!map.current) return;
         const b = map.current.getBounds();
         if (b) {
-          onBoundsChange?.({
+          onBoundsChangeRef.current?.({
             north: b.getNorth(),
             south: b.getSouth(),
             east: b.getEast(),
@@ -193,7 +200,7 @@ export function useMapInstance(
           const coords = (polygon.geometry as GeoJSON.Polygon).coordinates[0];
           const area = calculatePolygonArea(coords as number[][]);
           setDrawnArea(area);
-          onPolygonDrawn?.(coords as number[][], area);
+          onPolygonDrawnRef.current?.(coords as number[][], area);
         }
       });
       map.current.on('draw.update', (e: { features: GeoJSON.Feature[] }) => {
@@ -202,7 +209,7 @@ export function useMapInstance(
           const coords = (polygon.geometry as GeoJSON.Polygon).coordinates[0];
           const area = calculatePolygonArea(coords as number[][]);
           setDrawnArea(area);
-          onPolygonDrawn?.(coords as number[][], area);
+          onPolygonDrawnRef.current?.(coords as number[][], area);
         }
       });
       map.current.on('draw.delete', () => {

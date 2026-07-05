@@ -47,11 +47,15 @@ export const useReservations = (projectId?: string) => {
   return useQuery({
     queryKey: ['reservations', projectId],
     queryFn: async () => {
+      // When filtering by project we must use an inner join (`lots!inner`),
+      // otherwise PostgREST only nulls out non-matching embeds and still
+      // returns reservations from every project.
+      const lotsEmbed = projectId ? 'lots!inner' : 'lots';
       let query = supabase
         .from('reservations')
         .select(`
           *,
-          lots (
+          ${lotsEmbed} (
             id,
             lot_number,
             name,
