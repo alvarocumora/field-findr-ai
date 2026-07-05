@@ -43,7 +43,9 @@ import {
 import { useAgentCommissions, useMarkCommissionPaid } from '@/hooks/useAgentCommissions';
 import ConvertToSaleDialog from '@/components/reservations/ConvertToSaleDialog';
 import LotQuoteDialog from '@/components/lots/LotQuoteDialog';
+import BulkPriceAdjustDialog from '@/components/lots/BulkPriceAdjustDialog';
 import type { Lot } from '@/hooks/useLots';
+import { Percent } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const formatCLP = (n: number) =>
