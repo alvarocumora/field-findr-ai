@@ -13,6 +13,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@lovable.dev/cloud-auth-js": "^1.1.1",
+    "@lovable.dev/mcp-js": "^0.20.0",
     "@mapbox/mapbox-gl-draw": "^1.5.1",
     "@mapbox/togeojson": "^0.16.2",
     "@photo-sphere-viewer/compass-plugin": "^5.14.1",
@@ -83,7 +84,7 @@
     "threebox-plugin": "2.2.7",
     "vaul": "^0.9.3",
     "vite-plugin-pwa": "^1.2.0",
-    "zod": "^3.23.8",
+    "zod": "^4.4.3",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
