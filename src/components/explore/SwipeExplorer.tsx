@@ -195,66 +195,126 @@ const SwipeExplorer = ({
     return new Intl.NumberFormat('es-CL', { style: 'currency', currency, maximumFractionDigits: 0 }).format(price);
   };
 
+  const totalInCategory = useMemo(
+    () => listings.filter(CATEGORY_FILTERS[category]).length,
+    [listings, category],
+  );
+  const progress =
+    filtered.length === 0
+      ? 0
+      : Math.min(100, Math.round(((currentIndex + 1) / filtered.length) * 100));
+
   const CategoryTabs = (
-    <div className="flex items-center gap-2 px-4 pb-2 overflow-x-auto no-scrollbar">
-      {(Object.keys(CATEGORY_LABELS) as CategoryKey[]).map(key => {
-        const count = listings.filter(CATEGORY_FILTERS[key]).filter(l => !dismissedIds.has(l.id)).length;
-        return (
-          <Button
-            key={key}
-            variant={category === key ? 'default' : 'outline'}
-            size="sm"
-            className="rounded-full flex-shrink-0"
-            onClick={() => setCategory(key)}
-          >
-            {CATEGORY_LABELS[key]}
-            <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 h-4 text-[10px]">{count}</Badge>
-          </Button>
-        );
-      })}
+    <div className="relative">
+      <div className="flex items-center gap-1.5 px-4 pb-3 overflow-x-auto no-scrollbar snap-x">
+        {(Object.keys(CATEGORY_LABELS) as CategoryKey[]).map((key) => {
+          const count = listings
+            .filter(CATEGORY_FILTERS[key])
+            .filter((l) => !dismissedIds.has(l.id)).length;
+          const active = category === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setCategory(key)}
+              className={cn(
+                'snap-start inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-xs font-medium border transition-colors flex-shrink-0',
+                active
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  : 'bg-background text-foreground border-border/60 hover:bg-muted',
+              )}
+            >
+              {CATEGORY_LABELS[key]}
+              <span
+                className={cn(
+                  'h-4 min-w-4 px-1 rounded-full text-[10px] font-semibold inline-flex items-center justify-center',
+                  active
+                    ? 'bg-primary-foreground/25 text-primary-foreground'
+                    : 'bg-muted text-muted-foreground',
+                )}
+              >
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {/* Right fade for scroll affordance */}
+      <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-background to-transparent" />
     </div>
   );
 
   const Header = (
-    <div className="flex items-center justify-between p-4 pb-2 gap-2">
-      <Button variant="ghost" size="icon" onClick={onBack}>
-        <ChevronLeft className="h-5 w-5" />
-      </Button>
-      <div className="flex items-center gap-2 flex-1 justify-center">
-        <span className="text-sm text-muted-foreground">
-          {Math.min(currentIndex + 1, filtered.length)} / {filtered.length}
-        </span>
-        {compareCount >= 2 && onOpenCompare && (
-          <Button
-            size="sm"
-            variant="default"
-            className="rounded-full h-7 px-3 gap-1 animate-in fade-in slide-in-from-top-1"
-            onClick={onOpenCompare}
-          >
-            <Scale className="h-3.5 w-3.5" />
-            Comparar ({compareCount})
-          </Button>
-        )}
+    <div className="px-4 pt-3 pb-1">
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          className="h-9 w-9 rounded-full"
+          aria-label="Volver"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          <div className="flex items-baseline gap-1 tabular-nums">
+            <span className="text-sm font-semibold text-foreground">
+              {Math.min(currentIndex + 1, filtered.length || 1)}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              / {filtered.length || totalInCategory}
+            </span>
+          </div>
+          {compareCount >= 2 && onOpenCompare && (
+            <Button
+              size="sm"
+              variant="default"
+              className="rounded-full h-7 px-2.5 gap-1 text-xs animate-in fade-in slide-in-from-top-1"
+              onClick={onOpenCompare}
+            >
+              <Scale className="h-3.5 w-3.5" />
+              {compareCount}
+            </Button>
+          )}
+        </div>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleUndo}
+          disabled={history.length === 0}
+          className="h-9 w-9 rounded-full"
+          aria-label="Deshacer"
+        >
+          <Undo2 className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setFiltersOpen(true)}
+          className="relative h-9 w-9 rounded-full"
+          aria-label="Filtros"
+        >
+          <SlidersHorizontal className="h-5 w-5" />
+          {advancedFiltersCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+              {advancedFiltersCount}
+            </span>
+          )}
+        </Button>
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setFiltersOpen(true)}
-        className="relative"
-        aria-label="Filtros"
-      >
-        <SlidersHorizontal className="h-5 w-5" />
-        {advancedFiltersCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-            {advancedFiltersCount}
-          </span>
-        )}
-      </Button>
-      <Button variant="ghost" size="icon" onClick={handleUndo} disabled={history.length === 0}>
-        <Undo2 className="h-5 w-5" />
-      </Button>
+
+      {/* Slim progress bar */}
+      <div className="mt-2.5 h-1 w-full rounded-full bg-muted/60 overflow-hidden">
+        <div
+          className="h-full bg-primary transition-all duration-300"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
     </div>
   );
+
 
   const formatCLP = (n: number) =>
     new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
