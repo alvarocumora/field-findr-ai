@@ -245,14 +245,17 @@ serve(async (req) => {
             }
           }
 
-          // Assign agent role if upgrading to professional or enterprise
-          if (externalRef.plan_type === "professional" || externalRef.plan_type === "enterprise") {
+          // Assign agent role for any paid corredor plan
+          const AGENT_PLANS = new Set([
+            "starter", "growth", "scale", "enterprise", "professional",
+          ]);
+          if (AGENT_PLANS.has(externalRef.plan_type)) {
             const { data: existingRole } = await supabase
               .from("user_roles")
               .select("id")
               .eq("user_id", externalRef.user_id)
               .eq("role", "agent")
-              .single();
+              .maybeSingle();
 
             if (!existingRole) {
               await supabase.from("user_roles").insert({
