@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo, useDeferredValue } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown, LayoutGrid, List, Wheat, Factory, Truck, Zap, Home, Droplets, Car, ShieldCheck } from 'lucide-react';
 import SearchAutocomplete from '@/components/search/SearchAutocomplete';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -159,6 +160,111 @@ const ListingSkeleton = () => (
   </div>
 );
 
+/* ── Virtualized listing renderer ── */
+interface VirtualizedListingsProps {
+  listings: Listing[];
+  scrollParentRef: React.RefObject<HTMLDivElement>;
+  viewLayout: 'compact' | 'grid';
+  hoveredListing?: Listing | null;
+  selectedListing?: Listing | null;
+  onListingHover?: (l: Listing | null) => void;
+  onListingClick?: (l: Listing) => void;
+  onListingPreview?: (l: Listing) => void;
+  sentinelRef: React.RefObject<HTMLDivElement>;
+  isLoadingMore?: boolean;
+  hasMore?: boolean;
+  displayCount: number;
+}
+
+const VirtualizedListings = ({
+  listings,
+  scrollParentRef,
+  viewLayout,
+  hoveredListing,
+  selectedListing,
+  onListingHover,
+  onListingClick,
+  onListingPreview,
+  sentinelRef,
+  isLoadingMore,
+  hasMore,
+  displayCount,
+}: VirtualizedListingsProps) => {
+  const isGrid = viewLayout === 'grid';
+  const columns = isGrid ? 2 : 1;
+  const rowCount = Math.ceil(listings.length / columns);
+  const estimatedRowSize = isGrid ? 210 : 108;
+
+  const virtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => scrollParentRef.current,
+    estimateSize: () => estimatedRowSize,
+    overscan: 6,
+    measureElement:
+      typeof window !== 'undefined' && typeof ResizeObserver !== 'undefined'
+        ? (el) => el?.getBoundingClientRect().height ?? estimatedRowSize
+        : undefined,
+  });
+
+  const virtualRows = virtualizer.getVirtualItems();
+  const totalSize = virtualizer.getTotalSize();
+
+  return (
+    <>
+      <div
+        style={{ height: totalSize, width: '100%', position: 'relative' }}
+      >
+        {virtualRows.map((virtualRow) => {
+          const startIdx = virtualRow.index * columns;
+          const rowItems = listings.slice(startIdx, startIdx + columns);
+          return (
+            <div
+              key={virtualRow.key}
+              data-index={virtualRow.index}
+              ref={virtualizer.measureElement}
+              className={cn(
+                'absolute top-0 left-0 w-full',
+                isGrid ? 'grid grid-cols-2 gap-2 pb-2' : 'pb-1'
+              )}
+              style={{ transform: `translateY(${virtualRow.start}px)` }}
+            >
+              {rowItems.map((listing) => (
+                <QuickPropertyCard
+                  key={listing.id}
+                  listing={listing}
+                  isHovered={hoveredListing?.id === listing.id}
+                  isSelected={selectedListing?.id === listing.id}
+                  onHover={onListingHover}
+                  onClick={onListingClick}
+                  onPreview={onListingPreview}
+                  layout={isGrid ? 'vertical' : 'horizontal'}
+                />
+              ))}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Infinite scroll sentinel */}
+      <div ref={sentinelRef} className="py-1" />
+
+      {isLoadingMore && (
+        <div className="space-y-1">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <ListingSkeleton key={`more-${i}`} />
+          ))}
+        </div>
+      )}
+
+      {!hasMore && listings.length > 0 && (
+        <p className="text-center text-xs text-muted-foreground py-4">
+          Mostrando {listings.length} de {displayCount} resultados
+        </p>
+      )}
+    </>
+  );
+};
+
 interface ExploreListPanelProps {
   listings: Listing[];
   totalCount?: number;
@@ -297,7 +403,9 @@ const ExploreListPanel = ({
     return result;
   }, [tabFilteredListings, territorialFilter]);
 
-  const sortedListings = sortListings(territorialFilteredListings, sortBy);
+  const sortedListingsRaw = useMemo(() => sortListings(territorialFilteredListings, sortBy), [territorialFilteredListings, sortBy]);
+  // Defer expensive re-render when filters change quickly (progressive rendering)
+  const sortedListings = useDeferredValue(sortedListingsRaw);
 
   // Smart summary
   const displayCount = totalCount ?? listings.length;
@@ -475,44 +583,20 @@ const ExploreListPanel = ({
             </div>
 
           ) : (
-            <div className={viewLayout === 'grid' ? 'grid grid-cols-2 gap-2' : 'space-y-1'}>
-              {sortedListings.map((listing, index) => (
-                <div
-                  key={listing.id}
-                  className="animate-fade-in"
-                  style={{ animationDelay: `${Math.min(index * 20, 100)}ms` }}
-                >
-                  <QuickPropertyCard
-                    listing={listing}
-                    isHovered={hoveredListing?.id === listing.id}
-                    isSelected={selectedListing?.id === listing.id}
-                    onHover={onListingHover}
-                    onClick={onListingClick}
-                    onPreview={onListingPreview}
-                    layout={viewLayout === 'grid' ? 'vertical' : 'horizontal'}
-                  />
-                </div>
-              ))}
-
-              {/* Infinite scroll sentinel */}
-              <div ref={sentinelRef} className="py-1" />
-
-              {/* Loading more indicator */}
-              {isLoadingMore && (
-                <div className="space-y-1">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <ListingSkeleton key={`more-${i}`} />
-                  ))}
-                </div>
-              )}
-
-              {/* End of results */}
-              {!hasMore && sortedListings.length > 0 && (
-                <p className="text-center text-xs text-muted-foreground py-4">
-                  Mostrando {sortedListings.length} de {displayCount} resultados
-                </p>
-              )}
-            </div>
+            <VirtualizedListings
+              listings={sortedListings}
+              scrollParentRef={scrollContainerRef}
+              viewLayout={viewLayout}
+              hoveredListing={hoveredListing}
+              selectedListing={selectedListing}
+              onListingHover={onListingHover}
+              onListingClick={onListingClick}
+              onListingPreview={onListingPreview}
+              sentinelRef={sentinelRef}
+              isLoadingMore={isLoadingMore}
+              hasMore={hasMore}
+              displayCount={displayCount}
+            />
           )}
         </div>
       </div>

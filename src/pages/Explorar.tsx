@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
+import { useState, useMemo, useCallback, useRef, useDeferredValue, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StickyHeader from '@/components/navigation/StickyHeader';
 import ExploreListPanel from '@/components/explore/ExploreListPanel';
@@ -110,6 +110,9 @@ const Explorar = () => {
     }
     return result;
   }, [listings, searchQuery, selectedTags, selectedSlopes, selectedValuation]);
+
+  // Progressive rendering: defer the heavy map listings so filter updates stay responsive
+  const deferredMapListings = useDeferredValue(filteredListings);
 
   const activeFiltersCount = selectedTypes.length + selectedRegions.length + selectedCountries.length + selectedTags.length +
     selectedSlopes.length + selectedValuation.length +
@@ -309,7 +312,7 @@ const Explorar = () => {
         {/* Right panel – map fills remaining space */}
         <div className="flex-1 min-w-0 relative">
           <ExploreMapPanel
-            listings={filteredListings}
+            listings={deferredMapListings}
             hoveredListing={hoveredListing}
             selectedListing={selectedListing}
             onListingHover={setHoveredListing}
