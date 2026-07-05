@@ -372,6 +372,10 @@ const Explorar = () => {
               onFavorite={(l) => { addFavorite.mutate(l.id); track('swipe_favorite', { listing_id: l.id }); }}
               onDismiss={(l) => { track('swipe_dismiss', { listing_id: l.id }); }}
               onContact={(l) => { setDesktopSwipe(false); navigate(`/propiedad/${l.id}`); }}
+              onAddToCompare={(l) => { addToCompare(l); track('swipe_compare', { listing_id: l.id }); }}
+              onOpenCompare={() => { setDesktopSwipe(false); setCompareOpen(true); }}
+              compareCount={compareList.length}
+              isInCompare={isInCompare}
               onBack={() => setDesktopSwipe(false)}
             />
           </div>
