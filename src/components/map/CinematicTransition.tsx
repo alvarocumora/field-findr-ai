@@ -112,7 +112,7 @@ const CinematicTransition = ({
       {/* Crossfade overlay */}
       {(phase === 'crossfade' || phase === 'returning') && (
         <motion.div
-          className="absolute inset-0 z-40 bg-background"
+          className="absolute inset-0 z-overlay bg-background"
           initial={{ opacity: 0 }}
           animate={{ opacity: phase === 'crossfade' ? 1 : 0 }}
           exit={{ opacity: 0 }}
