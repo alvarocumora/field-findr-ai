@@ -164,6 +164,13 @@
   .bottom-safe-nav {
     bottom: max(1rem, calc(var(--safe-bottom) + var(--bottom-nav-h) + 0.75rem));
   }
+  /* Extra offset when the CompareFloatingBar is visible (72px tall) */
+  .bottom-safe-compare {
+    bottom: max(1rem, calc(var(--safe-bottom) + var(--bottom-nav-h) + var(--compare-bar-h, 0px) + 0.75rem));
+  }
+  /* Push content below the fixed global header without hardcoding heights */
+  .top-header { top: var(--header-h); }
+  .pt-header  { padding-top: var(--header-h); }
 }
 
 * {
