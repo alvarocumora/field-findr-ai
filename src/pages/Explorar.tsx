@@ -24,6 +24,7 @@ import { useCompare } from '@/hooks/useCompare';
 const Explorar = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const isTabletOrBelow = useIsTabletOrBelow();
   const addFavorite = useAddFavorite();
   const { track } = useTrackEvent();
   const { addToCompare, compareList, isInCompare, setCompareOpen } = useCompare();
