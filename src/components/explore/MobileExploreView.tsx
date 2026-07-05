@@ -5,7 +5,10 @@ import MapErrorBoundary from '@/components/map/MapErrorBoundary';
 import FloatingSearchBar from './FloatingSearchBar';
 import ExploreBottomSheet from './ExploreBottomSheet';
 import MobileFilterSheet from './MobileFilterSheet';
+import { Button } from '@/components/ui/button';
+import { MapPin } from 'lucide-react';
 import { Listing } from '@/hooks/useListings';
+
 
 interface MobileExploreViewProps {
   listings: Listing[];
