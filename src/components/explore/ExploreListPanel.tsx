@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo, useDeferredValue } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown, LayoutGrid, List, Wheat, Factory, Truck, Zap, Home, Droplets, Car, ShieldCheck } from 'lucide-react';
 import SearchAutocomplete from '@/components/search/SearchAutocomplete';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
