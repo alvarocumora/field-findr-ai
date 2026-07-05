@@ -33,6 +33,7 @@ import {
   DollarSign,
   Bell,
   Flame,
+  Gauge,
   Code,
   Building2,
   CalendarCheck,
@@ -64,6 +65,7 @@ const coreItems: NavItem[] = [
   { name: 'Contactos CRM', href: '/asesor/contacts', icon: Users },
   { name: 'Proyectos', href: '/asesor/projects', icon: FolderKanban },
   { name: 'Lotes', href: '/asesor/lots', icon: Grid3X3 },
+  { name: 'Control Loteo', href: '/asesor/loteos', icon: Gauge },
   { name: 'Reservas', href: '/asesor/reservations', icon: CalendarCheck },
   { name: 'Reportes', href: '/asesor/reports', icon: FileBarChart },
 ];
