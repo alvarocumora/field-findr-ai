@@ -15,6 +15,7 @@ import {
 import QuickPropertyCard from './QuickPropertyCard';
 import FilterBar from './FilterBar';
 import ValuationFilters from './ValuationFilters';
+import { EmptyResultsState, FewResultsHint } from './EmptyResultsState';
 import { Listing, formatPriceShort, getPricePerM2 } from '@/hooks/useListings';
 import { cn } from '@/lib/utils';
 
