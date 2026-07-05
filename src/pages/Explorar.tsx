@@ -225,6 +225,10 @@ const Explorar = () => {
               onFavorite={(l) => { addFavorite.mutate(l.id); track('swipe_favorite', { listing_id: l.id }); }}
               onDismiss={(l) => { track('swipe_dismiss', { listing_id: l.id }); }}
               onContact={(l) => navigate(`/propiedad/${l.id}`)}
+              onAddToCompare={(l) => { addToCompare(l); track('swipe_compare', { listing_id: l.id }); }}
+              onOpenCompare={() => setCompareOpen(true)}
+              compareCount={compareList.length}
+              isInCompare={isInCompare}
               onBack={() => setMobileViewMode('list')}
             />
           </div>
