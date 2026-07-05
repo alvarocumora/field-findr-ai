@@ -47,6 +47,7 @@ interface FilterBarProps {
   onAreaRangeChange: (range: [number, number]) => void;
   onClearFilters: () => void;
   activeFiltersCount: number;
+  resultsCount?: number;
   showAISearch?: boolean;
   onToggleAISearch?: () => void;
   className?: string;
@@ -151,6 +152,7 @@ const FilterBar = ({
   onAreaRangeChange,
   onClearFilters,
   activeFiltersCount,
+  resultsCount,
   showAISearch = false,
   onToggleAISearch,
   className,
@@ -437,20 +439,47 @@ const FilterBar = ({
               </Accordion>
             </div>
 
-            <SheetFooter className="px-5 py-3 border-t border-border/40 flex-row gap-2 sm:justify-between">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={activeFiltersCount === 0}
-                onClick={onClearFilters}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <X className="h-3.5 w-3.5 mr-1" /> Limpiar
-              </Button>
-              <Button size="sm" onClick={() => setOpen(false)} className="flex-1 sm:flex-none">
-                Ver resultados
-              </Button>
+            <SheetFooter className="sticky bottom-0 z-10 mt-auto px-5 py-3 border-t border-border/40 bg-background/95 backdrop-blur-xl shadow-[0_-4px_16px_-8px_hsl(var(--background))] flex-col gap-2 sm:flex-col sm:space-x-0">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">
+                  {activeFiltersCount > 0
+                    ? `${activeFiltersCount} filtro${activeFiltersCount === 1 ? '' : 's'} activo${activeFiltersCount === 1 ? '' : 's'}`
+                    : 'Sin filtros activos'}
+                </span>
+                {typeof resultsCount === 'number' && (
+                  <span className="font-semibold text-foreground">
+                    <span className="text-primary">{resultsCount.toLocaleString()}</span>{' '}
+                    <span className="text-muted-foreground font-normal">
+                      resultado{resultsCount === 1 ? '' : 's'}
+                    </span>
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={activeFiltersCount === 0}
+                  onClick={onClearFilters}
+                  className="flex-1 h-10 rounded-xl border-border/60 text-muted-foreground hover:text-destructive hover:border-destructive/40 hover:bg-destructive/5"
+                >
+                  <X className="h-3.5 w-3.5 mr-1.5" /> Limpiar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setOpen(false)}
+                  className="flex-[2] h-10 rounded-xl font-medium"
+                >
+                  Aplicar
+                  {typeof resultsCount === 'number' && (
+                    <span className="ml-1.5 opacity-90">
+                      · {resultsCount.toLocaleString()}
+                    </span>
+                  )}
+                </Button>
+              </div>
             </SheetFooter>
+
           </SheetContent>
         </Sheet>
 
