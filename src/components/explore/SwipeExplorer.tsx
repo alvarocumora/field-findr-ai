@@ -461,7 +461,7 @@ const SwipeExplorer = ({
       {Header}
       {CategoryTabs}
 
-      <div className="flex-1 relative px-4 pb-32">
+      <div className="flex-1 relative px-4 pb-36 sm:pb-40 min-h-0">
         {next && (
           <div className="absolute inset-x-4 top-0 bottom-4 pointer-events-none">
             <Card className="h-full opacity-60 scale-[0.96] overflow-hidden">
