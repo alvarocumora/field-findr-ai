@@ -16,13 +16,19 @@ import { useFlattenedListings } from '@/hooks/useInfiniteListings';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Layers, CreditCard } from 'lucide-react';
 import RealListingsSection from '@/components/RealListingsSection';
+import { useAddFavorite } from '@/hooks/useFavorites';
+import { useTrackEvent } from '@/hooks/useTrackEvent';
 
 const Explorar = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const addFavorite = useAddFavorite();
+  const track = useTrackEvent();
 
   // View mode for mobile
   const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>('swipe');
+  // Desktop: overlay swipe mode
+  const [desktopSwipe, setDesktopSwipe] = useState(false);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
