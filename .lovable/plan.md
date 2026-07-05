@@ -1,99 +1,73 @@
 ## Objetivo
 
-Dejar OFERTA TERRENOS lista para producción en **ofertaterrenos.com**: QA funcional end‑to‑end de todas las rutas, importar propiedades reales vía scraper, auditoría de seguridad, SEO/sitemap actualizados, y publicación final.
+Verificar que la app funcione end‑to‑end, entregar un **reporte técnico en `docs/AUDIT_REPORT.md`** con estructura, rutas pendientes y flujos críticos (publicación → detalle → 3D del mapa), y mejorar la experiencia de `/explorar`.
 
 ---
 
-## Fase 1 — QA funcional completo
+## Fase 1 — Auditoría automatizada
 
-Recorro con Playwright cada ruta clave y arreglo lo que falle. Cuento con red viva de dev; capturo screenshot + consola en cada paso.
+QA con Playwright headless sobre las rutas clave. Para cada una: status, errores de consola, mapa/token, imágenes, filtros, formularios.
 
-**Rutas a validar:**
+**Rutas auditadas:**
 
 ```text
-Públicas         /  /explorar  /propiedad/:id  /pais/:code  /region/:slug
-                 /ciudad/:slug  /oportunidades  /pricing  /blog  /contact
-Marketplace      /comparar  /alertas  /referrals  /mi-terreno  /buyer-quiz
-Landing brand    /forestal-valle-escondido  /huellelhue  /playa-alvaro
-Auth             /auth  /reset-password  /profile
-Tasación         /tasacion/v/:id  /tasacion/validar
-Reservas         /reservation-{success,pending,error}
-Dashboard        /asesor/* (leads, listings, reservations, closing, reports)
-Admin            /admin/users  /admin/visual-scenarios
+Públicas     /  /explorar  /propiedad/:id  /pais/:code  /region/:slug
+             /ciudad/:slug  /oportunidades  /pricing  /blog  /contact
+             /publish  /comparar  /alertas  /mi-terreno  /buyer-quiz
+Landings     /forestal-valle-escondido  /huellelhue  /playa-alvaro
+Auth         /auth  /reset-password  /profile
+Tasación     /tasacion/v/:id  /tasacion/validar
+Reservas     /reservation-{success,pending,error}
+Dashboard    /asesor/*  (leads, listings, reservations, closing, reports)
+Admin        /admin/users  /admin/visual-scenarios
 ```
 
-**Checks por vista:** carga sin error rojo en consola, mapa con token válido, filtros aplican a lista + mapa + swipe, imágenes cargan, PDFs se generan, formularios envían.
+Sesión Supabase inyectada para dashboard/admin. Screenshots por ruta en `/tmp/browser/audit/`.
 
-## Fase 2 — Datos reales vía scraper
+## Fase 2 — Reporte `docs/AUDIT_REPORT.md`
 
-- Ejecutar `scrape-real-listings` (Firecrawl v2, ya fue endurecido) apuntando a Portalinmobiliario / MercadoLibre / Yapo para terrenos LATAM.
-- Insertar como `is_demo=false`, `status='active'`, `source='external'`.
-- Meta: ≥30 propiedades reales cargadas antes de publicar.
-- Programar cron `pg_cron` diario para mantener el inventario fresco.
+Un solo documento con estas secciones:
 
-## Fase 3 — Correcciones frontales previsibles
+1. **Resumen ejecutivo** (semáforo verde/amarillo/rojo por área).
+2. **Mapa de rutas** — tabla `ruta · componente · estado · pendiente`.
+3. **Flujo Publicación → 3D del mapa**:
+   ```text
+   /publish  →  PublishForm  →  listings (insert)
+             →  /propiedad/:id  (PropertyDetail)
+             →  Hero cinemático 3D  (EnhancedMap + Terrain-RGB)
+             →  Layout overlay (Threebox/R3F)
+   ```
+   Con puntos de falla conocidos (token Mapbox, polígono normalizado, tags).
+4. **Flujo Explorar** — filtros → useInfiniteListings → mapa + lista + swipe, con sync bidireccional.
+5. **Backend/RLS** — resumen de findings restantes (warnings).
+6. **Pendientes por prioridad** — P0 bloqueantes, P1 UX, P2 nice‑to‑have.
+7. **Checklist de release** enlazado a `docs/QA_RELEASE_CHECKLIST.md`.
 
-Basado en los últimos reportes:
+## Fase 3 — Mejoras a `/explorar`
 
-- `EnhancedMap` — fallback claro con `MapErrorState` cuando `useMapboxToken` falla; retry manual.
-- `MobileExploreView` — empty state con CTA "Ver todas" cuando `listings.length===0`.
-- `FloatingSearchBar` — debounce 300ms + botón limpiar.
-- `PropertyDetail` — placeholder gráfico si `images[0]` es nulo, evitando 404 en `<img>`.
-- `Explorar` — asegurar que slope/valuación siga filtrando en swipe (ya integrado en lista/mapa).
-- `Auth` — configurar Google OAuth (`configure_social_auth`) con `redirect_uri = window.location.origin`.
+Focalizadas en presentación y UX (sin tocar lógica de negocio salvo bugs claros):
 
-## Fase 4 — SEO, sitemap y metadata
+- **Empty state**: cuando `listings.length === 0`, mostrar tarjeta con CTA "Limpiar filtros" y "Ver todas las propiedades" (arreglar `MobileExploreView` que hoy no lo tiene).
+- **Loading skeletons** en la lista y el bottom sheet (evitar salto visual).
+- **Sync mapa↔lista mejorado**: al hover en la lista, resaltar marker; al click en marker, hacer scroll al item en la lista.
+- **`FloatingSearchBar`**: debounce 300 ms + botón limpiar (X) cuando hay query.
+- **Chips activos**: mostrar chips de filtros seleccionados (tipos, regiones, pendiente) con quitar rápido.
+- **Botón "Buscar en esta zona"**: verificar que dispare `onBoundsSearch` correctamente en desktop y mobile.
+- **Contador de resultados** persistente en header de la lista.
+- **Error state del mapa**: fallback claro cuando `useMapboxToken` falla, con retry.
 
-- `index.html`: title/description reales de OFERTA TERRENOS, `og:*`, `twitter:card`, JSON‑LD `Organization`.
-- Per‑route con `react-helmet-async` en `/propiedad/:id`, `/ciudad/:slug`, `/region/:slug`, `/pais/:code`, landings brand.
-- `public/robots.txt` con `Sitemap: https://ofertaterrenos.com/sitemap.xml`.
-- Sitemap: verificar que la edge `sitemap` incluya listings reales + landings.
-- Correr `seo--trigger_scan` + `security--run_security_scan` antes de publicar.
-
-## Fase 5 — Seguridad
-
-- `supabase--linter` + `security--run_security_scan`.
-- Cerrar findings críticos (RLS, `USING(true)` en tablas sensibles, funciones sin `search_path`).
-- Activar HIBP password check en auth.
-- Confirmar buckets storage con RLS coherente.
-
-## Fase 6 — Publicación
-
-1. `publish_settings--get_publish_settings` → confirmar visibility `public`.
-2. `security--get_scan_results` → 0 findings críticos.
-3. `preview_ui--publish` con `website_info_status: added_or_updated`.
-4. Confirmar propagación en `ofertaterrenos.com` (custom domain ya conectado).
-
----
-
-## Detalles técnicos
-
-**Playwright QA:** scripts en `/tmp/browser/qa-<ruta>/` con sesión Supabase inyectada (agente + comprador). Screenshots + consola por paso. Un solo script por rol.
-
-**Scraper:** invocar `scrape-real-listings` con `{ countries: ['CL','AR','MX','CO'], limit: 40, tags: ['terreno','parcela','campo'] }`. Validar `lat/lng` presentes antes de insertar (descartar filas sin geocoding).
-
-**Cron scraper:**
-```sql
-select cron.schedule('scrape-real-listings-daily','0 6 * * *', $$
-  select net.http_post(url:='.../functions/v1/scrape-real-listings',
-    headers:='{"apikey":"<anon>"}'::jsonb) $$);
-```
-
-**SEO helper:** crear `src/components/seo/PageSEO.tsx` reutilizable (title/desc/canonical/JSON‑LD).
-
-**Findings de seguridad esperados:** revisar `payments`, `credit_payments`, `transaction_documents`, `api_keys`, `webhook_deliveries` — deben negar acceso a `anon`.
+Sin cambios de schema, sin cambios en el scraper, sin publicar en este pase.
 
 ---
 
 ## Entregables
 
-- Reporte QA por ruta (pasa / falla / arreglado).
-- ≥30 listings reales cargados.
-- 0 findings críticos de seguridad.
-- Sitio publicado y accesible en https://ofertaterrenos.com.
+- `docs/AUDIT_REPORT.md` con las 7 secciones y tabla de rutas.
+- `/explorar` con empty state, skeletons, chips activos y sync mapa↔lista.
+- Screenshots de QA en `/tmp/browser/audit/` (referenciados en el reporte).
 
-## Riesgos
+## Fuera de alcance
 
-- **Firecrawl sin créditos** → si `402`, aviso al usuario para top‑up (conector managed).
-- **Rutas dashboard requieren rol** → uso sesión inyectada `LOVABLE_BROWSER_SUPABASE_*`.
-- **Publicación cachea metadata social** → aviso al usuario que previews sociales tardan en refrescar.
+- Publicación a producción (ya se hizo en el pase anterior).
+- Re‑correr scraper Firecrawl (bloqueado por resultados vacíos previos).
+- Cambios de RLS o migraciones nuevas.
