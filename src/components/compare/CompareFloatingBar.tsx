@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { X, Scale, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,17 @@ import { formatPriceShort } from '@/hooks/useListings';
 
 const CompareFloatingBar = memo(() => {
   const { compareList, removeFromCompare, clearCompare, setCompareOpen } = useCompare();
+
+  // Publish bar height as CSS var so other FABs can stack above via bottom-safe-compare.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (compareList.length > 0) {
+      root.style.setProperty('--compare-bar-h', '4.75rem');
+    } else {
+      root.style.removeProperty('--compare-bar-h');
+    }
+    return () => { root.style.removeProperty('--compare-bar-h'); };
+  }, [compareList.length]);
 
   if (compareList.length === 0) return null;
 
