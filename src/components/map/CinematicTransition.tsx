@@ -123,7 +123,7 @@ const CinematicTransition = ({
       {/* Flying indicator */}
       {phase === 'flying' && (
         <motion.div
-          className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center"
+          className="absolute inset-0 z-map-overlay pointer-events-none flex items-center justify-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
