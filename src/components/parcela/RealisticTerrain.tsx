@@ -94,9 +94,9 @@ export function bboxForPlane(lat: number, lng: number, planeSize: number) {
 export function staticSatelliteUrl(lat: number, lng: number, planeSize: number, token: string): string {
   const { minLng, minLat, maxLng, maxLat } = bboxForPlane(lat, lng, planeSize);
   const px = 1024; // logical; @2x → 2048 actual, Mapbox max
-  // URL-encode the bbox brackets so strict URL parsers (some CDNs/browsers)
-  // do not reject the request; raw `[` `]` are reserved characters.
-  const bbox = encodeURIComponent(`[${minLng},${minLat},${maxLng},${maxLat}]`);
+  // Escape ONLY the brackets — Mapbox requires literal commas inside the bbox
+  // segment and returns 404 if they are percent-encoded.
+  const bbox = `%5B${minLng},${minLat},${maxLng},${maxLat}%5D`;
   return (
     `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/${bbox}/${px}x${px}@2x` +
     `?access_token=${token}&attribution=false&logo=false`
