@@ -352,22 +352,17 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
           </mesh>
         </group>
 
-        {/* Lot polygon contour — neon green */}
+        {/* Lot polygon contour — neon green. depthTest is disabled so the lot
+            boundary always draws on top of the relief (a cadastral overlay),
+            instead of being hidden behind hills once the terrain has real 3D
+            elevation — the reason the outline vanished after cropping the DEM. */}
         {contourPositions && contourPositions.length >= 9 && (
-          <>
-            <lineLoop>
-              <bufferGeometry>
-                <bufferAttribute attach="attributes-position" count={contourPositions.length / 3} array={contourPositions} itemSize={3} />
-              </bufferGeometry>
-              <lineBasicMaterial color="#00FF88" linewidth={3} transparent opacity={0.4} />
-            </lineLoop>
-            <lineLoop>
-              <bufferGeometry>
-                <bufferAttribute attach="attributes-position" count={contourPositions.length / 3} array={contourPositions} itemSize={3} />
-              </bufferGeometry>
-              <lineBasicMaterial color="#00FF88" linewidth={2} />
-            </lineLoop>
-          </>
+          <lineLoop renderOrder={999}>
+            <bufferGeometry>
+              <bufferAttribute attach="attributes-position" count={contourPositions.length / 3} array={contourPositions} itemSize={3} />
+            </bufferGeometry>
+            <lineBasicMaterial color="#00FF88" depthTest={false} transparent toneMapped={false} />
+          </lineLoop>
         )}
       </>
     );
