@@ -179,7 +179,9 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
 
     // Load satellite texture (cropped approach)
     useEffect(() => {
-      if (!mapboxToken) { onTextureError?.(true); return; }
+      // While the Mapbox token is still loading (empty string from the parent),
+      // stay in the "loading" state instead of flashing the error banner.
+      if (!mapboxToken) { onTextureLoading?.(true); return; }
       onTextureLoading?.(true);
       onTextureError?.(false);
       setTexture(null);
