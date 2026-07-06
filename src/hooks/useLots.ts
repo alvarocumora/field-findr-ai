@@ -8,6 +8,18 @@ export type Lot = Tables<'lots'>;
 export type LotInsert = TablesInsert<'lots'>;
 export type LotUpdate = TablesUpdate<'lots'>;
 
+/**
+ * Non-PII lot columns readable by anon/authenticated. The buyer_* columns are
+ * granted only to service_role (migration 20260603153301), so a `select('*')`
+ * is rejected wholesale with "permission denied for column buyer_name" — which
+ * silently emptied the list and dropped the map to simulated polygons. Always
+ * select this explicit list instead of `*`.
+ */
+const LOT_COLUMNS =
+  'id, project_id, user_id, lot_number, name, description, area, price, price_per_sqm, ' +
+  'status, latitude, longitude, polygon, features, reservation_date, sale_date, ' +
+  'created_at, updated_at, elevation_avg, slope_category, images';
+
 export interface LotFeatures {
   hasWater?: boolean;
   hasElectricity?: boolean;
@@ -38,7 +50,7 @@ export const useLots = (projectId?: string) => {
     queryFn: async () => {
       let query = supabase
         .from('lots')
-        .select('*')
+        .select(LOT_COLUMNS)
         .order('lot_number', { ascending: true });
 
       if (projectId) {
@@ -64,7 +76,7 @@ export const useLots = (projectId?: string) => {
       const { data, error } = await supabase
         .from('lots')
         .insert({ ...lot, user_id: user.id })
-        .select()
+        .select(LOT_COLUMNS)
         .single();
 
       if (error) throw error;
@@ -86,7 +98,7 @@ export const useLots = (projectId?: string) => {
         .from('lots')
         .update(updates)
         .eq('id', id)
-        .select()
+        .select(LOT_COLUMNS)
         .single();
 
       if (error) throw error;
