@@ -120,9 +120,10 @@ async function loadStaticSatelliteTexture(
   if (!img) return null;
 
   // Draw onto a canvas so we can build a debug preview and control filtering.
+  const fallbackPx = 2048; // matches @2x of 1024 logical px
   const canvas = document.createElement('canvas');
-  canvas.width = img.naturalWidth || px;
-  canvas.height = img.naturalHeight || px;
+  canvas.width = img.naturalWidth || fallbackPx;
+  canvas.height = img.naturalHeight || fallbackPx;
   const ctx = canvas.getContext('2d')!;
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
@@ -140,7 +141,7 @@ async function loadStaticSatelliteTexture(
   tex.magFilter = THREE.LinearFilter;
   tex.needsUpdate = true;
 
-  console.log('🛰️ Static satellite loaded:', { planeSize: Math.round(planeSize), bbox });
+  console.log('🛰️ Static satellite loaded:', { planeSize: Math.round(planeSize), url });
   return { texture: tex, tilesLoaded: 1, canvasDataUrl };
 }
 
