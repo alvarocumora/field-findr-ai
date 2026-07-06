@@ -57,7 +57,16 @@ describe('staticSatelliteUrl', () => {
     expect(url).toContain('access_token=pk.test-token');
     expect(url).toContain('attribution=false');
     expect(url).toContain('logo=false');
-    // bbox is [minLng,minLat,maxLng,maxLat]
-    expect(url).toMatch(/static\/\[-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+\]\/1024x1024@2x/);
+    // bbox is [minLng,minLat,maxLng,maxLat] with escaped brackets (%5B/%5D)
+    // but LITERAL commas — Mapbox 404s if the commas are percent-encoded.
+    expect(url).toMatch(/static\/%5B-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+%5D\/1024x1024@2x/);
+    expect(url).not.toContain('%2C'); // commas must stay literal
+  });
+
+  it('escapes the bbox brackets so the image request is not rejected', () => {
+    const url = staticSatelliteUrl(-34.99, -71.63, 200, 'pk.test-token');
+    expect(url).toContain('%5B');
+    expect(url).toContain('%5D');
+    expect(url).not.toMatch(/static\/\[/); // no raw bracket
   });
 });
