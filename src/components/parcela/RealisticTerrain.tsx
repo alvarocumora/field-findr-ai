@@ -69,26 +69,93 @@ export function normalizeElevations(heights: Float32Array | number[]): { min: nu
   return { min, relief };
 }
 
-async function loadElevationTile(lat: number, lng: number, token: string): Promise<Float32Array> {
-  const { tileX, tileY } = lngLatToTileFraction(lng, lat, ELEV_ZOOM);
-  if (!token) return new Float32Array(TERRAIN_RES * TERRAIN_RES);
-  const url = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${ELEV_ZOOM}/${tileX}/${tileY}.pngraw?access_token=${token}`;
-  return new Promise<Float32Array>((resolve) => {
+const ELEV_TILE_PX = 256; // terrain-rgb native tile size
+
+/**
+ * Crop-and-resample an elevation grid down to the parcel's actual extent.
+ *
+ * The previous code stretched a WHOLE zoom-15 tile (~1.2 km across) over the
+ * parcel plane (~200-660 m), so ~1.2 km of relief was compressed onto a few
+ * hundred metres → wildly exaggerated, unreal slopes. Cropping to the parcel
+ * bbox means the plane only shows the relief that actually exists inside the
+ * lot (near-flat for flat parcels). Pure + testable.
+ */
+export function cropResampleElevation(
+  grid: Float32Array, gridPx: number,
+  centerPxX: number, centerPxY: number, cropPx: number, outRes: number,
+): Float32Array {
+  const out = new Float32Array(outRes * outRes);
+  const startX = centerPxX - cropPx / 2;
+  const startY = centerPxY - cropPx / 2;
+  for (let r = 0; r < outRes; r++) {
+    for (let c = 0; c < outRes; c++) {
+      const gx = Math.round(startX + (c / (outRes - 1)) * cropPx);
+      const gy = Math.round(startY + (r / (outRes - 1)) * cropPx);
+      const cx = Math.max(0, Math.min(gridPx - 1, gx));
+      const cy = Math.max(0, Math.min(gridPx - 1, gy));
+      out[r * outRes + c] = grid[cy * gridPx + cx];
+    }
+  }
+  return out;
+}
+
+function decodeTileToElevations(img: HTMLImageElement): Float32Array {
+  const c = document.createElement('canvas');
+  c.width = ELEV_TILE_PX; c.height = ELEV_TILE_PX;
+  const ctx = c.getContext('2d')!;
+  ctx.drawImage(img, 0, 0, ELEV_TILE_PX, ELEV_TILE_PX);
+  const data = ctx.getImageData(0, 0, ELEV_TILE_PX, ELEV_TILE_PX).data;
+  const h = new Float32Array(ELEV_TILE_PX * ELEV_TILE_PX);
+  for (let i = 0; i < h.length; i++) h[i] = decodeRGBElevation(data[i * 4], data[i * 4 + 1], data[i * 4 + 2]);
+  return h;
+}
+
+function loadTerrainTile(tx: number, ty: number, token: string): Promise<Float32Array | null> {
+  return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const c = document.createElement('canvas');
-      c.width = TERRAIN_RES; c.height = TERRAIN_RES;
-      const ctx = c.getContext('2d')!;
-      ctx.drawImage(img, 0, 0, TERRAIN_RES, TERRAIN_RES);
-      const data = ctx.getImageData(0, 0, TERRAIN_RES, TERRAIN_RES).data;
-      const h = new Float32Array(TERRAIN_RES * TERRAIN_RES);
-      for (let i = 0; i < h.length; i++) h[i] = decodeRGBElevation(data[i * 4], data[i * 4 + 1], data[i * 4 + 2]);
-      resolve(h);
-    };
-    img.onerror = () => resolve(new Float32Array(TERRAIN_RES * TERRAIN_RES));
-    img.src = url;
+    img.onload = () => resolve(decodeTileToElevations(img));
+    img.onerror = () => resolve(null);
+    img.src = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${ELEV_ZOOM}/${tx}/${ty}.pngraw?access_token=${token}`;
   });
+}
+
+/**
+ * Loads a 3×3 grid of zoom-15 terrain tiles, stitches their decoded elevations,
+ * then crops+resamples to the parcel extent so relief is true-to-the-lot.
+ */
+async function loadElevationTile(lat: number, lng: number, planeSize: number, token: string): Promise<Float32Array> {
+  const zeros = new Float32Array(TERRAIN_RES * TERRAIN_RES);
+  if (!token) return zeros;
+
+  const { tileX, tileY, fracX, fracY } = lngLatToTileFraction(lng, lat, ELEV_ZOOM);
+  const tileMeters = tileSizeMeters(lat, ELEV_ZOOM);
+
+  const tiles = await Promise.all(
+    [-1, 0, 1].flatMap((dy) => [-1, 0, 1].map((dx) =>
+      loadTerrainTile(tileX + dx, tileY + dy, token).then((t) => ({ t, dx, dy })),
+    )),
+  );
+  if (tiles.every((x) => x.t === null)) return zeros;
+
+  // Stitch into a 3×256 grid (row 0 = north).
+  const gridPx = ELEV_TILE_PX * 3;
+  const grid = new Float32Array(gridPx * gridPx);
+  for (const { t, dx, dy } of tiles) {
+    if (!t) continue;
+    const ox = (dx + 1) * ELEV_TILE_PX;
+    const oy = (dy + 1) * ELEV_TILE_PX;
+    for (let y = 0; y < ELEV_TILE_PX; y++) {
+      for (let x = 0; x < ELEV_TILE_PX; x++) {
+        grid[(oy + y) * gridPx + (ox + x)] = t[y * ELEV_TILE_PX + x];
+      }
+    }
+  }
+
+  const centerPxX = (1 + fracX) * ELEV_TILE_PX;
+  const centerPxY = (1 + fracY) * ELEV_TILE_PX;
+  const cropPx = planeSize * (ELEV_TILE_PX / tileMeters);
+  return cropResampleElevation(grid, gridPx, centerPxX, centerPxY, cropPx, TERRAIN_RES);
 }
 
 /**
@@ -184,14 +251,14 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
     // Load elevation
     useEffect(() => {
       if (!mapboxToken) { setHeightData(new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0)); return; }
-      loadElevationTile(lat, lng, mapboxToken).then((heights) => {
+      loadElevationTile(lat, lng, size, mapboxToken).then((heights) => {
         const { min, relief } = normalizeElevations(heights);
         setBaseElevation(min);
         onElevationLoaded?.(min);
         // Real 1:1 relief (clamped so DEM spikes don't explode the surface).
         setHeightData(relief);
       }).catch(() => setHeightData(new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0)));
-    }, [lat, lng, mapboxToken]);
+    }, [lat, lng, size, mapboxToken]);
 
     // Load satellite texture (cropped approach)
     useEffect(() => {

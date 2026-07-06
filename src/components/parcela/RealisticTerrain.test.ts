@@ -1,5 +1,34 @@
 import { describe, it, expect } from 'vitest';
-import { bboxForPlane, staticSatelliteUrl, normalizeElevations, MAX_RELIEF_M } from './RealisticTerrain';
+import { bboxForPlane, staticSatelliteUrl, normalizeElevations, MAX_RELIEF_M, cropResampleElevation } from './RealisticTerrain';
+
+describe('cropResampleElevation', () => {
+  const GRID = 96;
+  // A north-south elevation ramp across the whole grid: 0 → 950 m
+  const ramp = new Float32Array(GRID * GRID);
+  for (let r = 0; r < GRID; r++) for (let c = 0; c < GRID; c++) ramp[r * GRID + c] = r * 10;
+
+  const range = (a: Float32Array) => Math.max(...a) - Math.min(...a);
+
+  it('a flat sub-region yields a flat parcel', () => {
+    const flat = new Float32Array(GRID * GRID).fill(177);
+    const out = cropResampleElevation(flat, GRID, GRID / 2, GRID / 2, 20, 16);
+    expect(range(out)).toBe(0);
+    expect(out[0]).toBe(177);
+  });
+
+  it('cropping to the parcel shows far less relief than the whole tile', () => {
+    // Whole grid relief ≈ 950 m; a 10px-wide central crop should show ~1/9 of it
+    const cropped = cropResampleElevation(ramp, GRID, GRID / 2, GRID / 2, 10, 32);
+    expect(range(cropped)).toBeLessThan(range(ramp) / 5);
+    expect(range(cropped)).toBeGreaterThan(0);
+  });
+
+  it('clamps sampling to grid bounds when the crop overflows an edge', () => {
+    const out = cropResampleElevation(ramp, GRID, 2, 2, 40, 16);
+    expect(out.every((v) => Number.isFinite(v))).toBe(true);
+    expect(Math.min(...out)).toBeGreaterThanOrEqual(0);
+  });
+});
 
 describe('normalizeElevations', () => {
   it('measures relief above the lowest point', () => {
