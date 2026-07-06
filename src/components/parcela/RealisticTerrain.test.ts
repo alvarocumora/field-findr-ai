@@ -1,5 +1,25 @@
 import { describe, it, expect } from 'vitest';
-import { bboxForPlane, staticSatelliteUrl } from './RealisticTerrain';
+import { bboxForPlane, staticSatelliteUrl, normalizeElevations, MAX_RELIEF_M } from './RealisticTerrain';
+
+describe('normalizeElevations', () => {
+  it('measures relief above the lowest point', () => {
+    const { min, relief } = normalizeElevations([100, 110, 130]);
+    expect(min).toBe(100);
+    expect(Array.from(relief)).toEqual([0, 10, 30]);
+  });
+
+  it('clamps DEM spikes so the surface never explodes', () => {
+    const { relief } = normalizeElevations([100, 100 + MAX_RELIEF_M + 5000, 105]);
+    expect(relief[1]).toBe(MAX_RELIEF_M);
+    expect(relief[2]).toBe(5);
+  });
+
+  it('treats non-finite samples as the base level (no NaN holes)', () => {
+    const { relief } = normalizeElevations([50, NaN, 60]);
+    expect(relief[1]).toBe(0);
+    expect(relief.every((v) => Number.isFinite(v))).toBe(true);
+  });
+});
 
 describe('bboxForPlane', () => {
   const lat = -34.99019;

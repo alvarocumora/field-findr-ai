@@ -49,6 +49,26 @@ function decodeRGBElevation(r: number, g: number, b: number): number {
   return -10000 + (r * 256 * 256 + g * 256 + b) * 0.1;
 }
 
+/**
+ * Relief above the parcel's lowest point, applied at real 1:1 scale (the plane
+ * is sized in meters) but clamped so DEM decode/resample spikes can't explode
+ * the surface into white noise — real parcels rarely exceed a few tens of
+ * meters of relief across their extent.
+ */
+export const MAX_RELIEF_M = 45;
+export function normalizeElevations(heights: Float32Array | number[]): { min: number; relief: Float32Array } {
+  const arr = heights instanceof Float32Array ? heights : Float32Array.from(heights);
+  let min = Infinity;
+  for (let i = 0; i < arr.length; i++) if (arr[i] < min && Number.isFinite(arr[i])) min = arr[i];
+  if (!Number.isFinite(min)) min = 0;
+  const relief = new Float32Array(arr.length);
+  for (let i = 0; i < arr.length; i++) {
+    const d = Number.isFinite(arr[i]) ? arr[i] - min : 0;
+    relief[i] = Math.max(0, Math.min(MAX_RELIEF_M, d));
+  }
+  return { min, relief };
+}
+
 async function loadElevationTile(lat: number, lng: number, token: string): Promise<Float32Array> {
   const { tileX, tileY } = lngLatToTileFraction(lng, lat, ELEV_ZOOM);
   if (!token) return new Float32Array(TERRAIN_RES * TERRAIN_RES);
@@ -162,15 +182,11 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
     useEffect(() => {
       if (!mapboxToken) { setHeightData(new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0)); return; }
       loadElevationTile(lat, lng, mapboxToken).then((heights) => {
-        const min = Math.min(...Array.from(heights));
+        const { min, relief } = normalizeElevations(heights);
         setBaseElevation(min);
         onElevationLoaded?.(min);
-        // Real vertical scale: the plane is sized in meters (1 three.js unit =
-        // 1 m), so elevation is applied 1:1 — "Relieve Real" now shows true
-        // relief instead of the old ×0.005 that flattened everything.
-        const normalized = new Float32Array(heights.length);
-        for (let i = 0; i < heights.length; i++) normalized[i] = heights[i] - min;
-        setHeightData(normalized);
+        // Real 1:1 relief (clamped so DEM spikes don't explode the surface).
+        setHeightData(relief);
       }).catch(() => setHeightData(new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0)));
     }, [lat, lng, mapboxToken]);
 
@@ -249,11 +265,18 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
       <>
         <group rotation={[-Math.PI / 2, 0, 0]}>
           <mesh geometry={geometry} receiveShadow>
-            {texture ? (
-              <meshBasicMaterial map={texture} side={THREE.DoubleSide} toneMapped={false} />
-            ) : (
-              <meshBasicMaterial color="#5D8233" side={THREE.DoubleSide} toneMapped={false} />
-            )}
+            {/* The `key` forces React to REMOUNT the material when the texture
+                arrives (null → texture). Without it R3F reuses the same
+                material instance and only sets material.map, but the shader was
+                already compiled without USE_MAP, so the map is ignored and the
+                ground renders as the flat white base colour — the reported bug. */}
+            <meshBasicMaterial
+              key={texture ? texture.uuid : 'flat'}
+              map={texture ?? undefined}
+              color={texture ? '#ffffff' : '#5D8233'}
+              side={THREE.DoubleSide}
+              toneMapped={false}
+            />
           </mesh>
         </group>
 
