@@ -2,10 +2,11 @@ import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Upload, Search, Box, Package } from 'lucide-react';
+import { Upload, Search, Box, Package, Trees } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { type ParcelaObjectType } from './useParcelaState';
+import { OPEN_SOURCE_MODELS, OPEN_SOURCE_LICENSE } from './openSourceModels';
 
 export interface GLBAsset {
   name: string;
@@ -70,6 +71,7 @@ const CATEGORIES = [
   { id: 'vegetacion', label: 'Vegetación', icon: '🌳' },
   { id: 'mobiliario', label: 'Mobiliario', icon: '🪑' },
   { id: 'infraestructura', label: 'Infra', icon: '🔧' },
+  { id: 'cc0', label: 'CC0 3D', icon: '🌲' },
   { id: 'custom', label: 'Subidos', icon: '📎' },
 ];
 
@@ -117,8 +119,15 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, on
   }, [uploadedAssets, onAssetsChange]);
 
   const filteredBuiltIn = BUILT_IN_ASSETS.filter(a => {
-    if (activeCategory !== 'all' && activeCategory !== 'custom' && a.category !== activeCategory) return false;
-    if (activeCategory === 'custom') return false;
+    if (activeCategory !== 'all' && activeCategory !== 'custom' && activeCategory !== 'cc0' && a.category !== activeCategory) return false;
+    if (activeCategory === 'custom' || activeCategory === 'cc0') return false;
+    if (search && !a.name.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  // Curated CC0 GLB models — shown under "all" and their own "cc0" tab.
+  const filteredCC0 = OPEN_SOURCE_MODELS.filter(a => {
+    if (activeCategory !== 'all' && activeCategory !== 'cc0') return false;
     if (search && !a.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -179,6 +188,21 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, on
             </button>
           ))}
 
+          {/* Curated CC0 open-source GLB models (loaded on demand from CDN) */}
+          {filteredCC0.map((asset) => (
+            <button
+              key={`cc0-${asset.name}`}
+              onClick={() => onSelectAsset(asset)}
+              className="flex flex-col items-center p-1.5 rounded-md hover:bg-accent/50 transition-colors border border-emerald-500/25 bg-emerald-500/5"
+              title={`${asset.name} — ${OPEN_SOURCE_LICENSE.label}`}
+            >
+              <Trees className="h-4 w-4 text-emerald-600" />
+              <span className="text-[8px] text-muted-foreground line-clamp-1 w-full text-center mt-0.5">
+                {asset.name}
+              </span>
+            </button>
+          ))}
+
           {/* Custom uploaded GLB */}
           {filteredCustom.map((asset, i) => (
             <button
@@ -195,13 +219,24 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, on
           ))}
         </div>
 
-        {filteredBuiltIn.length === 0 && filteredCustom.length === 0 && (
+        {filteredBuiltIn.length === 0 && filteredCustom.length === 0 && filteredCC0.length === 0 && (
           <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
             <Box className="h-5 w-5 mb-1 opacity-40" />
             <span className="text-[10px]">Sin resultados</span>
           </div>
         )}
       </ScrollArea>
+
+      {(activeCategory === 'cc0' || (activeCategory === 'all' && filteredCC0.length > 0)) && (
+        <a
+          href={OPEN_SOURCE_LICENSE.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block px-1 text-[8px] text-muted-foreground hover:text-foreground"
+        >
+          Modelos 3D · {OPEN_SOURCE_LICENSE.label} ↗
+        </a>
+      )}
 
       <div className="px-1">
         <label className="w-full">
