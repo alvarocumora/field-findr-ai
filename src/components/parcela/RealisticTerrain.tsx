@@ -94,7 +94,9 @@ export function bboxForPlane(lat: number, lng: number, planeSize: number) {
 export function staticSatelliteUrl(lat: number, lng: number, planeSize: number, token: string): string {
   const { minLng, minLat, maxLng, maxLat } = bboxForPlane(lat, lng, planeSize);
   const px = 1024; // logical; @2x → 2048 actual, Mapbox max
-  const bbox = `[${minLng},${minLat},${maxLng},${maxLat}]`;
+  // URL-encode the bbox brackets so strict URL parsers (some CDNs/browsers)
+  // do not reject the request; raw `[` `]` are reserved characters.
+  const bbox = encodeURIComponent(`[${minLng},${minLat},${maxLng},${maxLat}]`);
   return (
     `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/${bbox}/${px}x${px}@2x` +
     `?access_token=${token}&attribution=false&logo=false`
@@ -118,9 +120,10 @@ async function loadStaticSatelliteTexture(
   if (!img) return null;
 
   // Draw onto a canvas so we can build a debug preview and control filtering.
+  const fallbackPx = 2048; // matches @2x of 1024 logical px
   const canvas = document.createElement('canvas');
-  canvas.width = img.naturalWidth || px;
-  canvas.height = img.naturalHeight || px;
+  canvas.width = img.naturalWidth || fallbackPx;
+  canvas.height = img.naturalHeight || fallbackPx;
   const ctx = canvas.getContext('2d')!;
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
@@ -138,7 +141,7 @@ async function loadStaticSatelliteTexture(
   tex.magFilter = THREE.LinearFilter;
   tex.needsUpdate = true;
 
-  console.log('🛰️ Static satellite loaded:', { planeSize: Math.round(planeSize), bbox });
+  console.log('🛰️ Static satellite loaded:', { planeSize: Math.round(planeSize), url });
   return { texture: tex, tilesLoaded: 1, canvasDataUrl };
 }
 
@@ -176,7 +179,9 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
 
     // Load satellite texture (cropped approach)
     useEffect(() => {
-      if (!mapboxToken) { onTextureError?.(true); return; }
+      // While the Mapbox token is still loading (empty string from the parent),
+      // stay in the "loading" state instead of flashing the error banner.
+      if (!mapboxToken) { onTextureLoading?.(true); return; }
       onTextureLoading?.(true);
       onTextureError?.(false);
       setTexture(null);
