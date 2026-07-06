@@ -186,7 +186,15 @@ export default function ReservationSuccess() {
                 Volver al inicio
               </Link>
             </Button>
-            <Button className="flex-1" disabled>
+            <Button
+              className="flex-1"
+              disabled={!isPaid}
+              onClick={async () => {
+                // jsPDF loads on demand so the route chunk stays light
+                const { downloadReservationReceipt } = await import('@/lib/reservationReceiptPdf');
+                downloadReservationReceipt(reservation);
+              }}
+            >
               <Download className="h-4 w-4 mr-2" />
               Descargar Comprobante
             </Button>
