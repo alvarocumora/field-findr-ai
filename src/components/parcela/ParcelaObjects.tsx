@@ -8,7 +8,40 @@ interface ObjectProps {
   onClick: () => void;
 }
 
+/**
+ * Shared PBR material presets. Previously every mesh used
+ * `<meshStandardMaterial color=...>` with default roughness 1 / metalness 0,
+ * so wood, glass, metal and stone all read as the same flat plastic. These
+ * give each material family realistic roughness/metalness (and real glass).
+ */
+export const MAT = {
+  wood: { color: '#8d6e63', roughness: 0.82, metalness: 0.0 },
+  woodDark: { color: '#5d4037', roughness: 0.8, metalness: 0.0 },
+  woodLight: { color: '#a1887f', roughness: 0.85, metalness: 0.0 },
+  logs: { color: '#9c6b4f', roughness: 0.9, metalness: 0.0 },
+  glass: { color: '#bcdfff', roughness: 0.06, metalness: 0.1, transparent: true, opacity: 0.42 },
+  metal: { color: '#b0bec5', roughness: 0.35, metalness: 0.85 },
+  darkMetal: { color: '#37474f', roughness: 0.4, metalness: 0.7 },
+  stone: { color: '#9e9e9e', roughness: 1.0, metalness: 0.0 },
+  concrete: { color: '#cfd8dc', roughness: 0.95, metalness: 0.0 },
+  plasterLight: { color: '#eceff1', roughness: 0.9, metalness: 0.0 },
+  roofTile: { color: '#7b4a3a', roughness: 0.85, metalness: 0.0 },
+  roofDark: { color: '#455a64', roughness: 0.6, metalness: 0.2 },
+  water: { color: '#29b6f6', roughness: 0.08, metalness: 0.2, transparent: true, opacity: 0.82 },
+  foliage: { color: '#388e3c', roughness: 0.9, metalness: 0.0 },
+  rubber: { color: '#212121', roughness: 0.8, metalness: 0.0 },
+} as const;
+
 // ─── VIVIENDA ───────────────────────────────────────────
+
+/** Triangular-prism gable roof (ridge runs along Z). */
+const GableRoof = ({ w, h, d, y, mat }: { w: number; h: number; d: number; y: number; mat: object }) => (
+  <mesh position={[0, y, 0]} rotation={[Math.PI / 2, 0, Math.PI / 2]} castShadow>
+    {/* 3-sided cylinder = triangular prism; length along its local axis = w */}
+    <cylinderGeometry args={[h, h, w, 3]} />
+    <meshStandardMaterial {...mat} />
+  </mesh>
+);
 
 const House = ({ size, color }: { size: number; color: string }) => {
   const w = size;
@@ -18,21 +51,20 @@ const House = ({ size, color }: { size: number; color: string }) => {
     <group>
       <mesh position={[0, h / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[w, h, d]} />
-        <meshStandardMaterial color={color} />
+        <meshStandardMaterial color={color} roughness={0.9} metalness={0} />
       </mesh>
-      <mesh position={[0, h + size * 0.2, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
-        <coneGeometry args={[w * 0.85, size * 0.45, 4]} />
-        <meshStandardMaterial color="#8B4513" />
-      </mesh>
+      {/* Gable roof (overhangs the walls slightly) */}
+      <GableRoof w={w * 1.05} h={size * 0.32} d={d} y={h + size * 0.02} mat={MAT.roofTile} />
+      {/* Door */}
       <mesh position={[0, h * 0.25, d / 2 + 0.01]}>
         <planeGeometry args={[w * 0.2, h * 0.5]} />
-        <meshStandardMaterial color="#5C3317" />
+        <meshStandardMaterial {...MAT.woodDark} />
       </mesh>
-      {/* Windows */}
+      {/* Windows (glass) */}
       {[[-w * 0.25, h * 0.55], [w * 0.25, h * 0.55]].map(([x, y], i) => (
         <mesh key={i} position={[x, y, d / 2 + 0.01]}>
           <planeGeometry args={[w * 0.12, h * 0.25]} />
-          <meshStandardMaterial color="#B3E5FC" />
+          <meshStandardMaterial {...MAT.glass} />
         </mesh>
       ))}
     </group>
@@ -45,27 +77,27 @@ const ModernHouse = () => {
       {/* Main body - flat roof */}
       <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
         <boxGeometry args={[5, 3, 4]} />
-        <meshStandardMaterial color="#ECEFF1" />
+        <meshStandardMaterial {...MAT.plasterLight} />
       </mesh>
       {/* Roof slab */}
       <mesh position={[0, 3.05, 0]} castShadow>
         <boxGeometry args={[5.4, 0.1, 4.4]} />
-        <meshStandardMaterial color="#455A64" />
+        <meshStandardMaterial {...MAT.roofDark} />
       </mesh>
       {/* Second floor offset */}
       <mesh position={[1.5, 1.5, -0.8]} castShadow receiveShadow>
         <boxGeometry args={[2.5, 3, 2]} />
-        <meshStandardMaterial color="#CFD8DC" />
+        <meshStandardMaterial {...MAT.concrete} />
       </mesh>
       {/* Large windows */}
       <mesh position={[0, 1.5, 2.01]}>
         <planeGeometry args={[3.5, 2.2]} />
-        <meshStandardMaterial color="#4FC3F7" transparent opacity={0.5} />
+        <meshStandardMaterial {...MAT.glass} />
       </mesh>
       {/* Garage */}
       <mesh position={[-1.8, 0.8, 2.01]}>
         <planeGeometry args={[1.2, 1.6]} />
-        <meshStandardMaterial color="#37474F" />
+        <meshStandardMaterial {...MAT.darkMetal} />
       </mesh>
     </group>
   );
@@ -73,25 +105,41 @@ const ModernHouse = () => {
 
 const Cabin = () => (
   <group>
-    {/* Log walls */}
+    {/* Log walls (base box) */}
     <mesh position={[0, 1, 0]} castShadow receiveShadow>
       <boxGeometry args={[3, 2, 3.5]} />
-      <meshStandardMaterial color="#8D6E63" />
+      <meshStandardMaterial {...MAT.logs} />
     </mesh>
-    {/* A-frame roof */}
-    <mesh position={[0, 2.8, 0]} rotation={[0, 0, 0]} castShadow>
-      <coneGeometry args={[2.8, 1.8, 4]} />
-      <meshStandardMaterial color="#5D4037" />
+    {/* Stacked-log detail on the front & back faces */}
+    {[-1, 1].map((sz) =>
+      [0.4, 0.9, 1.4].map((yy, i) => (
+        <mesh key={`${sz}-${i}`} position={[0, yy, sz * 1.75]} rotation={[0, 0, Math.PI / 2]} castShadow>
+          <cylinderGeometry args={[0.12, 0.12, 3, 8]} />
+          <meshStandardMaterial {...MAT.wood} />
+        </mesh>
+      ))
+    )}
+    {/* Gable roof */}
+    <GableRoof w={3.4} h={1.1} d={3.9} y={2.05} mat={MAT.woodDark} />
+    {/* Door */}
+    <mesh position={[0, 0.7, 1.76]}>
+      <planeGeometry args={[0.8, 1.4]} />
+      <meshStandardMaterial {...MAT.woodDark} />
     </mesh>
-    {/* Porch */}
-    <mesh position={[0, 0.1, 2]} receiveShadow>
+    {/* Window (glass) */}
+    <mesh position={[1, 1.15, 1.76]}>
+      <planeGeometry args={[0.6, 0.6]} />
+      <meshStandardMaterial {...MAT.glass} />
+    </mesh>
+    {/* Porch deck */}
+    <mesh position={[0, 0.1, 2.4]} receiveShadow>
       <boxGeometry args={[3.5, 0.15, 1]} />
-      <meshStandardMaterial color="#A1887F" />
+      <meshStandardMaterial {...MAT.woodLight} />
     </mesh>
-    {/* Chimney */}
-    <mesh position={[1, 3.2, -0.5]} castShadow>
-      <boxGeometry args={[0.4, 1.2, 0.4]} />
-      <meshStandardMaterial color="#795548" />
+    {/* Stone chimney */}
+    <mesh position={[1, 3.1, -0.5]} castShadow>
+      <boxGeometry args={[0.45, 1.4, 0.45]} />
+      <meshStandardMaterial {...MAT.stone} />
     </mesh>
   </group>
 );
@@ -100,23 +148,28 @@ const TinyHouse = () => (
   <group>
     <mesh position={[0, 0.8, 0]} castShadow receiveShadow>
       <boxGeometry args={[2, 1.6, 3]} />
-      <meshStandardMaterial color="#E8EAF6" />
+      <meshStandardMaterial {...MAT.woodLight} />
     </mesh>
     {/* Curved roof */}
     <mesh position={[0, 1.75, 0]} castShadow>
       <cylinderGeometry args={[1.3, 1.3, 3.2, 16, 1, false, 0, Math.PI]} />
-      <meshStandardMaterial color="#78909C" />
+      <meshStandardMaterial {...MAT.roofDark} />
     </mesh>
     {/* Door */}
     <mesh position={[0, 0.6, 1.51]}>
       <planeGeometry args={[0.7, 1.2]} />
-      <meshStandardMaterial color="#455A64" />
+      <meshStandardMaterial {...MAT.woodDark} />
+    </mesh>
+    {/* Window (glass) */}
+    <mesh position={[0.6, 1.0, 1.51]}>
+      <planeGeometry args={[0.5, 0.5]} />
+      <meshStandardMaterial {...MAT.glass} />
     </mesh>
     {/* Wheels */}
     {[[-0.7, 0.15, 1.3], [0.7, 0.15, 1.3], [-0.7, 0.15, -1.3], [0.7, 0.15, -1.3]].map((p, i) => (
       <mesh key={i} position={p as [number, number, number]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.15, 0.15, 0.1, 12]} />
-        <meshStandardMaterial color="#212121" />
+        <meshStandardMaterial {...MAT.rubber} />
       </mesh>
     ))}
   </group>
@@ -128,16 +181,16 @@ const Pool = () => (
   <group>
     <mesh position={[0, 0.05, 0]} receiveShadow>
       <boxGeometry args={[3, 0.1, 5]} />
-      <meshStandardMaterial color="#E0E0E0" />
+      <meshStandardMaterial {...MAT.concrete} />
     </mesh>
     <mesh position={[0, -0.15, 0]}>
       <boxGeometry args={[2.6, 0.3, 4.6]} />
-      <meshStandardMaterial color="#4FC3F7" transparent opacity={0.8} />
+      <meshStandardMaterial {...MAT.water} />
     </mesh>
     {/* Pool edge tiles */}
     <mesh position={[0, 0.12, 0]}>
       <boxGeometry args={[3.2, 0.04, 5.2]} />
-      <meshStandardMaterial color="#B0BEC5" />
+      <meshStandardMaterial {...MAT.stone} />
     </mesh>
   </group>
 );
@@ -146,11 +199,11 @@ const RoundPool = () => (
   <group>
     <mesh position={[0, 0.05, 0]} receiveShadow>
       <cylinderGeometry args={[2.2, 2.2, 0.1, 24]} />
-      <meshStandardMaterial color="#E0E0E0" />
+      <meshStandardMaterial {...MAT.concrete} />
     </mesh>
     <mesh position={[0, -0.15, 0]}>
       <cylinderGeometry args={[2, 2, 0.3, 24]} />
-      <meshStandardMaterial color="#29B6F6" transparent opacity={0.8} />
+      <meshStandardMaterial {...MAT.water} />
     </mesh>
   </group>
 );
@@ -159,11 +212,11 @@ const Jacuzzi = () => (
   <group>
     <mesh position={[0, 0.25, 0]} receiveShadow>
       <cylinderGeometry args={[1.2, 1.3, 0.5, 16]} />
-      <meshStandardMaterial color="#5D4037" />
+      <meshStandardMaterial {...MAT.woodDark} />
     </mesh>
     <mesh position={[0, 0.15, 0]}>
       <cylinderGeometry args={[1, 1, 0.4, 16]} />
-      <meshStandardMaterial color="#4DD0E1" transparent opacity={0.85} />
+      <meshStandardMaterial {...MAT.water} />
     </mesh>
     {/* Jets - small spheres */}
     {Array.from({ length: 6 }).map((_, i) => {
