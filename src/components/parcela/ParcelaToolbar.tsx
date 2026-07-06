@@ -348,7 +348,7 @@ export const ParcelaToolbar = ({
           </Button>
           {onExportPdf && (
             <Button variant="outline" size="sm" onClick={onExportPdf} className="w-full h-7 text-[10px]">
-              <FileDown className="h-3 w-3 mr-1" /> Exportar PDF
+              <FileDown className="h-3 w-3 mr-1" /> Descargar Plano
             </Button>
           )}
           <Button variant="default" size="sm" onClick={onSave} className="w-full h-7 text-[10px]">
