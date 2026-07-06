@@ -1,5 +1,25 @@
 import { describe, it, expect } from 'vitest';
-import { bboxForPlane, staticSatelliteUrl, normalizeElevations, MAX_RELIEF_M, cropResampleElevation } from './RealisticTerrain';
+import { bboxForPlane, staticSatelliteUrl, normalizeElevations, MAX_RELIEF_M, cropResampleElevation, sampleGridBilinear } from './RealisticTerrain';
+
+describe('sampleGridBilinear', () => {
+  // 2×2 grid: [0,10 / 20,30]
+  const grid = Float32Array.from([0, 10, 20, 30]);
+
+  it('returns exact values at integer coordinates', () => {
+    expect(sampleGridBilinear(grid, 2, 0, 0)).toBe(0);
+    expect(sampleGridBilinear(grid, 2, 1, 1)).toBe(30);
+  });
+
+  it('interpolates linearly between samples (smooth, not stair-stepped)', () => {
+    expect(sampleGridBilinear(grid, 2, 0.5, 0)).toBeCloseTo(5, 6);
+    expect(sampleGridBilinear(grid, 2, 0.5, 0.5)).toBeCloseTo(15, 6);
+  });
+
+  it('clamps to the grid edge outside bounds', () => {
+    expect(sampleGridBilinear(grid, 2, -5, -5)).toBe(0);
+    expect(sampleGridBilinear(grid, 2, 99, 99)).toBe(30);
+  });
+});
 
 describe('cropResampleElevation', () => {
   const GRID = 96;

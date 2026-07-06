@@ -80,6 +80,17 @@ const ELEV_TILE_PX = 256; // terrain-rgb native tile size
  * bbox means the plane only shows the relief that actually exists inside the
  * lot (near-flat for flat parcels). Pure + testable.
  */
+/** Bilinear sample of a square grid at fractional pixel (fx, fy), edge-clamped. */
+export function sampleGridBilinear(grid: Float32Array, gridPx: number, fx: number, fy: number): number {
+  const clamp = (v: number) => Math.max(0, Math.min(gridPx - 1, v));
+  const x0 = Math.floor(fx), y0 = Math.floor(fy);
+  const tx = fx - x0, ty = fy - y0;
+  const cx0 = clamp(x0), cy0 = clamp(y0), cx1 = clamp(x0 + 1), cy1 = clamp(y0 + 1);
+  const v00 = grid[cy0 * gridPx + cx0], v10 = grid[cy0 * gridPx + cx1];
+  const v01 = grid[cy1 * gridPx + cx0], v11 = grid[cy1 * gridPx + cx1];
+  return v00 * (1 - tx) * (1 - ty) + v10 * tx * (1 - ty) + v01 * (1 - tx) * ty + v11 * tx * ty;
+}
+
 export function cropResampleElevation(
   grid: Float32Array, gridPx: number,
   centerPxX: number, centerPxY: number, cropPx: number, outRes: number,
@@ -89,11 +100,11 @@ export function cropResampleElevation(
   const startY = centerPxY - cropPx / 2;
   for (let r = 0; r < outRes; r++) {
     for (let c = 0; c < outRes; c++) {
-      const gx = Math.round(startX + (c / (outRes - 1)) * cropPx);
-      const gy = Math.round(startY + (r / (outRes - 1)) * cropPx);
-      const cx = Math.max(0, Math.min(gridPx - 1, gx));
-      const cy = Math.max(0, Math.min(gridPx - 1, gy));
-      out[r * outRes + c] = grid[cy * gridPx + cx];
+      // Bilinear sampling smooths the low-resolution DEM crop, so the surface
+      // (and object snapping) is no longer stair-stepped/nearest.
+      const fx = startX + (c / (outRes - 1)) * cropPx;
+      const fy = startY + (r / (outRes - 1)) * cropPx;
+      out[r * outRes + c] = sampleGridBilinear(grid, gridPx, fx, fy);
     }
   }
   return out;
@@ -302,34 +313,55 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
       return geo;
     }, [heightData, size]);
 
-    // Polygon contour using normalized local coords
+    // Bilinear terrain height at a LOCAL (x=east, y=north) point in meters.
+    const heightAtLocal = useCallback((x: number, y: number): number => {
+      if (!heightData) return 0;
+      const halfSize = size / 2;
+      const fx = ((x + halfSize) / size) * (TERRAIN_RES - 1);
+      const fy = ((halfSize - y) / size) * (TERRAIN_RES - 1);
+      return sampleGridBilinear(heightData, TERRAIN_RES, fx, fy);
+    }, [heightData, size]);
+
+    // Polygon contour draped on the terrain (local coords → world x, h, -y).
     const contourPositions = useMemo(() => {
       if (norm.localCoords.length === 0) return null;
       const pts: number[] = [];
       for (const [x, y] of norm.localCoords) {
-        const terrainY = (() => {
-          if (!heightData) return 0.2;
-          const halfSize = size / 2;
-          const gx = ((x + halfSize) / size) * (TERRAIN_RES - 1);
-          const gz = ((-y + halfSize) / size) * (TERRAIN_RES - 1);
-          const ix = Math.max(0, Math.min(TERRAIN_RES - 1, Math.round(gx)));
-          const iz = Math.max(0, Math.min(TERRAIN_RES - 1, Math.round(gz)));
-          return (heightData[iz * TERRAIN_RES + ix] || 0) + 0.3;
-        })();
-        pts.push(x, terrainY, -y);
+        pts.push(x, heightAtLocal(x, y) + 0.4, -y);
       }
       return new Float32Array(pts);
-    }, [norm.localCoords, heightData, size]);
+    }, [norm.localCoords, heightAtLocal]);
 
-    const getHeightAt = useCallback((x: number, z: number): number => {
-      if (!heightData) return 0;
-      const halfSize = size / 2;
-      const gx = ((x + halfSize) / size) * (TERRAIN_RES - 1);
-      const gz = ((-z + halfSize) / size) * (TERRAIN_RES - 1);
-      const ix = Math.max(0, Math.min(TERRAIN_RES - 1, Math.round(gx)));
-      const iz = Math.max(0, Math.min(TERRAIN_RES - 1, Math.round(gz)));
-      return heightData[iz * TERRAIN_RES + ix] || 0;
-    }, [heightData, size]);
+    // Translucent fill draped over the terrain (triangle fan from the centroid,
+    // which normalizePolygon centres at the local origin) + a vertical skirt so
+    // the lot reads as a 3D volume, not just a line.
+    const { fillPositions, wallPositions } = useMemo(() => {
+      const lc = norm.localCoords;
+      if (lc.length < 3) return { fillPositions: null, wallPositions: null };
+      const fill: number[] = [];
+      const wall: number[] = [];
+      const cx = lc.reduce((s, p) => s + p[0], 0) / lc.length;
+      const cy = lc.reduce((s, p) => s + p[1], 0) / lc.length;
+      const cH = heightAtLocal(cx, cy) + 0.3;
+      const SKIRT = 3; // metres the wall drops below the boundary
+      for (let i = 0; i < lc.length; i++) {
+        const [ax, ay] = lc[i];
+        const [bx, by] = lc[(i + 1) % lc.length];
+        const aH = heightAtLocal(ax, ay) + 0.3;
+        const bH = heightAtLocal(bx, by) + 0.3;
+        // Fill triangle: centroid → edge
+        fill.push(cx, cH, -cy, ax, aH, -ay, bx, bH, -by);
+        // Wall quad (two triangles): edge top → edge bottom (skirt)
+        wall.push(
+          ax, aH, -ay, bx, bH, -by, bx, bH - SKIRT, -by,
+          ax, aH, -ay, bx, bH - SKIRT, -by, ax, aH - SKIRT, -ay,
+        );
+      }
+      return { fillPositions: new Float32Array(fill), wallPositions: new Float32Array(wall) };
+    }, [norm.localCoords, heightAtLocal]);
+
+    // World getHeightAt(x, z): local y = -z.
+    const getHeightAt = useCallback((x: number, z: number): number => heightAtLocal(x, -z), [heightAtLocal]);
 
     useImperativeHandle(ref, () => ({ getHeightAt }), [getHeightAt]);
 
@@ -351,6 +383,24 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
             />
           </mesh>
         </group>
+
+        {/* Lot as a 3D volume: translucent draped fill + vertical skirt walls. */}
+        {fillPositions && fillPositions.length >= 9 && (
+          <mesh renderOrder={1}>
+            <bufferGeometry>
+              <bufferAttribute attach="attributes-position" count={fillPositions.length / 3} array={fillPositions} itemSize={3} />
+            </bufferGeometry>
+            <meshBasicMaterial color="#00FF88" transparent opacity={0.14} side={THREE.DoubleSide} depthWrite={false} toneMapped={false} />
+          </mesh>
+        )}
+        {wallPositions && wallPositions.length >= 9 && (
+          <mesh renderOrder={2}>
+            <bufferGeometry>
+              <bufferAttribute attach="attributes-position" count={wallPositions.length / 3} array={wallPositions} itemSize={3} />
+            </bufferGeometry>
+            <meshBasicMaterial color="#00E57A" transparent opacity={0.22} side={THREE.DoubleSide} depthWrite={false} toneMapped={false} />
+          </mesh>
+        )}
 
         {/* Lot polygon contour — neon green. depthTest is disabled so the lot
             boundary always draws on top of the relief (a cadastral overlay),
