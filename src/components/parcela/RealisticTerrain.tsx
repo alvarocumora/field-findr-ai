@@ -4,6 +4,8 @@ import { normalizePolygon, type NormalizedPolygon } from '@/lib/polygonUtils';
 
 interface RealisticTerrainProps {
   polygon: number[][] | null;
+  /** Sibling lot rings ([lng,lat]) drawn dimmed for context. */
+  neighbors?: number[][][];
   latitude?: number;
   longitude?: number;
   mapboxToken: string;
@@ -80,6 +82,37 @@ const ELEV_TILE_PX = 256; // terrain-rgb native tile size
  * bbox means the plane only shows the relief that actually exists inside the
  * lot (near-flat for flat parcels). Pure + testable.
  */
+/**
+ * Project a [lng,lat] ring into the LOCAL metre frame of the parcel — centred
+ * on the parcel centroid, x=east, y=north. Used to place sibling lots in the
+ * same coordinate system as the main lot (they share one centroid, unlike
+ * normalizePolygon which re-centres each ring on its own centroid).
+ */
+export function projectRingToLocal(
+  ring: number[][], centroidLng: number, centroidLat: number,
+): [number, number][] {
+  const mLng = 111320 * Math.cos((centroidLat * Math.PI) / 180);
+  const mLat = 110540;
+  return ring.map(([lng, lat]) => [(lng - centroidLng) * mLng, (lat - centroidLat) * mLat]);
+}
+
+/** Ray-cast point-in-ring test on local [x,y] coordinates. */
+export function pointInRing(x: number, y: number, ring: [number, number][]): boolean {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/** Deterministic pseudo-random in [0,1) from an integer seed (stable across renders). */
+export function hashRand(seed: number): number {
+  const s = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+  return s - Math.floor(s);
+}
+
 /** Bilinear sample of a square grid at fractional pixel (fx, fy), edge-clamped. */
 export function sampleGridBilinear(grid: Float32Array, gridPx: number, fx: number, fy: number): number {
   const clamp = (v: number) => Math.max(0, Math.min(gridPx - 1, v));
@@ -244,7 +277,7 @@ async function loadStaticSatelliteTexture(
 }
 
 export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>(
-  ({ polygon, latitude, longitude, mapboxToken, onElevationLoaded, onTextureLoading, onTextureError, onDebugInfo }, ref) => {
+  ({ polygon, neighbors, latitude, longitude, mapboxToken, onElevationLoaded, onTextureLoading, onTextureError, onDebugInfo }, ref) => {
     const [heightData, setHeightData] = useState<Float32Array | null>(null);
     const [texture, setTexture] = useState<THREE.Texture | null>(null);
     const [baseElevation, setBaseElevation] = useState(0);
@@ -360,6 +393,41 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
       return { fillPositions: new Float32Array(fill), wallPositions: new Float32Array(wall) };
     }, [norm.localCoords, heightAtLocal]);
 
+    // Neighbouring lots (dimmed outlines) projected into this lot's local frame
+    // and draped on the terrain — the surrounding loteo context.
+    const neighborSegments = useMemo(() => {
+      if (!neighbors?.length || !heightData) return null;
+      const half = size / 2;
+      const seg: number[] = [];
+      for (const ring of neighbors) {
+        if (!Array.isArray(ring) || ring.length < 3) continue;
+        const local = projectRingToLocal(ring, lng, lat);
+        // Skip rings entirely outside the terrain plane.
+        if (!local.some(([x, y]) => Math.abs(x) <= half && Math.abs(y) <= half)) continue;
+        for (let i = 0; i < local.length; i++) {
+          const [ax, ay] = local[i];
+          const [bx, by] = local[(i + 1) % local.length];
+          seg.push(ax, heightAtLocal(ax, ay) + 0.25, -ay, bx, heightAtLocal(bx, by) + 0.25, -by);
+        }
+      }
+      return seg.length ? new Float32Array(seg) : null;
+    }, [neighbors, heightData, size, lat, lng, heightAtLocal]);
+
+    // Basic vegetation: deterministic scatter of low-poly trees on the terrain
+    // OUTSIDE the lot, for environmental context (not inside the buildable lot).
+    const vegetation = useMemo(() => {
+      if (!heightData || norm.localCoords.length < 3) return [];
+      const half = size / 2;
+      const out: { pos: [number, number, number]; scale: number }[] = [];
+      for (let i = 0; i < 600 && out.length < 26; i++) {
+        const x = (hashRand(i * 2 + 1) * 2 - 1) * half * 0.92;
+        const y = (hashRand(i * 2 + 2) * 2 - 1) * half * 0.92;
+        if (pointInRing(x, y, norm.localCoords)) continue; // keep the lot clear
+        out.push({ pos: [x, heightAtLocal(x, y), -y], scale: 0.7 + hashRand(i * 3 + 5) * 0.8 });
+      }
+      return out;
+    }, [heightData, size, norm.localCoords, heightAtLocal]);
+
     // World getHeightAt(x, z): local y = -z.
     const getHeightAt = useCallback((x: number, z: number): number => heightAtLocal(x, -z), [heightAtLocal]);
 
@@ -383,6 +451,30 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
             />
           </mesh>
         </group>
+
+        {/* Neighbouring lots — dimmed outlines draped on the terrain. */}
+        {neighborSegments && neighborSegments.length >= 6 && (
+          <lineSegments renderOrder={0}>
+            <bufferGeometry>
+              <bufferAttribute attach="attributes-position" count={neighborSegments.length / 3} array={neighborSegments} itemSize={3} />
+            </bufferGeometry>
+            <lineBasicMaterial color="#dbeafe" transparent opacity={0.35} toneMapped={false} />
+          </lineSegments>
+        )}
+
+        {/* Basic vegetation scatter outside the lot (low-poly conifers). */}
+        {vegetation.map((t, i) => (
+          <group key={`veg-${i}`} position={t.pos} scale={t.scale}>
+            <mesh position={[0, 1.1, 0]}>
+              <coneGeometry args={[0.9, 2.4, 6]} />
+              <meshBasicMaterial color="#2f6b34" toneMapped={false} />
+            </mesh>
+            <mesh position={[0, 0.25, 0]}>
+              <cylinderGeometry args={[0.14, 0.18, 0.5, 5]} />
+              <meshBasicMaterial color="#5b3d24" toneMapped={false} />
+            </mesh>
+          </group>
+        ))}
 
         {/* Lot as a 3D volume: translucent draped fill + vertical skirt walls. */}
         {fillPositions && fillPositions.length >= 9 && (
