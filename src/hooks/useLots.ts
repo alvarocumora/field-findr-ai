@@ -34,25 +34,27 @@ export const useLots = (projectId?: string) => {
   const queryClient = useQueryClient();
 
   const { data: lots = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['lots', user?.id, projectId],
+    queryKey: ['lots', user?.id ?? 'anon', projectId ?? 'all'],
     queryFn: async () => {
-      if (!user?.id) return [];
-      
       let query = supabase
         .from('lots')
         .select('*')
-        .eq('user_id', user.id)
         .order('lot_number', { ascending: true });
 
       if (projectId) {
+        // Public/project view: RLS allows anyone to read lots of active projects.
         query = query.eq('project_id', projectId);
+      } else {
+        // Personal view (no project scope): require auth and scope to current user.
+        if (!user?.id) return [];
+        query = query.eq('user_id', user.id);
       }
 
       const { data, error } = await query;
       if (error) throw error;
       return data as Lot[];
     },
-    enabled: !!user?.id,
+    enabled: !!projectId || !!user?.id,
   });
 
   const createLot = useMutation({
