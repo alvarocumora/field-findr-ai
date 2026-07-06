@@ -1,14 +1,17 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useMyPayments, PAYMENT_STATUS_LABEL } from '@/hooks/useMyPayments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  Heart, MapPin, Bell, TrendingDown, Search, Home, 
-  ChevronRight, Sparkles, Calendar, Eye, Scale, Calculator
+import {
+  Heart, MapPin, Bell, TrendingDown, Search, Home,
+  ChevronRight, Sparkles, Calendar, Eye, Scale, Calculator,
+  Receipt, Download
 } from 'lucide-react';
+import { format } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,15 +24,16 @@ const BuyerHome = () => {
   const { profile } = useProfile();
   const navigate = useNavigate();
   const { data: favorites, isLoading: favsLoading } = useFavorites();
+  const { data: payments } = useMyPayments(5);
 
-  // Get active reservations
+  // Get active reservations (lot area/location feed the receipt PDF)
   const { data: reservations, isLoading: resLoading } = useQuery({
     queryKey: ['buyer-reservations', user?.id],
     queryFn: async () => {
       if (!user) return [];
       const { data } = await supabase
         .from('reservations')
-        .select('*, lots(lot_number, project_id, projects(name))')
+        .select('*, lots(lot_number, area, project_id, projects(name, location))')
         .eq('user_id', user.id)
         .in('status', ['pending_payment', 'paid'])
         .order('created_at', { ascending: false })
@@ -158,9 +162,25 @@ const BuyerHome = () => {
                       Estado: {res.status === 'paid' ? '✅ Pagada' : '⏳ Pendiente de pago'}
                     </p>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/mi-terreno')}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    {res.status === 'paid' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1 text-xs"
+                        onClick={async () => {
+                          const { downloadReservationReceipt } = await import('@/lib/reservationReceiptPdf');
+                          downloadReservationReceipt(res);
+                        }}
+                      >
+                        <Download className="h-3 w-3" />
+                        Comprobante
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={() => navigate('/mi-terreno')}>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </CardContent>
@@ -253,6 +273,43 @@ const BuyerHome = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Payment history (gateway payments written by the webhook) */}
+            {payments && payments.length > 0 && (
+              <Card className="border-border/40">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Receipt className="h-4 w-4" />
+                    Mis Pagos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {payments.map((p) => (
+                    <div key={p.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {p.description || 'Pago'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(p.created_at), 'dd/MM/yyyy')}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0 ml-2">
+                        <p className="text-sm font-semibold text-foreground">
+                          {new Intl.NumberFormat('es-CL', { style: 'currency', currency: p.currency || 'CLP', maximumFractionDigits: 0 }).format(p.amount)}
+                        </p>
+                        <Badge
+                          variant={p.status === 'approved' ? 'secondary' : 'outline'}
+                          className="text-[10px]"
+                        >
+                          {PAYMENT_STATUS_LABEL[p.status] || p.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Recent Favorites */}
             <Card className="border-border/40">
