@@ -32,8 +32,6 @@ export interface TerrainDebugInfo {
 const TERRAIN_RES = 128;
 const ELEV_ZOOM = 15;
 const SAT_ZOOM = 18;
-const TILE_PX = 256; // Use 256px tiles — simpler math, no zoom offset issues
-const GRID = 3;
 
 function lngLatToTileFraction(lng: number, lat: number, zoom: number) {
   const n = Math.pow(2, zoom);
@@ -73,92 +71,65 @@ async function loadElevationTile(lat: number, lng: number, token: string): Promi
   });
 }
 
-function loadTileImage(zoom: number, tx: number, ty: number, token: string): Promise<HTMLImageElement | null> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => { console.warn(`❌ Tile failed: z${zoom}/${tx}/${ty}`); resolve(null); };
-    // Use Raster Tiles API with 256px — straightforward zoom math
-    img.src = `https://api.mapbox.com/v4/mapbox.satellite/${zoom}/${tx}/${ty}@2x.png?access_token=${token}`;
-  });
+/**
+ * Meters → degrees deltas at a given latitude (local flat-earth approximation,
+ * accurate at parcel scale).
+ */
+export function bboxForPlane(lat: number, lng: number, planeSize: number) {
+  const half = planeSize / 2;
+  const metersPerDegLat = 110540;
+  const metersPerDegLng = 111320 * Math.cos((lat * Math.PI) / 180);
+  const dLat = half / metersPerDegLat;
+  const dLng = half / metersPerDegLng;
+  return { minLng: lng - dLng, minLat: lat - dLat, maxLng: lng + dLng, maxLat: lat + dLat };
 }
 
 /**
- * Loads a 3x3 grid of satellite tiles, then CROPS the exact region
- * corresponding to the terrain plane. Returns a texture with default UV (no repeat/offset).
+ * Loads the satellite ground as a SINGLE Mapbox Static Images request for the
+ * parcel's exact bounding box. This replaces the old 3×3 tile stitch + crop,
+ * whose @2x/256-vs-512px math cropped off-canvas in production and left the
+ * ground blank (white). One bbox image maps 1:1 to the plane, north-up, with
+ * default UVs — no stitching, no zoom offsets.
  */
-async function loadCroppedSatelliteTexture(
-  lat: number, lng: number, planeSize: number, token: string, zoom = SAT_ZOOM
+export function staticSatelliteUrl(lat: number, lng: number, planeSize: number, token: string): string {
+  const { minLng, minLat, maxLng, maxLat } = bboxForPlane(lat, lng, planeSize);
+  const px = 1024; // logical; @2x → 2048 actual, Mapbox max
+  const bbox = `[${minLng},${minLat},${maxLng},${maxLat}]`;
+  return (
+    `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/${bbox}/${px}x${px}@2x` +
+    `?access_token=${token}&attribution=false&logo=false`
+  );
+}
+
+async function loadStaticSatelliteTexture(
+  lat: number, lng: number, planeSize: number, token: string
 ): Promise<{ texture: THREE.Texture; tilesLoaded: number; canvasDataUrl: string } | null> {
   if (!token) return null;
 
-  const { tileX, tileY, fracX, fracY } = lngLatToTileFraction(lng, lat, zoom);
-  const tileMeters = tileSizeMeters(lat, zoom);
-  const canvasPx = TILE_PX * GRID; // 768px for 256px tiles * 3
+  const url = staticSatelliteUrl(lat, lng, planeSize, token);
 
-  // Load 3x3 grid
-  const promises: Promise<{ img: HTMLImageElement | null; col: number; row: number }>[] = [];
-  for (let dy = -1; dy <= 1; dy++) {
-    for (let dx = -1; dx <= 1; dx++) {
-      promises.push(
-        loadTileImage(zoom, tileX + dx, tileY + dy, token).then(img => ({ img, col: dx + 1, row: dy + 1 }))
-      );
-    }
-  }
-  const results = await Promise.all(promises);
-  const loaded = results.filter(r => r.img !== null).length;
+  const img = await new Promise<HTMLImageElement | null>((resolve) => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve(image);
+    image.onerror = () => { console.warn('❌ Static satellite image failed'); resolve(null); };
+    image.src = url;
+  });
+  if (!img) return null;
 
-  if (loaded === 0) {
-    if (zoom > 14) return loadCroppedSatelliteTexture(lat, lng, planeSize, token, zoom - 1);
-    return null;
-  }
+  // Draw onto a canvas so we can build a debug preview and control filtering.
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth || px;
+  canvas.height = img.naturalHeight || px;
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-  // Stitch tiles onto a canvas
-  // Note: @2x tiles are 512px but we requested TILE_PX=256 in our grid math
-  // The actual image size from @2x is 512px, so we draw them into 512px slots
-  const actualTilePx = 512; // @2x tiles
-  const stitchPx = actualTilePx * GRID; // 1536
-  const stitchCanvas = document.createElement('canvas');
-  stitchCanvas.width = stitchPx;
-  stitchCanvas.height = stitchPx;
-  const sCtx = stitchCanvas.getContext('2d')!;
-  sCtx.fillStyle = '#5D8233';
-  sCtx.fillRect(0, 0, stitchPx, stitchPx);
-  for (const { img, col, row } of results) {
-    if (img) sCtx.drawImage(img, col * actualTilePx, row * actualTilePx, actualTilePx, actualTilePx);
-  }
+  const prev = document.createElement('canvas');
+  prev.width = 128; prev.height = 128;
+  prev.getContext('2d')!.drawImage(canvas, 0, 0, 128, 128);
+  const canvasDataUrl = prev.toDataURL('image/jpeg', 0.6);
 
-  // Now crop exactly the plane's extent
-  const gridMeters = tileMeters * GRID;
-  const pxPerMeter = stitchPx / gridMeters;
-
-  // Center of the grid in pixels (where the centroid falls)
-  const centerPxX = (1 + fracX) * actualTilePx;
-  const centerPxY = (1 + fracY) * actualTilePx;
-
-  // Plane extent in pixels
-  const halfPlanePx = (planeSize / 2) * pxPerMeter;
-  const cropX = centerPxX - halfPlanePx;
-  const cropY = centerPxY - halfPlanePx;
-  const cropSize = planeSize * pxPerMeter;
-
-  // Create cropped canvas at good resolution (clamp to 1024 max)
-  const outputPx = Math.min(1024, Math.ceil(cropSize));
-  const cropCanvas = document.createElement('canvas');
-  cropCanvas.width = outputPx;
-  cropCanvas.height = outputPx;
-  const cCtx = cropCanvas.getContext('2d')!;
-  cCtx.drawImage(stitchCanvas, cropX, cropY, cropSize, cropSize, 0, 0, outputPx, outputPx);
-
-  // Debug preview
-  const prevCanvas = document.createElement('canvas');
-  prevCanvas.width = 128; prevCanvas.height = 128;
-  prevCanvas.getContext('2d')!.drawImage(cropCanvas, 0, 0, 128, 128);
-  const canvasDataUrl = prevCanvas.toDataURL('image/jpeg', 0.6);
-
-  // Create texture — no repeat/offset needed, just 1:1 mapping
-  const tex = new THREE.CanvasTexture(cropCanvas);
+  const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = THREE.ClampToEdgeWrapping;
   tex.wrapT = THREE.ClampToEdgeWrapping;
@@ -167,13 +138,8 @@ async function loadCroppedSatelliteTexture(
   tex.magFilter = THREE.LinearFilter;
   tex.needsUpdate = true;
 
-  console.log('🛰️ Satellite cropped:', {
-    zoom, tileMeters: Math.round(tileMeters), gridMeters: Math.round(gridMeters),
-    planeSize: Math.round(planeSize), cropPx: `${Math.round(cropX)},${Math.round(cropY)} ${Math.round(cropSize)}px`,
-    outputPx, loaded: `${loaded}/9`,
-  });
-
-  return { texture: tex, tilesLoaded: loaded, canvasDataUrl };
+  console.log('🛰️ Static satellite loaded:', { planeSize: Math.round(planeSize), bbox });
+  return { texture: tex, tilesLoaded: 1, canvasDataUrl };
 }
 
 export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>(
@@ -199,8 +165,11 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
         const min = Math.min(...Array.from(heights));
         setBaseElevation(min);
         onElevationLoaded?.(min);
+        // Real vertical scale: the plane is sized in meters (1 three.js unit =
+        // 1 m), so elevation is applied 1:1 — "Relieve Real" now shows true
+        // relief instead of the old ×0.005 that flattened everything.
         const normalized = new Float32Array(heights.length);
-        for (let i = 0; i < heights.length; i++) normalized[i] = (heights[i] - min) * 0.005;
+        for (let i = 0; i < heights.length; i++) normalized[i] = heights[i] - min;
         setHeightData(normalized);
       }).catch(() => setHeightData(new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0)));
     }, [lat, lng, mapboxToken]);
@@ -212,20 +181,20 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
       onTextureError?.(false);
       setTexture(null);
 
-      loadCroppedSatelliteTexture(lat, lng, size, mapboxToken, SAT_ZOOM).then((result) => {
+      loadStaticSatelliteTexture(lat, lng, size, mapboxToken).then((result) => {
         if (result) {
           setTexture(result.texture);
           onTextureError?.(false);
           onDebugInfo?.({
             lat, lng, zoom: SAT_ZOOM, tileMeters: Math.round(tileSizeMeters(lat, SAT_ZOOM)),
-            planeSize: Math.round(size), tilesLoaded: result.tilesLoaded, tilesTotal: 9,
+            planeSize: Math.round(size), tilesLoaded: result.tilesLoaded, tilesTotal: 1,
             textureApplied: true, canvasDataUrl: result.canvasDataUrl,
           });
         } else {
           onTextureError?.(true);
           onDebugInfo?.({
             lat, lng, zoom: SAT_ZOOM, tileMeters: Math.round(tileSizeMeters(lat, SAT_ZOOM)),
-            planeSize: Math.round(size), tilesLoaded: 0, tilesTotal: 9, textureApplied: false,
+            planeSize: Math.round(size), tilesLoaded: 0, tilesTotal: 1, textureApplied: false,
           });
         }
         onTextureLoading?.(false);
