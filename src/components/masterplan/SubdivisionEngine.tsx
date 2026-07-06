@@ -13,9 +13,14 @@ import { AlertCircle, CheckCircle2, Grid3X3, TreePine, Route, Ruler, Download, W
 import { autoSubdivide, type SubdivisionParams, type SubdivisionResult } from '@/lib/subdivision/autoSubdivide';
 import {
   NORMATIVE_PROFILES, calculateAreaBreakdown, validateSubdivision, estimateMaxLots,
-  type NormativeProfile,
 } from '@/lib/subdivision/areaCalculations';
+import { downloadScaledPdf, type PdfLot } from '@/lib/exporters/scaledPdfExporter';
+import { downloadDxf, type DxfLot } from '@/lib/exporters/dxfExporter';
 import { toast } from 'sonner';
+
+const slugify = (s: string) =>
+  (s || 'loteo').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'loteo';
 
 interface SubdivisionEngineProps {
   polygon: [number, number][] | null;
@@ -80,6 +85,39 @@ export const SubdivisionEngine = ({
       onApplyLots(result);
       toast.success('Lotes aplicados al proyecto');
     }
+  };
+
+  const handleExportPdf = () => {
+    if (!result) return;
+    const lots: PdfLot[] = result.lots.map((l) => ({
+      id: String(l.id),
+      label: `L${l.id}`,
+      polygon: l.polygon,
+      area: l.area,
+      status: 'available',
+    }));
+    const roads = result.roads.map((r) => r.polygon);
+    downloadScaledPdf(lots, `plano-loteo-${slugify(projectName || '')}`, roads, {
+      projectName: projectName || 'Loteo',
+      scale: 1000,
+    });
+    toast.success('Plano PDF descargado');
+  };
+
+  const handleExportDxf = () => {
+    if (!result) return;
+    const lots: DxfLot[] = result.lots.map((l) => ({
+      id: String(l.id),
+      label: `L${l.id}`,
+      polygon: l.polygon,
+      area: l.area,
+    }));
+    const roads = result.roads.map((r) => r.polygon);
+    downloadDxf(lots, `loteo-${slugify(projectName || '')}`, roads, {
+      projectName: projectName || 'Loteo',
+      scale: 1000,
+    });
+    toast.success('Archivo DXF descargado');
   };
 
   return (
@@ -295,11 +333,19 @@ export const SubdivisionEngine = ({
             </Tabs>
           )}
 
-          {result && onApplyLots && (
-            <div className="flex gap-2 mt-3">
-              <Button onClick={handleApply} className="flex-1">
-                Aplicar {result.lots.length} Lotes al Proyecto
+          {result && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Button variant="outline" onClick={handleExportPdf} className="gap-1.5">
+                <Download className="h-4 w-4" /> Plano PDF
               </Button>
+              <Button variant="outline" onClick={handleExportDxf} className="gap-1.5">
+                <Download className="h-4 w-4" /> DXF (AutoCAD)
+              </Button>
+              {onApplyLots && (
+                <Button onClick={handleApply} className="flex-1">
+                  Aplicar {result.lots.length} Lotes al Proyecto
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
