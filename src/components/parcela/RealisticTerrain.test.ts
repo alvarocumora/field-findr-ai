@@ -1,5 +1,46 @@
 import { describe, it, expect } from 'vitest';
-import { bboxForPlane, staticSatelliteUrl, normalizeElevations, MAX_RELIEF_M, cropResampleElevation, sampleGridBilinear } from './RealisticTerrain';
+import { bboxForPlane, staticSatelliteUrl, normalizeElevations, MAX_RELIEF_M, cropResampleElevation, sampleGridBilinear, projectRingToLocal, pointInRing, hashRand } from './RealisticTerrain';
+
+describe('projectRingToLocal', () => {
+  const cLng = -71.63, cLat = -34.99;
+
+  it('places the shared centroid at the local origin', () => {
+    const [p] = projectRingToLocal([[cLng, cLat]], cLng, cLat);
+    expect(p[0]).toBeCloseTo(0, 6);
+    expect(p[1]).toBeCloseTo(0, 6);
+  });
+
+  it('keeps neighbours offset from the main lot (east & north positive)', () => {
+    // A point ~100m east and ~100m north of the centroid
+    const mLng = 111320 * Math.cos((cLat * Math.PI) / 180);
+    const ring = [[cLng + 100 / mLng, cLat + 100 / 110540]];
+    const [p] = projectRingToLocal(ring, cLng, cLat);
+    expect(p[0]).toBeCloseTo(100, 0);
+    expect(p[1]).toBeCloseTo(100, 0);
+  });
+});
+
+describe('pointInRing', () => {
+  const square: [number, number][] = [[-10, -10], [10, -10], [10, 10], [-10, 10]];
+  it('detects points inside and outside', () => {
+    expect(pointInRing(0, 0, square)).toBe(true);
+    expect(pointInRing(50, 0, square)).toBe(false);
+  });
+});
+
+describe('hashRand', () => {
+  it('is deterministic and within [0,1)', () => {
+    expect(hashRand(7)).toBe(hashRand(7));
+    for (let i = 0; i < 50; i++) {
+      const v = hashRand(i);
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThan(1);
+    }
+  });
+  it('varies across seeds', () => {
+    expect(hashRand(1)).not.toBe(hashRand(2));
+  });
+});
 
 describe('sampleGridBilinear', () => {
   // 2×2 grid: [0,10 / 20,30]

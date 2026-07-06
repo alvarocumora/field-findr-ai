@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Lot } from '@/hooks/useLots';
+import { Lot, useLots } from '@/hooks/useLots';
 
 const ParcelaDesigner3D = lazy(() =>
   import('@/components/parcela/ParcelaDesigner3D').then((m) => ({
@@ -40,9 +40,16 @@ export const LotDesigner3DDialog = ({
   onSave,
   savedDesign,
 }: LotDesigner3DDialogProps) => {
+  // Sibling lots of the same project → surrounding context in the 3D scene.
+  // Hook must run unconditionally; project_id is undefined when lot is null.
+  const { lots: projectLots } = useLots(lot?.project_id ?? undefined);
+
   if (!lot) return null;
 
   const polygon = lot.polygon as number[][] | null;
+  const neighbors = projectLots
+    .filter((l) => l.id !== lot.id && Array.isArray(l.polygon) && (l.polygon as number[][]).length >= 3)
+    .map((l) => l.polygon as number[][]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -74,6 +81,7 @@ export const LotDesigner3DDialog = ({
             <div className="h-full [&>div]:!h-full [&>div]:!rounded-none [&>div]:!border-0">
               <ParcelaDesigner3D
                 polygon={polygon}
+                neighbors={neighbors}
                 lotNumber={lot.lot_number}
                 lotArea={Number(lot.area)}
                 lotPrice={lot.price ?? undefined}

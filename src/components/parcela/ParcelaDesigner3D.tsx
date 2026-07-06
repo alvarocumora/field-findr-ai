@@ -19,6 +19,8 @@ import { Separator } from '@/components/ui/separator';
 
 interface ParcelaDesigner3DProps {
   polygon: number[][] | null;
+  /** Sibling lot rings ([lng,lat]) for surrounding context. */
+  neighbors?: number[][][];
   lotNumber: string;
   lotArea: number;
   lotPrice?: number;
@@ -187,7 +189,7 @@ const CameraController = ({
 };
 
 export const ParcelaDesigner3D = ({
-  polygon, lotNumber, lotArea, lotPrice, latitude, longitude, savedDesign, onSave,
+  polygon, neighbors, lotNumber, lotArea, lotPrice, latitude, longitude, savedDesign, onSave,
 }: ParcelaDesigner3DProps) => {
   const ps = useParcelaState();
   const { token: mapboxToken } = useMapboxToken();
@@ -427,6 +429,7 @@ export const ParcelaDesigner3D = ({
               <RealisticTerrain
                 ref={terrainRef}
                 polygon={polygon}
+                neighbors={neighbors}
                 latitude={latitude}
                 longitude={longitude}
                 mapboxToken={mapboxToken || ''}
