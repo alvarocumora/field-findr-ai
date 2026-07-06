@@ -213,14 +213,18 @@ serve(async (req) => {
     if (!mpResponse.ok) {
       const errorText = await mpResponse.text();
       console.error("MercadoPago error:", errorText);
-      
-      // Still return reservation, but without payment link
+
+      // Without a payment link the buyer can never pay, so keeping the
+      // reservation would block the lot for 48h for nothing. Cancel it and
+      // surface a real error the UI can act on.
+      await supabase
+        .from("reservations")
+        .update({ status: "cancelled" })
+        .eq("id", reservation.id);
+
       return new Response(
-        JSON.stringify({
-          reservation,
-          message: "Reservation created but payment link generation failed",
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "No pudimos generar el link de pago. Intenta nuevamente." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

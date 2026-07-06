@@ -1,10 +1,9 @@
-import { useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useReservation } from '@/hooks/useReservations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, MapPin, Calendar, Download, ArrowLeft, Loader2 } from 'lucide-react';
+import { CheckCircle, MapPin, Calendar, Download, ArrowLeft, Loader2, Clock, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -19,8 +18,12 @@ const formatPrice = (price: number) => {
 export default function ReservationSuccess() {
   const [searchParams] = useSearchParams();
   const reservationId = searchParams.get('reservation_id');
-  
-  const { data: reservation, isLoading, error } = useReservation(reservationId || '');
+
+  // MercadoPago redirects here the instant it approves, often before the
+  // webhook has marked the reservation as paid — poll until the DB confirms.
+  const { data: reservation, isLoading, error } = useReservation(reservationId || '', {
+    refetchWhilePending: true,
+  });
 
   if (isLoading) {
     return (
@@ -56,17 +59,63 @@ export default function ReservationSuccess() {
   const lot = reservation.lots as any;
   const project = lot?.projects;
 
+  // The URL only says MP redirected with "approved" — the source of truth is
+  // the reservation row, updated by the webhook.
+  const isPaid = reservation.status === 'paid' || reservation.status === 'converted';
+  const isProcessing = reservation.status === 'pending_payment';
+
+  if (!isPaid && !isProcessing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
+              <XCircle className="h-10 w-10 text-red-500" />
+            </div>
+            <CardTitle>Reserva no vigente</CardTitle>
+            <CardDescription>
+              Esta reserva fue cancelada o expiró. Si crees que es un error, contáctanos.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <Button asChild>
+              <Link to="/">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Volver al inicio
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex items-center justify-center p-4">
       <Card className="max-w-lg w-full">
         <CardHeader className="text-center pb-2">
-          <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-            <CheckCircle className="h-10 w-10 text-green-600" />
-          </div>
-          <CardTitle className="text-2xl">¡Reserva Confirmada!</CardTitle>
-          <CardDescription>
-            Tu seña ha sido procesada exitosamente
-          </CardDescription>
+          {isPaid ? (
+            <>
+              <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="h-10 w-10 text-green-600" />
+              </div>
+              <CardTitle className="text-2xl">¡Reserva Confirmada!</CardTitle>
+              <CardDescription>
+                Tu seña ha sido procesada exitosamente
+              </CardDescription>
+            </>
+          ) : (
+            <>
+              <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-amber-100 flex items-center justify-center">
+                <Clock className="h-10 w-10 text-amber-600 animate-pulse" />
+              </div>
+              <CardTitle className="text-2xl">Confirmando tu pago…</CardTitle>
+              <CardDescription>
+                MercadoPago aprobó el pago y estamos registrando tu reserva.
+                Esta página se actualiza sola.
+              </CardDescription>
+            </>
+          )}
         </CardHeader>
         
         <CardContent className="space-y-6">
@@ -90,7 +139,7 @@ export default function ReservationSuccess() {
             </div>
             
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Seña pagada</span>
+              <span className="text-sm text-muted-foreground">{isPaid ? 'Seña pagada' : 'Seña'}</span>
               <span className="font-bold text-primary text-lg">
                 {formatPrice(reservation.reservation_amount)}
               </span>

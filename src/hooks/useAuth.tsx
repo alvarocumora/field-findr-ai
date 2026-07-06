@@ -7,7 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, metadata?: { first_name?: string; last_name?: string; account_type?: string }) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, metadata?: { first_name?: string; last_name?: string; account_type?: string }) => Promise<{ session: Session | null; error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -42,15 +42,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signUp = async (email: string, password: string, metadata?: { first_name?: string; last_name?: string; account_type?: string }) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}/auth`,
         data: metadata
       }
     });
-    return { error };
+    // session === null with no error means email confirmation is required —
+    // callers must tell the user to check their inbox instead of "log in now".
+    return { session: data?.session ?? null, error };
   };
 
   const signOut = async () => {

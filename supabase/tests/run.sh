@@ -17,4 +17,7 @@ psql "$@" -d miglab -v ON_ERROR_STOP=1 \
   -f supabase/tests/stub_env.sql \
   -f supabase/migrations/20260705210000_loteo_sales_tools.sql \
   -f supabase/migrations/20260705220000_mark_commission_paid.sql \
-  -f supabase/tests/loteo_rpcs.test.sql
+  -f supabase/tests/loteo_rpcs.test.sql \
+  -f supabase/tests/stub_payments.sql \
+  -f supabase/migrations/20260706120000_payment_gateway_hardening.sql \
+  -f supabase/tests/payment_hardening.test.sql

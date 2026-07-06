@@ -87,6 +87,30 @@ const BuyerHome = () => {
           <p className="text-muted-foreground">Tu centro de búsqueda de terrenos</p>
         </div>
 
+        {/* First-run: nudge new buyers into the preference quiz. Before this,
+            /quiz was only discoverable via a footer link. */}
+        {profile && !profile.onboarding_completed && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="p-3 rounded-xl bg-primary/10 w-fit">
+                <Sparkles className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <p className="font-semibold text-foreground">Cuéntanos qué buscas</p>
+                <p className="text-sm text-muted-foreground">
+                  Responde 5 preguntas y personalizamos las recomendaciones de terrenos para ti.
+                </p>
+              </div>
+              <Button asChild className="gap-2 shrink-0">
+                <Link to="/quiz">
+                  Hacer el quiz
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Quick Actions */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
           {[

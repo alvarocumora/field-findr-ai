@@ -19,7 +19,7 @@ import { ListingFormDialog } from '@/components/listings/ListingFormDialog';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import { useNavigate } from 'react-router-dom';
 import { FolderKanban, Map, FileArchive, Sparkles } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import MorningBriefing from '@/components/dashboard/MorningBriefing';
@@ -28,8 +28,9 @@ import { es } from 'date-fns/locale';
 
 const DashboardAsesor = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile, isLoading: profileLoading } = useProfile();
   const { data: stats, isLoading: statsLoading } = useAgentStats();
   const { data: leads, isLoading: leadsLoading } = useAgentLeads();
   const { data: goals, isLoading: goalsLoading } = useAgentGoals();
@@ -102,6 +103,11 @@ const DashboardAsesor = () => {
   const unreadNotifs = notifications?.filter((n: any) => !n.read).slice(0, 3) || [];
 
   const hasNoProjects = !projectsLoading && projects.length === 0;
+  // Show the wizard only to agents who never finished onboarding — gating on
+  // project count alone re-onboarded anyone who skipped project creation,
+  // forever.
+  const needsOnboarding =
+    hasNoProjects && !profileLoading && !profile?.onboarding_completed;
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000000) return `$${(value / 1000000000).toFixed(1)}B`;
@@ -125,8 +131,17 @@ const DashboardAsesor = () => {
     );
   }
 
-  if (hasNoProjects) {
-    return <OnboardingWizard onComplete={() => window.location.reload()} />;
+  if (needsOnboarding) {
+    return (
+      <OnboardingWizard
+        onComplete={() => {
+          // Refresh instead of window.location.reload(): keeps the SPA alive
+          // and the invalidated profile (onboarding_completed) drops the gate.
+          queryClient.invalidateQueries({ queryKey: ['profile'] });
+          queryClient.invalidateQueries({ queryKey: ['projects'] });
+        }}
+      />
+    );
   }
 
   const statsConfig = [

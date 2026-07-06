@@ -86,9 +86,17 @@ export const useReservations = (projectId?: string) => {
   });
 };
 
-export const useReservation = (reservationId: string) => {
+export const useReservation = (
+  reservationId: string,
+  opts?: { refetchWhilePending?: boolean },
+) => {
   return useQuery({
     queryKey: ['reservation', reservationId],
+    // While the MP webhook confirms the payment the row is still
+    // pending_payment; the return pages poll until it settles.
+    refetchInterval: opts?.refetchWhilePending
+      ? (query) => ((query.state.data as { status?: string } | undefined)?.status === 'pending_payment' ? 4000 : false)
+      : undefined,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('reservations')
@@ -150,7 +158,18 @@ export const useCreateReservation = () => {
       });
 
       if (response.error) {
-        throw new Error(response.error.message || 'Error al crear la reserva');
+        // FunctionsHttpError hides the response body behind `context`; surface
+        // the server's message (e.g. "No pudimos generar el link de pago").
+        let message = 'Error al crear la reserva';
+        const ctx = (response.error as { context?: Response }).context;
+        if (ctx && typeof ctx.json === 'function') {
+          try {
+            message = (await ctx.json())?.error || message;
+          } catch {
+            // keep the generic message
+          }
+        }
+        throw new Error(message);
       }
 
       return response.data;
