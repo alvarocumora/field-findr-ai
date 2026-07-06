@@ -6,6 +6,7 @@ import ConceptRenderGallery from '@/components/property/ConceptRenderGallery';
 import TasacionTeno from '@/components/property/TasacionTeno';
 import PublishedTasacionBanner from '@/components/property/PublishedTasacionBanner';
 import ListingDesigner3DDialog from '@/components/property/ListingDesigner3DDialog';
+import BuyerToolsPanel from '@/components/property/BuyerToolsPanel';
 import { lazy, Suspense } from 'react';
 const TenoCinematicHero = lazy(() => import('@/components/property/teno-hero/TenoCinematicHero'));
 import { useParams, Link } from 'react-router-dom';
@@ -761,6 +762,12 @@ const PropertyDetail = () => {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Buyer tools: financing + investment calculators (client-side) */}
+            <BuyerToolsPanel
+              price={listing.currency === 'UF' ? Math.round(listing.price * 39500) : listing.price}
+              areaM2={listing.area_m2}
+            />
 
             {/* Contact Form */}
             <ContactForm listingId={listing.id} listingTitle={listing.title} listingOwnerId={listing.user_id} />

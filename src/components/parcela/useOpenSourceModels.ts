@@ -14,7 +14,11 @@ const REGISTRY = 'https://cdn.jsdelivr.net/gh/toxsam/open-source-3D-assets@main/
 
 // Collections that make sense on a rural/urban parcel (nature, park furniture,
 // structures, vehicles, props). Avatar/sci-fi/holiday sets are skipped.
-const RELEVANT_COLLECTIONS = ['pm-momuspark', 'pm-transit', 'pm-medieval-fair', 'pm-towers'];
+const RELEVANT_COLLECTIONS = [
+  'pm-momuspark', 'pm-transit', 'pm-medieval-fair', 'pm-towers',
+  // Added: rich in architecture / furniture / nature / lighting.
+  'pm-abm', 'pm-ca-world', 'pm-crystal-crossroads',
+];
 
 // Category attribute → Spanish filter group. Unlisted categories are dropped.
 const GROUP_MAP: Record<string, string> = {
