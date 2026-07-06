@@ -106,7 +106,7 @@ function snapToGrid(value: number, gridSize: number): number {
   return Math.round(value / gridSize) * gridSize;
 }
 
-function checkCollision(
+export function checkCollision(
   objects: PlacedObject[],
   newObj: PlacedObject,
   excludeId?: string
@@ -199,10 +199,20 @@ export const useParcelaState = () => {
 
   const updateObject = useCallback((id: string, updates: Partial<PlacedObject>) => {
     setState(prev => {
+      const obj = prev.objects.find(o => o.id === id);
+      if (!obj) return prev;
       pushUndo(prev.objects);
+      let merged = { ...obj, ...updates };
+      // Collision-aware: a position change that overlaps another object is
+      // rejected (rotation/scale from the same commit are still applied). This
+      // covers the transform gizmo, which committed straight through
+      // updateObject and previously ignored collisions entirely.
+      if (updates.position && checkCollision(prev.objects, merged, id)) {
+        merged = { ...merged, position: obj.position };
+      }
       return {
         ...prev,
-        objects: prev.objects.map(o => o.id === id ? { ...o, ...updates } : o),
+        objects: prev.objects.map(o => o.id === id ? merged : o),
       };
     });
   }, [pushUndo]);
