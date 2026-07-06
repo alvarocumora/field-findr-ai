@@ -6,7 +6,8 @@ import { Upload, Search, Box, Package, Trees } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { type ParcelaObjectType } from './useParcelaState';
-import { OPEN_SOURCE_MODELS, OPEN_SOURCE_LICENSE } from './openSourceModels';
+import { OPEN_SOURCE_LICENSE } from './openSourceModels';
+import { useOpenSourceModels } from './useOpenSourceModels';
 
 export interface GLBAsset {
   name: string;
@@ -78,7 +79,14 @@ const CATEGORIES = [
 export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, onAddPrimitive }: AssetCatalogProps) => {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  const [cc0Group, setCc0Group] = useState('all');
   const [uploading, setUploading] = useState(false);
+
+  // Dynamic CC0 library (loaded from the community registry via CDN); fetched
+  // only once the CC0/all tab is viewed, with the static list as fallback.
+  const cc0Enabled = activeCategory === 'cc0' || activeCategory === 'all';
+  const { data: cc0Models = [], isLoading: cc0Loading } = useOpenSourceModels(cc0Enabled);
+  const cc0Groups = Array.from(new Set(cc0Models.map((m) => m.group))).sort();
 
   const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -125,9 +133,11 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, on
     return true;
   });
 
-  // Curated CC0 GLB models — shown under "all" and their own "cc0" tab.
-  const filteredCC0 = OPEN_SOURCE_MODELS.filter(a => {
+  // CC0 GLB models (dynamic) — shown under "all" and their own "cc0" tab.
+  const filteredCC0 = cc0Models.filter(a => {
     if (activeCategory !== 'all' && activeCategory !== 'cc0') return false;
+    // The group sub-filter only applies inside the CC0 tab.
+    if (activeCategory === 'cc0' && cc0Group !== 'all' && a.group !== cc0Group) return false;
     if (search && !a.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -171,7 +181,29 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, on
         ))}
       </div>
 
+      {/* CC0 sub-group filter */}
+      {activeCategory === 'cc0' && cc0Groups.length > 1 && (
+        <div className="flex gap-0.5 px-1 flex-wrap">
+          {['all', ...cc0Groups].map((g) => (
+            <button
+              key={g}
+              onClick={() => setCc0Group(g)}
+              className={`px-1.5 py-0.5 rounded text-[9px] capitalize transition-colors ${
+                cc0Group === g ? 'bg-emerald-600 text-white' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              {g === 'all' ? 'Todos' : g}
+            </button>
+          ))}
+        </div>
+      )}
+
       <ScrollArea className="h-[140px]">
+        {activeCategory === 'cc0' && cc0Loading && (
+          <div className="flex items-center justify-center py-4 text-[10px] text-muted-foreground">
+            Cargando modelos CC0…
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-1 px-1">
           {/* Built-in primitives */}
           {filteredBuiltIn.map((asset) => (

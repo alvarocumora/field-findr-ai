@@ -19,12 +19,12 @@ export const OPEN_SOURCE_LICENSE = {
 
 const BASE = 'https://cdn.jsdelivr.net/gh/ToxSam/cc0-models-Polygonal-Mind@main/projects/MomusPark';
 
-interface CuratedModel extends GLBAsset {
-  /** Spanish display name shown in the catalog. */
+export interface CC0Model extends GLBAsset {
   name: string;
-  /** Sub-group for the CC0 tab (nature / furniture / wildlife). */
-  group: 'naturaleza' | 'mobiliario' | 'fauna';
+  /** Sub-group for the CC0 tab filter. */
+  group: string;
 }
+type CuratedModel = CC0Model & { group: 'naturaleza' | 'mobiliario' | 'fauna' };
 
 const model = (file: string, name: string, group: CuratedModel['group']): CuratedModel => ({
   name,
