@@ -64,7 +64,7 @@ export const useLots = (projectId?: string) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Lot[];
+      return (data ?? []) as unknown as Lot[];
     },
     enabled: !!projectId || !!user?.id,
   });
