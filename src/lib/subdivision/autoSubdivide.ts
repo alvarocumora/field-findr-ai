@@ -2,6 +2,7 @@
  * Auto-Subdivision Engine
  * Takes a polygon and parameters, returns an array of lot polygons with area calculations.
  */
+import { polygon as turfPolygon, intersect, featureCollection } from '@turf/turf';
 
 export interface SubdivisionParams {
   /** Minimum lot area in m² */
@@ -105,16 +106,59 @@ function pointInPolygon(point: [number, number], polygon: [number, number][]): b
 }
 
 /**
- * Clip a rectangle to the polygon boundary (simplified - returns rectangle if center is inside)
+ * Clip a rectangle to the polygon boundary via a real polygon intersection
+ * (turf). Coordinates are local planar meters, which turf treats as a
+ * cartesian plane — exactly what we want for a site-level layout. Returns the
+ * clipped ring (following the parcel edge for boundary lots) or null when the
+ * rectangle lies entirely outside. Falls back to the ray-cast heuristic if the
+ * intersection fails for degenerate input.
  */
 function clipRectToPolygon(
   rect: [number, number][],
   polygon: [number, number][]
 ): [number, number][] | null {
-  // Check if at least 3 corners are inside the polygon
-  const insideCount = rect.filter(p => pointInPolygon(p, polygon)).length;
-  if (insideCount >= 3) return rect;
-  return null;
+  const closeRing = (r: [number, number][]): [number, number][] => {
+    const first = r[0];
+    const last = r[r.length - 1];
+    return first[0] === last[0] && first[1] === last[1] ? r : [...r, first];
+  };
+
+  try {
+    const clipped = intersect(
+      featureCollection([
+        turfPolygon([closeRing(rect)]),
+        turfPolygon([closeRing(polygon)]),
+      ])
+    );
+    if (!clipped) return null;
+
+    const geom = clipped.geometry;
+    // Take the largest ring when the intersection is a MultiPolygon.
+    let ring: number[][];
+    if (geom.type === 'MultiPolygon') {
+      let best: number[][] = [];
+      let bestArea = 0;
+      for (const poly of geom.coordinates) {
+        const outer = poly[0] as [number, number][];
+        const a = polygonArea(outer);
+        if (a > bestArea) { bestArea = a; best = outer; }
+      }
+      ring = best;
+    } else {
+      ring = geom.coordinates[0];
+    }
+
+    // Drop the duplicate closing vertex turf adds.
+    const out = ring.map((p) => [p[0], p[1]] as [number, number]);
+    if (out.length > 1 && out[0][0] === out[out.length - 1][0] && out[0][1] === out[out.length - 1][1]) {
+      out.pop();
+    }
+    return out.length >= 3 ? out : null;
+  } catch {
+    // Degenerate geometry — fall back to the corner heuristic.
+    const insideCount = rect.filter((p) => pointInPolygon(p, polygon)).length;
+    return insideCount >= 3 ? rect : null;
+  }
 }
 
 /**
@@ -190,7 +234,10 @@ export function autoSubdivide(
   for (const side of sides) {
     const startOffset = halfRoad + 1; // 1m setback from road
     const cols = Math.floor(primaryLength / lotFrontage);
-    const rows = Math.floor((secondaryLength / 2 - startOffset) / lotDepth);
+    // Try at least one row: when a full-depth lot overflows the available
+    // depth, real clipping + the minimum-area filter keep only lots that still
+    // qualify, instead of silently yielding zero lots on modest parcels.
+    const rows = Math.max(1, Math.floor((secondaryLength / 2 - startOffset) / lotDepth));
 
     for (let col = 0; col < cols; col++) {
       for (let row = 0; row < rows; row++) {
@@ -226,12 +273,17 @@ export function autoSubdivide(
         if (clipped) {
           const area = polygonArea(clipped);
           if (area >= params.minLotArea * 0.8) { // Allow 20% tolerance
+            // Recompute frontage/depth from the actual clipped footprint —
+            // boundary lots are no longer full rectangles.
+            const cb = getBounds(clipped);
+            const frontage = isHorizontal ? cb.width : cb.height;
+            const depth = frontage > 0 ? area / frontage : lotDepth;
             lots.push({
               id: lotId++,
               polygon: clipped,
               area,
-              frontage: lotFrontage,
-              depth: lotDepth,
+              frontage,
+              depth,
             });
           }
         }

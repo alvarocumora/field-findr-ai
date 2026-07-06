@@ -66,6 +66,7 @@ const coreItems: NavItem[] = [
   { name: 'Proyectos', href: '/asesor/projects', icon: FolderKanban },
   { name: 'Lotes', href: '/asesor/lots', icon: Grid3X3 },
   { name: 'Control Loteo', href: '/asesor/loteos', icon: Gauge },
+  { name: 'Estudio de Loteo', href: '/asesor/subdivision', icon: Grid3X3 },
   { name: 'Reservas', href: '/asesor/reservations', icon: CalendarCheck },
   { name: 'Reportes', href: '/asesor/reports', icon: FileBarChart },
 ];
