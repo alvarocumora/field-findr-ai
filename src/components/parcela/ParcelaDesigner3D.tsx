@@ -303,6 +303,13 @@ export const ParcelaDesigner3D = ({
 
   const handleCapture = useCallback(() => { captureRef.current?.(); }, []);
 
+  const handleExportPdf = useCallback(async () => {
+    // jsPDF loads on demand so the designer chunk stays light.
+    const { downloadParcelaSitePlan } = await import('@/lib/parcelaSitePlanPdf');
+    downloadParcelaSitePlan({ lotNumber, lotArea, polygon, objects: ps.objects });
+    toast.success('Plano descargado');
+  }, [lotNumber, lotArea, polygon, ps.objects]);
+
   const handleRemoveSelected = useCallback(() => {
     if (ps.selectedId) ps.removeObject(ps.selectedId);
   }, [ps]);
@@ -354,6 +361,7 @@ export const ParcelaDesigner3D = ({
           onScale={ps.scaleSelected}
           onRemoveSelected={handleRemoveSelected}
           onCapture={handleCapture}
+          onExportPdf={handleExportPdf}
           onSave={handleSave}
           onReset={ps.resetAll}
           selectedId={ps.selectedId}
