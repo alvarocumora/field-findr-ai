@@ -25,7 +25,8 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, signIn, signUp, loading } = useAuth();
-  const { getRedirectPath, isLoading: rolesLoading } = useSmartRedirect();
+  const { getRedirectPath, isLoading: rolesLoading, roles, refetchRoles } = useSmartRedirect();
+  const [roleWaitTries, setRoleWaitTries] = useState(0);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -44,11 +45,21 @@ const Auth = () => {
   }, [defaultRole]);
 
   useEffect(() => {
-    if (user && !rolesLoading) {
-      const target = redirectParam || getRedirectPath();
-      navigate(target, { replace: true });
+    if (!user || rolesLoading) return;
+    // Right after signup the user_roles row is inserted by a DB trigger and
+    // may not be visible yet; redirecting with zero roles would send a fresh
+    // loteador to /explorar instead of their dashboard. Retry briefly before
+    // falling back to the role-less redirect.
+    if (roles.length === 0 && roleWaitTries < 4 && !redirectParam) {
+      const t = setTimeout(() => {
+        refetchRoles();
+        setRoleWaitTries((n) => n + 1);
+      }, 700);
+      return () => clearTimeout(t);
     }
-  }, [user, rolesLoading, redirectParam, navigate, getRedirectPath]);
+    const target = redirectParam || getRedirectPath();
+    navigate(target, { replace: true });
+  }, [user, rolesLoading, roles, roleWaitTries, redirectParam, navigate, getRedirectPath, refetchRoles]);
 
   const handleGoogleSignIn = async () => {
     setIsSubmitting(true);
@@ -96,7 +107,7 @@ const Auth = () => {
     setIsSubmitting(true);
     try {
       authSchema.parse({ email, password });
-      const { error } = await signUp(email, password, {
+      const { session, error } = await signUp(email, password, {
         first_name: firstName,
         last_name: lastName,
         account_type: accountType,
@@ -107,8 +118,12 @@ const Auth = () => {
         } else {
           toast.error(error.message);
         }
+      } else if (!session) {
+        // Email confirmation is enabled: there is no session yet, so telling
+        // the user "you can log in" would be false.
+        toast.success('¡Cuenta creada! Revisa tu email para confirmarla antes de ingresar.');
       } else {
-        toast.success('¡Cuenta creada! Ya puedes ingresar.');
+        toast.success('¡Cuenta creada! Bienvenido.');
       }
     } catch (err) {
       if (err instanceof z.ZodError) {

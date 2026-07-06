@@ -31,7 +31,7 @@ const LATAM_COUNTRIES = [
 
 const OnboardingWizard = ({ onComplete }: OnboardingWizardProps) => {
   const { user } = useAuth();
-  const { profile, updateProfile } = useProfile();
+  const { updateProfileAsync } = useProfile();
   const { createProject } = useProjects();
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,15 +81,17 @@ const OnboardingWizard = ({ onComplete }: OnboardingWizardProps) => {
     return 'enterprise';
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!user) return;
-    updateProfile({
-      phone,
-      first_name: profile?.first_name || companyName,
+    // The company name is NOT the person's first name — it lives in
+    // onboarding_data (profiles has no company column).
+    await updateProfileAsync({
+      phone: phone || null,
       onboarding_completed: true,
       onboarding_data: {
         country: selectedCountry,
         userType,
+        companyName,
         operatingRegion,
         estimatedUnits,
         completedAt: new Date().toISOString(),
@@ -127,8 +129,12 @@ const OnboardingWizard = ({ onComplete }: OnboardingWizardProps) => {
     }
   };
 
-  const handleSkipProject = () => {
-    handleSaveProfile();
+  const handleSkipProject = async () => {
+    try {
+      await handleSaveProfile();
+    } catch {
+      // toast already shown by the mutation; still let the user move on
+    }
     setStep(4);
   };
 
@@ -243,7 +249,7 @@ const OnboardingWizard = ({ onComplete }: OnboardingWizardProps) => {
                 <Button
                   onClick={() => {
                     if (userType === 'buyer') {
-                      handleSaveProfile();
+                      handleSaveProfile().catch(() => { /* toast shown by the mutation */ });
                       setStep(2); // Go to "Listo" for buyers
                     } else {
                       setStep(2); // Go to Profile for agents

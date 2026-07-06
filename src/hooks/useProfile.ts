@@ -96,6 +96,8 @@ export const useProfile = () => {
     isLoading,
     error,
     updateProfile: updateProfile.mutate,
+    // Awaitable variant for flows that must sequence on the save (onboarding).
+    updateProfileAsync: updateProfile.mutateAsync,
     isUpdating: updateProfile.isPending,
   };
 };

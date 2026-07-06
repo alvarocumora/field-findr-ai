@@ -1,11 +1,26 @@
-import { useSearchParams, Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useReservation } from '@/hooks/useReservations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, ArrowLeft, RefreshCw, Mail } from 'lucide-react';
+import { Clock, ArrowLeft, Mail } from 'lucide-react';
 
 export default function ReservationPending() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const reservationId = searchParams.get('reservation_id');
+
+  // Poll while the payment is in flight; the webhook flips the status to paid
+  // (card retries, transfers) and we move the buyer to the confirmation page.
+  const { data: reservation } = useReservation(reservationId || '', {
+    refetchWhilePending: true,
+  });
+
+  useEffect(() => {
+    if (reservation?.status === 'paid' || reservation?.status === 'converted') {
+      navigate(`/reserva/exito?reservation_id=${reservationId}`, { replace: true });
+    }
+  }, [reservation?.status, reservationId, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-yellow-500/5 to-background flex items-center justify-center p-4">

@@ -26,6 +26,7 @@ const ProjectExperience = lazy(() => import("@/pages/ProjectExperience"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const SubscriptionSuccess = lazy(() => import("@/pages/SubscriptionSuccess"));
 const SubscriptionFailure = lazy(() => import("@/pages/SubscriptionFailure"));
+const SubscriptionPending = lazy(() => import("@/pages/SubscriptionPending"));
 const ReservationSuccess = lazy(() => import("@/pages/ReservationSuccess"));
 const ReservationError = lazy(() => import("@/pages/ReservationError"));
 const ReservationPending = lazy(() => import("@/pages/ReservationPending"));
@@ -62,6 +63,7 @@ export const publicRoutes = [
   <Route key="reset-password" path="/reset-password" element={<ResetPassword />} />,
   <Route key="subscription-success" path="/subscription/success" element={<SubscriptionSuccess />} />,
   <Route key="subscription-failure" path="/subscription/failure" element={<SubscriptionFailure />} />,
+  <Route key="subscription-pending" path="/subscription/pending" element={<SubscriptionPending />} />,
   <Route key="reservation-success" path="/reserva/exito" element={<ReservationSuccess />} />,
   <Route key="reservation-error" path="/reserva/error" element={<ReservationError />} />,
   <Route key="reservation-pending" path="/reserva/pendiente" element={<ReservationPending />} />,

@@ -86,16 +86,23 @@ export const LotReservationDialog = ({
 
   const onSubmit = async (data: ReservationFormData) => {
     if (!lot) return;
-    
-    const result = await createReservation.mutateAsync({
-      lot_id: lot.id,
-      buyer_name: `${data.firstName} ${data.lastName}`,
-      buyer_email: data.email,
-      buyer_phone: data.phone,
-      buyer_rut: data.rut,
-      reservation_amount: reservationAmount,
-      notes: data.message,
-    });
+
+    let result;
+    try {
+      result = await createReservation.mutateAsync({
+        lot_id: lot.id,
+        buyer_name: `${data.firstName} ${data.lastName}`,
+        buyer_email: data.email,
+        buyer_phone: data.phone,
+        buyer_rut: data.rut,
+        reservation_amount: reservationAmount,
+        notes: data.message,
+      });
+    } catch {
+      // The hook already toasts the server error; keep the dialog open so the
+      // buyer can retry.
+      return;
+    }
 
     // If we got a payment URL, redirect to MercadoPago
     if (result.payment_url) {

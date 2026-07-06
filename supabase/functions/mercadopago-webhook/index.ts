@@ -11,6 +11,16 @@ const MERCADOPAGO_WEBHOOK_SECRET = Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+// Must stay aligned with PLANS in supabase/functions/mercadopago/index.ts.
+// Used only as a defense-in-depth amount assertion, never as the price source.
+const PLAN_PRICES: Record<string, number> = {
+  starter: 75000,
+  growth: 168750,
+  scale: 300000,
+  enterprise: 562500,
+  professional: 49990,
+};
+
 /**
  * Verify the MercadoPago webhook HMAC signature.
  * See https://www.mercadopago.com/developers/en/docs/your-integrations/notifications/webhooks
@@ -50,6 +60,27 @@ async function verifyMercadoPagoSignature(req: Request, dataId: string): Promise
   let diff = 0;
   for (let i = 0; i < computed.length; i++) diff |= computed.charCodeAt(i) ^ v1.charCodeAt(i);
   return diff === 0;
+}
+
+/**
+ * Record the MercadoPago payment exactly once. MP retries notifications, so the
+ * insert must be idempotent: `payments.mercadopago_payment_id` has a unique
+ * index and retries update the status of the existing row instead of inserting.
+ */
+// deno-lint-ignore no-explicit-any
+async function recordPayment(supabase: any, row: {
+  user_id?: string;
+  amount: number;
+  currency: string;
+  status: string;
+  mercadopago_payment_id: string;
+  mercadopago_preference_id?: string;
+  description: string;
+}) {
+  const { error } = await supabase
+    .from("payments")
+    .upsert(row, { onConflict: "mercadopago_payment_id" });
+  if (error) console.error("Failed to record payment:", error);
 }
 
 serve(async (req) => {
@@ -114,14 +145,14 @@ serve(async (req) => {
       console.log("Payment fetched:", JSON.stringify({ id: paymentId, status: payment.status }));
 
       // Parse external reference
-      let externalRef: { 
+      let externalRef: {
         type?: string;
-        user_id?: string; 
+        user_id?: string;
         plan_type?: string;
         reservation_id?: string;
         lot_id?: string;
       } | null = null;
-      
+
       try {
         externalRef = JSON.parse(payment.external_reference || "{}");
       } catch (e) {
@@ -140,27 +171,56 @@ serve(async (req) => {
 
       // Handle RESERVATION payments
       if (externalRef.type === "reservation" && externalRef.reservation_id) {
-        console.log("Processing reservation payment:", externalRef.reservation_id);
-        
-        if (payment.status === "approved") {
-          // Update reservation to paid
-          const { error: updateError } = await supabase
-            .from("reservations")
-            .update({
-              status: "paid",
-              mercadopago_payment_id: paymentId.toString(),
-              paid_at: new Date().toISOString(),
-            })
-            .eq("id", externalRef.reservation_id);
+        console.log("Processing reservation payment:", externalRef.reservation_id, "status:", payment.status);
 
-          if (updateError) {
-            console.error("Failed to update reservation:", updateError);
-          } else {
-            console.log("Reservation marked as paid:", externalRef.reservation_id);
+        const { data: reservation } = await supabase
+          .from("reservations")
+          .select("id, status, reservation_amount, expires_at")
+          .eq("id", externalRef.reservation_id)
+          .maybeSingle();
+
+        if (!reservation) {
+          console.error("Reservation not found for webhook:", externalRef.reservation_id);
+          // 200 so MercadoPago stops retrying a reference we will never resolve.
+          return new Response(JSON.stringify({ received: true, type: "reservation", ignored: "not_found" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
+        if (payment.status === "approved") {
+          // Defense-in-depth: the preference is built server-side, but never
+          // mark paid on an amount that doesn't match the reservation.
+          if (Number(payment.transaction_amount) !== Number(reservation.reservation_amount)) {
+            console.error("Amount mismatch on reservation payment", {
+              reservation_id: reservation.id,
+              expected: reservation.reservation_amount,
+              received: payment.transaction_amount,
+            });
+            return new Response(JSON.stringify({ received: true, type: "reservation", ignored: "amount_mismatch" }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
           }
 
-          // Record the payment
-          await supabase.from("payments").insert({
+          // Idempotent transition: only pending reservations move to paid.
+          if (reservation.status === "pending_payment") {
+            const { error: updateError } = await supabase
+              .from("reservations")
+              .update({
+                status: "paid",
+                mercadopago_payment_id: paymentId.toString(),
+                paid_at: new Date().toISOString(),
+              })
+              .eq("id", reservation.id)
+              .eq("status", "pending_payment");
+
+            if (updateError) {
+              console.error("Failed to update reservation:", updateError);
+            } else {
+              console.log("Reservation marked as paid:", reservation.id);
+            }
+          }
+
+          await recordPayment(supabase, {
             user_id: externalRef.user_id,
             amount: payment.transaction_amount,
             currency: payment.currency_id,
@@ -169,12 +229,46 @@ serve(async (req) => {
             mercadopago_preference_id: payment.preference_id,
             description: `Reserva de lote - ID: ${externalRef.lot_id}`
           });
+        } else if (payment.status === "in_process" || payment.status === "pending") {
+          // Money is in flight (bank transfer / cash point: 1-3 business days).
+          // Keep the reservation alive so it doesn't expire mid-payment.
+          if (reservation.status === "pending_payment") {
+            const extended = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
+            if (!reservation.expires_at || reservation.expires_at < extended) {
+              await supabase
+                .from("reservations")
+                .update({ expires_at: extended })
+                .eq("id", reservation.id)
+                .eq("status", "pending_payment");
+              console.log("Reservation expiry extended for in-flight payment:", reservation.id);
+            }
+          }
         } else if (payment.status === "rejected" || payment.status === "cancelled") {
-          // Mark reservation as cancelled if payment failed
+          // Mark reservation as cancelled if payment failed — but never knock
+          // down a reservation that another (approved) payment already paid.
           await supabase
             .from("reservations")
             .update({ status: "cancelled" })
-            .eq("id", externalRef.reservation_id);
+            .eq("id", reservation.id)
+            .eq("status", "pending_payment");
+        } else if (payment.status === "refunded" || payment.status === "charged_back") {
+          // Money came back: cancel the reservation. The DB trigger releases
+          // the lot (only while it's still 'reserved', never once sold).
+          await supabase
+            .from("reservations")
+            .update({ status: "cancelled" })
+            .eq("id", reservation.id)
+            .eq("status", "paid");
+
+          await recordPayment(supabase, {
+            user_id: externalRef.user_id,
+            amount: payment.transaction_amount,
+            currency: payment.currency_id,
+            status: payment.status,
+            mercadopago_payment_id: paymentId.toString(),
+            mercadopago_preference_id: payment.preference_id,
+            description: `Reserva de lote - ID: ${externalRef.lot_id}`
+          });
         }
 
         return new Response(JSON.stringify({ received: true, type: "reservation" }), {
@@ -184,8 +278,8 @@ serve(async (req) => {
 
       // Handle SUBSCRIPTION payments (existing logic)
       if (externalRef.user_id && externalRef.plan_type) {
-        // Record the payment
-        const { error: paymentError } = await supabase.from("payments").insert({
+        // Record the payment (idempotent — MP retries the same notification)
+        await recordPayment(supabase, {
           user_id: externalRef.user_id,
           amount: payment.transaction_amount,
           currency: payment.currency_id,
@@ -195,12 +289,31 @@ serve(async (req) => {
           description: `Suscripción ${externalRef.plan_type}`
         });
 
-        if (paymentError) {
-          console.error("Failed to record payment:", paymentError);
+        // Refund/chargeback: deactivate the subscription.
+        if (payment.status === "refunded" || payment.status === "charged_back") {
+          const { error: cancelError } = await supabase
+            .from("subscriptions")
+            .update({ status: "cancelled" })
+            .eq("user_id", externalRef.user_id);
+          if (cancelError) console.error("Failed to cancel subscription on refund:", cancelError);
         }
 
         // If payment approved, update or create subscription
         if (payment.status === "approved") {
+          // Defense-in-depth: the charged amount must match the plan price.
+          const expectedPrice = PLAN_PRICES[externalRef.plan_type];
+          if (expectedPrice !== undefined && Number(payment.transaction_amount) !== expectedPrice) {
+            console.error("Amount mismatch on subscription payment", {
+              user_id: externalRef.user_id,
+              plan_type: externalRef.plan_type,
+              expected: expectedPrice,
+              received: payment.transaction_amount,
+            });
+            return new Response(JSON.stringify({ received: true, ignored: "amount_mismatch" }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+
           const now = new Date();
           const periodEnd = new Date(now);
           periodEnd.setMonth(periodEnd.getMonth() + 1);

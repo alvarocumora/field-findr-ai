@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export const useSmartRedirect = () => {
   const { user } = useAuth();
-  const { data: roles = [], isLoading } = useUserRoles();
+  const { data: roles = [], isLoading, refetch: refetchRoles } = useUserRoles();
 
   const getRedirectPath = (fallback?: string): string => {
     if (!user) return '/auth';
@@ -28,5 +28,6 @@ export const useSmartRedirect = () => {
     isBuyer,
     isLoading,
     roles,
+    refetchRoles,
   };
 };
