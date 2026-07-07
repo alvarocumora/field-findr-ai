@@ -234,24 +234,53 @@ export function staticSatelliteUrl(lat: number, lng: number, planeSize: number, 
   );
 }
 
-async function loadStaticSatelliteTexture(
-  lat: number, lng: number, planeSize: number, token: string
-): Promise<{ texture: THREE.Texture; tilesLoaded: number; canvasDataUrl: string } | null> {
-  if (!token) return null;
+/**
+ * Esri World Imagery export — a single satellite image for the exact bbox, no
+ * API key, CORS-enabled. Used as a fallback when Mapbox has no token or fails.
+ */
+export function esriSatelliteUrl(lat: number, lng: number, planeSize: number): string {
+  const { minLng, minLat, maxLng, maxLat } = bboxForPlane(lat, lng, planeSize);
+  const px = 1024;
+  return (
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export' +
+    `?bbox=${minLng},${minLat},${maxLng},${maxLat}&bboxSR=4326&imageSR=4326` +
+    `&size=${px},${px}&format=jpg&f=image`
+  );
+}
 
-  const url = staticSatelliteUrl(lat, lng, planeSize, token);
+/** Ordered satellite providers: Mapbox first (if token), Esri as key-less fallback. */
+export function satelliteProviders(lat: number, lng: number, planeSize: number, token: string) {
+  const providers: { name: string; url: string }[] = [];
+  if (token) providers.push({ name: 'mapbox', url: staticSatelliteUrl(lat, lng, planeSize, token) });
+  providers.push({ name: 'esri', url: esriSatelliteUrl(lat, lng, planeSize) });
+  return providers;
+}
 
-  const img = await new Promise<HTMLImageElement | null>((resolve) => {
+const loadImage = (url: string): Promise<HTMLImageElement | null> =>
+  new Promise((resolve) => {
     const image = new Image();
     image.crossOrigin = 'anonymous';
     image.onload = () => resolve(image);
-    image.onerror = () => { console.warn('❌ Static satellite image failed'); resolve(null); };
+    image.onerror = () => resolve(null);
     image.src = url;
   });
+
+async function loadStaticSatelliteTexture(
+  lat: number, lng: number, planeSize: number, token: string
+): Promise<{ texture: THREE.Texture; tilesLoaded: number; canvasDataUrl: string; provider: string } | null> {
+  const providers = satelliteProviders(lat, lng, planeSize, token);
+
+  let img: HTMLImageElement | null = null;
+  let provider = '';
+  for (const p of providers) {
+    img = await loadImage(p.url);
+    if (img) { provider = p.name; break; }
+    console.warn(`❌ Satellite provider failed: ${p.name}`);
+  }
   if (!img) return null;
 
   // Draw onto a canvas so we can build a debug preview and control filtering.
-  const fallbackPx = 2048; // matches @2x of 1024 logical px
+  const fallbackPx = 2048;
   const canvas = document.createElement('canvas');
   canvas.width = img.naturalWidth || fallbackPx;
   canvas.height = img.naturalHeight || fallbackPx;
@@ -272,8 +301,8 @@ async function loadStaticSatelliteTexture(
   tex.magFilter = THREE.LinearFilter;
   tex.needsUpdate = true;
 
-  console.log('🛰️ Static satellite loaded:', { planeSize: Math.round(planeSize), url });
-  return { texture: tex, tilesLoaded: 1, canvasDataUrl };
+  console.log('🛰️ Static satellite loaded:', { planeSize: Math.round(planeSize), provider });
+  return { texture: tex, tilesLoaded: 1, canvasDataUrl, provider };
 }
 
 export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>(
@@ -304,11 +333,10 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
       }).catch(() => setHeightData(new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0)));
     }, [lat, lng, size, mapboxToken]);
 
-    // Load satellite texture (cropped approach)
+    // Load satellite texture (multi-provider: Mapbox → Esri fallback). Works
+    // even without a Mapbox token (Esri needs no key), so the ground still gets
+    // real imagery — only the elevation relief requires the Mapbox DEM.
     useEffect(() => {
-      // While the Mapbox token is still loading (empty string from the parent),
-      // stay in the "loading" state instead of flashing the error banner.
-      if (!mapboxToken) { onTextureLoading?.(true); return; }
       onTextureLoading?.(true);
       onTextureError?.(false);
       setTexture(null);
