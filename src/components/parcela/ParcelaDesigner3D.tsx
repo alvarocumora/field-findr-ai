@@ -29,6 +29,8 @@ interface ParcelaDesigner3DProps {
   longitude?: number;
   savedDesign?: string | null;
   onSave?: (designJson: string) => void;
+  /** Program the auto-design generator lays out. Defaults to residential. */
+  program?: 'residencial' | 'industrial';
 }
 
 function createTerrainShape(coords: [number, number][]): THREE.Shape {
@@ -193,6 +195,7 @@ const CameraController = ({
 
 export const ParcelaDesigner3D = ({
   polygon, neighbors, lotNumber, lotArea, lotPrice, latitude, longitude, savedDesign, onSave,
+  program = 'residencial',
 }: ParcelaDesigner3DProps) => {
   const ps = useParcelaState();
   const { token: mapboxToken } = useMapboxToken();
@@ -365,7 +368,7 @@ export const ParcelaDesigner3D = ({
       return;
     }
     const { generateParcelaDesign } = await import('@/lib/parcela/autoDesign');
-    const gen = generateParcelaDesign(norm.localCoords, { seed: autoSeedRef.current++ });
+    const gen = generateParcelaDesign(norm.localCoords, { seed: autoSeedRef.current++, program });
     if (gen.length === 0) {
       toast.error('El lote es demasiado pequeño para autogenerar');
       return;

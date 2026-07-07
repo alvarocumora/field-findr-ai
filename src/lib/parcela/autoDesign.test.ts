@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateParcelaDesign, polygonArea, pointInPolygon, mulberry32 } from './autoDesign';
+import { generateParcelaDesign, polygonArea, pointInPolygon, mulberry32, distanceToBoundary } from './autoDesign';
 import { OBJECT_CATALOG } from '@/components/parcela/useParcelaState';
 
 const rect = (w: number, h: number): [number, number][] => [
@@ -38,6 +38,21 @@ describe('mulberry32', () => {
     }
   });
 });
+
+describe('distanceToBoundary', () => {
+  const sq = rect(10, 10);
+  it('is the clearance to the nearest edge', () => {
+    expect(distanceToBoundary(0, 0, sq)).toBeCloseTo(5, 6);
+    expect(distanceToBoundary(4, 0, sq)).toBeCloseTo(1, 6);
+    expect(distanceToBoundary(0, -4.5, sq)).toBeCloseTo(0.5, 6);
+  });
+});
+
+// L-shaped lot (a big square with a bite taken out of one corner) exercises
+// the re-entrant edge that a bbox inset would miss.
+const lShape: [number, number][] = [
+  [-20, -20], [20, -20], [20, 0], [0, 0], [0, 20], [-20, 20],
+];
 
 describe('generateParcelaDesign', () => {
   it('returns nothing for a degenerate ring', () => {
@@ -94,5 +109,45 @@ describe('generateParcelaDesign', () => {
   it('gives a tiny lot a compact dwelling', () => {
     const tiny = generateParcelaDesign(rect(9, 11), { seed: 1 });
     expect(tiny.some((o) => o.type === 'tiny_house' || o.type === 'casa_50')).toBe(true);
+  });
+
+  it('keeps every piece clear of a re-entrant edge on an L-shaped lot', () => {
+    const design = generateParcelaDesign(lShape, { seed: 9 });
+    expect(design.length).toBeGreaterThan(2);
+    for (const o of design) {
+      const lx = o.position[0];
+      const ly = -o.position[2];
+      expect(pointInPolygon(lx, ly, lShape), `${o.type} inside`).toBe(true);
+      // fits() guarantees clearance ≥ r*0.85 + 0.8, so at minimum ≥ 1m from any edge
+      expect(distanceToBoundary(lx, ly, lShape), `${o.type} clearance`).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  describe('industrial program', () => {
+    const bigLot = rect(120, 90); // ~1 ha packing site
+
+    it('lays out a warehouse-centred facility', () => {
+      const design = generateParcelaDesign(bigLot, { seed: 1, program: 'industrial' });
+      expect(design.some((o) => o.type === 'galpon_packing')).toBe(true);
+      expect(design.some((o) => o.type === 'anden_carga')).toBe(true);
+      expect(design.some((o) => o.type === 'porteria')).toBe(true);
+      // no residential dwellings in an industrial layout
+      expect(design.some((o) => o.type.startsWith('casa') || o.type === 'tiny_house')).toBe(false);
+    });
+
+    it('places every industrial piece inside the lot with clearance', () => {
+      const design = generateParcelaDesign(bigLot, { seed: 2, program: 'industrial' });
+      for (const o of design) {
+        const lx = o.position[0];
+        const ly = -o.position[2];
+        expect(pointInPolygon(lx, ly, bigLot), `${o.type} inside`).toBe(true);
+      }
+    });
+
+    it('degrades to a compact facility when the lot is too small for a warehouse', () => {
+      const design = generateParcelaDesign(rect(24, 24), { seed: 1, program: 'industrial' });
+      expect(design.some((o) => o.type === 'galpon_packing')).toBe(false);
+      expect(design.length).toBeGreaterThan(0);
+    });
   });
 });

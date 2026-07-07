@@ -22,9 +22,13 @@ export interface GeneratedObject {
   scale: number;
 }
 
+export type AutoDesignProgram = 'residencial' | 'industrial';
+
 export interface AutoDesignOptions {
   /** Deterministic seed; same seed → same layout. */
   seed?: number;
+  /** Which program to lay out. Defaults to residential. */
+  program?: AutoDesignProgram;
 }
 
 type Ring = [number, number][];
@@ -36,6 +40,30 @@ export function polygonArea(ring: Ring): number {
     a += ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
   }
   return Math.abs(a) / 2;
+}
+
+/** Shortest distance from point (px,py) to segment a→b. */
+function pointToSegment(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len2 = dx * dx + dy * dy || 1;
+  let t = ((px - ax) * dx + (py - ay) * dy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
+/**
+ * Shortest distance from a point to the polygon boundary. Unlike a bounding-box
+ * inset this is correct for concave / L-shaped lots, so it's the real setback
+ * guard that keeps footprints off re-entrant edges.
+ */
+export function distanceToBoundary(x: number, y: number, ring: Ring): number {
+  let m = Infinity;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const d = pointToSegment(x, y, ring[j][0], ring[j][1], ring[i][0], ring[i][1]);
+    if (d < m) m = d;
+  }
+  return m;
 }
 
 /** Ray-casting point-in-polygon test. */
@@ -77,6 +105,37 @@ function bbox(ring: Ring) {
 
 const radiusOf = (t: ParcelaObjectType) => OBJECT_CATALOG[t]?.boundingRadius ?? 1.5;
 
+/**
+ * Scan a coarse grid for the interior point with the greatest clearance that
+ * still fits a footprint of radius `r` — i.e. the most open spot in the lot.
+ * Robust for irregular shapes where the centroid may be outside the polygon.
+ */
+function bestOpenSpot(ring: Ring, r: number): { x: number; y: number } | null {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const [x, y] of ring) {
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  const N = 14;
+  let best: { x: number; y: number; d: number } | null = null;
+  for (let i = 0; i <= N; i++) {
+    for (let j = 0; j <= N; j++) {
+      const x = minX + ((maxX - minX) * i) / N;
+      const y = minY + ((maxY - minY) * j) / N;
+      if (!pointInPolygon(x, y, ring)) continue;
+      const d = distanceToBoundary(x, y, ring);
+      if (d < r * 0.85 + 0.8) continue;
+      // prefer the most open spot; break ties toward the back (higher y)
+      if (!best || d > best.d + 1e-6 || (Math.abs(d - best.d) < 1e-6 && y > best.y)) {
+        best = { x, y, d };
+      }
+    }
+  }
+  return best ? { x: best.x, y: best.y } : null;
+}
+
 interface Item {
   type: ParcelaObjectType;
   lx: number;
@@ -107,16 +166,14 @@ export function generateParcelaDesign(localCoords: Ring, opts: AutoDesignOptions
 
   const items: Item[] = [];
 
-  /** Is a footprint of radius `r` centered at (x,y) fully inside the setback? */
+  /**
+   * Does a footprint of radius `r` centered at (x,y) sit inside the lot with a
+   * real clearance from every edge? Using the true distance-to-boundary (not a
+   * bbox inset) keeps pieces off re-entrant edges on irregular / L-shaped lots.
+   */
   const fits = (x: number, y: number, r: number): boolean => {
     if (!pointInPolygon(x, y, ring)) return false;
-    const rr = Math.min(r, 3) * 0.75;
-    return (
-      pointInPolygon(x + rr, y + rr, ring) &&
-      pointInPolygon(x + rr, y - rr, ring) &&
-      pointInPolygon(x - rr, y + rr, ring) &&
-      pointInPolygon(x - rr, y - rr, ring)
-    );
+    return distanceToBoundary(x, y, ring) >= r * 0.85 + 0.8;
   };
 
   const tryPlace = (type: ParcelaObjectType, x: number, y: number, rotation = 0, scale = 1): boolean => {
@@ -128,6 +185,55 @@ export function generateParcelaDesign(localCoords: Ring, opts: AutoDesignOptions
     items.push({ type, lx: x, ly: y, rotation, scale, r });
     return true;
   };
+
+  const toWorld = (): GeneratedObject[] =>
+    items.map((it) => ({
+      type: it.type,
+      position: [it.lx, 0.02, -it.ly] as [number, number, number],
+      rotation: it.rotation,
+      scale: it.scale,
+    }));
+
+  // ── Industrial / packing program ─────────────────────────
+  if (opts.program === 'industrial') {
+    const galpY = clamp(cy + spanY * 0.1, minY, maxY);
+    let g = tryPlace('galpon_packing', cx, galpY) ? items[items.length - 1] : undefined;
+    if (!g) g = tryPlace('galpon_packing', cx, cy) ? items[items.length - 1] : undefined;
+
+    if (g) {
+      // Cold room + offices flanking the warehouse
+      tryPlace('camara_frio', g.lx + g.r + 11, g.ly);
+      tryPlace('oficinas_industrial', g.lx - g.r - 9, g.ly - 4);
+      tryPlace('bodega', g.lx - g.r - 9, g.ly + 8);
+      // Loading dock, truck maneuver + parking in the front apron (toward −y)
+      tryPlace('anden_carga', g.lx, g.ly - g.r - 9);
+      tryPlace('area_maniobras', g.lx, g.ly - g.r - 24);
+      tryPlace('estacionamiento_camiones', g.lx - 16, g.ly - g.r - 22);
+      // Weighbridge + gatehouse at the entrance
+      tryPlace('bascula', g.lx + 14, minY + setback + 14);
+      tryPlace('porteria', g.lx, minY + setback + 3);
+      // A small solar field along the east edge
+      for (let i = 0; i < 6; i++) {
+        tryPlace('panel_solar', g.lx + g.r + 8 + (i % 3) * 4, g.ly + 8 + Math.floor(i / 3) * 4);
+      }
+    } else {
+      // Lot too small for a warehouse — place a compact facility instead
+      tryPlace('oficinas_industrial', cx, cy);
+      tryPlace('estacionamiento_camiones', cx, cy - 12);
+      tryPlace('porteria', cx, minY + setback + 3);
+      tryPlace('bodega', cx + 8, cy);
+    }
+
+    // Sparse perimeter landscaping
+    const trees: ParcelaObjectType[] = ['arbol_pino', 'arbusto'];
+    for (let attempt = 0, placed = 0; attempt < 40 && placed < 6; attempt++) {
+      const x = minX + setback + rng() * (spanX - 2 * setback);
+      const y = minY + setback + rng() * (spanY - 2 * setback);
+      if (tryPlace(trees[Math.floor(rng() * trees.length)], x, y, rng() * Math.PI * 2)) placed++;
+    }
+
+    return toWorld();
+  }
 
   // ── House ────────────────────────────────────────────────
   let houseType: ParcelaObjectType;
@@ -142,7 +248,16 @@ export function generateParcelaDesign(localCoords: Ring, opts: AutoDesignOptions
   const houseY = clamp(cy + spanY * 0.16, minY + setback + houseR, maxY - setback - houseR);
   let hasHouse = tryPlace(houseType, houseX, houseY, 0);
   if (!hasHouse) hasHouse = tryPlace(houseType, cx, cy, 0);
-  if (!hasHouse) hasHouse = tryPlace('tiny_house', cx, cy, 0);
+  // Irregular / L-shaped lots: fall back to the most open interior spot so a
+  // house is still placed even when the centroid lands on a re-entrant corner.
+  if (!hasHouse) {
+    const spot = bestOpenSpot(ring, houseR);
+    if (spot) hasHouse = tryPlace(houseType, spot.x, spot.y, 0);
+  }
+  if (!hasHouse) {
+    const spot = bestOpenSpot(ring, radiusOf('tiny_house'));
+    if (spot) hasHouse = tryPlace('tiny_house', spot.x, spot.y, 0);
+  }
   const house = items[0];
 
   // ── Front-yard access (toward −y) ────────────────────────
@@ -171,7 +286,7 @@ export function generateParcelaDesign(localCoords: Ring, opts: AutoDesignOptions
   }
   if (area > 900) {
     tryPlace('invernadero', minX + setback + 2.5, maxY - setback - 7, 0);
-    tryPlace('pergola', house.lx - house.r - 3, house.ly + 3, 0);
+    if (house) tryPlace('pergola', house.lx - house.r - 3, house.ly + 3, 0);
   }
 
   // ── Trees & shrubs scattered inside the setback ──────────
@@ -192,10 +307,5 @@ export function generateParcelaDesign(localCoords: Ring, opts: AutoDesignOptions
     tryPlace('cesped', x, y, 0);
   }
 
-  return items.map((it) => ({
-    type: it.type,
-    position: [it.lx, 0.02, -it.ly] as [number, number, number],
-    rotation: it.rotation,
-    scale: it.scale,
-  }));
+  return toWorld();
 }

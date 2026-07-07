@@ -22,12 +22,13 @@ interface Props {
   lat?: number | null;
   lng?: number | null;
   price?: number | null;
+  program?: 'residencial' | 'industrial';
 }
 
 const STORAGE_KEY = (id: string) => `listing-design-${id}`;
 
 const ListingDesigner3DDialog = ({
-  open, onOpenChange, listingId, title, polygon, area_m2, lat, lng, price,
+  open, onOpenChange, listingId, title, polygon, area_m2, lat, lng, price, program = 'industrial',
 }: Props) => {
   const { user } = useAuth();
   const [savedDesign, setSavedDesign] = useState<string | null>(null);
@@ -133,6 +134,7 @@ const ListingDesigner3DDialog = ({
                   longitude={lng ?? undefined}
                   savedDesign={savedDesign}
                   onSave={handleSave}
+                  program={program}
                 />
               </div>
             </Suspense>
