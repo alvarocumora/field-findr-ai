@@ -178,6 +178,17 @@ const PublishForm = () => {
       return;
     }
 
+    if (!planLimits.canCreateListing) {
+      toast({
+        title: "Límite de plan alcanzado",
+        description: `Tu plan ${planLimits.planDetails.name} permite ${planLimits.listings.limit} publicaciones. Mejora tu plan para publicar más.`,
+        variant: "destructive",
+      });
+      navigate('/pricing');
+      return;
+    }
+
+
     try {
       const countryConfig = getCountryConfig(formData.country);
       await createListing.mutateAsync({
