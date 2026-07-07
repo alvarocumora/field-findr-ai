@@ -1445,6 +1445,48 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_designs: {
+        Row: {
+          area: number | null
+          created_at: string
+          created_by: string | null
+          design_json: Json
+          id: string
+          latitude: number | null
+          longitude: number | null
+          lot_number: string | null
+          polygon: Json | null
+          title: string | null
+          token: string
+        }
+        Insert: {
+          area?: number | null
+          created_at?: string
+          created_by?: string | null
+          design_json: Json
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          lot_number?: string | null
+          polygon?: Json | null
+          title?: string | null
+          token?: string
+        }
+        Update: {
+          area?: number | null
+          created_at?: string
+          created_by?: string | null
+          design_json?: Json
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          lot_number?: string | null
+          polygon?: Json | null
+          title?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean | null
@@ -1902,6 +1944,21 @@ export type Database = {
           tasador_nombre: string
           valor_clp: number
           valor_uf: number
+        }[]
+      }
+      get_shared_design: {
+        Args: { p_token: string }
+        Returns: {
+          area: number
+          created_at: string
+          design_json: Json
+          id: string
+          latitude: number
+          longitude: number
+          lot_number: string
+          polygon: Json
+          title: string
+          token: string
         }[]
       }
       has_role: {
