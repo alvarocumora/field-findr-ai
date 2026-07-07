@@ -276,27 +276,41 @@ export interface RegisterSaleData {
   saleAmount: number;
   commissionRate?: number | null;
   notes?: string | null;
+  /** Optional: link the sale to a specific lead so referral splits are inherited. */
+  leadId?: string | null;
+  /** Optional: referring broker who brought the client, if not resolved via leadId. */
+  referringAgentId?: string | null;
+  /** Referral split (% of the total commission) paid to the referring broker. */
+  referralRate?: number | null;
 }
 
 /**
  * Atomic reservation → sale conversion: marks the reservation converted (the
  * DB trigger sets the lot sold + sale_date), records the final negotiated
  * price on the lot, and creates the agent commission when a rate is given.
+ * If a leadId with a referring_agent is provided, a referral split is added.
  */
 export const useRegisterSale = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ reservationId, saleAmount, commissionRate, notes }: RegisterSaleData) => {
+    mutationFn: async ({
+      reservationId, saleAmount, commissionRate, notes,
+      leadId, referringAgentId, referralRate,
+    }: RegisterSaleData) => {
       const { data, error } = await (supabase.rpc as CallableFunction)('register_sale', {
         p_reservation_id: reservationId,
         p_sale_amount: saleAmount,
         p_commission_rate: commissionRate ?? null,
         p_notes: notes ?? null,
+        p_referring_agent_id: referringAgentId ?? null,
+        p_referral_rate: referralRate ?? null,
+        p_lead_id: leadId ?? null,
       });
       if (error) throw error;
       return data as string | null; // commission id (null when no commission)
     },
+
     onSuccess: (_commissionId, { commissionRate }) => {
       queryClient.invalidateQueries({ queryKey: ['reservations'] });
       queryClient.invalidateQueries({ queryKey: ['lots'] });
