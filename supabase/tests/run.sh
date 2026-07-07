@@ -25,3 +25,7 @@ psql "$@" -d miglab -v ON_ERROR_STOP=1 \
 # Lots public-read contract (RLS + column grants) — self-contained on its own DB.
 psql "$@" -c "DROP DATABASE IF EXISTS lotslab;" -c "CREATE DATABASE lotslab;"
 psql "$@" -d lotslab -v ON_ERROR_STOP=1 -f supabase/tests/lots_public_read.test.sql
+
+# Shared designs (RLS + public token RPC) — self-contained on its own DB.
+psql "$@" -c "DROP DATABASE IF EXISTS sdlab;" -c "CREATE DATABASE sdlab;"
+psql "$@" -d sdlab -v ON_ERROR_STOP=1 -f supabase/tests/shared_designs.test.sql

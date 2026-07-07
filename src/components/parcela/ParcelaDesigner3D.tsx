@@ -312,6 +312,21 @@ export const ParcelaDesigner3D = ({
     toast.success('Plano descargado');
   }, [lotNumber, lotArea, polygon, ps.objects]);
 
+  const handleShare = useCallback(async () => {
+    try {
+      const { createSharedDesign, shareLink } = await import('@/lib/shareDesignAction');
+      const token = await createSharedDesign({
+        designJson: ps.toJSON(),
+        polygon, lotNumber, area: lotArea, latitude, longitude,
+      });
+      const link = shareLink(token);
+      try { await navigator.clipboard.writeText(link); } catch { /* clipboard may be blocked */ }
+      toast.success('Enlace copiado', { description: link });
+    } catch (e) {
+      toast.error('No se pudo compartir', { description: e instanceof Error ? e.message : undefined });
+    }
+  }, [ps, polygon, lotNumber, lotArea, latitude, longitude]);
+
   const handleRemoveSelected = useCallback(() => {
     if (ps.selectedId) ps.removeObject(ps.selectedId);
   }, [ps]);
@@ -364,6 +379,7 @@ export const ParcelaDesigner3D = ({
           onRemoveSelected={handleRemoveSelected}
           onCapture={handleCapture}
           onExportPdf={handleExportPdf}
+          onShare={handleShare}
           onSave={handleSave}
           onReset={ps.resetAll}
           selectedId={ps.selectedId}
