@@ -91,6 +91,8 @@ const PropertyDetail = () => {
   const designerPolygon = isTeno ? TENO_POLYGON : null;
   // Permisos: visible solo si el listing está activo/aprobado, o si lo ve su dueño (cualquier estado)
   const isListingOwner = !!user && !!listing && listing.user_id === user.id;
+  const isAgent = useIsAgent();
+  const canReferLead = !!user && !!listing && isAgent && !isListingOwner;
   const isListingPublished = listing?.status === 'active';
   const { data: approval } = useListingApproval(isListingOwner ? listing?.id : undefined);
   const showPackingDesigner =
