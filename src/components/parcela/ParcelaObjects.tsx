@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import type { ParcelaObjectType, PlacedObject } from './useParcelaState';
 
 interface ObjectProps {
@@ -34,7 +34,7 @@ export const MAT = {
 
 // ─── VIVIENDA ───────────────────────────────────────────
 
-/** Triangular-prism gable roof (ridge runs along Z). */
+/** Triangular-prism gable roof (ridge runs along X). */
 const GableRoof = ({ w, h, d, y, mat }: { w: number; h: number; d: number; y: number; mat: object }) => (
   <mesh position={[0, y, 0]} rotation={[Math.PI / 2, 0, Math.PI / 2]} castShadow>
     {/* 3-sided cylinder = triangular prism; length along its local axis = w */}
@@ -43,61 +43,239 @@ const GableRoof = ({ w, h, d, y, mat }: { w: number; h: number; d: number; y: nu
   </mesh>
 );
 
-const House = ({ size, color }: { size: number; color: string }) => {
-  const w = size;
-  const d = size * 1.2;
-  const h = size * 0.6;
+/**
+ * Proper two-slope (gable) roof with eave overhang, ridge cap and filled
+ * triangular gable ends. Ridge runs along Z; slopes shed water toward ±X.
+ * Far more believable than a single triangular prism because it has real
+ * overhangs and thin fascia rather than a fat solid wedge.
+ */
+const PitchedRoof = ({
+  w,
+  d,
+  rise,
+  y,
+  ov = 0.28,
+  mat,
+  gableMat,
+}: {
+  w: number;
+  d: number;
+  rise: number;
+  y: number;
+  ov?: number;
+  mat: object;
+  gableMat?: object;
+}) => {
+  const sx = w / 2 + ov;
+  const slant = Math.hypot(sx, rise);
+  const angle = Math.atan2(rise, sx);
+  const len = d + 2 * ov;
+  const tri = useMemo(() => {
+    const s = new THREE.Shape();
+    s.moveTo(-w / 2, 0);
+    s.lineTo(w / 2, 0);
+    s.lineTo(0, rise);
+    s.closePath();
+    return new THREE.ShapeGeometry(s);
+  }, [w, rise]);
+  return (
+    <group position={[0, y, 0]}>
+      {/* two roof planes */}
+      <mesh position={[sx / 2, rise / 2, 0]} rotation={[0, 0, -angle]} castShadow>
+        <boxGeometry args={[slant, 0.09, len]} />
+        <meshStandardMaterial {...mat} />
+      </mesh>
+      <mesh position={[-sx / 2, rise / 2, 0]} rotation={[0, 0, angle]} castShadow>
+        <boxGeometry args={[slant, 0.09, len]} />
+        <meshStandardMaterial {...mat} />
+      </mesh>
+      {/* ridge cap */}
+      <mesh position={[0, rise + 0.03, 0]} castShadow>
+        <boxGeometry args={[0.14, 0.09, len]} />
+        <meshStandardMaterial {...mat} />
+      </mesh>
+      {/* filled triangular gable ends */}
+      {gableMat &&
+        [d / 2, -d / 2].map((z, i) => (
+          <mesh key={i} geometry={tri} position={[0, 0, z]} rotation={[0, i === 0 ? 0 : Math.PI, 0]}>
+            <meshStandardMaterial {...gableMat} side={THREE.DoubleSide} />
+          </mesh>
+        ))}
+    </group>
+  );
+};
+
+/**
+ * Framed glass window (faces +Z). A recessed cool interior + a semi-opaque
+ * blue glass pane so it reads as glazing even without an HDRI environment,
+ * a border frame (four bars, not a solid backing) and a mullion cross.
+ */
+const Window = ({ w, h, frame = MAT.darkMetal }: { w: number; h: number; frame?: object }) => {
+  const bars: [number, number, number, number][] = [
+    [0, h / 2, w + 0.08, 0.06],
+    [0, -h / 2, w + 0.08, 0.06],
+    [-w / 2, 0, 0.06, h],
+    [w / 2, 0, 0.06, h],
+  ];
   return (
     <group>
-      <mesh position={[0, h / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[w, h, d]} />
-        <meshStandardMaterial color={color} roughness={0.9} metalness={0} />
+      {/* recessed interior (dark, cool) */}
+      <mesh position={[0, 0, -0.05]}>
+        <planeGeometry args={[w, h]} />
+        <meshStandardMaterial color="#2b3742" roughness={0.6} metalness={0.1} />
       </mesh>
-      {/* Gable roof (overhangs the walls slightly) */}
-      <GableRoof w={w * 1.05} h={size * 0.32} d={d} y={h + size * 0.02} mat={MAT.roofTile} />
-      {/* Door */}
-      <mesh position={[0, h * 0.25, d / 2 + 0.01]}>
-        <planeGeometry args={[w * 0.2, h * 0.5]} />
-        <meshStandardMaterial {...MAT.woodDark} />
+      {/* glass pane */}
+      <mesh position={[0, 0, -0.01]}>
+        <planeGeometry args={[w, h]} />
+        <meshStandardMaterial color="#aed6ee" roughness={0.08} metalness={0.25} transparent opacity={0.55} />
       </mesh>
-      {/* Windows (glass) */}
-      {[[-w * 0.25, h * 0.55], [w * 0.25, h * 0.55]].map(([x, y], i) => (
-        <mesh key={i} position={[x, y, d / 2 + 0.01]}>
-          <planeGeometry args={[w * 0.12, h * 0.25]} />
-          <meshStandardMaterial {...MAT.glass} />
+      {/* border frame */}
+      {bars.map(([x, y, bw, bh], i) => (
+        <mesh key={i} position={[x, y, 0.01]}>
+          <boxGeometry args={[bw, bh, 0.06]} />
+          <meshStandardMaterial {...frame} />
         </mesh>
       ))}
+      {/* mullion */}
+      <mesh position={[0, 0, 0.005]}>
+        <boxGeometry args={[0.035, h, 0.03]} />
+        <meshStandardMaterial {...frame} />
+      </mesh>
+    </group>
+  );
+};
+
+/** Panelled door with frame + handle (faces +Z). Centred on origin. */
+const Door = ({ w = 0.9, h = 2, mat = MAT.woodDark }: { w?: number; h?: number; mat?: object }) => (
+  <group>
+    <mesh position={[0, 0, -0.02]}>
+      <boxGeometry args={[w + 0.14, h + 0.14, 0.05]} />
+      <meshStandardMaterial {...MAT.stone} />
+    </mesh>
+    <mesh>
+      <boxGeometry args={[w, h, 0.07]} />
+      <meshStandardMaterial {...mat} />
+    </mesh>
+    <mesh position={[w * 0.32, 0, 0.06]}>
+      <sphereGeometry args={[0.05, 10, 10]} />
+      <meshStandardMaterial {...MAT.metal} />
+    </mesh>
+  </group>
+);
+
+const House = ({ size, color }: { size: number; color: string }) => {
+  const w = size * 1.7;
+  const d = size * 2.1;
+  const h = size * 0.9;
+  const rise = size * 0.6;
+  const base = 0.16;
+  const wallMat = { color, roughness: 0.9, metalness: 0 };
+  return (
+    <group>
+      {/* foundation plinth */}
+      <mesh position={[0, base / 2, 0]} receiveShadow castShadow>
+        <boxGeometry args={[w + 0.25, base, d + 0.25]} />
+        <meshStandardMaterial {...MAT.concrete} />
+      </mesh>
+      {/* walls */}
+      <mesh position={[0, base + h / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, h, d]} />
+        <meshStandardMaterial {...wallMat} />
+      </mesh>
+      {/* gable roof with overhang + filled gable ends */}
+      <PitchedRoof w={w} d={d} rise={rise} y={base + h} ov={0.3} mat={MAT.roofTile} gableMat={wallMat} />
+      {/* front door */}
+      <group position={[0, base + h * 0.31, d / 2 + 0.03]}>
+        <Door w={size * 0.36} h={h * 0.62} />
+      </group>
+      {/* small canopy over the door */}
+      <mesh position={[0, base + h * 0.66, d / 2 + 0.26]} castShadow>
+        <boxGeometry args={[size * 0.62, 0.06, 0.5]} />
+        <meshStandardMaterial {...MAT.roofDark} />
+      </mesh>
+      {/* front windows either side of the door */}
+      {[-1, 1].map((sx) => (
+        <group key={`f${sx}`} position={[sx * w * 0.3, base + h * 0.58, d / 2 + 0.02]}>
+          <Window w={size * 0.42} h={h * 0.42} />
+        </group>
+      ))}
+      {/* side windows */}
+      {[-1, 1].map((sx) => (
+        <group
+          key={`s${sx}`}
+          position={[sx * (w / 2 + 0.02), base + h * 0.58, 0]}
+          rotation={[0, (sx * Math.PI) / 2, 0]}
+        >
+          <Window w={size * 0.55} h={h * 0.42} />
+        </group>
+      ))}
+      {/* brick chimney */}
+      <mesh position={[w * 0.28, base + h + rise * 0.75, -d * 0.12]} castShadow>
+        <boxGeometry args={[0.34, rise * 1.2, 0.34]} />
+        <meshStandardMaterial {...MAT.stone} />
+      </mesh>
     </group>
   );
 };
 
 const ModernHouse = () => {
+  const base = 0.18;
   return (
     <group>
-      {/* Main body - flat roof */}
-      <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
-        <boxGeometry args={[5, 3, 4]} />
-        <meshStandardMaterial {...MAT.plasterLight} />
-      </mesh>
-      {/* Roof slab */}
-      <mesh position={[0, 3.05, 0]} castShadow>
-        <boxGeometry args={[5.4, 0.1, 4.4]} />
-        <meshStandardMaterial {...MAT.roofDark} />
-      </mesh>
-      {/* Second floor offset */}
-      <mesh position={[1.5, 1.5, -0.8]} castShadow receiveShadow>
-        <boxGeometry args={[2.5, 3, 2]} />
+      {/* foundation slab */}
+      <mesh position={[0, base / 2, 0]} receiveShadow castShadow>
+        <boxGeometry args={[6.4, base, 5]} />
         <meshStandardMaterial {...MAT.concrete} />
       </mesh>
-      {/* Large windows */}
-      <mesh position={[0, 1.5, 2.01]}>
-        <planeGeometry args={[3.5, 2.2]} />
-        <meshStandardMaterial {...MAT.glass} />
+      {/* ground floor — white plaster volume */}
+      <mesh position={[0, base + 1.6, 0]} castShadow receiveShadow>
+        <boxGeometry args={[6, 3.2, 4.6]} />
+        <meshStandardMaterial {...MAT.plasterLight} />
       </mesh>
-      {/* Garage */}
-      <mesh position={[-1.8, 0.8, 2.01]}>
-        <planeGeometry args={[1.2, 1.6]} />
+      {/* flat-roof parapet cap over the ground floor */}
+      <mesh position={[0, base + 3.26, 0]} castShadow>
+        <boxGeometry args={[6.2, 0.12, 4.8]} />
+        <meshStandardMaterial {...MAT.roofDark} />
+      </mesh>
+      {/* cantilevered upper floor — dark, offset back and to one side */}
+      <mesh position={[-0.9, base + 4.45, -0.3]} castShadow receiveShadow>
+        <boxGeometry args={[4.2, 2.7, 4]} />
         <meshStandardMaterial {...MAT.darkMetal} />
+      </mesh>
+      <mesh position={[-0.9, base + 5.86, -0.3]} castShadow>
+        <boxGeometry args={[4.4, 0.12, 4.2]} />
+        <meshStandardMaterial {...MAT.roofDark} />
+      </mesh>
+      {/* vertical wood-slat accent running up the façade */}
+      <mesh position={[2.65, base + 2.4, 2.35]} castShadow>
+        <boxGeometry args={[0.7, 4.6, 0.1]} />
+        <meshStandardMaterial {...MAT.wood} />
+      </mesh>
+      {/* floor-to-ceiling glazing on the ground floor */}
+      <group position={[0.5, base + 1.5, 2.32]}>
+        <Window w={3.4} h={2.6} frame={MAT.darkMetal} />
+      </group>
+      {/* window band on the upper floor */}
+      <group position={[-0.9, base + 4.55, 1.72]}>
+        <Window w={3.2} h={1.5} frame={MAT.metal} />
+      </group>
+      {/* entry door */}
+      <group position={[-2.2, base + 1.1, 2.32]}>
+        <Door w={1} h={2.2} mat={MAT.darkMetal} />
+      </group>
+      {/* entry canopy */}
+      <mesh position={[-2.2, base + 2.35, 2.75]} castShadow>
+        <boxGeometry args={[1.7, 0.1, 1] } />
+        <meshStandardMaterial {...MAT.roofDark} />
+      </mesh>
+      {/* upper-floor balcony slab + glass railing */}
+      <mesh position={[-0.9, base + 3.38, 2.35]} castShadow receiveShadow>
+        <boxGeometry args={[4.2, 0.12, 1.4]} />
+        <meshStandardMaterial {...MAT.concrete} />
+      </mesh>
+      <mesh position={[-0.9, base + 3.78, 3]}>
+        <boxGeometry args={[4.2, 0.7, 0.04]} />
+        <meshStandardMaterial {...MAT.glass} />
       </mesh>
     </group>
   );
@@ -146,29 +324,30 @@ const Cabin = () => (
 
 const TinyHouse = () => (
   <group>
-    <mesh position={[0, 0.8, 0]} castShadow receiveShadow>
-      <boxGeometry args={[2, 1.6, 3]} />
+    {/* trailer chassis */}
+    <mesh position={[0, 0.3, 0]} castShadow>
+      <boxGeometry args={[2.1, 0.18, 3.2]} />
+      <meshStandardMaterial {...MAT.darkMetal} />
+    </mesh>
+    {/* timber body */}
+    <mesh position={[0, 1.15, 0]} castShadow receiveShadow>
+      <boxGeometry args={[2, 1.5, 3]} />
       <meshStandardMaterial {...MAT.woodLight} />
     </mesh>
-    {/* Curved roof */}
-    <mesh position={[0, 1.75, 0]} castShadow>
-      <cylinderGeometry args={[1.3, 1.3, 3.2, 16, 1, false, 0, Math.PI]} />
-      <meshStandardMaterial {...MAT.roofDark} />
-    </mesh>
-    {/* Door */}
-    <mesh position={[0, 0.6, 1.51]}>
-      <planeGeometry args={[0.7, 1.2]} />
-      <meshStandardMaterial {...MAT.woodDark} />
-    </mesh>
-    {/* Window (glass) */}
-    <mesh position={[0.6, 1.0, 1.51]}>
-      <planeGeometry args={[0.5, 0.5]} />
-      <meshStandardMaterial {...MAT.glass} />
-    </mesh>
-    {/* Wheels */}
-    {[[-0.7, 0.15, 1.3], [0.7, 0.15, 1.3], [-0.7, 0.15, -1.3], [0.7, 0.15, -1.3]].map((p, i) => (
+    {/* low gable roof with overhang */}
+    <PitchedRoof w={2} d={3} rise={0.55} y={1.9} ov={0.22} mat={MAT.roofDark} gableMat={MAT.woodLight} />
+    {/* door */}
+    <group position={[-0.45, 0.95, 1.51]}>
+      <Door w={0.55} h={1.1} />
+    </group>
+    {/* window */}
+    <group position={[0.55, 1.25, 1.51]}>
+      <Window w={0.6} h={0.55} frame={MAT.woodDark} />
+    </group>
+    {/* wheels */}
+    {[[-0.7, 0.18, 1.1], [0.7, 0.18, 1.1], [-0.7, 0.18, -1.1], [0.7, 0.18, -1.1]].map((p, i) => (
       <mesh key={i} position={p as [number, number, number]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.15, 0.15, 0.1, 12]} />
+        <cylinderGeometry args={[0.18, 0.18, 0.1, 14]} />
         <meshStandardMaterial {...MAT.rubber} />
       </mesh>
     ))}
