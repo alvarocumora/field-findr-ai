@@ -8,6 +8,7 @@ import { PageLoader } from "./routeUtils";
 const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
 const AgentManagement = lazy(() => import("@/components/AgentManagement"));
 const PropertyApprovalQueue = lazy(() => import("@/components/admin/PropertyApprovalQueue"));
+const ProjectApprovalQueue = lazy(() => import("@/components/admin/ProjectApprovalQueue"));
 const DocumentCenter = lazy(() => import("@/components/admin/DocumentCenter"));
 const AuditLog = lazy(() => import("@/pages/dashboard/AuditLog"));
 const ReservationsManager = lazy(() => import("@/components/reservations/ReservationsManager"));
