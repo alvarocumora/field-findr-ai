@@ -81,6 +81,8 @@ export function ListingFormDialog({ trigger, onSuccess }: ListingFormDialogProps
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { canCreateListing, listings, planDetails } = usePlanLimits();
 
   const form = useForm<ListingFormData>({
     resolver: zodResolver(listingSchema),
