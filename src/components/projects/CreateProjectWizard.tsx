@@ -90,7 +90,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
   const [step, setStep] = useState(0);
   const [data, setData] = useState<WizardData>(() =>
     editingProject ? projectToWizardData(editingProject) : {
-      name: '', description: '', status: 'draft', rol_number: '',
+      name: '', description: '', status: 'pending_review', rol_number: '',
       latitude: null, longitude: null, region: '', city: '', address: '',
       total_lots: 0, total_area: null, price_base: null, reservation_deposit: 500000, images: [], plan_images: [],
       commercial_conditions: { ...DEFAULT_CONDITIONS },
