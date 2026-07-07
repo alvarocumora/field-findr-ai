@@ -23,6 +23,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import MorningBriefing from '@/components/dashboard/MorningBriefing';
+import PlanLimitsCard from '@/components/subscription/PlanLimitsCard';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { es } from 'date-fns/locale';
 
