@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { Check, Sparkles, Building2, Rocket, Loader2, TrendingUp, Zap, Globe, Users, Star, Crown, Eye } from 'lucide-react';
+import { Check, X, Sparkles, Building2, Rocket, Loader2, TrendingUp, Zap, Globe, Users, Star, Crown, Eye, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import {
   useCurrentPlan, useCreateCheckout,
-  PLAN_DETAILS, LATAM_PRICES, LISTING_ADDONS, ADDON_PRICES,
+  PLAN_DETAILS, LATAM_PRICES, LATAM_PRICES_ANNUAL, LISTING_ADDONS, ADDON_PRICES,
+  PLAN_ORDER_CORREDORES, PLAN_ORDER_INMOBILIARIAS,
   PlanType, AddOnType,
 } from '@/hooks/useSubscription';
+import { COMPETITOR_BENCHMARK, BENCHMARK_ROWS } from '@/config/pricingBenchmark';
 import PublicLayout from '@/components/layouts/PublicLayout';
 
 const CURRENCIES = [
@@ -24,10 +27,14 @@ const CURRENCIES = [
 
 const PLAN_ICONS: Record<PlanType, React.ElementType> = {
   free: Sparkles,
+  corredor: User,
+  corredora: Building2,
+  inmobiliaria: TrendingUp,
+  grupo: Zap,
+  enterprise: Rocket,
   starter: Building2,
   growth: TrendingUp,
   scale: Zap,
-  enterprise: Rocket,
 };
 
 const ADDON_ICONS: Record<AddOnType, React.ElementType> = {
@@ -36,55 +43,142 @@ const ADDON_ICONS: Record<AddOnType, React.ElementType> = {
   super_featured: Crown,
 };
 
+const formatCLP = (n: number) =>
+  new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
+
 const Pricing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { plan: currentPlan, isLoading: planLoading } = useCurrentPlan();
   const { mutate: createCheckout, isPending } = useCreateCheckout();
   const [currency, setCurrency] = useState('UF');
+  const [annual, setAnnual] = useState(false);
 
   const handleSelectPlan = (planId: PlanType) => {
-    if (!user) {
-      navigate('/auth?redirect=/pricing');
-      return;
-    }
+    if (planId === 'enterprise') { navigate('/contacto'); return; }
+    if (!user) { navigate('/auth?redirect=/pricing'); return; }
     if (planId === 'free') return;
     createCheckout(planId);
   };
 
   const formatPrice = (price: number, curr: string) => {
-    if (price === 0) return 'Gratis';
+    if (price === 0) return curr === 'UF' ? 'Gratis' : 'Gratis';
     if (curr === 'UF') return `UF ${price.toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
     if (curr === 'USD') return `US$${price}`;
     return new Intl.NumberFormat('es-CL', { style: 'currency', currency: curr, maximumFractionDigits: 0 }).format(price);
   };
 
-  const plans = (Object.keys(PLAN_DETAILS) as PlanType[]).map((key) => {
-    const plan = PLAN_DETAILS[key];
-    const Icon = PLAN_ICONS[key];
-    const price = LATAM_PRICES[currency]?.[key] ?? plan.price;
-    return { ...plan, price, icon: Icon, isCurrent: currentPlan === key };
-  });
+  const priceMap = annual ? LATAM_PRICES_ANNUAL[currency] : LATAM_PRICES[currency];
+
+  const renderPlanCard = (planId: PlanType) => {
+    const plan = PLAN_DETAILS[planId];
+    const Icon = PLAN_ICONS[planId];
+    const price = priceMap?.[planId] ?? plan.price;
+    const isCurrent = currentPlan === planId;
+    const isEnterprise = planId === 'enterprise';
+
+    return (
+      <Card
+        key={planId}
+        className={`relative flex flex-col transition-all ${
+          plan.highlighted
+            ? 'border-primary shadow-xl ring-2 ring-primary/20 md:scale-[1.02]'
+            : 'border-border hover:border-primary/30'
+        }`}
+      >
+        {plan.highlighted && (
+          <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+            Más popular
+          </Badge>
+        )}
+        <CardHeader className="text-center pb-3">
+          <div className={`mx-auto p-3 rounded-full mb-3 ${plan.highlighted ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+            <Icon className="h-5 w-5" />
+          </div>
+          <CardTitle className="text-xl">{plan.name}</CardTitle>
+          <p className="text-xs text-muted-foreground min-h-[2.5rem]">{plan.target}</p>
+          <CardDescription>
+            {isEnterprise ? (
+              <span className="text-3xl font-bold text-foreground">A medida</span>
+            ) : (
+              <>
+                <span className="text-3xl font-bold text-foreground">
+                  {formatPrice(price, currency)}
+                </span>
+                {price > 0 && (
+                  <span className="text-muted-foreground text-sm">/mes{annual ? ' (anual)' : ''}</span>
+                )}
+              </>
+            )}
+          </CardDescription>
+          <div className="flex flex-wrap justify-center gap-1 mt-2">
+            {plan.maxUnits && (
+              <Badge variant="secondary" className="text-[10px]">
+                {plan.maxUnits} publicaciones
+              </Badge>
+            )}
+            {plan.includedFeatured > 0 && plan.includedFeatured < 9999 && (
+              <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">
+                <Star className="h-2.5 w-2.5 mr-0.5" /> {plan.includedFeatured} destacadas
+              </Badge>
+            )}
+            {plan.includedSuperFeatured > 0 && plan.includedSuperFeatured < 9999 && (
+              <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">
+                <Crown className="h-2.5 w-2.5 mr-0.5" /> {plan.includedSuperFeatured} super
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="flex-1">
+          <ul className="space-y-2.5">
+            {plan.features.map((feature, i) => (
+              <li key={i} className="flex items-start gap-2.5">
+                <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <span className="text-xs">{feature}</span>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+        <CardFooter>
+          <Button
+            className="w-full"
+            variant={plan.highlighted || isEnterprise ? 'default' : 'outline'}
+            size="lg"
+            onClick={() => handleSelectPlan(planId)}
+            disabled={planLoading || isPending || isCurrent}
+          >
+            {isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            {isCurrent ? 'Plan actual' : (plan.ctaLabel || 'Suscribirse')}
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  };
 
   return (
     <PublicLayout>
       <div className="container py-16 px-4">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <Badge variant="secondary" className="mb-4 font-swiss tracking-widest text-xs">
-            PLANES COMERCIALES LATAM
+            PLANES COMERCIALES · LATAM
           </Badge>
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-            Escala tu operación inmobiliaria
+            Planes para corredoras e inmobiliarias
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Planes diseñados para corredores, desarrolladores e inmobiliarias en Chile, Argentina, Colombia y México.
-            Paga por la cantidad de lotes que gestionas.
+            Publica, gestiona y cierra ventas con IA, mapa 3D, CRM y financiamiento directo.
+            Sin comisiones por venta.
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
+            <Badge variant="outline" className="border-primary/40 text-primary">✨ Primer mes 50% OFF</Badge>
+            <Badge variant="outline">Sin permanencia</Badge>
+            <Badge variant="outline">Cambia de plan cuando quieras</Badge>
+          </div>
         </div>
 
-        {/* Currency selector */}
-        <div className="flex justify-center mb-10">
+        {/* Currency + billing toggle */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-10">
           <div className="inline-flex items-center gap-1 bg-muted rounded-lg p-1">
             {CURRENCIES.map((c) => (
               <button
@@ -100,27 +194,34 @@ const Pricing = () => {
               </button>
             ))}
           </div>
+          <div className="flex items-center gap-3 bg-muted rounded-lg px-4 py-2">
+            <span className={`text-sm ${!annual ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>Mensual</span>
+            <Switch checked={annual} onCheckedChange={setAnnual} />
+            <span className={`text-sm ${annual ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+              Anual <Badge className="ml-1 bg-primary/10 text-primary border-primary/30 text-[10px]">−17% · 2 meses gratis</Badge>
+            </span>
+          </div>
         </div>
 
         {/* Role tabs */}
-        <Tabs defaultValue="agent" className="max-w-7xl mx-auto">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8">
-            <TabsTrigger value="buyer" className="gap-1">
+        <Tabs defaultValue="corredores" className="max-w-7xl mx-auto">
+          <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3 mb-8">
+            <TabsTrigger value="corredores" className="gap-1">
+              <Building2 className="h-3.5 w-3.5" />
+              Corredores
+            </TabsTrigger>
+            <TabsTrigger value="inmobiliarias" className="gap-1">
+              <Rocket className="h-3.5 w-3.5" />
+              Inmobiliarias
+            </TabsTrigger>
+            <TabsTrigger value="comprador" className="gap-1">
               <Users className="h-3.5 w-3.5" />
               Comprador
             </TabsTrigger>
-            <TabsTrigger value="agent" className="gap-1">
-              <Building2 className="h-3.5 w-3.5" />
-              Agente
-            </TabsTrigger>
-            <TabsTrigger value="developer" className="gap-1">
-              <Rocket className="h-3.5 w-3.5" />
-              Inmobiliaria
-            </TabsTrigger>
           </TabsList>
 
-          {/* Buyer tab */}
-          <TabsContent value="buyer">
+          {/* Comprador */}
+          <TabsContent value="comprador">
             <div className="max-w-md mx-auto">
               <Card className="border-primary/20 shadow-lg">
                 <CardHeader className="text-center">
@@ -152,152 +253,106 @@ const Pricing = () => {
                 </CardContent>
                 <CardFooter>
                   <Button className="w-full" size="lg" variant="outline" onClick={() => navigate('/explorar')}>
-                    Explorar Terrenos
+                    Explorar terrenos
                   </Button>
                 </CardFooter>
               </Card>
             </div>
           </TabsContent>
 
-          {/* Agent tab */}
-          <TabsContent value="agent">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {plans.filter((p) => p.id !== 'enterprise').map((plan) => (
-                <Card
-                  key={plan.id}
-                  className={`relative flex flex-col transition-all ${
-                    plan.highlighted
-                      ? 'border-primary shadow-xl ring-2 ring-primary/20 scale-[1.02]'
-                      : 'border-border hover:border-primary/30'
-                  }`}
-                >
-                  {plan.highlighted && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
-                      Más Popular
-                    </Badge>
-                  )}
-                  <CardHeader className="text-center pb-3">
-                    <div className={`mx-auto p-3 rounded-full mb-3 ${plan.highlighted ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                      <plan.icon className="h-5 w-5" />
-                    </div>
-                    <CardTitle className="text-xl">{plan.name}</CardTitle>
-                    <CardDescription>
-                      <span className="text-3xl font-bold text-foreground">
-                        {formatPrice(plan.price, currency)}
-                      </span>
-                      {plan.price > 0 && <span className="text-muted-foreground">/mes</span>}
-                    </CardDescription>
-                    {plan.maxUnits && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Hasta <strong className="text-foreground">{plan.maxUnits} lotes</strong> · {plan.maxProjects} proyecto{plan.maxProjects > 1 ? 's' : ''}
-                      </p>
-                    )}
-                  </CardHeader>
-                  <CardContent className="flex-1">
-                    <ul className="space-y-2.5">
-                      {plan.features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-2.5">
-                          <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                          <span className="text-xs">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      className="w-full"
-                      variant={plan.highlighted ? 'default' : 'outline'}
-                      size="lg"
-                      onClick={() => handleSelectPlan(plan.id)}
-                      disabled={planLoading || isPending || plan.isCurrent}
-                    >
-                      {isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                      {plan.isCurrent ? 'Plan Actual' : plan.price === 0 ? 'Comenzar Gratis' : 'Suscribirse'}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+          {/* Corredores */}
+          <TabsContent value="corredores">
+            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              {PLAN_ORDER_CORREDORES.map((id) => renderPlanCard(id))}
             </div>
+            <p className="text-center text-xs text-muted-foreground mt-6">
+              ¿Solo quieres probar? El plan <button className="underline underline-offset-2 hover:text-foreground" onClick={() => handleSelectPlan('free')}>Explorador (gratis)</button> te permite publicar 3 avisos.
+            </p>
           </TabsContent>
 
-          {/* Developer / Inmobiliaria tab */}
-          <TabsContent value="developer">
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {plans.filter((p) => p.id === 'scale' || p.id === 'enterprise').map((plan) => (
-                <Card
-                  key={plan.id}
-                  className={`relative flex flex-col ${
-                    plan.id === 'enterprise'
-                      ? 'border-primary shadow-xl ring-2 ring-primary/20'
-                      : 'border-border'
-                  }`}
-                >
-                  <CardHeader className="text-center pb-3">
-                    <div className="mx-auto p-3 rounded-full mb-3 bg-primary/10 text-primary">
-                      <plan.icon className="h-6 w-6" />
-                    </div>
-                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                    <CardDescription>
-                      <span className="text-4xl font-bold text-foreground">
-                        {plan.id === 'enterprise' ? 'Contactar' : formatPrice(plan.price, currency)}
-                      </span>
-                      {plan.price > 0 && plan.id !== 'enterprise' && (
-                        <span className="text-muted-foreground">/mes</span>
-                      )}
-                    </CardDescription>
-                    {plan.maxUnits && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Hasta <strong className="text-foreground">{plan.maxUnits} lotes</strong> · {plan.maxProjects} proyectos
-                      </p>
-                    )}
-                    {!plan.maxUnits && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        <strong className="text-foreground">Lotes ilimitados</strong> · Proyectos ilimitados
-                      </p>
-                    )}
-                  </CardHeader>
-                  <CardContent className="flex-1">
-                    <ul className="space-y-3">
-                      {plan.features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-3">
-                          <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                          <span className="text-sm">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      className="w-full"
-                      variant={plan.id === 'enterprise' ? 'default' : 'outline'}
-                      size="lg"
-                      onClick={() =>
-                        plan.id === 'enterprise'
-                          ? navigate('/contacto')
-                          : handleSelectPlan(plan.id)
-                      }
-                      disabled={planLoading || isPending || plan.isCurrent}
-                    >
-                      {plan.isCurrent ? 'Plan Actual' : plan.id === 'enterprise' ? 'Contactar Ventas' : 'Suscribirse'}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+          {/* Inmobiliarias */}
+          <TabsContent value="inmobiliarias">
+            <div className="grid md:grid-cols-3 gap-6">
+              {PLAN_ORDER_INMOBILIARIAS.map((id) => renderPlanCard(id))}
             </div>
           </TabsContent>
         </Tabs>
 
-        {/* ── Featured Listings Add-On Section ── */}
-        <div className="mt-20 max-w-5xl mx-auto">
+        {/* ── Benchmark vs competencia ── */}
+        <div className="mt-24 max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <Badge variant="outline" className="mb-3 border-primary/40 text-primary">
+              TRANSPARENCIA
+            </Badge>
+            <h2 className="text-3xl font-bold mb-3 text-foreground">
+              OfertaTerrenos vs otros portales
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Comparación pública con ChilePropiedades, Portalinmobiliario, TocToc, Yapo, Zonaprop y EasyBroker.
+              Datos recolectados de sus páginas oficiales.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full text-sm min-w-[900px]">
+              <thead className="bg-muted/40">
+                <tr>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground sticky left-0 bg-muted/40 z-10">Característica</th>
+                  {COMPETITOR_BENCHMARK.map((c) => (
+                    <th
+                      key={c.competitor}
+                      className={`text-center py-3 px-3 font-semibold whitespace-nowrap ${
+                        c.competitor === 'OfertaTerrenos' ? 'bg-primary/10 text-primary' : ''
+                      }`}
+                    >
+                      {c.competitor}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {BENCHMARK_ROWS.map((row, i) => (
+                  <tr key={i} className="border-t border-border hover:bg-muted/30">
+                    <td className="py-3 px-4 text-foreground font-medium sticky left-0 bg-background z-10">
+                      {row.label}
+                    </td>
+                    {COMPETITOR_BENCHMARK.map((c) => {
+                      const v = c[row.key as keyof typeof c];
+                      const isUs = c.competitor === 'OfertaTerrenos';
+                      return (
+                        <td
+                          key={c.competitor}
+                          className={`text-center py-3 px-3 text-xs ${isUs ? 'bg-primary/5 font-medium text-foreground' : 'text-muted-foreground'}`}
+                        >
+                          {typeof v === 'boolean' ? (
+                            v ? <Check className="h-4 w-4 text-primary mx-auto" /> : <X className="h-4 w-4 text-muted-foreground/40 mx-auto" />
+                          ) : (
+                            (v as string) || '—'
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[11px] text-muted-foreground text-center mt-3">
+            Precios de referencia recolectados en jul-2026 desde sitios oficiales. Cada portal puede modificar sus precios sin previo aviso.
+          </p>
+        </div>
+
+        {/* ── Add-ons ── */}
+        <div className="mt-24 max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <Badge variant="outline" className="mb-3 border-primary/40 text-primary">
               <Star className="h-3 w-3 mr-1" /> ADD-ON DE VISIBILIDAD
             </Badge>
             <h2 className="text-3xl font-bold mb-3 text-foreground">
-              Publicaciones Destacadas
+              Impulsa publicaciones específicas
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Aumenta la exposición de tus terrenos con visibilidad premium. Precio por publicación, por mes — compatible con cualquier plan.
+              ¿Necesitas más destacadas de las incluidas en tu plan? Compra visibilidad extra por publicación / mes.
             </p>
           </div>
 
@@ -321,7 +376,7 @@ const Pricing = () => {
                 >
                   {isSuper && (
                     <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
-                      Máx. Conversión
+                      Máx. conversión
                     </Badge>
                   )}
                   <CardHeader className="text-center pb-3">
@@ -360,7 +415,7 @@ const Pricing = () => {
                       onClick={() => price === 0 ? undefined : (user ? navigate('/dashboard') : navigate('/auth?redirect=/pricing'))}
                       disabled={price === 0}
                     >
-                      {price === 0 ? 'Ya incluido' : 'Activar Add-on'}
+                      {price === 0 ? 'Ya incluido' : 'Activar add-on'}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -369,53 +424,27 @@ const Pricing = () => {
           </div>
         </div>
 
-        {/* Feature comparison */}
-        <div className="mt-20 max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-8">Comparación de funcionalidades</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Funcionalidad</th>
-                  {(Object.keys(PLAN_DETAILS) as PlanType[]).map((key) => (
-                    <th key={key} className="text-center py-3 px-3 font-semibold">
-                      {PLAN_DETAILS[key].name}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { label: 'Precio mensual', values: ['Gratis', formatPrice(LATAM_PRICES[currency].starter, currency), formatPrice(LATAM_PRICES[currency].growth, currency), formatPrice(LATAM_PRICES[currency].scale, currency), formatPrice(LATAM_PRICES[currency].enterprise, currency)] },
-                  { label: 'Lotes máx.', values: ['5', '30', '150', '500', '∞'] },
-                  { label: 'Proyectos activos', values: ['1', '3', '10', '50', '∞'] },
-                  { label: 'Publicaciones marketplace', values: ['3', '20', '100', '500', '∞'] },
-                  { label: 'CRM de leads', values: ['—', 'Básico', 'Completo + AI', '✓', '✓'] },
-                  { label: 'Reservas online', values: ['—', '—', '✓', '✓', '✓'] },
-                  { label: 'Financiamiento directo', values: ['—', '—', '✓', '✓', '✓'] },
-                  { label: 'Dashboard multi-proyecto', values: ['—', '—', '✓', '✓', '✓'] },
-                  { label: 'Equipo multi-agente', values: ['—', '—', '—', '10', '∞'] },
-                  { label: 'API REST + Webhooks', values: ['—', '—', '—', '✓', 'Custom'] },
-                  { label: 'White-label', values: ['—', '—', '—', 'Parcial', 'Completo'] },
-                  { label: 'Soporte', values: ['Email', 'Email', 'Prioritario', 'Dedicado', 'SLA 24/7'] },
-                ].map((row, i) => (
-                  <tr key={i} className="border-b last:border-0 hover:bg-muted/50">
-                    <td className="py-3 px-4 text-foreground font-medium">{row.label}</td>
-                    {row.values.map((v, j) => (
-                      <td key={j} className="text-center py-3 px-3 text-muted-foreground">
-                        {v === '✓' ? (
-                          <Check className="h-4 w-4 text-primary mx-auto" />
-                        ) : v === '—' ? (
-                          <span className="text-muted-foreground/40">—</span>
-                        ) : (
-                          v
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* FAQ */}
+        <div className="mt-24 max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold text-center mb-8">Preguntas frecuentes</h2>
+          <div className="space-y-4">
+            {[
+              { q: '¿Puedo cambiar de plan en cualquier momento?', a: 'Sí. El upgrade es inmediato y prorrateamos el cargo. El downgrade aplica al final del periodo actual.' },
+              { q: '¿Cobran comisión por venta?', a: 'No. Pagas solo la suscripción mensual (o anual). Las ventas y financiamientos son 100% tuyos.' },
+              { q: '¿Puedo pagar con factura empresa?', a: 'Sí, planes Inmobiliaria, Grupo y Enterprise incluyen facturación electrónica automática en Chile.' },
+              { q: '¿Qué pasa si supero mis publicaciones?', a: 'Te avisamos con anticipación. Puedes hacer upgrade o comprar publicaciones adicionales sin perder tu inventario.' },
+              { q: '¿El anual tiene permanencia?', a: 'El anual te da 2 meses gratis, pero puedes cancelar cuando quieras. Solo pierdes el descuento anticipado.' },
+              { q: '¿Cómo funciona el descuento del primer mes?', a: 'Aplicamos 50% OFF sobre el primer cargo mensual al contratar por primera vez cualquier plan pagado.' },
+            ].map((f, i) => (
+              <Card key={i}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">{f.q}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{f.a}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
 
@@ -423,11 +452,12 @@ const Pricing = () => {
         <div className="mt-16 text-center">
           <h2 className="text-2xl font-bold mb-4">¿Operación a gran escala?</h2>
           <p className="text-muted-foreground mb-6">
-            Planes corporativos con SLA, integraciones ERP y soporte dedicado para inmobiliarias con +500 unidades
+            Planes Enterprise con SLA 99.9%, SSO, integración ERP y account manager dedicado
+            para inmobiliarias con +500 unidades o marketplaces regionales.
           </p>
           <Button variant="outline" size="lg" onClick={() => navigate('/contacto')}>
             <Globe className="h-4 w-4 mr-2" />
-            Contactar Equipo Comercial
+            Contactar equipo comercial
           </Button>
         </div>
       </div>
