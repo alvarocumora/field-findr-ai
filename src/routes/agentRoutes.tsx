@@ -36,6 +36,7 @@ const Contacts = lazy(() => import("@/pages/dashboard/Contacts"));
 const OpportunityDetail = lazy(() => import("@/pages/dashboard/OpportunityDetail"));
 const LoteoControlCenter = lazy(() => import("@/pages/dashboard/LoteoControlCenter"));
 const SubdivisionStudio = lazy(() => import("@/pages/dashboard/SubdivisionStudio"));
+const Commissions = lazy(() => import("@/pages/dashboard/Commissions"));
 
 const agentElement = (children: ReactNode) => (
   <DashboardLayout requiredRole="agent">
