@@ -118,7 +118,11 @@ export default defineConfig(({ mode }) => ({
           // chunk that loads first: jspdf's internal dynamic import('canvg')
           // made rollup place the preload helper INSIDE vendor-pdf, forcing
           // the entry to preload jspdf on every page just to reach it.
-          if (id.includes('vite/preload-helper') || id.includes('vite/modulepreload-polyfill')) {
+          if (
+            id.includes('vite/preload-helper') ||
+            id.includes('vite/modulepreload-polyfill') ||
+            id.includes('commonjsHelpers')
+          ) {
             return 'vendor-react';
           }
           if (!id.includes('node_modules')) return;
