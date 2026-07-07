@@ -34,8 +34,11 @@ import CreateProjectWizard from './projects/CreateProjectWizard';
 const statusConfig: Record<string, { label: string; color: string }> = {
   draft: { label: 'Borrador', color: 'bg-muted text-muted-foreground border-border' },
   planning: { label: 'En Planificación', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+  pending_review: { label: 'En Revisión', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
   active: { label: 'Activo', color: 'bg-green-500/10 text-green-600 border-green-500/20' },
+  rejected: { label: 'Rechazado', color: 'bg-red-500/10 text-red-600 border-red-500/20' },
   sold_out: { label: 'Agotado', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' },
+  inactive: { label: 'Inactivo', color: 'bg-muted text-muted-foreground border-border' },
   completed: { label: 'Completado', color: 'bg-gray-500/10 text-gray-600 border-gray-500/20' },
 };
 
@@ -295,23 +298,29 @@ const ProjectsManagement = () => {
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-2">
-                  {(project.status === 'draft' || project.status === 'planning') && (
+                  {(project.status === 'draft' || project.status === 'planning' || project.status === 'rejected') && (
                     <Button
                       variant="default"
                       className="flex-1 gap-1"
                       onClick={() => {
                         const lotsWithPrice = (project.total_lots || 0) > 0;
                         if (!lotsWithPrice) {
-                          toast.error('Agrega al menos 1 lote con precio antes de publicar');
+                          toast.error('Agrega al menos 1 lote con precio antes de enviar a revisión');
                           return;
                         }
-                        updateProject.mutate({ id: project.id, status: 'active' });
-                        toast.success('Proyecto publicado exitosamente');
+                        updateProject.mutate({ id: project.id, status: 'pending_review' });
+                        toast.success('Loteo enviado a revisión. Te notificaremos cuando sea aprobado.');
                       }}
                     >
                       <Rocket className="h-4 w-4" />
-                      Publicar
+                      {project.status === 'rejected' ? 'Reenviar' : 'Enviar a revisión'}
                     </Button>
+                  )}
+                  {project.status === 'pending_review' && (
+                    <div className="flex-1 flex items-center justify-center gap-2 text-xs text-amber-600 border border-amber-500/30 bg-amber-500/10 rounded-md px-3 py-2">
+                      <Clock className="h-3 w-3" />
+                      En revisión por un admin
+                    </div>
                   )}
                   <Button 
                     variant="outline" 

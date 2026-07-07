@@ -97,6 +97,7 @@ const adminItems: NavItem[] = [
   { name: 'Documentos', href: '/admin/documents', icon: ClipboardCheck },
   { name: 'Reservas', href: '/admin/reservations', icon: CalendarCheck },
   { name: 'Aprobaciones', href: '/admin/approvals', icon: ClipboardCheck },
+  { name: 'Aprobación Loteos', href: '/admin/project-approvals', icon: ClipboardCheck },
   { name: 'Créditos', href: '/admin/credits', icon: CreditCard },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { name: 'Auditoría', href: '/admin/audit', icon: ShieldCheck },
