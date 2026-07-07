@@ -20,10 +20,14 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt'],
       manifest: false, // Use existing manifest.json
       workbox: {
-        // Increase limit to handle large bundles - cache them via runtime caching instead
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10 MB
-        // Only precache essential small files, large JS bundles will be cached at runtime
-        globPatterns: ['**/*.{css,html,ico,png,svg,woff,woff2}'],
+        // Precache the JS bundles TOO, not just html/css. Previously js was
+        // excluded, so the SW served a cached index.html that referenced old
+        // hashed chunks (index-<oldhash>.js) which 404 after a redeploy →
+        // white screen on the live domain. Precaching js keeps index.html and
+        // its exact chunks a consistent, atomically-updated set.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           // Cache Mapbox tiles for offline map access
           {
