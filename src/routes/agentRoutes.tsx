@@ -74,6 +74,7 @@ export const agentRoutes = [
   <Route key="asesor-executive" path="/asesor/executive" element={agentElement(<ExecutiveDashboard />)} />,
   <Route key="asesor-financial" path="/asesor/financial" element={agentElement(<FinancialDashboard />)} />,
   <Route key="asesor-performance" path="/asesor/performance" element={agentElement(<AgentPerformance />)} />,
+  <Route key="asesor-comisiones" path="/asesor/comisiones" element={agentElement(<Commissions />)} />,
   <Route key="asesor-pipeline" path="/asesor/pipeline" element={agentElement(<SalesPipeline />)} />,
   <Route key="asesor-multi-project" path="/asesor/multi-project" element={agentElement(<MultiProjectDashboard />)} />,
   <Route key="asesor-payments" path="/asesor/payments" element={agentElement(<PaymentManagement />)} />,
