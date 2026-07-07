@@ -38,6 +38,7 @@ export const adminRoutes = [
   <Route key="admin-agents" path="/admin/agents" element={adminElement(<AgentManagement />)} />,
   <Route key="admin-reservations" path="/admin/reservations" element={adminElement(<ReservationsManager />)} />,
   <Route key="admin-approvals" path="/admin/approvals" element={adminElement(<PropertyApprovalQueue />)} />,
+  <Route key="admin-project-approvals" path="/admin/project-approvals" element={adminElement(<ProjectApprovalQueue />)} />,
   <Route key="admin-credits" path="/admin/credits" element={adminElement(<CreditManager />)} />,
   <Route key="admin-analytics" path="/admin/analytics" element={adminElement(<BusinessIntelligence />)} />,
   <Route key="admin-financial" path="/admin/financial" element={adminElement(<FinancialDashboard />)} />,
