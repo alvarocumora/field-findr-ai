@@ -77,6 +77,7 @@ const advancedItems: NavItem[] = [
   { name: 'Créditos', href: '/asesor/credits', icon: CreditCard },
   { name: 'Cierres', href: '/asesor/closing', icon: Scale },
   { name: 'Ventas', href: '/asesor/sales', icon: Handshake },
+  { name: 'Comisiones', href: '/asesor/comisiones', icon: DollarSign },
   { name: 'Financiero', href: '/asesor/financial', icon: TrendingUp },
   { name: 'Multi-Proyecto', href: '/asesor/multi-project', icon: BarChart3 },
   { name: 'Rendimiento', href: '/asesor/performance', icon: Target },
