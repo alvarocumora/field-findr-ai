@@ -734,12 +734,17 @@ const PublishForm = () => {
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             ) : (
-              <Button 
+              <Button
                 onClick={handlePublish}
-                disabled={createListing.isPending}
+                disabled={createListing.isPending || !planLimits.canCreateListing}
                 className="btn-glow"
+                title={!planLimits.canCreateListing ? 'Has alcanzado el límite de publicaciones de tu plan' : undefined}
               >
-                {createListing.isPending ? "Publicando..." : "Publicar propiedad"}
+                {createListing.isPending
+                  ? "Publicando..."
+                  : !planLimits.canCreateListing
+                    ? "Límite alcanzado — mejora tu plan"
+                    : "Publicar propiedad"}
               </Button>
             )}
           </div>
