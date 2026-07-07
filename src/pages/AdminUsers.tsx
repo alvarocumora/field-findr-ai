@@ -20,13 +20,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
-  DropdownMenuSeparator, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Users, Search, MoreVertical, Shield, UserCheck, Crown, Download, UserPlus,
+  Users, Search, Shield, UserCheck, Crown, Download, UserPlus,
   AlertCircle, Ban, KeyRound, Trash2, Sparkles, TrendingUp, Activity,
-  Mail, CalendarClock, RefreshCw, ChevronRight,
+  Mail, RefreshCw, ChevronRight,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format, formatDistanceToNow, subDays, isAfter } from 'date-fns';
