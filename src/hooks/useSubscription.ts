@@ -3,7 +3,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
-export type PlanType = 'free' | 'starter' | 'growth' | 'scale' | 'enterprise';
+// ─────────────────────────────────────────────────────────────────────────────
+// Nueva taxonomía orientada al rubro inmobiliario chileno.
+// Mantenemos retro-compatibilidad con los ids legacy (starter/growth/scale)
+// que aún existen en `subscriptions.plan_type` para clientes previos.
+// ─────────────────────────────────────────────────────────────────────────────
+export type PlanType =
+  | 'free'
+  | 'corredor'
+  | 'corredora'
+  | 'inmobiliaria'
+  | 'grupo'
+  | 'enterprise'
+  // legacy
+  | 'starter'
+  | 'growth'
+  | 'scale';
+
 export type UserRole = 'buyer' | 'agent' | 'admin';
 
 export interface Subscription {
@@ -21,143 +37,280 @@ export interface Subscription {
 
 export interface Plan {
   name: string;
-  price: number;
+  target: string;
+  price: number;         // UF/mes referencial (legacy)
   priceUSD: number;
   currency: string;
   maxUnits: number | null;
   maxProjects: number;
   maxPublications: number;
+  includedFeatured: number;       // publicaciones destacadas incluidas / mes
+  includedSuperFeatured: number;  // publicaciones super destacadas incluidas / mes
+  teamSeats: number | null;
   features: string[];
+  highlights: string[];           // 3 diferenciadores para landings
   roleAccess: UserRole[];
   highlighted?: boolean;
+  ctaLabel?: string;
 }
 
-// LATAM-ready pricing tiers based on units managed
+// Mapeo legacy → nuevo id (para renombrar en UI sin migración de datos)
+export const LEGACY_PLAN_MAP: Record<string, PlanType> = {
+  starter: 'corredora',
+  growth: 'inmobiliaria',
+  scale: 'grupo',
+};
+
+export const normalizePlanId = (id: string | null | undefined): PlanType => {
+  if (!id) return 'free';
+  if (id in LEGACY_PLAN_MAP) return LEGACY_PLAN_MAP[id];
+  return id as PlanType;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLAN CATALOG (v2 · jul-2026) — precios anclados a UF, competitivos con
+// ChilePropiedades, TocToc y EasyBroker.
+// ─────────────────────────────────────────────────────────────────────────────
 export const PLAN_DETAILS: Record<PlanType, Plan & { id: PlanType }> = {
   free: {
     id: 'free',
     name: 'Explorador',
+    target: 'Prueba el marketplace sin costo',
     price: 0,
     priceUSD: 0,
-    currency: 'CLP',
+    currency: 'UF',
     maxUnits: 5,
     maxProjects: 1,
     maxPublications: 3,
+    includedFeatured: 0,
+    includedSuperFeatured: 0,
+    teamSeats: 1,
     roleAccess: ['buyer', 'agent'],
+    highlights: ['Explora terrenos', 'Publica 3 avisos', 'Alertas de precio'],
     features: [
       'Hasta 5 lotes por proyecto',
       '1 proyecto activo',
       '3 publicaciones en marketplace',
       'Mapa interactivo básico',
       'Alertas por email',
-      'Búsqueda y exploración',
     ],
+    ctaLabel: 'Comenzar gratis',
   },
-  starter: {
-    id: 'starter',
-    name: 'Starter',
-    price: 29990,
-    priceUSD: 35,
-    currency: 'CLP',
-    maxUnits: 30,
-    maxProjects: 3,
-    maxPublications: 20,
+  corredor: {
+    id: 'corredor',
+    name: 'Corredor',
+    target: 'Corredor independiente que recién parte',
+    price: 1.0,
+    priceUSD: 39,
+    currency: 'UF',
+    maxUnits: 15,
+    maxProjects: 1,
+    maxPublications: 15,
+    includedFeatured: 1,
+    includedSuperFeatured: 0,
+    teamSeats: 1,
     roleAccess: ['agent'],
-    highlighted: false,
+    highlights: [
+      '15 publicaciones activas',
+      '1 destacada incluida al mes',
+      'CRM básico + WhatsApp',
+    ],
     features: [
-      'Hasta 30 lotes totales',
-      '3 proyectos activos',
-      '20 publicaciones en marketplace',
-      'CRM de leads básico',
-      'Importación KMZ/KML',
-      'Cotizador público por proyecto',
-      'Reportes PDF con tu marca',
+      'Hasta 15 lotes / publicaciones activas',
+      '1 destacada incluida al mes',
+      'CRM básico de leads',
+      'Cotizador público con tu marca',
+      'Ficha PDF descargable',
+      'Widget WhatsApp directo',
       'Soporte por email',
     ],
+    ctaLabel: 'Empezar por 1 UF/mes',
   },
-  growth: {
-    id: 'growth',
-    name: 'Growth',
-    price: 79990,
+  corredora: {
+    id: 'corredora',
+    name: 'Corredora',
+    target: 'Oficina con 1-3 agentes',
+    price: 2.5,
     priceUSD: 95,
-    currency: 'CLP',
-    maxUnits: 150,
-    maxProjects: 10,
-    maxPublications: 100,
+    currency: 'UF',
+    maxUnits: 60,
+    maxProjects: 3,
+    maxPublications: 60,
+    includedFeatured: 3,
+    includedSuperFeatured: 1,
+    teamSeats: 3,
     roleAccess: ['agent'],
     highlighted: true,
+    highlights: [
+      '60 publicaciones + 3 destacadas',
+      'CRM completo con lead scoring IA',
+      'Reservas online + pasarela de pago',
+    ],
     features: [
-      'Hasta 150 lotes totales',
-      '10 proyectos activos',
-      '100 publicaciones en marketplace',
-      'CRM completo + lead scoring AI',
-      'Reservas online con pasarela de pago',
-      'Financiamiento directo (créditos)',
+      'Hasta 60 publicaciones activas',
+      '3 destacadas + 1 super destacada / mes',
+      '3 agentes en el equipo',
+      'CRM completo + lead scoring IA',
+      'Importación KMZ/KML',
+      'Reservas online con Mercado Pago',
       'Dashboard multi-proyecto',
-      'Analytics avanzados + BI',
-      'Mapa 3D + planos interactivos',
+      'Reportes PDF con tu marca',
       'Soporte prioritario',
     ],
+    ctaLabel: 'Empezar prueba',
   },
-  scale: {
-    id: 'scale',
-    name: 'Scale',
-    price: 199990,
-    priceUSD: 240,
-    currency: 'CLP',
+  inmobiliaria: {
+    id: 'inmobiliaria',
+    name: 'Inmobiliaria',
+    target: 'Desarrollador con 1-3 proyectos activos',
+    price: 5.0,
+    priceUSD: 189,
+    currency: 'UF',
+    maxUnits: 200,
+    maxProjects: 10,
+    maxPublications: 200,
+    includedFeatured: 10,
+    includedSuperFeatured: 3,
+    teamSeats: 8,
+    roleAccess: ['agent'],
+    highlights: [
+      'Mapa 3D + planos interactivos',
+      'Financiamiento directo (pie en cuotas)',
+      'Tasación IA + BI de mercado',
+    ],
+    features: [
+      'Hasta 200 publicaciones activas',
+      '10 destacadas + 3 super destacadas / mes',
+      '10 proyectos activos',
+      'Equipo hasta 8 agentes',
+      'CRM completo + lead scoring IA',
+      'Reservas online + pasarela de pago',
+      'Financiamiento directo (créditos internos)',
+      'Mapa 3D + planos interactivos',
+      'Tasación IA + reportes de mercado',
+      'Analytics avanzados + BI',
+      'Soporte prioritario',
+    ],
+    ctaLabel: 'Contratar Inmobiliaria',
+  },
+  grupo: {
+    id: 'grupo',
+    name: 'Grupo',
+    target: 'Multi-proyecto, equipo grande, canje entre oficinas',
+    price: 9.0,
+    priceUSD: 339,
+    currency: 'UF',
     maxUnits: 500,
     maxProjects: 50,
     maxPublications: 500,
+    includedFeatured: 30,
+    includedSuperFeatured: 10,
+    teamSeats: 25,
     roleAccess: ['agent', 'admin'],
-    features: [
-      'Hasta 500 lotes totales',
-      '50 proyectos activos',
-      '500 publicaciones en marketplace',
-      'Todo de Growth +',
-      'Equipo multi-agente (hasta 10)',
-      'Comisiones y metas por agente',
+    highlights: [
+      'Equipo hasta 25 agentes',
+      'API REST + webhooks',
       'Cierre legal digital completo',
-      'Webhooks + API REST',
-      'White-label parcial',
+    ],
+    features: [
+      'Hasta 500 publicaciones activas',
+      '30 destacadas + 10 super destacadas / mes',
+      '50 proyectos activos',
+      'Equipo hasta 25 agentes con roles',
+      'Comisiones y metas por agente',
+      'Todo lo de Inmobiliaria +',
+      'Cierre legal digital completo',
+      'API REST + Webhooks',
+      'White-label parcial (subdominio)',
       'Soporte dedicado',
     ],
+    ctaLabel: 'Contratar Grupo',
   },
   enterprise: {
     id: 'enterprise',
     name: 'Enterprise',
-    price: 499990,
-    priceUSD: 599,
-    currency: 'CLP',
+    target: 'Cadenas, holdings, marketplaces con >500 unidades',
+    price: 0, // sales-led
+    priceUSD: 0,
+    currency: 'UF',
     maxUnits: null,
     maxProjects: 999,
     maxPublications: 9999,
+    includedFeatured: 9999,
+    includedSuperFeatured: 9999,
+    teamSeats: null,
     roleAccess: ['agent', 'admin'],
+    highlights: [
+      'White-label completo + dominio propio',
+      'SSO / SAML + SLA 99.9%',
+      'Integración ERP + account manager',
+    ],
     features: [
-      'Lotes y proyectos ilimitados',
-      'Publicaciones ilimitadas',
-      'Todo de Scale +',
+      'Publicaciones y proyectos ilimitados',
+      'Destacadas ilimitadas',
+      'Todo de Grupo +',
       'Multi-organización',
       'API avanzada con scopes custom',
-      'White-label completo',
+      'White-label completo (dominio propio)',
       'SSO / SAML',
       'SLA 99.9%',
       'Account manager dedicado',
       'Integración ERP personalizada',
     ],
+    ctaLabel: 'Contactar ventas',
   },
+  // ─── Legacy ids (mostrados con nombre nuevo para clientes antiguos) ───
+  starter: null as unknown as Plan & { id: PlanType },
+  growth: null as unknown as Plan & { id: PlanType },
+  scale: null as unknown as Plan & { id: PlanType },
+};
+// Alias legacy → nuevo objeto
+PLAN_DETAILS.starter = { ...PLAN_DETAILS.corredora, id: 'starter' };
+PLAN_DETAILS.growth = { ...PLAN_DETAILS.inmobiliaria, id: 'growth' };
+PLAN_DETAILS.scale = { ...PLAN_DETAILS.grupo, id: 'scale' };
+
+// Orden canónico para renderizar tarjetas
+export const PLAN_ORDER_CORREDORES: PlanType[] = ['corredor', 'corredora'];
+export const PLAN_ORDER_INMOBILIARIAS: PlanType[] = ['inmobiliaria', 'grupo', 'enterprise'];
+export const PLAN_ORDER_ALL: PlanType[] = ['free', 'corredor', 'corredora', 'inmobiliaria', 'grupo', 'enterprise'];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Precios multi-moneda — MENSUAL (UF base)
+// Anual = 10× mensual (2 meses gratis, estándar del mercado chileno).
+// ─────────────────────────────────────────────────────────────────────────────
+type PriceMap = Record<PlanType, number>;
+
+const buildPriceMap = (values: Record<Exclude<PlanType, 'starter'|'growth'|'scale'>, number>): PriceMap => ({
+  ...values,
+  starter: values.corredora,
+  growth: values.inmobiliaria,
+  scale: values.grupo,
+});
+
+export const LATAM_PRICES: Record<string, PriceMap> = {
+  UF:  buildPriceMap({ free: 0, corredor: 1.0,   corredora: 2.5,   inmobiliaria: 5.0,   grupo: 9.0,   enterprise: 0 }),
+  CLP: buildPriceMap({ free: 0, corredor: 38000, corredora: 94000, inmobiliaria: 188000, grupo: 338000, enterprise: 0 }),
+  USD: buildPriceMap({ free: 0, corredor: 39,    corredora: 95,    inmobiliaria: 189,    grupo: 339,    enterprise: 0 }),
+  ARS: buildPriceMap({ free: 0, corredor: 35000, corredora: 84000, inmobiliaria: 168000, grupo: 302000, enterprise: 0 }),
+  COP: buildPriceMap({ free: 0, corredor: 155000, corredora: 379000, inmobiliaria: 749000, grupo: 1349000, enterprise: 0 }),
+  MXN: buildPriceMap({ free: 0, corredor: 690,   corredora: 1690,  inmobiliaria: 3390,   grupo: 5990,   enterprise: 0 }),
 };
 
-// Multi-currency pricing for LATAM — aligned to Chilean market benchmark (UF base)
-export const LATAM_PRICES: Record<string, Record<PlanType, number>> = {
-  UF:  { free: 0, starter: 2.0, growth: 4.5, scale: 8.0, enterprise: 15.0 },
-  CLP: { free: 0, starter: 75000, growth: 168750, scale: 300000, enterprise: 562500 },
-  USD: { free: 0, starter: 75, growth: 165, scale: 295, enterprise: 599 },
-  ARS: { free: 0, starter: 67500, growth: 148500, scale: 265500, enterprise: 539100 },
-  COP: { free: 0, starter: 299900, growth: 659900, scale: 1179900, enterprise: 2399900 },
-  MXN: { free: 0, starter: 1299, growth: 2899, scale: 4999, enterprise: 9999 },
-};
+// Anual (por mes equivalente) — 2 meses gratis => 10/12 del mensual
+export const LATAM_PRICES_ANNUAL: Record<string, PriceMap> = Object.fromEntries(
+  Object.entries(LATAM_PRICES).map(([curr, map]) => [
+    curr,
+    Object.fromEntries(
+      Object.entries(map).map(([plan, price]) => [plan, Math.round(price * 10 / 12)])
+    ) as PriceMap,
+  ])
+);
 
-// Featured listing add-on pricing (per listing, per month)
+export const ANNUAL_DISCOUNT_MONTHS = 2;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Add-ons de visibilidad (compatibles con cualquier plan)
+// ─────────────────────────────────────────────────────────────────────────────
 export type AddOnType = 'basic' | 'featured' | 'super_featured';
 
 export interface ListingAddOn {
@@ -180,7 +333,7 @@ export const LISTING_ADDONS: ListingAddOn[] = [
     id: 'featured',
     name: 'Publicación Destacada',
     description: 'Mayor visibilidad y posicionamiento premium',
-    multiplier: '3x visibilidad',
+    multiplier: '3× visibilidad',
     features: [
       'Badge "Destacado" visible',
       'Prioridad en resultados de búsqueda',
@@ -193,7 +346,7 @@ export const LISTING_ADDONS: ListingAddOn[] = [
     id: 'super_featured',
     name: 'Super Destacada',
     description: 'Máxima exposición + herramientas de conversión',
-    multiplier: '10x visibilidad',
+    multiplier: '10× visibilidad',
     features: [
       'Todo de Destacada +',
       'Banner premium en landing y explorar',
@@ -214,6 +367,9 @@ export const ADDON_PRICES: Record<string, Record<AddOnType, number>> = {
   ARS: { basic: 0, featured: 17100, super_featured: 49500 },
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Hooks
+// ─────────────────────────────────────────────────────────────────────────────
 export const useSubscription = () => {
   const { user } = useAuth();
 
@@ -263,7 +419,7 @@ export const useCreateCheckout = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      if (data.init_point) {
+      if (data?.init_point) {
         window.location.href = data.init_point;
       }
     },
@@ -280,14 +436,14 @@ export const useCreateCheckout = () => {
 export const useCurrentPlan = () => {
   const { data: subscription, isLoading } = useSubscription();
 
-  const planType = (subscription?.plan_type as PlanType) || 'free';
+  const planType = normalizePlanId(subscription?.plan_type);
 
   return {
     plan: planType,
     isLoading,
     isPremium: planType !== 'free',
     isEnterprise: planType === 'enterprise',
-    isScale: planType === 'scale' || planType === 'enterprise',
+    isScale: planType === 'grupo' || planType === 'enterprise' || planType === 'scale',
     subscription,
     planDetails: PLAN_DETAILS[planType] || PLAN_DETAILS.free,
   };
