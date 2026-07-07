@@ -274,6 +274,9 @@ const DashboardAsesor = () => {
           ))}
         </div>
 
+        {/* Plan usage & limits */}
+        <PlanLimitsCard />
+
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Leads Column */}
