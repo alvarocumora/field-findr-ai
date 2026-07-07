@@ -3,6 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      Recovery net for users still holding a stale service worker from a
+      previous deploy: if the entry script or a lazy chunk fails to load
+      (old hashed asset 404s after a redeploy), unregister the SW, clear its
+      caches and reload ONCE. Guarded by sessionStorage so it can never loop.
+    -->
+    <script>
+      (function () {
+        function recover() {
+          try {
+            if (sessionStorage.getItem('sw-chunk-recovered')) return;
+            sessionStorage.setItem('sw-chunk-recovered', '1');
+          } catch (e) { /* private mode */ }
+          var done = function () { location.reload(); };
+          try {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function (rs) {
+                rs.forEach(function (r) { r.unregister(); });
+              }).catch(function () {});
+            }
+            if (window.caches && caches.keys) {
+              caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+              }).then(done, done);
+            } else { done(); }
+          } catch (e) { done(); }
+        }
+        window.addEventListener('error', function (e) {
+          var t = e && e.target;
+          if (t && t.tagName === 'SCRIPT' && t.src && t.src.indexOf('/assets/') !== -1) recover();
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) {
+          var msg = e && e.reason && (e.reason.message || String(e.reason));
+          if (msg && /(dynamically imported module|Importing a module script failed|Failed to fetch dynamically imported)/i.test(msg)) recover();
+        });
+      })();
+    </script>
+
     <title>Ofertaterrenos.com - Terrenos Rurales e Industriales con IA</title>
     <meta name="description" content="La plataforma más avanzada para comprar y vender terrenos rurales e industriales en Chile. Búsqueda inteligente con IA, análisis de mercado y herramientas profesionales." />
     <meta name="keywords" content="terrenos chile, terrenos agrícolas, terrenos industriales, compra venta terrenos, inteligencia artificial inmobiliaria" />
