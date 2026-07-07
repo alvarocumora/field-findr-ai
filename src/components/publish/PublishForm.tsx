@@ -89,6 +89,7 @@ const PublishForm = () => {
   const { user } = useAuth();
   const createListing = useCreateListing();
   const { isLoading: isGenerating, generateListing } = useListingGenerator();
+  const planLimits = usePlanLimits();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     title: "",
