@@ -38,6 +38,7 @@ const DashboardAsesor = () => {
   const { data: goals, isLoading: goalsLoading } = useAgentGoals();
   const { projects, isLoading: projectsLoading } = useProjects();
   const { data: notifications } = useNotifications();
+  const planLimits = usePlanLimits();
 
   // Hot leads: high score, not contacted in 48h+
   const { data: hotLeads } = useQuery({
