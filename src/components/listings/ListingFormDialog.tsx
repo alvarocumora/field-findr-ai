@@ -24,6 +24,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import LocationPicker from '@/components/publish/LocationPicker';
 import ImageUploader from '@/components/publish/ImageUploader';
 import { cn } from '@/lib/utils';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { useNavigate } from 'react-router-dom';
 
 const PROPERTY_TYPES = [
   { value: 'parcela_rural', label: 'Parcela Rural' },
@@ -79,6 +81,8 @@ export function ListingFormDialog({ trigger, onSuccess }: ListingFormDialogProps
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { canCreateListing, listings, planDetails } = usePlanLimits();
 
   const form = useForm<ListingFormData>({
     resolver: zodResolver(listingSchema),
@@ -117,6 +121,13 @@ export function ListingFormDialog({ trigger, onSuccess }: ListingFormDialogProps
 
   const onSubmit = async (data: ListingFormData) => {
     if (!user) { toast.error('Debes iniciar sesión'); return; }
+    if (!canCreateListing) {
+      toast.error(
+        `Alcanzaste el límite de ${listings.limit} publicaciones del plan ${planDetails.name}. Mejora tu plan para publicar más.`,
+        { action: { label: 'Ver planes', onClick: () => navigate('/pricing') } }
+      );
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -161,10 +172,23 @@ export function ListingFormDialog({ trigger, onSuccess }: ListingFormDialogProps
   const images = form.watch('images') || [];
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setStep(1); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (v && !canCreateListing) {
+          toast.error(
+            `Alcanzaste el límite de ${listings.limit} publicaciones del plan ${planDetails.name}.`,
+            { action: { label: 'Ver planes', onClick: () => navigate('/pricing') } }
+          );
+          return;
+        }
+        setOpen(v);
+        if (!v) setStep(1);
+      }}
+    >
       <DialogTrigger asChild>
         {trigger || (
-          <Button className="rounded-xl gap-2">
+          <Button className="rounded-xl gap-2" disabled={!canCreateListing} title={!canCreateListing ? 'Límite del plan alcanzado' : undefined}>
             <Building2 className="h-4 w-4" />
             Nueva Propiedad
           </Button>
@@ -173,7 +197,14 @@ export function ListingFormDialog({ trigger, onSuccess }: ListingFormDialogProps
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nueva Propiedad</DialogTitle>
-          <DialogDescription>Paso {step} de 4 — {STEPS[step - 1].label}</DialogDescription>
+          <DialogDescription>
+            Paso {step} de 4 — {STEPS[step - 1].label}
+            {!listings.isUnlimited && (
+              <span className="ml-2 text-xs text-muted-foreground">
+                · {listings.used}/{listings.limit} usadas
+              </span>
+            )}
+          </DialogDescription>
         </DialogHeader>
 
         {/* Stepper */}

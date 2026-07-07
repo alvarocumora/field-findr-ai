@@ -23,6 +23,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import MorningBriefing from '@/components/dashboard/MorningBriefing';
+import PlanLimitsCard from '@/components/subscription/PlanLimitsCard';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -36,6 +38,7 @@ const DashboardAsesor = () => {
   const { data: goals, isLoading: goalsLoading } = useAgentGoals();
   const { projects, isLoading: projectsLoading } = useProjects();
   const { data: notifications } = useNotifications();
+  const planLimits = usePlanLimits();
 
   // Hot leads: high score, not contacted in 48h+
   const { data: hotLeads } = useQuery({
@@ -203,9 +206,18 @@ const DashboardAsesor = () => {
             />
             <ListingFormDialog
               trigger={
-                <Button className="rounded-xl gap-2">
+                <Button
+                  className="rounded-xl gap-2"
+                  disabled={!planLimits.canCreateListing}
+                  title={!planLimits.canCreateListing ? 'Límite del plan alcanzado' : undefined}
+                >
                   <Building2 className="h-4 w-4" />
                   Nueva Propiedad
+                  {!planLimits.listings.isUnlimited && (
+                    <span className="text-xs opacity-80">
+                      · {planLimits.listings.used}/{planLimits.listings.limit}
+                    </span>
+                  )}
                 </Button>
               }
             />
@@ -261,6 +273,9 @@ const DashboardAsesor = () => {
             )
           ))}
         </div>
+
+        {/* Plan usage & limits */}
+        <PlanLimitsCard />
 
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
