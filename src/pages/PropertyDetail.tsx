@@ -15,6 +15,8 @@ import { useListing, useListings, formatPrice, formatArea, getListingTypeLabel, 
 import PriceHistoryChart from '@/components/property/PriceHistoryChart';
 import { useToggleFavorite, useFavoriteIds } from '@/hooks/useFavorites';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsAgent } from '@/hooks/useUserRole';
+import ReferLeadDialog from '@/components/property/ReferLeadDialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
