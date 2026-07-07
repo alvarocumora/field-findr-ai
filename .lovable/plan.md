@@ -1,82 +1,88 @@
-# Plan de mejoras: Dashboard, Perfil, Usuarios y otras secciones
 
-Divido el trabajo en 4 fases entregables por separado. Cada fase se puede revisar y publicar independientemente.
+## Contexto — qué existe hoy
 
----
+- **Ruta pública:** `/pricing` (`src/pages/Pricing.tsx`) con tabs Comprador / Agente / Inmobiliaria.
+- **Definiciones:** `src/hooks/useSubscription.ts` → `PLAN_DETAILS`, `LATAM_PRICES` (UF/CLP/USD/ARS/COP/MXN), `LISTING_ADDONS`, `ADDON_PRICES`.
+- **Checkout:** `useCreateCheckout` → edge function `mercadopago` (suscripción). Retornos `/subscription/{success,pending,failure}`. Webhook `mercadopago-webhook` sincroniza `subscriptions` + rol.
+- **Add-ons ya existentes:** Básica (incluida) · Destacada 0.5 UF (3× visibilidad) · Super Destacada 1.5 UF (10× visibilidad).
+- **Planes actuales (UF/mes):** free 0 · Starter 2.0 · Growth 4.5 · Scale 8.0 · Enterprise 15.0.
 
-## Fase 1 — Dashboard admin
+## Benchmark competencia (jul-2026)
 
-**Objetivo:** que los KPIs sean interactivos, comparables y navegables.
+| Portal | Entrada | Medio | Alto | Modelo |
+|---|---|---|---|---|
+| **ChilePropiedades** | $3.990 CLP (30 prop / 5 dest) | $6.990 (60/10) → $9.990 (90/15) | $15.990 (ilim / 20 dest) | SaaS mensual, 2 meses gratis anual |
+| **Portalinmobiliario** | Sales-led (Plata/Oro/Platino) | — | Tienda Oficial + branding | Enterprise sales, sin precios públicos |
+| **TocToc** | Contactar ejecutiva | — | Perfil auto-administrado | Sales-led, personalizado |
+| **Yapo — Pack Inmo** | Créditos por cupo/tiempo | — | — | Pay-per-slot |
+| **Zonaprop (AR)** | Simple por aviso | Destacado | Super Destacado | Pay-per-listing con visibilidad tiered |
+| **EasyBroker (MX SaaS)** | $490 MXN (10 anun.) | $990 (25) → $1.490 (50) | $1.990+ (custom) | SaaS por inventario, foco CRM |
+| **Inmuebles24 / Vivanuncios** | Combo mensual (contactar) | — | — | Sales-led combo multi-portal |
 
-- Selector de rango de fechas en `DashboardHeader` (Hoy / 7d / 30d / 90d / YTD / Custom con `Calendar`).
-- Extender `useDashboardKPIs` / `useSalesChartData` para aceptar `{ from, to }` y calcular **% vs periodo anterior** (comparativa real, no placeholder).
-- Saludo dinámico según rol (Admin / Asesor / Inmobiliaria) usando `useUserRoles`.
-- Cablear navegación real:
-  - `QuickActions` → rutas existentes (`/asesor/listings/new`, `/asesor/leads`, `/asesor/reservations`).
-  - `PropertyInsights.onViewProperty(id)` → `/propiedad/:id`, `onViewAll` → `/asesor/listings`.
-- Skeleton unificado y estado vacío con CTA cuando no hay ventas.
+**Conclusiones clave:**
+1. El mercado chileno tiene una **entrada muy barata** ($4–7k CLP) para captar corredores independientes. Nuestro Starter (UF 2 ≈ $75k) es 10× más caro sin justificarlo bien.
+2. La **inmobiliaria grande** paga premium con sales-led (Portalinmobiliario, TocToc). Ahí compite valor: branding + BI + white-label.
+3. Todos ofrecen **anual con 2 meses gratis** como estándar.
+4. Nadie ofrece nuestro combo: **IA + mapa 3D + tasación + CRM + financiamiento directo**. Ese es el diferencial a monetizar.
 
-**Archivos:** `src/components/Dashboard.tsx`, `src/components/dashboard/DashboardHeader.tsx`, `src/components/dashboard/QuickActions.tsx`, `src/components/dashboard/PropertyInsights.tsx`, `src/hooks/useDashboardData.ts`.
+## Estrategia de nueva oferta
 
----
+Estructura de 5 planes con nombres orientados al negocio inmobiliario chileno, precios en UF (base) con conversión LATAM:
 
-## Fase 2 — Perfil
+| Plan | UF/mes | ~CLP | Target | Lotes | Publicaciones | Destacadas incluidas |
+|---|---|---|---|---|---|---|
+| **Free** | 0 | $0 | Prueba | 5 | 3 | 0 |
+| **Corredor** ⭐ nuevo entry | **1.0** | ~$38k | Corredor independiente | 15 | 15 | 1 destacada |
+| **Corredora** | **2.5** | ~$94k | Oficina 1-3 agentes | 60 | 60 | 3 destacadas + 1 super |
+| **Inmobiliaria** (Growth) | **5.0** | ~$188k | Desarrollador 1-3 proyectos | 200 | 200 | 10 destacadas + 3 super |
+| **Grupo** (Scale) | **9.0** | ~$338k | Multi-proyecto, equipo | 500 | 500 | ilim destacadas + 10 super |
+| **Enterprise** | Custom | — | Cadenas, holdings | Ilimitado | Ilimitado | White-label + API + SLA |
 
-**Objetivo:** perfil real, con avatar, rol visible y preferencias que persistan.
+**Cambios respecto al actual:**
+- Añadir tier **Corredor 1 UF** (competitivo con ChilePropiedades pero superior en features).
+- Renombrar tiers a nombres del rubro (Corredor / Corredora / Inmobiliaria / Grupo) — hoy son Starter/Growth/Scale.
+- Incluir **N destacadas gratis dentro del plan** (hoy son 100% add-on). Reduce fricción y compite con ChilePropiedades.
+- Toggle **Mensual / Anual −17%** (2 meses gratis) — estándar del mercado.
+- **Primer mes 50% OFF** para nuevo corredor (badge en Pricing).
+- Enterprise pasa a "Contactar ventas" (sales-led como Portalinmobiliario).
 
-- **Avatar:** componente `AvatarUploader` que sube al bucket `avatars` (ya existe, público) en path `${user.id}/avatar.{ext}`, con RLS de owner y actualiza `profiles.avatar_url`.
-- **Badge de rol** junto al nombre (Comprador / Asesor / Admin) + CTA "Convertirme en asesor" que redirige a `/pricing` si es buyer.
-- **PreferencesTab:** agregar columnas `language`, `currency`, `notifications_email`, `notifications_push` a `profiles` (migración) y persistirlas.
-- **SecurityTab:** cambio de email (`supabase.auth.updateUser`), cerrar sesión en todos los dispositivos, toggle 2FA (informativo si no está habilitado a nivel proyecto).
+## Cambios de código
 
-**Archivos:** `src/pages/Profile.tsx`, `src/components/profile/PersonalInfoTab.tsx`, `src/components/profile/SecurityTab.tsx`, `src/components/profile/PreferencesTab.tsx`, nuevo `src/components/profile/AvatarUploader.tsx`, migración de `profiles` + policy en `storage.objects`.
+**1. `src/hooks/useSubscription.ts`**
+- Ampliar `PlanType` a `'free' | 'corredor' | 'corredora' | 'inmobiliaria' | 'grupo' | 'enterprise'` (mantener retrocompatibilidad con `starter/growth/scale` mapeando en el hook).
+- Reescribir `PLAN_DETAILS` con nuevos nombres, `maxUnits`, `maxPublications`, `includedFeatured`, `includedSuperFeatured`, `annualDiscountMonths: 2`.
+- Reescribir `LATAM_PRICES` para mensual y añadir `LATAM_PRICES_ANNUAL` (10 × mensual).
+- Añadir `PLAN_TARGET` (texto de a quién apunta cada tier) y `PLAN_HIGHLIGHTS` (3 bullets diferenciadores).
 
----
+**2. `src/pages/Pricing.tsx`**
+- Toggle Mensual / Anual (12 meses × 10) con badge "Ahorra 2 meses".
+- Reordenar tabs → **Corredores** (Corredor/Corredora), **Inmobiliarias** (Inmobiliaria/Grupo/Enterprise), **Comprador**.
+- En cada card: badge "N destacadas incluidas/mes", CTA "Empieza gratis 14 días" en tier destacado.
+- Nueva sección debajo: tabla comparativa **"Ofertaterrenos vs competencia"** con 6-8 filas (precio entry, publicaciones, destacadas, CRM, mapa 3D, tasación IA, financiamiento, soporte). Datos hard-coded en `src/config/pricingBenchmark.ts` (nuevo).
+- Nueva sección FAQ pricing: cambio de plan, prorrateo, factura, cancelación.
 
-## Fase 3 — Gestión de usuarios (admin)
+**3. `src/config/pricingBenchmark.ts`** (nuevo)
+- Export const con la tabla benchmark ChilePropiedades / Portalinmobiliario / TocToc / Zonaprop / EasyBroker + nuestra oferta.
 
-**Objetivo:** panel admin funcional para operar sobre la base de usuarios.
+**4. Landings dedicadas — nueva ruta pública**
+- `/para-corredoras` → `src/pages/marketing/CorredorasLanding.tsx`: hero con dolor ("¿pagas $9.990 en ChilePropiedades y no vendes?"), propuesta única (IA + mapa + CRM), 3 planes destacados (Corredor / Corredora / Inmobiliaria), testimonios, CTA a `/auth?redirect=/pricing`.
+- `/para-inmobiliarias` → `src/pages/marketing/InmobiliariasLanding.tsx`: hero enterprise (multi-proyecto, white-label, API), planes Inmobiliaria / Grupo / Enterprise, ROI calculator simple (lotes × ticket × comisión).
+- Registrar ambas en `src/routes/publicRoutes.tsx`.
+- Link desde `FooterSection` y `StickyHeader`.
 
-- Auditar `AdminUsers.tsx` actual y agregar lo que falte:
-  - Buscador (email / nombre) + filtro por rol + orden.
-  - Cambio de rol inline (buyer ↔ agent ↔ admin) usando `user_roles`.
-  - Suspender/reactivar (columna `is_suspended` en `profiles` + guard en `useAuth`).
-  - Drawer de detalle: listings, reservas, pagos, leads, última actividad.
-  - Invitar por email (edge function `invite-user` usando `auth.admin.inviteUserByEmail`).
-  - Export CSV del listado filtrado.
-- Todas las acciones registradas en `audit_logs`.
+**5. Backend — sin migración obligatoria**
+- `subscriptions.plan_type` es text libre → basta actualizar constantes. Los planes legacy (`starter/growth/scale`) siguen funcionando; el hook mapea legacy → nuevo nombre para mostrar.
+- La edge function `mercadopago` recibe `plan_type` string; no requiere cambios de esquema, solo actualizar el mapeo de precios interno cuando confirmes los precios finales.
 
-**Archivos:** `src/pages/AdminUsers.tsx` (+ subcomponentes nuevos en `src/components/admin/users/`), nueva edge function `supabase/functions/invite-user/index.ts`, migración para `is_suspended`.
+## Fuera de alcance de este PR
 
----
+- Cambios en Mercado Pago (crear planes nuevos en su dashboard) — lo hacemos después de aprobar precios.
+- Cupones / trials automáticos (requiere lógica extra en `subscriptions`). Se puede dejar como copy "50% primer mes" y aplicar manualmente hasta el próximo sprint.
+- Migración de usuarios existentes a nuevos nombres (mapping en UI es suficiente por ahora).
 
-## Fase 4 — Otras secciones
+## Preguntas para confirmar antes de implementar
 
-**Objetivo:** pulir puntos débiles detectados.
-
-- **Notificaciones (`/notificaciones`):** agrupar por tipo (reservas / leads / sistema), acciones inline "marcar leído" masivo, tab "no leídas".
-- **Aprobaciones (`/admin/approvals`):** motivos estructurados de rechazo (enum + plantillas editables) en lugar de texto libre.
-- **Auditoría (`/admin/audit`):** filtros por usuario / acción / fecha + export CSV.
-- **Onboarding asesor:** widget en `DashboardAsesor` con checklist ("Completa tu perfil", "Publica tu 1ª propiedad", "Configura pagos", "Conecta WhatsApp") con % de progreso.
-
-**Archivos:** `src/pages/NotificationCenter.tsx`, `src/components/admin/PropertyApprovalQueue.tsx`, `src/pages/dashboard/AuditLog.tsx`, `src/pages/dashboard/DashboardAsesor.tsx` + nuevo `src/components/dashboard/OnboardingChecklist.tsx`.
-
----
-
-## Orden sugerido
-
-1. **Fase 1** (dashboard) — impacto visible inmediato, sin cambios de schema.
-2. **Fase 2** (perfil) — requiere 1 migración pequeña + policy de storage.
-3. **Fase 3** (usuarios) — requiere migración + edge function.
-4. **Fase 4** (secciones) — pulido final.
-
-## Aspectos técnicos
-
-- Sin cambios en `auth`, `storage.buckets` (uso `storage_update_bucket` si hace falta) ni en archivos autogenerados.
-- Nuevas tablas/columnas con `GRANT` explícito + policies role-based (nunca `USING(true)`).
-- Reutilizar `useSmartRedirect`, `useUserRoles`, `useTrackEvent` existentes.
-- Sin tocar el hero cinemático ni el flujo de tasaciones.
-
-## Pregunta antes de empezar
-
-¿Arranco por **Fase 1** ya, o prefieres que ejecute las 4 fases seguidas en un solo hilo largo sin pausas para revisión?
+1. **Precios:** ¿te sirven los valores propuestos en UF, o quieres subirlos/bajarlos? (ej. Corredor 1 UF vs 1.5 UF).
+2. **Trial:** ¿14 días gratis o "primer mes 50% off"? (elige uno; ambos requieren copy distinto).
+3. **Destacadas incluidas:** ¿ok con incluirlas en el plan, o prefieres seguir 100% add-on?
+4. **Landings dedicadas:** ¿creo `/para-corredoras` y `/para-inmobiliarias`, o basta con reforzar `/pricing`?
