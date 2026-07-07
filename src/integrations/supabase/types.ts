@@ -21,10 +21,16 @@ export type Database = {
           commission_rate: number
           created_at: string
           id: string
+          lead_id: string | null
+          listing_id: string | null
           lot_id: string | null
           notes: string | null
           paid_at: string | null
           project_id: string | null
+          referral_amount: number | null
+          referral_rate: number | null
+          referral_status: string | null
+          referring_agent_id: string | null
           reservation_id: string | null
           sale_amount: number
           status: string
@@ -36,10 +42,16 @@ export type Database = {
           commission_rate?: number
           created_at?: string
           id?: string
+          lead_id?: string | null
+          listing_id?: string | null
           lot_id?: string | null
           notes?: string | null
           paid_at?: string | null
           project_id?: string | null
+          referral_amount?: number | null
+          referral_rate?: number | null
+          referral_status?: string | null
+          referring_agent_id?: string | null
           reservation_id?: string | null
           sale_amount?: number
           status?: string
@@ -51,16 +63,36 @@ export type Database = {
           commission_rate?: number
           created_at?: string
           id?: string
+          lead_id?: string | null
+          listing_id?: string | null
           lot_id?: string | null
           notes?: string | null
           paid_at?: string | null
           project_id?: string | null
+          referral_amount?: number | null
+          referral_rate?: number | null
+          referral_status?: string | null
+          referring_agent_id?: string | null
           reservation_id?: string | null
           sale_amount?: number
           status?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "agent_commissions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_commissions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "agent_commissions_lot_id_fkey"
             columns: ["lot_id"]
@@ -515,6 +547,7 @@ export type Database = {
           last_name: string | null
           last_scored_at: string | null
           lead_score: number | null
+          listing_id: string | null
           lot_id: string | null
           next_follow_up: string | null
           notes: string | null
@@ -522,6 +555,8 @@ export type Database = {
           preferred_area_max: number | null
           preferred_area_min: number | null
           project_id: string | null
+          referral_notes: string | null
+          referring_agent_id: string | null
           score_breakdown: Json | null
           source: string | null
           status: string | null
@@ -538,6 +573,7 @@ export type Database = {
           last_name?: string | null
           last_scored_at?: string | null
           lead_score?: number | null
+          listing_id?: string | null
           lot_id?: string | null
           next_follow_up?: string | null
           notes?: string | null
@@ -545,6 +581,8 @@ export type Database = {
           preferred_area_max?: number | null
           preferred_area_min?: number | null
           project_id?: string | null
+          referral_notes?: string | null
+          referring_agent_id?: string | null
           score_breakdown?: Json | null
           source?: string | null
           status?: string | null
@@ -561,6 +599,7 @@ export type Database = {
           last_name?: string | null
           last_scored_at?: string | null
           lead_score?: number | null
+          listing_id?: string | null
           lot_id?: string | null
           next_follow_up?: string | null
           notes?: string | null
@@ -568,6 +607,8 @@ export type Database = {
           preferred_area_max?: number | null
           preferred_area_min?: number | null
           project_id?: string | null
+          referral_notes?: string | null
+          referring_agent_id?: string | null
           score_breakdown?: Json | null
           source?: string | null
           status?: string | null
@@ -575,6 +616,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "leads_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "leads_lot_id_fkey"
             columns: ["lot_id"]
@@ -1964,6 +2012,19 @@ export type Database = {
         }
         Returns: number
       }
+      create_referral_lead: {
+        Args: {
+          p_budget_max?: number
+          p_budget_min?: number
+          p_email?: string
+          p_first_name: string
+          p_last_name?: string
+          p_listing_id: string
+          p_notes?: string
+          p_phone?: string
+        }
+        Returns: string
+      }
       expire_stale_reservations: { Args: never; Returns: number }
       extend_reservation: {
         Args: { p_hours?: number; p_reservation_id: string }
@@ -2011,15 +2072,29 @@ export type Database = {
         Returns: string
       }
       mark_overdue_payments: { Args: never; Returns: undefined }
-      register_sale: {
-        Args: {
-          p_commission_rate?: number
-          p_notes?: string
-          p_reservation_id: string
-          p_sale_amount: number
-        }
-        Returns: string
-      }
+      mark_referral_paid: { Args: { p_commission_id: string }; Returns: string }
+      register_sale:
+        | {
+            Args: {
+              p_commission_rate?: number
+              p_notes?: string
+              p_reservation_id: string
+              p_sale_amount: number
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_commission_rate?: number
+              p_lead_id?: string
+              p_notes?: string
+              p_referral_rate?: number
+              p_referring_agent_id?: string
+              p_reservation_id: string
+              p_sale_amount: number
+            }
+            Returns: string
+          }
     }
     Enums: {
       app_role: "buyer" | "agent" | "admin"
