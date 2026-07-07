@@ -554,14 +554,14 @@ export const ParcelaDesigner3D = ({
         {/* Satellite loading */}
         {useRealisticTerrain && satelliteLoading && (
           <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 bg-primary/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-[10px] text-primary-foreground font-medium animate-pulse border border-primary/40">
-            🛰️ Cargando imagen satelital (9 tiles)...
+            🛰️ Cargando imagen satelital…
           </div>
         )}
 
-        {/* Satellite error */}
+        {/* Satellite error (only after all providers — Mapbox + Esri — fail) */}
         {useRealisticTerrain && !satelliteLoading && satelliteError && (
           <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 bg-destructive/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-[10px] text-destructive-foreground font-medium border border-destructive/40">
-            ⚠️ No se pudo cargar imagen satelital — verificar token Mapbox
+            ⚠️ No se pudo cargar la imagen satelital — revisa tu conexión
           </div>
         )}
 
@@ -630,9 +630,31 @@ export const ParcelaDesigner3D = ({
                 ? 'Arrastra el gizmo para transformar · Q=Mover W=Rotar E=Escalar · Supr elimina'
                 : 'Selecciona un objeto para transformarlo · Click terreno para colocar'}
         </div>
-        <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-medium text-foreground border border-border/40">
-          {ps.objects.length} objetos
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+          <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-medium text-foreground border border-border/40">
+            {ps.objects.length} {ps.objects.length === 1 ? 'objeto' : 'objetos'}
+          </div>
+          {ps.viewMode !== 'pedestrian' && (
+            <button
+              type="button"
+              onClick={() => controlsRef.current?.reset?.()}
+              title="Recentrar vista"
+              className="bg-background/80 backdrop-blur-sm rounded-lg px-2.5 py-1.5 text-xs text-foreground border border-border/40 hover:bg-background transition-colors"
+            >
+              ⌖ Centrar
+            </button>
+          )}
         </div>
+
+        {/* First-use hint — non-blocking, guides the initial placement */}
+        {ps.objects.length === 0 && !pendingLabel && !ps.measureMode && ps.viewMode !== 'pedestrian' && (
+          <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-10 pointer-events-none max-w-xs text-center bg-background/85 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-primary/30 shadow-lg">
+            <p className="text-xs font-medium text-foreground">Diseña tu parcela 🏡</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Elige un elemento del catálogo (izquierda) y haz clic en el terreno para colocarlo.
+            </p>
+          </div>
+        )}
         {ps.measureMode && ps.measurePoints.length === 2 && (
           <div className="absolute top-3 left-3 bg-primary/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-bold text-primary-foreground border border-primary/40 z-20">
             📏 {Math.sqrt(
