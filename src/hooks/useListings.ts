@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { Json } from '@/integrations/supabase/types';
+import type { Json, Tables } from '@/integrations/supabase/types';
 
 export interface Listing {
   id: string;
@@ -182,14 +182,34 @@ export const useCreateListing = () => {
       status?: string;
       is_demo?: boolean;
     }) => {
-      const { data, error } = await supabase
-        .from('listings')
-        .insert(listing)
-        .select()
-        .single();
+      // Server-side quota enforcement via edge function.
+      // Returns 403 with { error: 'plan_quota_exceeded', message, limit, used } when over plan.
+      const { data, error } = await supabase.functions.invoke('publish-listing', {
+        body: { listing },
+      });
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        // supabase-js exposes function HTTP errors via FunctionsHttpError with a Response context.
+        // Try to surface the server-provided message when available.
+        const ctx = (error as { context?: Response }).context;
+        if (ctx && typeof ctx.json === 'function') {
+          try {
+            const payload = await ctx.json();
+            const message =
+              (payload && typeof payload === 'object' && 'message' in payload
+                ? String((payload as { message: unknown }).message)
+                : (payload as { error?: unknown })?.error) || error.message;
+            throw new Error(String(message));
+          } catch (parseErr) {
+            if (parseErr instanceof Error && parseErr.message) throw parseErr;
+          }
+        }
+        throw error;
+      }
+
+      const created = (data as { listing?: unknown })?.listing;
+      if (!created) throw new Error('No se recibió la propiedad creada del servidor');
+      return created as Tables<'listings'>;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['listings'] });
