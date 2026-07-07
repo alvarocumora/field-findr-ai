@@ -8,53 +8,71 @@ const corsHeaders = {
 const MERCADOPAGO_ACCESS_TOKEN = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
 const MERCADOPAGO_API_URL = "https://api.mercadopago.com";
 
+type BillingCycle = "monthly" | "annual";
+type PlanKey =
+  | "corredor" | "corredora" | "inmobiliaria" | "grupo"
+  // legacy aliases -> map to new tiers
+  | "starter" | "growth" | "scale" | "professional";
+
 interface PlanConfig {
   name: string;
-  price: number;
+  monthly: number; // CLP
   currency: string;
   features: string[];
 }
 
-// Prices aligned to LATAM_PRICES (CLP) in src/hooks/useSubscription.ts
-const PLANS: Record<string, PlanConfig> = {
-  starter: {
-    name: "Plan Starter",
-    price: 75000,
+// Precios CLP alineados con LATAM_PRICES en src/hooks/useSubscription.ts
+const PLANS: Record<Exclude<PlanKey, "starter" | "growth" | "scale" | "professional">, PlanConfig> = {
+  corredor: {
+    name: "Plan Corredor",
+    monthly: 38000,
     currency: "CLP",
-    features: ["Hasta 30 lotes", "3 proyectos", "CRM básico"],
+    features: ["1 usuario", "Hasta 15 publicaciones", "CRM básico", "IA búsqueda"],
   },
-  growth: {
-    name: "Plan Growth",
-    price: 168750,
+  corredora: {
+    name: "Plan Corredora",
+    monthly: 94000,
     currency: "CLP",
-    features: ["Hasta 150 lotes", "10 proyectos", "CRM + Lead Scoring AI"],
+    features: ["3 usuarios", "Hasta 60 publicaciones", "1 destacada/mes", "Lead scoring AI", "Mapa 3D"],
   },
-  scale: {
-    name: "Plan Scale",
-    price: 300000,
+  inmobiliaria: {
+    name: "Plan Inmobiliaria",
+    monthly: 188000,
     currency: "CLP",
-    features: ["Hasta 500 lotes", "50 proyectos", "Equipo multi-agente"],
+    features: ["10 usuarios", "Hasta 200 publicaciones", "3 destacadas/mes", "CRM + financing", "Tasación AI"],
   },
-  enterprise: {
-    name: "Plan Enterprise",
-    price: 562500,
+  grupo: {
+    name: "Plan Grupo",
+    monthly: 338000,
     currency: "CLP",
-    features: ["Lotes ilimitados", "White-label", "SSO / SAML"],
-  },
-  // Legacy aliases
-  professional: {
-    name: "Plan Profesional",
-    price: 49990,
-    currency: "CLP",
-    features: ["Hasta 50 publicaciones", "CRM integrado"],
+    features: ["25 usuarios", "Hasta 500 publicaciones", "8 destacadas/mes", "Multi-proyecto", "API + Webhooks"],
   },
 };
 
-serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+// Aliases -> nueva estructura para retro-compat.
+const ALIAS: Record<string, keyof typeof PLANS> = {
+  starter: "corredora",
+  growth: "inmobiliaria",
+  scale: "grupo",
+  professional: "corredora",
+};
+
+const resolvePlan = (planType: string): { key: keyof typeof PLANS; cfg: PlanConfig } | null => {
+  const key = (ALIAS[planType] ?? planType) as keyof typeof PLANS;
+  const cfg = PLANS[key];
+  return cfg ? { key, cfg } : null;
+};
+
+const priceFor = (cfg: PlanConfig, cycle: BillingCycle, firstMonthDiscount: boolean) => {
+  if (cycle === "annual") {
+    // 2 meses gratis: 10 * mensual
+    return cfg.monthly * 10;
   }
+  return firstMonthDiscount ? Math.round(cfg.monthly * 0.5) : cfg.monthly;
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   if (!MERCADOPAGO_ACCESS_TOKEN) {
     return new Response(
@@ -67,54 +85,85 @@ serve(async (req) => {
     const url = new URL(req.url);
     const path = url.pathname.split("/").pop();
 
-    // Create preference for checkout
     if (req.method === "POST" && path === "create-preference") {
-      const { plan_type, user_id, user_email, success_url, failure_url } = await req.json();
+      const body = await req.json();
+      const {
+        plan_type,
+        user_id,
+        user_email,
+        success_url,
+        failure_url,
+        billing_cycle = "monthly",
+        first_month_discount = true,
+      } = body as {
+        plan_type: string;
+        user_id?: string;
+        user_email?: string;
+        success_url?: string;
+        failure_url?: string;
+        billing_cycle?: BillingCycle;
+        first_month_discount?: boolean;
+      };
 
-      if (!plan_type || !PLANS[plan_type]) {
+      if (plan_type === "enterprise" || plan_type === "free") {
+        return new Response(
+          JSON.stringify({ error: "Plan requires sales contact", contact_url: "/contacto" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const resolved = resolvePlan(plan_type);
+      if (!resolved) {
         return new Response(
           JSON.stringify({ error: "Invalid plan type" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-
-      const plan = PLANS[plan_type];
+      const { key, cfg } = resolved;
+      const cycle: BillingCycle = billing_cycle === "annual" ? "annual" : "monthly";
+      const unitPrice = priceFor(cfg, cycle, first_month_discount && cycle === "monthly");
+      const cycleLabel = cycle === "annual" ? "Suscripción anual (2 meses gratis)" : "Suscripción mensual";
+      const promoLabel =
+        cycle === "monthly" && first_month_discount ? " · 50% off primer mes" : "";
 
       const preferenceData = {
         items: [
           {
-            title: plan.name,
-            description: `Suscripción mensual a ${plan.name}`,
+            title: `${cfg.name} — ${cycle === "annual" ? "Anual" : "Mensual"}`,
+            description: `${cycleLabel}${promoLabel}`,
             quantity: 1,
-            currency_id: plan.currency,
-            unit_price: plan.price
-          }
+            currency_id: cfg.currency,
+            unit_price: unitPrice,
+          },
         ],
-        payer: {
-          email: user_email
-        },
+        payer: user_email ? { email: user_email } : undefined,
         back_urls: {
           success: success_url || `${req.headers.get("origin")}/subscription/success`,
           failure: failure_url || `${req.headers.get("origin")}/subscription/failure`,
-          pending: `${req.headers.get("origin")}/subscription/pending`
+          pending: `${req.headers.get("origin")}/subscription/pending`,
         },
         auto_return: "approved",
-        external_reference: JSON.stringify({ user_id, plan_type }),
+        external_reference: JSON.stringify({
+          user_id,
+          plan_type: key,
+          billing_cycle: cycle,
+          first_month_discount: cycle === "monthly" && first_month_discount,
+        }),
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`,
-        statement_descriptor: "OFERTATERRENOS"
+        statement_descriptor: "OFERTATERRENOS",
+        metadata: { plan_type: key, billing_cycle: cycle },
       };
 
       const response = await fetch(`${MERCADOPAGO_API_URL}/checkout/preferences`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(preferenceData)
+        body: JSON.stringify(preferenceData),
       });
 
       const data = await response.json();
-
       if (!response.ok) {
         console.error("MercadoPago error:", data);
         return new Response(
@@ -127,30 +176,31 @@ serve(async (req) => {
         JSON.stringify({
           preference_id: data.id,
           init_point: data.init_point,
-          sandbox_init_point: data.sandbox_init_point
+          sandbox_init_point: data.sandbox_init_point,
+          plan_type: key,
+          billing_cycle: cycle,
+          unit_price: unitPrice,
+          currency: cfg.currency,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get plans info
     if (req.method === "GET" && path === "plans") {
-      return new Response(
-        JSON.stringify(PLANS),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify(PLANS), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(
       JSON.stringify({ error: "Not found" }),
       { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error: unknown) {
     console.error("Error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
