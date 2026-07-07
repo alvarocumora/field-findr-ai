@@ -32,9 +32,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useCreateListing } from "@/hooks/useListings";
 import { useAuth } from "@/hooks/useAuth";
 import { useListingGenerator } from "@/hooks/useAI";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 import LocationPicker from "./LocationPicker";
 import ImageUploader from "./ImageUploader";
 import { LATAM_COUNTRIES, getCountryConfig, type CountryConfig } from "@/lib/latam";
+import { AlertTriangle } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const PROPERTY_TYPES = [
   { value: 'parcela_rural', label: 'Parcela Rural' },
@@ -86,6 +89,7 @@ const PublishForm = () => {
   const { user } = useAuth();
   const createListing = useCreateListing();
   const { isLoading: isGenerating, generateListing } = useListingGenerator();
+  const planLimits = usePlanLimits();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -174,6 +178,17 @@ const PublishForm = () => {
       return;
     }
 
+    if (!planLimits.canCreateListing) {
+      toast({
+        title: "Límite de plan alcanzado",
+        description: `Tu plan ${planLimits.planDetails.name} permite ${planLimits.listings.limit} publicaciones. Mejora tu plan para publicar más.`,
+        variant: "destructive",
+      });
+      navigate('/pricing');
+      return;
+    }
+
+
     try {
       const countryConfig = getCountryConfig(formData.country);
       await createListing.mutateAsync({
@@ -235,6 +250,31 @@ const PublishForm = () => {
             </Badge>
           </div>
         </div>
+
+        {/* Plan usage / limit banner */}
+        {user && !planLimits.isLoading && !planLimits.listings.isUnlimited && (
+          <div
+            className={`mb-6 rounded-lg border p-3 flex items-center justify-between gap-3 text-sm ${
+              planLimits.listings.isAtLimit
+                ? 'border-destructive/40 bg-destructive/10 text-destructive'
+                : planLimits.listings.isNearLimit
+                  ? 'border-amber-500/40 bg-amber-500/10 text-amber-200'
+                  : 'border-white/10 bg-white/5 text-muted-foreground'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {planLimits.listings.isAtLimit && <AlertTriangle className="h-4 w-4" />}
+              <span>
+                Plan <b>{planLimits.planDetails.name}</b> · {planLimits.listings.used}/{planLimits.listings.limit} publicaciones usadas
+                {planLimits.listings.isAtLimit && ' · límite alcanzado'}
+              </span>
+            </div>
+            {planLimits.listings.isNearLimit && (
+              <Link to="/pricing" className="underline whitespace-nowrap">Mejorar plan</Link>
+            )}
+          </div>
+        )}
+
 
         {/* Progress Steps */}
         <div className="flex items-center justify-between mb-8">
@@ -694,12 +734,17 @@ const PublishForm = () => {
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             ) : (
-              <Button 
+              <Button
                 onClick={handlePublish}
-                disabled={createListing.isPending}
+                disabled={createListing.isPending || !planLimits.canCreateListing}
                 className="btn-glow"
+                title={!planLimits.canCreateListing ? 'Has alcanzado el límite de publicaciones de tu plan' : undefined}
               >
-                {createListing.isPending ? "Publicando..." : "Publicar propiedad"}
+                {createListing.isPending
+                  ? "Publicando..."
+                  : !planLimits.canCreateListing
+                    ? "Límite alcanzado — mejora tu plan"
+                    : "Publicar propiedad"}
               </Button>
             )}
           </div>
