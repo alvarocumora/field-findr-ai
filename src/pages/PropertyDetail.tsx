@@ -776,6 +776,24 @@ const PropertyDetail = () => {
             {/* Contact Form */}
             <ContactForm listingId={listing.id} listingTitle={listing.title} listingOwnerId={listing.user_id} />
 
+            {/* Broker referral: only visible to other agents (not the owner) */}
+            {canReferLead && (
+              <Card className="glass border-primary/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <span className="text-primary">Corredor / Corredora</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    ¿Tienes un cliente interesado en esta propiedad? Refiérelo y recibe una comisión
+                    automática si se concreta la venta.
+                  </p>
+                  <ReferLeadDialog listingId={listing.id} listingTitle={listing.title} />
+                </CardContent>
+              </Card>
+            )}
+
             {/* Property Map */}
             <Card className="glass border-border/50">
               <CardHeader className="pb-3">
