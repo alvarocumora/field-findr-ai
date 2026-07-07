@@ -32,9 +32,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useCreateListing } from "@/hooks/useListings";
 import { useAuth } from "@/hooks/useAuth";
 import { useListingGenerator } from "@/hooks/useAI";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 import LocationPicker from "./LocationPicker";
 import ImageUploader from "./ImageUploader";
 import { LATAM_COUNTRIES, getCountryConfig, type CountryConfig } from "@/lib/latam";
+import { AlertTriangle } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const PROPERTY_TYPES = [
   { value: 'parcela_rural', label: 'Parcela Rural' },
