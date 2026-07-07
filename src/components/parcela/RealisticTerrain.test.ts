@@ -1,5 +1,28 @@
 import { describe, it, expect } from 'vitest';
-import { bboxForPlane, staticSatelliteUrl, normalizeElevations, MAX_RELIEF_M, cropResampleElevation, sampleGridBilinear, projectRingToLocal, pointInRing, hashRand } from './RealisticTerrain';
+import { bboxForPlane, staticSatelliteUrl, esriSatelliteUrl, satelliteProviders, normalizeElevations, MAX_RELIEF_M, cropResampleElevation, sampleGridBilinear, projectRingToLocal, pointInRing, hashRand } from './RealisticTerrain';
+
+describe('esriSatelliteUrl', () => {
+  it('builds a key-less Esri World Imagery bbox export', () => {
+    const url = esriSatelliteUrl(-34.99, -71.63, 200);
+    expect(url).toContain('server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export');
+    expect(url).toContain('bbox=');
+    expect(url).toContain('bboxSR=4326');
+    expect(url).toContain('f=image');
+    expect(url).not.toContain('access_token'); // no API key
+  });
+});
+
+describe('satelliteProviders (fallback chain)', () => {
+  it('tries Mapbox first then Esri when a token is present', () => {
+    const p = satelliteProviders(-34.99, -71.63, 200, 'pk.tok');
+    expect(p.map((x) => x.name)).toEqual(['mapbox', 'esri']);
+  });
+  it('uses only Esri when there is no Mapbox token', () => {
+    const p = satelliteProviders(-34.99, -71.63, 200, '');
+    expect(p.map((x) => x.name)).toEqual(['esri']);
+    expect(p[0].url).toContain('arcgisonline.com');
+  });
+});
 
 describe('projectRingToLocal', () => {
   const cLng = -71.63, cLat = -34.99;
