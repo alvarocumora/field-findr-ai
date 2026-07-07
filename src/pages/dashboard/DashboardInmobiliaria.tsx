@@ -21,6 +21,7 @@ import Layout from '@/components/Layout';
 import { useAgencyStats, useAgencyAgents, useAgencyProperties } from '@/hooks/useDashboardStats';
 import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
 import { ListingFormDialog } from '@/components/listings/ListingFormDialog';
+import PlanLimitsCard from '@/components/subscription/PlanLimitsCard';
 
 const DashboardInmobiliaria = () => {
   const { data: stats, isLoading: statsLoading } = useAgencyStats();
