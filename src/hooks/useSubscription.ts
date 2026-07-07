@@ -394,19 +394,41 @@ export const useSubscription = () => {
   });
 };
 
+export type BillingCycle = 'monthly' | 'annual';
+
+export interface CheckoutParams {
+  planType: PlanType;
+  billingCycle?: BillingCycle;
+  firstMonthDiscount?: boolean;
+}
+
 export const useCreateCheckout = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (planType: PlanType) => {
+    mutationFn: async (params: PlanType | CheckoutParams) => {
       if (!user) throw new Error('User not authenticated');
+
+      const normalized: CheckoutParams =
+        typeof params === 'string' ? { planType: params } : params;
+      const { planType, billingCycle = 'monthly', firstMonthDiscount = true } = normalized;
+
+      // Enterprise / Free se manejan por sales / no requieren pago
+      if (planType === 'enterprise') {
+        window.location.href = '/contacto?plan=enterprise';
+        return { redirected: true } as const;
+      }
+      if (planType === 'free') {
+        throw new Error('El plan Free no requiere pago');
+      }
 
       const response = await supabase.functions.invoke('mercadopago/create-preference', {
         body: {
           plan_type: planType,
           user_id: user.id,
           user_email: user.email,
+          billing_cycle: billingCycle,
+          first_month_discount: firstMonthDiscount,
           success_url: `${window.location.origin}/subscription/success`,
           failure_url: `${window.location.origin}/subscription/failure`,
         },
@@ -419,8 +441,8 @@ export const useCreateCheckout = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      if (data?.init_point) {
-        window.location.href = data.init_point;
+      if (data && 'init_point' in data && data.init_point) {
+        window.location.href = data.init_point as string;
       }
     },
     onError: (error) => {
