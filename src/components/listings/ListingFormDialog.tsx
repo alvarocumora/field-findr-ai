@@ -24,6 +24,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import LocationPicker from '@/components/publish/LocationPicker';
 import ImageUploader from '@/components/publish/ImageUploader';
 import { cn } from '@/lib/utils';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { useNavigate } from 'react-router-dom';
 
 const PROPERTY_TYPES = [
   { value: 'parcela_rural', label: 'Parcela Rural' },
