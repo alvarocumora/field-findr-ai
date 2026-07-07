@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
   RotateCcw, RotateCw, ZoomIn, ZoomOut, Trash2, Camera, Save, RefreshCw,
   Ruler, ChevronDown, ChevronRight, Undo2, Redo2, Sun, Eye, Grid3X3,
-  Move, RotateCcw as RotateIcon, Maximize, Footprints, FileDown
+  Move, RotateCcw as RotateIcon, Maximize, Footprints, FileDown, Share2
 } from 'lucide-react';
 import { OBJECT_CATALOG, CATEGORY_LABELS, type ParcelaObjectType, type CatalogCategory, type ViewMode, type TransformMode } from './useParcelaState';
 
@@ -22,6 +22,7 @@ interface ParcelaToolbarProps {
   onSave: () => void;
   onReset: () => void;
   onExportPdf?: () => void;
+  onShare?: () => void;
   selectedId: string | null;
   lotInfo?: { lotNumber: string; area: number; price?: number };
   // New controls
@@ -43,7 +44,7 @@ interface ParcelaToolbarProps {
 
 export const ParcelaToolbar = ({
   onAddObject, onRotate, onScale, onRemoveSelected,
-  onCapture, onSave, onReset, onExportPdf, selectedId, lotInfo,
+  onCapture, onSave, onReset, onExportPdf, onShare, selectedId, lotInfo,
   onUndo, onRedo, canUndo, canRedo,
   snapEnabled, onToggleSnap,
   viewMode, onSetViewMode,
@@ -349,6 +350,11 @@ export const ParcelaToolbar = ({
           {onExportPdf && (
             <Button variant="outline" size="sm" onClick={onExportPdf} className="w-full h-7 text-[10px]">
               <FileDown className="h-3 w-3 mr-1" /> Descargar Plano
+            </Button>
+          )}
+          {onShare && (
+            <Button variant="outline" size="sm" onClick={onShare} className="w-full h-7 text-[10px]">
+              <Share2 className="h-3 w-3 mr-1" /> Compartir
             </Button>
           )}
           <Button variant="default" size="sm" onClick={onSave} className="w-full h-7 text-[10px]">

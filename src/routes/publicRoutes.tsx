@@ -32,6 +32,7 @@ const ReservationError = lazy(() => import("@/pages/ReservationError"));
 const ReservationPending = lazy(() => import("@/pages/ReservationPending"));
 const VisualScenariosDemo = lazy(() => import("@/pages/demo/VisualScenariosDemo"));
 const TasacionLive = lazy(() => import("@/pages/TasacionLive"));
+const SharedDesign = lazy(() => import("@/pages/SharedDesign"));
 const TasacionValidator = lazy(() => import("@/pages/TasacionValidator"));
 const ForestalLanding = lazy(() => import("@/pages/forestal/ForestalLanding"));
 const InvestorsLogin = lazy(() => import("@/pages/forestal/InvestorsLogin"));
@@ -68,6 +69,7 @@ export const publicRoutes = [
   <Route key="reservation-error" path="/reserva/error" element={<ReservationError />} />,
   <Route key="reservation-pending" path="/reserva/pendiente" element={<ReservationPending />} />,
   <Route key="tasacion-live" path="/tasacion/v/:id" element={<TasacionLive />} />,
+  <Route key="shared-design" path="/diseno/:token" element={<SharedDesign />} />,
   <Route key="tasacion-validar" path="/tasacion/validar" element={<TasacionValidator />} />,
   <Route key="forestal-landing" path="/forestal-valle-escondido" element={<ForestalLanding />} />,
   <Route key="forestal-investors" path="/forestal-valle-escondido/investors" element={<InvestorsLogin />} />,
