@@ -58,7 +58,7 @@ const Pricing = () => {
     if (planId === 'enterprise') { navigate('/contacto'); return; }
     if (!user) { navigate('/auth?redirect=/pricing'); return; }
     if (planId === 'free') return;
-    createCheckout(planId);
+    createCheckout({ planType: planId, billingCycle: annual ? 'annual' : 'monthly', firstMonthDiscount: !annual });
   };
 
   const formatPrice = (price: number, curr: string) => {
