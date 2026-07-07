@@ -121,6 +121,13 @@ export function ListingFormDialog({ trigger, onSuccess }: ListingFormDialogProps
 
   const onSubmit = async (data: ListingFormData) => {
     if (!user) { toast.error('Debes iniciar sesión'); return; }
+    if (!canCreateListing) {
+      toast.error(
+        `Alcanzaste el límite de ${listings.limit} publicaciones del plan ${planDetails.name}. Mejora tu plan para publicar más.`,
+        { action: { label: 'Ver planes', onClick: () => navigate('/pricing') } }
+      );
+      return;
+    }
 
     setIsSubmitting(true);
     try {
