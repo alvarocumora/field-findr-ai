@@ -14,6 +14,7 @@ import { RealisticTerrain, type TerrainHandle, type TerrainDebugInfo } from './R
 import { useParcelaState, OBJECT_CATALOG, type ParcelaObjectType } from './useParcelaState';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { normalizePolygon } from '@/lib/polygonUtils';
+import { grassTexture } from './proceduralTextures';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 
@@ -46,12 +47,14 @@ const FlatTerrain = ({ polygon }: { polygon: number[][] | null }) => {
   const norm = useMemo(() => normalizePolygon(polygon), [polygon]);
   const localCoords = norm.localCoords;
   const shape = useMemo(() => createTerrainShape(localCoords), [localCoords]);
+  // ShapeGeometry UVs are in raw metres, so repeat is tiles-per-metre → ~4m/tile.
+  const grass = grassTexture(0.25);
 
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
       <mesh receiveShadow>
         <shapeGeometry args={[shape]} />
-        <meshStandardMaterial color="#7CB342" side={THREE.DoubleSide} roughness={0.9} />
+        <meshStandardMaterial color={grass ? '#ffffff' : '#7CB342'} map={grass} side={THREE.DoubleSide} roughness={0.9} />
       </mesh>
       <lineLoop>
         <bufferGeometry>
@@ -353,6 +356,34 @@ export const ParcelaDesigner3D = ({
     ps.updateObject(id, { position: [obj.position[0], y, obj.position[2]] });
   }, [ps, snapToTerrain]);
 
+  // Auto-design: generate a full residential layout from the lot polygon.
+  // Each click re-rolls the seed so users can cycle through variations.
+  const autoSeedRef = useRef(1);
+  const handleAutoDesign = useCallback(async () => {
+    if (!norm.valid || norm.localCoords.length < 3) {
+      toast.error('No hay polígono del lote para autogenerar el diseño');
+      return;
+    }
+    const { generateParcelaDesign } = await import('@/lib/parcela/autoDesign');
+    const gen = generateParcelaDesign(norm.localCoords, { seed: autoSeedRef.current++ });
+    if (gen.length === 0) {
+      toast.error('El lote es demasiado pequeño para autogenerar');
+      return;
+    }
+    const now = Date.now();
+    const objects = gen.map((g, i) => ({
+      id: `auto_${now}_${i}`,
+      type: g.type,
+      position: [g.position[0], snapToTerrain(g.position[0], g.position[2]), g.position[2]] as [number, number, number],
+      rotation: g.rotation,
+      scale: g.scale,
+    }));
+    ps.replaceObjects(objects);
+    toast.success(`Diseño generado · ${objects.length} elementos`, {
+      description: 'Vuelve a pulsar para otra variante',
+    });
+  }, [norm, ps, snapToTerrain]);
+
   const selectedObj = ps.objects.find(o => o.id === ps.selectedId);
 
   // Persist a gizmo drag into state (single undo entry per drag). The next
@@ -382,6 +413,7 @@ export const ParcelaDesigner3D = ({
           onShare={handleShare}
           onSave={handleSave}
           onReset={ps.resetAll}
+          onAutoDesign={handleAutoDesign}
           selectedId={ps.selectedId}
           lotInfo={{ lotNumber, area: lotArea, price: lotPrice }}
           onUndo={ps.undo}
