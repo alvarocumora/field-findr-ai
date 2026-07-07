@@ -298,23 +298,29 @@ const ProjectsManagement = () => {
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-2">
-                  {(project.status === 'draft' || project.status === 'planning') && (
+                  {(project.status === 'draft' || project.status === 'planning' || project.status === 'rejected') && (
                     <Button
                       variant="default"
                       className="flex-1 gap-1"
                       onClick={() => {
                         const lotsWithPrice = (project.total_lots || 0) > 0;
                         if (!lotsWithPrice) {
-                          toast.error('Agrega al menos 1 lote con precio antes de publicar');
+                          toast.error('Agrega al menos 1 lote con precio antes de enviar a revisión');
                           return;
                         }
-                        updateProject.mutate({ id: project.id, status: 'active' });
-                        toast.success('Proyecto publicado exitosamente');
+                        updateProject.mutate({ id: project.id, status: 'pending_review' });
+                        toast.success('Loteo enviado a revisión. Te notificaremos cuando sea aprobado.');
                       }}
                     >
                       <Rocket className="h-4 w-4" />
-                      Publicar
+                      {project.status === 'rejected' ? 'Reenviar' : 'Enviar a revisión'}
                     </Button>
+                  )}
+                  {project.status === 'pending_review' && (
+                    <div className="flex-1 flex items-center justify-center gap-2 text-xs text-amber-600 border border-amber-500/30 bg-amber-500/10 rounded-md px-3 py-2">
+                      <Clock className="h-3 w-3" />
+                      En revisión por un admin
+                    </div>
                   )}
                   <Button 
                     variant="outline" 
