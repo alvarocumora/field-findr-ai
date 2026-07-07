@@ -364,10 +364,14 @@ const StepBasicData = ({ data, update }: { data: WizardData; update: (p: Partial
         <Select value={data.status} onValueChange={v => update({ status: v })}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
+            <SelectItem value="draft">Borrador (no se envía a revisión)</SelectItem>
             <SelectItem value="planning">En Planificación</SelectItem>
-            <SelectItem value="active">Activo</SelectItem>
+            <SelectItem value="pending_review">Enviar a revisión al crear</SelectItem>
           </SelectContent>
         </Select>
+        <p className="text-xs text-muted-foreground">
+          Los loteos deben ser aprobados por un administrador antes de publicarse en el marketplace.
+        </p>
       </div>
       <div className="space-y-2">
         <Label>ROL SII</Label>
