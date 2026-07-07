@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { useRef, useMemo } from 'react';
 import type { ParcelaObjectType, PlacedObject } from './useParcelaState';
+import { roofTileTexture, stuccoTexture } from './proceduralTextures';
 
 interface ObjectProps {
   obj: PlacedObject;
@@ -78,16 +79,18 @@ const PitchedRoof = ({
     s.closePath();
     return new THREE.ShapeGeometry(s);
   }, [w, rise]);
+  const roofTex = roofTileTexture();
+  const roofProps = roofTex ? { ...mat, map: roofTex, color: '#ffffff' } : mat;
   return (
     <group position={[0, y, 0]}>
       {/* two roof planes */}
       <mesh position={[sx / 2, rise / 2, 0]} rotation={[0, 0, -angle]} castShadow>
         <boxGeometry args={[slant, 0.09, len]} />
-        <meshStandardMaterial {...mat} />
+        <meshStandardMaterial {...roofProps} />
       </mesh>
       <mesh position={[-sx / 2, rise / 2, 0]} rotation={[0, 0, angle]} castShadow>
         <boxGeometry args={[slant, 0.09, len]} />
-        <meshStandardMaterial {...mat} />
+        <meshStandardMaterial {...roofProps} />
       </mesh>
       {/* ridge cap */}
       <mesh position={[0, rise + 0.03, 0]} castShadow>
@@ -170,6 +173,8 @@ const House = ({ size, color }: { size: number; color: string }) => {
   const rise = size * 0.6;
   const base = 0.16;
   const wallMat = { color, roughness: 0.9, metalness: 0 };
+  const stucco = stuccoTexture();
+  const wallProps = stucco ? { ...wallMat, map: stucco } : wallMat;
   return (
     <group>
       {/* foundation plinth */}
@@ -180,7 +185,7 @@ const House = ({ size, color }: { size: number; color: string }) => {
       {/* walls */}
       <mesh position={[0, base + h / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[w, h, d]} />
-        <meshStandardMaterial {...wallMat} />
+        <meshStandardMaterial {...wallProps} />
       </mesh>
       {/* gable roof with overhang + filled gable ends */}
       <PitchedRoof w={w} d={d} rise={rise} y={base + h} ov={0.3} mat={MAT.roofTile} gableMat={wallMat} />
@@ -230,7 +235,7 @@ const ModernHouse = () => {
       {/* ground floor — white plaster volume */}
       <mesh position={[0, base + 1.6, 0]} castShadow receiveShadow>
         <boxGeometry args={[6, 3.2, 4.6]} />
-        <meshStandardMaterial {...MAT.plasterLight} />
+        <meshStandardMaterial {...MAT.plasterLight} map={stuccoTexture()} />
       </mesh>
       {/* flat-roof parapet cap over the ground floor */}
       <mesh position={[0, base + 3.26, 0]} castShadow>

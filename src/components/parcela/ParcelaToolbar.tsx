@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
   RotateCcw, RotateCw, ZoomIn, ZoomOut, Trash2, Camera, Save, RefreshCw,
   Ruler, ChevronDown, ChevronRight, Undo2, Redo2, Sun, Eye, Grid3X3,
-  Move, RotateCcw as RotateIcon, Maximize, Footprints, FileDown, Share2
+  Move, RotateCcw as RotateIcon, Maximize, Footprints, FileDown, Share2, Wand2
 } from 'lucide-react';
 import { OBJECT_CATALOG, CATEGORY_LABELS, type ParcelaObjectType, type CatalogCategory, type ViewMode, type TransformMode } from './useParcelaState';
 
@@ -23,6 +23,7 @@ interface ParcelaToolbarProps {
   onReset: () => void;
   onExportPdf?: () => void;
   onShare?: () => void;
+  onAutoDesign?: () => void;
   selectedId: string | null;
   lotInfo?: { lotNumber: string; area: number; price?: number };
   // New controls
@@ -44,7 +45,7 @@ interface ParcelaToolbarProps {
 
 export const ParcelaToolbar = ({
   onAddObject, onRotate, onScale, onRemoveSelected,
-  onCapture, onSave, onReset, onExportPdf, onShare, selectedId, lotInfo,
+  onCapture, onSave, onReset, onExportPdf, onShare, onAutoDesign, selectedId, lotInfo,
   onUndo, onRedo, canUndo, canRedo,
   snapEnabled, onToggleSnap,
   viewMode, onSetViewMode,
@@ -90,6 +91,22 @@ export const ParcelaToolbar = ({
             {lotInfo.price && (
               <p className="text-xs text-muted-foreground">${lotInfo.price.toLocaleString('es-CL')}</p>
             )}
+          </div>
+        )}
+
+        {/* Auto-design generator */}
+        {onAutoDesign && (
+          <div className="p-2 border-b border-border/40">
+            <Button
+              size="sm"
+              onClick={onAutoDesign}
+              className="w-full h-8 text-[11px] font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white border-0"
+            >
+              <Wand2 className="h-3.5 w-3.5 mr-1.5" /> Auto-diseño ✨
+            </Button>
+            <p className="text-[9px] text-muted-foreground text-center mt-1 leading-tight">
+              Genera casa, accesos, piscina y jardín. Vuelve a pulsar para otra variante.
+            </p>
           </div>
         )}
 

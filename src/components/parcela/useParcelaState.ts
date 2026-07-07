@@ -281,6 +281,14 @@ export const useParcelaState = () => {
     });
   }, [pushUndo]);
 
+  /** Replace the whole scene (used by the auto-design generator). Undoable. */
+  const replaceObjects = useCallback((objects: PlacedObject[]) => {
+    setState(prev => {
+      pushUndo(prev.objects);
+      return { objects, selectedId: null };
+    });
+  }, [pushUndo]);
+
   const toJSON = useCallback(() => {
     return JSON.stringify(state.objects);
   }, [state.objects]);
@@ -315,6 +323,7 @@ export const useParcelaState = () => {
     rotateSelected,
     scaleSelected,
     resetAll,
+    replaceObjects,
     toJSON,
     loadFromJSON,
     // Undo/Redo
