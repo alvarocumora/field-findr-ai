@@ -251,6 +251,31 @@ const PublishForm = () => {
           </div>
         </div>
 
+        {/* Plan usage / limit banner */}
+        {user && !planLimits.isLoading && !planLimits.listings.isUnlimited && (
+          <div
+            className={`mb-6 rounded-lg border p-3 flex items-center justify-between gap-3 text-sm ${
+              planLimits.listings.isAtLimit
+                ? 'border-destructive/40 bg-destructive/10 text-destructive'
+                : planLimits.listings.isNearLimit
+                  ? 'border-amber-500/40 bg-amber-500/10 text-amber-200'
+                  : 'border-white/10 bg-white/5 text-muted-foreground'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {planLimits.listings.isAtLimit && <AlertTriangle className="h-4 w-4" />}
+              <span>
+                Plan <b>{planLimits.planDetails.name}</b> · {planLimits.listings.used}/{planLimits.listings.limit} publicaciones usadas
+                {planLimits.listings.isAtLimit && ' · límite alcanzado'}
+              </span>
+            </div>
+            {planLimits.listings.isNearLimit && (
+              <Link to="/pricing" className="underline whitespace-nowrap">Mejorar plan</Link>
+            )}
+          </div>
+        )}
+
+
         {/* Progress Steps */}
         <div className="flex items-center justify-between mb-8">
           {steps.map((step, index) => (
