@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MapPin, Plus, Search, Filter, Grid3X3, List, Loader2, TrendingUp } from 'lucide-react';
+import { MapPin, Plus, Search, Filter, Grid3X3, List, Loader2, TrendingUp, FileDown, FileText, FileSpreadsheet } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Map from './Map';
 import { useLots, Lot, LotInsert } from '@/hooks/useLots';
 import { useProjects } from '@/hooks/useProjects';
@@ -61,6 +62,23 @@ const LotManagement = () => {
     });
   };
 
+  // Price list export reflects the current filters. Title/subtitle come from the
+  // selected project (or a consolidated label when viewing all projects).
+  const priceListMeta = () => {
+    const proj = projectFilter !== 'all' ? projects.find(p => p.id === projectFilter) : undefined;
+    return {
+      title: proj?.name ?? 'Consolidado — todos los proyectos',
+      subtitle: proj ? [proj.location, proj.city, proj.region].filter(Boolean).join(', ') || undefined : undefined,
+      lots: filteredLots,
+    };
+  };
+
+  const handleExportPriceList = async (format: 'pdf' | 'csv') => {
+    const mod = await import('@/lib/priceList/priceListPdf');
+    if (format === 'pdf') mod.downloadProjectPriceList(priceListMeta());
+    else mod.downloadPriceListCsv(priceListMeta());
+  };
+
   const mapMarkers = filteredLots
     .filter(lot => lot.latitude && lot.longitude)
     .map(lot => ({
@@ -88,6 +106,22 @@ const LotManagement = () => {
           <p className="text-muted-foreground">Administra el inventario de parcelas y lotes</p>
         </div>
         <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2" disabled={filteredLots.length === 0}>
+                <FileDown className="h-4 w-4" />
+                Lista de precios
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExportPriceList('pdf')} className="gap-2">
+                <FileText className="h-4 w-4" /> Descargar PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExportPriceList('csv')} className="gap-2">
+                <FileSpreadsheet className="h-4 w-4" /> Descargar CSV (Excel)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             variant="outline"
             className="gap-2"
