@@ -48,6 +48,7 @@ import {
   Scale,
   FileText,
   Camera,
+  FileDown,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -495,6 +496,25 @@ const ProjectDetail = () => {
 
             {/* Lots Tab */}
             <TabsContent value="lots">
+              {sortedLots.length > 0 && (
+                <div className="flex justify-end mb-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={async () => {
+                      const { downloadProjectPriceList } = await import('@/lib/priceList/priceListPdf');
+                      downloadProjectPriceList({
+                        title: project.name,
+                        subtitle: [project.location, project.city, project.region].filter(Boolean).join(', ') || undefined,
+                        lots: sortedLots,
+                      });
+                    }}
+                  >
+                    <FileDown className="h-4 w-4" /> Lista de precios (PDF)
+                  </Button>
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {sortedLots.map((lot, index) => (
                   <EnhancedLotCard
