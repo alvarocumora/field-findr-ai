@@ -5,20 +5,25 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Grid3X3, Wand2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Grid3X3, Wand2, MapPin } from 'lucide-react';
 import { SubdivisionEngine } from '@/components/masterplan/SubdivisionEngine';
 import { normalizePolygon } from '@/lib/polygonUtils';
+import { useProjects } from '@/hooks/useProjects';
+import { usePersistSubdivision } from '@/hooks/usePersistSubdivision';
+import { subdivisionToLotInserts, perimeterToGeo } from '@/lib/subdivision/persistLots';
+import type { SubdivisionResult } from '@/lib/subdivision/autoSubdivide';
+import { toast } from 'sonner';
 
 /**
- * Estudio de Loteo — entry point for the auto-subdivision engine.
+ * Estudio de Loteo — auto-subdivision engine wired to persistence.
  *
- * The projects schema has no boundary polygon, so the agent supplies the
- * perimeter here: either a rectangular macro-lote (ancho × largo) or pasted
- * [lng, lat] coordinates (e.g. from a KMZ / GIS export). Both resolve to a
- * local-meters polygon that feeds SubdivisionEngine.
+ * The perimeter comes from a rectangular macro-lote, pasted [lng,lat] coords
+ * (e.g. a KMZ / GIS export) or an existing project's saved boundary. Once a
+ * subdivision is generated it can be saved as real `lots` of a chosen project
+ * (and the boundary is stored on the project for later re-loteo).
  */
 
-// Shoelace area for a local-meters ring.
 const ringArea = (pts: [number, number][]) => {
   let a = 0;
   for (let i = 0; i < pts.length; i++) {
@@ -29,7 +34,6 @@ const ringArea = (pts: [number, number][]) => {
 };
 
 const parseCoords = (raw: string): number[][] => {
-  // Accepts "lng,lat" per line or a JSON array of [lng,lat] pairs.
   const trimmed = raw.trim();
   if (!trimmed) return [];
   try {
@@ -49,12 +53,28 @@ const parseCoords = (raw: string): number[][] => {
     .map((nums) => [nums[0], nums[1]]);
 };
 
+interface BuiltPerimeter {
+  polygon: [number, number][];
+  area: number;
+  /** Geo anchor when the perimeter carries geo (coords / project boundary). */
+  center: { lng: number; lat: number } | null;
+}
+
 const SubdivisionStudio = () => {
+  const { projects } = useProjects();
+  const persist = usePersistSubdivision();
+
   const [mode, setMode] = useState<'rect' | 'coords'>('rect');
   const [width, setWidth] = useState(300);
   const [height, setHeight] = useState(240);
   const [coordsRaw, setCoordsRaw] = useState('');
-  const [built, setBuilt] = useState<{ polygon: [number, number][]; area: number } | null>(null);
+  const [built, setBuilt] = useState<BuiltPerimeter | null>(null);
+
+  const [projectId, setProjectId] = useState<string>('');
+  const [pricePerSqm, setPricePerSqm] = useState<number>(0);
+
+  const selectedProject = projects.find((p) => p.id === projectId);
+  const projectBoundary = (selectedProject as unknown as { boundary?: number[][] } | undefined)?.boundary;
 
   const rectPreviewArea = useMemo(() => Math.max(0, width) * Math.max(0, height), [width, height]);
 
@@ -67,21 +87,56 @@ const SubdivisionStudio = () => {
       [w / 2, h / 2],
       [-w / 2, h / 2],
     ];
-    setBuilt({ polygon, area: w * h });
+    setBuilt({ polygon, area: w * h, center: null });
   };
 
   const handleBuildCoords = () => {
     const coords = parseCoords(coordsRaw);
-    if (coords.length < 3) {
-      setBuilt(null);
-      return;
-    }
+    if (coords.length < 3) return setBuilt(null);
     const norm = normalizePolygon(coords);
-    if (!norm.valid) {
-      setBuilt(null);
+    if (!norm.valid) return setBuilt(null);
+    setBuilt({
+      polygon: norm.localCoords,
+      area: ringArea(norm.localCoords),
+      center: { lng: norm.centroidLng, lat: norm.centroidLat },
+    });
+  };
+
+  const handleLoadProjectBoundary = () => {
+    if (!projectBoundary || projectBoundary.length < 3) return;
+    const norm = normalizePolygon(projectBoundary);
+    if (!norm.valid) return toast.error('El perímetro guardado del proyecto no es válido');
+    setBuilt({
+      polygon: norm.localCoords,
+      area: ringArea(norm.localCoords),
+      center: { lng: norm.centroidLng, lat: norm.centroidLat },
+    });
+    toast.success('Perímetro del proyecto cargado');
+  };
+
+  const handlePersist = (result: SubdivisionResult) => {
+    if (!built || !selectedProject) return;
+    if (result.lots.length === 0) return toast.error('Genera una subdivisión con lotes antes de guardar');
+
+    // Geo anchor: the perimeter's own centre, else the project's coordinates.
+    const center =
+      built.center ??
+      (selectedProject.latitude != null && selectedProject.longitude != null
+        ? { lng: Number(selectedProject.longitude), lat: Number(selectedProject.latitude) }
+        : null);
+    if (!center) {
+      toast.error('Este proyecto no tiene coordenadas. Usa el modo "Coordenadas" o define lat/lng del proyecto.');
       return;
     }
-    setBuilt({ polygon: norm.localCoords, area: ringArea(norm.localCoords) });
+
+    const lots = subdivisionToLotInserts(result, {
+      projectId: selectedProject.id,
+      centerLng: center.lng,
+      centerLat: center.lat,
+      pricePerSqm,
+    });
+    const boundary = perimeterToGeo(built.polygon, center.lng, center.lat);
+    persist.mutate({ projectId: selectedProject.id, lots, boundary });
   };
 
   return (
@@ -93,17 +148,61 @@ const SubdivisionStudio = () => {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Estudio de Loteo</h1>
           <p className="text-sm text-muted-foreground">
-            Genera una subdivisión automática y exporta el plano en PDF o DXF (AutoCAD).
+            Genera una subdivisión automática, guárdala como lotes del proyecto y exporta el plano (PDF / DXF).
           </p>
         </div>
       </div>
 
+      {/* Project + pricing */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">1 · Perímetro del terreno</CardTitle>
+          <CardTitle className="text-base">1 · Proyecto destino</CardTitle>
           <CardDescription className="text-xs">
-            Define el macro-lote a subdividir.
+            Elige a qué proyecto se guardarán los lotes generados y su precio referencial.
           </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Proyecto</Label>
+              <Select value={projectId} onValueChange={setProjectId}>
+                <SelectTrigger className="h-9 w-72"><SelectValue placeholder="Selecciona un proyecto…" /></SelectTrigger>
+                <SelectContent>
+                  {projects.length === 0 && <SelectItem value="none" disabled>No tienes proyectos</SelectItem>}
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Precio por m² (opcional)</Label>
+              <Input
+                type="number"
+                value={pricePerSqm || ''}
+                placeholder="0"
+                className="h-9 w-40"
+                onChange={(e) => setPricePerSqm(Math.max(0, Number(e.target.value)))}
+              />
+            </div>
+            {selectedProject && projectBoundary && projectBoundary.length >= 3 && (
+              <Button variant="outline" className="gap-1.5" onClick={handleLoadProjectBoundary}>
+                <MapPin className="h-4 w-4" /> Cargar perímetro del proyecto
+              </Button>
+            )}
+          </div>
+          {!projectId && (
+            <p className="text-[11px] text-muted-foreground mt-2">
+              Sin proyecto seleccionado puedes generar y exportar el plano, pero no guardar los lotes.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">2 · Perímetro del terreno</CardTitle>
+          <CardDescription className="text-xs">Define el macro-lote a subdividir.</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={mode} onValueChange={(v) => setMode(v as 'rect' | 'coords')}>
@@ -132,6 +231,9 @@ const SubdivisionStudio = () => {
                   <Wand2 className="h-4 w-4" /> Usar este perímetro
                 </Button>
               </div>
+              <p className="text-[11px] text-muted-foreground mt-2">
+                El macro-lote rectangular se ancla en las coordenadas del proyecto al guardar.
+              </p>
             </TabsContent>
 
             <TabsContent value="coords" className="pt-4 space-y-3">
@@ -155,11 +257,14 @@ const SubdivisionStudio = () => {
 
       {built && (
         <div className="space-y-2">
-          <h2 className="text-base font-semibold text-foreground">2 · Subdivisión</h2>
+          <h2 className="text-base font-semibold text-foreground">3 · Subdivisión y guardado</h2>
           <SubdivisionEngine
             polygon={built.polygon}
             totalArea={built.area}
-            projectName="Loteo"
+            projectName={selectedProject?.name || 'Loteo'}
+            onApplyLots={projectId ? handlePersist : undefined}
+            applyLabel={persist.isPending ? 'Guardando…' : undefined}
+            applyDisabled={persist.isPending}
           />
         </div>
       )}
