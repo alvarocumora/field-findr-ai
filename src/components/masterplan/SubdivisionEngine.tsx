@@ -27,10 +27,14 @@ interface SubdivisionEngineProps {
   totalArea: number;
   projectName?: string;
   onApplyLots?: (lots: SubdivisionResult) => void;
+  /** Overrides the apply button label (e.g. while saving). */
+  applyLabel?: string;
+  /** Disables the apply button (e.g. while a save is in flight). */
+  applyDisabled?: boolean;
 }
 
 export const SubdivisionEngine = ({
-  polygon, totalArea, projectName, onApplyLots,
+  polygon, totalArea, projectName, onApplyLots, applyLabel, applyDisabled,
 }: SubdivisionEngineProps) => {
   const [profileKey, setProfileKey] = useState('rural_5000');
   const [customParams, setCustomParams] = useState<SubdivisionParams>({
@@ -81,10 +85,7 @@ export const SubdivisionEngine = ({
   };
 
   const handleApply = () => {
-    if (result && onApplyLots) {
-      onApplyLots(result);
-      toast.success('Lotes aplicados al proyecto');
-    }
+    if (result && onApplyLots) onApplyLots(result);
   };
 
   const handleExportPdf = () => {
@@ -342,8 +343,8 @@ export const SubdivisionEngine = ({
                 <Download className="h-4 w-4" /> DXF (AutoCAD)
               </Button>
               {onApplyLots && (
-                <Button onClick={handleApply} className="flex-1">
-                  Aplicar {result.lots.length} Lotes al Proyecto
+                <Button onClick={handleApply} className="flex-1" disabled={applyDisabled}>
+                  {applyLabel ?? `Guardar ${result.lots.length} lotes en el proyecto`}
                 </Button>
               )}
             </div>
