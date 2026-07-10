@@ -29,6 +29,7 @@ const ParcelaDesigner3D = lazy(() =>
 );
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { ownReservations, partitionReservations, reservationsSummary } from '@/lib/portal/reservations';
 
 type ReservationStatus = 'pending_payment' | 'paid' | 'expired' | 'cancelled' | 'converted';
 
@@ -77,12 +78,11 @@ const MiTerreno = () => {
     );
   }
 
-  const activeReservations = (reservations as any[]).filter(
-    (r: any) => ['paid', 'pending_payment', 'converted'].includes(r.status)
-  );
-  const pastReservations = (reservations as any[]).filter(
-    (r: any) => ['expired', 'cancelled'].includes(r.status)
-  );
+  // Only the buyer's OWN reservations (useReservations also returns a project
+  // owner's incoming reservations via RLS — those must not appear here).
+  const mine = ownReservations(reservations as any[], user?.id);
+  const { active: activeReservations, past: pastReservations } = partitionReservations(mine);
+  const summary = reservationsSummary(activeReservations as any[]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -122,10 +122,7 @@ const MiTerreno = () => {
             <StatCard
               icon={DollarSign}
               label="Total Depositado"
-              value={`$${activeReservations
-                .filter((r: any) => r.status === 'paid' || r.status === 'converted')
-                .reduce((s: number, r: any) => s + (r.reservation_amount || 0), 0)
-                .toLocaleString('es-CL')}`}
+              value={`$${summary.totalDeposited.toLocaleString('es-CL')}`}
               color="text-green-600"
             />
             <StatCard
@@ -137,9 +134,7 @@ const MiTerreno = () => {
             <StatCard
               icon={TrendingUp}
               label="Valor Total"
-              value={`$${activeReservations
-                .reduce((s: number, r: any) => s + (r.lots?.price || 0), 0)
-                .toLocaleString('es-CL')}`}
+              value={`$${summary.totalValue.toLocaleString('es-CL')}`}
               color="text-amber-600"
             />
           </div>
@@ -398,6 +393,20 @@ const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buye
                   Contactar Asesor
                 </a>
               </Button>
+              {['paid', 'converted'].includes(status) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 rounded-xl"
+                  onClick={async () => {
+                    const { downloadReservationReceipt } = await import('@/lib/reservationReceiptPdf');
+                    downloadReservationReceipt(reservation);
+                  }}
+                >
+                  <Receipt className="h-4 w-4" />
+                  Comprobante
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"

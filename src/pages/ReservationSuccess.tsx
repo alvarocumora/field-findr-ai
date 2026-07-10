@@ -3,7 +3,7 @@ import { useReservation } from '@/hooks/useReservations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, MapPin, Calendar, Download, ArrowLeft, Loader2, Clock, XCircle } from 'lucide-react';
+import { CheckCircle, MapPin, Calendar, Download, ArrowLeft, ArrowRight, Loader2, Clock, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -180,13 +180,8 @@ export default function ReservationSuccess() {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <Button asChild variant="outline" className="flex-1">
-              <Link to="/">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver al inicio
-              </Link>
-            </Button>
             <Button
+              variant="outline"
               className="flex-1"
               disabled={!isPaid}
               onClick={async () => {
@@ -197,6 +192,12 @@ export default function ReservationSuccess() {
             >
               <Download className="h-4 w-4 mr-2" />
               Descargar Comprobante
+            </Button>
+            <Button asChild className="flex-1">
+              <Link to="/mi-terreno">
+                Ver en Mi Terreno
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Link>
             </Button>
           </div>
         </CardContent>
