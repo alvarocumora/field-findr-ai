@@ -18,14 +18,31 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_public_slug
   ON public.profiles(public_slug) WHERE public_slug IS NOT NULL;
 
 -- Public read of the showcase subset only, for opted-in agencies.
+-- DROP first: a parallel migration (Lovable) may already define this function
+-- with a different TABLE signature, and CREATE OR REPLACE cannot change the
+-- return type — that error stalls `supabase db push`. Dropping reconciles both.
+-- The returned column set matches that migration (a superset) so the generated
+-- types stay valid; the app only reads user_id/company_name/logo_url/bio.
+DROP FUNCTION IF EXISTS public.get_agency_by_slug(text);
 CREATE OR REPLACE FUNCTION public.get_agency_by_slug(p_slug text)
-RETURNS TABLE (user_id uuid, company_name text, logo_url text, bio text)
+RETURNS TABLE (
+  user_id uuid,
+  company_name text,
+  public_slug text,
+  logo_url text,
+  bio text,
+  first_name text,
+  last_name text,
+  avatar_url text,
+  created_at timestamptz
+)
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT user_id, company_name, logo_url, bio
+  SELECT user_id, company_name, public_slug, logo_url, bio,
+         first_name, last_name, avatar_url, created_at
   FROM public.profiles
   WHERE is_public = true AND public_slug = p_slug
   LIMIT 1;

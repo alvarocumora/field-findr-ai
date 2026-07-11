@@ -9,7 +9,10 @@ CREATE TABLE public.profiles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid UNIQUE,
   first_name text,
-  email text
+  last_name text,
+  avatar_url text,
+  email text,
+  created_at timestamptz DEFAULT now()
 );
 
 \i supabase/migrations/20260711160000_agency_showcase.sql
