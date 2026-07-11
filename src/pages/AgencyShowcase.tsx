@@ -3,6 +3,7 @@ import { Loader2, Building2, MapPin, ArrowLeft, Grid3X3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAgencyShowcase } from '@/hooks/useAgencyShowcase';
+import { AgencyContactDialog } from '@/components/agency/AgencyContactDialog';
 
 /** Public branded showcase for an inmobiliaria: /inmobiliaria/:slug */
 const AgencyShowcase = () => {
@@ -47,10 +48,13 @@ const AgencyShowcase = () => {
           <div className="min-w-0">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{agency.company_name || 'Inmobiliaria'}</h1>
             {agency.bio && <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{agency.bio}</p>}
-            <Badge variant="secondary" className="mt-2 gap-1">
-              <Grid3X3 className="h-3 w-3" />
-              {projects.length} proyecto{projects.length === 1 ? '' : 's'}
-            </Badge>
+            <div className="flex flex-wrap items-center gap-3 mt-3">
+              <Badge variant="secondary" className="gap-1">
+                <Grid3X3 className="h-3 w-3" />
+                {projects.length} proyecto{projects.length === 1 ? '' : 's'}
+              </Badge>
+              <AgencyContactDialog slug={slug ?? ''} agencyName={agency.company_name || 'la inmobiliaria'} />
+            </div>
           </div>
         </div>
       </header>

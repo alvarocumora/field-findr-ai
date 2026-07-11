@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import type { PublicLeadForm } from '@/lib/agency/leadForm';
 
 export interface AgencyPublic {
   user_id: string;
@@ -57,6 +58,25 @@ export const useAgencyShowcase = (slug?: string) => {
     notFound: !agencyQ.isLoading && !agencyQ.data,
   };
 };
+
+/** Public visitor sends an inquiry to the agency (creates a lead via RPC). */
+export const useCreatePublicLead = () =>
+  useMutation({
+    mutationFn: async ({ slug, form, projectId }: { slug: string; form: PublicLeadForm; projectId?: string | null }) => {
+      const { data, error } = await (supabase.rpc as CallableFunction)('create_public_lead', {
+        p_slug: slug,
+        p_first_name: form.firstName,
+        p_email: form.email || null,
+        p_phone: form.phone || null,
+        p_message: form.message || null,
+        p_project_id: projectId ?? null,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: () => toast.success('¡Gracias! La inmobiliaria te contactará pronto.'),
+    onError: (error: Error) => toast.error('No se pudo enviar', { description: error.message }),
+  });
 
 export interface AgencyProfileForm {
   company_name: string | null;
