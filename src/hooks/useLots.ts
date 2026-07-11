@@ -48,21 +48,27 @@ export const useLots = (projectId?: string) => {
   const { data: lots = [], isLoading, error, refetch } = useQuery({
     queryKey: ['lots', user?.id ?? 'anon', projectId ?? 'all'],
     queryFn: async () => {
-      let query = supabase
-        .from('lots')
-        .select(LOT_COLUMNS)
-        .order('lot_number', { ascending: true });
+      const build = (cols: string) => {
+        let q = supabase.from('lots').select(cols).order('lot_number', { ascending: true });
+        if (projectId) {
+          // Public/project view: RLS allows anyone to read lots of active projects.
+          q = q.eq('project_id', projectId);
+        } else {
+          // Personal view (no project scope): scoped to current user (guarded below).
+          q = q.eq('user_id', user!.id);
+        }
+        return q;
+      };
 
-      if (projectId) {
-        // Public/project view: RLS allows anyone to read lots of active projects.
-        query = query.eq('project_id', projectId);
-      } else {
-        // Personal view (no project scope): require auth and scope to current user.
-        if (!user?.id) return [];
-        query = query.eq('user_id', user.id);
+      if (!projectId && !user?.id) return [];
+
+      // Prefer selecting listing_id (marketplace link), but fall back gracefully
+      // if the migration adding it hasn't been applied yet — otherwise the whole
+      // lots list would error out on a missing column.
+      let { data, error } = await build(`${LOT_COLUMNS}, listing_id`);
+      if (error && (error.code === '42703' || /listing_id/i.test(error.message ?? ''))) {
+        ({ data, error } = await build(LOT_COLUMNS));
       }
-
-      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as Lot[];
     },

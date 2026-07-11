@@ -677,6 +677,8 @@ const ProjectDetail = () => {
           onOpenChange={(open) => !open && setDetailLot(null)}
           projectName={project.name}
           legalDocuments={legalDocuments}
+          project={project}
+          canManage={isOwner}
           onReserve={(lot) => {
             setDetailLot(null);
             setReservationLot(lot);

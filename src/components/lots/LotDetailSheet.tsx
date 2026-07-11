@@ -40,6 +40,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
+import { PublishLotButton } from './PublishLotButton';
 
 const ParcelaDesigner3D = lazy(() =>
   import('@/components/parcela/ParcelaDesigner3D').then((m) => ({
@@ -56,6 +57,10 @@ interface LotDetailSheetProps {
   onDesign?: (lot: Lot) => void;
   onFinance?: (lot: Lot) => void;
   legalDocuments?: any[];
+  /** Full project (needed to publish the lot to the marketplace). */
+  project?: import('@/lib/marketplace/lotToListing').ProjectForListing | null;
+  /** Owner-only: enables the "publish to marketplace" control. */
+  canManage?: boolean;
 }
 
 const formatPrice = (price: number | null) => {
@@ -166,6 +171,8 @@ export const LotDetailSheet = ({
   onDesign,
   onFinance,
   legalDocuments = [],
+  project,
+  canManage = false,
 }: LotDetailSheetProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -452,6 +459,16 @@ export const LotDetailSheet = ({
             <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 text-sm text-amber-600 flex items-start gap-2">
               <TriangleAlert className="h-4 w-4 mt-0.5 shrink-0" />
               <span>Este lote se encuentra actualmente reservado.</span>
+            </div>
+          )}
+
+          {/* Owner: publish this lot to the marketplace */}
+          {canManage && project && (
+            <div className="pt-2 border-t border-border/40">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+                Gestión
+              </p>
+              <PublishLotButton lot={lot as any} project={project} />
             </div>
           )}
         </div>
