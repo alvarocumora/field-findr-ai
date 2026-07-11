@@ -778,6 +778,7 @@ export type Database = {
           id: string
           images: string[] | null
           latitude: number | null
+          listing_id: string | null
           longitude: number | null
           lot_number: string
           name: string | null
@@ -804,6 +805,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           latitude?: number | null
+          listing_id?: string | null
           longitude?: number | null
           lot_number: string
           name?: string | null
@@ -830,6 +832,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           latitude?: number | null
+          listing_id?: string | null
           longitude?: number | null
           lot_number?: string
           name?: string | null
@@ -845,6 +848,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "lots_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "lots_project_id_fkey"
             columns: ["project_id"]
@@ -1183,6 +1193,7 @@ export type Database = {
         Row: {
           address: string | null
           available_lots: number | null
+          boundary: Json | null
           city: string | null
           commercial_conditions: Json | null
           country: string | null
@@ -1216,6 +1227,7 @@ export type Database = {
         Insert: {
           address?: string | null
           available_lots?: number | null
+          boundary?: Json | null
           city?: string | null
           commercial_conditions?: Json | null
           country?: string | null
@@ -1249,6 +1261,7 @@ export type Database = {
         Update: {
           address?: string | null
           available_lots?: number | null
+          boundary?: Json | null
           city?: string | null
           commercial_conditions?: Json | null
           country?: string | null
