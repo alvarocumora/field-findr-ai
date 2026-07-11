@@ -4,11 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import { Link } from 'react-router-dom';
 import { useProjects } from '@/hooks/useProjects';
 import { useMultiProjectMetrics } from '@/hooks/useMultiProjectMetrics';
+import { useLots } from '@/hooks/useLots';
+import { marketplacePublishStats, publishStatsByProject } from '@/lib/marketplace/publishStats';
 import {
   Building2, Grid3X3, TrendingUp, DollarSign, Users, AlertTriangle,
-  ArrowUpRight, ArrowDownRight, BarChart3, Target,
+  ArrowUpRight, ArrowDownRight, BarChart3, Target, Store, ExternalLink,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -23,8 +26,15 @@ const MultiProjectDashboard = () => {
   const { data: metrics, isLoading: metricsLoading } = useMultiProjectMetrics(
     selectedProject === 'all' ? undefined : selectedProject
   );
+  const { lots } = useLots();
 
   const isLoading = projLoading || metricsLoading;
+
+  const scopedLots = (selectedProject === 'all'
+    ? lots
+    : lots.filter((l) => l.project_id === selectedProject)) as Array<{ project_id?: string | null; listing_id?: string | null }>;
+  const pubStats = marketplacePublishStats(scopedLots);
+  const pubByProject = publishStatsByProject(scopedLots);
 
   if (isLoading) {
     return (
@@ -44,6 +54,7 @@ const MultiProjectDashboard = () => {
     { label: 'Lotes Totales', value: String(metrics.totalLots), icon: Grid3X3, color: 'text-blue-600', bg: 'bg-blue-500/10' },
     { label: 'Lotes Vendidos', value: String(metrics.soldLots), icon: ArrowUpRight, color: 'text-green-600', bg: 'bg-green-500/10' },
     { label: 'Lotes Disponibles', value: String(metrics.availableLots), icon: Target, color: 'text-amber-600', bg: 'bg-amber-500/10' },
+    { label: 'Publicados', value: `${pubStats.published}/${pubStats.total}`, icon: Store, color: 'text-teal-600', bg: 'bg-teal-500/10' },
     { label: 'Ingresos Reservas', value: formatCLP(metrics.reservationRevenue), icon: DollarSign, color: 'text-green-600', bg: 'bg-green-500/10' },
     { label: 'Ingresos Créditos', value: formatCLP(metrics.creditRevenue), icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-500/10' },
     { label: 'Leads Activos', value: String(metrics.activeLeads), icon: Users, color: 'text-purple-600', bg: 'bg-purple-500/10' },
@@ -170,6 +181,7 @@ const MultiProjectDashboard = () => {
               {metrics.projectDetails.map((proj) => {
                 const total = proj.totalLots || 1;
                 const soldPct = Math.round((proj.soldLots / total) * 100);
+                const pub = pubByProject.get(proj.id) ?? { total: 0, published: 0, unpublished: 0 };
                 return (
                   <div key={proj.id} className="p-4 rounded-lg border border-border space-y-3">
                     <div className="flex items-center justify-between">
@@ -187,6 +199,16 @@ const MultiProjectDashboard = () => {
                       <div><p className="text-muted-foreground">Disp.</p><p className="font-bold text-green-600">{proj.availableLots}</p></div>
                       <div><p className="text-muted-foreground">Reserv.</p><p className="font-bold text-amber-600">{proj.reservedLots}</p></div>
                       <div><p className="text-muted-foreground">Vend.</p><p className="font-bold text-primary">{proj.soldLots}</p></div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs pt-1 border-t border-border/40">
+                      <span className="flex items-center gap-1.5 text-muted-foreground">
+                        <Store className="h-3.5 w-3.5 text-teal-600" />
+                        Publicados en marketplace: <span className="font-semibold text-foreground">{pub.published}/{pub.total}</span>
+                        {pub.unpublished > 0 && <span className="text-amber-600">· {pub.unpublished} sin publicar</span>}
+                      </span>
+                      <Link to={`/proyecto/${proj.id}`} className="flex items-center gap-1 text-primary hover:underline">
+                        Gestionar <ExternalLink className="h-3 w-3" />
+                      </Link>
                     </div>
                   </div>
                 );
