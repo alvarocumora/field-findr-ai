@@ -29,3 +29,7 @@ psql "$@" -d lotslab -v ON_ERROR_STOP=1 -f supabase/tests/lots_public_read.test.
 # Shared designs (RLS + public token RPC) — self-contained on its own DB.
 psql "$@" -c "DROP DATABASE IF EXISTS sdlab;" -c "CREATE DATABASE sdlab;"
 psql "$@" -d sdlab -v ON_ERROR_STOP=1 -f supabase/tests/shared_designs.test.sql
+
+# Lot → listing sync trigger — self-contained on its own DB.
+psql "$@" -c "DROP DATABASE IF EXISTS synclab;" -c "CREATE DATABASE synclab;"
+psql "$@" -d synclab -v ON_ERROR_STOP=1 -f supabase/tests/sync_listing.test.sql
