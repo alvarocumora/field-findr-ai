@@ -1094,12 +1094,16 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
+          company_name: string | null
           created_at: string
           email: string | null
           email_notifications: boolean | null
           first_name: string | null
           id: string
+          is_public: boolean
           last_name: string | null
+          logo_url: string | null
           marketing_emails: boolean | null
           new_listing_alerts: boolean | null
           onboarding_completed: boolean | null
@@ -1108,17 +1112,22 @@ export type Database = {
           preferred_currency: string | null
           preferred_language: string | null
           price_drop_alerts: boolean | null
+          public_slug: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
+          company_name?: string | null
           created_at?: string
           email?: string | null
           email_notifications?: boolean | null
           first_name?: string | null
           id?: string
+          is_public?: boolean
           last_name?: string | null
+          logo_url?: string | null
           marketing_emails?: boolean | null
           new_listing_alerts?: boolean | null
           onboarding_completed?: boolean | null
@@ -1127,17 +1136,22 @@ export type Database = {
           preferred_currency?: string | null
           preferred_language?: string | null
           price_drop_alerts?: boolean | null
+          public_slug?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
+          company_name?: string | null
           created_at?: string
           email?: string | null
           email_notifications?: boolean | null
           first_name?: string | null
           id?: string
+          is_public?: boolean
           last_name?: string | null
+          logo_url?: string | null
           marketing_emails?: boolean | null
           new_listing_alerts?: boolean | null
           onboarding_completed?: boolean | null
@@ -1146,6 +1160,7 @@ export type Database = {
           preferred_currency?: string | null
           preferred_language?: string | null
           price_drop_alerts?: boolean | null
+          public_slug?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -2056,6 +2071,20 @@ export type Database = {
           tasador_nombre: string
           valor_clp: number
           valor_uf: number
+        }[]
+      }
+      get_agency_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          company_name: string
+          created_at: string
+          first_name: string
+          last_name: string
+          logo_url: string
+          public_slug: string
+          user_id: string
         }[]
       }
       get_shared_design: {
