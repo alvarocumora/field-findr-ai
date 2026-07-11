@@ -37,3 +37,7 @@ psql "$@" -d synclab -v ON_ERROR_STOP=1 -f supabase/tests/sync_listing.test.sql
 # Public agency showcase RPC — self-contained on its own DB.
 psql "$@" -c "DROP DATABASE IF EXISTS agencylab;" -c "CREATE DATABASE agencylab;"
 psql "$@" -d agencylab -v ON_ERROR_STOP=1 -f supabase/tests/agency_showcase.test.sql
+
+# Public lead-capture RPC — self-contained on its own DB.
+psql "$@" -c "DROP DATABASE IF EXISTS leadlab;" -c "CREATE DATABASE leadlab;"
+psql "$@" -d leadlab -v ON_ERROR_STOP=1 -f supabase/tests/public_lead.test.sql
