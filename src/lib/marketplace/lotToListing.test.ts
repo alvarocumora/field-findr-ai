@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { lotToListingInput } from './lotToListing';
+import { lotToListingInput, publishableLots } from './lotToListing';
 
 const project = {
   name: 'Loteo Brisas',
@@ -73,5 +73,18 @@ describe('lotToListingInput', () => {
     expect(sparse.area_m2).toBeUndefined();
     expect(sparse.country).toBe('Chile');
     expect(sparse.images).toEqual([]);
+  });
+});
+
+describe('publishableLots', () => {
+  const lots = [
+    { id: '1', status: 'available', price: 40_000_000, listing_id: null },
+    { id: '2', status: 'available', price: 40_000_000, listing_id: 'x' }, // already published
+    { id: '3', status: 'reserved', price: 40_000_000, listing_id: null }, // not available
+    { id: '4', status: 'available', price: 0, listing_id: null }, // no price
+    { id: '5', status: 'available', price: 55_000_000, listing_id: null },
+  ];
+  it('keeps only available, unpublished, priced lots', () => {
+    expect(publishableLots(lots).map((l) => l.id)).toEqual(['1', '5']);
   });
 });

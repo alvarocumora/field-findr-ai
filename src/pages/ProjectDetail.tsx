@@ -49,7 +49,10 @@ import {
   FileText,
   Camera,
   FileDown,
+  Store,
 } from 'lucide-react';
+import { useBulkPublishLots } from '@/hooks/useBulkPublishLots';
+import { publishableLots } from '@/lib/marketplace/lotToListing';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
@@ -168,6 +171,7 @@ const ProjectDetail = () => {
   const [showCompare, setShowCompare] = useState(false);
   const [editingSceneIdx, setEditingSceneIdx] = useState<number | null>(null);
   const { scenes: tourScenes } = useTourScenes(id);
+  const bulkPublish = useBulkPublishLots();
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
@@ -316,6 +320,7 @@ const ProjectDetail = () => {
 
   // selectedLotData removed - now using LotDetailSheet
   const isOwner = !!user && project.user_id === user.id;
+  const publishableCount = isOwner ? publishableLots(lots as any[]).length : 0;
 
   const handleCall = () => {
     const phone = ownerProfile?.phone;
@@ -370,15 +375,29 @@ const ProjectDetail = () => {
         {/* Social Proof */}
         {!isOwner && <SocialProofToast projectId={project.id} />}
 
-        {/* Experience link for owners */}
+        {/* Owner controls */}
         {isOwner && (
-          <div className="container px-4 pb-2">
+          <div className="container px-4 pb-2 flex flex-wrap items-center gap-2">
             <Link to={`/proyecto/${project.id}/experiencia`}>
               <Button variant="outline" size="sm" className="gap-2 text-xs">
                 <Camera className="h-3.5 w-3.5" />
                 Ver Micrositio Inmersivo
               </Button>
             </Link>
+            {publishableCount > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 text-xs"
+                disabled={bulkPublish.isPending}
+                onClick={() => bulkPublish.mutate({ project, lots })}
+              >
+                <Store className="h-3.5 w-3.5" />
+                {bulkPublish.isPending
+                  ? 'Publicando…'
+                  : `Publicar ${publishableCount} disponible${publishableCount === 1 ? '' : 's'} en marketplace`}
+              </Button>
+            )}
           </div>
         )}
 

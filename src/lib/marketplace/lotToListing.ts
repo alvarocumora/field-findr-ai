@@ -64,6 +64,16 @@ const num = (v: number | null | undefined): number | undefined => {
   return Number.isFinite(n) && n !== 0 ? n : undefined;
 };
 
+/**
+ * Lots eligible for a bulk "publish available" run: still available, not
+ * already published, and with a real price (the marketplace requires one).
+ */
+export function publishableLots<T extends { status?: string | null; listing_id?: string | null; price?: number | null }>(
+  lots: T[],
+): T[] {
+  return lots.filter((l) => l.status === 'available' && !l.listing_id && Number(l.price) > 0);
+}
+
 /** Build the listing input for publishing a lot as a marketplace card. */
 export function lotToListingInput(
   lot: LotForListing,
