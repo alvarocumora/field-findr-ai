@@ -20,6 +20,7 @@ import { UseMutationResult } from '@tanstack/react-query';
 import { Project, ProjectInsert, ProjectUpdate } from '@/hooks/useProjects';
 import { parseKMZFile, parseKMLFile } from '@/lib/kmz';
 import type { ParsedKMZ } from '@/lib/kmz/types';
+import { planKmzImport } from '@/lib/kmz/kmzToLots';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -176,36 +177,40 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         projectId = result.id;
       }
 
-      // Import KMZ lots if parsed
-      if (parsedKMZ && user?.id && !isEditing) {
+      // Import KMZ lots (create or edit). Upserts by lot number so importing on
+      // an existing project updates matching lots instead of duplicating, and
+      // writes a RAW [lng,lat] polygon so lots render on the map (not simulated).
+      if (parsedKMZ && user?.id) {
         const basePrice = data.price_base || 15000000;
         const pricePerSqm = data.total_area && data.price_base && data.total_lots
           ? Math.round((data.price_base * data.total_lots) / data.total_area)
           : 3000;
 
-        for (const placemark of parsedKMZ.placemarks) {
-          const area = placemark.area || 5000;
-          const lotNumber = placemark.name.match(/\d+/)?.[0] || String(parsedKMZ.placemarks.indexOf(placemark) + 1);
-          const centroid = placemark.coordinates.reduce(
-            (acc, [lng, lat]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }),
-            { lat: 0, lng: 0 }
-          );
-          const n = placemark.coordinates.length;
+        let existing: Array<{ id: string; lot_number: string | null }> = [];
+        if (isEditing) {
+          const { data: ex } = await supabase.from('lots').select('id, lot_number').eq('project_id', projectId);
+          existing = ex ?? [];
+        }
 
-          await supabase.from('lots').insert({
+        const { toInsert, toUpdate } = planKmzImport(parsedKMZ.placemarks, existing, { basePrice, pricePerSqm });
+
+        if (toInsert.length > 0) {
+          const rows = toInsert.map((r) => ({
+            ...r,
             project_id: projectId,
             user_id: user.id,
-            lot_number: lotNumber,
-            name: placemark.name,
-            description: placemark.description,
-            area,
-            price: Math.round(basePrice + (area * pricePerSqm / 1000)),
-            price_per_sqm: pricePerSqm,
-            status: 'available',
-            latitude: centroid.lat / n,
-            longitude: centroid.lng / n,
-            polygon: { type: 'Polygon', coordinates: [placemark.coordinates] },
-          });
+            polygon: r.polygon as unknown as never,
+          }));
+          const { error: insErr } = await supabase.from('lots').insert(rows);
+          if (insErr) throw insErr;
+        }
+        for (const u of toUpdate) {
+          await supabase.from('lots').update({
+            polygon: u.row.polygon as unknown as never,
+            area: u.row.area,
+            latitude: u.row.latitude,
+            longitude: u.row.longitude,
+          }).eq('id', u.id);
         }
 
         // Update project center from KMZ
@@ -214,7 +219,10 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
           longitude: parsedKMZ.center.lng,
         }).eq('id', projectId);
 
-        toast.success(`${parsedKMZ.placemarks.length} lotes importados`);
+        const parts: string[] = [];
+        if (toInsert.length) parts.push(`${toInsert.length} importados`);
+        if (toUpdate.length) parts.push(`${toUpdate.length} actualizados`);
+        toast.success(`Lotes desde KMZ: ${parts.join(' · ') || 'sin cambios'}`);
       }
 
       onComplete();
@@ -478,20 +486,17 @@ const StepKMZ = ({ isEditing, parsedKMZ, kmzError, kmzFileName, onUpload, onClea
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClear: () => void;
 }) => {
-  if (isEditing) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <FileArchive className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Importar KMZ</h3>
-        <p className="text-sm text-muted-foreground max-w-sm">
-          Para proyectos existentes, usa el botón "Importar KMZ" desde la tarjeta del proyecto para sincronizar lotes existentes.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
+      {isEditing && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="text-xs">
+            Al importar en un proyecto existente, los lotes que coincidan por número se
+            actualizan (geometría y superficie) y los nuevos se agregan. No se duplican.
+          </AlertDescription>
+        </Alert>
+      )}
       {kmzError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
