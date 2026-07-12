@@ -536,6 +536,53 @@ export type Database = {
           },
         ]
       }
+      featured_history: {
+        Row: {
+          action: string
+          changed_by: string | null
+          created_at: string
+          id: string
+          new_featured: boolean
+          new_until: string | null
+          notes: string | null
+          previous_featured: boolean | null
+          previous_until: string | null
+          project_id: string
+        }
+        Insert: {
+          action: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_featured: boolean
+          new_until?: string | null
+          notes?: string | null
+          previous_featured?: boolean | null
+          previous_until?: string | null
+          project_id: string
+        }
+        Update: {
+          action?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_featured?: boolean
+          new_until?: string | null
+          notes?: string | null
+          previous_featured?: boolean | null
+          previous_until?: string | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_history_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           budget_max: number | null
@@ -1216,6 +1263,7 @@ export type Database = {
           description: string | null
           embed_map_url: string | null
           featured: boolean
+          featured_until: string | null
           id: string
           images: string[] | null
           kmz_file_url: string | null
@@ -1251,6 +1299,7 @@ export type Database = {
           description?: string | null
           embed_map_url?: string | null
           featured?: boolean
+          featured_until?: string | null
           id?: string
           images?: string[] | null
           kmz_file_url?: string | null
@@ -1286,6 +1335,7 @@ export type Database = {
           description?: string | null
           embed_map_url?: string | null
           featured?: boolean
+          featured_until?: string | null
           id?: string
           images?: string[] | null
           kmz_file_url?: string | null
@@ -2043,6 +2093,19 @@ export type Database = {
         }
         Returns: number
       }
+      admin_set_project_featured: {
+        Args: {
+          p_active: boolean
+          p_notes?: string
+          p_project_id: string
+          p_until?: string
+        }
+        Returns: {
+          featured: boolean
+          featured_until: string
+          project_id: string
+        }[]
+      }
       create_public_lead: {
         Args: {
           p_email?: string
@@ -2067,6 +2130,7 @@ export type Database = {
         }
         Returns: string
       }
+      expire_featured_projects: { Args: never; Returns: number }
       expire_stale_reservations: { Args: never; Returns: number }
       extend_reservation: {
         Args: { p_hours?: number; p_reservation_id: string }
