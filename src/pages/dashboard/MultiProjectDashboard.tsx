@@ -11,8 +11,9 @@ import { useLots } from '@/hooks/useLots';
 import { marketplacePublishStats, publishStatsByProject } from '@/lib/marketplace/publishStats';
 import {
   Building2, Grid3X3, TrendingUp, DollarSign, Users, AlertTriangle,
-  ArrowUpRight, ArrowDownRight, BarChart3, Target, Store, ExternalLink,
+  ArrowUpRight, ArrowDownRight, BarChart3, Target, Store, ExternalLink, Star,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const formatCLP = (n: number) =>
@@ -21,8 +22,9 @@ const formatCLP = (n: number) =>
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
 const MultiProjectDashboard = () => {
-  const { projects, isLoading: projLoading } = useProjects();
+  const { projects, updateProject, isLoading: projLoading } = useProjects();
   const [selectedProject, setSelectedProject] = useState<string>('all');
+  const featuredById = new Map(projects.map((p) => [p.id, !!(p as unknown as { featured?: boolean }).featured]));
   const { data: metrics, isLoading: metricsLoading } = useMultiProjectMetrics(
     selectedProject === 'all' ? undefined : selectedProject
   );
@@ -206,9 +208,20 @@ const MultiProjectDashboard = () => {
                         Publicados en marketplace: <span className="font-semibold text-foreground">{pub.published}/{pub.total}</span>
                         {pub.unpublished > 0 && <span className="text-amber-600">· {pub.unpublished} sin publicar</span>}
                       </span>
-                      <Link to={`/proyecto/${proj.id}`} className="flex items-center gap-1 text-primary hover:underline">
-                        Gestionar <ExternalLink className="h-3 w-3" />
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 gap-1 px-1.5 text-[11px]"
+                          onClick={() => updateProject.mutate({ id: proj.id, featured: !featuredById.get(proj.id) } as never)}
+                        >
+                          <Star className={`h-3.5 w-3.5 ${featuredById.get(proj.id) ? 'fill-amber-400 text-amber-400' : ''}`} />
+                          {featuredById.get(proj.id) ? 'Destacado' : 'Destacar'}
+                        </Button>
+                        <Link to={`/proyecto/${proj.id}`} className="flex items-center gap-1 text-primary hover:underline">
+                          Gestionar <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 );

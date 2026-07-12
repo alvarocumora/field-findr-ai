@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, Building2, MapPin, ArrowLeft, Grid3X3 } from 'lucide-react';
+import { Loader2, Building2, MapPin, ArrowLeft, Grid3X3, MessageCircle, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAgencyShowcase } from '@/hooks/useAgencyShowcase';
@@ -54,6 +54,16 @@ const AgencyShowcase = () => {
                 {projects.length} proyecto{projects.length === 1 ? '' : 's'}
               </Badge>
               <AgencyContactDialog slug={slug ?? ''} agencyName={agency.company_name || 'la inmobiliaria'} />
+              {agency.phone && (
+                <a
+                  href={`https://wa.me/${agency.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${agency.company_name || ''}, vi su vitrina en Ofertaterrenos y me interesan sus proyectos.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-md bg-[#25D366] px-3 py-1.5 text-sm font-medium text-white hover:brightness-95"
+                >
+                  <MessageCircle className="h-4 w-4" /> WhatsApp
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -71,7 +81,12 @@ const AgencyShowcase = () => {
                 to={`/proyecto/${p.id}`}
                 className="group rounded-xl border border-border/50 bg-card overflow-hidden hover:shadow-lg transition-shadow"
               >
-                <div className="aspect-[16/10] bg-muted overflow-hidden">
+                <div className="aspect-[16/10] bg-muted overflow-hidden relative">
+                  {p.featured && (
+                    <Badge className="absolute top-2 left-2 z-10 gap-1 bg-amber-500 text-white border-0">
+                      <Star className="h-3 w-3 fill-current" /> Destacado
+                    </Badge>
+                  )}
                   {p.images?.[0] ? (
                     <img src={p.images[0]} alt={p.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
                   ) : (

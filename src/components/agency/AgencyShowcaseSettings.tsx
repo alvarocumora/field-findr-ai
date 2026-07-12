@@ -9,7 +9,7 @@ import { Store, ExternalLink } from 'lucide-react';
 import { useAgencyProfile, type AgencyProfileForm } from '@/hooks/useAgencyShowcase';
 import { slugifyAgency, isValidSlug } from '@/lib/agency/slug';
 
-const EMPTY: AgencyProfileForm = { company_name: '', public_slug: '', logo_url: '', bio: '', is_public: false };
+const EMPTY: AgencyProfileForm = { company_name: '', public_slug: '', logo_url: '', bio: '', phone: '', is_public: false };
 
 /** Owner card to configure the public agency showcase (/inmobiliaria/:slug). */
 export const AgencyShowcaseSettings = () => {
@@ -61,9 +61,15 @@ export const AgencyShowcaseSettings = () => {
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <Label className="text-xs">Logo (URL)</Label>
-          <Input value={form.logo_url ?? ''} placeholder="https://…/logo.png" onChange={(e) => set('logo_url', e.target.value)} />
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Logo (URL)</Label>
+            <Input value={form.logo_url ?? ''} placeholder="https://…/logo.png" onChange={(e) => set('logo_url', e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">WhatsApp / teléfono público</Label>
+            <Input value={form.phone ?? ''} placeholder="+56 9 1234 5678" onChange={(e) => set('phone', e.target.value)} />
+          </div>
         </div>
 
         <div className="space-y-1.5">
