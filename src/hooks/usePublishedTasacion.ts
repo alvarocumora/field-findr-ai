@@ -24,16 +24,12 @@ export const usePublishedTasacion = (listingId?: string | null) => {
     queryKey: ['published-tasacion', listingId],
     enabled: !!listingId,
     queryFn: async (): Promise<PublishedTasacion | null> => {
-      const { data, error } = await supabase
-        .from('tasaciones_publicadas')
-        .select('id, listing_id, valor_uf, valor_clp, fecha_emision, tasador_nombre, version, revoked_at, blockchain_anchor, created_at')
-        .eq('listing_id', listingId!)
-        .is('revoked_at', null)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('get_tasacion_by_listing', {
+        p_listing_id: listingId!,
+      });
       if (error) throw error;
-      return (data as PublishedTasacion) ?? null;
+      const row = Array.isArray(data) ? data[0] : data;
+      return (row as PublishedTasacion) ?? null;
     },
   });
 };

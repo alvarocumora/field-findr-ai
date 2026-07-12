@@ -1215,6 +1215,7 @@ export type Database = {
           created_at: string
           description: string | null
           embed_map_url: string | null
+          featured: boolean
           id: string
           images: string[] | null
           kmz_file_url: string | null
@@ -1249,6 +1250,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           embed_map_url?: string | null
+          featured?: boolean
           id?: string
           images?: string[] | null
           kmz_file_url?: string | null
@@ -1283,6 +1285,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           embed_map_url?: string | null
+          featured?: boolean
           id?: string
           images?: string[] | null
           kmz_file_url?: string | null
@@ -2040,6 +2043,17 @@ export type Database = {
         }
         Returns: number
       }
+      create_public_lead: {
+        Args: {
+          p_email?: string
+          p_first_name: string
+          p_message?: string
+          p_phone?: string
+          p_project_id?: string
+          p_slug: string
+        }
+        Returns: string
+      }
       create_referral_lead: {
         Args: {
           p_budget_max?: number
@@ -2083,6 +2097,7 @@ export type Database = {
           first_name: string
           last_name: string
           logo_url: string
+          phone: string
           public_slug: string
           user_id: string
         }[]
@@ -2100,6 +2115,59 @@ export type Database = {
           polygon: Json
           title: string
           token: string
+        }[]
+      }
+      get_tasacion_by_id: {
+        Args: { p_id: string }
+        Returns: {
+          blockchain_anchor: Json | null
+          comuna: string | null
+          created_at: string
+          direccion: string | null
+          fecha_emision: string | null
+          firma_data_hash: string | null
+          id: string
+          lang: string | null
+          listing_id: string | null
+          payload_hash: string
+          payload_json: Json
+          pdf_final_path: string | null
+          pdf_final_sha256: string | null
+          pdf_path: string
+          pdf_sha256: string
+          publisher_user_id: string
+          region: string | null
+          revoked_at: string | null
+          revoked_reason: string | null
+          rol: string | null
+          superficie_m2: number | null
+          tasador_nombre: string | null
+          updated_at: string
+          valor_clp: number | null
+          valor_m2_uf: number | null
+          valor_uf: number | null
+          version: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "tasaciones_publicadas"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_tasacion_by_listing: {
+        Args: { p_listing_id: string }
+        Returns: {
+          blockchain_anchor: Json
+          created_at: string
+          fecha_emision: string
+          id: string
+          listing_id: string
+          revoked_at: string
+          tasador_nombre: string
+          valor_clp: number
+          valor_uf: number
+          version: number
         }[]
       }
       has_role: {

@@ -48,8 +48,6 @@ type LookupResult =
   | Found
   | { kind: 'notfound' };
 
-const SELECT_COLS =
-  'id,comuna,valor_uf,tasador_nombre,fecha_emision,revoked_at,revoked_reason,pdf_path,pdf_final_path,pdf_sha256,pdf_final_sha256';
 
 const toFound = (data: any, matched: string): Found => ({
   kind: 'found',
@@ -97,13 +95,10 @@ const TasacionValidator = () => {
     const id = code.trim();
     if (!id) return;
     setByCodeState({ kind: 'checking' });
-    const { data, error } = await supabase
-      .from('tasaciones_publicadas')
-      .select(SELECT_COLS)
-      .eq('id', id)
-      .maybeSingle();
-    if (data && !error) {
-      setByCodeState(toFound(data, 'id'));
+    const { data, error } = await supabase.rpc('get_tasacion_by_id', { p_id: id });
+    const row = Array.isArray(data) ? data[0] : data;
+    if (row && !error) {
+      setByCodeState(toFound(row, 'id'));
       return;
     }
     const rec = findPublicAppraisalById(id);
@@ -122,27 +117,14 @@ const TasacionValidator = () => {
     const { data: rpcData } = await supabase.rpc('find_tasacion_by_hash', { _hash: hash });
     const rpcRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
     if (rpcRow?.id) {
-      const { data: full } = await supabase
-        .from('tasaciones_publicadas')
-        .select(SELECT_COLS)
-        .eq('id', rpcRow.id)
-        .maybeSingle();
+      const { data: fullData } = await supabase.rpc('get_tasacion_by_id', { p_id: rpcRow.id });
+      const full = Array.isArray(fullData) ? fullData[0] : fullData;
       if (full) {
         setByFileState(toFound(full, rpcRow.matched_field ?? 'pdf'));
         return;
       }
     }
-    // 2) Fallback: direct match on pdf_sha256 / pdf_final_sha256
-    const { data: direct } = await supabase
-      .from('tasaciones_publicadas')
-      .select(SELECT_COLS)
-      .or(`pdf_sha256.eq.${hash},pdf_final_sha256.eq.${hash}`)
-      .maybeSingle();
-    if (direct) {
-      setByFileState(toFound(direct, 'pdf'));
-      return;
-    }
-    // 3) Fallback: static public registry (demo / shipped PDFs)
+    // 2) Fallback: static public registry (demo / shipped PDFs)
     const staticRec = findPublicAppraisalByHash(hash);
     if (staticRec) {
       setByFileState(staticToFound(staticRec, 'pdf (registro público)'));
