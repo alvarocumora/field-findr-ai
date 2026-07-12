@@ -151,6 +151,9 @@ serve(async (req) => {
         plan_type?: string;
         reservation_id?: string;
         lot_id?: string;
+        project_id?: string;
+        plan?: string;
+        days?: number;
       } | null = null;
 
       try {
