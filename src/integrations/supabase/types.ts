@@ -2269,6 +2269,10 @@ export type Database = {
             }
             Returns: string
           }
+      system_activate_featured: {
+        Args: { p_days: number; p_payment_ref?: string; p_project_id: string }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "buyer" | "agent" | "admin"

@@ -151,6 +151,9 @@ serve(async (req) => {
         plan_type?: string;
         reservation_id?: string;
         lot_id?: string;
+        project_id?: string;
+        plan?: string;
+        days?: number;
       } | null = null;
 
       try {
@@ -168,6 +171,95 @@ serve(async (req) => {
       }
 
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+      // Handle FEATURED (Home slot destacado) payments
+      if (externalRef.type === "featured" && externalRef.project_id && externalRef.days) {
+        console.log("Processing featured payment for project:", externalRef.project_id, "status:", payment.status);
+
+        // Server-authoritative pricing — MUST match create-featured-checkout.
+        const FEATURED_PRICES: Record<string, number> = {
+          "featured-7": 19990,
+          "featured-30": 59990,
+          "featured-90": 149990,
+        };
+
+        if (payment.status === "approved") {
+          const expected = externalRef.plan ? FEATURED_PRICES[externalRef.plan] : undefined;
+          if (expected !== undefined && Number(payment.transaction_amount) !== expected) {
+            console.error("Amount mismatch on featured payment", {
+              project_id: externalRef.project_id,
+              plan: externalRef.plan,
+              expected,
+              received: payment.transaction_amount,
+            });
+            return new Response(JSON.stringify({ received: true, type: "featured", ignored: "amount_mismatch" }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+
+          // Idempotency: skip if we've already processed this MP payment id.
+          const { data: existingPayment } = await supabase
+            .from("payments")
+            .select("id")
+            .eq("mercadopago_payment_id", paymentId.toString())
+            .maybeSingle();
+
+          if (!existingPayment) {
+            const { error: rpcError } = await supabase.rpc("system_activate_featured", {
+              p_project_id: externalRef.project_id,
+              p_days: externalRef.days,
+              p_payment_ref: `MP #${paymentId}`,
+            });
+            if (rpcError) {
+              console.error("Failed to activate featured:", rpcError);
+              return new Response(JSON.stringify({ error: rpcError.message }), {
+                status: 500,
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+              });
+            }
+          }
+
+          await recordPayment(supabase, {
+            user_id: externalRef.user_id,
+            amount: payment.transaction_amount,
+            currency: payment.currency_id,
+            status: payment.status,
+            mercadopago_payment_id: paymentId.toString(),
+            mercadopago_preference_id: payment.preference_id,
+            description: `Destacado ${externalRef.days}d — proyecto ${externalRef.project_id}`,
+          });
+        } else if (payment.status === "refunded" || payment.status === "charged_back") {
+          // Money returned: turn off the featured slot immediately.
+          await supabase
+            .from("projects")
+            .update({ featured: false, featured_until: null, updated_at: new Date().toISOString() })
+            .eq("id", externalRef.project_id);
+
+          await supabase.from("featured_history").insert({
+            project_id: externalRef.project_id,
+            action: "deactivated",
+            previous_featured: true,
+            new_featured: false,
+            new_until: null,
+            notes: `Reembolso/chargeback MP #${paymentId}`,
+            changed_by: null,
+          });
+
+          await recordPayment(supabase, {
+            user_id: externalRef.user_id,
+            amount: payment.transaction_amount,
+            currency: payment.currency_id,
+            status: payment.status,
+            mercadopago_payment_id: paymentId.toString(),
+            mercadopago_preference_id: payment.preference_id,
+            description: `Destacado ${externalRef.days}d — proyecto ${externalRef.project_id} (reembolso)`,
+          });
+        }
+
+        return new Response(JSON.stringify({ received: true, type: "featured" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
 
       // Handle RESERVATION payments
       if (externalRef.type === "reservation" && externalRef.reservation_id) {
