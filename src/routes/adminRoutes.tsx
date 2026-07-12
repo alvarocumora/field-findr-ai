@@ -17,6 +17,7 @@ const BusinessIntelligence = lazy(() => import("@/components/BusinessIntelligenc
 const FinancialDashboard = lazy(() => import("@/pages/dashboard/FinancialDashboard"));
 const ProjectsManagement = lazy(() => import("@/components/ProjectsManagement"));
 const VisualScenariosAdmin = lazy(() => import("@/pages/admin/VisualScenariosAdmin"));
+const FeaturedManager = lazy(() => import("@/pages/admin/FeaturedManager"));
 
 const adminElement = (children: ReactNode) => (
   <DashboardLayout requiredRole="admin">
