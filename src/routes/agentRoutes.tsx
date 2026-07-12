@@ -5,7 +5,30 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { TeamActivityFeed } from "@/components/dashboard/TeamActivityFeed";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { DashboardAsesor } from "@/pages/dashboard";
+import { useCurrentPlan } from "@/hooks/useSubscription";
 import { PageLoader } from "./routeUtils";
+
+const DashboardInmobiliaria = lazy(() => import("@/pages/dashboard/DashboardInmobiliaria"));
+
+/**
+ * El dashboard del asesor depende del tipo de cuenta (plan):
+ * inmobiliaria/grupo/enterprise → panel de agencia (ya incluye el feed de
+ * actividad); el resto → vista de corredor + feed de actividad del equipo.
+ */
+const AgentDashboard = () => {
+  const { plan, isLoading } = useCurrentPlan();
+  if (isLoading) return <PageLoader />;
+  const isAgency = plan === "inmobiliaria" || plan === "grupo" || plan === "enterprise";
+  if (isAgency) return <DashboardInmobiliaria />;
+  return (
+    <>
+      <DashboardAsesor />
+      <div className="container pb-8">
+        <TeamActivityFeed />
+      </div>
+    </>
+  );
+};
 
 const Tools = lazy(() => import("@/pages/Tools"));
 const Profile = lazy(() => import("@/pages/Profile"));
@@ -45,20 +68,15 @@ const agentElement = (children: ReactNode) => (
   </DashboardLayout>
 );
 
-const agentDashboardElement = (
-  <Suspense fallback={<PageLoader />}>
-    <DashboardAsesor />
-    <div className="container pb-8">
-      <TeamActivityFeed />
-    </div>
-  </Suspense>
-);
-
 export const agentRoutes = [
   <Route
     key="asesor-dashboard"
     path="/asesor/dashboard"
-    element={agentElement(agentDashboardElement)}
+    element={agentElement(
+      <Suspense fallback={<PageLoader />}>
+        <AgentDashboard />
+      </Suspense>
+    )}
   />,
   <Route key="asesor-opportunities" path="/asesor/opportunities" element={agentElement(<LandOpportunities />)} />,
   <Route key="asesor-opportunity" path="/asesor/opportunity/:id" element={agentElement(<OpportunityDetail />)} />,

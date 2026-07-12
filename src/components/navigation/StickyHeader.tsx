@@ -55,14 +55,14 @@ const StickyHeader = () => {
     { name: 'Blog', href: '/blog' },
   ];
 
-  // Contextual nav items based on role
-  const roleNavigation = isAdmin
-    ? [{ name: 'Panel Admin', href: '/admin/dashboard' }]
-    : isAgent
-      ? [{ name: 'Mi Dashboard', href: '/asesor/dashboard' }]
-      : user
-        ? [{ name: 'Mi Terreno', href: '/mi-terreno' }]
-        : [];
+  // Contextual nav items based on role.
+  // Admin access is intentionally NOT surfaced in the public top nav —
+  // it lives in the personal avatar dropdown and the footer only.
+  const roleNavigation = isAgent
+    ? [{ name: 'Mi Dashboard', href: '/asesor/dashboard' }]
+    : user && !isAdmin
+      ? [{ name: 'Mi Terreno', href: '/mi-terreno' }]
+      : [];
 
   const navigation = [...publicNavigation, ...roleNavigation];
   const isActive = (path: string) => location.pathname === path;
