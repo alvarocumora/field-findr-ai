@@ -48,8 +48,6 @@ type LookupResult =
   | Found
   | { kind: 'notfound' };
 
-const SELECT_COLS =
-  'id,comuna,valor_uf,tasador_nombre,fecha_emision,revoked_at,revoked_reason,pdf_path,pdf_final_path,pdf_sha256,pdf_final_sha256';
 
 const toFound = (data: any, matched: string): Found => ({
   kind: 'found',
