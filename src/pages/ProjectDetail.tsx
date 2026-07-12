@@ -25,6 +25,7 @@ import { ShareButtons } from '@/components/social/ShareButtons';
 import { ProjectBrochureTab } from '@/components/projects/ProjectBrochureTab';
 import { ProjectHero } from '@/components/projects/ProjectHero';
 import { FloatingQuoter } from '@/components/projects/FloatingQuoter';
+import FeatureProjectButton from '@/components/projects/FeatureProjectButton';
 import { SocialProofToast } from '@/components/projects/SocialProofToast';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
