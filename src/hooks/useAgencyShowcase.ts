@@ -9,6 +9,7 @@ export interface AgencyPublic {
   company_name: string | null;
   logo_url: string | null;
   bio: string | null;
+  phone: string | null;
 }
 
 export interface AgencyProject {
@@ -20,6 +21,7 @@ export interface AgencyProject {
   images: string[] | null;
   total_lots: number | null;
   available_lots: number | null;
+  featured?: boolean | null;
 }
 
 /** Public read: resolve an agency by slug (RPC) + its active projects. */
@@ -40,14 +42,20 @@ export const useAgencyShowcase = (slug?: string) => {
     queryKey: ['agency-projects', userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name, location, city, region, images, total_lots, available_lots')
-        .eq('user_id', userId!)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
+      const base = 'id, name, location, city, region, images, total_lots, available_lots';
+      const build = (cols: string) =>
+        supabase.from('projects').select(cols).eq('user_id', userId!).eq('status', 'active')
+          .order('created_at', { ascending: false });
+      // Prefer selecting `featured`, fall back if the column isn't there yet.
+      let { data, error } = await build(`${base}, featured`);
+      if (error && (error.code === '42703' || /featured/i.test(error.message ?? ''))) {
+        ({ data, error } = await build(base));
+      }
       if (error) throw error;
-      return (data ?? []) as AgencyProject[];
+      // Featured projects first (stable — the query already orders by recency).
+      return ((data ?? []) as unknown as AgencyProject[])
+        .slice()
+        .sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
     },
   });
 
@@ -83,6 +91,7 @@ export interface AgencyProfileForm {
   public_slug: string | null;
   logo_url: string | null;
   bio: string | null;
+  phone: string | null;
   is_public: boolean;
 }
 
@@ -96,7 +105,7 @@ export const useAgencyProfile = () => {
     enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await (supabase.from as CallableFunction)('profiles')
-        .select('company_name, public_slug, logo_url, bio, is_public')
+        .select('company_name, public_slug, logo_url, bio, phone, is_public')
         .eq('user_id', user!.id)
         .maybeSingle();
       if (error) throw error;
@@ -113,6 +122,7 @@ export const useAgencyProfile = () => {
           public_slug: form.public_slug,
           logo_url: form.logo_url,
           bio: form.bio,
+          phone: form.phone,
           is_public: form.is_public,
         })
         .eq('user_id', user.id);
