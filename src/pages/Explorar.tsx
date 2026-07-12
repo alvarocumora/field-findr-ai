@@ -5,6 +5,7 @@ import ExploreListPanel from '@/components/explore/ExploreListPanel';
 import ExploreMapPanel, { MapBounds } from '@/components/explore/ExploreMapPanel';
 import MobileExploreView from '@/components/explore/MobileExploreView';
 import PropertyPreviewSheet from '@/components/explore/PropertyPreviewSheet';
+import ProjectsRail from '@/components/explore/ProjectsRail';
 import EnhancedAISearch from '@/components/ai/EnhancedAISearch';
 import CompareFloatingBar from '@/components/compare/CompareFloatingBar';
 import CompareSheet from '@/components/compare/CompareSheet';
@@ -374,7 +375,9 @@ const Explorar = () => {
       {/* Split view: List (380px fixed) + Map (rest) */}
       <div className="flex-1 flex pt-header min-h-0">
         {/* Left panel – scrollable list */}
-        <div className="w-[420px] min-w-[380px] flex-shrink-0 border-r border-border/30">
+        <div className="w-[420px] min-w-[380px] flex-shrink-0 border-r border-border/30 flex flex-col min-h-0">
+          <ProjectsRail />
+          <div className="flex-1 min-h-0">
           <ExploreListPanel
             listings={filteredListings}
             totalCount={totalCount}
@@ -410,6 +413,7 @@ const Explorar = () => {
             selectedValuation={selectedValuation}
             onToggleValuation={toggleValuation}
           />
+          </div>
         </div>
 
         {/* Inline preview panel — docks between list and map (no map overlay) */}

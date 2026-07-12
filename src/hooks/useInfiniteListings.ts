@@ -19,6 +19,9 @@ export const useInfiniteListings = (filters?: ListingFilters) => {
         .select('*', { count: 'exact' })
         .eq('status', 'active')
         .eq('is_demo', false)
+        // Hide individual lots of a loteo/project from the general explorer.
+        // Projects surface as their own cards via the ProjectsRail.
+        .not('tags', 'cs', '{loteo}')
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
         .range(pageParam, pageParam + PAGE_SIZE - 1);

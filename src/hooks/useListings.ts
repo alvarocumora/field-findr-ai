@@ -63,6 +63,7 @@ export const useListings = (filters?: ListingFilters) => {
         .select('*')
         .eq('status', 'active')
         .eq('is_demo', false)
+        .not('tags', 'cs', '{loteo}')
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false });
 
