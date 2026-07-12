@@ -413,6 +413,7 @@ const Explorar = () => {
             selectedValuation={selectedValuation}
             onToggleValuation={toggleValuation}
           />
+          </div>
         </div>
 
         {/* Inline preview panel — docks between list and map (no map overlay) */}
