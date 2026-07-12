@@ -1215,6 +1215,7 @@ export type Database = {
           created_at: string
           description: string | null
           embed_map_url: string | null
+          featured: boolean
           id: string
           images: string[] | null
           kmz_file_url: string | null
@@ -1249,6 +1250,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           embed_map_url?: string | null
+          featured?: boolean
           id?: string
           images?: string[] | null
           kmz_file_url?: string | null
@@ -1283,6 +1285,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           embed_map_url?: string | null
+          featured?: boolean
           id?: string
           images?: string[] | null
           kmz_file_url?: string | null
@@ -2040,6 +2043,17 @@ export type Database = {
         }
         Returns: number
       }
+      create_public_lead: {
+        Args: {
+          p_email?: string
+          p_first_name: string
+          p_message?: string
+          p_phone?: string
+          p_project_id?: string
+          p_slug: string
+        }
+        Returns: string
+      }
       create_referral_lead: {
         Args: {
           p_budget_max?: number
@@ -2083,6 +2097,7 @@ export type Database = {
           first_name: string
           last_name: string
           logo_url: string
+          phone: string
           public_slug: string
           user_id: string
         }[]
