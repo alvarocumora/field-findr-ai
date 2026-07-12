@@ -5,6 +5,7 @@ import ExploreListPanel from '@/components/explore/ExploreListPanel';
 import ExploreMapPanel, { MapBounds } from '@/components/explore/ExploreMapPanel';
 import MobileExploreView from '@/components/explore/MobileExploreView';
 import PropertyPreviewSheet from '@/components/explore/PropertyPreviewSheet';
+import ProjectsRail from '@/components/explore/ProjectsRail';
 import EnhancedAISearch from '@/components/ai/EnhancedAISearch';
 import CompareFloatingBar from '@/components/compare/CompareFloatingBar';
 import CompareSheet from '@/components/compare/CompareSheet';
