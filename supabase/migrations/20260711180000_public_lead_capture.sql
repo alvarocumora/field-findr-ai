@@ -5,6 +5,9 @@
 -- SLUG (never a caller-supplied user_id, so leads can't be injected to
 -- arbitrary accounts), inserts the lead for that owner and notifies them.
 
+-- DROP first so a re-push that changes the signature can't hit
+-- "cannot change return type of existing function".
+DROP FUNCTION IF EXISTS public.create_public_lead(text, text, text, text, text, uuid);
 CREATE OR REPLACE FUNCTION public.create_public_lead(
   p_slug text,
   p_first_name text,
