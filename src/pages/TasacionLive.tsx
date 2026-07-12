@@ -115,14 +115,11 @@ const TasacionLive = () => {
     let alive = true;
     (async () => {
       if (!id) return;
-      const { data, error } = await supabase
-        .from('tasaciones_publicadas')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('get_tasacion_by_id', { p_id: id });
+      const row = Array.isArray(data) ? data[0] : data;
       if (!alive) return;
-      if (data && !error) {
-        setRow(data as PublicacionRow);
+      if (row && !error) {
+        setRow(row as PublicacionRow);
       } else {
         // Fallback: static registry (e.g. v21 Teno demo PDFs)
         const rec = findPublicAppraisalById(id);
