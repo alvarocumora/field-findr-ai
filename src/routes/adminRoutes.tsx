@@ -46,5 +46,6 @@ export const adminRoutes = [
   <Route key="admin-documents" path="/admin/documents" element={adminElement(<DocumentCenter />)} />,
   <Route key="admin-projects" path="/admin/projects" element={adminElement(<ProjectsManagement />)} />,
   <Route key="admin-visual-scenarios" path="/admin/visual-scenarios" element={adminElement(<VisualScenariosAdmin />)} />,
+  <Route key="admin-featured" path="/admin/featured" element={adminElement(<FeaturedManager />)} />,
   <Route key="admin-audit" path="/admin/audit" element={adminElement(<AuditLog />)} />,
 ];
