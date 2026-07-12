@@ -95,6 +95,7 @@ const adminItems: NavItem[] = [
   { name: 'Usuarios', href: '/admin/users', icon: Users },
   { name: 'Agentes', href: '/admin/agents', icon: ShieldCheck },
   { name: 'Proyectos', href: '/admin/projects', icon: FolderKanban },
+  { name: 'Destacados', href: '/admin/featured', icon: Sparkles },
   { name: 'Documentos', href: '/admin/documents', icon: ClipboardCheck },
   { name: 'Reservas', href: '/admin/reservations', icon: CalendarCheck },
   { name: 'Aprobaciones', href: '/admin/approvals', icon: ClipboardCheck },
