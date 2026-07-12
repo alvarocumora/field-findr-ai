@@ -399,6 +399,12 @@ const ProjectDetail = () => {
                   : `Publicar ${publishableCount} disponible${publishableCount === 1 ? '' : 's'} en marketplace`}
               </Button>
             )}
+            <FeatureProjectButton
+              projectId={project.id}
+              projectName={project.name}
+              featured={(project as any).featured}
+              featuredUntil={(project as any).featured_until ?? null}
+            />
           </div>
         )}
 
