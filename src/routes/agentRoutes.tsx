@@ -2,6 +2,7 @@ import { Suspense, lazy, type ReactNode } from "react";
 import { Route } from "react-router-dom";
 
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { TeamActivityFeed } from "@/components/dashboard/TeamActivityFeed";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { DashboardAsesor } from "@/pages/dashboard";
 import { PageLoader } from "./routeUtils";
@@ -44,15 +45,20 @@ const agentElement = (children: ReactNode) => (
   </DashboardLayout>
 );
 
+const agentDashboardElement = (
+  <Suspense fallback={<PageLoader />}>
+    <DashboardAsesor />
+    <div className="container pb-8">
+      <TeamActivityFeed />
+    </div>
+  </Suspense>
+);
+
 export const agentRoutes = [
   <Route
     key="asesor-dashboard"
     path="/asesor/dashboard"
-    element={agentElement(
-      <Suspense fallback={<PageLoader />}>
-        <DashboardAsesor />
-      </Suspense>
-    )}
+    element={agentElement(agentDashboardElement)}
   />,
   <Route key="asesor-opportunities" path="/asesor/opportunities" element={agentElement(<LandOpportunities />)} />,
   <Route key="asesor-opportunity" path="/asesor/opportunity/:id" element={agentElement(<OpportunityDetail />)} />,
