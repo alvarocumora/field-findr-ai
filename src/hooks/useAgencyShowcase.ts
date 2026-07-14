@@ -9,7 +9,7 @@ export interface AgencyPublic {
   company_name: string | null;
   logo_url: string | null;
   bio: string | null;
-  phone: string | null;
+  public_whatsapp: string | null;
 }
 
 export interface AgencyProject {
@@ -91,7 +91,7 @@ export interface AgencyProfileForm {
   public_slug: string | null;
   logo_url: string | null;
   bio: string | null;
-  phone: string | null;
+  public_whatsapp: string | null;
   is_public: boolean;
 }
 
@@ -105,7 +105,7 @@ export const useAgencyProfile = () => {
     enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await (supabase.from as CallableFunction)('profiles')
-        .select('company_name, public_slug, logo_url, bio, phone, is_public')
+        .select('company_name, public_slug, logo_url, bio, public_whatsapp, is_public')
         .eq('user_id', user!.id)
         .maybeSingle();
       if (error) throw error;
@@ -122,7 +122,7 @@ export const useAgencyProfile = () => {
           public_slug: form.public_slug,
           logo_url: form.logo_url,
           bio: form.bio,
-          phone: form.phone,
+          public_whatsapp: form.public_whatsapp,
           is_public: form.is_public,
         })
         .eq('user_id', user.id);

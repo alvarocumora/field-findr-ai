@@ -54,9 +54,9 @@ const AgencyShowcase = () => {
                 {projects.length} proyecto{projects.length === 1 ? '' : 's'}
               </Badge>
               <AgencyContactDialog slug={slug ?? ''} agencyName={agency.company_name || 'la inmobiliaria'} />
-              {agency.phone && (
+              {agency.public_whatsapp && (
                 <a
-                  href={`https://wa.me/${agency.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${agency.company_name || ''}, vi su vitrina en Ofertaterrenos y me interesan sus proyectos.`)}`}
+                  href={`https://wa.me/${agency.public_whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${agency.company_name || ''}, vi su vitrina en Ofertaterrenos y me interesan sus proyectos.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-md bg-[#25D366] px-3 py-1.5 text-sm font-medium text-white hover:brightness-95"

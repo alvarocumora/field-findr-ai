@@ -9,7 +9,14 @@ import { Store, ExternalLink } from 'lucide-react';
 import { useAgencyProfile, type AgencyProfileForm } from '@/hooks/useAgencyShowcase';
 import { slugifyAgency, isValidSlug } from '@/lib/agency/slug';
 
-const EMPTY: AgencyProfileForm = { company_name: '', public_slug: '', logo_url: '', bio: '', phone: '', is_public: false };
+const EMPTY: AgencyProfileForm = {
+  company_name: '',
+  public_slug: '',
+  logo_url: '',
+  bio: '',
+  public_whatsapp: '',
+  is_public: false,
+};
 
 /** Owner card to configure the public agency showcase (/inmobiliaria/:slug). */
 export const AgencyShowcaseSettings = () => {
@@ -67,8 +74,9 @@ export const AgencyShowcaseSettings = () => {
             <Input value={form.logo_url ?? ''} placeholder="https://…/logo.png" onChange={(e) => set('logo_url', e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">WhatsApp / teléfono público</Label>
-            <Input value={form.phone ?? ''} placeholder="+56 9 1234 5678" onChange={(e) => set('phone', e.target.value)} />
+            <Label className="text-xs">WhatsApp público</Label>
+            <Input value={form.public_whatsapp ?? ''} placeholder="+56 9 1234 5678" onChange={(e) => set('public_whatsapp', e.target.value)} />
+            <p className="text-[11px] text-muted-foreground">Este número se mostrará públicamente en tu vitrina. Déjalo vacío si no quieres mostrar WhatsApp.</p>
           </div>
         </div>
 
