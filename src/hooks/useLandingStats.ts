@@ -28,7 +28,7 @@ export const useLandingStats = () => {
       const [listings, projects, lots, reservations, listingsWithArea] = await Promise.all([
         supabase.from('listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('projects').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('lots').select('id', { count: 'exact', head: true }).eq('status', 'available'),
+        supabase.rpc('get_public_lots', { p_project_id: null }).eq('status', 'available').select('id', { count: 'exact', head: true }) as any,
         supabase.from('reservations').select('id', { count: 'exact', head: true }).eq('status', 'paid'),
         supabase.from('listings').select('region, price, area_ha').eq('status', 'active'),
       ]);
