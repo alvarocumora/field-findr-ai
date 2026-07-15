@@ -18,6 +18,7 @@ const FinancialDashboard = lazy(() => import("@/pages/dashboard/FinancialDashboa
 const ProjectsManagement = lazy(() => import("@/components/ProjectsManagement"));
 const VisualScenariosAdmin = lazy(() => import("@/pages/admin/VisualScenariosAdmin"));
 const FeaturedManager = lazy(() => import("@/pages/admin/FeaturedManager"));
+const CommercialLeadsAdmin = lazy(() => import("@/pages/admin/CommercialLeadsAdmin"));
 
 const adminElement = (children: ReactNode) => (
   <DashboardLayout requiredRole="admin">
@@ -46,6 +47,7 @@ export const adminRoutes = [
   <Route key="admin-documents" path="/admin/documents" element={adminElement(<DocumentCenter />)} />,
   <Route key="admin-projects" path="/admin/projects" element={adminElement(<ProjectsManagement />)} />,
   <Route key="admin-visual-scenarios" path="/admin/visual-scenarios" element={adminElement(<VisualScenariosAdmin />)} />,
+  <Route key="admin-commercial-leads" path="/admin/commercial-leads" element={adminElement(<CommercialLeadsAdmin />)} />,
   <Route key="admin-featured" path="/admin/featured" element={adminElement(<FeaturedManager />)} />,
   <Route key="admin-audit" path="/admin/audit" element={adminElement(<AuditLog />)} />,
 ];
