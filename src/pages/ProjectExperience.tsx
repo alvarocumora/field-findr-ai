@@ -32,7 +32,7 @@ const ProjectExperience = () => {
   const { data: lots } = useQuery({
     queryKey: ['project-lots-exp', id],
     queryFn: async () => {
-      const { data } = await supabase.from('lots').select('*').eq('project_id', id!);
+      const { data } = await supabase.rpc('get_public_lots', { p_project_id: id! });
       return data || [];
     },
     enabled: !!id,
