@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 const plans = [
   {
     name: 'Starter Loteo',
+    key: 'starter-loteo',
     price: '$49.990',
     period: '/mes',
     description: 'Para corredores o inmobiliarias que quieren publicar y validar demanda de un loteo.',
@@ -24,6 +25,7 @@ const plans = [
   },
   {
     name: 'Growth Inmobiliaria',
+    key: 'growth-inmobiliaria',
     price: '$149.990',
     period: '/mes',
     description: 'Para equipos que venden varios proyectos y necesitan control comercial diario.',
@@ -42,6 +44,7 @@ const plans = [
   },
   {
     name: 'Enterprise Loteos',
+    key: 'enterprise-loteos',
     price: 'A medida',
     period: '',
     description: 'Para inmobiliarias con múltiples loteos, equipos comerciales y reporting ejecutivo.',
@@ -65,6 +68,10 @@ const outcomes = [
   { icon: BarChart3, title: 'Control ejecutivo', text: 'Visualiza actividad, reservas, pagos y desempeño comercial.' },
 ];
 
+const getPlanContactUrl = (planKey: string, source = 'planes-loteos') => (
+  `/contacto-loteos?plan=${encodeURIComponent(planKey)}&source=${encodeURIComponent(source)}`
+);
+
 const PricingLoteos = () => {
   return (
     <div className="min-h-screen bg-background">
@@ -80,13 +87,13 @@ const PricingLoteos = () => {
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Button size="lg" asChild>
-                <Link to="/auth?mode=signup">
-                  Crear cuenta
+                <Link to={getPlanContactUrl('growth-inmobiliaria', 'planes-loteos-hero')}>
+                  Solicitar demo comercial
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link to="/contacto">Agendar demo</Link>
+                <Link to={getPlanContactUrl('enterprise-loteos', 'planes-loteos-hero-secondary')}>Hablar con ventas</Link>
               </Button>
             </div>
           </div>
@@ -134,7 +141,7 @@ const PricingLoteos = () => {
                   ))}
                 </ul>
                 <Button className="w-full" variant={plan.highlight ? 'default' : 'outline'} asChild>
-                  <Link to={plan.highlight ? '/contacto?plan=growth-inmobiliaria' : '/contacto'}>{plan.cta}</Link>
+                  <Link to={getPlanContactUrl(plan.key, 'planes-loteos-card')}>{plan.cta}</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -156,6 +163,9 @@ const PricingLoteos = () => {
               <div>
                 <p className="font-medium">Siguiente integración</p>
                 <p className="text-sm text-muted-foreground">Conectar cada plan a checkout y activar límites comerciales dentro del dashboard.</p>
+                <Button className="mt-4" size="sm" asChild>
+                  <Link to={getPlanContactUrl('growth-inmobiliaria', 'planes-loteos-footer')}>Solicitar activación</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
