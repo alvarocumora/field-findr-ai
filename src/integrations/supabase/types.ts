@@ -2166,6 +2166,14 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_owner_lot_buyer: {
+        Args: { p_lot_id: string }
+        Returns: {
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string
+        }[]
+      }
       get_shared_design: {
         Args: { p_token: string }
         Returns: {
