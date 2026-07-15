@@ -554,7 +554,7 @@ const ProjectDetail = () => {
                 {sortedLots.map((lot, index) => (
                   <EnhancedLotCard
                     key={lot.id}
-                    lot={lot}
+                    lot={lot as any}
                     index={index}
                     totalAvailable={availableLots.length}
                     isSelected={selectedLot === lot.id}
