@@ -39,10 +39,10 @@ const InmobiliariasLanding = () => {
           Desde <strong className="text-foreground">5 UF/mes</strong>.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button size="lg" onClick={() => navigate('/pricing')}>
-            Ver planes <ArrowRight className="ml-2 h-4 w-4" />
+          <Button size="lg" onClick={() => navigate('/planes-loteos')}>
+            Ver planes de loteos <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
-          <Button size="lg" variant="outline" onClick={() => navigate('/contacto')}>
+          <Button size="lg" variant="outline" onClick={() => navigate('/contacto?source=inmobiliarias-landing')}>
             Hablar con ventas
           </Button>
         </div>
@@ -158,7 +158,7 @@ const InmobiliariasLanding = () => {
                   <Button
                     className="w-full"
                     variant={id === 'grupo' || isEnterprise ? 'default' : 'outline'}
-                    onClick={() => isEnterprise ? navigate('/contacto') : navigate('/pricing')}
+                    onClick={() => isEnterprise ? navigate('/contacto?plan=enterprise-loteos') : navigate('/planes-loteos')}
                   >
                     {p.ctaLabel}
                   </Button>
@@ -178,11 +178,11 @@ const InmobiliariasLanding = () => {
             Importamos tu inventario desde KMZ, Excel o tu portal actual. Sin costo de onboarding en planes anuales.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg" onClick={() => navigate('/contacto')}>
+            <Button size="lg" onClick={() => navigate('/contacto?source=inmobiliarias-final-cta')}>
               Agendar demo
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('/pricing')}>
-              Ver planes detallados
+            <Button size="lg" variant="outline" onClick={() => navigate('/planes-loteos')}>
+              Ver planes para loteos
             </Button>
           </div>
         </div>

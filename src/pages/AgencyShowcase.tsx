@@ -115,9 +115,14 @@ const AgencyShowcase = () => {
       </main>
 
       <footer className="border-t border-border/40 py-6 text-center">
-        <Button asChild variant="ghost" size="sm">
-          <Link to="/">Ofertaterrenos</Link>
-        </Button>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/">Ofertaterrenos</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/planes-loteos">Crear vitrina inmobiliaria</Link>
+          </Button>
+        </div>
       </footer>
     </div>
   );

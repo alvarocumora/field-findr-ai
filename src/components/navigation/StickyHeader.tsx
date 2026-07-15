@@ -51,6 +51,7 @@ const StickyHeader = () => {
     { name: 'Oportunidades', href: '/oportunidades' },
     { name: 'Publicar', href: '/auth?role=agent' },
     { name: 'Corredores', href: '/pricing' },
+    { name: 'Planes Loteos', href: '/planes-loteos', badge: 'B2B' },
     { name: 'Blog', href: '/blog' },
   ];
 
@@ -230,13 +231,18 @@ const StickyHeader = () => {
                         to={item.href}
                         onClick={() => setIsMobileMenuOpen(false)}
                         className={cn(
-                          "px-4 py-3.5 text-base font-medium rounded-xl transition-colors touch-target",
+                          "px-4 py-3.5 text-base font-medium rounded-xl transition-colors touch-target relative",
                           isActive(item.href)
                             ? "text-primary bg-primary/10"
                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                         )}
                       >
                         {item.name}
+                        {'badge' in item && (item as any).badge && (
+                          <span className="ml-2 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-foreground">
+                            {(item as any).badge}
+                          </span>
+                        )}
                       </Link>
                     ))}
                   </nav>

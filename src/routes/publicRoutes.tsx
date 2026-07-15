@@ -11,6 +11,7 @@ const PropertyDetail = lazy(() => import("@/pages/PropertyDetail"));
 const ProjectDetail = lazy(() => import("@/pages/ProjectDetail"));
 const Install = lazy(() => import("@/pages/Install"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
+const PricingLoteos = lazy(() => import("@/pages/PricingLoteos"));
 const Referrals = lazy(() => import("@/pages/Referrals"));
 const IntelligentSearch = lazy(() => import("@/components/IntelligentSearch"));
 const RegionLanding = lazy(() => import("@/pages/RegionLanding"));
@@ -49,6 +50,7 @@ export const publicRoutes = [
   <Route key="propiedad" path="/propiedad/:id" element={<PropertyDetail />} />,
   <Route key="proyecto" path="/proyecto/:id" element={<ProjectDetail />} />,
   <Route key="pricing" path="/pricing" element={<Pricing />} />,
+  <Route key="planes-loteos" path="/planes-loteos" element={<PricingLoteos />} />,
   <Route key="para-corredoras" path="/para-corredoras" element={<CorredorasLanding />} />,
   <Route key="para-inmobiliarias" path="/para-inmobiliarias" element={<InmobiliariasLanding />} />,
   <Route key="tools" path="/tools" element={<Tools />} />,
