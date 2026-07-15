@@ -188,16 +188,25 @@ const ProjectDetail = () => {
   });
 
   const { data: lots = [], isLoading: lotsLoading } = useQuery({
-    queryKey: ['project-lots', id],
+    queryKey: ['project-lots', id, user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('lots')
-        .select('*')
-        .eq('project_id', id)
-        .order('lot_number', { ascending: true });
-      return data || [];
+      // Owner (and admin) can read directly to get full buyer info; anyone else
+      // goes through the PII-free RPC.
+      const isOwner = !!user && !!project && project.user_id === user.id;
+      if (isOwner) {
+        const { data } = await supabase
+          .from('lots')
+          .select('*')
+          .eq('project_id', id)
+          .order('lot_number', { ascending: true });
+        return data || [];
+      }
+      const { data } = await supabase.rpc('get_public_lots', { p_project_id: id });
+      return (data || []).sort((a: any, b: any) =>
+        String(a.lot_number || '').localeCompare(String(b.lot_number || ''))
+      );
     },
-    enabled: validId,
+    enabled: validId && !!project,
   });
 
   const { data: ownerProfile } = useQuery({
@@ -545,7 +554,7 @@ const ProjectDetail = () => {
                 {sortedLots.map((lot, index) => (
                   <EnhancedLotCard
                     key={lot.id}
-                    lot={lot}
+                    lot={lot as any}
                     index={index}
                     totalAvailable={availableLots.length}
                     isSelected={selectedLot === lot.id}

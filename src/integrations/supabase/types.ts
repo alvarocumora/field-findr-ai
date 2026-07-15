@@ -2166,6 +2166,41 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_owner_lot_buyer: {
+        Args: { p_lot_id: string }
+        Returns: {
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string
+        }[]
+      }
+      get_public_lots: {
+        Args: { p_project_id?: string }
+        Returns: {
+          area: number
+          created_at: string
+          description: string
+          elevation_avg: number
+          features: Json
+          id: string
+          images: string[]
+          latitude: number
+          listing_id: string
+          longitude: number
+          lot_number: string
+          name: string
+          polygon: Json
+          price: number
+          price_per_sqm: number
+          project_id: string
+          reservation_date: string
+          sale_date: string
+          slope_category: string
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_shared_design: {
         Args: { p_token: string }
         Returns: {

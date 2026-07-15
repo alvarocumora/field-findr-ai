@@ -37,8 +37,7 @@ const FeaturedProjects = () => {
     queryFn: async () => {
       if (projectIds.length === 0) return {};
       const { data } = await supabase
-        .from('lots')
-        .select('project_id, price')
+        .rpc('get_public_lots', { p_project_id: null })
         .in('project_id', projectIds)
         .not('price', 'is', null)
         .order('price', { ascending: true });
