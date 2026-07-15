@@ -63,16 +63,16 @@ const FeaturedListings = () => {
   };
 
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-12 md:py-24">
       <div className="container px-4">
-        <div className="flex items-end justify-between mb-10">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6 md:mb-10">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-primary/70 mb-3">
+            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-primary/70 mb-2 md:mb-3">
               Loteos destacados · Slot patrocinado
             </p>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold tracking-tight text-foreground">
@@ -93,12 +93,13 @@ const FeaturedListings = () => {
         </div>
 
         <motion.div
-          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5"
           variants={prefersReducedMotion ? {} : container}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-40px' }}
         >
+
           {projects.slice(0, 6).map((p: any) => {
             const img = p.images?.[0] || '/placeholder.svg';
             const location = [p.city, p.region].filter(Boolean).join(', ');
