@@ -31,7 +31,9 @@ const FeaturedListings = () => {
         .order('created_at', { ascending: false })
         .limit(6);
 
-      if (paid && paid.length >= 3) return paid;
+      const hasImages = (p: any) => Array.isArray(p?.images) && p.images.length > 0;
+      const paidWithImages = (paid ?? []).filter(hasImages);
+      if (paidWithImages.length >= 3) return paidWithImages;
 
       const { data: recent } = await supabase
         .from('projects')
@@ -39,14 +41,20 @@ const FeaturedListings = () => {
         .eq('status', 'active')
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
-        .limit(6);
+        .limit(18);
 
-      return recent ?? [];
+      // Only surface projects with a cover image so the section never looks empty.
+      const merged = [
+        ...paidWithImages,
+        ...(recent ?? []).filter(hasImages).filter((p) => !paidWithImages.some((x) => x.id === p.id)),
+      ];
+      return merged.slice(0, 6);
     },
     staleTime: 5 * 60 * 1000,
   });
 
   if (projects.length === 0) return null;
+
 
   const container = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } };
   const item = {
