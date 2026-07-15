@@ -34,8 +34,7 @@ const ScrollytellingSection = () => {
       const ids = projects.map(p => p.id);
       if (!ids.length) return {};
       const { data } = await supabase
-        .from('lots')
-        .select('project_id, price')
+        .rpc('get_public_lots', { p_project_id: null })
         .in('project_id', ids)
         .not('price', 'is', null)
         .order('price', { ascending: true });
