@@ -101,13 +101,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "agent_commissions_lot_id_fkey"
-            columns: ["lot_id"]
-            isOneToOne: false
-            referencedRelation: "lots_public"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "agent_commissions_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -456,13 +449,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "credits_lot_id_fkey"
-            columns: ["lot_id"]
-            isOneToOne: false
-            referencedRelation: "lots_public"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "credits_reservation_id_fkey"
             columns: ["reservation_id"]
             isOneToOne: false
@@ -689,13 +675,6 @@ export type Database = {
             columns: ["lot_id"]
             isOneToOne: false
             referencedRelation: "lots"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "leads_lot_id_fkey"
-            columns: ["lot_id"]
-            isOneToOne: false
-            referencedRelation: "lots_public"
             referencedColumns: ["id"]
           },
           {
@@ -1553,13 +1532,6 @@ export type Database = {
             referencedRelation: "lots"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "reservations_lot_id_fkey"
-            columns: ["lot_id"]
-            isOneToOne: false
-            referencedRelation: "lots_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       reviews: {
@@ -2109,96 +2081,7 @@ export type Database = {
       }
     }
     Views: {
-      lots_public: {
-        Row: {
-          area: number | null
-          created_at: string | null
-          description: string | null
-          elevation_avg: number | null
-          features: Json | null
-          id: string | null
-          images: string[] | null
-          latitude: number | null
-          listing_id: string | null
-          longitude: number | null
-          lot_number: string | null
-          name: string | null
-          polygon: Json | null
-          price: number | null
-          price_per_sqm: number | null
-          project_id: string | null
-          reservation_date: string | null
-          sale_date: string | null
-          slope_category: string | null
-          status: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          area?: number | null
-          created_at?: string | null
-          description?: string | null
-          elevation_avg?: number | null
-          features?: Json | null
-          id?: string | null
-          images?: string[] | null
-          latitude?: number | null
-          listing_id?: string | null
-          longitude?: number | null
-          lot_number?: string | null
-          name?: string | null
-          polygon?: Json | null
-          price?: number | null
-          price_per_sqm?: number | null
-          project_id?: string | null
-          reservation_date?: string | null
-          sale_date?: string | null
-          slope_category?: string | null
-          status?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          area?: number | null
-          created_at?: string | null
-          description?: string | null
-          elevation_avg?: number | null
-          features?: Json | null
-          id?: string | null
-          images?: string[] | null
-          latitude?: number | null
-          listing_id?: string | null
-          longitude?: number | null
-          lot_number?: string | null
-          name?: string | null
-          polygon?: Json | null
-          price?: number | null
-          price_per_sqm?: number | null
-          project_id?: string | null
-          reservation_date?: string | null
-          sale_date?: string | null
-          slope_category?: string | null
-          status?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lots_listing_id_fkey"
-            columns: ["listing_id"]
-            isOneToOne: false
-            referencedRelation: "listings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lots_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       adjust_lot_prices: {
@@ -2289,6 +2172,33 @@ export type Database = {
           buyer_email: string
           buyer_name: string
           buyer_phone: string
+        }[]
+      }
+      get_public_lots: {
+        Args: { p_project_id?: string }
+        Returns: {
+          area: number
+          created_at: string
+          description: string
+          elevation_avg: number
+          features: Json
+          id: string
+          images: string[]
+          latitude: number
+          listing_id: string
+          longitude: number
+          lot_number: string
+          name: string
+          polygon: Json
+          price: number
+          price_per_sqm: number
+          project_id: string
+          reservation_date: string
+          sale_date: string
+          slope_category: string
+          status: string
+          updated_at: string
+          user_id: string
         }[]
       }
       get_shared_design: {
