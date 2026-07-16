@@ -2,10 +2,12 @@ import { Mail, Phone, MapPin, Linkedin, Twitter, Instagram, ShieldCheck } from '
 import { Link } from 'react-router-dom';
 import Logo from '@/components/brand/Logo';
 import { useLandingStats } from '@/hooks/useLandingStats';
+import { useSmartRedirect } from '@/hooks/useSmartRedirect';
 
 const FooterSection = () => {
   const currentYear = new Date().getFullYear();
   const { data: stats } = useLandingStats();
+  const { isAdmin } = useSmartRedirect();
 
   const links = {
     platform: [
@@ -145,12 +147,23 @@ const FooterSection = () => {
           <p className="text-sm text-muted-foreground">
             © {currentYear} Ofertaterrenos. Todos los derechos reservados.
           </p>
-          <ul className="flex gap-6">
+          <ul className="flex items-center gap-6">
             {links.legal.map((link) => (
               <li key={link.name}>
                 <Link to={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">{link.name}</Link>
               </li>
             ))}
+            {isAdmin && (
+              <li>
+                <Link
+                  to="/admin/dashboard"
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground/70 hover:text-primary transition-colors"
+                >
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Admin
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
       </div>

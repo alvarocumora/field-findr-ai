@@ -6,6 +6,7 @@ import Logo from '@/components/brand/Logo';
 import LogoIcon from '@/components/brand/LogoIcon';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
 import { useSidebarCounts } from '@/hooks/useSidebarCounts';
+import { useCurrentPlan } from '@/hooks/useSubscription';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   MapPin,
@@ -57,53 +58,136 @@ interface ModernSidebarProps {
   onToggle?: () => void;
 }
 
-// Core items always visible
-const coreItems: NavItem[] = [
+// ---- Navegación del CORREDOR / agente individual ----
+// Enfoque en venta directa; sin analítica de agencia ni multi-proyecto.
+const corredorCore: NavItem[] = [
   { name: 'Dashboard', href: '/asesor/dashboard', icon: LayoutDashboard },
   { name: 'Oportunidades', href: '/asesor/opportunities', icon: Target },
   { name: 'Pipeline', href: '/asesor/pipeline', icon: Workflow },
   { name: 'Contactos CRM', href: '/asesor/contacts', icon: Users },
+  { name: 'Propiedades', href: '/asesor/listings', icon: Building2 },
   { name: 'Proyectos', href: '/asesor/projects', icon: FolderKanban },
   { name: 'Lotes', href: '/asesor/lots', icon: Grid3X3 },
-  { name: 'Control Loteo', href: '/asesor/loteos', icon: Gauge },
-  { name: 'Estudio de Loteo', href: '/asesor/subdivision', icon: Grid3X3 },
   { name: 'Reservas', href: '/asesor/reservations', icon: CalendarCheck },
-  { name: 'Reportes', href: '/asesor/reports', icon: FileBarChart },
 ];
 
-// Advanced items collapsed by default
-const advancedItems: NavItem[] = [
+const corredorMore: NavItem[] = [
+  { name: 'Control Loteo', href: '/asesor/loteos', icon: Gauge },
+  { name: 'Estudio de Loteo', href: '/asesor/subdivision', icon: Grid3X3 },
   { name: 'Pagos', href: '/asesor/payments', icon: DollarSign },
   { name: 'Créditos', href: '/asesor/credits', icon: CreditCard },
   { name: 'Cierres', href: '/asesor/closing', icon: Scale },
   { name: 'Ventas', href: '/asesor/sales', icon: Handshake },
   { name: 'Comisiones', href: '/asesor/comisiones', icon: DollarSign },
   { name: 'Financiero', href: '/asesor/financial', icon: TrendingUp },
-  { name: 'Multi-Proyecto', href: '/asesor/multi-project', icon: BarChart3 },
-  { name: 'Rendimiento', href: '/asesor/performance', icon: Target },
-  { name: 'Ejecutivo', href: '/asesor/executive', icon: PieChart },
-  { name: 'Demanda', href: '/asesor/demand', icon: Flame },
-  { name: 'Propiedades', href: '/asesor/listings', icon: Building2 },
+  { name: 'Reportes', href: '/asesor/reports', icon: FileBarChart },
   { name: 'Mensajes', href: '/asesor/messages', icon: MessageSquare },
-  { name: 'Documentos', href: '/asesor/documents', icon: FileBarChart },
   { name: 'Notificaciones', href: '/asesor/notifications', icon: Bell },
 ];
 
-const adminItems: NavItem[] = [
-  { name: 'Panel Admin', href: '/admin/dashboard', icon: LayoutDashboard },
-  { name: 'Financiero', href: '/admin/financial', icon: TrendingUp },
-  { name: 'Usuarios', href: '/admin/users', icon: Users },
-  { name: 'Agentes', href: '/admin/agents', icon: ShieldCheck },
-  { name: 'Proyectos', href: '/admin/projects', icon: FolderKanban },
-  { name: 'Destacados', href: '/admin/featured', icon: Sparkles },
-  { name: 'Documentos', href: '/admin/documents', icon: ClipboardCheck },
-  { name: 'Reservas', href: '/admin/reservations', icon: CalendarCheck },
-  { name: 'Aprobaciones', href: '/admin/approvals', icon: ClipboardCheck },
-  { name: 'Aprobación Loteos', href: '/admin/project-approvals', icon: ClipboardCheck },
-  { name: 'Créditos', href: '/admin/credits', icon: CreditCard },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-  { name: 'Auditoría', href: '/admin/audit', icon: ShieldCheck },
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+// Panel principal del admin, siempre visible en la parte superior.
+const adminDashboard: NavItem = { name: 'Panel Admin', href: '/admin/dashboard', icon: LayoutDashboard };
+
+// Resto de herramientas admin agrupadas por función para no ser una lista plana.
+const adminGroups: NavGroup[] = [
+  {
+    label: 'Gestión',
+    items: [
+      { name: 'Usuarios', href: '/admin/users', icon: Users },
+      { name: 'Agentes', href: '/admin/agents', icon: ShieldCheck },
+      { name: 'Proyectos', href: '/admin/projects', icon: FolderKanban },
+      { name: 'Destacados', href: '/admin/featured', icon: Sparkles },
+      { name: 'Leads Comerciales', href: '/admin/commercial-leads', icon: Handshake },
+      { name: 'Reservas', href: '/admin/reservations', icon: CalendarCheck },
+      { name: 'Documentos', href: '/admin/documents', icon: ClipboardCheck },
+    ],
+  },
+  {
+    label: 'Aprobaciones',
+    items: [
+      { name: 'Propiedades', href: '/admin/approvals', icon: ClipboardCheck },
+      { name: 'Loteos', href: '/admin/project-approvals', icon: ClipboardCheck },
+    ],
+  },
+  {
+    label: 'Finanzas',
+    items: [
+      { name: 'Financiero', href: '/admin/financial', icon: TrendingUp },
+      { name: 'Créditos', href: '/admin/credits', icon: CreditCard },
+      { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+    ],
+  },
+  {
+    label: 'Sistema',
+    items: [
+      { name: 'Auditoría', href: '/admin/audit', icon: ShieldCheck },
+    ],
+  },
 ];
+
+// Lista plana (usada cuando la barra está colapsada a solo iconos).
+const allAdminItems: NavItem[] = [adminDashboard, ...adminGroups.flatMap((g) => g.items)];
+
+// ---- Panel interno de la INMOBILIARIA (planes inmobiliaria/grupo/enterprise) ----
+// Dashboard de agencia + herramientas agrupadas por área de la operación.
+const inmobiliariaDashboard: NavItem = { name: 'Dashboard', href: '/asesor/dashboard', icon: LayoutDashboard };
+
+const inmobiliariaGroups: NavGroup[] = [
+  {
+    label: 'Proyectos',
+    items: [
+      { name: 'Proyectos', href: '/asesor/projects', icon: FolderKanban },
+      { name: 'Multi-Proyecto', href: '/asesor/multi-project', icon: BarChart3 },
+      { name: 'Lotes', href: '/asesor/lots', icon: Grid3X3 },
+      { name: 'Control Loteo', href: '/asesor/loteos', icon: Gauge },
+      { name: 'Estudio de Loteo', href: '/asesor/subdivision', icon: Grid3X3 },
+    ],
+  },
+  {
+    label: 'Ventas & Reservas',
+    items: [
+      { name: 'Oportunidades', href: '/asesor/opportunities', icon: Target },
+      { name: 'Pipeline', href: '/asesor/pipeline', icon: Workflow },
+      { name: 'Reservas', href: '/asesor/reservations', icon: CalendarCheck },
+      { name: 'Ventas', href: '/asesor/sales', icon: Handshake },
+      { name: 'Cierres & Legal', href: '/asesor/closing', icon: Scale },
+      { name: 'Comisiones', href: '/asesor/comisiones', icon: DollarSign },
+    ],
+  },
+  {
+    label: 'Clientes',
+    items: [
+      { name: 'Contactos CRM', href: '/asesor/contacts', icon: Users },
+      { name: 'Propiedades', href: '/asesor/listings', icon: Building2 },
+      { name: 'Mensajes', href: '/asesor/messages', icon: MessageSquare },
+    ],
+  },
+  {
+    label: 'Finanzas',
+    items: [
+      { name: 'Financiero', href: '/asesor/financial', icon: TrendingUp },
+      { name: 'Pagos', href: '/asesor/payments', icon: DollarSign },
+      { name: 'Créditos', href: '/asesor/credits', icon: CreditCard },
+      { name: 'Ejecutivo', href: '/asesor/executive', icon: PieChart },
+      { name: 'Demanda', href: '/asesor/demand', icon: Flame },
+    ],
+  },
+  {
+    label: 'Equipo & Reportes',
+    items: [
+      { name: 'Rendimiento', href: '/asesor/performance', icon: Target },
+      { name: 'Reportes', href: '/asesor/reports', icon: FileBarChart },
+      { name: 'Notificaciones', href: '/asesor/notifications', icon: Bell },
+    ],
+  },
+];
+
+const allInmobiliariaItems: NavItem[] = [inmobiliariaDashboard, ...inmobiliariaGroups.flatMap((g) => g.items)];
 
 const commonNavigation: NavItem[] = [
   { name: 'Explorar Mapa', href: '/explorar', icon: MapPin },
@@ -116,11 +200,35 @@ const commonNavigation: NavItem[] = [
 const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
   const location = useLocation();
   const { isAdmin, isAgent } = useSmartRedirect();
+  const { plan } = useCurrentPlan();
   const counts = useSidebarCounts();
 
+  // Planes de inmobiliaria/desarrolladora → panel interno completo.
+  // El resto de asesores (corredor/corredora/gratis) → vista de corredor.
+  const planIsAgency = plan === 'inmobiliaria' || plan === 'grupo' || plan === 'enterprise';
+
   const isActive = (path: string) => location.pathname === path;
-  const advancedHasActive = advancedItems.some(i => isActive(i.href));
+  const advancedHasActive = corredorMore.some(i => isActive(i.href));
   const [advancedOpen, setAdvancedOpen] = useState(advancedHasActive);
+
+  // Grupos colapsables (admin + inmobiliaria): abren el grupo de la ruta activa.
+  // Clave con prefijo para que "Finanzas" de admin no colisione con la de inmobiliaria.
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
+    const open = new Set<string>();
+    adminGroups.forEach((g) => {
+      if (g.items.some((i) => location.pathname === i.href)) open.add(`admin:${g.label}`);
+    });
+    inmobiliariaGroups.forEach((g) => {
+      if (g.items.some((i) => location.pathname === i.href)) open.add(`inmo:${g.label}`);
+    });
+    return open;
+  });
+  const toggleGroup = (key: string) =>
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
 
   const badgeMap: Record<string, number> = {
     '/asesor/reservations': counts.pendingReservations,
@@ -192,7 +300,7 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
         {!collapsed && (isAdmin || isAgent) && (
           <div className="flex items-center justify-between px-4 mb-2">
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-              {isAdmin ? 'ADMIN' : 'PRO'}
+              {isAdmin ? 'ADMIN' : planIsAgency ? 'INMOBILIARIA' : 'CORREDOR'}
             </Badge>
           </div>
         )}
@@ -202,22 +310,91 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
           {/* Admin section */}
           {isAdmin && (
             <>
-              {!collapsed && (
-                <span className="block px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Admin
-                </span>
+              {!collapsed ? (
+                <>
+                  <span className="block px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Admin
+                  </span>
+                  {/* Panel principal siempre visible */}
+                  <div className="space-y-0.5">
+                    <NavItemRow item={adminDashboard} />
+                  </div>
+                  {/* Grupos colapsables */}
+                  {adminGroups.map((group) => {
+                    const key = `admin:${group.label}`;
+                    const open = openGroups.has(key);
+                    return (
+                      <Collapsible
+                        key={key}
+                        open={open}
+                        onOpenChange={() => toggleGroup(key)}
+                      >
+                        <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-1.5 mt-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors">
+                          <span className="truncate">{group.label}</span>
+                          <ChevronDown className={cn('h-3 w-3 flex-shrink-0 transition-transform', open && 'rotate-180')} />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="space-y-0.5 mt-0.5">
+                          {group.items.map((item) => (
+                            <NavItemRow key={item.href} item={item} />
+                          ))}
+                        </CollapsibleContent>
+                      </Collapsible>
+                    );
+                  })}
+                </>
+              ) : (
+                // Colapsada: lista plana de iconos
+                <div className="space-y-0.5">
+                  {allAdminItems.map((item) => (
+                    <NavItemRow key={item.href} item={item} />
+                  ))}
+                </div>
               )}
-              <div className="space-y-0.5">
-                {adminItems.map((item) => (
-                  <NavItemRow key={item.href} item={item} />
-                ))}
-              </div>
               <Separator className="my-2" />
             </>
           )}
 
-          {/* Agent Core */}
-          {(isAgent || isAdmin) && (
+          {/* Panel INMOBILIARIA (planes inmobiliaria/grupo/enterprise) */}
+          {(isAgent || isAdmin) && planIsAgency && (
+            <>
+              {!collapsed ? (
+                <>
+                  <span className="block px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Inmobiliaria
+                  </span>
+                  <div className="space-y-0.5">
+                    <NavItemRow item={inmobiliariaDashboard} />
+                  </div>
+                  {inmobiliariaGroups.map((group) => {
+                    const key = `inmo:${group.label}`;
+                    const open = openGroups.has(key);
+                    return (
+                      <Collapsible key={key} open={open} onOpenChange={() => toggleGroup(key)}>
+                        <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-1.5 mt-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors">
+                          <span className="truncate">{group.label}</span>
+                          <ChevronDown className={cn('h-3 w-3 flex-shrink-0 transition-transform', open && 'rotate-180')} />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="space-y-0.5 mt-0.5">
+                          {group.items.map((item) => (
+                            <NavItemRow key={item.href} item={item} />
+                          ))}
+                        </CollapsibleContent>
+                      </Collapsible>
+                    );
+                  })}
+                </>
+              ) : (
+                <div className="space-y-0.5">
+                  {allInmobiliariaItems.map((item) => (
+                    <NavItemRow key={item.href} item={item} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Vista CORREDOR / agente individual (planes corredor/corredora/gratis) */}
+          {(isAgent || isAdmin) && !planIsAgency && (
             <>
               {!collapsed && (
                 <span className="block px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -225,12 +402,12 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
                 </span>
               )}
               <div className="space-y-0.5">
-                {coreItems.map((item) => (
+                {corredorCore.map((item) => (
                   <NavItemRow key={item.href} item={item} />
                 ))}
               </div>
 
-              {/* Advanced - collapsed by default */}
+              {/* Más herramientas - colapsado por defecto */}
               {!collapsed ? (
                 <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
                   <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-1.5 mt-2 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors">
@@ -241,14 +418,14 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
                     <ChevronDown className={cn('h-3 w-3 transition-transform', advancedOpen && 'rotate-180')} />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="space-y-0.5 mt-0.5">
-                    {advancedItems.map((item) => (
+                    {corredorMore.map((item) => (
                       <NavItemRow key={item.href} item={item} />
                     ))}
                   </CollapsibleContent>
                 </Collapsible>
               ) : (
                 <div className="space-y-0.5">
-                  {advancedItems.map((item) => (
+                  {corredorMore.map((item) => (
                     <div key={item.href} className="relative">
                       <NavItemRow item={item} />
                     </div>
