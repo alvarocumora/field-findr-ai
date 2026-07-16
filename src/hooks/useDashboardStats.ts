@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useMyOrganization } from '@/hooks/useMyOrganization';
 import { differenceInDays } from 'date-fns';
 
 // Admin Dashboard Stats
@@ -260,106 +261,128 @@ export const useAgentGoals = () => {
   });
 };
 
-// Agency Dashboard Stats
+// Agency Dashboard Stats — SIEMPRE scoped al equipo de la organización propia
+// (dueño + miembros), nunca a toda la plataforma.
 export const useAgencyStats = () => {
   const { user } = useAuth();
+  const { data: team, isLoading: teamLoading } = useMyOrganization();
+  const teamIds = team?.teamUserIds ?? [];
 
-  return useQuery({
-    queryKey: ['agency-stats', user?.id],
+  const query = useQuery({
+    queryKey: ['agency-stats', user?.id, teamIds],
+    enabled: teamIds.length > 0,
     queryFn: async () => {
-      // Get agents count (users with agent role)
-      const { count: agentCount } = await supabase
-        .from('user_roles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'agent');
-
-      // Get total properties
-      const { count: totalProperties } = await supabase
-        .from('listings')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active');
-
-      // Get monthly sales
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
 
-      const { data: soldLots } = await supabase
-        .from('lots')
-        .select('price')
-        .eq('status', 'sold')
-        .gte('sale_date', startOfMonth.toISOString());
+      const [agentRolesRes, propertiesRes, soldRes, viewsRes] = await Promise.all([
+        // Miembros del equipo que efectivamente son agentes
+        supabase
+          .from('user_roles')
+          .select('user_id')
+          .in('user_id', teamIds)
+          .eq('role', 'agent'),
+        // Propiedades activas del equipo
+        supabase
+          .from('listings')
+          .select('*', { count: 'exact', head: true })
+          .in('user_id', teamIds)
+          .eq('status', 'active'),
+        // Ventas del mes del equipo
+        supabase
+          .from('lots')
+          .select('price')
+          .in('user_id', teamIds)
+          .eq('status', 'sold')
+          .gte('sale_date', startOfMonth.toISOString()),
+        // Visitas de las propiedades del equipo
+        supabase
+          .from('listings')
+          .select('views_count')
+          .in('user_id', teamIds),
+      ]);
+      if (agentRolesRes.error) throw agentRolesRes.error;
+      if (propertiesRes.error) throw propertiesRes.error;
+      if (soldRes.error) throw soldRes.error;
+      if (viewsRes.error) throw viewsRes.error;
 
-      const monthlySales = soldLots?.reduce((sum, lot) => sum + (lot.price || 0), 0) || 0;
-
-      // Get total views
-      const { data: listings } = await supabase
-        .from('listings')
-        .select('views_count');
-
-      const totalViews = listings?.reduce((sum, l) => sum + (l.views_count || 0), 0) || 0;
+      const monthlySales = soldRes.data?.reduce((sum, lot) => sum + (lot.price || 0), 0) || 0;
+      const totalViews = viewsRes.data?.reduce((sum, l) => sum + (l.views_count || 0), 0) || 0;
 
       return {
-        agentCount: agentCount || 0,
-        totalProperties: totalProperties || 0,
+        agentCount: new Set(agentRolesRes.data?.map((r) => r.user_id)).size,
+        totalProperties: propertiesRes.count || 0,
         monthlySales,
         totalViews,
       };
     },
   });
+
+  // Mientras se resuelve la organización la query está deshabilitada y su
+  // isLoading es false (react-query v5): sin esto el dashboard muestra un
+  // flash de ceros/estados vacíos en vez de skeletons.
+  return { ...query, isLoading: teamLoading || query.isLoading };
 };
 
 export const useAgencyAgents = () => {
-  return useQuery({
-    queryKey: ['agency-agents'],
+  const { user } = useAuth();
+  const { data: team, isLoading: teamLoading } = useMyOrganization();
+  const teamIds = team?.teamUserIds ?? [];
+
+  const query = useQuery({
+    queryKey: ['agency-agents', user?.id, teamIds],
+    enabled: teamIds.length > 0,
     queryFn: async () => {
-      // Get all agents
-      const { data: agentRoles, error } = await supabase
+      // El ranking contiene solo miembros del equipo CON rol agente
+      // (el dueño/staff sin rol agente no aparece como vendedor fantasma).
+      const rolesRes = await supabase
         .from('user_roles')
         .select('user_id')
+        .in('user_id', teamIds)
         .eq('role', 'agent');
+      if (rolesRes.error) throw rolesRes.error;
 
-      if (error) throw error;
+      const agentIds = [...new Set((rolesRes.data ?? []).map((r) => r.user_id))];
+      if (agentIds.length === 0) return [];
 
-      const agentUserIds = agentRoles?.map(a => a.user_id) || [];
-
-      // Get profiles for agents
-      const { data: profiles } = await supabase
+      const profilesRes = await supabase
         .from('profiles')
         .select('user_id, first_name, last_name, avatar_url')
-        .in('user_id', agentUserIds);
+        .in('user_id', agentIds);
+      if (profilesRes.error) throw profilesRes.error;
 
-      const profilesMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      const profilesMap = new Map(profilesRes.data?.map(p => [p.user_id, p]) || []);
 
-      // For each agent, get their stats
+      // Conteos exactos en servidor (head+count no tiene el tope de filas de
+      // PostgREST). N está acotado por los asientos del plan y va en paralelo.
       const agentStats = await Promise.all(
-        agentUserIds.map(async (userId) => {
+        agentIds.map(async (userId) => {
+          const [leadsRes, salesRes] = await Promise.all([
+            supabase
+              .from('leads')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', userId),
+            supabase
+              .from('lots')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', userId)
+              .eq('status', 'sold'),
+          ]);
+          if (leadsRes.error) throw leadsRes.error;
+          if (salesRes.error) throw salesRes.error;
+
           const profile = profilesMap.get(userId);
-
-          // Get leads count
-          const { count: leadsCount } = await supabase
-            .from('leads')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', userId);
-
-          // Get sold lots count
-          const { count: salesCount } = await supabase
-            .from('lots')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', userId)
-            .eq('status', 'sold');
-
-          // Calculate conversion rate
-          const conversion = leadsCount && leadsCount > 0 
-            ? Math.round(((salesCount || 0) / leadsCount) * 100) 
-            : 0;
+          const leadsCount = leadsRes.count ?? 0;
+          const salesCount = salesRes.count ?? 0;
+          const conversion = leadsCount > 0 ? Math.round((salesCount / leadsCount) * 100) : 0;
 
           return {
             id: userId,
             name: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Sin nombre',
             avatar: profile?.avatar_url || null,
-            sales: salesCount || 0,
-            leads: leadsCount || 0,
+            sales: salesCount,
+            leads: leadsCount,
             conversion,
           };
         })
@@ -368,15 +391,23 @@ export const useAgencyAgents = () => {
       return agentStats.sort((a, b) => b.sales - a.sales);
     },
   });
+
+  return { ...query, isLoading: teamLoading || query.isLoading };
 };
 
 export const useAgencyProperties = () => {
-  return useQuery({
-    queryKey: ['agency-properties'],
+  const { user } = useAuth();
+  const { data: team, isLoading: teamLoading } = useMyOrganization();
+  const teamIds = team?.teamUserIds ?? [];
+
+  const query = useQuery({
+    queryKey: ['agency-properties', user?.id, teamIds],
+    enabled: teamIds.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('listings')
         .select('*')
+        .in('user_id', teamIds)
         .order('created_at', { ascending: false })
         .limit(6);
 
@@ -393,6 +424,8 @@ export const useAgencyProperties = () => {
       })) || [];
     },
   });
+
+  return { ...query, isLoading: teamLoading || query.isLoading };
 };
 
 // Helper functions
