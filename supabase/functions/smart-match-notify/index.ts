@@ -6,13 +6,31 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const INTERNAL_SECRET = Deno.env.get("INTERNAL_FUNCTION_SECRET");
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Internal-only cron job — reject anything that isn't the service role or
+  // the shared internal secret.
+  const authHeader = req.headers.get("authorization") || "";
+  const bearer = authHeader.replace(/^Bearer\s+/i, "");
+  const internalHeader = req.headers.get("x-internal-secret") || "";
+  const authorized =
+    bearer === SERVICE_ROLE_KEY ||
+    (INTERNAL_SECRET ? internalHeader === INTERNAL_SECRET : false);
+  if (!authorized) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      SERVICE_ROLE_KEY
     );
 
     // Get profiles with onboarding data
