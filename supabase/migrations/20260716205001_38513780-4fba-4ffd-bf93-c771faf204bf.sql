@@ -1,0 +1,2 @@
+-- No-op migration to trigger types regeneration for commercial_plan_leads
+COMMENT ON TABLE public.commercial_plan_leads IS 'Solicitudes comerciales capturadas desde /contacto-loteos (planes de gestión de loteos).';
