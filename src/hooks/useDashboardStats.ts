@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useMyOrganization } from '@/hooks/useMyOrganization';
+import { countByUser } from '@/lib/team/teamScope';
 import { differenceInDays } from 'date-fns';
 
 // Admin Dashboard Stats
@@ -260,26 +262,25 @@ export const useAgentGoals = () => {
   });
 };
 
-// Agency Dashboard Stats
+// Agency Dashboard Stats — SIEMPRE scoped al equipo de la organización propia
+// (dueño + miembros), nunca a toda la plataforma.
 export const useAgencyStats = () => {
   const { user } = useAuth();
+  const { data: team } = useMyOrganization();
+  const teamIds = team?.teamUserIds ?? [];
 
   return useQuery({
-    queryKey: ['agency-stats', user?.id],
+    queryKey: ['agency-stats', user?.id, teamIds],
+    enabled: teamIds.length > 0,
     queryFn: async () => {
-      // Get agents count (users with agent role)
-      const { count: agentCount } = await supabase
-        .from('user_roles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'agent');
-
-      // Get total properties
+      // Propiedades activas del equipo
       const { count: totalProperties } = await supabase
         .from('listings')
         .select('*', { count: 'exact', head: true })
+        .in('user_id', teamIds)
         .eq('status', 'active');
 
-      // Get monthly sales
+      // Ventas del mes del equipo
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
@@ -287,20 +288,22 @@ export const useAgencyStats = () => {
       const { data: soldLots } = await supabase
         .from('lots')
         .select('price')
+        .in('user_id', teamIds)
         .eq('status', 'sold')
         .gte('sale_date', startOfMonth.toISOString());
 
       const monthlySales = soldLots?.reduce((sum, lot) => sum + (lot.price || 0), 0) || 0;
 
-      // Get total views
+      // Visitas totales de las propiedades del equipo
       const { data: listings } = await supabase
         .from('listings')
-        .select('views_count');
+        .select('views_count')
+        .in('user_id', teamIds);
 
       const totalViews = listings?.reduce((sum, l) => sum + (l.views_count || 0), 0) || 0;
 
       return {
-        agentCount: agentCount || 0,
+        agentCount: teamIds.length,
         totalProperties: totalProperties || 0,
         monthlySales,
         totalViews,
@@ -310,60 +313,45 @@ export const useAgencyStats = () => {
 };
 
 export const useAgencyAgents = () => {
+  const { user } = useAuth();
+  const { data: team } = useMyOrganization();
+  const teamIds = team?.teamUserIds ?? [];
+
   return useQuery({
-    queryKey: ['agency-agents'],
+    queryKey: ['agency-agents', user?.id, teamIds],
+    enabled: teamIds.length > 0,
     queryFn: async () => {
-      // Get all agents
-      const { data: agentRoles, error } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'agent');
+      // Solo los miembros del equipo propio (3 queries planas, sin N+1)
+      const [profilesRes, leadsRes, soldRes] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('user_id, first_name, last_name, avatar_url')
+          .in('user_id', teamIds),
+        supabase.from('leads').select('user_id').in('user_id', teamIds),
+        supabase.from('lots').select('user_id').in('user_id', teamIds).eq('status', 'sold'),
+      ]);
 
-      if (error) throw error;
+      if (profilesRes.error) throw profilesRes.error;
 
-      const agentUserIds = agentRoles?.map(a => a.user_id) || [];
+      const profilesMap = new Map(profilesRes.data?.map(p => [p.user_id, p]) || []);
+      const leadCounts = countByUser(leadsRes.data ?? []);
+      const saleCounts = countByUser(soldRes.data ?? []);
 
-      // Get profiles for agents
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, first_name, last_name, avatar_url')
-        .in('user_id', agentUserIds);
+      const agentStats = teamIds.map((userId) => {
+        const profile = profilesMap.get(userId);
+        const leadsCount = leadCounts.get(userId) ?? 0;
+        const salesCount = saleCounts.get(userId) ?? 0;
+        const conversion = leadsCount > 0 ? Math.round((salesCount / leadsCount) * 100) : 0;
 
-      const profilesMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-
-      // For each agent, get their stats
-      const agentStats = await Promise.all(
-        agentUserIds.map(async (userId) => {
-          const profile = profilesMap.get(userId);
-
-          // Get leads count
-          const { count: leadsCount } = await supabase
-            .from('leads')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', userId);
-
-          // Get sold lots count
-          const { count: salesCount } = await supabase
-            .from('lots')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', userId)
-            .eq('status', 'sold');
-
-          // Calculate conversion rate
-          const conversion = leadsCount && leadsCount > 0 
-            ? Math.round(((salesCount || 0) / leadsCount) * 100) 
-            : 0;
-
-          return {
-            id: userId,
-            name: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Sin nombre',
-            avatar: profile?.avatar_url || null,
-            sales: salesCount || 0,
-            leads: leadsCount || 0,
-            conversion,
-          };
-        })
-      );
+        return {
+          id: userId,
+          name: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Sin nombre',
+          avatar: profile?.avatar_url || null,
+          sales: salesCount,
+          leads: leadsCount,
+          conversion,
+        };
+      });
 
       return agentStats.sort((a, b) => b.sales - a.sales);
     },
@@ -371,12 +359,18 @@ export const useAgencyAgents = () => {
 };
 
 export const useAgencyProperties = () => {
+  const { user } = useAuth();
+  const { data: team } = useMyOrganization();
+  const teamIds = team?.teamUserIds ?? [];
+
   return useQuery({
-    queryKey: ['agency-properties'],
+    queryKey: ['agency-properties', user?.id, teamIds],
+    enabled: teamIds.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('listings')
         .select('*')
+        .in('user_id', teamIds)
         .order('created_at', { ascending: false })
         .limit(6);
 
