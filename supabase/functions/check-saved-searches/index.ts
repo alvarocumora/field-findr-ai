@@ -7,6 +7,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
+const INTERNAL_SECRET = Deno.env.get("INTERNAL_FUNCTION_SECRET");
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -15,6 +17,23 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Internal-only cron job. Only accept the service-role bearer or the
+    // shared internal secret to prevent any signed-in user from spamming
+    // platform-wide notifications.
+    const authHeader = req.headers.get("authorization") || "";
+    const bearer = authHeader.replace(/^Bearer\s+/i, "");
+    const internalHeader = req.headers.get("x-internal-secret") || "";
+    const authorized =
+      bearer === serviceKey ||
+      (INTERNAL_SECRET ? internalHeader === INTERNAL_SECRET : false);
+    if (!authorized) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // Get all saved searches with notifications enabled
