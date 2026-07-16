@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,24 +87,46 @@ serve(async (req) => {
     const path = url.pathname.split("/").pop();
 
     if (req.method === "POST" && path === "create-preference") {
+      // Require an authenticated caller. The user_id bound to the payment
+      // MUST come from the verified JWT — never from the request body —
+      // otherwise an attacker could bind their payment (or its chargeback)
+      // to a victim's account.
+      const authHeader = req.headers.get("authorization") || "";
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const supabaseUser = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const { data: { user }, error: userErr } = await supabaseUser.auth.getUser();
+      if (userErr || !user) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       const body = await req.json();
       const {
         plan_type,
-        user_id,
-        user_email,
         success_url,
         failure_url,
         billing_cycle = "monthly",
         first_month_discount = true,
       } = body as {
         plan_type: string;
-        user_id?: string;
-        user_email?: string;
         success_url?: string;
         failure_url?: string;
         billing_cycle?: BillingCycle;
         first_month_discount?: boolean;
       };
+      const user_id = user.id;
+      const user_email = user.email;
 
       if (plan_type === "enterprise" || plan_type === "free") {
         return new Response(
