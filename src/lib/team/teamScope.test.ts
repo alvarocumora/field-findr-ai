@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { pickPrimaryOrganization, resolveTeamUserIds, countByUser } from './teamScope';
+import { pickPrimaryOrganization, resolveTeamUserIds } from './teamScope';
 
 describe('pickPrimaryOrganization', () => {
   const org = (id: string, owner: string) => ({ id, owner_id: owner });
@@ -27,19 +27,5 @@ describe('resolveTeamUserIds', () => {
   });
   it('NUNCA devuelve vacío si hay usuario', () => {
     expect(resolveTeamUserIds('self', undefined, [null]).length).toBeGreaterThan(0);
-  });
-});
-
-describe('countByUser', () => {
-  it('agrupa conteos por user_id ignorando nulos', () => {
-    const counts = countByUser([
-      { user_id: 'a' },
-      { user_id: 'a' },
-      { user_id: 'b' },
-      { user_id: null },
-    ]);
-    expect(counts.get('a')).toBe(2);
-    expect(counts.get('b')).toBe(1);
-    expect(counts.size).toBe(2);
   });
 });

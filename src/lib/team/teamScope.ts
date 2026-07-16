@@ -37,13 +37,3 @@ export function resolveTeamUserIds(
   if (ids.size === 0 && selfId) ids.add(selfId);
   return [...ids];
 }
-
-/** Cuenta de leads/ventas por usuario a partir de filas planas (evita N+1 en el cliente). */
-export function countByUser(rows: Array<{ user_id: string | null }>): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const row of rows) {
-    if (!row.user_id) continue;
-    counts.set(row.user_id, (counts.get(row.user_id) ?? 0) + 1);
-  }
-  return counts;
-}

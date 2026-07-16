@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyOrganization } from '@/hooks/useMyOrganization';
-import { countByUser } from '@/lib/team/teamScope';
 import { differenceInDays } from 'date-fns';
 
 // Admin Dashboard Stats
@@ -266,104 +265,142 @@ export const useAgentGoals = () => {
 // (dueño + miembros), nunca a toda la plataforma.
 export const useAgencyStats = () => {
   const { user } = useAuth();
-  const { data: team } = useMyOrganization();
+  const { data: team, isLoading: teamLoading } = useMyOrganization();
   const teamIds = team?.teamUserIds ?? [];
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['agency-stats', user?.id, teamIds],
     enabled: teamIds.length > 0,
     queryFn: async () => {
-      // Propiedades activas del equipo
-      const { count: totalProperties } = await supabase
-        .from('listings')
-        .select('*', { count: 'exact', head: true })
-        .in('user_id', teamIds)
-        .eq('status', 'active');
-
-      // Ventas del mes del equipo
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
 
-      const { data: soldLots } = await supabase
-        .from('lots')
-        .select('price')
-        .in('user_id', teamIds)
-        .eq('status', 'sold')
-        .gte('sale_date', startOfMonth.toISOString());
+      const [agentRolesRes, propertiesRes, soldRes, viewsRes] = await Promise.all([
+        // Miembros del equipo que efectivamente son agentes
+        supabase
+          .from('user_roles')
+          .select('user_id')
+          .in('user_id', teamIds)
+          .eq('role', 'agent'),
+        // Propiedades activas del equipo
+        supabase
+          .from('listings')
+          .select('*', { count: 'exact', head: true })
+          .in('user_id', teamIds)
+          .eq('status', 'active'),
+        // Ventas del mes del equipo
+        supabase
+          .from('lots')
+          .select('price')
+          .in('user_id', teamIds)
+          .eq('status', 'sold')
+          .gte('sale_date', startOfMonth.toISOString()),
+        // Visitas de las propiedades del equipo
+        supabase
+          .from('listings')
+          .select('views_count')
+          .in('user_id', teamIds),
+      ]);
+      if (agentRolesRes.error) throw agentRolesRes.error;
+      if (propertiesRes.error) throw propertiesRes.error;
+      if (soldRes.error) throw soldRes.error;
+      if (viewsRes.error) throw viewsRes.error;
 
-      const monthlySales = soldLots?.reduce((sum, lot) => sum + (lot.price || 0), 0) || 0;
-
-      // Visitas totales de las propiedades del equipo
-      const { data: listings } = await supabase
-        .from('listings')
-        .select('views_count')
-        .in('user_id', teamIds);
-
-      const totalViews = listings?.reduce((sum, l) => sum + (l.views_count || 0), 0) || 0;
+      const monthlySales = soldRes.data?.reduce((sum, lot) => sum + (lot.price || 0), 0) || 0;
+      const totalViews = viewsRes.data?.reduce((sum, l) => sum + (l.views_count || 0), 0) || 0;
 
       return {
-        agentCount: teamIds.length,
-        totalProperties: totalProperties || 0,
+        agentCount: new Set(agentRolesRes.data?.map((r) => r.user_id)).size,
+        totalProperties: propertiesRes.count || 0,
         monthlySales,
         totalViews,
       };
     },
   });
+
+  // Mientras se resuelve la organización la query está deshabilitada y su
+  // isLoading es false (react-query v5): sin esto el dashboard muestra un
+  // flash de ceros/estados vacíos en vez de skeletons.
+  return { ...query, isLoading: teamLoading || query.isLoading };
 };
 
 export const useAgencyAgents = () => {
   const { user } = useAuth();
-  const { data: team } = useMyOrganization();
+  const { data: team, isLoading: teamLoading } = useMyOrganization();
   const teamIds = team?.teamUserIds ?? [];
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['agency-agents', user?.id, teamIds],
     enabled: teamIds.length > 0,
     queryFn: async () => {
-      // Solo los miembros del equipo propio (3 queries planas, sin N+1)
-      const [profilesRes, leadsRes, soldRes] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('user_id, first_name, last_name, avatar_url')
-          .in('user_id', teamIds),
-        supabase.from('leads').select('user_id').in('user_id', teamIds),
-        supabase.from('lots').select('user_id').in('user_id', teamIds).eq('status', 'sold'),
-      ]);
+      // El ranking contiene solo miembros del equipo CON rol agente
+      // (el dueño/staff sin rol agente no aparece como vendedor fantasma).
+      const rolesRes = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .in('user_id', teamIds)
+        .eq('role', 'agent');
+      if (rolesRes.error) throw rolesRes.error;
 
+      const agentIds = [...new Set((rolesRes.data ?? []).map((r) => r.user_id))];
+      if (agentIds.length === 0) return [];
+
+      const profilesRes = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, avatar_url')
+        .in('user_id', agentIds);
       if (profilesRes.error) throw profilesRes.error;
 
       const profilesMap = new Map(profilesRes.data?.map(p => [p.user_id, p]) || []);
-      const leadCounts = countByUser(leadsRes.data ?? []);
-      const saleCounts = countByUser(soldRes.data ?? []);
 
-      const agentStats = teamIds.map((userId) => {
-        const profile = profilesMap.get(userId);
-        const leadsCount = leadCounts.get(userId) ?? 0;
-        const salesCount = saleCounts.get(userId) ?? 0;
-        const conversion = leadsCount > 0 ? Math.round((salesCount / leadsCount) * 100) : 0;
+      // Conteos exactos en servidor (head+count no tiene el tope de filas de
+      // PostgREST). N está acotado por los asientos del plan y va en paralelo.
+      const agentStats = await Promise.all(
+        agentIds.map(async (userId) => {
+          const [leadsRes, salesRes] = await Promise.all([
+            supabase
+              .from('leads')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', userId),
+            supabase
+              .from('lots')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', userId)
+              .eq('status', 'sold'),
+          ]);
+          if (leadsRes.error) throw leadsRes.error;
+          if (salesRes.error) throw salesRes.error;
 
-        return {
-          id: userId,
-          name: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Sin nombre',
-          avatar: profile?.avatar_url || null,
-          sales: salesCount,
-          leads: leadsCount,
-          conversion,
-        };
-      });
+          const profile = profilesMap.get(userId);
+          const leadsCount = leadsRes.count ?? 0;
+          const salesCount = salesRes.count ?? 0;
+          const conversion = leadsCount > 0 ? Math.round((salesCount / leadsCount) * 100) : 0;
+
+          return {
+            id: userId,
+            name: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Sin nombre',
+            avatar: profile?.avatar_url || null,
+            sales: salesCount,
+            leads: leadsCount,
+            conversion,
+          };
+        })
+      );
 
       return agentStats.sort((a, b) => b.sales - a.sales);
     },
   });
+
+  return { ...query, isLoading: teamLoading || query.isLoading };
 };
 
 export const useAgencyProperties = () => {
   const { user } = useAuth();
-  const { data: team } = useMyOrganization();
+  const { data: team, isLoading: teamLoading } = useMyOrganization();
   const teamIds = team?.teamUserIds ?? [];
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['agency-properties', user?.id, teamIds],
     enabled: teamIds.length > 0,
     queryFn: async () => {
@@ -387,6 +424,8 @@ export const useAgencyProperties = () => {
       })) || [];
     },
   });
+
+  return { ...query, isLoading: teamLoading || query.isLoading };
 };
 
 // Helper functions

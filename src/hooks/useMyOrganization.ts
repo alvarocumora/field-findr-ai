@@ -43,17 +43,22 @@ export const useMyOrganization = () => {
           .select('organization_id')
           .eq('user_id', user.id),
       ]);
+      // Fallar fuerte: un error silenciado aquí colapsaría el equipo al dueño
+      // y el dashboard subcontaría a todo el equipo sin aviso.
+      if (ownedRes.error) throw ownedRes.error;
+      if (membershipRes.error) throw membershipRes.error;
 
       const owned = (ownedRes.data ?? []) as MyOrganization[];
 
       let memberOrgs: MyOrganization[] = [];
       const membershipIds = (membershipRes.data ?? []).map((m) => m.organization_id);
       if (owned.length === 0 && membershipIds.length > 0) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('organizations')
           .select('id, name, slug, owner_id, logo_url')
           .in('id', membershipIds)
           .order('created_at', { ascending: true });
+        if (error) throw error;
         memberOrgs = (data ?? []) as MyOrganization[];
       }
 
@@ -61,10 +66,11 @@ export const useMyOrganization = () => {
 
       let memberIds: string[] = [];
       if (organization) {
-        const { data: members } = await supabase
+        const { data: members, error } = await supabase
           .from('organization_members')
           .select('user_id')
           .eq('organization_id', organization.id);
+        if (error) throw error;
         memberIds = (members ?? []).map((m) => m.user_id);
       }
 
