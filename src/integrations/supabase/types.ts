@@ -329,6 +329,51 @@ export type Database = {
           },
         ]
       }
+      commercial_plan_leads: {
+        Row: {
+          company_name: string | null
+          contact_name: string | null
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          metadata: Json
+          phone: string | null
+          plan_slug: string
+          source: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_name?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          phone?: string | null
+          plan_slug: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          phone?: string | null
+          plan_slug?: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_payments: {
         Row: {
           amount: number
@@ -2276,6 +2321,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_platform_admin: { Args: never; Returns: boolean }
       mark_commission_paid: {
         Args: { p_commission_id: string }
         Returns: string
