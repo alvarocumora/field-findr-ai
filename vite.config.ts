@@ -5,8 +5,22 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
 
+// Public browser configuration. Lovable Cloud normally injects these values,
+// but classic Vite production builds must still initialize when the managed
+// root .env is not present in the deployment checkout.
+const PUBLIC_SUPABASE_URL = "https://gqcizjridfkiacpqcoqs.supabase.co";
+const PUBLIC_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxY2l6anJpZGZraWFjcHFjb3FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDYxMjIsImV4cCI6MjA4NTAyMjEyMn0.qX_7oongmcfi5Txidgt9Jkax8FoyPFPDXWKAtPIQx34";
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  define: {
+    "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
+      process.env.VITE_SUPABASE_URL || PUBLIC_SUPABASE_URL,
+    ),
+    "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY || PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    ),
+  },
   server: {
     host: "::",
     port: 8080,
