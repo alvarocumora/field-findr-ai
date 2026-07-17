@@ -63,33 +63,60 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <title>Ofertaterrenos · Marketplace de terrenos LATAM con IA territorial</title>
+    <meta name="description" content="Marketplace inteligente de terrenos rurales, parcelas de agrado, loteos DL 3.516, sitios industriales y de inversión en Chile, Argentina, Colombia, México y Perú." />
+    <link rel="canonical" href="https://ofertaterrenos.com/" />
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:title" content="Ofertaterrenos.com - Terrenos con IA" />
-    <meta property="og:description" content="Plataforma revolucionaria para terrenos rurales e industriales con inteligencia artificial avanzada" />
+    <meta property="og:title" content="Ofertaterrenos · Marketplace de terrenos LATAM con IA territorial" />
+    <meta property="og:description" content="Terrenos rurales, parcelas, loteos e industriales verificados en LATAM. Datos GIS, análisis IA y contacto directo con corredores." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://ofertaterrenos.com" />
-    <meta property="og:image" content="https://ofertaterrenos.com/og-image.jpg" />
+    <meta property="og:url" content="https://ofertaterrenos.com/" />
+    <meta property="og:site_name" content="Ofertaterrenos" />
     <meta property="og:locale" content="es_CL" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@ofertaterrenos" />
-    <meta name="twitter:title" content="Ofertaterrenos.com - Terrenos con IA" />
-    <meta name="twitter:description" content="La plataforma más avanzada para terrenos rurales e industriales" />
-    <meta name="twitter:image" content="https://ofertaterrenos.com/twitter-image.jpg" />
+    <meta name="twitter:title" content="Ofertaterrenos · Marketplace de terrenos LATAM con IA" />
+    <meta name="twitter:description" content="Terrenos rurales, parcelas, loteos e industriales verificados en LATAM. Datos GIS y análisis IA." />
 
     <!-- Structured Data -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "RealEstateAgent",
-      "name": "Ofertaterrenos.com",
-      "description": "Plataforma especializada en terrenos rurales e industriales con inteligencia artificial",
-      "url": "https://ofertaterrenos.com",
-      "areaServed": "Chile",
-      "serviceType": "Real Estate"
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://ofertaterrenos.com/#org",
+          "name": "Ofertaterrenos",
+          "url": "https://ofertaterrenos.com",
+          "logo": "https://ofertaterrenos.com/favicon.svg",
+          "sameAs": ["https://twitter.com/ofertaterrenos"]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://ofertaterrenos.com/#website",
+          "url": "https://ofertaterrenos.com",
+          "name": "Ofertaterrenos",
+          "publisher": { "@id": "https://ofertaterrenos.com/#org" },
+          "inLanguage": "es",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://ofertaterrenos.com/explorar?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "RealEstateAgent",
+          "name": "Ofertaterrenos",
+          "url": "https://ofertaterrenos.com",
+          "areaServed": ["Chile", "Argentina", "Colombia", "México", "Perú", "Uruguay"],
+          "serviceType": "Marketplace de terrenos y loteos con inteligencia territorial"
+        }
+      ]
     }
     </script>
   </head>
