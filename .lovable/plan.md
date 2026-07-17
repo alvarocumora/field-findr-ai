@@ -1,79 +1,74 @@
+## Hallazgos de la auditoría
 
-# Auditoría E2E: Flujo de Publicar Propiedad + Fixes críticos
+Recorrí `/` en el preview y detecté:
 
-Alcance acotado a lo elegido: **Publicar propiedad (wizard + aprobación → marketplace)**. Los otros módulos (loteos, buscador, CRM/comisiones) quedan para pases siguientes.
+1. **Hero (`CartographicHero`)** — El título "OFERTA / TERRENOS" ocupa demasiado espacio vertical y se solapa con el globo. Los KPIs sobre el hero muestran "31+ hectáreas · 1 región · 1+ proyectos" — números débiles que dañan credibilidad. No hay propuesta de valor concreta arriba del pliegue.
+2. **Meta / SEO en `index.html`** — Título genérico "Ofertaterrenos.com - Terrenos con IA", description promocional sin keywords ("plataforma revolucionaria"), JSON-LD `RealEstateAgent` con `areaServed: Chile` (el proyecto es LATAM), sin `Organization` ni `WebSite` con `SearchAction`.
+3. **`CategoryShowcase`** — 10 tarjetas idénticas en cuadrícula plana, sin imagen, sin conteos reales visibles cuando `counts=0`, sin jerarquía. Se ven como cajas negras vacías.
+4. **`RealListingsSection`** — La edge function `scrape-real-listings` devuelve **CORS + 400/401** en el preview → la sección se rompe silenciosamente. Hay que ocultarla si falla en vez de mostrar espacio muerto.
+5. **`CTASection` (no montada)** — Existe pero no se usa; el landing termina en `TrustBadges` sin cierre fuerte de conversión.
+6. **Orden de secciones** — Value Proposition (¿por qué nosotros?) aparece **después** de featured listings y how-it-works. Debería subir para justificar antes de convertir.
+7. **Performance** — Fonts se cargan con 8 pesos + Fraunces sin `preload`; el hero (`CartographicHero`) es lazy pero es LCP → tiene que ser eager. `FeaturedListings` y `RealListingsSection` disparan queries al montar sin `Suspense`.
 
-## Objetivo
+## Alcance de esta iteración
 
-Recorrer el flujo completo `/publish` → creación en `listings` → cola `property_approvals` → activación → visible en `/explorar` y `/propiedad/:id`, detectar los bloqueantes y arreglarlos en este mismo pase.
+Foco en `/` (home principal). No toco landings de proyectos (Forestal / Huellelhue / Playa Álvaro) ni las de marketing — quedan para una segunda ronda si te interesa.
 
-## Cobertura de auditoría
+## Cambios
 
-1. **Autorización de entrada**
-   - `/publish` protegido por `ProtectedRoute requireRole="agent"`. Verifico que agentes/inmobiliarias/admin entren y buyers sean redirigidos.
-   - Toast de "Inicia sesión" en `handlePublish` cuando no hay sesión.
+### 1. `index.html` — SEO + Head
+- Título: `Ofertaterrenos · Marketplace de terrenos LATAM con IA territorial`
+- Meta description con keywords reales (terrenos rurales, parcelas de agrado, loteos, DL 3.516, Chile / Argentina / Colombia / México / Perú), <160 chars.
+- OG/Twitter alineados con nuevo título.
+- JSON-LD: `Organization` + `WebSite` con `potentialAction` (SearchAction apuntando a `/explorar?q={query}`). Mantener `RealEstateAgent` pero con `areaServed` = lista de países LATAM.
+- `<link rel="preload">` para la imagen LCP del hero (si aplica) y `font-display: swap` ya está — quitar `Fraunces` del cargador global si no se usa en landing (se usa solo en Forestal → mover a esa página).
 
-2. **Wizard (`PublishForm.tsx`, 4 pasos)**
-   - Validaciones por paso (`validateStep`): título/tipo/área, ubicación/región, precio.
-   - Uploads (`ImageUploader` → bucket `property-images`, público).
-   - Selector de ubicación (`LocationPicker` + Mapbox token).
-   - Moneda/país (LATAM), UF/CLP, tags, utilities, subdivision.
+### 2. `CartographicHero` — Compactar y fortalecer
+- Reducir el título gigante a `text-5xl md:text-7xl` (hoy `text-8xl`), acortar padding vertical.
+- Añadir subtítulo/subheadline concreto encima de los CTAs: *"El marketplace inteligente para terrenos rurales, industriales y de inversión en LATAM. Datos verificados, análisis IA y contacto directo con corredores."*
+- **KPIs**: cambiar `1 región / 1+ proyectos` por métricas más honestas y con formato: `+X terrenos publicados`, `Y países`, `Z corredores verificados`. Si un valor es <5, mostrar copy cualitativo en su lugar ("Mapeo activo", "En expansión") — no números vergonzosos.
+- Añadir tercer CTA secundario "Ver oportunidades" que enlace a `/oportunidades`.
 
-3. **Enforcement de plan**
-   - `usePlanLimits` vs. cuota real de listings activos del usuario.
-   - Botón "Publicar" debe bloquearse (o mostrar upgrade) al superar el límite del plan Corredor/Corredora/Inmobiliaria/Grupo. Hoy `PublishForm` **no** consulta `usePlanLimits` — es candidato #1 a fix.
+### 3. `CategoryShowcase` — Rediseño visual
+- Grid asimétrico: 2 categorías destacadas (Parcelas de Agrado, Oportunidades) en tarjetas grandes (col-span-2) con imagen/gradient de fondo, y las 8 restantes en tarjetas compactas.
+- Mostrar conteo siempre (aunque sea 0 → "Explorar"), y KPI de precio mínimo por categoría cuando esté disponible.
+- Hover con lift + glow en color de la categoría.
 
-4. **Inserción y triggers**
-   - `useCreateListing` inserta con `status='pending_review'` → trigger `enqueue_listing_approval` crea fila en `property_approvals`.
-   - Notificación al admin (revisar si existe).
-   - Al aprobar: trigger `sync_listing_status_from_approval` pasa `listings.status='active'` y notifica al dueño.
+### 4. `RealListingsSection` — Fallback robusto
+- Si el hook `useRealListings` retorna error o array vacío, **no renderizar** la sección (return null) en vez de mostrar shell vacío.
+- No arreglar la edge function en este pase (es tema aparte); solo evitar que rompa visualmente el landing.
 
-5. **Visibilidad pública**
-   - Aparece en `/explorar`, `/propiedad/:id`, city landings.
-   - Imágenes cargan desde el bucket público.
-   - RLS permite lectura anónima solo para `status='active'`.
+### 5. Reordenar `Index.tsx`
+Nuevo orden:
+```text
+Hero → Search AI → ValueProposition (¿por qué?) → CategoryShowcase
+→ FeaturedListings → HowItWorksFlow → RealListingsSection (si hay data)
+→ InvestmentShowcase → Scrollytelling → RegionStats → MarketInsights
+→ AgentCTA → Testimonials → TrustBadges → CTASection (cierre) → FloatingCTA
+```
+Se agrega `CTASection` como cierre fuerte antes del footer.
 
-6. **Estados de rechazo y edición**
-   - Rechazo escribe motivo, notifica y marca listing como `rejected`.
-   - Botón "Republicar" tras corregir (verificar si existe).
+### 6. Performance quick-wins
+- Cargar `CartographicHero` **eager** (no lazy) — es el LCP.
+- Reducir pesos de Google Fonts: `Inter 400;500;600;700` + `Plus Jakarta Sans 600;700;800`. Quitar Fraunces del landing.
+- Añadir `fetchpriority="high"` al primer asset del hero.
 
-7. **Errores/UX**
-   - Manejo de errores del mutation, toasts.
-   - Navegación post-publicación (`/mi-terreno`).
-   - Estado "Cargando…" atascado observado en la home (session replay) — investigar si afecta la ruta post-publish.
+## Detalle técnico
 
-## Método de verificación
+Archivos a modificar:
+- `index.html` — meta, JSON-LD, fonts
+- `src/pages/Index.tsx` — reorden + hero eager + añadir CTASection
+- `src/components/landing/CartographicHero.tsx` — tipografía, subtítulo, KPIs con fallback cualitativo
+- `src/components/landing/CategoryShowcase.tsx` — grid asimétrico con hero cards
+- `src/components/RealListingsSection.tsx` — early-return si error/empty (leer primero)
+- `src/hooks/useLandingStats.ts` — extender si hace falta para más KPIs
 
-- Playwright headless contra `http://localhost:8080` restaurando sesión del agente inyectada (`LOVABLE_BROWSER_AUTH_STATUS`). Si el usuario logueado no es agente, uso un usuario con rol `agent` real vía SQL de prueba (no cambio credenciales productivas).
-- Recorro: login → `/publish` → completo los 4 pasos con datos sintéticos → verifico fila en `listings` + `property_approvals` → apruebo con SQL admin → confirmo aparición en `/explorar`.
-- Screenshots por paso, guardados en `/tmp/browser/publish-audit/`.
+No toco: rutas, auth, edge functions, migraciones, landings de proyectos, sidebar.
 
-## Fixes críticos que aplico en este pase
+## Fuera de alcance (te aviso para futura ronda)
+- Arreglar la edge function `scrape-real-listings` (CORS + 400/401).
+- Rediseño de secciones `MarketInsights`, `Scrollytelling`, `TestimonialMarquee` — funcionan pero merecen otra iteración.
+- SEO por-ruta con `react-helmet-async` (hoy solo hay meta estáticos en `index.html`).
+- Landings `/inmobiliarias`, `/corredoras`, `/pricing-loteos`.
 
-Solo si la auditoría los confirma como bloqueantes (no toco lo que ya funciona):
-
-1. **Enforcement de plan en el wizard**
-   - Integrar `usePlanLimits` en `PublishForm`: banner con cuota (`X de Y usados`), bloquear botón "Publicar" y CTA a `/pricing` si `canPublish === false`.
-
-2. **Validación server-side de cuota**
-   - Añadir chequeo en `useCreateListing` (o edge function `submit-interest`-style) que rechace la inserción si el usuario excede su plan — evita bypass del cliente.
-
-3. **Feedback tras publicar**
-   - Reemplazar `navigate('/mi-terreno')` mudo por toast de éxito con estado "En revisión" + link a la aprobación.
-
-4. **Republicar tras rechazo**
-   - Si el listing quedó en `rejected`, permitir reabrir el wizard con datos precargados y setear `status='pending_review'` de nuevo (dispara `enqueue_listing_approval` con `ON CONFLICT DO NOTHING`, hay que revisar el ON CONFLICT — puede impedir reencolar).
-
-5. **Bugs concretos** encontrados durante el recorrido Playwright (imagen que no sube, campo requerido faltante, etc.) — se listan al reportar.
-
-## Detalles técnicos
-
-- Archivos a editar (previsto): `src/components/publish/PublishForm.tsx`, `src/hooks/useListings.ts`, posiblemente `supabase/migrations/*` si `enqueue_listing_approval` necesita permitir reencolar tras rechazo.
-- No toco `mercadopago`, `useSubscription`, `AdminUsers` — fuera de alcance.
-- Sin cambios en tokens de diseño, RLS de otras tablas ni edge functions no relacionadas.
-
-## Entregable
-
-- Reporte breve en el chat: qué probé, qué pasó, qué arreglé, qué quedó pendiente (con severidad).
-- Screenshots como evidencia.
-- Los demás módulos (loteos, buscador, comisiones) los abordo en pases separados cuando lo confirmes.
+¿Apruebas el plan tal cual, o quieres priorizar/quitar algo?
