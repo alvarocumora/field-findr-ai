@@ -24,16 +24,29 @@ const HeroContent = ({
 }) => {
   const { data: stats } = useLandingStats();
 
+  // Fallback cualitativo cuando el número es débil (evita mostrar "1 región")
+  const q = (n: number, min: number, weak: string, format: (v: number) => string) =>
+    n >= min ? format(n) : weak;
+
   const metrics = [
-    { value: `${stats?.totalHectares ? stats.totalHectares.toLocaleString() : '2,400'}+`, label: 'Hectáreas mapeadas' },
-    { value: `${stats?.totalRegions || 12}`, label: 'Regiones' },
-    { value: `${stats?.totalProjects || 0}+`, label: 'Proyectos activos' },
+    {
+      value: q(stats?.totalListings ?? 0, 10, 'Catálogo en crecimiento', (v) => `+${v.toLocaleString()}`),
+      label: 'Terrenos publicados',
+    },
+    {
+      value: q(stats?.totalRegions ?? 0, 3, 'LATAM', (v) => `${v}`),
+      label: 'Regiones activas',
+    },
+    {
+      value: q(stats?.totalHectares ?? 0, 100, 'Mapeo activo', (v) => `${v.toLocaleString()} ha`),
+      label: 'Hectáreas mapeadas',
+    },
   ];
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 px-4">
       <motion.div
-        className="text-center"
+        className="text-center max-w-4xl"
         style={prefersReducedMotion ? {} : { y: titleY }}
       >
         <motion.p
@@ -46,7 +59,7 @@ const HeroContent = ({
         </motion.p>
 
         <motion.h1
-          className="text-5xl sm:text-7xl md:text-8xl lg:text-[10rem] font-heading font-bold tracking-tight leading-[0.85] text-foreground"
+          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-heading font-bold tracking-tight leading-[0.9] text-foreground"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.8, ease: 'easeOut' as const }}
@@ -55,27 +68,34 @@ const HeroContent = ({
           <span className="block gradient-text-hero">TERRENOS</span>
         </motion.h1>
 
+        <motion.p
+          className="mt-6 max-w-2xl mx-auto text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55, duration: 0.6 }}
+        >
+          El marketplace inteligente para terrenos rurales, industriales y de inversión en LATAM.
+          Datos verificados, análisis IA y contacto directo con corredores.
+        </motion.p>
+
         {/* Animated metrics */}
         <motion.div
-          className="mt-8 flex items-center justify-center gap-6 sm:gap-10"
+          className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
         >
-          {metrics.map((m, i) => (
-            <div key={m.label} className="text-center">
-              <p className="text-lg sm:text-2xl font-heading font-bold text-foreground">{m.value}</p>
-              <p className="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">{m.label}</p>
-              {i < metrics.length - 1 && (
-                <span className="hidden" />
-              )}
+          {metrics.map((m) => (
+            <div key={m.label} className="text-center min-w-[110px]">
+              <p className="text-base sm:text-xl md:text-2xl font-heading font-bold text-foreground">{m.value}</p>
+              <p className="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground mt-1">{m.label}</p>
             </div>
           ))}
         </motion.div>
 
         {/* Coordinates */}
         <motion.div
-          className="mt-6 font-mono text-xs sm:text-sm text-muted-foreground tracking-[0.2em]"
+          className="mt-6 font-mono text-[10px] sm:text-xs text-muted-foreground tracking-[0.2em]"
           style={prefersReducedMotion ? {} : { opacity: coordOpacity, y: coordY }}
         >
           <span className="text-primary">−33.4489° S</span>
@@ -85,7 +105,7 @@ const HeroContent = ({
           <span>Santiago, Chile</span>
         </motion.div>
 
-        {/* Dual CTA */}
+        {/* Triple CTA */}
         <motion.div
           className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 pointer-events-auto"
           initial={{ opacity: 0, y: 20 }}
@@ -99,10 +119,13 @@ const HeroContent = ({
             </Link>
           </Button>
           <Button variant="outline" asChild size="lg" className="border-border/50 backdrop-blur-sm bg-background/30">
-            <Link to="/pricing">
-              Soy Corredor
+            <Link to="/oportunidades">
+              Ver Oportunidades
               <ArrowRight className="h-4 w-4 ml-2" />
             </Link>
+          </Button>
+          <Button variant="ghost" asChild size="lg" className="text-muted-foreground hover:text-foreground">
+            <Link to="/pricing">Soy Corredor</Link>
           </Button>
         </motion.div>
       </motion.div>
