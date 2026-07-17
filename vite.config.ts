@@ -9,7 +9,7 @@ import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
 // but classic Vite production builds must still initialize when the managed
 // root .env is not present in the deployment checkout.
 const PUBLIC_SUPABASE_URL = "https://gqcizjridfkiacpqcoqs.supabase.co";
-const PUBLIC_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6ImdxY2l6anJpZGZraWFjcHFjb3FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDYxMjIsImV4cCI6MjA4NTAyMjEyMn0.qX_7oongmcfi5Txidgt9Jkax8FoyPFPDXWKAtPIQx34";
+const PUBLIC_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxY2l6anJpZGZraWFjcHFjb3FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDYxMjIsImV4cCI6MjA4NTAyMjEyMn0.qX_7oongmcfi5Txidgt9Jkax8FoyPFPDXWKAtPIQx34";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
