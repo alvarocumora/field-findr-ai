@@ -6,9 +6,14 @@
 
     <!--
       Recovery net for users still holding a stale service worker from a
-      previous deploy: if the entry script or a lazy chunk fails to load
-      (old hashed asset 404s after a redeploy), unregister the SW, clear its
-      caches and reload ONCE. Guarded by sessionStorage so it can never loop.
+      previous deploy. Two failure modes are covered, both guarded by
+      sessionStorage so it can never loop:
+      1) The entry script or a lazy chunk fails to LOAD (old hashed asset
+         404s after a redeploy).
+      2) A cached bundle loads but CRASHES before the app paints (e.g. a
+         runtime throw at module init) — detected as any uncaught error
+         while #root is still empty.
+      In either case: unregister the SW, clear its caches and reload ONCE.
     -->
     <script>
       (function () {
@@ -31,13 +36,21 @@
             } else { done(); }
           } catch (e) { done(); }
         }
+        function rootIsEmpty() {
+          var root = document.getElementById('root');
+          return !root || root.childElementCount === 0;
+        }
         window.addEventListener('error', function (e) {
           var t = e && e.target;
-          if (t && t.tagName === 'SCRIPT' && t.src && t.src.indexOf('/assets/') !== -1) recover();
+          // Modo 1: falla la descarga de un asset propio
+          if (t && t.tagName === 'SCRIPT' && t.src && t.src.indexOf('/assets/') !== -1) return recover();
+          // Modo 2: error de ejecución fatal antes del primer render
+          if (e && e.error && rootIsEmpty()) recover();
         }, true);
         window.addEventListener('unhandledrejection', function (e) {
           var msg = e && e.reason && (e.reason.message || String(e.reason));
-          if (msg && /(dynamically imported module|Importing a module script failed|Failed to fetch dynamically imported)/i.test(msg)) recover();
+          if (msg && /(dynamically imported module|Importing a module script failed|Failed to fetch dynamically imported)/i.test(msg)) return recover();
+          if (rootIsEmpty()) recover();
         });
       })();
     </script>

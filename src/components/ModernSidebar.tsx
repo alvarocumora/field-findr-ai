@@ -72,6 +72,7 @@ const corredorCore: NavItem[] = [
 ];
 
 const corredorMore: NavItem[] = [
+  { name: 'Mi Equipo', href: '/asesor/team', icon: Users },
   { name: 'Control Loteo', href: '/asesor/loteos', icon: Gauge },
   { name: 'Estudio de Loteo', href: '/asesor/subdivision', icon: Grid3X3 },
   { name: 'Pagos', href: '/asesor/payments', icon: DollarSign },
@@ -180,6 +181,7 @@ const inmobiliariaGroups: NavGroup[] = [
   {
     label: 'Equipo & Reportes',
     items: [
+      { name: 'Mi Equipo', href: '/asesor/team', icon: Users },
       { name: 'Rendimiento', href: '/asesor/performance', icon: Target },
       { name: 'Reportes', href: '/asesor/reports', icon: FileBarChart },
       { name: 'Notificaciones', href: '/asesor/notifications', icon: Bell },
