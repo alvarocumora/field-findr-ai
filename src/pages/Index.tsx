@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import PublicLayout from '@/components/layouts/PublicLayout';
+import CartographicHero from '@/components/landing/CartographicHero';
 import FloatingCTA from '@/components/landing/FloatingCTA';
 import TestimonialMarquee from '@/components/landing/TestimonialMarquee';
 import TrustBadges from '@/components/landing/TrustBadges';
@@ -13,23 +14,17 @@ import FeaturedListings from '@/components/landing/FeaturedListings';
 import HowItWorksFlow from '@/components/landing/HowItWorksFlow';
 import ConversationalSearch from '@/components/explore/ConversationalSearch';
 import RealListingsSection from '@/components/RealListingsSection';
+import CTASection from '@/components/CTASection';
 
-const CartographicHero = lazy(() => import('@/components/landing/CartographicHero'));
+// Hero is above-the-fold (LCP) — load eagerly.
+// Only truly heavy below-fold work stays lazy.
 const ScrollytellingSection = lazy(() => import('@/components/landing/ScrollytellingSection'));
-
-const LazyFallback = () => (
-  <div className="h-screen flex items-center justify-center bg-background">
-    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-  </div>
-);
 
 const Index = () => {
   return (
     <PublicLayout showFooter={true}>
-      {/* ===== HERO — Globe zoom to Chile ===== */}
-      <Suspense fallback={<LazyFallback />}>
-        <CartographicHero />
-      </Suspense>
+      {/* ===== HERO — Globe zoom to Chile (LCP) ===== */}
+      <CartographicHero />
 
       {/* ===== AI CONVERSATIONAL SEARCH ===== */}
       <section className="container px-4 -mt-8 relative z-10">
@@ -38,31 +33,28 @@ const Index = () => {
         </div>
       </section>
 
+      {/* ===== VALUE PROPOSITION — 3 audiences (justify before converting) ===== */}
+      <ValueProposition />
+
       {/* ===== CATEGORY SHOWCASE ===== */}
       <CategoryShowcase />
 
       {/* ===== FEATURED LISTINGS ===== */}
       <FeaturedListings />
 
-      {/* ===== REAL LISTINGS — scraped LATAM portals ===== */}
-      <RealListingsSection limit={16} />
-
       {/* ===== HOW IT WORKS ===== */}
       <HowItWorksFlow />
+
+      {/* ===== REAL LISTINGS — scraped LATAM portals (fail-silent if empty/error) ===== */}
+      <RealListingsSection limit={16} />
+
+      {/* ===== INVESTMENT SHOWCASE — KPIs ===== */}
+      <InvestmentShowcase />
 
       {/* ===== SCROLLYTELLING PROJECTS ===== */}
       <Suspense fallback={null}>
         <ScrollytellingSection />
       </Suspense>
-
-      {/* ===== VALUE PROPOSITION — 3 audiences ===== */}
-      <ValueProposition />
-
-      {/* ===== INVESTMENT SHOWCASE — KPIs ===== */}
-      <InvestmentShowcase />
-
-      {/* ===== AGENT CTA — Broker lead-gen ===== */}
-      <AgentCTA />
 
       {/* ===== REGION STATS ===== */}
       <RegionStatsCards />
@@ -70,11 +62,17 @@ const Index = () => {
       {/* ===== MARKET INSIGHTS ===== */}
       <MarketInsights />
 
+      {/* ===== AGENT CTA — Broker lead-gen ===== */}
+      <AgentCTA />
+
       {/* ===== TESTIMONIALS ===== */}
       <TestimonialMarquee />
 
       {/* ===== TRUST ===== */}
       <TrustBadges />
+
+      {/* ===== FINAL CTA — Conversion close ===== */}
+      <CTASection />
 
       {/* ===== FLOATING CTA ===== */}
       <FloatingCTA />
