@@ -92,7 +92,14 @@ export default function RealListingsSection({
   compact = false,
 }: RealListingsSectionProps) {
   const [country, setCountry] = useState(defaultCountry);
-  const { data, isLoading, isFetching, refetch } = useRealListings({ country, limit });
+  const { data, isLoading, isFetching, refetch, isError } = useRealListings({ country, limit });
+
+  // Fail-silent en el landing: si no hay datos o hay error, no renderizar la sección
+  // en vez de mostrar un shell vacío o un mensaje de error a los visitantes.
+  if (!isLoading && (isError || !data || data.length === 0)) {
+    return null;
+  }
+
 
   return (
     <section className="container px-4 py-12 md:py-16">
