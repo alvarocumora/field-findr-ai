@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { useAuth } from './useAuth';
+import { useMyOrganization } from './useMyOrganization';
 import { toast } from 'sonner';
 
 export type Project = Tables<'projects'>;
@@ -11,22 +12,26 @@ export type ProjectUpdate = TablesUpdate<'projects'>;
 export const useProjects = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { data: team } = useMyOrganization();
+  // Proyectos del equipo completo (RLS ya permite verlos); mientras se
+  // resuelve la organización caemos a los propios para no quedar en blanco.
+  const teamIds = team?.teamUserIds?.length ? team.teamUserIds : user?.id ? [user.id] : [];
 
   const { data: projects = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['projects', user?.id],
+    queryKey: ['projects', user?.id, teamIds],
     queryFn: async () => {
       if (!user?.id) return [];
-      
+
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('user_id', user.id)
+        .in('user_id', teamIds)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data as Project[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && teamIds.length > 0,
   });
 
   const createProject = useMutation({
