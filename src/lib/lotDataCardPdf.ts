@@ -92,20 +92,12 @@ export const generateLotDataCardPdf = async (
   // ── Lot hero image ──
   const images = (lot as any).images as string[] | null;
   if (images && images.length > 0) {
-    try {
-      const response = await fetch(images[0]);
-      const blob = await response.blob();
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
+    const base64 = await fetchImageAsBase64(images[0]);
+    if (base64) {
       const imgW = contentW;
       const imgH = imgW * (9 / 16);
       doc.addImage(base64, 'JPEG', margin, y, imgW, imgH);
       y += imgH + 6;
-    } catch {
-      // skip image on error
     }
   }
 
