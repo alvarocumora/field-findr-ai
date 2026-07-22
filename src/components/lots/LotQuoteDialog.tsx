@@ -56,6 +56,7 @@ const LotQuoteDialog = ({
   reservationDeposit,
 }: LotQuoteDialogProps) => {
   const { user } = useAuth();
+  const { token: mapboxToken } = useMapboxToken();
   const [buyerName, setBuyerName] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
   const [salePrice, setSalePrice] = useState('');
