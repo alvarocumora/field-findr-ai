@@ -132,7 +132,7 @@ const LotQuoteDialog = ({
     if (!lot) return;
     setGenerating(true);
     try {
-      await generateLotDataCardPdf(lot, projectName, parseLotFeatures(lot.features));
+      await generateLotDataCardPdf(lot, projectName, parseLotFeatures(lot.features), { mapboxToken });
       toast.success('Ficha del lote descargada');
     } catch {
       toast.error('Error al generar la ficha');
