@@ -212,20 +212,49 @@ export const generateLotDataCardPdf = async (
     y += lines.length * 4 + 6;
   }
 
-  // ── Location link ──
-  if (lot.latitude && lot.longitude) {
-    doc.setFontSize(8);
-    doc.setTextColor(...FOREST_GREEN);
-    const mapsUrl = `https://www.google.com/maps?q=${lot.latitude},${lot.longitude}`;
-    doc.textWithLink('📍 Ver ubicación en Google Maps', margin, y, { url: mapsUrl });
-    y += 8;
+  // ── Map (satellite + polygon) ──
+  const token = options.mapboxToken;
+  if (token) {
+    const mapUrl = buildMapboxStaticUrl(lot, token);
+    if (mapUrl) {
+      const mapBase64 = await fetchImageAsBase64(mapUrl);
+      if (mapBase64) {
+        const mapH = 70;
+        if (y + mapH + 20 > 275) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setFillColor(...FOREST_GREEN);
+        doc.rect(margin, y, contentW, 8, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text('UBICACIÓN', margin + 4, y + 5.5);
+        y += 10;
+        try {
+          doc.addImage(mapBase64, 'PNG', margin, y, contentW, mapH);
+        } catch {
+          // ignore image errors
+        }
+        y += mapH + 6;
+      }
+    }
   }
 
-  // ── Project link ──
+  // ── Links ──
   const projectUrl = `${window.location.origin}/proyecto/${lot.project_id}?lote=${lot.lot_number}`;
+  const compareUrl = `${window.location.origin}/comparar?lotes=${lot.id}`;
+
   doc.setFontSize(8);
   doc.setTextColor(...FOREST_GREEN);
-  doc.textWithLink('🔗 Ver lote en línea', margin, y, { url: projectUrl });
+  if (lot.latitude && lot.longitude) {
+    const mapsUrl = `https://www.google.com/maps?q=${lot.latitude},${lot.longitude}`;
+    doc.textWithLink('📍 Ver ubicación en Google Maps', margin, y, { url: mapsUrl });
+    y += 6;
+  }
+  doc.textWithLink('🔗 Ver ficha en línea', margin, y, { url: projectUrl });
+  y += 6;
+  doc.textWithLink('⚖️  Comparar este lote', margin, y, { url: compareUrl });
   y += 10;
 
   // ── Footer ──
