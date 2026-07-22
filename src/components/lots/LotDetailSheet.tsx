@@ -176,6 +176,7 @@ export const LotDetailSheet = ({
   canManage = false,
 }: LotDetailSheetProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const { token: mapboxToken } = useMapboxToken();
 
   if (!lot) return null;
 
@@ -190,7 +191,7 @@ export const LotDetailSheet = ({
   const handleDownloadFicha = async () => {
     setIsDownloading(true);
     try {
-      await generateLotDataCardPdf(lot, projectName, features);
+      await generateLotDataCardPdf(lot, projectName, features, { mapboxToken });
       toast.success('Ficha del lote descargada');
     } catch (err) {
       toast.error('Error al generar ficha PDF');
