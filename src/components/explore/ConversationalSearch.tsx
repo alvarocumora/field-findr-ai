@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -38,10 +38,6 @@ const ConversationalSearch = ({ onClose, className }: ConversationalSearchProps)
   const [hasSearched, setHasSearched] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
 
   const handleSearch = async (searchQuery?: string) => {
     const q = searchQuery || query;
