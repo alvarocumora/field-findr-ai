@@ -40,6 +40,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { PublishLotButton } from './PublishLotButton';
 
 const ParcelaDesigner3D = lazy(() =>
