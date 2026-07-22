@@ -12,10 +12,61 @@ const formatCLP = (n: number | null) => {
   return '$' + n.toLocaleString('es-CL');
 };
 
+const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+};
+
+const buildMapboxStaticUrl = (
+  lot: Lot,
+  token: string,
+  width = 800,
+  height = 450
+): string | null => {
+  const lng = lot.longitude ? Number(lot.longitude) : null;
+  const lat = lot.latitude ? Number(lot.latitude) : null;
+  if (lng == null || lat == null || Number.isNaN(lng) || Number.isNaN(lat)) return null;
+
+  const polygon = (lot as any).polygon as number[][] | null;
+  let overlay = '';
+  if (polygon && polygon.length >= 3) {
+    // GeoJSON polygon overlay (fill + stroke) — encoded
+    const coords = [...polygon];
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+    if (first[0] !== last[0] || first[1] !== last[1]) coords.push(first);
+    const geojson = {
+      type: 'Feature',
+      properties: {
+        stroke: '#2C5F2D',
+        'stroke-width': 3,
+        fill: '#2C5F2D',
+        'fill-opacity': 0.25,
+      },
+      geometry: { type: 'Polygon', coordinates: [coords] },
+    };
+    overlay = `geojson(${encodeURIComponent(JSON.stringify(geojson))})`;
+  } else {
+    overlay = `pin-l+b85042(${lng},${lat})`;
+  }
+  return `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${overlay}/${lng},${lat},15,0/${width}x${height}@2x?access_token=${token}`;
+};
+
 export const generateLotDataCardPdf = async (
   lot: Lot,
   projectName: string,
-  features: LotFeatures
+  features: LotFeatures,
+  options: { mapboxToken?: string | null } = {}
 ) => {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const W = 210;
