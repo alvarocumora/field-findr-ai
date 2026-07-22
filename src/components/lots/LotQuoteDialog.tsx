@@ -18,6 +18,7 @@ import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
 import { parseLotFeatures, type Lot } from '@/hooks/useLots';
 import { whatsapp } from '@/lib/whatsappUtils';
 import { useAuth } from '@/hooks/useAuth';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 
 interface LotQuoteDialogProps {
   open: boolean;
