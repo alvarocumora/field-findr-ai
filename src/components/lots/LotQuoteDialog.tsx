@@ -18,6 +18,7 @@ import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
 import { parseLotFeatures, type Lot } from '@/hooks/useLots';
 import { whatsapp } from '@/lib/whatsappUtils';
 import { useAuth } from '@/hooks/useAuth';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 
 interface LotQuoteDialogProps {
   open: boolean;
@@ -55,6 +56,7 @@ const LotQuoteDialog = ({
   reservationDeposit,
 }: LotQuoteDialogProps) => {
   const { user } = useAuth();
+  const { token: mapboxToken } = useMapboxToken();
   const [buyerName, setBuyerName] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
   const [salePrice, setSalePrice] = useState('');
@@ -130,7 +132,7 @@ const LotQuoteDialog = ({
     if (!lot) return;
     setGenerating(true);
     try {
-      await generateLotDataCardPdf(lot, projectName, parseLotFeatures(lot.features));
+      await generateLotDataCardPdf(lot, projectName, parseLotFeatures(lot.features), { mapboxToken });
       toast.success('Ficha del lote descargada');
     } catch {
       toast.error('Error al generar la ficha');

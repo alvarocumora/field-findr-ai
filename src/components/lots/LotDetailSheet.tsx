@@ -40,6 +40,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { PublishLotButton } from './PublishLotButton';
 
 const ParcelaDesigner3D = lazy(() =>
@@ -175,6 +176,7 @@ export const LotDetailSheet = ({
   canManage = false,
 }: LotDetailSheetProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const { token: mapboxToken } = useMapboxToken();
 
   if (!lot) return null;
 
@@ -189,7 +191,7 @@ export const LotDetailSheet = ({
   const handleDownloadFicha = async () => {
     setIsDownloading(true);
     try {
-      await generateLotDataCardPdf(lot, projectName, features);
+      await generateLotDataCardPdf(lot, projectName, features, { mapboxToken });
       toast.success('Ficha del lote descargada');
     } catch (err) {
       toast.error('Error al generar ficha PDF');

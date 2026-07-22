@@ -12,10 +12,61 @@ const formatCLP = (n: number | null) => {
   return '$' + n.toLocaleString('es-CL');
 };
 
+const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+};
+
+const buildMapboxStaticUrl = (
+  lot: Lot,
+  token: string,
+  width = 800,
+  height = 450
+): string | null => {
+  const lng = lot.longitude ? Number(lot.longitude) : null;
+  const lat = lot.latitude ? Number(lot.latitude) : null;
+  if (lng == null || lat == null || Number.isNaN(lng) || Number.isNaN(lat)) return null;
+
+  const polygon = (lot as any).polygon as number[][] | null;
+  let overlay = '';
+  if (polygon && polygon.length >= 3) {
+    // GeoJSON polygon overlay (fill + stroke) — encoded
+    const coords = [...polygon];
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+    if (first[0] !== last[0] || first[1] !== last[1]) coords.push(first);
+    const geojson = {
+      type: 'Feature',
+      properties: {
+        stroke: '#2C5F2D',
+        'stroke-width': 3,
+        fill: '#2C5F2D',
+        'fill-opacity': 0.25,
+      },
+      geometry: { type: 'Polygon', coordinates: [coords] },
+    };
+    overlay = `geojson(${encodeURIComponent(JSON.stringify(geojson))})`;
+  } else {
+    overlay = `pin-l+b85042(${lng},${lat})`;
+  }
+  return `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${overlay}/${lng},${lat},15,0/${width}x${height}@2x?access_token=${token}`;
+};
+
 export const generateLotDataCardPdf = async (
   lot: Lot,
   projectName: string,
-  features: LotFeatures
+  features: LotFeatures,
+  options: { mapboxToken?: string | null } = {}
 ) => {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const W = 210;
@@ -41,20 +92,12 @@ export const generateLotDataCardPdf = async (
   // ── Lot hero image ──
   const images = (lot as any).images as string[] | null;
   if (images && images.length > 0) {
-    try {
-      const response = await fetch(images[0]);
-      const blob = await response.blob();
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
+    const base64 = await fetchImageAsBase64(images[0]);
+    if (base64) {
       const imgW = contentW;
       const imgH = imgW * (9 / 16);
       doc.addImage(base64, 'JPEG', margin, y, imgW, imgH);
       y += imgH + 6;
-    } catch {
-      // skip image on error
     }
   }
 
@@ -169,20 +212,49 @@ export const generateLotDataCardPdf = async (
     y += lines.length * 4 + 6;
   }
 
-  // ── Location link ──
-  if (lot.latitude && lot.longitude) {
-    doc.setFontSize(8);
-    doc.setTextColor(...FOREST_GREEN);
-    const mapsUrl = `https://www.google.com/maps?q=${lot.latitude},${lot.longitude}`;
-    doc.textWithLink('📍 Ver ubicación en Google Maps', margin, y, { url: mapsUrl });
-    y += 8;
+  // ── Map (satellite + polygon) ──
+  const token = options.mapboxToken;
+  if (token) {
+    const mapUrl = buildMapboxStaticUrl(lot, token);
+    if (mapUrl) {
+      const mapBase64 = await fetchImageAsBase64(mapUrl);
+      if (mapBase64) {
+        const mapH = 70;
+        if (y + mapH + 20 > 275) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setFillColor(...FOREST_GREEN);
+        doc.rect(margin, y, contentW, 8, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text('UBICACIÓN', margin + 4, y + 5.5);
+        y += 10;
+        try {
+          doc.addImage(mapBase64, 'PNG', margin, y, contentW, mapH);
+        } catch {
+          // ignore image errors
+        }
+        y += mapH + 6;
+      }
+    }
   }
 
-  // ── Project link ──
+  // ── Links ──
   const projectUrl = `${window.location.origin}/proyecto/${lot.project_id}?lote=${lot.lot_number}`;
+  const compareUrl = `${window.location.origin}/comparar?lotes=${lot.id}`;
+
   doc.setFontSize(8);
   doc.setTextColor(...FOREST_GREEN);
-  doc.textWithLink('🔗 Ver lote en línea', margin, y, { url: projectUrl });
+  if (lot.latitude && lot.longitude) {
+    const mapsUrl = `https://www.google.com/maps?q=${lot.latitude},${lot.longitude}`;
+    doc.textWithLink('📍 Ver ubicación en Google Maps', margin, y, { url: mapsUrl });
+    y += 6;
+  }
+  doc.textWithLink('🔗 Ver ficha en línea', margin, y, { url: projectUrl });
+  y += 6;
+  doc.textWithLink('⚖️  Comparar este lote', margin, y, { url: compareUrl });
   y += 10;
 
   // ── Footer ──
