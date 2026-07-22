@@ -1,74 +1,64 @@
-## Hallazgos de la auditoría
+## Objetivo
 
-Recorrí `/` en el preview y detecté:
+Publicar **Parque Mirador** en Hualañé, Región del Maule, replicando el patrón de Brisas de Caone: registro en `projects`, `lots` con polígonos, `listings` sincronizadas para las fichas públicas por lote y activación como destacado en la home.
 
-1. **Hero (`CartographicHero`)** — El título "OFERTA / TERRENOS" ocupa demasiado espacio vertical y se solapa con el globo. Los KPIs sobre el hero muestran "31+ hectáreas · 1 región · 1+ proyectos" — números débiles que dañan credibilidad. No hay propuesta de valor concreta arriba del pliegue.
-2. **Meta / SEO en `index.html`** — Título genérico "Ofertaterrenos.com - Terrenos con IA", description promocional sin keywords ("plataforma revolucionaria"), JSON-LD `RealEstateAgent` con `areaServed: Chile` (el proyecto es LATAM), sin `Organization` ni `WebSite` con `SearchAction`.
-3. **`CategoryShowcase`** — 10 tarjetas idénticas en cuadrícula plana, sin imagen, sin conteos reales visibles cuando `counts=0`, sin jerarquía. Se ven como cajas negras vacías.
-4. **`RealListingsSection`** — La edge function `scrape-real-listings` devuelve **CORS + 400/401** en el preview → la sección se rompe silenciosamente. Hay que ocultarla si falla en vez de mostrar espacio muerto.
-5. **`CTASection` (no montada)** — Existe pero no se usa; el landing termina en `TrustBadges` sin cierre fuerte de conversión.
-6. **Orden de secciones** — Value Proposition (¿por qué nosotros?) aparece **después** de featured listings y how-it-works. Debería subir para justificar antes de convertir.
-7. **Performance** — Fonts se cargan con 8 pesos + Fraunces sin `preload`; el hero (`CartographicHero`) es lazy pero es LCP → tiene que ser eager. `FeaturedListings` y `RealListingsSection` disparan queries al montar sin `Suspense`.
+## Fuente de datos
 
-## Alcance de esta iteración
+- `user-uploads://doc.kml` — 225 polylines dentro de carpetas `Polyline [XXXX]`. No hay `<Polygon>`, por lo que hay que **reconstruir** los cierres.
+- Ubicación confirmada: **Hualañé, Región del Maule**.
 
-Foco en `/` (home principal). No toco landings de proyectos (Forestal / Huellelhue / Playa Álvaro) ni las de marketing — quedan para una segunda ronda si te interesa.
+## Fases
 
-## Cambios
+### 1. Script de ingesta del KML → `scripts/generateParqueMiradorLots.ts`
+Similar en espíritu a `generateHuellelhueLots.ts` / `generatePlayaAlvaroLots.ts`.
 
-### 1. `index.html` — SEO + Head
-- Título: `Ofertaterrenos · Marketplace de terrenos LATAM con IA territorial`
-- Meta description con keywords reales (terrenos rurales, parcelas de agrado, loteos, DL 3.516, Chile / Argentina / Colombia / México / Perú), <160 chars.
-- OG/Twitter alineados con nuevo título.
-- JSON-LD: `Organization` + `WebSite` con `potentialAction` (SearchAction apuntando a `/explorar?q={query}`). Mantener `RealEstateAgent` pero con `areaServed` = lista de países LATAM.
-- `<link rel="preload">` para la imagen LCP del hero (si aplica) y `font-display: swap` ya está — quitar `Fraunces` del cargador global si no se usa en landing (se usa solo en Forestal → mover a esa página).
+- Parsear el KML y agrupar `LineString`s por carpeta padre (`Polyline [ID]` = un lote candidato).
+- Concatenar segmentos por continuidad de vértices (snap tolerancia ~1.5 m según `mem://features/compactacion-poligonos-con-restriccion-vial`) y cerrar el anillo cuando el primer y último punto coinciden (dentro de tolerancia).
+- Filtrar polylines de calles/servicios (color rojo `ff0000fe` en el KML se ve usado para caminos vs `fffefefe` blanco para bordes de lote) para no confundir viales con lotes.
+- Pasar cada polígono por `normalizePolygon` (`src/lib/polygonUtils.ts`) para respetar la Core rule de geometría 2D/3D.
+- Calcular área (Shoelace en metros) y centroide para latitude/longitude.
+- Exportar `src/pages/parqueMirador/data/lots.ts` con la lista tipada `{ lotNumber, polygon, area, centroid }`.
 
-### 2. `CartographicHero` — Compactar y fortalecer
-- Reducir el título gigante a `text-5xl md:text-7xl` (hoy `text-8xl`), acortar padding vertical.
-- Añadir subtítulo/subheadline concreto encima de los CTAs: *"El marketplace inteligente para terrenos rurales, industriales y de inversión en LATAM. Datos verificados, análisis IA y contacto directo con corredores."*
-- **KPIs**: cambiar `1 región / 1+ proyectos` por métricas más honestas y con formato: `+X terrenos publicados`, `Y países`, `Z corredores verificados`. Si un valor es <5, mostrar copy cualitativo en su lugar ("Mapeo activo", "En expansión") — no números vergonzosos.
-- Añadir tercer CTA secundario "Ver oportunidades" que enlace a `/oportunidades`.
+Salida esperada: N lotes (se determina al parsear; probablemente ~40–80). Reportar en consola los polylines descartados por no cerrar para revisión manual.
 
-### 3. `CategoryShowcase` — Rediseño visual
-- Grid asimétrico: 2 categorías destacadas (Parcelas de Agrado, Oportunidades) en tarjetas grandes (col-span-2) con imagen/gradient de fondo, y las 8 restantes en tarjetas compactas.
-- Mostrar conteo siempre (aunque sea 0 → "Explorar"), y KPI de precio mínimo por categoría cuando esté disponible.
-- Hover con lift + glow en color de la categoría.
+### 2. Migración de datos (usando insert tool, no schema)
+- Crear registro en `projects`:
+  - `name: "Parque Mirador"`, `slug: "parque-mirador"`, `city: "Hualañé"`, `region: "Maule"`, `country_code: "CL"`, `status: 'active'`, `featured: true`, `featured_until: now() + 90 días`.
+  - `description`, `total_area`, `boundary` (envelope de todos los lotes), imágenes placeholder.
+- Insertar lotes en `lots` (owner = usuario admin del proyecto, mismo dueño que Brisas):
+  - `lot_number`, `area`, `polygon` (jsonb normalizado), `latitude/longitude`, `price` y `price_per_sqm` con valores base (usar promedio de Brisas como referencia inicial, editable luego).
+  - `status: 'available'`.
+- Para cada lote crear `listings` correspondiente (aprovecha trigger `sync_listing_from_lot` una vez seteado `listing_id`): crear listing con `status='active'`, `tags: ['loteo','parque-mirador']`, price idéntico al lote, luego `UPDATE lots SET listing_id=…` para linkear.
+- Registrar entrada en `featured_history` (`action='activated'`) para dejar auditoría.
 
-### 4. `RealListingsSection` — Fallback robusto
-- Si el hook `useRealListings` retorna error o array vacío, **no renderizar** la sección (return null) en vez de mostrar shell vacío.
-- No arreglar la edge function en este pase (es tema aparte); solo evitar que rompa visualmente el landing.
+### 3. Ficha pública y visibilidad
+- Reutilizar la ruta genérica existente `/proyecto/:id` (misma que usa Brisas) — no se crea landing dedicada según tu selección de alcance.
+- Verificar que `get_public_lots(project_id)` devuelve los lotes (RPC ya existente).
+- Confirmar que aparecen tarjetas por lote en `/proyecto/:id` y que el master plan renderiza polígonos.
+- Al estar `featured=true` con imágenes, aparecerá en `FeaturedListings` de la home.
 
-### 5. Reordenar `Index.tsx`
-Nuevo orden:
-```text
-Hero → Search AI → ValueProposition (¿por qué?) → CategoryShowcase
-→ FeaturedListings → HowItWorksFlow → RealListingsSection (si hay data)
-→ InvestmentShowcase → Scrollytelling → RegionStats → MarketInsights
-→ AgentCTA → Testimonials → TrustBadges → CTASection (cierre) → FloatingCTA
-```
-Se agrega `CTASection` como cierre fuerte antes del footer.
+### 4. QA
+- Playwright:
+  - `/` — Parque Mirador visible en la sección destacados.
+  - `/proyecto/<id>` — hero, master plan con polígonos, listado de lotes.
+  - `/proyecto/<id>/experiencia` — scrollytelling funcional.
+  - Filtro `/explorar` con `region=Maule` → excluye lotes individuales (tag `loteo`) y muestra Parque Mirador como proyecto en `ProjectsRail`.
+- Ejecutar `supabase--linter` post-migración.
 
-### 6. Performance quick-wins
-- Cargar `CartographicHero` **eager** (no lazy) — es el LCP.
-- Reducir pesos de Google Fonts: `Inter 400;500;600;700` + `Plus Jakarta Sans 600;700;800`. Quitar Fraunces del landing.
-- Añadir `fetchpriority="high"` al primer asset del hero.
+## Detalles técnicos
 
-## Detalle técnico
+- **NO** se modifica schema: se usan tablas existentes (`projects`, `lots`, `listings`, `featured_history`).
+- Se usa `supabase--insert` para poblar datos (no migration).
+- Owner del proyecto: mismo `user_id` que Brisas de Caone (`e0d83d66-c7be-4c94-a017-3ad331d74699`.user_id) para heredar permisos y evitar RLS mismatches.
+- Precios iniciales: `price_per_sqm` = mediana de Brisas de Caone (se calcula en el script y se aplica área × ppsqm). Editable después vía `adjust_lot_prices` RPC.
+- Imágenes: usar 3 placeholders genéricos de campo/mirador desde `src/assets` existentes o `unsplash` público (no se generan nuevas con imagegen salvo que lo pidas).
+- **Tour virtual y landing dedicada quedan fuera** de este alcance según tu selección (podemos hacerlas en un turno posterior cuando tengas panorámicas 360).
 
-Archivos a modificar:
-- `index.html` — meta, JSON-LD, fonts
-- `src/pages/Index.tsx` — reorden + hero eager + añadir CTASection
-- `src/components/landing/CartographicHero.tsx` — tipografía, subtítulo, KPIs con fallback cualitativo
-- `src/components/landing/CategoryShowcase.tsx` — grid asimétrico con hero cards
-- `src/components/RealListingsSection.tsx` — early-return si error/empty (leer primero)
-- `src/hooks/useLandingStats.ts` — extender si hace falta para más KPIs
+## Riesgos conocidos
 
-No toco: rutas, auth, edge functions, migraciones, landings de proyectos, sidebar.
+- Si muchos polylines no cierran (por gaps del KML), reportaré la lista y podrás decidir: (a) aceptar N lotes válidos ahora, (b) ajustar tolerancia, o (c) descartar los rotos.
+- Diferenciar caminos vs bordes de lote se hace por color de línea; si el KML mezcla estilos, algunos polígonos podrían necesitar corrección manual posterior.
 
-## Fuera de alcance (te aviso para futura ronda)
-- Arreglar la edge function `scrape-real-listings` (CORS + 400/401).
-- Rediseño de secciones `MarketInsights`, `Scrollytelling`, `TestimonialMarquee` — funcionan pero merecen otra iteración.
-- SEO por-ruta con `react-helmet-async` (hoy solo hay meta estáticos en `index.html`).
-- Landings `/inmobiliarias`, `/corredoras`, `/pricing-loteos`.
+## Entregable de este turno
 
-¿Apruebas el plan tal cual, o quieres priorizar/quitar algo?
+Con tu aprobación, entrego: script de ingesta ejecutado, archivo `lots.ts` generado, proyecto + lotes + listings creados en la BD, destacado activo, y reporte de QA con screenshots de la home y ficha del proyecto.
