@@ -1,12 +1,8 @@
 // Admin user management: invite, suspend/unsuspend, delete, reset password
 // Requires authenticated caller with 'admin' role. Uses service role for auth.admin operations.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.23.8";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 const ActionSchema = z.discriminatedUnion("action", [
   z.object({

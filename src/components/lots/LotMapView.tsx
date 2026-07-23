@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { MasterPlanOverlay } from './MasterPlanOverlay';
 import { LotDrawingTool } from './LotDrawingTool';
 import { LotRenumberTool } from './LotRenumberTool';
+import { normalizePolygon } from '@/lib/polygonUtils';
 
 interface Lot {
   id: string;
@@ -44,15 +45,13 @@ const generateLotGeoJSON = (lots: Lot[], center: { lat: number; lng: number }) =
   const features: GeoJSON.Feature[] = [];
   
   // Separate lots with valid polygons (>=3 points) from those without
-  const lotsWithValidPolygons = lots.filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3);
-  const lotsWithoutPolygons = lots.filter(lot => !lot.polygon || !Array.isArray(lot.polygon) || lot.polygon.length < 3);
+  const normalizedLots = lots.map((lot) => ({ lot, normalized: normalizePolygon(lot.polygon) }));
+  const lotsWithValidPolygons = normalizedLots.filter(({ normalized }) => normalized.valid);
+  const lotsWithoutPolygons = normalizedLots.filter(({ normalized }) => !normalized.valid).map(({ lot }) => lot);
   
   // Add real polygon features
-  lotsWithValidPolygons.forEach((lot) => {
-    const coords = [...lot.polygon];
-    if (coords.length > 0 && (coords[0][0] !== coords[coords.length - 1][0] || coords[0][1] !== coords[coords.length - 1][1])) {
-      coords.push(coords[0]);
-    }
+  lotsWithValidPolygons.forEach(({ lot, normalized }) => {
+    const coords = [...normalized.coords, normalized.coords[0]];
     
     features.push({
       type: 'Feature',
@@ -931,7 +930,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         : 'mapbox://styles/mapbox/streets-v12',
       center: bounds ? bounds.getCenter() : [projectCenter.lng, projectCenter.lat],
       zoom: 15,
-      pitch: 45,
+      pitch: 0,
+      bearing: 0,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -947,7 +947,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         const padding = isMobile
           ? { top: 90, bottom: 140, left: 24, right: 24 }
           : 50;
-        map.current.fitBounds(bounds, { padding, pitch: isMobile ? 0 : 45 });
+        map.current.fitBounds(bounds, { padding, pitch: 0, bearing: 0 });
       }
 
       const geojson = generateLotGeoJSON(lots, projectCenter);
