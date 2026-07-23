@@ -940,9 +940,14 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       if (!map.current) return;
       setMapLoaded(true);
       
-      // Fit to bounds if we have real polygons
+      // Fit to bounds if we have real polygons — extra top/bottom padding on mobile
+      // so the plan doesn't collide with sticky header, legend, color-mode toggle or mapbox attribution.
       if (bounds) {
-        map.current.fitBounds(bounds, { padding: 50, pitch: 45 });
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        const padding = isMobile
+          ? { top: 90, bottom: 140, left: 24, right: 24 }
+          : 50;
+        map.current.fitBounds(bounds, { padding, pitch: isMobile ? 0 : 45 });
       }
 
       const geojson = generateLotGeoJSON(lots, projectCenter);
@@ -1369,7 +1374,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       )}
 
       {/* Color Mode Selector */}
-      <div className="absolute bottom-4 right-4 flex gap-1 bg-background/90 backdrop-blur-md rounded-xl p-1 shadow-lg border border-border/50">
+      <div className="absolute bottom-16 right-3 md:bottom-4 md:right-4 flex gap-1 bg-background/90 backdrop-blur-md rounded-xl p-1 shadow-lg border border-border/50 max-w-[calc(100%-1.5rem)]">
+
         {[
           { key: 'status' as const, label: 'Estado' },
           { key: 'price' as const, label: 'Precio' },
@@ -1393,7 +1399,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       </div>
 
       {/* Dynamic Legend */}
-      <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-md rounded-xl p-3 shadow-lg border border-border/50 space-y-2">
+      <div className="absolute bottom-16 left-3 md:bottom-4 md:left-4 bg-background/90 backdrop-blur-md rounded-xl p-2.5 md:p-3 shadow-lg border border-border/50 space-y-1.5 md:space-y-2">
+
         {colorMode === 'status' && (
           <>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Estado</p>
