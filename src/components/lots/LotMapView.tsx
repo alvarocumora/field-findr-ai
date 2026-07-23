@@ -1399,7 +1399,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       </div>
 
       {/* Dynamic Legend */}
-      <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-md rounded-xl p-3 shadow-lg border border-border/50 space-y-2">
+      <div className="absolute bottom-16 left-3 md:bottom-4 md:left-4 bg-background/90 backdrop-blur-md rounded-xl p-2.5 md:p-3 shadow-lg border border-border/50 space-y-1.5 md:space-y-2">
+
         {colorMode === 'status' && (
           <>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Estado</p>
