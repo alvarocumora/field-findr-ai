@@ -117,6 +117,32 @@ const generateLotGeoJSON = (lots: Lot[], center: { lat: number; lng: number }) =
   };
 };
 
+// Align elongated master plans with the viewport while preserving geographic geometry.
+// Mapbox bearing rotates only the camera; stored [lng, lat] coordinates remain untouched.
+const calculatePlanBearing = (lots: Lot[]): number => {
+  const coordinates = lots.flatMap((lot) => normalizePolygon(lot.polygon).coords);
+  if (coordinates.length < 3) return 0;
+
+  const centerLng = coordinates.reduce((sum, coordinate) => sum + coordinate[0], 0) / coordinates.length;
+  const centerLat = coordinates.reduce((sum, coordinate) => sum + coordinate[1], 0) / coordinates.length;
+  const lngScale = Math.cos((centerLat * Math.PI) / 180);
+
+  let xx = 0;
+  let xy = 0;
+  let yy = 0;
+  coordinates.forEach(([lng, lat]) => {
+    const x = (lng - centerLng) * lngScale;
+    const y = lat - centerLat;
+    xx += x * x;
+    xy += x * y;
+    yy += y * y;
+  });
+
+  const principalAngleFromEast = 0.5 * Math.atan2(2 * xy, xx - yy);
+  const axisBearingFromNorth = 90 - (principalAngleFromEast * 180) / Math.PI;
+  return axisBearingFromNorth - 90;
+};
+
 const getStatusFillColor = (status: string): string => {
   if (status === 'sold') return '#64748b';
   if (status === 'reserved') return '#d97706';
@@ -916,6 +942,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     return null;
   }, [lots]);
 
+  const planBearing = calculatePlanBearing(lots);
+
   const initializeMap = useCallback(() => {
     if (!mapContainer.current || !token || map.current) return;
 
@@ -931,7 +959,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       center: bounds ? bounds.getCenter() : [projectCenter.lng, projectCenter.lat],
       zoom: 15,
       pitch: 0,
-      bearing: 0,
+      bearing: planBearing,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -947,7 +975,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         const padding = isMobile
           ? { top: 90, bottom: 140, left: 24, right: 24 }
           : 50;
-        map.current.fitBounds(bounds, { padding, pitch: 0, bearing: 0 });
+        map.current.fitBounds(bounds, { padding, pitch: 0, bearing: planBearing });
       }
 
       const geojson = generateLotGeoJSON(lots, projectCenter);
@@ -1110,7 +1138,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       map.current?.remove();
       map.current = null;
     };
-  }, [token, lots, projectCenter, onLotClick, mapStyle, calculateBounds]);
+  }, [token, lots, projectCenter, onLotClick, mapStyle, calculateBounds, planBearing]);
 
   useEffect(() => {
     initializeMap();
