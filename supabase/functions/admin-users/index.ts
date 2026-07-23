@@ -115,6 +115,15 @@ Deno.serve(async (req) => {
 
       case "delete": {
         if (body.user_id === callerId) return json({ error: "No puedes eliminarte a ti mismo" }, 400);
+
+        // Keep reviewed documents while removing the restrictive reviewer reference.
+        // All user-owned records already use ON DELETE CASCADE or SET NULL.
+        const { error: reviewerError } = await admin
+          .from("documents")
+          .update({ reviewed_by: null })
+          .eq("reviewed_by", body.user_id);
+        if (reviewerError) return json({ error: reviewerError.message }, 400);
+
         const { error } = await admin.auth.admin.deleteUser(body.user_id);
         if (error) return json({ error: error.message }, 400);
         await audit("user.deleted", body.user_id, { reason: body.reason });
