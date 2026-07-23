@@ -1374,7 +1374,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       )}
 
       {/* Color Mode Selector */}
-      <div className="absolute bottom-4 right-4 flex gap-1 bg-background/90 backdrop-blur-md rounded-xl p-1 shadow-lg border border-border/50">
+      <div className="absolute bottom-16 right-3 md:bottom-4 md:right-4 flex gap-1 bg-background/90 backdrop-blur-md rounded-xl p-1 shadow-lg border border-border/50 max-w-[calc(100%-1.5rem)]">
+
         {[
           { key: 'status' as const, label: 'Estado' },
           { key: 'price' as const, label: 'Precio' },
