@@ -940,9 +940,14 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       if (!map.current) return;
       setMapLoaded(true);
       
-      // Fit to bounds if we have real polygons
+      // Fit to bounds if we have real polygons — extra top/bottom padding on mobile
+      // so the plan doesn't collide with sticky header, legend, color-mode toggle or mapbox attribution.
       if (bounds) {
-        map.current.fitBounds(bounds, { padding: 50, pitch: 45 });
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        const padding = isMobile
+          ? { top: 90, bottom: 140, left: 24, right: 24 }
+          : 50;
+        map.current.fitBounds(bounds, { padding, pitch: isMobile ? 0 : 45 });
       }
 
       const geojson = generateLotGeoJSON(lots, projectCenter);
