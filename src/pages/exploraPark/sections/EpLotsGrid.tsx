@@ -196,6 +196,26 @@ export default function EpLotsGrid() {
           </>
         )}
       </div>
+
+      <Dialog open={!!leadLot} onOpenChange={(o) => !o && setLeadLot(null)}>
+        <DialogContent className="max-w-lg bg-[#0d1b12] border-white/10 text-[var(--hue-bone)]">
+          <DialogHeader>
+            <DialogTitle className="serif text-2xl">
+              Consultar por Lote {leadLot?.number}
+            </DialogTitle>
+          </DialogHeader>
+          {leadLot && (
+            <EpLeadForm
+              lotId={leadLot.id}
+              lotNumber={leadLot.number}
+              lotStatus={leadLot.status}
+              defaultReason={leadLot.status === 'available' ? 'reserva' : 'informacion'}
+              compact
+              onSuccess={() => setTimeout(() => setLeadLot(null), 1800)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
