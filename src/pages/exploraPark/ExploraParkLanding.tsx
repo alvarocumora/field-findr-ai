@@ -48,14 +48,16 @@ export default function ExploraParkLanding() {
         } as React.CSSProperties
       }
     >
-      <EpHero />
-      <EpFicha />
-      <EpAmenities />
-      <EpGallery />
-      <EpMasterplan />
-      <EpLotsGrid />
-      <EpContact />
-      <EpFooter />
+      <ExploraParkStateProvider>
+        <EpHero />
+        <EpFicha />
+        <EpAmenities />
+        <EpGallery />
+        <EpMasterplan />
+        <EpLotsGrid />
+        <EpContact />
+        <EpFooter />
+      </ExploraParkStateProvider>
     </div>
   );
 }
