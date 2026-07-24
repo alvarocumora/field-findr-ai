@@ -8,6 +8,7 @@ import EpMasterplan from './sections/EpMasterplan';
 import EpLotsGrid from './sections/EpLotsGrid';
 import EpContact from './sections/EpContact';
 import EpFooter from './sections/EpFooter';
+import { ExploraParkStateProvider } from './state/ExploraParkContext';
 
 export default function ExploraParkLanding() {
   useEffect(() => {
