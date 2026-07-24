@@ -27,6 +27,9 @@ export default function EpLotsGrid() {
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('num');
   const [visible, setVisible] = useState(PAGE);
+  const [leadLot, setLeadLot] = useState<{ id: string; number: string; status: EpLotStatus } | null>(null);
+  const [sort, setSort] = useState<SortKey>('num');
+  const [visible, setVisible] = useState(PAGE);
 
   const counts = useMemo(() => {
     const c = { all: EXPLORA_PARK_LOTS.length, available: 0, reserved: 0, sold: 0 };
