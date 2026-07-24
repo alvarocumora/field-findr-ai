@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, ArrowUpDown, MapPin, MessageSquare } from 'lucide-react';
+import { Search, ArrowUpDown, MapPin, MessageSquare, Crosshair } from 'lucide-react';
 import { EXPLORA_PARK_LOTS, type EpLotStatus } from '../data/lots';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EpLeadForm from '../components/EpLeadForm';
+import { useExploraParkState } from '../state/ExploraParkContext';
 
-type StatusKey = 'all' | EpLotStatus;
 type SortKey = 'num' | 'area_asc' | 'area_desc' | 'price_asc' | 'price_desc';
 
 const STATUS_LABEL: Record<EpLotStatus, string> = {
@@ -21,9 +21,18 @@ const STATUS_TONE: Record<EpLotStatus, string> = {
 };
 
 const PAGE = 60;
+const ALL_STATUSES: EpLotStatus[] = ['available', 'reserved', 'sold'];
 
 export default function EpLotsGrid() {
-  const [status, setStatus] = useState<StatusKey>('all');
+  const {
+    activeStatus,
+    toggleStatus,
+    setOnlyStatus,
+    hoveredLotId,
+    setHoveredLotId,
+    requestFocus,
+  } = useExploraParkState();
+
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('num');
   const [visible, setVisible] = useState(PAGE);
@@ -35,10 +44,12 @@ export default function EpLotsGrid() {
     return c;
   }, []);
 
+  const allActive = ALL_STATUSES.every((s) => activeStatus.has(s));
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const arr = EXPLORA_PARK_LOTS.filter((l) => {
-      if (status !== 'all' && l.status !== status) return false;
+      if (!activeStatus.has(l.status)) return false;
       if (q && !l.lot_number.includes(q)) return false;
       return true;
     });
@@ -50,9 +61,21 @@ export default function EpLotsGrid() {
       default: arr.sort((a, b) => parseInt(a.lot_number) - parseInt(b.lot_number));
     }
     return arr;
-  }, [status, query, sort]);
+  }, [activeStatus, query, sort]);
 
   const shown = filtered.slice(0, visible);
+
+  const handleFocusOnMap = (lotId: string) => {
+    requestFocus(lotId);
+    document.getElementById('masterplan')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const chipClasses = (active: boolean) =>
+    `inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] tracking-[0.1em] uppercase transition ${
+      active
+        ? 'border-[var(--hue-amber)]/60 bg-[var(--hue-amber)]/10 text-[var(--hue-bone)]'
+        : 'border-white/10 bg-white/[0.02] text-[var(--hue-bone)]/60 hover:text-[var(--hue-bone)]'
+    }`;
 
   return (
     <section id="lotes" className="relative px-6 py-24 md:px-16 bg-[#06120a]/40 scroll-mt-16">
@@ -65,33 +88,40 @@ export default function EpLotsGrid() {
           className="mb-10 flex flex-col gap-3 md:flex-row md:items-end md:justify-between"
         >
           <div>
-            <div className="hue-eyebrow mb-3">Grilla de lotes · {counts.all} parcelas</div>
+            <div className="hue-eyebrow mb-3">
+              Grilla de lotes · {filtered.length} de {counts.all} visibles
+            </div>
             <h2 className="serif text-[clamp(2rem,4.5vw,3rem)] leading-tight">
               Filtra, ordena <span className="italic text-[var(--hue-bone)]/55">y elige tu parcela.</span>
             </h2>
           </div>
           <p className="max-w-md text-[13px] text-[var(--hue-bone)]/55">
-            Cada lote enlaza a su ficha pública: precio, superficie, mapa, documentación y opción
-            de reserva.
+            Filtros sincronizados con el masterplan. Pasa el mouse sobre una tarjeta para
+            resaltarla en el mapa, o usa <Crosshair className="inline h-3 w-3" /> para centrarlo.
           </p>
         </motion.div>
 
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
-            {(['all', 'available', 'reserved', 'sold'] as StatusKey[]).map((k) => (
-              <button
-                key={k}
-                onClick={() => { setStatus(k); setVisible(PAGE); }}
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] tracking-[0.1em] uppercase transition ${
-                  status === k
-                    ? 'border-[var(--hue-amber)]/60 bg-[var(--hue-amber)]/10 text-[var(--hue-bone)]'
-                    : 'border-white/10 bg-white/[0.02] text-[var(--hue-bone)]/60 hover:text-[var(--hue-bone)]'
-                }`}
-              >
-                {k === 'all' ? 'Todas' : STATUS_LABEL[k]}
-                <span className="tabular-nums opacity-70">{counts[k as keyof typeof counts]}</span>
-              </button>
-            ))}
+            <button
+              onClick={() => { setOnlyStatus('all'); setVisible(PAGE); }}
+              className={chipClasses(allActive)}
+            >
+              Todas <span className="tabular-nums opacity-70">{counts.all}</span>
+            </button>
+            {ALL_STATUSES.map((k) => {
+              const active = activeStatus.has(k) && !allActive;
+              return (
+                <button
+                  key={k}
+                  onClick={() => { toggleStatus(k); setVisible(PAGE); }}
+                  className={chipClasses(active)}
+                >
+                  {STATUS_LABEL[k]}
+                  <span className="tabular-nums opacity-70">{counts[k]}</span>
+                </button>
+              );
+            })}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -132,10 +162,18 @@ export default function EpLotsGrid() {
                 const href = l.listing_id
                   ? `/propiedad/${l.listing_id}`
                   : `/proyecto/6e6f62be-a81a-4374-a3ef-cf296bd638d0`;
+                const isHovered = hoveredLotId === l.id;
                 return (
                   <div
+                    id={`ep-lot-${l.id}`}
                     key={l.id}
-                    className="group rounded-sm border border-white/10 bg-white/[0.02] p-3 hover:border-[var(--hue-amber)]/40 hover:bg-white/[0.05] transition flex flex-col"
+                    onMouseEnter={() => setHoveredLotId(l.id)}
+                    onMouseLeave={() => setHoveredLotId(null)}
+                    className={`group rounded-sm border p-3 transition flex flex-col ${
+                      isHovered
+                        ? 'border-[var(--hue-amber)]/70 bg-[var(--hue-amber)]/10 ring-1 ring-[var(--hue-amber)]/40'
+                        : 'border-white/10 bg-white/[0.02] hover:border-[var(--hue-amber)]/40 hover:bg-white/[0.05]'
+                    }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="serif text-xl font-light text-[var(--hue-bone)]">
@@ -162,20 +200,30 @@ export default function EpLotsGrid() {
                         </span>
                       </div>
                     </div>
-                    <div className="mt-3 flex items-center gap-2 border-t border-white/5 pt-2">
+                    <div className="mt-3 flex items-center gap-1.5 border-t border-white/5 pt-2">
                       <Link
                         to={href}
                         className="flex-1 text-[10px] tracking-[0.18em] uppercase text-[var(--hue-amber)] hover:text-[var(--hue-bone)] transition"
                       >
-                        Ver ficha →
+                        Ficha →
                       </Link>
                       <button
                         type="button"
-                        onClick={() => setLeadLot({ id: l.id, number: l.lot_number, status: l.status })}
-                        className="inline-flex items-center gap-1 rounded-sm border border-white/15 bg-white/[0.03] px-2 py-1 text-[10px] tracking-[0.14em] uppercase text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition"
-                        title="Consultar por este lote"
+                        onClick={() => handleFocusOnMap(l.id)}
+                        className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition"
+                        title="Ver en el mapa"
+                        aria-label="Ver en el mapa"
                       >
-                        <MessageSquare className="h-3 w-3" /> Consultar
+                        <Crosshair className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLeadLot({ id: l.id, number: l.lot_number, status: l.status })}
+                        className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition"
+                        title="Consultar por este lote"
+                        aria-label="Consultar por este lote"
+                      >
+                        <MessageSquare className="h-3 w-3" />
                       </button>
                     </div>
                   </div>
