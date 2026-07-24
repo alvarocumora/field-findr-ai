@@ -102,10 +102,36 @@ const PropertyDetail = () => {
   const visualScenarios = isTeno && canShow3D ? mockVisualScenarios : [];
 
 
+  const canonicalUrl = listing ? `https://ofertaterrenos.com/propiedad/${listing.id}` : undefined;
+
+  // Unique, human-readable SEO title per lot: "Título — 5.000 m² en Ciudad, Región | CLP $..."
+  const seoTitle = listing
+    ? [
+        listing.title,
+        listing.area_m2 ? `${formatArea(listing.area_m2, listing.area_ha)} en ${listing.city || listing.location}` : (listing.city || listing.location),
+        listing.region,
+      ].filter(Boolean).join(' · ')
+    : 'Propiedad';
+
+  // Auto-generated OpenGraph description (≤160 chars) unique per lot
+  const seoDescription = (() => {
+    if (!listing) return undefined;
+    if (listing.description && listing.description.trim().length >= 80) {
+      const clean = listing.description.replace(/\s+/g, ' ').trim();
+      return clean.length > 158 ? `${clean.slice(0, 157)}…` : clean;
+    }
+    const typeLabel = getListingTypeLabel(listing.type) || 'Terreno';
+    const priceLabel = formatPrice(listing.price, listing.currency);
+    const areaLabel = formatArea(listing.area_m2, listing.area_ha);
+    const where = [listing.city, listing.region, listing.country].filter(Boolean).join(', ');
+    const legal = listing.legal_status ? ` · ${getLegalStatusLabel(listing.legal_status)}` : '';
+    return `${typeLabel} de ${areaLabel} en ${where}. ${priceLabel}${legal}. Ficha con mapa, fotos y contacto directo en Ofertaterrenos.`;
+  })();
+
   const propertyJsonLd = listing ? buildPropertyJsonLd({
     id: listing.id,
     title: listing.title,
-    description: listing.description,
+    description: seoDescription,
     price: listing.price,
     currency: listing.currency,
     location: listing.location,
@@ -119,14 +145,25 @@ const PropertyDetail = () => {
     type: listing.type,
   }) : undefined;
 
+  const breadcrumbJsonLd = listing ? {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://ofertaterrenos.com/' },
+      { '@type': 'ListItem', position: 2, name: 'Explorar', item: 'https://ofertaterrenos.com/explorar' },
+      ...(listing.region ? [{ '@type': 'ListItem', position: 3, name: listing.region, item: `https://ofertaterrenos.com/explorar?region=${encodeURIComponent(listing.region)}` }] : []),
+      { '@type': 'ListItem', position: listing.region ? 4 : 3, name: listing.title, item: canonicalUrl },
+    ],
+  } : undefined;
+
   useSEO({
-    title: listing?.title || 'Propiedad',
-    description: listing ? `${listing.title} en ${listing.location}, ${listing.region}. ${formatPrice(listing.price, listing.currency)}. ${formatArea(listing.area_m2, listing.area_ha)}.` : undefined,
+    title: seoTitle,
+    description: seoDescription,
     image: listing?.images?.[0] || undefined,
-    url: window.location.href,
-    canonicalUrl: listing ? `https://ofertaterrenos.com/propiedad/${listing.id}` : undefined,
+    url: canonicalUrl,
+    canonicalUrl,
     type: 'article',
-    jsonLd: propertyJsonLd,
+    jsonLd: propertyJsonLd && breadcrumbJsonLd ? [propertyJsonLd, breadcrumbJsonLd] : propertyJsonLd,
   });
 
   if (isLoading) {
