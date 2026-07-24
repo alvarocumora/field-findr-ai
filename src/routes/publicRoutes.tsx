@@ -41,6 +41,7 @@ const ForestalLanding = lazy(() => import("@/pages/forestal/ForestalLanding"));
 const InvestorsLogin = lazy(() => import("@/pages/forestal/InvestorsLogin"));
 const HuellelhueLanding = lazy(() => import("@/pages/huellelhue/HuellelhueLanding"));
 const PlayaAlvaroLanding = lazy(() => import("@/pages/playaAlvaro/PlayaAlvaroLanding"));
+const ExploraParkLanding = lazy(() => import("@/pages/exploraPark/ExploraParkLanding"));
 const CorredorasLanding = lazy(() => import("@/pages/marketing/CorredorasLanding"));
 const InmobiliariasLanding = lazy(() => import("@/pages/marketing/InmobiliariasLanding"));
 
@@ -85,4 +86,5 @@ export const publicRoutes = [
   <Route key="forestal-investors" path="/forestal-valle-escondido/investors" element={<InvestorsLogin />} />,
   <Route key="huellelhue" path="/huellelhue" element={<HuellelhueLanding />} />,
   <Route key="playa-alvaro" path="/playa-alvaro" element={<PlayaAlvaroLanding />} />,
+  <Route key="explora-park" path="/explora-park" element={<ExploraParkLanding />} />,
 ];

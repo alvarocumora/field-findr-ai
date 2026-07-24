@@ -1,0 +1,63 @@
+import { motion } from 'framer-motion';
+import { Phone, Mail, MessageCircle } from 'lucide-react';
+import { EXPLORA_PARK_PROJECT } from '../data/project';
+
+export default function EpContact() {
+  return (
+    <section className="relative px-6 py-24 md:px-16">
+      <div className="mx-auto max-w-4xl text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9 }}
+        >
+          <div className="hue-eyebrow mb-4">Contacto directo</div>
+          <h2 className="serif text-[clamp(2.2rem,5vw,3.4rem)] leading-tight">
+            Agenda tu visita <span className="italic text-[var(--hue-bone)]/55">a Explora Park.</span>
+          </h2>
+          <p className="mt-5 text-[15px] leading-relaxed text-[var(--hue-bone)]/65 max-w-2xl mx-auto">
+            Nuestro equipo comercial coordina visitas guiadas al proyecto en Hualañé y responde
+            consultas sobre {EXPLORA_PARK_PROJECT.availableLots} parcelas disponibles, formas de pago
+            y documentación legal.
+          </p>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            <a
+              href="https://wa.me/56900000000?text=Hola,%20me%20interesa%20Explora%20Park"
+              target="_blank"
+              rel="noreferrer"
+              className="group rounded-sm border border-white/10 bg-white/[0.02] p-6 hover:border-[var(--hue-amber)]/40 hover:bg-white/[0.05] transition"
+            >
+              <MessageCircle className="mx-auto h-5 w-5 text-[var(--hue-amber)]" />
+              <div className="mt-3 text-[10px] tracking-[0.28em] uppercase text-[var(--hue-bone)]/55">
+                WhatsApp
+              </div>
+              <div className="mt-1 text-[var(--hue-bone)]">Escribir por WhatsApp</div>
+            </a>
+            <a
+              href="tel:+56900000000"
+              className="group rounded-sm border border-white/10 bg-white/[0.02] p-6 hover:border-[var(--hue-amber)]/40 hover:bg-white/[0.05] transition"
+            >
+              <Phone className="mx-auto h-5 w-5 text-[var(--hue-amber)]" />
+              <div className="mt-3 text-[10px] tracking-[0.28em] uppercase text-[var(--hue-bone)]/55">
+                Teléfono
+              </div>
+              <div className="mt-1 text-[var(--hue-bone)]">+56 9 0000 0000</div>
+            </a>
+            <a
+              href="mailto:contacto@ofertaterrenos.com?subject=Consulta%20Explora%20Park"
+              className="group rounded-sm border border-white/10 bg-white/[0.02] p-6 hover:border-[var(--hue-amber)]/40 hover:bg-white/[0.05] transition"
+            >
+              <Mail className="mx-auto h-5 w-5 text-[var(--hue-amber)]" />
+              <div className="mt-3 text-[10px] tracking-[0.28em] uppercase text-[var(--hue-bone)]/55">
+                Email
+              </div>
+              <div className="mt-1 text-[var(--hue-bone)]">contacto@ofertaterrenos.com</div>
+            </a>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
