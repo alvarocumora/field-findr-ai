@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, ArrowUpDown, MapPin } from 'lucide-react';
+import { Search, ArrowUpDown, MapPin, MessageSquare } from 'lucide-react';
 import { EXPLORA_PARK_LOTS, type EpLotStatus } from '../data/lots';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import EpLeadForm from '../components/EpLeadForm';
 
 type StatusKey = 'all' | EpLotStatus;
 type SortKey = 'num' | 'area_asc' | 'area_desc' | 'price_asc' | 'price_desc';
