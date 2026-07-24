@@ -62,6 +62,7 @@ const LoteoControlCenter = lazy(() => import("@/pages/dashboard/LoteoControlCent
 const SubdivisionStudio = lazy(() => import("@/pages/dashboard/SubdivisionStudio"));
 const Commissions = lazy(() => import("@/pages/dashboard/Commissions"));
 const TeamManagement = lazy(() => import("@/pages/dashboard/TeamManagement"));
+const MyCaptaciones = lazy(() => import("@/pages/dashboard/MyCaptaciones"));
 
 const agentElement = (children: ReactNode) => (
   <DashboardLayout requiredRole="agent">
@@ -101,6 +102,7 @@ export const agentRoutes = [
   <Route key="asesor-performance" path="/asesor/performance" element={agentElement(<AgentPerformance />)} />,
   <Route key="asesor-comisiones" path="/asesor/comisiones" element={agentElement(<Commissions />)} />,
   <Route key="asesor-team" path="/asesor/team" element={agentElement(<TeamManagement />)} />,
+  <Route key="asesor-captaciones" path="/asesor/captaciones" element={agentElement(<MyCaptaciones />)} />,
   <Route key="asesor-pipeline" path="/asesor/pipeline" element={agentElement(<SalesPipeline />)} />,
   <Route key="asesor-multi-project" path="/asesor/multi-project" element={agentElement(<MultiProjectDashboard />)} />,
   <Route key="asesor-payments" path="/asesor/payments" element={agentElement(<PaymentManagement />)} />,

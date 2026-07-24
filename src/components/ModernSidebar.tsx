@@ -69,6 +69,7 @@ const corredorCore: NavItem[] = [
   { name: 'Proyectos', href: '/asesor/projects', icon: FolderKanban },
   { name: 'Lotes', href: '/asesor/lots', icon: Grid3X3 },
   { name: 'Reservas', href: '/asesor/reservations', icon: CalendarCheck },
+  { name: 'Captaciones', href: '/asesor/captaciones', icon: Handshake },
 ];
 
 const corredorMore: NavItem[] = [
@@ -104,6 +105,7 @@ const adminGroups: NavGroup[] = [
       { name: 'Proyectos', href: '/admin/projects', icon: FolderKanban },
       { name: 'Destacados', href: '/admin/featured', icon: Sparkles },
       { name: 'Leads Comerciales', href: '/admin/commercial-leads', icon: Handshake },
+      { name: 'Captaciones', href: '/admin/captaciones', icon: MapPin },
       { name: 'Reservas', href: '/admin/reservations', icon: CalendarCheck },
       { name: 'Documentos', href: '/admin/documents', icon: ClipboardCheck },
     ],
@@ -147,6 +149,7 @@ const inmobiliariaGroups: NavGroup[] = [
       { name: 'Lotes', href: '/asesor/lots', icon: Grid3X3 },
       { name: 'Control Loteo', href: '/asesor/loteos', icon: Gauge },
       { name: 'Estudio de Loteo', href: '/asesor/subdivision', icon: Grid3X3 },
+      { name: 'Captaciones', href: '/asesor/captaciones', icon: Handshake },
     ],
   },
   {
