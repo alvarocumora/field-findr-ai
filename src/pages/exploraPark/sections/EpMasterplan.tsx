@@ -6,7 +6,8 @@ import { motion } from 'framer-motion';
 import { Loader2, Compass, Layers } from 'lucide-react';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { EXPLORA_PARK_PROJECT } from '../data/project';
-import { EXPLORA_PARK_LOTS, type EpLot, type EpLotStatus } from '../data/lots';
+import { EXPLORA_PARK_LOTS, type EpLotStatus } from '../data/lots';
+import { useExploraParkState } from '../state/ExploraParkContext';
 
 type StatusFilter = EpLotStatus;
 
@@ -21,16 +22,36 @@ export default function EpMasterplan() {
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeStatus, setActiveStatus] = useState<Set<StatusFilter>>(
-    new Set<StatusFilter>(['available', 'reserved', 'sold']),
-  );
+  const [styleReady, setStyleReady] = useState(false);
   const { token, loading: tokenLoading } = useMapboxToken();
+
+  const {
+    activeStatus,
+    toggleStatus,
+    hoveredLotId,
+    setHoveredLotId,
+    focusRequest,
+  } = useExploraParkState();
 
   const counts = useMemo(() => {
     const c: Record<StatusFilter, number> = { available: 0, reserved: 0, sold: 0 };
     for (const l of EXPLORA_PARK_LOTS) c[l.status]++;
     return c;
   }, []);
+
+  // Live summary based on active filters
+  const summary = useMemo(() => {
+    const visible = EXPLORA_PARK_LOTS.filter((l) => activeStatus.has(l.status));
+    const total = visible.length;
+    const totalArea = visible.reduce((s, l) => s + l.area_m2, 0);
+    const totalPrice = visible.reduce((s, l) => s + l.price_clp, 0);
+    return {
+      total,
+      totalHa: totalArea / 10000,
+      avgAreaM2: total ? Math.round(totalArea / total) : 0,
+      avgPriceClp: total ? Math.round(totalPrice / total) : 0,
+    };
+  }, [activeStatus]);
 
   useEffect(() => {
     if (!containerRef.current || tokenLoading || !token || mapRef.current) return;
@@ -59,9 +80,8 @@ export default function EpMasterplan() {
     map.on('load', () => {
       const fc: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
-        features: EXPLORA_PARK_LOTS.map((l, i) => ({
+        features: EXPLORA_PARK_LOTS.map((l) => ({
           type: 'Feature',
-          id: i,
           properties: {
             id: l.id,
             num: l.lot_number,
@@ -76,7 +96,7 @@ export default function EpMasterplan() {
           },
         })),
       };
-      map.addSource('lots', { type: 'geojson', data: fc });
+      map.addSource('lots', { type: 'geojson', data: fc, promoteId: 'id' });
 
       map.addLayer({
         id: 'lots-fill',
@@ -92,8 +112,9 @@ export default function EpMasterplan() {
           ],
           'fill-opacity': [
             'case',
-            ['boolean', ['feature-state', 'hover'], false], 0.9,
-            0.55,
+            ['boolean', ['feature-state', 'hover'], false], 0.92,
+            ['boolean', ['feature-state', 'focus'], false], 0.85,
+            0.5,
           ],
         },
       });
@@ -101,7 +122,20 @@ export default function EpMasterplan() {
         id: 'lots-line',
         type: 'line',
         source: 'lots',
-        paint: { 'line-color': 'rgba(255,255,255,0.6)', 'line-width': 0.6 },
+        paint: {
+          'line-color': [
+            'case',
+            ['boolean', ['feature-state', 'hover'], false], '#ffffff',
+            ['boolean', ['feature-state', 'focus'], false], '#c9b06b',
+            'rgba(255,255,255,0.6)',
+          ],
+          'line-width': [
+            'case',
+            ['boolean', ['feature-state', 'hover'], false], 2,
+            ['boolean', ['feature-state', 'focus'], false], 1.8,
+            0.6,
+          ],
+        },
       });
 
       // Lot numbers
@@ -137,47 +171,22 @@ export default function EpMasterplan() {
         { padding: 60, duration: 0 },
       );
 
-      let hoveredId: number | null = null;
       map.on('mousemove', 'lots-fill', (e) => {
         if (!e.features?.length) return;
         map.getCanvas().style.cursor = 'pointer';
-        const fid = e.features[0].id as number;
-        if (hoveredId !== null && hoveredId !== fid) {
-          map.setFeatureState({ source: 'lots', id: hoveredId }, { hover: false });
-        }
-        hoveredId = fid;
-        map.setFeatureState({ source: 'lots', id: fid }, { hover: true });
+        const lotId = (e.features[0].properties as any)?.id as string | undefined;
+        if (lotId) setHoveredLotId(lotId);
       });
       map.on('mouseleave', 'lots-fill', () => {
         map.getCanvas().style.cursor = '';
-        if (hoveredId !== null) {
-          map.setFeatureState({ source: 'lots', id: hoveredId }, { hover: false });
-          hoveredId = null;
-        }
+        setHoveredLotId(null);
       });
       map.on('click', 'lots-fill', (e) => {
         if (!e.features?.length) return;
-        const p = e.features[0].properties || {};
-        const status = String(p.status) as StatusFilter;
-        const meta = STATUS_META[status];
-        const priceStr = Number(p.price).toLocaleString('es-CL');
-        const link = p.listing_id
-          ? `<a href="/propiedad/${p.listing_id}" style="display:inline-block;margin-top:10px;padding:6px 12px;border:1px solid rgba(201,176,107,0.5);color:#e8e3d8;text-decoration:none;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;">Ver ficha →</a>`
-          : '';
-        const html = `
-          <div style="padding:16px 18px;">
-            <div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:${meta.color};margin-bottom:6px;">
-              Lote ${p.num} · ${meta.label}
-            </div>
-            <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:300;color:#e8e3d8;margin-bottom:4px;">
-              ${Number(p.area).toLocaleString('es-CL')} m²
-            </div>
-            <div style="font-size:12px;color:#b8b1a3;">$${priceStr} CLP</div>
-            ${link}
-          </div>`;
-        popupRef.current?.setLngLat(e.lngLat).setHTML(html).addTo(map);
+        openPopupForFeature(map, e.features[0] as any, e.lngLat);
       });
 
+      setStyleReady(true);
       map.once('idle', () => setLoading(false));
     });
 
@@ -185,30 +194,110 @@ export default function EpMasterplan() {
       popupRef.current?.remove();
       mapRef.current?.remove();
       mapRef.current = null;
+      setStyleReady(false);
     };
+     
   }, [token, tokenLoading]);
 
+  // Apply status filter
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map || !styleReady) return;
     const filter = ['in', ['get', 'status'], ['literal', Array.from(activeStatus)]] as any;
     try {
       map.setFilter('lots-fill', filter);
       map.setFilter('lots-line', filter);
       map.setFilter('nums-label', filter);
     } catch {
-      /* layers not ready */
+      /* ignore */
     }
-  }, [activeStatus, loading]);
+  }, [activeStatus, styleReady]);
 
-  const toggle = (s: StatusFilter) => {
-    setActiveStatus((prev) => {
-      const next = new Set(prev);
-      if (next.has(s)) next.delete(s);
-      else next.add(s);
-      return next;
-    });
-  };
+  // Sync external hover (from grid) → feature-state
+  const lastHoverRef = useRef<string | null>(null);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !styleReady) return;
+    const prev = lastHoverRef.current;
+    if (prev && prev !== hoveredLotId) {
+      try { map.setFeatureState({ source: 'lots', id: prev }, { hover: false }); } catch {}
+    }
+    if (hoveredLotId) {
+      try { map.setFeatureState({ source: 'lots', id: hoveredLotId }, { hover: true }); } catch {}
+    }
+    lastHoverRef.current = hoveredLotId;
+  }, [hoveredLotId, styleReady]);
+
+  // Focus request: fly to the lot & open popup
+  const lastFocusRef = useRef<string | null>(null);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !styleReady || !focusRequest) return;
+    const lot = EXPLORA_PARK_LOTS.find((l) => l.id === focusRequest.lotId);
+    if (!lot) return;
+
+    // clear previous focus
+    if (lastFocusRef.current && lastFocusRef.current !== lot.id) {
+      try { map.setFeatureState({ source: 'lots', id: lastFocusRef.current }, { focus: false }); } catch {}
+    }
+    try { map.setFeatureState({ source: 'lots', id: lot.id }, { focus: true }); } catch {}
+    lastFocusRef.current = lot.id;
+
+    // compute bounds
+    const bounds = lot.polygon.reduce(
+      (b, [lng, lat]) => b.extend([lng, lat] as [number, number]),
+      new mapboxgl.LngLatBounds(lot.polygon[0] as [number, number], lot.polygon[0] as [number, number]),
+    );
+    map.fitBounds(bounds, { padding: 120, duration: 900, maxZoom: 18 });
+
+    // synthetic feature for popup
+    const feat = {
+      properties: {
+        id: lot.id,
+        num: lot.lot_number,
+        status: lot.status,
+        area: lot.area_m2,
+        price: lot.price_clp,
+        listing_id: lot.listing_id ?? '',
+      },
+    } as any;
+    openPopupForFeature(map, feat, { lng: lot.centroid[0], lat: lot.centroid[1] } as any);
+  }, [focusRequest, styleReady]);
+
+  function openPopupForFeature(map: mapboxgl.Map, feature: any, lngLat: mapboxgl.LngLatLike) {
+    const p = feature.properties || {};
+    const status = String(p.status) as StatusFilter;
+    const meta = STATUS_META[status];
+    const priceStr = Number(p.price).toLocaleString('es-CL');
+    const link = p.listing_id
+      ? `<a href="/propiedad/${p.listing_id}" style="flex:1;text-align:center;padding:8px 12px;border:1px solid rgba(201,176,107,0.55);background:rgba(201,176,107,0.08);color:#e8e3d8;text-decoration:none;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;border-radius:2px;">Abrir ficha →</a>`
+      : `<span style="flex:1;text-align:center;padding:8px 12px;border:1px dashed rgba(255,255,255,0.15);color:rgba(232,227,216,0.5);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;border-radius:2px;">Sin ficha</span>`;
+    const scrollBtn = `<button data-ep-scroll-grid="${p.id}" style="padding:8px 10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.03);color:#e8e3d8;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;border-radius:2px;cursor:pointer;">En grilla</button>`;
+    const html = `
+      <div style="padding:16px 18px;min-width:220px;">
+        <div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:${meta.color};margin-bottom:6px;">
+          Lote ${p.num} · ${meta.label}
+        </div>
+        <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:300;color:#e8e3d8;margin-bottom:4px;">
+          ${Number(p.area).toLocaleString('es-CL')} m²
+        </div>
+        <div style="font-size:12px;color:#b8b1a3;margin-bottom:12px;">$${priceStr} CLP</div>
+        <div style="display:flex;gap:6px;align-items:stretch;">${link}${scrollBtn}</div>
+      </div>`;
+    popupRef.current?.setLngLat(lngLat).setHTML(html).addTo(map);
+
+    // wire the "En grilla" button
+    setTimeout(() => {
+      const el = document.querySelector<HTMLButtonElement>(`button[data-ep-scroll-grid="${p.id}"]`);
+      if (el) {
+        el.addEventListener('click', () => {
+          const target = document.getElementById(`ep-lot-${p.id}`);
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          else document.getElementById('lotes')?.scrollIntoView({ behavior: 'smooth' });
+        }, { once: true });
+      }
+    }, 0);
+  }
 
   return (
     <section id="masterplan" className="relative px-3 py-24 md:px-6 lg:px-10">
@@ -227,8 +316,8 @@ export default function EpMasterplan() {
             </h2>
           </div>
           <p className="max-w-md text-sm text-[var(--hue-bone)]/55">
-            Polígonos generados desde el KMZ oficial (437 parcelas). Filtra por estado y haz click en
-            cada lote para ver precio, superficie y ficha pública.
+            Filtros sincronizados con la grilla. Pasa el mouse sobre una parcela y se resaltará en
+            ambos. Haz click para abrir su ficha pública directamente desde el popup.
           </p>
         </motion.div>
 
@@ -248,12 +337,12 @@ export default function EpMasterplan() {
               <div className="hue-divider" />
 
               <div className="space-y-3">
-                <div className="hue-eyebrow text-[10px]">Resumen</div>
+                <div className="hue-eyebrow text-[10px]">Resumen del filtro</div>
                 {[
-                  ['Superficie total', `${EXPLORA_PARK_PROJECT.totalAreaHa} ha`],
-                  ['Parcelas totales', String(EXPLORA_PARK_PROJECT.totalLots)],
-                  ['Superficie promedio', `${EXPLORA_PARK_PROJECT.avgAreaM2.toLocaleString('es-CL')} m²`],
-                  ['Precio promedio', `$${EXPLORA_PARK_PROJECT.avgPriceClp.toLocaleString('es-CL')}`],
+                  ['Parcelas visibles', `${summary.total} / ${EXPLORA_PARK_PROJECT.totalLots}`],
+                  ['Superficie filtrada', `${summary.totalHa.toFixed(1)} ha`],
+                  ['Superficie promedio', `${summary.avgAreaM2.toLocaleString('es-CL')} m²`],
+                  ['Precio promedio', summary.avgPriceClp ? `$${summary.avgPriceClp.toLocaleString('es-CL')}` : '—'],
                 ].map(([k, v]) => (
                   <div key={k} className="flex items-baseline justify-between gap-3 text-[11px]">
                     <span className="text-[var(--hue-bone)]/50">{k}</span>
@@ -274,7 +363,7 @@ export default function EpMasterplan() {
                   return (
                     <button
                       key={s}
-                      onClick={() => toggle(s)}
+                      onClick={() => toggleStatus(s)}
                       className={`w-full flex items-center gap-3 px-2 py-1.5 rounded transition ${
                         active ? 'bg-white/5' : 'opacity-40 hover:opacity-70'
                       }`}
@@ -322,6 +411,11 @@ export default function EpMasterplan() {
               <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2 rounded-sm bg-black/55 backdrop-blur-md px-3 py-1.5 text-[10px] tracking-[0.22em] uppercase text-[var(--hue-bone)]/70">
                 <Compass className="h-3 w-3" /> WGS84 · Satélite
               </div>
+              {hoveredLotId && (
+                <div className="pointer-events-none absolute top-3 right-3 z-10 rounded-sm bg-black/60 backdrop-blur-md px-3 py-1.5 text-[10px] tracking-[0.22em] uppercase text-[var(--hue-bone)]/85">
+                  Lote {EXPLORA_PARK_LOTS.find((l) => l.id === hoveredLotId)?.lot_number ?? ''}
+                </div>
+              )}
             </div>
           </div>
         </div>
