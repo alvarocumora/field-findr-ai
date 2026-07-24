@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, ArrowUpDown, MapPin } from 'lucide-react';
+import { Search, ArrowUpDown, MapPin, MessageSquare } from 'lucide-react';
 import { EXPLORA_PARK_LOTS, type EpLotStatus } from '../data/lots';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import EpLeadForm from '../components/EpLeadForm';
 
 type StatusKey = 'all' | EpLotStatus;
 type SortKey = 'num' | 'area_asc' | 'area_desc' | 'price_asc' | 'price_desc';
@@ -25,6 +27,7 @@ export default function EpLotsGrid() {
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('num');
   const [visible, setVisible] = useState(PAGE);
+  const [leadLot, setLeadLot] = useState<{ id: string; number: string; status: EpLotStatus } | null>(null);
 
   const counts = useMemo(() => {
     const c = { all: EXPLORA_PARK_LOTS.length, available: 0, reserved: 0, sold: 0 };
@@ -130,10 +133,9 @@ export default function EpLotsGrid() {
                   ? `/propiedad/${l.listing_id}`
                   : `/proyecto/6e6f62be-a81a-4374-a3ef-cf296bd638d0`;
                 return (
-                  <Link
+                  <div
                     key={l.id}
-                    to={href}
-                    className="group rounded-sm border border-white/10 bg-white/[0.02] p-3 hover:border-[var(--hue-amber)]/40 hover:bg-white/[0.05] transition"
+                    className="group rounded-sm border border-white/10 bg-white/[0.02] p-3 hover:border-[var(--hue-amber)]/40 hover:bg-white/[0.05] transition flex flex-col"
                   >
                     <div className="flex items-start justify-between">
                       <div className="serif text-xl font-light text-[var(--hue-bone)]">
@@ -160,10 +162,23 @@ export default function EpLotsGrid() {
                         </span>
                       </div>
                     </div>
-                    <div className="mt-3 border-t border-white/5 pt-2 text-[10px] tracking-[0.18em] uppercase text-[var(--hue-amber)] opacity-0 transition group-hover:opacity-100">
-                      Ver ficha →
+                    <div className="mt-3 flex items-center gap-2 border-t border-white/5 pt-2">
+                      <Link
+                        to={href}
+                        className="flex-1 text-[10px] tracking-[0.18em] uppercase text-[var(--hue-amber)] hover:text-[var(--hue-bone)] transition"
+                      >
+                        Ver ficha →
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setLeadLot({ id: l.id, number: l.lot_number, status: l.status })}
+                        className="inline-flex items-center gap-1 rounded-sm border border-white/15 bg-white/[0.03] px-2 py-1 text-[10px] tracking-[0.14em] uppercase text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition"
+                        title="Consultar por este lote"
+                      >
+                        <MessageSquare className="h-3 w-3" /> Consultar
+                      </button>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>
@@ -181,6 +196,26 @@ export default function EpLotsGrid() {
           </>
         )}
       </div>
+
+      <Dialog open={!!leadLot} onOpenChange={(o) => !o && setLeadLot(null)}>
+        <DialogContent className="max-w-lg bg-[#0d1b12] border-white/10 text-[var(--hue-bone)]">
+          <DialogHeader>
+            <DialogTitle className="serif text-2xl">
+              Consultar por Lote {leadLot?.number}
+            </DialogTitle>
+          </DialogHeader>
+          {leadLot && (
+            <EpLeadForm
+              lotId={leadLot.id}
+              lotNumber={leadLot.number}
+              lotStatus={leadLot.status}
+              defaultReason={leadLot.status === 'available' ? 'reserva' : 'informacion'}
+              compact
+              onSuccess={() => setTimeout(() => setLeadLot(null), 1800)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
