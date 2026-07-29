@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bboxForPlane, staticSatelliteUrl, esriSatelliteUrl, satelliteProviders, normalizeElevations, MAX_RELIEF_M, cropResampleElevation, sampleGridBilinear, projectRingToLocal, pointInRing, hashRand } from './RealisticTerrain';
+import { bboxForPlane, staticSatelliteUrl, esriSatelliteUrl, satelliteProviders, normalizeElevations, MAX_RELIEF_M, cropResampleElevation, sampleGridBilinear, projectRingToLocal, pointInRing, hashRand, subdivideRing, gridFillPositions } from './RealisticTerrain';
 
 describe('esriSatelliteUrl', () => {
   it('builds a key-less Esri World Imagery bbox export', () => {
@@ -181,5 +181,57 @@ describe('staticSatelliteUrl', () => {
     expect(url).toContain('%5B');
     expect(url).toContain('%5D');
     expect(url).not.toMatch(/static\/\[/); // no raw bracket
+  });
+});
+
+describe('subdivideRing (drape fidelity)', () => {
+  const square: [number, number][] = [[-40, -40], [40, -40], [40, 40], [-40, 40]];
+
+  it('inserta puntos para que ningún tramo supere maxLen', () => {
+    const ring = subdivideRing(square, 4);
+    for (let i = 0; i < ring.length; i++) {
+      const [ax, ay] = ring[i];
+      const [bx, by] = ring[(i + 1) % ring.length];
+      expect(Math.hypot(bx - ax, by - ay)).toBeLessThanOrEqual(4 + 1e-9);
+    }
+  });
+
+  it('conserva los vértices originales', () => {
+    const ring = subdivideRing(square, 7);
+    for (const corner of square) {
+      expect(ring.some(([x, y]) => x === corner[0] && y === corner[1])).toBe(true);
+    }
+  });
+
+  it('con maxLen grande devuelve el anillo original', () => {
+    expect(subdivideRing(square, 1000)).toEqual(square);
+  });
+});
+
+describe('gridFillPositions (relleno que sigue el terreno)', () => {
+  const square: [number, number][] = [[-30, -30], [30, -30], [30, 30], [-30, 30]];
+  // rampa: altura = x + 100 (fácil de verificar por vértice)
+  const ramp = (x: number, _y: number) => x + 100;
+
+  it('cada vértice toma la altura real del terreno + lift', () => {
+    const pos = gridFillPositions(square, 200, 128, ramp, 0.3);
+    expect(pos).not.toBeNull();
+    for (let i = 0; i < pos!.length; i += 3) {
+      const [x, h] = [pos![i], pos![i + 1]];
+      expect(h).toBeCloseTo(x + 100 + 0.3, 5);
+    }
+  });
+
+  it('los triángulos quedan dentro del bbox del lote (con media celda de margen)', () => {
+    const pos = gridFillPositions(square, 200, 128, ramp, 0.3);
+    const cell = 200 / 127;
+    for (let i = 0; i < pos!.length; i += 3) {
+      expect(Math.abs(pos![i])).toBeLessThanOrEqual(30 + cell);
+      expect(Math.abs(pos![i + 2])).toBeLessThanOrEqual(30 + cell);
+    }
+  });
+
+  it('devuelve null para anillos degenerados', () => {
+    expect(gridFillPositions([[0, 0], [1, 1]], 200, 128, ramp, 0.3)).toBeNull();
   });
 });
