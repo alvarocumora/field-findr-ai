@@ -113,6 +113,62 @@ export function hashRand(seed: number): number {
   return s - Math.floor(s);
 }
 
+/**
+ * Subdivide a ring so no edge is longer than maxLen metres. Long straight
+ * chords between polygon corners are what made the draped lot float above (or
+ * sink into) curved hillsides: with only corner samples, an 80 m edge renders
+ * as one straight line regardless of the relief under it.
+ */
+export function subdivideRing(ring: [number, number][], maxLen: number): [number, number][] {
+  const out: [number, number][] = [];
+  for (let i = 0; i < ring.length; i++) {
+    const [ax, ay] = ring[i];
+    const [bx, by] = ring[(i + 1) % ring.length];
+    const len = Math.hypot(bx - ax, by - ay);
+    const steps = Math.max(1, Math.ceil(len / maxLen));
+    for (let s = 0; s < steps; s++) {
+      out.push([ax + ((bx - ax) * s) / steps, ay + ((by - ay) * s) / steps]);
+    }
+  }
+  return out;
+}
+
+/**
+ * Terrain-hugging fill for the lot: tessellate the polygon at the resolution
+ * of the elevation grid (cells whose centre falls inside the ring) so the
+ * translucent surface follows the real relief instead of being a flat fan.
+ * Returns interleaved xyz world positions (y up, z = -north).
+ */
+export function gridFillPositions(
+  ring: [number, number][], size: number, res: number,
+  heightAt: (x: number, y: number) => number, lift: number,
+): Float32Array | null {
+  if (ring.length < 3) return null;
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const [x, y] of ring) {
+    if (x < minX) minX = x; if (x > maxX) maxX = x;
+    if (y < minY) minY = y; if (y > maxY) maxY = y;
+  }
+  const cell = size / (res - 1);
+  const half = size / 2;
+  const c0 = Math.max(0, Math.floor((minX + half) / cell) - 1);
+  const c1 = Math.min(res - 2, Math.ceil((maxX + half) / cell));
+  const r0 = Math.max(0, Math.floor((minY + half) / cell) - 1);
+  const r1 = Math.min(res - 2, Math.ceil((maxY + half) / cell));
+  const pts: number[] = [];
+  const push = (x: number, y: number) => pts.push(x, heightAt(x, y) + lift, -y);
+  for (let r = r0; r <= r1; r++) {
+    for (let c = c0; c <= c1; c++) {
+      const x0 = -half + c * cell, y0 = -half + r * cell;
+      const x1 = x0 + cell, y1 = y0 + cell;
+      if (!pointInRing((x0 + x1) / 2, (y0 + y1) / 2, ring)) continue;
+      push(x0, y0); push(x1, y0); push(x1, y1);
+      push(x0, y0); push(x1, y1); push(x0, y1);
+    }
+  }
+  return pts.length ? new Float32Array(pts) : null;
+}
+
 /** Bilinear sample of a square grid at fractional pixel (fx, fy), edge-clamped. */
 export function sampleGridBilinear(grid: Float32Array, gridPx: number, fx: number, fy: number): number {
   const clamp = (v: number) => Math.max(0, Math.min(gridPx - 1, v));
@@ -384,42 +440,40 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
     }, [heightData, size]);
 
     // Polygon contour draped on the terrain (local coords → world x, h, -y).
+    // Edges are subdivided every few metres so the line follows the relief —
+    // corner-only sampling drew straight chords that floated over valleys and
+    // cut through hills on sloped parcels.
+    const DRAPE_STEP = 4; // metres between terrain samples along lot edges
     const contourPositions = useMemo(() => {
       if (norm.localCoords.length === 0) return null;
       const pts: number[] = [];
-      for (const [x, y] of norm.localCoords) {
+      for (const [x, y] of subdivideRing(norm.localCoords, DRAPE_STEP)) {
         pts.push(x, heightAtLocal(x, y) + 0.4, -y);
       }
       return new Float32Array(pts);
     }, [norm.localCoords, heightAtLocal]);
 
-    // Translucent fill draped over the terrain (triangle fan from the centroid,
-    // which normalizePolygon centres at the local origin) + a vertical skirt so
-    // the lot reads as a 3D volume, not just a line.
+    // Translucent fill that hugs the relief (tessellated at the elevation-grid
+    // resolution) + a vertical skirt so the lot reads as a 3D volume.
     const { fillPositions, wallPositions } = useMemo(() => {
       const lc = norm.localCoords;
       if (lc.length < 3) return { fillPositions: null, wallPositions: null };
-      const fill: number[] = [];
+      const fill = gridFillPositions(lc, size, TERRAIN_RES, heightAtLocal, 0.3);
       const wall: number[] = [];
-      const cx = lc.reduce((s, p) => s + p[0], 0) / lc.length;
-      const cy = lc.reduce((s, p) => s + p[1], 0) / lc.length;
-      const cH = heightAtLocal(cx, cy) + 0.3;
       const SKIRT = 3; // metres the wall drops below the boundary
-      for (let i = 0; i < lc.length; i++) {
-        const [ax, ay] = lc[i];
-        const [bx, by] = lc[(i + 1) % lc.length];
+      const ring = subdivideRing(lc, DRAPE_STEP);
+      for (let i = 0; i < ring.length; i++) {
+        const [ax, ay] = ring[i];
+        const [bx, by] = ring[(i + 1) % ring.length];
         const aH = heightAtLocal(ax, ay) + 0.3;
         const bH = heightAtLocal(bx, by) + 0.3;
-        // Fill triangle: centroid → edge
-        fill.push(cx, cH, -cy, ax, aH, -ay, bx, bH, -by);
-        // Wall quad (two triangles): edge top → edge bottom (skirt)
         wall.push(
           ax, aH, -ay, bx, bH, -by, bx, bH - SKIRT, -by,
           ax, aH, -ay, bx, bH - SKIRT, -by, ax, aH - SKIRT, -ay,
         );
       }
-      return { fillPositions: new Float32Array(fill), wallPositions: new Float32Array(wall) };
-    }, [norm.localCoords, heightAtLocal]);
+      return { fillPositions: fill, wallPositions: new Float32Array(wall) };
+    }, [norm.localCoords, size, heightAtLocal]);
 
     // Neighbouring lots (dimmed outlines) projected into this lot's local frame
     // and draped on the terrain — the surrounding loteo context.
@@ -429,9 +483,10 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
       const seg: number[] = [];
       for (const ring of neighbors) {
         if (!Array.isArray(ring) || ring.length < 3) continue;
-        const local = projectRingToLocal(ring, lng, lat);
+        const raw = projectRingToLocal(ring, lng, lat);
         // Skip rings entirely outside the terrain plane.
-        if (!local.some(([x, y]) => Math.abs(x) <= half && Math.abs(y) <= half)) continue;
+        if (!raw.some(([x, y]) => Math.abs(x) <= half && Math.abs(y) <= half)) continue;
+        const local = subdivideRing(raw, 6);
         for (let i = 0; i < local.length; i++) {
           const [ax, ay] = local[i];
           const [bx, by] = local[(i + 1) % local.length];
