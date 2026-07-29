@@ -31,6 +31,7 @@ const AgentDashboard = () => {
 };
 
 const Tools = lazy(() => import("@/pages/Tools"));
+const Publicar = lazy(() => import("@/pages/Publicar"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const PublishProperty = lazy(() => import("@/components/PublishProperty"));
 const PropertyInventory = lazy(() => import("@/components/PropertyInventory"));
@@ -112,6 +113,15 @@ export const agentRoutes = [
   <Route key="asesor-api" path="/asesor/api" element={agentElement(<APIPortal />)} />,
   <Route key="asesor-tools" path="/asesor/tools" element={agentElement(<Tools />)} />,
   <Route key="asesor-profile" path="/asesor/profile" element={agentElement(<Profile />)} />,
+  <Route
+    key="publicar-hub"
+    path="/publicar"
+    element={
+      <ProtectedRoute requireAuth requireRole="agent">
+        <Publicar />
+      </ProtectedRoute>
+    }
+  />,
   <Route
     key="publish"
     path="/publish"

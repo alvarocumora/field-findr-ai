@@ -49,7 +49,7 @@ const StickyHeader = () => {
   const publicNavigation = [
     { name: 'Buscar Terrenos', href: '/explorar' },
     { name: 'Oportunidades', href: '/oportunidades' },
-    { name: 'Publicar', href: '/auth?role=agent' },
+    { name: 'Publicar', href: '/auth?role=agent&redirect=/publicar' },
     { name: 'Corredores', href: '/pricing' },
     { name: 'Planes Loteos', href: '/planes-loteos', badge: 'B2B' },
     { name: 'Blog', href: '/blog' },
@@ -147,7 +147,7 @@ const StickyHeader = () => {
 
             {(isAgent || isAdmin) && (
               <Button asChild className="btn-glow">
-                <Link to="/publish">
+                <Link to="/publicar">
                   <Plus className="h-4 w-4 mr-2" />
                   Publicar
                 </Link>
@@ -205,7 +205,7 @@ const StickyHeader = () => {
 
             {(isAgent || isAdmin) && (
               <Button asChild size="sm" className="btn-glow">
-                <Link to="/publish"><Plus className="h-4 w-4" /></Link>
+                <Link to="/publicar"><Plus className="h-4 w-4" /></Link>
               </Button>
             )}
 

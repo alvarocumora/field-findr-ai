@@ -25,35 +25,35 @@ const QuickActions = () => {
       description: 'Sube tu terreno con ayuda de IA',
       icon: Plus,
       color: 'bg-blue-500',
-      href: '/publish'
+      href: '/publicar'
     },
     {
       title: 'Comparar Terrenos',
       description: 'Compara propiedades lado a lado',
       icon: BarChart3,
       color: 'bg-purple-500',
-      href: '/compare'
+      href: '/comparar'
     },
     {
       title: 'Panel de Agente',
       description: 'Gestiona tus propiedades y clientes',
       icon: Users,
       color: 'bg-orange-500',
-      href: '/dashboard'
+      href: '/asesor/dashboard'
     },
     {
-      title: 'Creador de Contenido IA',
-      description: 'Genera descripções automáticas',
+      title: 'Herramientas',
+      description: 'Calculadoras, tasación y análisis con IA',
       icon: Zap,
       color: 'bg-green-600',
-      href: '/content-creator'
+      href: '/tools'
     },
     {
-      title: 'Enlaces Inteligentes',
-      description: 'Crea links con seguimiento',
+      title: 'Oportunidades',
+      description: 'Terrenos con potencial de inversión',
       icon: Target,
       color: 'bg-blue-600',
-      href: '/intelligent-links'
+      href: '/oportunidades'
     }
   ];
 
