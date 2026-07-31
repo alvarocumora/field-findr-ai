@@ -23,6 +23,7 @@ interface ProjectRow {
  */
 export default function ProjectsRail() {
   const navigate = useNavigate();
+  const { include, setInclude } = useIncludeLoteoLots();
 
   const { data: projects = [] } = useQuery({
     queryKey: ['explorer-projects-rail'],
@@ -53,6 +54,7 @@ export default function ProjectsRail() {
           {projects.length} activo{projects.length === 1 ? '' : 's'}
         </span>
       </div>
+
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
         {projects.map((p) => {
           const cover = p.images?.[0];
