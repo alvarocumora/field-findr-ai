@@ -69,9 +69,9 @@ export const useLandingStats = () => {
 
       return {
         totalListings: listings.count ?? 0,
-        totalProjects: projects.count ?? 0,
-        totalLots: lots.count ?? 0,
-        totalReservations: reservations.count ?? 0,
+        totalProjects: projectsData.length,
+        totalLots,
+        totalReservations: placedLots,
         totalRegions: uniqueRegions.size,
         totalHectares: Math.round(totalHectares),
         regionData,
