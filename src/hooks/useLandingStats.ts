@@ -25,13 +25,21 @@ export const useLandingStats = () => {
   return useQuery({
     queryKey: ['landing-stats'],
     queryFn: async (): Promise<LandingStats> => {
-      const [listings, projects, lots, reservations, listingsWithArea] = await Promise.all([
+      // Anonymous-safe aggregates only: `lots` buyer data and `reservations`
+      // are RLS-protected, so lot/placement counts are derived from the public
+      // `projects` counters instead of hitting those tables directly.
+      const [listings, projectRows, listingsWithArea] = await Promise.all([
         supabase.from('listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.rpc('get_public_lots', { p_project_id: null }, { count: 'exact', head: true }).eq('status', 'available'),
-        supabase.from('reservations').select('id', { count: 'exact', head: true }).eq('status', 'paid'),
+        supabase.from('projects').select('total_lots, available_lots').eq('status', 'active'),
         supabase.from('listings').select('region, price, area_ha').eq('status', 'active'),
       ]);
+
+      const projectsData = projectRows.data ?? [];
+      const totalLots = projectsData.reduce((acc, p) => acc + (p.total_lots ?? 0), 0);
+      const placedLots = projectsData.reduce(
+        (acc, p) => acc + Math.max(0, (p.total_lots ?? 0) - (p.available_lots ?? 0)),
+        0,
+      );
 
       const listingsData = listingsWithArea.data || [];
 
