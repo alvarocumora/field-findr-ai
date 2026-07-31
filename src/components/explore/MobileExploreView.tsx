@@ -174,7 +174,8 @@ const MobileExploreView = (props: MobileExploreViewProps) => {
         )}
 
         {mode === 'list' && (
-          <div className="absolute inset-0 flex flex-col">
+          <div className="absolute inset-0 flex flex-col overflow-y-auto">
+            <ProjectsRail />
             <ExploreListPanel
               listings={props.listings}
               totalCount={props.totalCount}
