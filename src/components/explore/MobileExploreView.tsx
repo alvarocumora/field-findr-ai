@@ -213,6 +213,7 @@ const MobileExploreView = (props: MobileExploreViewProps) => {
               selectedValuation={props.selectedValuation}
               onToggleValuation={props.onToggleValuation}
             />
+            </div>
           </div>
         )}
 
