@@ -628,6 +628,77 @@ export type Database = {
           },
         ]
       }
+      land_referrals: {
+        Row: {
+          address: string | null
+          admin_notes: string | null
+          comuna: string | null
+          created_at: string
+          description: string | null
+          expected_price: number | null
+          id: string
+          links: string | null
+          listing_id: string | null
+          owner_email: string | null
+          owner_name: string
+          owner_phone: string | null
+          referrer_id: string
+          region: string | null
+          size_m2: number | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          admin_notes?: string | null
+          comuna?: string | null
+          created_at?: string
+          description?: string | null
+          expected_price?: number | null
+          id?: string
+          links?: string | null
+          listing_id?: string | null
+          owner_email?: string | null
+          owner_name: string
+          owner_phone?: string | null
+          referrer_id: string
+          region?: string | null
+          size_m2?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          admin_notes?: string | null
+          comuna?: string | null
+          created_at?: string
+          description?: string | null
+          expected_price?: number | null
+          id?: string
+          links?: string | null
+          listing_id?: string | null
+          owner_email?: string | null
+          owner_name?: string
+          owner_phone?: string | null
+          referrer_id?: string
+          region?: string | null
+          size_m2?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "land_referrals_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           budget_max: number | null
@@ -2353,6 +2424,7 @@ export type Database = {
             }
             Returns: string
           }
+      same_organization: { Args: { _other: string }; Returns: boolean }
       system_activate_featured: {
         Args: { p_days: number; p_payment_ref?: string; p_project_id: string }
         Returns: string
