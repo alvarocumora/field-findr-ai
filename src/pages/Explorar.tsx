@@ -21,6 +21,7 @@ import { useAddFavorite, useRemoveFavorite } from '@/hooks/useFavorites';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
 import { useCompare } from '@/hooks/useCompare';
 import { whatsapp } from '@/lib/whatsappUtils';
+import { useIncludeLoteoLots } from '@/hooks/useIncludeLoteoLots';
 import { toast } from 'sonner';
 
 const Explorar = () => {
@@ -33,6 +34,9 @@ const Explorar = () => {
   const { addToCompare, compareList, isInCompare, setCompareOpen } = useCompare();
   // Imperative handle exposed by SwipeExplorer so we can revert a dismiss from an undo toast.
   const undoDismissRef = useRef<((id: string) => void) | null>(null);
+  // Shared with ProjectsRail's toggle (desktop + mobile).
+  const { include: includeLoteoLots } = useIncludeLoteoLots();
+
 
   // View mode for mobile
   const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>('swipe');
@@ -88,6 +92,7 @@ const Explorar = () => {
     areaMin: areaRange[0] > 0 ? areaRange[0] : undefined,
     areaMax: areaRange[1] < 1000000 ? areaRange[1] : undefined,
     bounds: mapBounds ?? undefined,
+    includeLoteoLots,
   });
 
   // Client-side search + tag/slope/valuation filter

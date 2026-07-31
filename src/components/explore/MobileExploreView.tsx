@@ -5,6 +5,7 @@ import EnhancedMap from '@/components/map/EnhancedMap';
 import MapErrorBoundary from '@/components/map/MapErrorBoundary';
 import SwipeExplorer from './SwipeExplorer';
 import ExploreListPanel from './ExploreListPanel';
+import ProjectsRail from './ProjectsRail';
 import FloatingSearchBar from './FloatingSearchBar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -174,7 +175,11 @@ const MobileExploreView = (props: MobileExploreViewProps) => {
         )}
 
         {mode === 'list' && (
-          <div className="absolute inset-0 flex flex-col">
+          <div className="absolute inset-0 flex flex-col min-h-0">
+            <div className="flex-shrink-0">
+              <ProjectsRail />
+            </div>
+            <div className="flex-1 min-h-0">
             <ExploreListPanel
               listings={props.listings}
               totalCount={props.totalCount}
@@ -208,6 +213,7 @@ const MobileExploreView = (props: MobileExploreViewProps) => {
               selectedValuation={props.selectedValuation}
               onToggleValuation={props.onToggleValuation}
             />
+            </div>
           </div>
         )}
 

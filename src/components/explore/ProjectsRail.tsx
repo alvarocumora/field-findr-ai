@@ -2,6 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MapPin, Layers } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { useIncludeLoteoLots } from '@/hooks/useIncludeLoteoLots';
+
 
 interface ProjectRow {
   id: string;
@@ -20,6 +23,7 @@ interface ProjectRow {
  */
 export default function ProjectsRail() {
   const navigate = useNavigate();
+  const { include, setInclude } = useIncludeLoteoLots();
 
   const { data: projects = [] } = useQuery({
     queryKey: ['explorer-projects-rail'],
@@ -50,6 +54,7 @@ export default function ProjectsRail() {
           {projects.length} activo{projects.length === 1 ? '' : 's'}
         </span>
       </div>
+
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
         {projects.map((p) => {
           const cover = p.images?.[0];
@@ -96,6 +101,17 @@ export default function ProjectsRail() {
           );
         })}
       </div>
+
+      <label className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-border/40 bg-card/50 px-3 py-2 cursor-pointer">
+        <span className="text-[11px] leading-tight text-muted-foreground">
+          Ver también <strong className="text-foreground font-medium">parcelas individuales</strong> de loteos en el listado
+        </span>
+        <Switch
+          checked={include}
+          onCheckedChange={setInclude}
+          aria-label="Incluir parcelas individuales de loteos"
+        />
+      </label>
     </div>
   );
 }
