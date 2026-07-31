@@ -2,6 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MapPin, Layers } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { useIncludeLoteoLots } from '@/hooks/useIncludeLoteoLots';
+
 
 interface ProjectRow {
   id: string;
