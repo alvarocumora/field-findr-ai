@@ -64,8 +64,13 @@ export const useListings = (filters?: ListingFilters) => {
         .from('listings')
         .select('*')
         .eq('status', 'active')
-        .eq('is_demo', false)
-        .not('tags', 'cs', '{loteo}')
+        .eq('is_demo', false);
+
+      if (!filters?.includeLoteoLots) {
+        query = query.not('tags', 'cs', '{loteo}');
+      }
+
+      query = query
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false });
 
