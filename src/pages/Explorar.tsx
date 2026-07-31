@@ -89,6 +89,7 @@ const Explorar = () => {
     areaMin: areaRange[0] > 0 ? areaRange[0] : undefined,
     areaMax: areaRange[1] < 1000000 ? areaRange[1] : undefined,
     bounds: mapBounds ?? undefined,
+    includeLoteoLots,
   });
 
   // Client-side search + tag/slope/valuation filter
