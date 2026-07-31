@@ -18,10 +18,15 @@ export const useInfiniteListings = (filters?: ListingFilters) => {
         .from('listings')
         .select('*', { count: 'exact' })
         .eq('status', 'active')
-        .eq('is_demo', false)
-        // Hide individual lots of a loteo/project from the general explorer.
-        // Projects surface as their own cards via the ProjectsRail.
-        .not('tags', 'cs', '{loteo}')
+        .eq('is_demo', false);
+
+      // Hide individual lots of a loteo/project from the general explorer unless
+      // the user opts in. Projects surface as their own cards via ProjectsRail.
+      if (!filters?.includeLoteoLots) {
+        query = query.not('tags', 'cs', '{loteo}');
+      }
+
+      query = query
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
         .range(pageParam, pageParam + PAGE_SIZE - 1);
