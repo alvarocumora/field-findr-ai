@@ -21,6 +21,7 @@ import { useAddFavorite, useRemoveFavorite } from '@/hooks/useFavorites';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
 import { useCompare } from '@/hooks/useCompare';
 import { whatsapp } from '@/lib/whatsappUtils';
+import { useIncludeLoteoLots } from '@/hooks/useIncludeLoteoLots';
 import { toast } from 'sonner';
 
 const Explorar = () => {
