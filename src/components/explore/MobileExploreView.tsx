@@ -5,6 +5,7 @@ import EnhancedMap from '@/components/map/EnhancedMap';
 import MapErrorBoundary from '@/components/map/MapErrorBoundary';
 import SwipeExplorer from './SwipeExplorer';
 import ExploreListPanel from './ExploreListPanel';
+import ProjectsRail from './ProjectsRail';
 import FloatingSearchBar from './FloatingSearchBar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
