@@ -45,6 +45,8 @@ export interface ListingFilters {
   areaMax?: number;
   tags?: string[];
   featured?: boolean;
+  /** Include individual lots of a loteo (tagged `loteo`) in the feed. */
+  includeLoteoLots?: boolean;
   status?: string;
   bounds?: {
     north: number;
