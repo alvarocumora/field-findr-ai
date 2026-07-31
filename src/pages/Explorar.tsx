@@ -34,6 +34,9 @@ const Explorar = () => {
   const { addToCompare, compareList, isInCompare, setCompareOpen } = useCompare();
   // Imperative handle exposed by SwipeExplorer so we can revert a dismiss from an undo toast.
   const undoDismissRef = useRef<((id: string) => void) | null>(null);
+  // Shared with ProjectsRail's toggle (desktop + mobile).
+  const { include: includeLoteoLots } = useIncludeLoteoLots();
+
 
   // View mode for mobile
   const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>('swipe');
