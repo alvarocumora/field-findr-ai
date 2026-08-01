@@ -49,7 +49,7 @@ export const useMyLandReferrals = () => {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('land_referrals' as any)
+        .from('land_referrals')
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -65,8 +65,8 @@ export const useCreateLandReferral = () => {
     mutationFn: async (input: LandReferralInput) => {
       if (!user) throw new Error('Debes iniciar sesión');
       const { data, error } = await supabase
-        .from('land_referrals' as any)
-        .insert({ ...input, referrer_id: user.id } as any)
+        .from('land_referrals')
+        .insert({ ...input, referrer_id: user.id })
         .select()
         .single();
       if (error) throw error;
@@ -82,7 +82,7 @@ export const useAdminLandReferrals = () => {
     queryKey: ['land-referrals', 'admin'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('land_referrals' as any)
+        .from('land_referrals')
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -96,8 +96,8 @@ export const useUpdateLandReferral = () => {
   return useMutation({
     mutationFn: async ({ id, ...patch }: { id: string; status?: CaptacionStatus; admin_notes?: string; listing_id?: string | null }) => {
       const { data, error } = await supabase
-        .from('land_referrals' as any)
-        .update(patch as any)
+        .from('land_referrals')
+        .update(patch)
         .eq('id', id)
         .select()
         .single();
