@@ -43,6 +43,7 @@ const HuellelhueLanding = lazy(() => import("@/pages/huellelhue/HuellelhueLandin
 const PlayaAlvaroLanding = lazy(() => import("@/pages/playaAlvaro/PlayaAlvaroLanding"));
 const ExploraParkLanding = lazy(() => import("@/pages/exploraPark/ExploraParkLanding"));
 const CorredorasLanding = lazy(() => import("@/pages/marketing/CorredorasLanding"));
+const ProjectLanding = lazy(() => import("@/pages/landing/ProjectLanding"));
 const InmobiliariasLanding = lazy(() => import("@/pages/marketing/InmobiliariasLanding"));
 
 export const publicRoutes = [
@@ -87,4 +88,5 @@ export const publicRoutes = [
   <Route key="huellelhue" path="/huellelhue" element={<HuellelhueLanding />} />,
   <Route key="playa-alvaro" path="/playa-alvaro" element={<PlayaAlvaroLanding />} />,
   <Route key="explora-park" path="/explora-park" element={<ExploraParkLanding />} />,
+  <Route key="project-landing" path="/p/:slug" element={<ProjectLanding />} />,
 ];
