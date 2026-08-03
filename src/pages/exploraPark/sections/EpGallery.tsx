@@ -1,12 +1,15 @@
 import { motion } from 'framer-motion';
+import caballo from '@/assets/explora-caballo.jpg';
+import camino from '@/assets/explora-camino.jpg';
 
 const IMAGES = [
-  { src: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1600&q=80', alt: 'Valle y lomajes de Hualañé al atardecer' },
-  { src: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80', alt: 'Camino rural entre trigales' },
+  { src: camino, alt: 'Camino interior de Explora Park con pinos y caballo en Hualañé' },
+  { src: caballo, alt: 'Caballo en una senda de pasto dentro de Explora Park' },
   { src: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1200&q=80', alt: 'Bosque nativo y quebrada' },
   { src: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80', alt: 'Campos ondulantes del Maule' },
   { src: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80', alt: 'Cordillera de la costa' },
 ];
+
 
 export default function EpGallery() {
   return (
