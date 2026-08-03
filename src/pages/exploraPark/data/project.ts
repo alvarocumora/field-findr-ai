@@ -12,7 +12,7 @@ export const EXPLORA_PARK_PROJECT = {
   soldLots: 345,
   totalAreaHa: 209.2,
   priceFromClp: 9990000,
-  avgPriceClp: 10060000,
+  avgPriceClp: 10208307,
   avgAreaM2: 4786,
   center: { lng: -71.6302664, lat: -34.9819488 },
   bbox: { minLng: -71.6379368, maxLng: -71.622596, minLat: -34.9943871, maxLat: -34.9695105 },
