@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { usePolygonDrawing } from '@/hooks/usePolygonDrawing';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Layers, Upload, Image, PenTool, ArrowLeftRight, Hash, RefreshCw, Minimize2, RotateCcw, Route, Settings2, ChevronDown } from 'lucide-react';
+import { AlertCircle, Layers, Mountain, Upload, Image, PenTool, ArrowLeftRight, Hash, RefreshCw, Minimize2, RotateCcw, Route, Settings2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced, buildPolygonsFromMixedGeometry, extractRoadGeometries } from '@/lib/kmz';
@@ -204,6 +204,10 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const { token, loading: tokenLoading, error: tokenError } = useMapboxToken();
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapStyle, setMapStyle] = useState<'satellite' | 'streets'>('satellite');
+  const [showContours, setShowContours] = useState(false);
+  // El cambio de estilo re-crea el mapa: el handler de load lee el ref para
+  // restaurar la visibilidad de las curvas sin depender del ciclo de React.
+  const showContoursRef = useRef(false);
   const [importing, setImporting] = useState(false);
   const [loadingKmz, setLoadingKmz] = useState(false);
   const [kmzLoaded, setKmzLoaded] = useState(false);
@@ -1009,6 +1013,46 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         },
       });
 
+      // Curvas de nivel (Mapbox Terrain v2): cotas reales del relieve bajo el
+      // loteo, con etiquetas de elevación. Ocultas por defecto; el toggle
+      // "Curvas" las muestra. Van bajo las etiquetas de lote.
+      map.current.addSource('terrain-contours', {
+        type: 'vector',
+        url: 'mapbox://mapbox.mapbox-terrain-v2',
+      });
+      const contourVisibility = showContoursRef.current ? 'visible' : 'none';
+      map.current.addLayer({
+        id: 'contour-lines',
+        type: 'line',
+        source: 'terrain-contours',
+        'source-layer': 'contour',
+        layout: { visibility: contourVisibility },
+        paint: {
+          'line-color': mapStyle === 'satellite' ? '#ffe0b2' : '#8b5e34',
+          'line-width': ['case', ['==', ['get', 'index'], 5], 1.4, 0.6],
+          'line-opacity': 0.85,
+        },
+      });
+      map.current.addLayer({
+        id: 'contour-labels',
+        type: 'symbol',
+        source: 'terrain-contours',
+        'source-layer': 'contour',
+        filter: ['==', ['get', 'index'], 5],
+        layout: {
+          visibility: contourVisibility,
+          'symbol-placement': 'line',
+          'text-field': ['concat', ['get', 'ele'], ' m'],
+          'text-size': 10,
+          'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'],
+        },
+        paint: {
+          'text-color': mapStyle === 'satellite' ? '#ffe0b2' : '#6d4c2a',
+          'text-halo-color': 'rgba(0,0,0,0.55)',
+          'text-halo-width': 1,
+        },
+      });
+
       // Add lot numbers with better typography
       map.current.addLayer({
         id: 'lots-labels',
@@ -1220,6 +1264,29 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         >
           <Layers className="h-4 w-4" />
           {mapStyle === 'satellite' ? 'Calles' : 'Satélite'}
+        </Button>
+
+        {/* Contour lines toggle */}
+        <Button
+          variant={showContours ? "default" : "secondary"}
+          size="sm"
+          className="gap-2 bg-background/80 backdrop-blur-md border border-border/50 shadow-md"
+          onClick={() => {
+            const next = !showContours;
+            setShowContours(next);
+            showContoursRef.current = next;
+            if (map.current && map.current.isStyleLoaded()) {
+              const vis = next ? 'visible' : 'none';
+              ['contour-lines', 'contour-labels'].forEach((layerId) => {
+                if (map.current!.getLayer(layerId)) {
+                  map.current!.setLayoutProperty(layerId, 'visibility', vis);
+                }
+              });
+            }
+          }}
+        >
+          <Mountain className="h-4 w-4" />
+          Curvas
         </Button>
 
         {/* Roads toggle */}
