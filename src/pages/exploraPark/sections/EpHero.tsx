@@ -28,7 +28,16 @@ export default function EpHero() {
           transition={{ duration: 1.2, delay: 0.2 }}
           className="flex items-center justify-between"
         >
-          <div className="hue-eyebrow">OFERTA TERRENOS · presenta</div>
+          <div className="flex items-center gap-4">
+            <img
+              src={exploraLogo}
+              alt="Logotipo de Explora Park"
+              className="h-9 w-auto md:h-12"
+              loading="eager"
+            />
+            <div className="hue-eyebrow">OFERTA TERRENOS · presenta</div>
+          </div>
+
           <div className="hue-pill hidden md:inline-flex">
             <MapPin className="h-3 w-3" /> Hualañé · Región del Maule
           </div>
