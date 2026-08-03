@@ -45,11 +45,20 @@ export default function EpHero() {
           <p className="serif text-[clamp(1.3rem,3vw,2rem)] italic text-[var(--hue-bone)]/85 font-light">
             {EXPLORA_PARK_PROJECT.totalLots} parcelas en el corazón del Maule
           </p>
+          <p className="mt-6 inline-flex items-baseline gap-3 rounded-sm border border-[var(--hue-amber)]/40 bg-[var(--hue-amber)]/10 px-5 py-3">
+            <span className="text-[10px] tracking-[0.28em] uppercase text-[var(--hue-bone)]/70">
+              Parcelas desde
+            </span>
+            <span className="serif text-[clamp(1.6rem,4vw,2.6rem)] font-light leading-none text-[var(--hue-bone)]">
+              ${EXPLORA_PARK_PROJECT.priceFromClp.toLocaleString('es-CL')}
+            </span>
+          </p>
           <p className="mt-8 max-w-xl text-[15px] leading-relaxed text-[var(--hue-bone)]/70">
             {EXPLORA_PARK_PROJECT.totalAreaHa} hectáreas subdivididas en parcelas rurales de
             ~{Math.round(EXPLORA_PARK_PROJECT.avgAreaM2)} m² con acceso directo, vistas al valle y
             entorno agrícola consolidado en Hualañé.
           </p>
+
 
           <div className="mt-10 flex flex-wrap gap-3">
             <a
