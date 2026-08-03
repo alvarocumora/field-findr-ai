@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
 import { ChevronDown, MapPin } from 'lucide-react';
 import { EXPLORA_PARK_PROJECT } from '../data/project';
+import heroImg from '@/assets/explora-camino.jpg';
+import exploraLogo from '@/assets/explora-logo.png';
 
-const HERO_IMG =
-  'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2400&q=80';
+const HERO_IMG = heroImg;
+
 
 export default function EpHero() {
   return (
