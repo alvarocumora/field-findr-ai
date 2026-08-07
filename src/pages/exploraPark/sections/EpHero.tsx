@@ -1,8 +1,11 @@
 import { motion } from 'framer-motion';
 import { ChevronDown, MapPin } from 'lucide-react';
 import { EXPLORA_PARK_PROJECT } from '../data/project';
-import heroImg from '@/assets/explora-camino.jpg';
-import exploraLogo from '@/assets/explora-logo.png';
+import heroAsset from '@/assets/explora-camino.jpg.asset.json';
+import logoAsset from '@/assets/explora-logo.png.asset.json';
+
+const heroImg = heroAsset.url;
+const exploraLogo = logoAsset.url;
 
 const HERO_IMG = heroImg;
 
