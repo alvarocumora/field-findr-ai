@@ -1383,6 +1383,7 @@ export type Database = {
           id: string
           images: string[] | null
           kmz_file_url: string | null
+          landing_config: Json
           latitude: number | null
           legal_documents: Json | null
           legal_status: string | null
@@ -1396,6 +1397,7 @@ export type Database = {
           reservation_deposit: number | null
           reserved_lots: number | null
           rol_number: string | null
+          slug: string | null
           sold_lots: number | null
           status: string | null
           total_area: number | null
@@ -1419,6 +1421,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           kmz_file_url?: string | null
+          landing_config?: Json
           latitude?: number | null
           legal_documents?: Json | null
           legal_status?: string | null
@@ -1432,6 +1435,7 @@ export type Database = {
           reservation_deposit?: number | null
           reserved_lots?: number | null
           rol_number?: string | null
+          slug?: string | null
           sold_lots?: number | null
           status?: string | null
           total_area?: number | null
@@ -1455,6 +1459,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           kmz_file_url?: string | null
+          landing_config?: Json
           latitude?: number | null
           legal_documents?: Json | null
           legal_status?: string | null
@@ -1468,6 +1473,7 @@ export type Database = {
           reservation_deposit?: number | null
           reserved_lots?: number | null
           rol_number?: string | null
+          slug?: string | null
           sold_lots?: number | null
           status?: string | null
           total_area?: number | null
@@ -2402,6 +2408,7 @@ export type Database = {
       }
       mark_overdue_payments: { Args: never; Returns: undefined }
       mark_referral_paid: { Args: { p_commission_id: string }; Returns: string }
+      project_slugify: { Args: { _txt: string }; Returns: string }
       register_sale:
         | {
             Args: {
