@@ -1,6 +1,9 @@
 import { motion } from 'framer-motion';
-import caballo from '@/assets/explora-caballo.jpg';
-import camino from '@/assets/explora-camino.jpg';
+import caballoAsset from '@/assets/explora-caballo.jpg.asset.json';
+import caminoAsset from '@/assets/explora-camino.jpg.asset.json';
+
+const caballo = caballoAsset.url;
+const camino = caminoAsset.url;
 
 const IMAGES = [
   { src: camino, alt: 'Camino interior de Explora Park con pinos y caballo en Hualañé' },
