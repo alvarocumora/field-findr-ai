@@ -12,5 +12,15 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /asesor/
+Disallow: /comprador/
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /subscription/
+Disallow: /reserva/
+Disallow: /diseno/
+Disallow: /demo/
 
+Sitemap: https://ofertaterrenos.com/sitemap.xml
 Sitemap: https://gqcizjridfkiacpqcoqs.supabase.co/functions/v1/sitemap
