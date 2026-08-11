@@ -16,12 +16,12 @@ interface BuyerLayoutProps {
 }
 
 const NAV_ITEMS = [
-  { href: '/buyer/home', label: 'Inicio', icon: Home },
+  { href: '/comprador/inicio', label: 'Inicio', icon: Home },
   { href: '/explorar', label: 'Explorar', icon: Search },
   { href: '/favoritos', label: 'Favoritos', icon: Heart },
   { href: '/mi-terreno', label: 'Mi Terreno', icon: MapPin },
   { href: '/alertas', label: 'Alertas', icon: Bell },
-  { href: '/profile', label: 'Mi Perfil', icon: User },
+  { href: '/perfil', label: 'Mi Perfil', icon: User },
 ];
 
 const BuyerSidebar = ({ collapsed, onClose }: { collapsed?: boolean; onClose?: () => void }) => {

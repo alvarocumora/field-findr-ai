@@ -1,25 +1,57 @@
 import { Suspense } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import NotFound from "@/pages/NotFound";
 import RootErrorBoundary from "@/components/RootErrorBoundary";
-import { adminRoutes } from "./adminRoutes";
-import { agentRoutes } from "./agentRoutes";
-import { buyerRoutes } from "./buyerRoutes";
-import { legacyRedirects } from "./legacyRedirects";
-import { publicRoutes } from "./publicRoutes";
+import RouteGuard from "./RouteGuard";
 import { PageLoader } from "./routeUtils";
+import {
+  routeAliases,
+  routeManifest,
+  type RouteAccess,
+  type RouteEntry,
+  type RouteLayout,
+} from "./routeManifest";
+
+/**
+ * Router derivado 100% del manifiesto: las rutas se agrupan por
+ * (acceso, layout) y cada grupo comparte un único guard + layout padre.
+ */
+type GroupKey = `${RouteAccess}|${RouteLayout}`;
+
+const groups = routeManifest.reduce<Record<GroupKey, RouteEntry[]>>((acc, entry) => {
+  const key: GroupKey = `${entry.access}|${entry.layout}`;
+  (acc[key] ||= []).push(entry);
+  return acc;
+}, {} as Record<GroupKey, RouteEntry[]>);
 
 const AppRouter = () => (
   <BrowserRouter>
     <RootErrorBoundary>
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          {publicRoutes}
-          {buyerRoutes}
-          {agentRoutes}
-          {adminRoutes}
-          {legacyRedirects}
+          {Object.entries(groups).map(([key, entries]) => {
+            const [access, layout] = key.split("|") as [RouteAccess, RouteLayout];
+            return (
+              <Route
+                key={key}
+                element={<RouteGuard access={access} layout={layout} />}
+              >
+                {entries.map((entry) => (
+                  <Route key={entry.id} path={entry.path} element={entry.element} />
+                ))}
+              </Route>
+            );
+          })}
+
+          {routeAliases.map((alias) => (
+            <Route
+              key={`alias-${alias.from}`}
+              path={alias.from}
+              element={<Navigate to={alias.to} replace />}
+            />
+          ))}
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
