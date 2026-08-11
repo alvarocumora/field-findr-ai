@@ -1,47 +1,28 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
+import { routeExists, routeManifest, routeAliases } from './routeManifest';
 
 /**
  * Red anti-links-muertos: extrae todos los href/to/route estáticos de los
- * componentes de navegación y verifica que cada uno resuelva contra una ruta
- * declarada en el router (incluidos redirects legacy). Un botón que apunte a
- * una ruta inexistente (como pasó con /content-creator e /intelligent-links)
- * vuelve a romper este test, no producción.
+ * componentes de navegación y verifica que cada uno resuelva contra el
+ * manifiesto único de rutas (incluidos alias/redirects legacy).
  */
 
 const SRC = join(__dirname, '..');
 
-const ROUTE_FILES = readdirSync(__dirname)
-  .filter((f) => f.endsWith('.tsx'))
-  .map((f) => join(__dirname, f));
-
 /** Componentes de navegación cuyo destino debe existir siempre. */
 const NAV_FILES = [
   'components/navigation/StickyHeader.tsx',
+  'components/navigation/MobileBottomNav.tsx',
   'components/LandingQuickActions.tsx',
   'components/dashboard/QuickActions.tsx',
   'components/ModernSidebar.tsx',
   'components/FooterSection.tsx',
+  'components/layouts/BuyerLayout.tsx',
   'pages/Publicar.tsx',
 ].map((f) => join(SRC, f));
-
-function routePaths(): { statics: Set<string>; dynamics: RegExp[] } {
-  const statics = new Set<string>();
-  const dynamics: RegExp[] = [];
-  for (const file of ROUTE_FILES) {
-    const src = readFileSync(file, 'utf-8');
-    for (const m of src.matchAll(/path="([^"]+)"/g)) {
-      const p = m[1];
-      if (p.includes(':')) {
-        dynamics.push(new RegExp('^' + p.replace(/:[^/]+/g, '[^/]+') + '$'));
-      } else {
-        statics.add(p);
-      }
-    }
-  }
-  return { statics, dynamics };
-}
 
 function extractLinks(file: string): string[] {
   const src = readFileSync(file, 'utf-8');
@@ -59,20 +40,32 @@ function extractLinks(file: string): string[] {
   return links;
 }
 
-describe('links estáticos de navegación', () => {
-  const { statics, dynamics } = routePaths();
-
-  it('el router declara rutas (sanity)', () => {
-    expect(statics.size).toBeGreaterThan(30);
+describe('manifiesto de rutas', () => {
+  it('declara rutas (sanity)', () => {
+    expect(routeManifest.length).toBeGreaterThan(30);
   });
 
+  it('no tiene ids ni paths duplicados', () => {
+    const ids = routeManifest.map((r) => r.id);
+    const paths = routeManifest.map((r) => r.path);
+    expect(new Set(ids).size, 'ids duplicados').toBe(ids.length);
+    expect(new Set(paths).size, 'paths duplicados').toBe(paths.length);
+  });
+
+  it('todos los alias apuntan a una ruta real y no colisionan', () => {
+    const paths = new Set(routeManifest.map((r) => r.path));
+    const bad = routeAliases.filter((a) => !paths.has(a.to) || paths.has(a.from));
+    expect(bad.map((b) => b.from)).toEqual([]);
+  });
+});
+
+describe('links estáticos de navegación', () => {
   for (const file of NAV_FILES) {
     it(`todos los links de ${file.split('/').slice(-1)[0]} resuelven a una ruta`, () => {
       const broken = extractLinks(file)
-        // query/hash no afectan el match de ruta
         .map((l) => l.split(/[?#]/)[0])
         .filter((path) => path !== '/')
-        .filter((path) => !statics.has(path) && !dynamics.some((re) => re.test(path)));
+        .filter((path) => !routeExists(path));
       expect(broken, `links rotos: ${[...new Set(broken)].join(', ')}`).toEqual([]);
     });
   }
