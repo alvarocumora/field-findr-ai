@@ -1,64 +1,81 @@
+# Ordenar la plataforma bajo un único sistema de rutas
+
+## Situación actual
+
+Hay 115 rutas repartidas en 5 archivos (`publicRoutes`, `buyerRoutes`, `agentRoutes`, `adminRoutes`, `legacyRedirects`), cada uno exportando un **array de `<Route>` sueltos**. Consecuencias:
+
+- El layout se repite ruta por ruta (`agentElement(...)` / `adminElement(...)` en cada línea) y en el lado público cada página importa `PublicLayout` por su cuenta (17 páginas lo hacen, otras no) → cabeceras/footers inconsistentes.
+- Convenciones mezcladas: `/publish` y `/publicar`, `/favoritos` vs `/favorites`, `/proyecto/:id` vs `/p/:slug` vs landings hardcodeadas (`/explora-park`, `/huellelhue`, `/playa-alvaro`, `/forestal-valle-escondido`).
+- No existe una fuente única de verdad: menús, sitemap, SEO y tests de links leen las rutas por regex sobre los archivos `.tsx`.
+- La protección de acceso vive en dos mecanismos distintos (`DashboardLayout requiredRole` y `ProtectedRoute requireRole`) sin criterio único.
+
 ## Objetivo
 
-Publicar **Parque Mirador** en Hualañé, Región del Maule, replicando el patrón de Brisas de Caone: registro en `projects`, `lots` con polígonos, `listings` sincronizadas para las fichas públicas por lote y activación como destacado en la home.
+Un único sistema estructurado: **un manifiesto de rutas tipado** + **rutas anidadas con layouts padre** + **redirects legacy centralizados**, sin cambiar ninguna URL pública ya indexada.
 
-## Fuente de datos
+## Qué se va a construir
 
-- `user-uploads://doc.kml` — 225 polylines dentro de carpetas `Polyline [XXXX]`. No hay `<Polygon>`, por lo que hay que **reconstruir** los cierres.
-- Ubicación confirmada: **Hualañé, Región del Maule**.
+### 1. Manifiesto único de rutas
+`src/routes/routeManifest.ts`: lista tipada de todas las rutas con metadatos:
 
-## Fases
+```text
+{ id, path, area: 'public'|'buyer'|'agent'|'admin', element, access: 'public'|'auth'|'agent'|'admin',
+  nav?: { label, icon, group, plans? }, seo?: { indexable, changefreq } }
+```
 
-### 1. Script de ingesta del KML → `scripts/generateParqueMiradorLots.ts`
-Similar en espíritu a `generateHuellelhueLots.ts` / `generatePlayaAlvaroLots.ts`.
+De este manifiesto se derivan: el router, los menús (sidebar/header/bottom-nav), el sitemap y el test anti-links-muertos.
 
-- Parsear el KML y agrupar `LineString`s por carpeta padre (`Polyline [ID]` = un lote candidato).
-- Concatenar segmentos por continuidad de vértices (snap tolerancia ~1.5 m según `mem://features/compactacion-poligonos-con-restriccion-vial`) y cerrar el anillo cuando el primer y último punto coinciden (dentro de tolerancia).
-- Filtrar polylines de calles/servicios (color rojo `ff0000fe` en el KML se ve usado para caminos vs `fffefefe` blanco para bordes de lote) para no confundir viales con lotes.
-- Pasar cada polígono por `normalizePolygon` (`src/lib/polygonUtils.ts`) para respetar la Core rule de geometría 2D/3D.
-- Calcular área (Shoelace en metros) y centroide para latitude/longitude.
-- Exportar `src/pages/parqueMirador/data/lots.ts` con la lista tipada `{ lotNumber, polygon, area, centroid }`.
+### 2. Router con rutas anidadas
+`AppRouter` pasa a usar layouts como rutas padre con `<Outlet />`, eliminando la repetición por ruta:
 
-Salida esperada: N lotes (se determina al parsear; probablemente ~40–80). Reportar en consola los polylines descartados por no cerrar para revisión manual.
+```text
+/                 → PublicLayout      (todas las públicas)
+/  (buyer)        → BuyerLayout       (auth requerida)
+/asesor           → DashboardLayout role=agent
+/admin            → DashboardLayout role=admin
+```
 
-### 2. Migración de datos (usando insert tool, no schema)
-- Crear registro en `projects`:
-  - `name: "Parque Mirador"`, `slug: "parque-mirador"`, `city: "Hualañé"`, `region: "Maule"`, `country_code: "CL"`, `status: 'active'`, `featured: true`, `featured_until: now() + 90 días`.
-  - `description`, `total_area`, `boundary` (envelope de todos los lotes), imágenes placeholder.
-- Insertar lotes en `lots` (owner = usuario admin del proyecto, mismo dueño que Brisas):
-  - `lot_number`, `area`, `polygon` (jsonb normalizado), `latitude/longitude`, `price` y `price_per_sqm` con valores base (usar promedio de Brisas como referencia inicial, editable luego).
-  - `status: 'available'`.
-- Para cada lote crear `listings` correspondiente (aprovecha trigger `sync_listing_from_lot` una vez seteado `listing_id`): crear listing con `status='active'`, `tags: ['loteo','parque-mirador']`, price idéntico al lote, luego `UPDATE lots SET listing_id=…` para linkear.
-- Registrar entrada en `featured_history` (`action='activated'`) para dejar auditoría.
+Los layouts se adaptan para renderizar `<Outlet />`; las páginas públicas que hoy importan `PublicLayout` internamente se limpian para no duplicar header/footer.
 
-### 3. Ficha pública y visibilidad
-- Reutilizar la ruta genérica existente `/proyecto/:id` (misma que usa Brisas) — no se crea landing dedicada según tu selección de alcance.
-- Verificar que `get_public_lots(project_id)` devuelve los lotes (RPC ya existente).
-- Confirmar que aparecen tarjetas por lote en `/proyecto/:id` y que el master plan renderiza polígonos.
-- Al estar `featured=true` con imágenes, aparecerá en `FeaturedListings` de la home.
+### 3. Un solo guard de acceso
+`RouteGuard` unificado (basado en el `ProtectedRoute` existente) aplicado a nivel de layout padre: sesión + rol + plan. `DashboardLayout` deja de decidir acceso y vuelve a ser solo presentación.
 
-### 4. QA
-- Playwright:
-  - `/` — Parque Mirador visible en la sección destacados.
-  - `/proyecto/<id>` — hero, master plan con polígonos, listado de lotes.
-  - `/proyecto/<id>/experiencia` — scrollytelling funcional.
-  - Filtro `/explorar` con `region=Maule` → excluye lotes individuales (tag `loteo`) y muestra Parque Mirador como proyecto en `ProjectsRail`.
-- Ejecutar `supabase--linter` post-migración.
+### 4. Normalización de nombres de URL (con redirects 301-equivalentes)
+Canónico en español, un patrón por concepto:
 
-## Detalles técnicos
+| Canónico | Alias que redirige |
+|---|---|
+| `/publicar` | `/publish` |
+| `/favoritos` | `/favorites` |
+| `/perfil` | `/profile` |
+| `/suscripcion` | `/subscription` |
+| `/comprador/inicio` | `/buyer/home` |
+| `/proyecto/:slug` | `/p/:slug`, `/proyecto/:id` |
 
-- **NO** se modifica schema: se usan tablas existentes (`projects`, `lots`, `listings`, `featured_history`).
-- Se usa `supabase--insert` para poblar datos (no migration).
-- Owner del proyecto: mismo `user_id` que Brisas de Caone (`e0d83d66-c7be-4c94-a017-3ad331d74699`.user_id) para heredar permisos y evitar RLS mismatches.
-- Precios iniciales: `price_per_sqm` = mediana de Brisas de Caone (se calcula en el script y se aplica área × ppsqm). Editable después vía `adjust_lot_prices` RPC.
-- Imágenes: usar 3 placeholders genéricos de campo/mirador desde `src/assets` existentes o `unsplash` público (no se generan nuevas con imagegen salvo que lo pidas).
-- **Tour virtual y landing dedicada quedan fuera** de este alcance según tu selección (podemos hacerlas en un turno posterior cuando tengas panorámicas 360).
+Las landings de proyecto hardcodeadas (`/explora-park`, `/huellelhue`, `/playa-alvaro`, `/forestal-valle-escondido`) se mantienen como están (SEO vivo) pero se registran en el manifiesto en un grupo `projectLandings` para que dejen de ser casos sueltos.
 
-## Riesgos conocidos
+Todos los alias viven en un único `legacyRedirects` generado desde el manifiesto.
 
-- Si muchos polylines no cierran (por gaps del KML), reportaré la lista y podrás decidir: (a) aceptar N lotes válidos ahora, (b) ajustar tolerancia, o (c) descartar los rotos.
-- Diferenciar caminos vs bordes de lote se hace por color de línea; si el KML mezcla estilos, algunos polígonos podrían necesitar corrección manual posterior.
+### 5. Navegación derivada del manifiesto
+`StickyHeader`, `ModernSidebar`, `MobileBottomNav` y `FooterSection` dejan de tener listas propias de links: consumen `getNavFor(area, role, plan)`. Un link imposible de escribir si la ruta no existe.
 
-## Entregable de este turno
+### 6. Tests
+- El test existente `navLinks.test.ts` se reescribe para validar contra el manifiesto (no por regex).
+- Nuevo test: ninguna ruta duplicada, todo alias apunta a una ruta existente, toda ruta protegida declara `access`.
 
-Con tu aprobación, entrego: script de ingesta ejecutado, archivo `lots.ts` generado, proyecto + lotes + listings creados en la BD, destacado activo, y reporte de QA con screenshots de la home y ficha del proyecto.
+### 7. Documentación
+`docs/ROUTES_MAP.md` se regenera desde el manifiesto y pasa a ser la referencia única.
+
+## Orden de ejecución
+
+1. Crear manifiesto + tipos, sin conectar nada (cero riesgo).
+2. Migrar `AppRouter` a rutas anidadas por área, área por área: admin → asesor → comprador → público.
+3. Limpiar `PublicLayout` duplicado en páginas.
+4. Unificar guard de acceso.
+5. Alias/redirects normalizados.
+6. Conectar navegación al manifiesto.
+7. Tests + doc.
+
+## Nota
+
+No se toca lógica de negocio, datos ni backend: es reorganización de enrutado, layouts y navegación. Todas las URLs actuales seguirán funcionando.
