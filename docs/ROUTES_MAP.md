@@ -1,123 +1,47 @@
 # Routes Map — OfertaTerrenos / Field Findr AI
 
-Este documento describe la organización de rutas después del refactor de Sprint 1.
+## Sistema único de rutas
 
-## Objetivo
+Toda la plataforma se declara en **un solo archivo**: `src/routes/routeManifest.tsx`.
+No se declaran rutas en ningún otro lugar.
 
-Reducir el tamaño y riesgo de `src/App.tsx`, separando rutas por dominio funcional sin cambiar comportamiento existente.
+```
+src/routes/
+  routeManifest.tsx   ← fuente de verdad (path, área, acceso, layout, nav, SEO)
+  RouteGuard.tsx      ← guard único: sesión + rol + layout
+  AppRouter.tsx       ← deriva el router del manifiesto (rutas anidadas)
+  elements/           ← elementos compuestos (dashboards por plan)
+  routeUtils.tsx      ← PageLoader
+  navLinks.test.ts    ← red anti-links-muertos contra el manifiesto
+```
 
-## Archivos de rutas
+### Anatomía de una ruta
 
-- `src/routes/AppRouter.tsx`: compone todas las rutas dentro de `BrowserRouter` y `Routes`.
-- `src/routes/publicRoutes.tsx`: rutas públicas y de resultados públicos.
-- `src/routes/buyerRoutes.tsx`: rutas de comprador y perfil.
-- `src/routes/agentRoutes.tsx`: rutas de asesor/corredor.
-- `src/routes/adminRoutes.tsx`: rutas de administración.
-- `src/routes/legacyRedirects.tsx`: redirects de URLs antiguas.
-- `src/routes/routeUtils.tsx`: utilidades compartidas para rutas, como loading fallback.
-
-## Rutas públicas
-
-| Ruta | Vista | Protección |
+| Campo | Valores | Uso |
 |---|---|---|
-| `/` | Landing | Pública |
-| `/auth` | Auth | Pública |
-| `/explorar` | Explorador | Pública |
-| `/propiedad/:id` | Ficha propiedad | Pública |
-| `/proyecto/:id` | Ficha proyecto | Pública |
-| `/pricing` | Pricing | Pública |
-| `/tools` | Herramientas | Pública |
-| `/search` | Búsqueda inteligente | Pública |
-| `/instalar` | Instalación PWA | Pública |
-| `/referidos` | Referidos | Pública |
-| `/region/:slug` | Landing región | Pública |
-| `/pais/:code` | Landing país | Pública |
-| `/ciudad/:slug` | Landing ciudad | Pública |
-| `/contacto` | Contacto | Pública |
-| `/comparar` | Comparador | Pública |
-| `/alertas` | Alertas | Pública |
-| `/blog` | Blog | Pública |
-| `/oportunidades` | Oportunidades | Pública |
-| `/quiz` | Quiz comprador | Pública |
-| `/proyecto/:id/experiencia` | Experiencia proyecto | Pública |
-| `/reset-password` | Reset password | Pública |
-| `/subscription/success` | Resultado suscripción | Pública |
-| `/subscription/failure` | Resultado suscripción | Pública |
-| `/reserva/exito` | Resultado reserva | Pública |
-| `/reserva/error` | Resultado reserva | Pública |
-| `/reserva/pendiente` | Resultado reserva | Pública |
+| `id` | único | key estable |
+| `path` | absoluto | URL |
+| `area` | `public` / `buyer` / `agent` / `admin` | agrupación y navegación |
+| `access` | `public` / `auth` / `agent` / `admin` | lo aplica `RouteGuard` |
+| `layout` | `none` / `public` / `buyer` / `dashboard` | layout padre con `<Outlet />` |
+| `nav` | `{ label, group, plans? }` | navegación derivada por plan |
+| `indexable` | boolean | SEO / sitemap |
 
-## Rutas comprador
+Las rutas se agrupan por `(access, layout)` y cada grupo comparte **un solo**
+guard y layout padre. Ninguna página se envuelve individualmente.
 
-| Ruta | Vista | Protección |
-|---|---|---|
-| `/buyer/home` | Home comprador | `BuyerLayout`, requiere sesión |
-| `/favoritos` | Favoritos | `BuyerLayout`, requiere sesión |
-| `/mi-terreno` | Mi Terreno | `BuyerLayout`, requiere sesión |
-| `/profile` | Perfil | `ProtectedRoute requireAuth` |
-| `/subscription` | Suscripción | `ProtectedRoute requireAuth` |
+### Alias y redirects
 
-Nota: `BuyerLayout` ya valida sesión y redirige a `/auth` si no hay usuario.
+`routeAliases` en el manifiesto concentra tanto los redirects legacy como la
+normalización al español. Cada alias renderiza `<Navigate replace />`.
 
-## Rutas asesor / corredor
-
-Todas usan `DashboardLayout requiredRole="agent"`, salvo `/publish`, que usa `ProtectedRoute requireAuth requireRole="agent"`.
-
-| Ruta | Vista |
+| Alias | Canónico |
 |---|---|
-| `/asesor/dashboard` | Dashboard asesor |
-| `/asesor/opportunities` | Oportunidades de suelo |
-| `/asesor/opportunity/:id` | Detalle oportunidad |
-| `/asesor/contacts` | Contactos |
-| `/asesor/listings` | Inventario |
-| `/asesor/leads` | Leads |
-| `/asesor/projects` | Proyectos |
-| `/asesor/lots` | Lotes |
-| `/asesor/analytics` | Analytics |
-| `/asesor/crm` | CRM |
-| `/asesor/sales` | Ventas |
-| `/asesor/reservations` | Reservas |
-| `/asesor/credits` | Créditos |
-| `/asesor/closing` | Cierre |
-| `/asesor/messages` | Mensajes |
-| `/asesor/enterprise` | Empresa |
-| `/asesor/executive` | Dashboard ejecutivo |
-| `/asesor/financial` | Dashboard financiero |
-| `/asesor/performance` | Performance |
-| `/asesor/pipeline` | Pipeline |
-| `/asesor/multi-project` | Multi proyecto |
-| `/asesor/payments` | Pagos |
-| `/asesor/reports` | Reportes |
-| `/asesor/notifications` | Notificaciones |
-| `/asesor/demand` | Demanda |
-| `/asesor/api` | API portal |
-| `/asesor/tools` | Herramientas |
-| `/asesor/profile` | Perfil asesor |
-| `/publish` | Publicar propiedad |
-
-## Rutas admin
-
-Todas usan `DashboardLayout requiredRole="admin"`.
-
-| Ruta | Vista |
-|---|---|
-| `/admin/dashboard` | Dashboard admin |
-| `/admin/users` | Usuarios |
-| `/admin/agents` | Agentes |
-| `/admin/reservations` | Reservas |
-| `/admin/approvals` | Aprobaciones |
-| `/admin/credits` | Créditos |
-| `/admin/analytics` | Analytics |
-| `/admin/financial` | Financiero |
-| `/admin/documents` | Documentos |
-| `/admin/projects` | Proyectos |
-| `/admin/audit` | Auditoría |
-
-## Redirects legacy
-
-| Ruta antigua | Redirige a |
-|---|---|
+| `/profile` | `/perfil` |
+| `/subscription` | `/suscripcion` |
+| `/buyer/home` | `/comprador/inicio` |
 | `/favorites` | `/favoritos` |
+| `/compare` | `/comparar` |
 | `/dashboard` | `/asesor/dashboard` |
 | `/inventory` | `/asesor/listings` |
 | `/leads` | `/asesor/leads` |
@@ -126,25 +50,40 @@ Todas usan `DashboardLayout requiredRole="admin"`.
 | `/analytics` | `/asesor/analytics` |
 | `/crm` | `/asesor/crm` |
 | `/sales` | `/asesor/sales` |
-| `/agents` | `/admin/agents` |
-| `/compare` | `/comparar` |
-| `/calculators` | `/tools` |
-| `/price-predictor` | `/tools` |
-| `/risk-analysis` | `/tools` |
-| `/ai-recommendations` | `/tools` |
 | `/urbanization` | `/asesor/projects` |
+| `/agents` | `/admin/agents` |
+| `/calculators`, `/price-predictor`, `/risk-analysis`, `/ai-recommendations` | `/tools` |
 
-## Catch-all
+### Áreas
 
-Toda ruta no reconocida cae en `NotFound`.
+- **public** (`access: public`, layout propio de cada página): home, explorar,
+  fichas de propiedad y proyecto, landings de región/país/ciudad, marketing,
+  tasaciones públicas, resultados de pago, y las landings de proyecto con URL
+  congelada por SEO (`/explora-park`, `/huellelhue`, `/playa-alvaro`,
+  `/forestal-valle-escondido`, `/p/:slug`).
+- **buyer** (`access: auth`, `BuyerLayout`): `/comprador/inicio`, `/favoritos`,
+  `/mi-terreno`, `/perfil`, `/suscripcion`.
+- **agent** (`access: agent`, `DashboardLayout`): todo `/asesor/*`.
+  `/publicar` y `/publish` usan `layout: none` (flujo enfocado sin sidebar).
+- **admin** (`access: admin`, `DashboardLayout`): todo `/admin/*`.
+
+### Navegación
+
+`navFor(area, plan)` devuelve los links del área filtrados por plan
+(`nav.plans` limita, por ejemplo, `/asesor/api` a Enterprise). El test
+`navLinks.test.ts` valida que ningún componente de navegación apunte a una URL
+inexistente y que no haya ids, paths o alias duplicados.
+
+### Añadir una ruta
+
+1. Agregar la entrada en `routeManifest.tsx` con `area`, `access` y `layout`.
+2. Si debe aparecer en el menú, agregar `nav`.
+3. Si reemplaza una URL antigua, agregar el alias en `routeAliases`.
+4. `bunx vitest run src/routes/navLinks.test.ts`.
 
 ## QA mínimo después de modificar rutas
 
-- Abrir `/`.
-- Abrir `/explorar`.
-- Abrir `/propiedad/:id`.
-- Abrir `/buyer/home` sin sesión.
-- Abrir `/asesor/dashboard` sin sesión.
-- Abrir `/admin/dashboard` sin sesión.
-- Probar `/dashboard` y confirmar redirect a `/asesor/dashboard`.
-- Probar `/favorites` y confirmar redirect a `/favoritos`.
+- `/`, `/explorar`, `/propiedad/:id`, `/explora-park`.
+- `/comprador/inicio`, `/asesor/dashboard`, `/admin/dashboard` sin sesión → `/auth?redirect=…`.
+- `/dashboard` → `/asesor/dashboard`; `/favorites` → `/favoritos`; `/profile` → `/perfil`.
+- Una URL inexistente → `NotFound`.
