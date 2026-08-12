@@ -51,7 +51,7 @@ const HeroContent = ({
         style={prefersReducedMotion ? {} : { y: titleY }}
       >
         <motion.p
-          className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.4em] text-primary/70 mb-4"
+          className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.4em] text-primary mb-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 1 }}
@@ -80,55 +80,63 @@ const HeroContent = ({
         </motion.p>
 
         {/* Animated metrics */}
-        <motion.div
-          className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-10"
+        <motion.ul
+          className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-10 list-none"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
+          aria-label="Métricas de la plataforma"
         >
           {metrics.map((m) => (
-            <div key={m.label} className="text-center min-w-[110px]">
-              <p className="text-base sm:text-xl md:text-2xl font-heading font-bold text-foreground">{m.value}</p>
-              <p className="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground mt-1">{m.label}</p>
-            </div>
+            <li key={m.label} className="text-center min-w-[110px]">
+              <p className="text-base sm:text-xl md:text-2xl font-heading font-bold text-foreground">
+                <span className="sr-only">{m.label}: </span>
+                {m.value}
+              </p>
+              <p aria-hidden="true" className="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground mt-1">{m.label}</p>
+            </li>
           ))}
-        </motion.div>
+        </motion.ul>
 
         {/* Coordinates */}
-        <motion.div
+        <motion.p
           className="mt-5 hidden sm:block font-mono text-[10px] sm:text-xs text-muted-foreground tracking-[0.2em]"
           style={prefersReducedMotion ? {} : { opacity: coordOpacity, y: coordY }}
         >
-          <span className="text-primary">−33.4489° S</span>
-          <span className="mx-3 text-border">|</span>
-          <span className="text-primary">−70.6693° W</span>
-          <span className="mx-3 text-border">|</span>
-          <span>Santiago, Chile</span>
-        </motion.div>
+          <span className="sr-only">Ubicación de referencia: latitud 33.4489 sur, longitud 70.6693 oeste, Santiago, Chile.</span>
+          <span aria-hidden="true">
+            <span className="text-primary">−33.4489° S</span>
+            <span className="mx-3 text-border">|</span>
+            <span className="text-primary">−70.6693° W</span>
+            <span className="mx-3 text-border">|</span>
+            <span>Santiago, Chile</span>
+          </span>
+        </motion.p>
 
         {/* Triple CTA */}
-        <motion.div
+        <motion.nav
           className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 pointer-events-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.1, duration: 0.6 }}
+          aria-label="Acciones principales"
         >
-          <Button asChild size="lg" className="btn-glow text-base px-8">
-            <Link to="/explorar">
-              <Compass className="h-4 w-4 mr-2" />
+          <Button asChild size="lg" className="btn-glow text-base px-8 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+            <Link to="/explorar" aria-label="Explorar terrenos disponibles en el mapa">
+              <Compass className="h-4 w-4 mr-2" aria-hidden="true" />
               Explorar Terrenos
             </Link>
           </Button>
-          <Button variant="outline" asChild size="lg" className="border-border/50 backdrop-blur-sm bg-background/30">
-            <Link to="/oportunidades">
+          <Button variant="outline" asChild size="lg" className="border-border backdrop-blur-sm bg-background/70 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+            <Link to="/oportunidades" aria-label="Ver oportunidades de inversión destacadas">
               Ver Oportunidades
-              <ArrowRight className="h-4 w-4 ml-2" />
+              <ArrowRight className="h-4 w-4 ml-2" aria-hidden="true" />
             </Link>
           </Button>
-          <Button variant="ghost" asChild size="lg" className="text-muted-foreground hover:text-foreground">
-            <Link to="/pricing">Soy Corredor</Link>
+          <Button variant="ghost" asChild size="lg" className="text-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+            <Link to="/pricing" aria-label="Soy corredor: ver planes y precios">Soy Corredor</Link>
           </Button>
-        </motion.div>
+        </motion.nav>
       </motion.div>
     </div>
   );
