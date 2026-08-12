@@ -233,21 +233,32 @@ const CartographicHero = () => {
   }, [mapReady, prefersReducedMotion, isMobile]);
 
   return (
-    <section ref={containerRef} className="relative h-[180vh] md:h-[240vh]">
+    <section
+      ref={containerRef}
+      className="relative h-[180vh] md:h-[240vh]"
+      aria-labelledby="hero-title"
+    >
       <div className="sticky top-0 h-[100svh] w-full overflow-hidden bg-background">
-        <motion.div className="absolute inset-0" style={{ opacity }}>
-          <div ref={mapContainerRef} className="w-full h-full" />
+        <motion.div className="absolute inset-0" style={{ opacity }} aria-hidden="true">
+          <div
+            ref={mapContainerRef}
+            className="w-full h-full"
+            role="img"
+            aria-label="Mapa satelital animado del globo terráqueo con acercamiento a Chile"
+          />
           {(!mapReady || tokenLoading) && (
-            <div className="absolute inset-0 flex items-center justify-center bg-background">
+            <div className="absolute inset-0 flex items-center justify-center bg-background" role="status">
+              <span className="sr-only">Cargando mapa del hero</span>
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             </div>
           )}
         </motion.div>
 
         {/* Vignette overlays */}
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,hsl(var(--background)/0.55)_0%,hsl(var(--background)/0.35)_45%,hsl(var(--background))_88%)]" />
-        <div className="absolute bottom-0 left-0 right-0 h-40 md:h-48 bg-gradient-to-t from-background via-background/60 to-transparent pointer-events-none" />
-        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background/50 to-transparent pointer-events-none" />
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,hsl(var(--background)/0.55)_0%,hsl(var(--background)/0.35)_45%,hsl(var(--background))_88%)]" />
+        <div aria-hidden="true" className="absolute bottom-0 left-0 right-0 h-40 md:h-48 bg-gradient-to-t from-background via-background/60 to-transparent pointer-events-none" />
+        <div aria-hidden="true" className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background/50 to-transparent pointer-events-none" />
+
 
         <HeroContent
           prefersReducedMotion={prefersReducedMotion}
@@ -258,6 +269,7 @@ const CartographicHero = () => {
 
         {/* Scroll indicator — desktop only (evita choque con los CTA en móvil) */}
         <motion.div
+          aria-hidden="true"
           className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-3 z-10 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -267,7 +279,7 @@ const CartographicHero = () => {
           <div className="w-px h-10 bg-gradient-to-b from-primary/60 to-transparent" />
         </motion.div>
 
-        <motion.div className="absolute bottom-0 left-0 h-px bg-primary/40 z-20" style={{ width: progressWidth }} />
+        <motion.div aria-hidden="true" className="absolute bottom-0 left-0 h-px bg-primary/40 z-20" style={{ width: progressWidth }} />
       </div>
     </section>
   );
