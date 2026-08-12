@@ -163,7 +163,7 @@ const CartographicHero = () => {
     mapboxgl.accessToken = token;
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      style: 'mapbox://styles/mapbox/satellite-v9',
       center: [-30, 20],
       zoom: 1.5,
       projection: 'globe',
@@ -237,7 +237,7 @@ const CartographicHero = () => {
         </motion.div>
 
         {/* Vignette overlays */}
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_25%,hsl(var(--background))_88%)]" />
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,hsl(var(--background)/0.55)_0%,hsl(var(--background)/0.35)_45%,hsl(var(--background))_88%)]" />
         <div className="absolute bottom-0 left-0 right-0 h-40 md:h-48 bg-gradient-to-t from-background via-background/60 to-transparent pointer-events-none" />
         <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background/50 to-transparent pointer-events-none" />
 
