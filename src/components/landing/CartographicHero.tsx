@@ -81,7 +81,7 @@ const HeroContent = ({
 
         {/* Animated metrics */}
         <motion.div
-          className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-10"
+          className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
@@ -96,7 +96,7 @@ const HeroContent = ({
 
         {/* Coordinates */}
         <motion.div
-          className="mt-6 font-mono text-[10px] sm:text-xs text-muted-foreground tracking-[0.2em]"
+          className="mt-5 hidden sm:block font-mono text-[10px] sm:text-xs text-muted-foreground tracking-[0.2em]"
           style={prefersReducedMotion ? {} : { opacity: coordOpacity, y: coordY }}
         >
           <span className="text-primary">−33.4489° S</span>
@@ -108,7 +108,7 @@ const HeroContent = ({
 
         {/* Triple CTA */}
         <motion.div
-          className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 pointer-events-auto"
+          className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 pointer-events-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.1, duration: 0.6 }}
