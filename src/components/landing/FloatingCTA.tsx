@@ -23,7 +23,7 @@ const FloatingCTA = () => {
     <div
       style={{ zIndex: 'var(--z-fab)' }}
       aria-hidden={!isVisible}
-      inert={!isVisible ? '' : undefined}
+      
       className={`fixed bottom-safe-nav left-1/2 -translate-x-1/2 transition-all duration-500 ${
         isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'
       }`}
