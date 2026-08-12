@@ -60,6 +60,7 @@ const HeroContent = ({
         </motion.p>
 
         <motion.h1
+          id="hero-title"
           className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-heading font-bold tracking-tight leading-[0.9] text-foreground"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
