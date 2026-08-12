@@ -4,6 +4,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { motion, useScroll, useTransform, useReducedMotion, MotionValue } from 'framer-motion';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useLandingStats } from '@/hooks/useLandingStats';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Compass } from 'lucide-react';
