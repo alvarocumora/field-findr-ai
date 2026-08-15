@@ -82,6 +82,7 @@ const AgencyShowcase = lazy(() => import("@/pages/AgencyShowcase"));
 const TasacionValidator = lazy(() => import("@/pages/TasacionValidator"));
 const CorredorasLanding = lazy(() => import("@/pages/marketing/CorredorasLanding"));
 const InmobiliariasLanding = lazy(() => import("@/pages/marketing/InmobiliariasLanding"));
+const Agendar = lazy(() => import("@/pages/Agendar"));
 
 // Landings de proyecto (SEO vivo: URLs congeladas)
 const ForestalLanding = lazy(() => import("@/pages/forestal/ForestalLanding"));
@@ -118,6 +119,7 @@ const FinancialDashboard = lazy(() => import("@/pages/dashboard/FinancialDashboa
 const AgentPerformance = lazy(() => import("@/pages/dashboard/AgentPerformance"));
 const Messages = lazy(() => import("@/pages/dashboard/Messages"));
 const SalesPipeline = lazy(() => import("@/pages/dashboard/SalesPipeline"));
+const MeetingsManager = lazy(() => import("@/pages/dashboard/MeetingsManager"));
 const MultiProjectDashboard = lazy(() => import("@/pages/dashboard/MultiProjectDashboard"));
 const PaymentManagement = lazy(() => import("@/pages/dashboard/PaymentManagement"));
 const Reports = lazy(() => import("@/pages/dashboard/Reports"));
@@ -212,6 +214,7 @@ export const publicRouteEntries: RouteEntry[] = [
   pub("pricing", "/pricing", <Pricing />, { nav: { label: "Planes", group: "principal" } }),
   pub("planes-loteos", "/planes-loteos", <PricingLoteos />),
   pub("contacto-loteos", "/contacto-loteos", <ContactLoteos />),
+  pub("agendar", "/agendar", <Agendar />),
   pub("para-corredoras", "/para-corredoras", <CorredorasLanding />),
   pub("para-inmobiliarias", "/para-inmobiliarias", <InmobiliariasLanding />),
   pub("tools", "/tools", <Tools />, { nav: { label: "Herramientas", group: "principal" } }),
@@ -278,6 +281,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-credits", "/asesor/credits", <CreditManager />, { label: "Créditos", group: "ventas" }),
   agent("asesor-closing", "/asesor/closing", <ClosingManager />, { label: "Cierre", group: "ventas" }),
   agent("asesor-messages", "/asesor/messages", <Messages />, { label: "Mensajes", group: "crm" }),
+  agent("asesor-reuniones", "/asesor/reuniones", <MeetingsManager />, { label: "Reuniones", group: "crm" }),
   agent("asesor-enterprise", "/asesor/enterprise", <EnterpriseSettings />, { label: "Empresa", group: "cuenta", plans: ["inmobiliaria", "grupo", "enterprise"] }),
   agent("asesor-executive", "/asesor/executive", <ExecutiveDashboard />, { label: "Ejecutivo", group: "análisis", plans: ["inmobiliaria", "grupo", "enterprise"] }),
   agent("asesor-financial", "/asesor/financial", <FinancialDashboard />, { label: "Financiero", group: "análisis" }),
