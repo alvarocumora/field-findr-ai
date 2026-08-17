@@ -82,6 +82,10 @@ const AgencyShowcase = lazy(() => import("@/pages/AgencyShowcase"));
 const TasacionValidator = lazy(() => import("@/pages/TasacionValidator"));
 const CorredorasLanding = lazy(() => import("@/pages/marketing/CorredorasLanding"));
 const InmobiliariasLanding = lazy(() => import("@/pages/marketing/InmobiliariasLanding"));
+const BrokersLanding = lazy(() => import("@/pages/brokers/BrokersLanding"));
+const BrokerSignup = lazy(() => import("@/pages/brokers/BrokerSignup"));
+const BrokerRanking = lazy(() => import("@/pages/brokers/BrokerRanking"));
+const BrokerShowcase = lazy(() => import("@/pages/brokers/BrokerShowcase"));
 
 // Landings de proyecto (SEO vivo: URLs congeladas)
 const ForestalLanding = lazy(() => import("@/pages/forestal/ForestalLanding"));
