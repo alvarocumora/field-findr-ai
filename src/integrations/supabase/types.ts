@@ -2619,6 +2619,40 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_broker_metrics: {
+        Args: { p_broker_user?: string }
+        Returns: {
+          broker_user_id: string
+          commission_paid: number
+          commission_pending: number
+          leads_active: number
+          leads_total: number
+          leads_won: number
+          network_direct: number
+          network_total: number
+          override_earned: number
+          override_pending: number
+          projects_assigned: number
+          sales_count: number
+          sales_volume: number
+        }[]
+      }
+      get_broker_project_attribution: {
+        Args: { p_broker_user?: string }
+        Returns: {
+          assignment_status: string
+          commission_paid: number
+          commission_rate: number
+          commission_total: number
+          last_activity: string
+          leads_count: number
+          leads_won: number
+          project_id: string
+          project_name: string
+          sales_count: number
+          sales_volume: number
+        }[]
+      }
       get_broker_ranking: {
         Args: { p_limit?: number }
         Returns: {
@@ -2631,6 +2665,23 @@ export type Database = {
           sales_count: number
           slug: string
           zones: string[]
+        }[]
+      }
+      get_broker_referral_tree: {
+        Args: { p_max_depth?: number; p_root_user?: string }
+        Returns: {
+          commission_volume: number
+          depth: number
+          display_name: string
+          is_active: boolean
+          joined_at: string
+          level: string
+          override_generated: number
+          parent_user_id: string
+          sales_count: number
+          sales_volume: number
+          slug: string
+          user_id: string
         }[]
       }
       get_owner_lot_buyer: {
