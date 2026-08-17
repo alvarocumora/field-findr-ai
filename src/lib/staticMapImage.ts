@@ -36,7 +36,10 @@ export function listingCoverUrl(
   lng: number | null | undefined,
   token: string | null,
 ): string | null {
-  const first = Array.isArray(images) ? images.find((i) => !!i) : null;
+  // '/placeholder.svg' se guardó en la BD para inventario importado: no es foto real.
+  const first = Array.isArray(images)
+    ? images.find((i) => !!i && !i.includes('placeholder.svg'))
+    : null;
   if (first) return first;
   if (token && lat != null && lng != null) {
     return staticMapUrl({ lat: Number(lat), lng: Number(lng), token });
