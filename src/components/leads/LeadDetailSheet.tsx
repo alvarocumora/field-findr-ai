@@ -22,6 +22,9 @@ import {
 import { Loader2, Mail, MessageCircle, Phone, Send } from 'lucide-react';
 import { LEAD_STATUS_CONFIG, type Lead, type LeadStatus, useLeads } from '@/hooks/useLeads';
 import LeadScoreBadge from '@/components/leads/LeadScoreBadge';
+import { useNotificationTemplates } from '@/hooks/useNotificationTemplates';
+import { useProfile } from '@/hooks/useProfile';
+import { renderTemplate, whatsappLink } from '@/lib/notifications/templates';
 
 interface LeadDetailSheetProps {
   lead: Lead | null;
@@ -50,6 +53,8 @@ const toDateInput = (value?: string | null) =>
 
 export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetProps) {
   const { updateLead } = useLeads();
+  const { getTemplate } = useNotificationTemplates();
+  const { profile } = useProfile();
   const [status, setStatus] = useState<LeadStatus>('new');
   const [followUp, setFollowUp] = useState('');
   const [reply, setReply] = useState('');
@@ -68,6 +73,18 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
   const fullName = `${lead.first_name} ${lead.last_name || ''}`.trim();
   const phoneDigits = (lead.phone || '').replace(/\D/g, '');
   const saving = updateLead.isPending;
+
+  const waTemplate = getTemplate('lead_created:whatsapp:contact');
+  const whatsappMessage = renderTemplate(
+    waTemplate?.body ?? 'Hola {{nombre}}, te escribo desde OFERTA TERRENOS.',
+    {
+      nombre: lead.first_name,
+      email: lead.email,
+      telefono: lead.phone,
+      mensaje: lead.notes,
+      agente: [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'tu asesor',
+    },
+  );
 
   const handleSaveTracking = () => {
     updateLead.mutate({
@@ -117,9 +134,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
               </Button>
               <Button asChild size="sm" variant="outline">
                 <a
-                  href={`https://wa.me/${phoneDigits}?text=${encodeURIComponent(
-                    `Hola ${lead.first_name}, te escribo desde OFERTA TERRENOS.`,
-                  )}`}
+                  href={whatsappLink(phoneDigits, whatsappMessage)}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Escribir por WhatsApp a ${fullName}`}
