@@ -1068,6 +1068,45 @@ export type Database = {
           },
         ]
       }
+      notification_templates: {
+        Row: {
+          audience: string
+          body: string
+          channel: string
+          created_at: string
+          enabled: boolean
+          event: string
+          id: string
+          subject: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audience: string
+          body: string
+          channel: string
+          created_at?: string
+          enabled?: boolean
+          event: string
+          id?: string
+          subject?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          channel?: string
+          created_at?: string
+          enabled?: boolean
+          event?: string
+          id?: string
+          subject?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
