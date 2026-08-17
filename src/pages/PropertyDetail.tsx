@@ -366,7 +366,7 @@ const PropertyDetail = () => {
             ) : (
               /* Gallery */
               <div className="relative">
-                <ImageGallery images={listing.images} title={listing.title} />
+                <ImageGallery images={galleryImages} title={listing.title} />
 
                 {/* Actions Overlay */}
                 <div className="absolute top-3 md:top-4 right-3 md:right-4 flex gap-2 z-10">
@@ -407,7 +407,7 @@ const PropertyDetail = () => {
             {/* Galería de fotos secundaria para Teno */}
             {isTeno && listing.images?.length > 0 && (
               <div className="relative">
-                <ImageGallery images={listing.images} title={listing.title} />
+                <ImageGallery images={galleryImages} title={listing.title} />
               </div>
             )}
 
