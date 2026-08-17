@@ -139,6 +139,7 @@ const TeamManagement = lazy(() => import("@/pages/dashboard/TeamManagement"));
 const MyCaptaciones = lazy(() => import("@/pages/dashboard/MyCaptaciones"));
 const BrokerMarketplace = lazy(() => import("@/pages/dashboard/BrokerMarketplace"));
 const MyBrokerBusiness = lazy(() => import("@/pages/dashboard/MyBrokerBusiness"));
+const BrokerNetwork = lazy(() => import("@/pages/dashboard/BrokerNetwork"));
 
 // Admin
 const DashboardAdminPage = lazy(() => import("./elements/AdminDashboard"));
@@ -280,6 +281,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-captaciones", "/asesor/captaciones", <MyCaptaciones />, { label: "Mis captaciones", group: "captación" }),
   agent("asesor-broker-marketplace", "/asesor/proyectos-en-venta", <BrokerMarketplace />, { label: "Proyectos en venta", group: "captación" }),
   agent("asesor-mi-negocio", "/asesor/mi-negocio", <MyBrokerBusiness />, { label: "Mi negocio", group: "gestión" }),
+  agent("asesor-red", "/asesor/red", <BrokerNetwork />, { label: "Red y atribución", group: "análisis" }),
   agent("asesor-contacts", "/asesor/contacts", <Contacts />, { label: "Contactos", group: "crm" }),
   agent("asesor-listings", "/asesor/listings", <PropertyInventory />, { label: "Inventario", group: "gestión" }),
   agent("asesor-leads", "/asesor/leads", <LeadManagement />, { label: "Leads", group: "crm" }),

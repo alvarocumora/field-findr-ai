@@ -174,6 +174,9 @@ const MyBrokerBusiness = () => {
               <p className="text-xs text-muted-foreground mt-2">
                 Override de red: {profile.network_override_rate}% · ganado {fmt(totals.network)}
               </p>
+              <Button variant="link" className="px-0" asChild>
+                <Link to="/asesor/red">Ver árbol de referidos y atribución →</Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
