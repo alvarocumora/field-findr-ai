@@ -82,6 +82,10 @@ const AgencyShowcase = lazy(() => import("@/pages/AgencyShowcase"));
 const TasacionValidator = lazy(() => import("@/pages/TasacionValidator"));
 const CorredorasLanding = lazy(() => import("@/pages/marketing/CorredorasLanding"));
 const InmobiliariasLanding = lazy(() => import("@/pages/marketing/InmobiliariasLanding"));
+const BrokersLanding = lazy(() => import("@/pages/brokers/BrokersLanding"));
+const BrokerSignup = lazy(() => import("@/pages/brokers/BrokerSignup"));
+const BrokerRanking = lazy(() => import("@/pages/brokers/BrokerRanking"));
+const BrokerShowcase = lazy(() => import("@/pages/brokers/BrokerShowcase"));
 
 // Landings de proyecto (SEO vivo: URLs congeladas)
 const ForestalLanding = lazy(() => import("@/pages/forestal/ForestalLanding"));
@@ -133,6 +137,8 @@ const SubdivisionStudio = lazy(() => import("@/pages/dashboard/SubdivisionStudio
 const Commissions = lazy(() => import("@/pages/dashboard/Commissions"));
 const TeamManagement = lazy(() => import("@/pages/dashboard/TeamManagement"));
 const MyCaptaciones = lazy(() => import("@/pages/dashboard/MyCaptaciones"));
+const BrokerMarketplace = lazy(() => import("@/pages/dashboard/BrokerMarketplace"));
+const MyBrokerBusiness = lazy(() => import("@/pages/dashboard/MyBrokerBusiness"));
 
 // Admin
 const DashboardAdminPage = lazy(() => import("./elements/AdminDashboard"));
@@ -146,6 +152,9 @@ const VisualScenariosAdmin = lazy(() => import("@/pages/admin/VisualScenariosAdm
 const FeaturedManager = lazy(() => import("@/pages/admin/FeaturedManager"));
 const CommercialLeadsAdmin = lazy(() => import("@/pages/admin/CommercialLeadsAdmin"));
 const CaptacionesQueue = lazy(() => import("@/pages/admin/CaptacionesQueue"));
+const BrokersAdmin = lazy(() => import("@/pages/admin/BrokersAdmin"));
+const CommissionsAdmin = lazy(() => import("@/pages/admin/CommissionsAdmin"));
+const SalesAdmin = lazy(() => import("@/pages/admin/SalesAdmin"));
 
 /* ------------------------------------------------------------------ */
 /* Helpers de declaración                                              */
@@ -240,6 +249,10 @@ export const publicRouteEntries: RouteEntry[] = [
   pub("tasacion-validar", "/tasacion/validar", <TasacionValidator />),
   pub("diseno-compartido", "/diseno/:token", <SharedDesign />, { indexable: false }),
   pub("inmobiliaria-showcase", "/inmobiliaria/:slug", <AgencyShowcase />),
+  pub("brokers", "/brokers", <BrokersLanding />, { nav: { label: "Brokers", group: "principal" } }),
+  pub("brokers-inscripcion", "/brokers/inscripcion", <BrokerSignup />),
+  pub("brokers-ranking", "/brokers/ranking", <BrokerRanking />),
+  pub("broker-showcase", "/b/:slug", <BrokerShowcase />),
 ];
 
 /** Landings de proyecto: URLs congeladas por SEO, agrupadas para no ser casos sueltos. */
@@ -265,6 +278,8 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-opportunities", "/asesor/opportunities", <LandOpportunities />, { label: "Oportunidades", group: "captación" }),
   agent("asesor-opportunity", "/asesor/opportunity/:id", <OpportunityDetail />),
   agent("asesor-captaciones", "/asesor/captaciones", <MyCaptaciones />, { label: "Mis captaciones", group: "captación" }),
+  agent("asesor-broker-marketplace", "/asesor/proyectos-en-venta", <BrokerMarketplace />, { label: "Proyectos en venta", group: "captación" }),
+  agent("asesor-mi-negocio", "/asesor/mi-negocio", <MyBrokerBusiness />, { label: "Mi negocio", group: "gestión" }),
   agent("asesor-contacts", "/asesor/contacts", <Contacts />, { label: "Contactos", group: "crm" }),
   agent("asesor-listings", "/asesor/listings", <PropertyInventory />, { label: "Inventario", group: "gestión" }),
   agent("asesor-leads", "/asesor/leads", <LeadManagement />, { label: "Leads", group: "crm" }),
@@ -330,6 +345,9 @@ export const adminRouteEntries: RouteEntry[] = [
   admin("admin-visual-scenarios", "/admin/visual-scenarios", <VisualScenariosAdmin />, { label: "Escenarios visuales", group: "admin" }),
   admin("admin-commercial-leads", "/admin/commercial-leads", <CommercialLeadsAdmin />, { label: "Leads comerciales", group: "admin" }),
   admin("admin-captaciones", "/admin/captaciones", <CaptacionesQueue />, { label: "Captaciones", group: "admin" }),
+  admin("admin-brokers", "/admin/brokers", <BrokersAdmin />, { label: "Brokers", group: "admin" }),
+  admin("admin-comisiones", "/admin/comisiones", <CommissionsAdmin />, { label: "Comisiones", group: "admin" }),
+  admin("admin-ventas", "/admin/ventas", <SalesAdmin />, { label: "Ventas", group: "admin" }),
   admin("admin-featured", "/admin/featured", <FeaturedManager />, { label: "Destacados", group: "admin" }),
   admin("admin-audit", "/admin/audit", <AuditLog />, { label: "Auditoría", group: "admin" }),
 ];

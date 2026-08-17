@@ -245,6 +245,150 @@ export type Database = {
         }
         Relationships: []
       }
+      broker_applications: {
+        Row: {
+          admin_notes: string | null
+          city: string | null
+          company_name: string | null
+          country: string
+          created_at: string
+          email: string
+          experience_years: number | null
+          full_name: string
+          id: string
+          invited_by_code: string | null
+          motivation: string | null
+          phone: string | null
+          region: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          socials: string | null
+          source: string | null
+          specialty: string | null
+          status: string
+          tax_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          city?: string | null
+          company_name?: string | null
+          country?: string
+          created_at?: string
+          email: string
+          experience_years?: number | null
+          full_name: string
+          id?: string
+          invited_by_code?: string | null
+          motivation?: string | null
+          phone?: string | null
+          region?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          socials?: string | null
+          source?: string | null
+          specialty?: string | null
+          status?: string
+          tax_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          city?: string | null
+          company_name?: string | null
+          country?: string
+          created_at?: string
+          email?: string
+          experience_years?: number | null
+          full_name?: string
+          id?: string
+          invited_by_code?: string | null
+          motivation?: string | null
+          phone?: string | null
+          region?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          socials?: string | null
+          source?: string | null
+          specialty?: string | null
+          status?: string
+          tax_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      broker_profiles: {
+        Row: {
+          avatar_url: string | null
+          base_commission_rate: number
+          bio: string | null
+          company_name: string | null
+          created_at: string
+          display_name: string
+          email: string | null
+          id: string
+          invite_code: string
+          is_active: boolean
+          is_public: boolean
+          level: string
+          network_override_rate: number
+          onboarding_step: number
+          phone: string | null
+          referred_by: string | null
+          slug: string
+          updated_at: string
+          user_id: string
+          zones: string[]
+        }
+        Insert: {
+          avatar_url?: string | null
+          base_commission_rate?: number
+          bio?: string | null
+          company_name?: string | null
+          created_at?: string
+          display_name: string
+          email?: string | null
+          id?: string
+          invite_code: string
+          is_active?: boolean
+          is_public?: boolean
+          level?: string
+          network_override_rate?: number
+          onboarding_step?: number
+          phone?: string | null
+          referred_by?: string | null
+          slug: string
+          updated_at?: string
+          user_id: string
+          zones?: string[]
+        }
+        Update: {
+          avatar_url?: string | null
+          base_commission_rate?: number
+          bio?: string | null
+          company_name?: string | null
+          created_at?: string
+          display_name?: string
+          email?: string | null
+          id?: string
+          invite_code?: string
+          is_active?: boolean
+          is_public?: boolean
+          level?: string
+          network_override_rate?: number
+          onboarding_step?: number
+          phone?: string | null
+          referred_by?: string | null
+          slug?: string
+          updated_at?: string
+          user_id?: string
+          zones?: string[]
+        }
+        Relationships: []
+      }
       cached_listings: {
         Row: {
           cache_key: string
@@ -373,6 +517,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      commission_rules: {
+        Row: {
+          commission_rate: number
+          created_at: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          plan_type: string | null
+          project_id: string | null
+          referral_override_rate: number
+          scope: string
+          updated_at: string
+        }
+        Insert: {
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          plan_type?: string | null
+          project_id?: string | null
+          referral_override_rate?: number
+          scope: string
+          updated_at?: string
+        }
+        Update: {
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          plan_type?: string | null
+          project_id?: string | null
+          referral_override_rate?: number
+          scope?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_rules_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       credit_payments: {
         Row: {
@@ -1406,6 +1597,56 @@ export type Database = {
           },
         ]
       }
+      project_broker_assignments: {
+        Row: {
+          broker_id: string
+          commission_rate: number
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          message: string | null
+          owner_id: string
+          project_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          broker_id: string
+          commission_rate?: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          message?: string | null
+          owner_id: string
+          project_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          broker_id?: string
+          commission_rate?: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          message?: string | null
+          owner_id?: string
+          project_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_broker_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           address: string | null
@@ -2257,6 +2498,20 @@ export type Database = {
         }
         Returns: number
       }
+      admin_register_manual_sale: {
+        Args: {
+          p_agent_id: string
+          p_commission_rate?: number
+          p_listing_id?: string
+          p_lot_id?: string
+          p_notes?: string
+          p_project_id?: string
+          p_referral_rate?: number
+          p_referring_agent_id?: string
+          p_sale_amount: number
+        }
+        Returns: string
+      }
       admin_set_project_featured: {
         Args: {
           p_active: boolean
@@ -2269,6 +2524,29 @@ export type Database = {
           featured_until: string
           project_id: string
         }[]
+      }
+      admin_update_commission: {
+        Args: {
+          p_commission_amount?: number
+          p_commission_id: string
+          p_commission_rate?: number
+          p_notes?: string
+          p_status?: string
+        }
+        Returns: string
+      }
+      admin_void_sale: {
+        Args: { p_commission_id: string; p_reason: string }
+        Returns: string
+      }
+      approve_broker_application: {
+        Args: {
+          p_application_id: string
+          p_base_commission_rate?: number
+          p_level?: string
+          p_user_id: string
+        }
+        Returns: string
       }
       create_listing_lead: {
         Args: {
@@ -2339,6 +2617,20 @@ export type Database = {
           phone: string
           public_slug: string
           user_id: string
+        }[]
+      }
+      get_broker_ranking: {
+        Args: { p_limit?: number }
+        Returns: {
+          avatar_url: string
+          bio: string
+          company_name: string
+          display_name: string
+          level: string
+          projects_count: number
+          sales_count: number
+          slug: string
+          zones: string[]
         }[]
       }
       get_owner_lot_buyer: {
@@ -2481,7 +2773,30 @@ export type Database = {
             }
             Returns: string
           }
+      request_project_assignment: {
+        Args: { p_message?: string; p_project_id: string }
+        Returns: string
+      }
       same_organization: { Args: { _other: string }; Returns: boolean }
+      submit_broker_application: {
+        Args: {
+          p_city?: string
+          p_company_name?: string
+          p_country?: string
+          p_email: string
+          p_experience_years?: number
+          p_full_name: string
+          p_invited_by_code?: string
+          p_motivation?: string
+          p_phone?: string
+          p_region?: string
+          p_socials?: string
+          p_source?: string
+          p_specialty?: string
+          p_tax_id?: string
+        }
+        Returns: string
+      }
       system_activate_featured: {
         Args: { p_days: number; p_payment_ref?: string; p_project_id: string }
         Returns: string
