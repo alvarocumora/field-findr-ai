@@ -38,8 +38,11 @@ import { useListingApproval } from '@/hooks/usePropertyApprovals';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { VisualScenario } from '@/types/visualScenario';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { listingCoverUrl } from '@/lib/staticMapImage';
+import { useStaticMapToken } from '@/hooks/useStaticMapToken';
 
 import {
+
   Heart,
   MapPin,
   Ruler,
@@ -87,6 +90,14 @@ const PropertyDetail = () => {
   const isFavorite = listing ? favoriteIds.includes(listing.id) : false;
   const similarListings = allListings.filter(l => l.id !== id).slice(0, 3);
   const isTeno = listing?.id === TENO_LISTING_ID;
+  const mapToken = useStaticMapToken();
+  // Sin fotos cargadas mostramos una portada satelital del terreno en vez de un vacío.
+  const galleryImages = (() => {
+    const real = (listing?.images ?? []).filter((i) => !!i && !i.includes('placeholder.svg'));
+    if (real.length > 0) return real;
+    const cover = listingCoverUrl([], listing?.lat, listing?.lng, mapToken);
+    return cover ? [cover] : [];
+  })();
   const hasPackingTag = !!listing?.tags?.some(t => t.toLowerCase().includes('packing'));
   const designerPolygon = isTeno ? TENO_POLYGON : null;
   // Permisos: visible solo si el listing está activo/aprobado, o si lo ve su dueño (cualquier estado)
@@ -366,7 +377,7 @@ const PropertyDetail = () => {
             ) : (
               /* Gallery */
               <div className="relative">
-                <ImageGallery images={listing.images} title={listing.title} />
+                <ImageGallery images={galleryImages} title={listing.title} />
 
                 {/* Actions Overlay */}
                 <div className="absolute top-3 md:top-4 right-3 md:right-4 flex gap-2 z-10">
@@ -407,7 +418,7 @@ const PropertyDetail = () => {
             {/* Galería de fotos secundaria para Teno */}
             {isTeno && listing.images?.length > 0 && (
               <div className="relative">
-                <ImageGallery images={listing.images} title={listing.title} />
+                <ImageGallery images={galleryImages} title={listing.title} />
               </div>
             )}
 

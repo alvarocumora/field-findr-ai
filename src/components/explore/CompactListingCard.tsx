@@ -3,6 +3,8 @@ import { MapPin, Maximize2, Sparkles, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Listing, formatPrice, formatArea, getListingTypeLabel, getPricePerM2, formatPriceShort, getCountryFlag } from '@/hooks/useListings';
 import { cn } from '@/lib/utils';
+import { listingCoverUrl } from '@/lib/staticMapImage';
+import { useStaticMapToken } from '@/hooks/useStaticMapToken';
 
 interface CompactListingCardProps {
   listing: Listing;
@@ -18,7 +20,8 @@ const CompactListingCard = ({
   onNavigate,
 }: CompactListingCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const imageUrl = listing.images?.[0] || '/placeholder.svg';
+  const mapToken = useStaticMapToken();
+  const imageUrl = listingCoverUrl(listing.images, listing.lat, listing.lng, mapToken) || '/placeholder.svg';
   const pricePerM2 = getPricePerM2(listing.price, listing.area_m2);
 
   useEffect(() => {
