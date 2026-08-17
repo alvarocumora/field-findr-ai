@@ -50,6 +50,8 @@ const toDateInput = (value?: string | null) =>
 
 export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetProps) {
   const { updateLead } = useLeads();
+  const { getTemplate } = useNotificationTemplates();
+  const { profile } = useProfile();
   const [status, setStatus] = useState<LeadStatus>('new');
   const [followUp, setFollowUp] = useState('');
   const [reply, setReply] = useState('');
