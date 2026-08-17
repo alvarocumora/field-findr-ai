@@ -174,28 +174,73 @@ const LeadManagement = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nombre o email..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      <div className="space-y-3">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nombre, email o teléfono..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Buscar leads"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="md:w-44" aria-label="Filtrar por estado">
+              <SelectValue placeholder="Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              {Object.entries(LEAD_STATUS_CONFIG).map(([key, { label }]) => (
+                <SelectItem key={key} value={key}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={sourceFilter} onValueChange={setSourceFilter}>
+            <SelectTrigger className="md:w-44" aria-label="Filtrar por origen">
+              <SelectValue placeholder="Origen" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los orígenes</SelectItem>
+              {sources.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={followUpFilter}
+            onValueChange={(v) => setFollowUpFilter(v as FollowUpFilter)}
+          >
+            <SelectTrigger className="md:w-48" aria-label="Filtrar por seguimiento">
+              <SelectValue placeholder="Seguimiento" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todo el seguimiento</SelectItem>
+              <SelectItem value="overdue">Atrasados ({overdueCount})</SelectItem>
+              <SelectItem value="week">Próximos 7 días</SelectItem>
+              <SelectItem value="none">Sin seguimiento</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filtrar por estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los estados</SelectItem>
-            {Object.entries(LEAD_STATUS_CONFIG).map(([key, { label }]) => (
-              <SelectItem key={key} value={key}>{label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <span>{filteredLeads.length} de {stats.total} leads</span>
+          <Button
+            size="sm"
+            variant={sortByScore ? 'secondary' : 'ghost'}
+            onClick={() => setSortByScore((v) => !v)}
+          >
+            {sortByScore ? 'Ordenado por score' : 'Ordenado por fecha'}
+          </Button>
+          {activeFilters > 0 && (
+            <Button size="sm" variant="ghost" onClick={clearFilters}>
+              <X className="h-4 w-4" /> Limpiar filtros ({activeFilters})
+            </Button>
+          )}
+        </div>
       </div>
+
 
       {/* Lead Cards */}
       {filteredLeads.length === 0 ? (
