@@ -52,6 +52,8 @@ const QuickPropertyCard = memo(({
     }
   }, [isHovered]);
 
+  const mapToken = useStaticMapToken();
+
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleFavorite(listing.id);

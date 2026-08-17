@@ -24,6 +24,8 @@ import { useAuth } from '@/hooks/useAuth';
 import MatchScoreBadge from '@/components/matching/MatchScoreBadge';
 import { MatchResult } from '@/hooks/useMatchScore';
 import { cn } from '@/lib/utils';
+import { listingCoverUrl } from '@/lib/staticMapImage';
+import { useStaticMapToken } from '@/hooks/useStaticMapToken';
 
 interface ListingCardProps {
   listing: Listing;
@@ -77,7 +79,7 @@ const ListingCard = ({ listing, onHover, matchResult, className }: ListingCardPr
         {/* Image Container */}
         <div className="relative aspect-[4/3] overflow-hidden">
           <img
-            src={listing.images[0] || '/placeholder.svg'}
+            src={listingCoverUrl(listing.images, listing.lat, listing.lng, mapToken) || '/placeholder.svg'}
             alt={listing.title}
             loading="lazy"
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
