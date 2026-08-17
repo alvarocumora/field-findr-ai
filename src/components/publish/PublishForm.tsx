@@ -620,6 +620,14 @@ const PublishForm = () => {
                     Coordenadas: {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}
                   </p>
                 )}
+                <GeoValidationPanel
+                  issues={geoIssues}
+                  duplicates={duplicates}
+                  isChecking={checkingDuplicates}
+                  hasPoint={formData.lat !== null && formData.lng !== null}
+                  duplicateAcknowledged={duplicateAcknowledged}
+                  onAcknowledgeDuplicates={() => setDuplicateAcknowledged(true)}
+                />
               </div>
 
               <div>
