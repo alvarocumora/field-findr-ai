@@ -279,6 +279,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-credits", "/asesor/credits", <CreditManager />, { label: "Créditos", group: "ventas" }),
   agent("asesor-closing", "/asesor/closing", <ClosingManager />, { label: "Cierre", group: "ventas" }),
   agent("asesor-messages", "/asesor/messages", <Messages />, { label: "Mensajes", group: "crm" }),
+  agent("asesor-notificaciones", "/asesor/notificaciones", <NotificationTemplates />, { label: "Notificaciones", group: "crm" }),
   agent("asesor-enterprise", "/asesor/enterprise", <EnterpriseSettings />, { label: "Empresa", group: "cuenta", plans: ["inmobiliaria", "grupo", "enterprise"] }),
   agent("asesor-executive", "/asesor/executive", <ExecutiveDashboard />, { label: "Ejecutivo", group: "análisis", plans: ["inmobiliaria", "grupo", "enterprise"] }),
   agent("asesor-financial", "/asesor/financial", <FinancialDashboard />, { label: "Financiero", group: "análisis" }),
