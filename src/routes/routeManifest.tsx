@@ -249,6 +249,10 @@ export const publicRouteEntries: RouteEntry[] = [
   pub("tasacion-validar", "/tasacion/validar", <TasacionValidator />),
   pub("diseno-compartido", "/diseno/:token", <SharedDesign />, { indexable: false }),
   pub("inmobiliaria-showcase", "/inmobiliaria/:slug", <AgencyShowcase />),
+  pub("brokers", "/brokers", <BrokersLanding />, { nav: { label: "Brokers", group: "principal" } }),
+  pub("brokers-inscripcion", "/brokers/inscripcion", <BrokerSignup />),
+  pub("brokers-ranking", "/brokers/ranking", <BrokerRanking />),
+  pub("broker-showcase", "/b/:slug", <BrokerShowcase />),
 ];
 
 /** Landings de proyecto: URLs congeladas por SEO, agrupadas para no ser casos sueltos. */
