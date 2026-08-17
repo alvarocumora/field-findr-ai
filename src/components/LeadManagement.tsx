@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,33 +7,82 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
-  Users, Search, Phone, Mail, Calendar, 
-  TrendingUp, UserPlus, MessageSquare, Clock, Loader2, Trash2, Flame, Thermometer, Snowflake
+  Users, Search, Phone, Mail, 
+  TrendingUp, UserPlus, Clock, Trash2, Flame, Thermometer, Snowflake, AlertTriangle, X
 } from 'lucide-react';
-import { useLeads, LEAD_STATUS_CONFIG, LeadStatus } from '@/hooks/useLeads';
+import { useLeads, LEAD_STATUS_CONFIG, LeadStatus, type Lead } from '@/hooks/useLeads';
 import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
 import { useLeadScoring } from '@/hooks/useLeadScoring';
 import LeadScoreBadge from '@/components/leads/LeadScoreBadge';
+import LeadDetailSheet from '@/components/leads/LeadDetailSheet';
+
+type FollowUpFilter = 'all' | 'overdue' | 'week' | 'none';
+
+const startOfToday = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
 
 const LeadManagement = () => {
-  const { leads, isLoading, stats, deleteLead } = useLeads();
+  const { leads, isLoading, stats, deleteLead, updateLead } = useLeads();
   const { scoredLeads, stats: scoreStats } = useLeadScoring(leads);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
+  const [followUpFilter, setFollowUpFilter] = useState<FollowUpFilter>('all');
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sortByScore, setSortByScore] = useState(true);
+
+  const sources = useMemo(
+    () => Array.from(new Set(leads.map((l) => l.source).filter(Boolean) as string[])).sort(),
+    [leads],
+  );
 
   const sourceLeads = sortByScore ? scoredLeads : leads;
   const filteredLeads = sourceLeads.filter(lead => {
     const name = `${lead.first_name} ${lead.last_name || ''}`.toLowerCase();
-    const matchesSearch = name.includes(searchQuery.toLowerCase()) ||
-                          (lead.email || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = name.includes(q) ||
+                          (lead.email || '').toLowerCase().includes(q) ||
+                          (lead.phone || '').toLowerCase().includes(q);
     const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesSource = sourceFilter === 'all' || lead.source === sourceFilter;
+
+    let matchesFollowUp = true;
+    if (followUpFilter !== 'all') {
+      const due = lead.next_follow_up ? new Date(lead.next_follow_up) : null;
+      if (followUpFilter === 'none') matchesFollowUp = !due;
+      else if (!due) matchesFollowUp = false;
+      else if (followUpFilter === 'overdue') matchesFollowUp = due < startOfToday();
+      else matchesFollowUp =
+        due >= startOfToday() && due <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    }
+
+    return matchesSearch && matchesStatus && matchesSource && matchesFollowUp;
   });
+
+  const activeFilters =
+    (statusFilter !== 'all' ? 1 : 0) +
+    (sourceFilter !== 'all' ? 1 : 0) +
+    (followUpFilter !== 'all' ? 1 : 0) +
+    (searchQuery ? 1 : 0);
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setSourceFilter('all');
+    setFollowUpFilter('all');
+  };
+
+  const overdueCount = leads.filter(
+    (l) => l.next_follow_up && new Date(l.next_follow_up) < startOfToday(),
+  ).length;
 
   const getInitials = (firstName: string, lastName?: string | null) => {
     return `${firstName[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
   };
+
 
   if (isLoading) {
     return (
