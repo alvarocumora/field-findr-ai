@@ -152,6 +152,9 @@ const VisualScenariosAdmin = lazy(() => import("@/pages/admin/VisualScenariosAdm
 const FeaturedManager = lazy(() => import("@/pages/admin/FeaturedManager"));
 const CommercialLeadsAdmin = lazy(() => import("@/pages/admin/CommercialLeadsAdmin"));
 const CaptacionesQueue = lazy(() => import("@/pages/admin/CaptacionesQueue"));
+const BrokersAdmin = lazy(() => import("@/pages/admin/BrokersAdmin"));
+const CommissionsAdmin = lazy(() => import("@/pages/admin/CommissionsAdmin"));
+const SalesAdmin = lazy(() => import("@/pages/admin/SalesAdmin"));
 
 /* ------------------------------------------------------------------ */
 /* Helpers de declaración                                              */
