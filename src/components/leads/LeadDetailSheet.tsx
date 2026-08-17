@@ -22,6 +22,9 @@ import {
 import { Loader2, Mail, MessageCircle, Phone, Send } from 'lucide-react';
 import { LEAD_STATUS_CONFIG, type Lead, type LeadStatus, useLeads } from '@/hooks/useLeads';
 import LeadScoreBadge from '@/components/leads/LeadScoreBadge';
+import { useNotificationTemplates } from '@/hooks/useNotificationTemplates';
+import { useProfile } from '@/hooks/useProfile';
+import { renderTemplate, whatsappLink } from '@/lib/notifications/templates';
 
 interface LeadDetailSheetProps {
   lead: Lead | null;
