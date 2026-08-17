@@ -23,7 +23,7 @@ const fmt = (n: number) =>
 const SalesAdmin = () => {
   const { data: rows = [] } = useAllCommissions();
   const { data: brokers = [] } = useAllBrokerProfiles();
-  const { data: projects = [] } = useProjects();
+  const { projects = [] } = useProjects();
   const register = useAdminRegisterManualSale();
 
   const [form, setForm] = useState({
