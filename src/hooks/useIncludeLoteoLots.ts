@@ -10,11 +10,14 @@ import { useSyncExternalStore, useCallback } from 'react';
 
 const STORAGE_KEY = 'ot:explorer:include-loteo-lots';
 
-let value = false;
+// Por defecto se incluyen: el catálogo propio es mayoritariamente parcelas de
+// loteo y ocultarlas deja el explorador casi vacío. El usuario puede apagarlo.
+let value = true;
 try {
-  value = localStorage.getItem(STORAGE_KEY) === '1';
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored !== null) value = stored === '1';
 } catch {
-  value = false;
+  value = true;
 }
 
 const listeners = new Set<() => void>();
@@ -40,7 +43,7 @@ export function setIncludeLoteoLots(next: boolean) {
 }
 
 export function useIncludeLoteoLots() {
-  const include = useSyncExternalStore(subscribe, getSnapshot, () => false);
+  const include = useSyncExternalStore(subscribe, getSnapshot, () => true);
   const toggle = useCallback(() => setIncludeLoteoLots(!getSnapshot()), []);
   return { include, setInclude: setIncludeLoteoLots, toggle };
 }
