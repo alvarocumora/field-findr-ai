@@ -345,6 +345,9 @@ export const adminRouteEntries: RouteEntry[] = [
   admin("admin-visual-scenarios", "/admin/visual-scenarios", <VisualScenariosAdmin />, { label: "Escenarios visuales", group: "admin" }),
   admin("admin-commercial-leads", "/admin/commercial-leads", <CommercialLeadsAdmin />, { label: "Leads comerciales", group: "admin" }),
   admin("admin-captaciones", "/admin/captaciones", <CaptacionesQueue />, { label: "Captaciones", group: "admin" }),
+  admin("admin-brokers", "/admin/brokers", <BrokersAdmin />, { label: "Brokers", group: "admin" }),
+  admin("admin-comisiones", "/admin/comisiones", <CommissionsAdmin />, { label: "Comisiones", group: "admin" }),
+  admin("admin-ventas", "/admin/ventas", <SalesAdmin />, { label: "Ventas", group: "admin" }),
   admin("admin-featured", "/admin/featured", <FeaturedManager />, { label: "Destacados", group: "admin" }),
   admin("admin-audit", "/admin/audit", <AuditLog />, { label: "Auditoría", group: "admin" }),
 ];
