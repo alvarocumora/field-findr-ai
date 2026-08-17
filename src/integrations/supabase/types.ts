@@ -2231,6 +2231,17 @@ export type Database = {
           project_id: string
         }[]
       }
+      create_listing_lead: {
+        Args: {
+          p_email?: string
+          p_first_name: string
+          p_listing_id: string
+          p_message?: string
+          p_phone?: string
+          p_source?: string
+        }
+        Returns: string
+      }
       create_public_lead: {
         Args: {
           p_email?: string
