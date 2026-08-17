@@ -125,6 +125,24 @@ const PublishForm = () => {
     { number: 4, title: "Fotos", icon: ImageIcon },
   ];
 
+  // Validación de georreferenciación + detección de duplicados.
+  const [duplicateAcknowledged, setDuplicateAcknowledged] = useState(false);
+  const geoIssues = validateCoordinates({
+    lat: formData.lat,
+    lng: formData.lng,
+    countryCode: formData.country,
+  });
+  const geoBlocked = hasBlockingIssues(geoIssues);
+  const { data: duplicates = [], isFetching: checkingDuplicates } = useDuplicateCheck({
+    lat: formData.lat,
+    lng: formData.lng,
+    rol: formData.rol,
+    areaHa: formData.area_ha ? parseFloat(formData.area_ha) : null,
+    userId: user?.id,
+    enabled: !geoBlocked || !!formData.rol,
+  });
+  const duplicatesBlocked = duplicates.length > 0 && !duplicateAcknowledged;
+
   const handleInputChange = (field: string, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
