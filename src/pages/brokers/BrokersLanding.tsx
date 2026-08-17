@@ -53,7 +53,7 @@ const BrokersLanding = () => {
     title: 'Comunidad de Brokers | Vende loteos y terrenos en Chile y LATAM',
     description:
       'Únete a la comunidad de brokers de Oferta Terrenos: catálogo de loteos listos para vender, comisiones trazables, kit de venta y CRM incluido.',
-    canonical: '/brokers',
+    canonicalUrl: '/brokers',
   });
 
   return (
