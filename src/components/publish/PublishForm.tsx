@@ -35,6 +35,9 @@ import { useListingGenerator } from "@/hooks/useAI";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import LocationPicker from "./LocationPicker";
 import ImageUploader from "./ImageUploader";
+import GeoValidationPanel from "./GeoValidationPanel";
+import { validateCoordinates, hasBlockingIssues } from "@/lib/geo/coordinateValidation";
+import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
 import { LATAM_COUNTRIES, getCountryConfig, type CountryConfig } from "@/lib/latam";
 import { AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -122,6 +125,24 @@ const PublishForm = () => {
     { number: 4, title: "Fotos", icon: ImageIcon },
   ];
 
+  // Validación de georreferenciación + detección de duplicados.
+  const [duplicateAcknowledged, setDuplicateAcknowledged] = useState(false);
+  const geoIssues = validateCoordinates({
+    lat: formData.lat,
+    lng: formData.lng,
+    countryCode: formData.country,
+  });
+  const geoBlocked = hasBlockingIssues(geoIssues);
+  const { data: duplicates = [], isFetching: checkingDuplicates } = useDuplicateCheck({
+    lat: formData.lat,
+    lng: formData.lng,
+    rol: formData.rol,
+    areaHa: formData.area_ha ? parseFloat(formData.area_ha) : null,
+    userId: user?.id,
+    enabled: !geoBlocked || !!formData.rol,
+  });
+  const duplicatesBlocked = duplicates.length > 0 && !duplicateAcknowledged;
+
   const handleInputChange = (field: string, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -143,6 +164,7 @@ const PublishForm = () => {
   };
 
   const handleLocationSelect = (lat: number, lng: number, address?: { address: string; city?: string; region?: string }) => {
+    setDuplicateAcknowledged(false);
     setFormData(prev => ({
       ...prev,
       lat,
@@ -159,7 +181,7 @@ const PublishForm = () => {
       case 1:
         return !!formData.title && !!formData.type && !!formData.area_ha;
       case 2:
-        return !!formData.location && !!formData.region;
+        return !!formData.location && !!formData.region && !geoBlocked && !duplicatesBlocked;
       case 3:
         return !!formData.price;
       default:
@@ -185,6 +207,27 @@ const PublishForm = () => {
         variant: "destructive",
       });
       navigate('/pricing');
+      return;
+    }
+
+    if (geoBlocked) {
+      toast({
+        title: "Revisa la ubicación",
+        description: geoIssues.find(i => i.level === 'error')?.message
+          ?? "Marca la ubicación exacta en el mapa antes de publicar.",
+        variant: "destructive",
+      });
+      setCurrentStep(2);
+      return;
+    }
+
+    if (duplicatesBlocked) {
+      toast({
+        title: "Posible publicación duplicada",
+        description: "Encontramos propiedades muy similares en esa ubicación. Revísalas y confirma que la tuya es distinta.",
+        variant: "destructive",
+      });
+      setCurrentStep(2);
       return;
     }
 
@@ -577,6 +620,14 @@ const PublishForm = () => {
                     Coordenadas: {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}
                   </p>
                 )}
+                <GeoValidationPanel
+                  issues={geoIssues}
+                  duplicates={duplicates}
+                  isChecking={checkingDuplicates}
+                  hasPoint={formData.lat !== null && formData.lng !== null}
+                  duplicateAcknowledged={duplicateAcknowledged}
+                  onAcknowledgeDuplicates={() => setDuplicateAcknowledged(true)}
+                />
               </div>
 
               <div>
