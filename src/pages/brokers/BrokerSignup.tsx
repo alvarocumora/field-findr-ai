@@ -95,8 +95,20 @@ const BrokerSignup = () => {
       toast.error(parsed.error.issues[0]?.message ?? 'Revisa los datos');
       return;
     }
+    const d = parsed.data;
     await submit.mutateAsync({
-      ...parsed.data,
+      fullName: d.fullName,
+      email: d.email,
+      phone: d.phone,
+      country: d.country,
+      region: d.region,
+      city: d.city,
+      companyName: d.companyName,
+      taxId: d.taxId,
+      experienceYears: d.experienceYears,
+      specialty: d.specialty,
+      socials: d.socials,
+      motivation: d.motivation,
       source: params.get('source') ?? 'brokers-landing',
       invitedByCode: params.get('ref') ?? undefined,
     });
