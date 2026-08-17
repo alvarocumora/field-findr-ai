@@ -210,6 +210,27 @@ const PublishForm = () => {
       return;
     }
 
+    if (geoBlocked) {
+      toast({
+        title: "Revisa la ubicación",
+        description: geoIssues.find(i => i.level === 'error')?.message
+          ?? "Marca la ubicación exacta en el mapa antes de publicar.",
+        variant: "destructive",
+      });
+      setCurrentStep(2);
+      return;
+    }
+
+    if (duplicatesBlocked) {
+      toast({
+        title: "Posible publicación duplicada",
+        description: "Encontramos propiedades muy similares en esa ubicación. Revísalas y confirma que la tuya es distinta.",
+        variant: "destructive",
+      });
+      setCurrentStep(2);
+      return;
+    }
+
 
     try {
       const countryConfig = getCountryConfig(formData.country);
