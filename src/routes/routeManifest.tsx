@@ -117,6 +117,7 @@ const ExecutiveDashboard = lazy(() => import("@/pages/dashboard/ExecutiveDashboa
 const FinancialDashboard = lazy(() => import("@/pages/dashboard/FinancialDashboard"));
 const AgentPerformance = lazy(() => import("@/pages/dashboard/AgentPerformance"));
 const Messages = lazy(() => import("@/pages/dashboard/Messages"));
+const NotificationTemplates = lazy(() => import("@/pages/dashboard/NotificationTemplates"));
 const SalesPipeline = lazy(() => import("@/pages/dashboard/SalesPipeline"));
 const MultiProjectDashboard = lazy(() => import("@/pages/dashboard/MultiProjectDashboard"));
 const PaymentManagement = lazy(() => import("@/pages/dashboard/PaymentManagement"));
