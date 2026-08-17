@@ -41,6 +41,8 @@ const ListingCard = ({ listing, onHover, matchResult, className }: ListingCardPr
   const isFavorite = favoriteIds.includes(listing.id);
   const legalStatus = getLegalStatusLabel(listing.legal_status);
   const { data: priceReduced } = usePriceReduced(listing.id);
+  const mapToken = useStaticMapToken();
+
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
