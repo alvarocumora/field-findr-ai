@@ -137,6 +137,8 @@ const SubdivisionStudio = lazy(() => import("@/pages/dashboard/SubdivisionStudio
 const Commissions = lazy(() => import("@/pages/dashboard/Commissions"));
 const TeamManagement = lazy(() => import("@/pages/dashboard/TeamManagement"));
 const MyCaptaciones = lazy(() => import("@/pages/dashboard/MyCaptaciones"));
+const BrokerMarketplace = lazy(() => import("@/pages/dashboard/BrokerMarketplace"));
+const MyBrokerBusiness = lazy(() => import("@/pages/dashboard/MyBrokerBusiness"));
 
 // Admin
 const DashboardAdminPage = lazy(() => import("./elements/AdminDashboard"));
