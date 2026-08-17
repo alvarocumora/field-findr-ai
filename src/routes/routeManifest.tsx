@@ -278,6 +278,8 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-opportunities", "/asesor/opportunities", <LandOpportunities />, { label: "Oportunidades", group: "captación" }),
   agent("asesor-opportunity", "/asesor/opportunity/:id", <OpportunityDetail />),
   agent("asesor-captaciones", "/asesor/captaciones", <MyCaptaciones />, { label: "Mis captaciones", group: "captación" }),
+  agent("asesor-broker-marketplace", "/asesor/proyectos-en-venta", <BrokerMarketplace />, { label: "Proyectos en venta", group: "captación" }),
+  agent("asesor-mi-negocio", "/asesor/mi-negocio", <MyBrokerBusiness />, { label: "Mi negocio", group: "gestión" }),
   agent("asesor-contacts", "/asesor/contacts", <Contacts />, { label: "Contactos", group: "crm" }),
   agent("asesor-listings", "/asesor/listings", <PropertyInventory />, { label: "Inventario", group: "gestión" }),
   agent("asesor-leads", "/asesor/leads", <LeadManagement />, { label: "Leads", group: "crm" }),
