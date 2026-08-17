@@ -41,6 +41,23 @@ const VisitRequestDialog = ({ listingId, listingOwnerId, listingTitle, trigger }
     try {
       const preferredDate = new Date(`${form.date}T${form.time}:00`);
       
+      if (!user) {
+        // Visitante sin sesión: se registra como contacto (visita) en el CRM.
+        const { error: leadError } = await supabase.rpc('create_listing_lead', {
+          p_listing_id: listingId,
+          p_first_name: form.name,
+          p_email: form.email,
+          p_phone: form.phone || null,
+          p_message: `[Solicitud de visita] ${form.date} ${form.time} · ${listingTitle}${form.notes ? ` · ${form.notes}` : ''}`,
+          p_source: 'visita_publica',
+        });
+        if (leadError) throw leadError;
+        toast({ title: '¡Visita solicitada!', description: 'El agente te contactará para confirmar.' });
+        setOpen(false);
+        setForm({ name: '', email: '', phone: '', date: '', time: '10:00', notes: '' });
+        return;
+      }
+
       const { error } = await supabase.from('visit_requests' as any).insert({
         listing_id: listingId,
         listing_owner_id: listingOwnerId || '',

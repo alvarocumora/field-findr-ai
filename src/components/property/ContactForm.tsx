@@ -60,18 +60,28 @@ const ContactForm = ({ listingId, listingTitle, listingOwnerId, onSuccess }: Con
       const validated = contactSchema.parse(formData);
       setIsSubmitting(true);
 
-      // Generate a thread_id for this conversation
-      const threadId = crypto.randomUUID();
-      
-      const { error } = await supabase.from('messages').insert({
-        thread_id: threadId,
-        listing_id: listingId,
-        sender_id: user?.id || '00000000-0000-0000-0000-000000000000',
-        recipient_id: listingOwnerId || '00000000-0000-0000-0000-000000000000',
-        content: `[${validated.name} - ${validated.email}${validated.phone ? ` - ${validated.phone}` : ''}]\n\n${validated.message}`,
-      });
-
-      if (error) throw error;
+      if (user && listingOwnerId && listingOwnerId !== user.id) {
+        // Usuario autenticado: conversación real en la bandeja de mensajes.
+        const { error } = await supabase.from('messages').insert({
+          thread_id: crypto.randomUUID(),
+          listing_id: listingId,
+          sender_id: user.id,
+          recipient_id: listingOwnerId,
+          content: `[${validated.name} - ${validated.email}${validated.phone ? ` - ${validated.phone}` : ''}]\n\n${validated.message}`,
+        });
+        if (error) throw error;
+      } else {
+        // Visitante sin sesión: se registra como contacto en el CRM del dueño.
+        const { error } = await supabase.rpc('create_listing_lead', {
+          p_listing_id: listingId,
+          p_first_name: validated.name,
+          p_email: validated.email,
+          p_phone: validated.phone || null,
+          p_message: validated.message,
+          p_source: 'ficha_publica',
+        });
+        if (error) throw error;
+      }
 
       setIsSubmitted(true);
       toast({
@@ -88,6 +98,12 @@ const ContactForm = ({ listingId, listingTitle, listingOwnerId, onSuccess }: Con
           }
         });
         setErrors(fieldErrors);
+      } else {
+        toast({
+          title: 'No pudimos enviar tu consulta',
+          description: 'Intenta nuevamente en unos minutos.',
+          variant: 'destructive',
+        });
       }
     } finally {
       setIsSubmitting(false);
