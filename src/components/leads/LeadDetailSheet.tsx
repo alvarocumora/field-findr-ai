@@ -117,9 +117,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
               </Button>
               <Button asChild size="sm" variant="outline">
                 <a
-                  href={`https://wa.me/${phoneDigits}?text=${encodeURIComponent(
-                    `Hola ${lead.first_name}, te escribo desde OFERTA TERRENOS.`,
-                  )}`}
+                  href={whatsappLink(phoneDigits, whatsappMessage)}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Escribir por WhatsApp a ${fullName}`}
