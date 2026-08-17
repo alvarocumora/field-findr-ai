@@ -248,16 +248,33 @@ const LeadManagement = () => {
           <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">Sin leads</h3>
           <p className="text-muted-foreground mb-4">
-            {searchQuery ? 'No se encontraron leads' : 'Agrega tu primer lead para comenzar'}
+            {activeFilters > 0 ? 'No se encontraron leads con estos filtros' : 'Agrega tu primer lead para comenzar'}
           </p>
+          {activeFilters > 0 && (
+            <Button variant="outline" onClick={clearFilters}>Limpiar filtros</Button>
+          )}
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredLeads.map((lead) => {
             const status = (lead.status || 'new') as LeadStatus;
             const config = LEAD_STATUS_CONFIG[status] || LEAD_STATUS_CONFIG.new;
+            const due = lead.next_follow_up ? new Date(lead.next_follow_up) : null;
+            const overdue = due ? due < startOfToday() : false;
             return (
-              <Card key={lead.id} className="group hover:shadow-lg transition-all duration-300 hover:border-primary/30">
+              <Card
+                key={lead.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedLead(lead)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedLead(lead);
+                  }
+                }}
+                className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -274,8 +291,11 @@ const LeadManagement = () => {
                       </div>
                     </div>
                     <Button 
-                      size="icon" variant="ghost" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100"
-                      onClick={() => {
+                      size="icon" variant="ghost"
+                      aria-label={`Eliminar lead ${lead.first_name}`}
+                      className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         if (confirm('¿Eliminar este lead?')) deleteLead.mutate(lead.id);
                       }}
                     >
@@ -285,10 +305,15 @@ const LeadManagement = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Badge className={`${config.color} text-white`}>
+                    <Badge className={`${config.color} text-primary-foreground`}>
                       {config.label}
                     </Badge>
                     <LeadScoreBadge lead={lead} />
+                    {overdue && (
+                      <Badge variant="destructive" className="gap-1">
+                        <AlertTriangle className="h-3 w-3" /> Atrasado
+                      </Badge>
+                    )}
                   </div>
                   
                   <div className="space-y-2 text-sm">
@@ -304,10 +329,10 @@ const LeadManagement = () => {
                         <span>{lead.phone}</span>
                       </div>
                     )}
-                    {lead.next_follow_up && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
+                    {due && (
+                      <div className={`flex items-center gap-2 ${overdue ? 'text-destructive' : 'text-muted-foreground'}`}>
                         <Clock className="h-3 w-3" />
-                        <span>Seguimiento: {new Date(lead.next_follow_up).toLocaleDateString('es-CL')}</span>
+                        <span>Seguimiento: {due.toLocaleDateString('es-CL')}</span>
                       </div>
                     )}
                   </div>
@@ -326,13 +351,37 @@ const LeadManagement = () => {
                   {lead.notes && (
                     <p className="text-xs text-muted-foreground line-clamp-2">{lead.notes}</p>
                   )}
+
+                  {/* Cambio rápido de estado */}
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Select
+                      value={status}
+                      onValueChange={(v) => updateLead.mutate({ id: lead.id, status: v })}
+                    >
+                      <SelectTrigger className="h-8 text-xs" aria-label={`Cambiar estado de ${lead.first_name}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(LEAD_STATUS_CONFIG).map(([key, { label }]) => (
+                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </CardContent>
               </Card>
             );
           })}
         </div>
       )}
+
+      <LeadDetailSheet
+        lead={selectedLead ? leads.find((l) => l.id === selectedLead.id) ?? selectedLead : null}
+        open={!!selectedLead}
+        onOpenChange={(open) => !open && setSelectedLead(null)}
+      />
     </div>
+
   );
 };
 
