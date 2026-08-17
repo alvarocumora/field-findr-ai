@@ -140,6 +140,8 @@ const MyCaptaciones = lazy(() => import("@/pages/dashboard/MyCaptaciones"));
 const BrokerMarketplace = lazy(() => import("@/pages/dashboard/BrokerMarketplace"));
 const MyBrokerBusiness = lazy(() => import("@/pages/dashboard/MyBrokerBusiness"));
 const BrokerNetwork = lazy(() => import("@/pages/dashboard/BrokerNetwork"));
+const SupportTickets = lazy(() => import("@/pages/dashboard/SupportTickets"));
+const HelpCenter = lazy(() => import("@/pages/HelpCenter"));
 
 // Admin
 const DashboardAdminPage = lazy(() => import("./elements/AdminDashboard"));
@@ -156,6 +158,7 @@ const CaptacionesQueue = lazy(() => import("@/pages/admin/CaptacionesQueue"));
 const BrokersAdmin = lazy(() => import("@/pages/admin/BrokersAdmin"));
 const CommissionsAdmin = lazy(() => import("@/pages/admin/CommissionsAdmin"));
 const SalesAdmin = lazy(() => import("@/pages/admin/SalesAdmin"));
+const SupportAdmin = lazy(() => import("@/pages/admin/SupportAdmin"));
 
 /* ------------------------------------------------------------------ */
 /* Helpers de declaración                                              */
@@ -254,6 +257,7 @@ export const publicRouteEntries: RouteEntry[] = [
   pub("brokers-inscripcion", "/brokers/inscripcion", <BrokerSignup />),
   pub("brokers-ranking", "/brokers/ranking", <BrokerRanking />),
   pub("broker-showcase", "/b/:slug", <BrokerShowcase />),
+  pub("ayuda", "/ayuda", <HelpCenter />, { nav: { label: "Ayuda", group: "soporte" } }),
 ];
 
 /** Landings de proyecto: URLs congeladas por SEO, agrupadas para no ser casos sueltos. */
@@ -311,6 +315,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-demand", "/asesor/demand", <DemandHeatmapDashboard />, { label: "Demanda", group: "análisis" }),
   agent("asesor-api", "/asesor/api", <APIPortal />, { label: "API", group: "cuenta", plans: ["enterprise"] }),
   agent("asesor-tools", "/asesor/tools", <Tools />, { label: "Herramientas", group: "cuenta" }),
+  agent("asesor-soporte", "/asesor/soporte", <SupportTickets />, { label: "Soporte", group: "cuenta" }),
   agent("asesor-profile", "/asesor/profile", <Profile />, { label: "Mi perfil", group: "cuenta" }),
   // Publicación: hub y formulario. Sin sidebar de dashboard (flujo enfocado).
   {
@@ -351,6 +356,7 @@ export const adminRouteEntries: RouteEntry[] = [
   admin("admin-comisiones", "/admin/comisiones", <CommissionsAdmin />, { label: "Comisiones", group: "admin" }),
   admin("admin-ventas", "/admin/ventas", <SalesAdmin />, { label: "Ventas", group: "admin" }),
   admin("admin-featured", "/admin/featured", <FeaturedManager />, { label: "Destacados", group: "admin" }),
+  admin("admin-soporte", "/admin/soporte", <SupportAdmin />, { label: "Soporte", group: "admin" }),
   admin("admin-audit", "/admin/audit", <AuditLog />, { label: "Auditoría", group: "admin" }),
 ];
 
@@ -387,6 +393,8 @@ export const routeAliases: RouteAlias[] = [
   { from: "/sales", to: "/asesor/sales" },
   { from: "/urbanization", to: "/asesor/projects" },
   { from: "/agents", to: "/admin/agents" },
+  { from: "/help", to: "/ayuda" },
+  { from: "/soporte", to: "/ayuda" },
   // Herramientas unificadas
   { from: "/calculators", to: "/tools" },
   { from: "/price-predictor", to: "/tools" },
