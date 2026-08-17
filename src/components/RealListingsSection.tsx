@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExternalLink, MapPin, Maximize2, Loader2, RefreshCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { listingCoverUrl } from '@/lib/staticMapImage';
 
 interface RealListingsSectionProps {
   title?: string;
@@ -31,14 +34,27 @@ function formatPrice(p: number, c: string) {
   }
 }
 
-function ListingCard({ l }: { l: RealListing }) {
+function ListingCard({ l, mapToken }: { l: RealListing; mapToken: string | null }) {
+  const isInternal = l.source_url.startsWith('/');
+  const cover = listingCoverUrl(l.image_url ? [l.image_url] : null, l.lat, l.lng, mapToken);
+  const Wrapper = ({ children }: { children: React.ReactNode }) =>
+    isInternal ? (
+      <Link to={l.source_url} className="block">
+        {children}
+      </Link>
+    ) : (
+      <a href={l.source_url} target="_blank" rel="noopener noreferrer nofollow" className="block">
+        {children}
+      </a>
+    );
+
   return (
     <Card className="group overflow-hidden hover:shadow-xl transition-all">
-      <a href={l.source_url} target="_blank" rel="noopener noreferrer nofollow" className="block">
+      <Wrapper>
         <div className="aspect-video bg-muted relative overflow-hidden">
-          {l.image_url ? (
+          {cover ? (
             <img
-              src={l.image_url}
+              src={cover}
               alt={l.title}
               loading="lazy"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -75,10 +91,10 @@ function ListingCard({ l }: { l: RealListing }) {
           </div>
           <div className="flex items-center gap-1 text-[11px] text-muted-foreground/80 pt-2 border-t">
             <ExternalLink className="w-3 h-3" />
-            Ver en portal original
+            {isInternal ? 'Ver ficha del terreno' : 'Ver en portal original'}
           </div>
         </div>
-      </a>
+      </Wrapper>
     </Card>
   );
 }
@@ -92,6 +108,7 @@ export default function RealListingsSection({
   compact = false,
 }: RealListingsSectionProps) {
   const [country, setCountry] = useState(defaultCountry);
+  const { token: mapToken } = useMapboxToken();
   const { data, isLoading, isFetching, refetch, isError } = useRealListings({ country, limit });
 
   // Fail-silent en el landing: si no hay datos o hay error, no renderizar la sección
@@ -139,7 +156,7 @@ export default function RealListingsSection({
         <>
           <div className={`grid gap-4 ${compact ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
             {data.slice(0, limit).map((l) => (
-              <ListingCard key={l.id} l={l} />
+              <ListingCard key={l.id} l={l} mapToken={mapToken} />
             ))}
           </div>
           <p className="text-xs text-muted-foreground/70 text-center mt-6">
