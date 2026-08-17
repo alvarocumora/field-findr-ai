@@ -6,6 +6,8 @@ import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
 import { useCompare } from '@/hooks/useCompare';
 import InvestmentScoreBadge from '@/components/explore/InvestmentScoreBadge';
 import { cn } from '@/lib/utils';
+import { listingCoverUrl } from '@/lib/staticMapImage';
+import { useStaticMapToken } from '@/hooks/useStaticMapToken';
 
 interface QuickPropertyCardProps {
   listing: Listing;
@@ -61,7 +63,8 @@ const QuickPropertyCard = memo(({
   };
 
   const hasSecondImage = listing.images.length > 1;
-  const currentImage = showSecondImage && hasSecondImage ? listing.images[1] : (listing.images[0] || '/placeholder.svg');
+  const cover = listingCoverUrl(listing.images, listing.lat, listing.lng, mapToken) || '/placeholder.svg';
+  const currentImage = showSecondImage && hasSecondImage ? listing.images[1] : cover;
 
   if (layout === 'vertical') {
     return (
