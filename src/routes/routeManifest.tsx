@@ -351,6 +351,9 @@ export const routeAliases: RouteAlias[] = [
   { from: "/buyer/home", to: "/comprador/inicio" },
   { from: "/favorites", to: "/favoritos" },
   { from: "/compare", to: "/comparar" },
+  { from: "/pricing-loteos", to: "/planes-loteos" },
+  { from: "/precios-loteos", to: "/planes-loteos" },
+
   // Legacy del dashboard plano
   { from: "/dashboard", to: "/asesor/dashboard" },
   { from: "/inventory", to: "/asesor/listings" },
