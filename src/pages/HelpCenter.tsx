@@ -20,7 +20,7 @@ const HelpCenter = () => {
     title: 'Centro de ayuda para brokers | Oferta Terrenos',
     description:
       'Guías sobre comisiones, proyectos, publicaciones y pagos para brokers de loteos y terrenos. Abre un ticket y recibe soporte del equipo.',
-    canonical: 'https://ofertaterrenos.com/ayuda',
+    canonicalUrl: 'https://ofertaterrenos.com/ayuda',
   });
 
   const results = useMemo(() => {
