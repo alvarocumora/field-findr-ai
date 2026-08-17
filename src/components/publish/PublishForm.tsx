@@ -164,6 +164,7 @@ const PublishForm = () => {
   };
 
   const handleLocationSelect = (lat: number, lng: number, address?: { address: string; city?: string; region?: string }) => {
+    setDuplicateAcknowledged(false);
     setFormData(prev => ({
       ...prev,
       lat,
@@ -180,7 +181,7 @@ const PublishForm = () => {
       case 1:
         return !!formData.title && !!formData.type && !!formData.area_ha;
       case 2:
-        return !!formData.location && !!formData.region;
+        return !!formData.location && !!formData.region && !geoBlocked && !duplicatesBlocked;
       case 3:
         return !!formData.price;
       default:
