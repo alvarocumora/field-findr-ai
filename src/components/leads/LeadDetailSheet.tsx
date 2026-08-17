@@ -74,6 +74,18 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
   const phoneDigits = (lead.phone || '').replace(/\D/g, '');
   const saving = updateLead.isPending;
 
+  const waTemplate = getTemplate('lead_created:whatsapp:contact');
+  const whatsappMessage = renderTemplate(
+    waTemplate?.body ?? 'Hola {{nombre}}, te escribo desde OFERTA TERRENOS.',
+    {
+      nombre: lead.first_name,
+      email: lead.email,
+      telefono: lead.phone,
+      mensaje: lead.notes,
+      agente: [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'tu asesor',
+    },
+  );
+
   const handleSaveTracking = () => {
     updateLead.mutate({
       id: lead.id,
