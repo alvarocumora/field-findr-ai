@@ -38,10 +38,11 @@ import { useListingApproval } from '@/hooks/usePropertyApprovals';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { VisualScenario } from '@/types/visualScenario';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
-
-import {
 import { listingCoverUrl } from '@/lib/staticMapImage';
 import { useStaticMapToken } from '@/hooks/useStaticMapToken';
+
+import {
+
   Heart,
   MapPin,
   Ruler,
