@@ -98,10 +98,15 @@ export default function IslaDeMaipoDossier() {
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            <Button onClick={copyLink} variant="default">
+            <Button onClick={downloadResumenPdf} disabled={generating} variant="default">
+              <FileDown className="mr-2 h-4 w-4" />
+              {generating ? 'Generando resumen…' : 'Descargar resumen PDF'}
+            </Button>
+            <Button onClick={copyLink} variant="secondary">
               {copied ? <Check className="mr-2 h-4 w-4" /> : <Link2 className="mr-2 h-4 w-4" />}
               Copiar enlace
             </Button>
+
             <Button onClick={downloadAll} variant="secondary">
               <Download className="mr-2 h-4 w-4" /> Descargar expediente ({DOCUMENTOS.length})
             </Button>
