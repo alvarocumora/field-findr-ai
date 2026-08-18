@@ -27,6 +27,7 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub?: st
 export default function IslaDeMaipoDossier() {
   const [active, setActive] = useState<DossierDoc>(DOCUMENTOS[0]);
   const [copied, setCopied] = useState(false);
+  const [filtro, setFiltro] = useState<string>('Todos');
   const [generating, setGenerating] = useState(false);
   const token = useStaticMapToken();
 
@@ -79,6 +80,15 @@ export default function IslaDeMaipoDossier() {
     toast.success(`Descargando ${DOCUMENTOS.length} documentos`);
   };
 
+  const categorias = useMemo(
+    () => ['Todos', ...Array.from(new Set(DOCUMENTOS.map((d) => d.categoria)))],
+    []
+  );
+  const docsFiltrados = useMemo(
+    () => (filtro === 'Todos' ? DOCUMENTOS : DOCUMENTOS.filter((d) => d.categoria === filtro)),
+    [filtro]
+  );
+
   const ufPorM2 = (PROPIEDAD.tasacionUf / PROPIEDAD.superficieTotalM2).toFixed(2);
 
   return (
@@ -126,7 +136,11 @@ export default function IslaDeMaipoDossier() {
             value={`UF ${PROPIEDAD.tasacionUf.toLocaleString('es-CL')}`}
             sub={`${ufPorM2} UF/m² · ${PROPIEDAD.tasacionFecha}`}
           />
-          <KpiCard label="Avalúo fiscal" value={clp(PROPIEDAD.avaluoFiscal)} sub={PROPIEDAD.avaluoFecha} />
+          <KpiCard
+            label="Avalúo fiscal (3 roles)"
+            value={clp(PROPIEDAD.avaluoFiscal)}
+            sub={PROPIEDAD.avaluoFecha}
+          />
           <KpiCard label="ROL(es) SII" value={PROPIEDAD.roles} sub={`Destino ${PROPIEDAD.destinoSii}`} />
         </section>
 
@@ -158,7 +172,7 @@ export default function IslaDeMaipoDossier() {
         </section>
 
         {/* Ficha */}
-        <section className="mt-8 grid gap-5 lg:grid-cols-3" aria-label="Ficha técnica">
+        <section className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4" aria-label="Ficha técnica">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Identificación y dominio</CardTitle>
@@ -179,6 +193,48 @@ export default function IslaDeMaipoDossier() {
                   {PROPIEDAD.deslindes.map((d) => (
                     <li key={d.lado} className="text-foreground">
                       <span className="font-medium">{d.lado}:</span> {d.con} ({d.metros})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Sociedad propietaria e inscripción</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="space-y-1">
+                <p className="font-medium text-foreground">{PROPIEDAD.sociedad.razonSocial}</p>
+                <p className="text-muted-foreground">
+                  RUT {PROPIEDAD.sociedad.rut} · Constituida el {PROPIEDAD.sociedad.constitucion}
+                </p>
+                <p className="text-muted-foreground">Domicilio: {PROPIEDAD.sociedad.domicilio}</p>
+                <p className="text-xs text-muted-foreground">{PROPIEDAD.sociedad.registro}</p>
+              </div>
+              <Separator />
+              <div>
+                <p className="text-muted-foreground">Inscripción de dominio</p>
+                <p className="font-medium text-foreground">
+                  Fojas {PROPIEDAD.inscripcion.fojas} N°{PROPIEDAD.inscripcion.numero} ·{' '}
+                  {PROPIEDAD.inscripcion.registro} {PROPIEDAD.inscripcion.anio}
+                </p>
+                <p className="text-muted-foreground">
+                  {PROPIEDAD.inscripcion.cbr} · vigente al {PROPIEDAD.inscripcion.vigenciaAl}
+                </p>
+              </div>
+              <Separator />
+              <div>
+                <p className="text-muted-foreground">Avalúos fiscales por rol</p>
+                <ul className="mt-1 space-y-1">
+                  {PROPIEDAD.avaluosDetalle.map((a) => (
+                    <li key={a.rol} className="flex items-baseline justify-between gap-3">
+                      <span className="text-foreground">
+                        <span className="font-medium">ROL {a.rol}</span>{' '}
+                        <span className="text-muted-foreground">· {a.destino}</span>
+                      </span>
+                      <span className="tabular-nums font-medium text-foreground">{clp(a.monto)}</span>
                     </li>
                   ))}
                 </ul>
@@ -237,9 +293,29 @@ export default function IslaDeMaipoDossier() {
             </Button>
           </div>
 
+          <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filtrar por categoría">
+            {categorias.map((c) => (
+              <button
+                key={c}
+                onClick={() => setFiltro(c)}
+                aria-pressed={filtro === c}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  filtro === c
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'bg-card text-muted-foreground hover:bg-accent'
+                }`}
+              >
+                {c}
+                <span className="ml-1.5 opacity-70">
+                  {c === 'Todos' ? DOCUMENTOS.length : DOCUMENTOS.filter((d) => d.categoria === c).length}
+                </span>
+              </button>
+            ))}
+          </div>
+
           <div className="grid gap-5 lg:grid-cols-[380px_1fr]">
-            <ul className="space-y-2">
-              {DOCUMENTOS.map((d) => {
+            <ul className="max-h-[760px] space-y-2 overflow-y-auto pr-1">
+              {docsFiltrados.map((d) => {
                 const isActive = d.id === active.id;
                 return (
                   <li key={d.id}>
