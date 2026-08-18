@@ -27,7 +27,21 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub?: st
 export default function IslaDeMaipoDossier() {
   const [active, setActive] = useState<DossierDoc>(DOCUMENTOS[0]);
   const [copied, setCopied] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const token = useStaticMapToken();
+
+  const downloadResumenPdf = async () => {
+    setGenerating(true);
+    try {
+      await generateIslaMaipoDossierPdf({ mapboxToken: token });
+      toast.success('Resumen PDF generado');
+    } catch {
+      toast.error('No se pudo generar el resumen PDF');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
 
   useSEO({
     title: 'Ficha Financiera · Predio Gálvez 1458, Isla de Maipo',
