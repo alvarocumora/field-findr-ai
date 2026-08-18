@@ -193,6 +193,23 @@ export async function generateIslaMaipoDossierPdf(options: { mapboxToken?: strin
   kv('Tasacion', `UF ${PROPIEDAD.tasacionUf.toLocaleString('es-CL')} (${clp(PROPIEDAD.tasacionClp)}) · ${PROPIEDAD.tasador}`);
   y += 2;
 
+  // ── Sociedad e inscripcion ──
+  section('Sociedad propietaria e inscripcion');
+  kv('Razon social', `${PROPIEDAD.sociedad.razonSocial} · RUT ${PROPIEDAD.sociedad.rut}`);
+  kv('Constitucion', `${PROPIEDAD.sociedad.constitucion} · ${PROPIEDAD.sociedad.domicilio}`);
+  kv('Registro', PROPIEDAD.sociedad.registro);
+  kv(
+    'Inscripcion',
+    `Fojas ${PROPIEDAD.inscripcion.fojas} N ${PROPIEDAD.inscripcion.numero}, ${PROPIEDAD.inscripcion.registro} ${PROPIEDAD.inscripcion.anio} · ${PROPIEDAD.inscripcion.cbr} · vigente al ${PROPIEDAD.inscripcion.vigenciaAl}`
+  );
+  kv(
+    'Avaluos por rol',
+    PROPIEDAD.avaluosDetalle
+      .map((a) => `ROL ${a.rol} (${a.destino}) ${clp(a.monto)} · ${a.periodo}`)
+      .join('\n')
+  );
+  y += 2;
+
   // ── Deslindes ──
   section('Deslindes');
   PROPIEDAD.deslindes.forEach((d) => kv(d.lado, `${d.con} · ${d.metros}`));
