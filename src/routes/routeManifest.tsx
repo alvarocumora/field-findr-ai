@@ -267,6 +267,9 @@ export const projectLandingEntries: RouteEntry[] = [
   pub("huellelhue", "/huellelhue", <HuellelhueLanding />),
   pub("playa-alvaro", "/playa-alvaro", <PlayaAlvaroLanding />),
   pub("explora-park", "/explora-park", <ExploraParkLanding />),
+  pub("dossier-isla-maipo", "/ficha/isla-de-maipo-galvez-1458", <IslaDeMaipoDossier />, {
+    indexable: false,
+  }),
   pub("project-landing", "/p/:slug", <ProjectLanding />),
 ];
 
