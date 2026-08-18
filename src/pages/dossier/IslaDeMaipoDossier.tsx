@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Download, FileText, Link2, MapPin, Printer, Check, ExternalLink } from 'lucide-react';
+import { Download, FileText, Link2, MapPin, Printer, Check, ExternalLink, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,9 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useSEO } from '@/hooks/useSEO';
 import { useStaticMapToken } from '@/hooks/useStaticMapToken';
+import { generateIslaMaipoDossierPdf } from '@/lib/dossierPdf';
 import { DOCUMENTOS, PROPIEDAD, type DossierDoc } from './islaMaipoData';
+
 
 const clp = (n: number) => '$' + n.toLocaleString('es-CL');
 const m2 = (n: number) => n.toLocaleString('es-CL') + ' m²';
