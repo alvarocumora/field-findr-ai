@@ -118,7 +118,7 @@ export async function generateIslaMaipoDossierPdf(options: { mapboxToken?: strin
   doc.text(doc.splitTextToSize(PROPIEDAD.nombre, contentW), margin, 24);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.text(`${PROPIEDAD.direccion} · ${PROPIEDAD.comuna} · ${PROPIEDAD.region}`, margin, 36);
+  doc.text(`${PROPIEDAD.direccion} · Sector ${PROPIEDAD.sector} · ${PROPIEDAD.region}`, margin, 36);
 
   y = 54;
 
@@ -128,7 +128,7 @@ export async function generateIslaMaipoDossierPdf(options: { mapboxToken?: strin
     [
       'Tasacion comercial',
       `UF ${PROPIEDAD.tasacionUf.toLocaleString('es-CL')}`,
-      `${(PROPIEDAD.tasacionUf / PROPIEDAD.superficieTotalM2).toFixed(2)} UF/m2 · ${PROPIEDAD.tasacionFecha}`,
+      `${(PROPIEDAD.tasacionUf / PROPIEDAD.superficieTotalM2).toFixed(2).replace('.', ',')} UF/m2 · ${PROPIEDAD.tasacionFecha}`,
     ],
     ['Avaluo fiscal', clp(PROPIEDAD.avaluoFiscal), PROPIEDAD.avaluoFecha],
     ['ROL(es) SII', PROPIEDAD.roles, `Destino ${PROPIEDAD.destinoSii}`],
