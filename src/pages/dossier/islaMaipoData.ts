@@ -6,11 +6,21 @@ import compraventa from '@/assets/dossier-isla-maipo/compraventa-rfg.pdf.asset.j
 import plano from '@/assets/dossier-isla-maipo/plano-subdivision.pdf.asset.json';
 import anexo1 from '@/assets/dossier-isla-maipo/antecedente-1.pdf.asset.json';
 import anexo2 from '@/assets/dossier-isla-maipo/antecedente-2.pdf.asset.json';
+import dvJul2026 from '@/assets/dossier-isla-maipo/dominio-vigente-2026.pdf.asset.json';
+import copiaVigente from '@/assets/dossier-isla-maipo/copia-vigente-inscripcion-2026.pdf.asset.json';
+import estatutoRfg from '@/assets/dossier-isla-maipo/estatuto-rfg-spa.pdf.asset.json';
+import avaluo1632 from '@/assets/dossier-isla-maipo/avaluo-fiscal-16-32.pdf.asset.json';
+import avaluo1633 from '@/assets/dossier-isla-maipo/avaluo-fiscal-16-33.pdf.asset.json';
+import noExp11940 from '@/assets/dossier-isla-maipo/no-expropiacion-119-40.pdf.asset.json';
+import noExp1632 from '@/assets/dossier-isla-maipo/no-expropiacion-16-32.pdf.asset.json';
+import noExp1633 from '@/assets/dossier-isla-maipo/no-expropiacion-16-33.pdf.asset.json';
+import protocolizacion from '@/assets/dossier-isla-maipo/protocolizacion-notarial-2020.pdf.asset.json';
+import repLegal from '@/assets/dossier-isla-maipo/antecedentes-representante.pdf.asset.json';
 
 export interface DossierDoc {
   id: string;
   titulo: string;
-  categoria: 'Legal' | 'Tributario' | 'Urbanístico' | 'Valoración' | 'Planos';
+  categoria: 'Legal' | 'Tributario' | 'Urbanístico' | 'Valoración' | 'Planos' | 'Societario';
   descripcion: string;
   emisor: string;
   fecha: string;
@@ -24,7 +34,7 @@ export const PROPIEDAD = {
   region: 'Región Metropolitana de Santiago',
   sector: 'La Villita',
   direccion: 'Gálvez 1458, Isla de Maipo',
-  roles: '119-40 / 16-35',
+  roles: '119-40 · 16-32 · 16-33',
   destinoSii: 'Agrícola',
   propietarios: [
     { nombre: 'Inversiones RFG SpA', rut: '77.033.083-1', pct: '50,00%' },
@@ -33,8 +43,29 @@ export const PROPIEDAD = {
   superficieTotalM2: 184100,
   superficieUrbanaM2: 76541,
   superficieRuralM2: 107559,
-  avaluoFiscal: 377765968,
-  avaluoFecha: '1er semestre 2026',
+  avaluoFiscal: 633000120,
+  avaluoFecha: 'Suma de 3 roles · 2026',
+  avaluosDetalle: [
+    { rol: '119-40', direccion: 'Gálvez 1458', destino: 'Agrícola', monto: 377765968, periodo: '1er semestre 2026' },
+    { rol: '16-32', direccion: 'Gálvez 1458 Lt. 1', destino: 'Sitio eriazo', monto: 127617076, periodo: '2º semestre 2026' },
+    { rol: '16-33', direccion: 'Gálvez 1458 Lt. 2', destino: 'Sitio eriazo', monto: 127617076, periodo: '2º semestre 2026' },
+  ],
+  sociedad: {
+    razonSocial: 'Inversiones RFG SpA',
+    rut: '77.033.083-1',
+    constitucion: '25 de junio de 2019',
+    domicilio: 'Isla de Maipo, Región Metropolitana',
+    registro: 'Registro de Empresas y Sociedades (Ley 20.659) · CVE CRsbOwz3ss1G',
+    certificadoFecha: '23-07-2026',
+  },
+  inscripcion: {
+    fojas: '1814',
+    numero: '1731',
+    registro: 'Registro de Propiedad',
+    anio: '2019',
+    cbr: 'Conservador de Bienes Raíces de Talagante',
+    vigenciaAl: '24 de julio de 2026',
+  },
   tasacionUf: 184036,
   tasacionClp: 5796946359,
   tasacionFecha: '25 de febrero de 2022',
@@ -65,6 +96,8 @@ export const PROPIEDAD = {
     'Certificados de informaciones previas N°09/2019, N°54/2018 y N°29/2018.',
     'Certificado de número lote 4 N°296 del 06-05-2015.',
     'Certificado de no expropiación SERVIU N°2500535 del 28-02-2022.',
+    'Certificados SERVIU RM de no afectación a expropiación para los 3 roles, emitidos el 24-07-2026 (N°3517815, N°3517810 y N°3517797).',
+    'Dominio vigente y copia vigente de inscripción fojas 1814 N°1731 de 2019, CBR Talagante (julio 2026).',
   ],
 };
 
@@ -150,5 +183,115 @@ export const DOCUMENTOS: DossierDoc[] = [
     fecha: '—',
     url: anexo2.url,
     filename: 'Antecedente-2.pdf',
+  },
+  {
+    id: 'dominio-vigente-2026',
+    titulo: 'Certificado de dominio vigente — CBR Talagante (julio 2026)',
+    categoria: 'Legal',
+    descripcion:
+      'Dominio vigente de la inscripción de fojas 1814 N°1731 del Registro de Propiedad 2019, vigente al 20-07-2026. Carátula N°152730, certificado N°123457021378 (verificable en fojas.cl).',
+    emisor: 'Conservador de Bienes Raíces de Talagante',
+    fecha: '20-07-2026',
+    url: dvJul2026.url,
+    filename: 'Dominio-Vigente-CBR-Jul2026.pdf',
+  },
+  {
+    id: 'copia-vigente-2026',
+    titulo: 'Copia vigente de inscripción fojas 1814 N°1731 (2019)',
+    categoria: 'Legal',
+    descripcion:
+      'Copia autorizada y vigente de la inscripción de dominio al 24-07-2026. Carátula N°153015, certificado N°123457022106.',
+    emisor: 'Conservador de Bienes Raíces de Talagante',
+    fecha: '24-07-2026',
+    url: copiaVigente.url,
+    filename: 'Copia-Vigente-Inscripcion-2026.pdf',
+  },
+  {
+    id: 'estatuto-rfg',
+    titulo: 'Certificado de estatuto actualizado — Inversiones RFG SpA',
+    categoria: 'Societario',
+    descripcion:
+      'Estatuto vigente de la sociedad propietaria (RUT 77.033.083-1), constituida el 25-06-2019. Valor probatorio de instrumento público (art. 22 Ley 20.659). CVE CRsbOwz3ss1G.',
+    emisor: 'Registro de Empresas y Sociedades · Ministerio de Economía',
+    fecha: '23-07-2026',
+    url: estatutoRfg.url,
+    filename: 'Estatuto-Actualizado-RFG-SpA.pdf',
+  },
+  {
+    id: 'avaluo-16-32',
+    titulo: 'Certificado de avalúo fiscal detallado — ROL 16-32',
+    categoria: 'Tributario',
+    descripcion:
+      'Gálvez 1458 Lt. 1, destino sitio eriazo, a nombre de Inversiones RFG SpA. Avalúo total $127.617.076 (2º semestre 2026).',
+    emisor: 'Servicio de Impuestos Internos',
+    fecha: '24-07-2026',
+    url: avaluo1632.url,
+    filename: 'Avaluo-Fiscal-16-32.pdf',
+  },
+  {
+    id: 'avaluo-16-33',
+    titulo: 'Certificado de avalúo fiscal detallado — ROL 16-33',
+    categoria: 'Tributario',
+    descripcion:
+      'Gálvez 1458 Lt. 2, destino sitio eriazo, a nombre de Inversiones RFG SpA. Avalúo total $127.617.076 (2º semestre 2026).',
+    emisor: 'Servicio de Impuestos Internos',
+    fecha: '24-07-2026',
+    url: avaluo1633.url,
+    filename: 'Avaluo-Fiscal-16-33.pdf',
+  },
+  {
+    id: 'no-exp-119-40',
+    titulo: 'Certificado de no expropiación SERVIU — ROL 119-40',
+    categoria: 'Urbanístico',
+    descripcion:
+      'Informe situación de inmueble N°3517815: Gálvez 1458 NO AFECTO A EXPROPIACIÓN por SERVIU RM.',
+    emisor: 'SERVIU Región Metropolitana · MINVU',
+    fecha: '24-07-2026',
+    url: noExp11940.url,
+    filename: 'No-Expropiacion-119-40.pdf',
+  },
+  {
+    id: 'no-exp-16-32',
+    titulo: 'Certificado de no expropiación SERVIU — ROL 16-32',
+    categoria: 'Urbanístico',
+    descripcion:
+      'Informe situación de inmueble N°3517810: Gálvez 1458 Lt. 1 NO AFECTO A EXPROPIACIÓN por SERVIU RM.',
+    emisor: 'SERVIU Región Metropolitana · MINVU',
+    fecha: '24-07-2026',
+    url: noExp1632.url,
+    filename: 'No-Expropiacion-16-32.pdf',
+  },
+  {
+    id: 'no-exp-16-33',
+    titulo: 'Certificado de no expropiación SERVIU — ROL 16-33',
+    categoria: 'Urbanístico',
+    descripcion:
+      'Informe situación de inmueble N°3517797: Gálvez 1458 Lt. 2 NO AFECTO A EXPROPIACIÓN por SERVIU RM.',
+    emisor: 'SERVIU Región Metropolitana · MINVU',
+    fecha: '24-07-2026',
+    url: noExp1633.url,
+    filename: 'No-Expropiacion-16-33.pdf',
+  },
+  {
+    id: 'protocolizacion-2020',
+    titulo: 'Instrumento protocolizado N°1.068 (repertorio 3.710/2020)',
+    categoria: 'Legal',
+    descripcion:
+      'Documento protocolizado el 10-12-2020 ante Notaría de San Fernando, Alberto Ortega Jirón. Certificado N°123456811407, verificable en fojas.cl.',
+    emisor: 'Primera Notaría de San Fernando',
+    fecha: '11-12-2020',
+    url: protocolizacion.url,
+    filename: 'Protocolizacion-Notarial-1068-2020.pdf',
+  },
+  {
+    id: 'rep-legal',
+    titulo: 'Antecedentes del representante legal',
+    categoria: 'Societario',
+    descripcion:
+      'Documentación de identificación y respaldo del representante legal de la sociedad propietaria, para verificación KYC de la entidad financiera.',
+    emisor: 'Expediente propietario',
+    fecha: '24-07-2026',
+    url: repLegal.url,
+    filename: 'Antecedentes-Representante-Legal.pdf',
   },
 ];
