@@ -93,6 +93,7 @@ const InvestorsLogin = lazy(() => import("@/pages/forestal/InvestorsLogin"));
 const HuellelhueLanding = lazy(() => import("@/pages/huellelhue/HuellelhueLanding"));
 const PlayaAlvaroLanding = lazy(() => import("@/pages/playaAlvaro/PlayaAlvaroLanding"));
 const ExploraParkLanding = lazy(() => import("@/pages/exploraPark/ExploraParkLanding"));
+const IslaDeMaipoDossier = lazy(() => import("@/pages/dossier/IslaDeMaipoDossier"));
 const ProjectLanding = lazy(() => import("@/pages/landing/ProjectLanding"));
 
 // Comprador
@@ -267,6 +268,9 @@ export const projectLandingEntries: RouteEntry[] = [
   pub("huellelhue", "/huellelhue", <HuellelhueLanding />),
   pub("playa-alvaro", "/playa-alvaro", <PlayaAlvaroLanding />),
   pub("explora-park", "/explora-park", <ExploraParkLanding />),
+  pub("dossier-isla-maipo", "/ficha/isla-de-maipo-galvez-1458", <IslaDeMaipoDossier />, {
+    indexable: false,
+  }),
   pub("project-landing", "/p/:slug", <ProjectLanding />),
 ];
 
