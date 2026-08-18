@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Download, FileText, Link2, MapPin, Printer, Check, ExternalLink } from 'lucide-react';
+import { Download, FileText, Link2, MapPin, Printer, Check, ExternalLink, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,9 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useSEO } from '@/hooks/useSEO';
 import { useStaticMapToken } from '@/hooks/useStaticMapToken';
+import { generateIslaMaipoDossierPdf } from '@/lib/dossierPdf';
 import { DOCUMENTOS, PROPIEDAD, type DossierDoc } from './islaMaipoData';
+
 
 const clp = (n: number) => '$' + n.toLocaleString('es-CL');
 const m2 = (n: number) => n.toLocaleString('es-CL') + ' m²';
@@ -25,7 +27,21 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub?: st
 export default function IslaDeMaipoDossier() {
   const [active, setActive] = useState<DossierDoc>(DOCUMENTOS[0]);
   const [copied, setCopied] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const token = useStaticMapToken();
+
+  const downloadResumenPdf = async () => {
+    setGenerating(true);
+    try {
+      await generateIslaMaipoDossierPdf({ mapboxToken: token });
+      toast.success('Resumen PDF generado');
+    } catch {
+      toast.error('No se pudo generar el resumen PDF');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
 
   useSEO({
     title: 'Ficha Financiera · Predio Gálvez 1458, Isla de Maipo',
@@ -82,10 +98,15 @@ export default function IslaDeMaipoDossier() {
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            <Button onClick={copyLink} variant="default">
+            <Button onClick={downloadResumenPdf} disabled={generating} variant="default">
+              <FileDown className="mr-2 h-4 w-4" />
+              {generating ? 'Generando resumen…' : 'Descargar resumen PDF'}
+            </Button>
+            <Button onClick={copyLink} variant="secondary">
               {copied ? <Check className="mr-2 h-4 w-4" /> : <Link2 className="mr-2 h-4 w-4" />}
               Copiar enlace
             </Button>
+
             <Button onClick={downloadAll} variant="secondary">
               <Download className="mr-2 h-4 w-4" /> Descargar expediente ({DOCUMENTOS.length})
             </Button>
