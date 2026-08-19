@@ -95,7 +95,7 @@ export const drawBrandLogo = (
       const h = theme.logo.imageHeight ?? size + 2;
       const props = doc.getImageProperties(theme.logo.imageDataUrl);
       const w = (props.width / props.height) * h;
-      doc.addImage(theme.logo.imageDataUrl, margin0(x), y, w, h);
+      doc.addImage(theme.logo.imageDataUrl, x, y, w, h);
       return;
     } catch {
       // si la imagen falla, se dibuja el logo vectorial
