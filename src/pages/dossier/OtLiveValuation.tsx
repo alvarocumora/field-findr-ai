@@ -303,8 +303,8 @@ export default function OtLiveValuation() {
               </p>
               <p>
                 Al ser un macropredio de {(PROPIEDAD.superficieTotalM2 / 10000).toLocaleString('es-CL')} ha se
-                aplica un factor de escala de {ESCALA_MACROPREDIO * 100}% sobre el unitario de sitios menores, y se
-                expresa un rango de ±{BANDA * 100}% como valor razonable (FMV).
+                aplica un factor de escala de {Math.round(ESCALA_MACROPREDIO * 100)}% sobre el unitario de sitios menores, y se
+                expresa un rango de ±{Math.round(BANDA * 100)}% como valor razonable (FMV).
               </p>
               <p>
                 Estimación referencial de OFERTA TERRENOS con datos de oferta pública; no reemplaza una tasación
