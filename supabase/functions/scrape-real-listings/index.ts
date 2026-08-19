@@ -84,14 +84,25 @@ async function firecrawlSearch(query: string, apiKey: string): Promise<string[]>
       console.error('search http error', r.status, query, text.slice(0, 200));
       return [];
     }
-    let j: { data?: unknown; web?: unknown; results?: unknown };
+    let j: Record<string, unknown>;
     try { j = JSON.parse(text); } catch { return []; }
-    const raw = (j?.data ?? j?.web ?? j?.results ?? []) as { results?: unknown[] } | unknown[];
-    const results = Array.isArray(raw) ? raw : (Array.isArray(raw?.results) ? raw.results : []);
-    return results
+    // Firecrawl v2: { success, data: { web: [{url,...}] } }. Se aceptan también
+    // formas antiguas (data como array, web/results en la raíz).
+    const data = j?.data as Record<string, unknown> | unknown[] | undefined;
+    const candidates: unknown[] = [
+      Array.isArray(data) ? data : undefined,
+      !Array.isArray(data) ? (data?.web as unknown) : undefined,
+      !Array.isArray(data) ? (data?.results as unknown) : undefined,
+      j?.web,
+      j?.results,
+    ].filter(Array.isArray) as unknown[];
+    const results = (candidates[0] as unknown[]) ?? [];
+    const urls = results
       .map((it: unknown) => (typeof it === 'string' ? it : (it as { url?: string })?.url))
       .filter((u: unknown): u is string => typeof u === 'string' && u.length > 0)
       .slice(0, 8);
+    console.log('search ok', query.slice(0, 60), 'urls:', urls.length);
+    return urls;
   } catch (e) {
     console.error('search failed', query, e);
     return [];
