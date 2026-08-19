@@ -133,7 +133,35 @@ export const PROPIEDAD = {
     detalle: 'Contribuciones formulario 30, vencimiento 30-06-2026 (neto $328.956 + reajustes e intereses).',
     fecha: '20-07-2026',
   },
+  /** Predios urbanos de la misma sociedad propietaria (Inversiones RFG SpA). */
+  prediosUrbanos: [
+    {
+      rol: '16-32',
+      direccion: 'Gálvez 1458 Lt. 1, Isla de Maipo',
+      destino: 'Sitio eriazo · urbano',
+      propietario: 'Inversiones RFG SpA — 77.033.083-1',
+      avaluoTotal: 127617076,
+      avaluoActualizado: 124141101,
+      contribucionSemestral: 775650,
+      periodo: '2º semestre 2026',
+      expropiacion: 'No afecto a expropiación (SERVIU RM N°3517810, 24-07-2026)',
+      docs: ['avaluo-16-32', 'antecedentes-16-32', 'cip-16-32', 'no-exp-16-32'],
+    },
+    {
+      rol: '16-33',
+      direccion: 'Gálvez 1458 Lt. 2, Isla de Maipo',
+      destino: 'Sitio eriazo · urbano',
+      propietario: 'Inversiones RFG SpA — 77.033.083-1',
+      avaluoTotal: 127617076,
+      avaluoActualizado: 124141101,
+      contribucionSemestral: 775650,
+      periodo: '2º semestre 2026',
+      expropiacion: 'No afecto a expropiación (SERVIU RM N°3517797, 24-07-2026)',
+      docs: ['avaluo-16-33', 'antecedentes-16-33', 'cip-16-33', 'no-exp-16-33'],
+    },
+  ],
 };
+
 
 export const DOCUMENTOS: DossierDoc[] = [
   {
