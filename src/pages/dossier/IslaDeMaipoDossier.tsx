@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useSEO } from '@/hooks/useSEO';
 import { useStaticMapToken } from '@/hooks/useStaticMapToken';
 import { generateIslaMaipoDossierPdf } from '@/lib/dossierPdf';
+import { generatePredioUrbanoFicha } from '@/lib/pdf/fichaTemplates';
 import { DOCUMENTOS, PROPIEDAD, type DossierDoc } from './islaMaipoData';
 import OtLiveValuation from './OtLiveValuation';
 
