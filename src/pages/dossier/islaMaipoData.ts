@@ -16,11 +16,32 @@ import noExp1632 from '@/assets/dossier-isla-maipo/no-expropiacion-16-32.pdf.ass
 import noExp1633 from '@/assets/dossier-isla-maipo/no-expropiacion-16-33.pdf.asset.json';
 import protocolizacion from '@/assets/dossier-isla-maipo/protocolizacion-notarial-2020.pdf.asset.json';
 import repLegal from '@/assets/dossier-isla-maipo/antecedentes-representante.pdf.asset.json';
+import vigenciaSociedad from '@/assets/dossier-isla-maipo/vigencia-sociedad-rfg.pdf.asset.json';
+import vigenciaPoderes from '@/assets/dossier-isla-maipo/vigencia-poderes-rfg.pdf.asset.json';
+import hipotecasAguas from '@/assets/dossier-isla-maipo/hipotecas-gravamenes-aguas.pdf.asset.json';
+import dominioAguas from '@/assets/dossier-isla-maipo/dominio-vigente-aguas.pdf.asset.json';
+import deudaTgr from '@/assets/dossier-isla-maipo/certificado-deuda-tgr.pdf.asset.json';
+import antecedentes1632 from '@/assets/dossier-isla-maipo/antecedentes-bien-raiz-16-32.pdf.asset.json';
+import antecedentes1633 from '@/assets/dossier-isla-maipo/antecedentes-bien-raiz-16-33.pdf.asset.json';
+import cip1632 from '@/assets/dossier-isla-maipo/cip-16-32.pdf.asset.json';
+import cip1633 from '@/assets/dossier-isla-maipo/cip-16-33.pdf.asset.json';
+import contratoAridos from '@/assets/dossier-isla-maipo/contrato-aridos.pdf.asset.json';
+import contratoAridosProt from '@/assets/dossier-isla-maipo/contrato-aridos-protocolizado.pdf.asset.json';
+import autorizacionContrato from '@/assets/dossier-isla-maipo/autorizacion-contrato.pdf.asset.json';
+import contratoAnexo from '@/assets/dossier-isla-maipo/contrato-anexo.pdf.asset.json';
 
 export interface DossierDoc {
   id: string;
   titulo: string;
-  categoria: 'Legal' | 'Tributario' | 'Urbanístico' | 'Valoración' | 'Planos' | 'Societario';
+  categoria:
+    | 'Legal'
+    | 'Tributario'
+    | 'Urbanístico'
+    | 'Valoración'
+    | 'Planos'
+    | 'Societario'
+    | 'Aguas'
+    | 'Contratos';
   descripcion: string;
   emisor: string;
   fecha: string;
