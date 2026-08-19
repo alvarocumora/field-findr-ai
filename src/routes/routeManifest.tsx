@@ -154,6 +154,7 @@ const DocumentCenter = lazy(() => import("@/components/admin/DocumentCenter"));
 const AuditLog = lazy(() => import("@/pages/dashboard/AuditLog"));
 const VisualScenariosAdmin = lazy(() => import("@/pages/admin/VisualScenariosAdmin"));
 const FeaturedManager = lazy(() => import("@/pages/admin/FeaturedManager"));
+const FichaBranding = lazy(() => import("@/pages/admin/FichaBranding"));
 const CommercialLeadsAdmin = lazy(() => import("@/pages/admin/CommercialLeadsAdmin"));
 const CaptacionesQueue = lazy(() => import("@/pages/admin/CaptacionesQueue"));
 const BrokersAdmin = lazy(() => import("@/pages/admin/BrokersAdmin"));
@@ -360,6 +361,7 @@ export const adminRouteEntries: RouteEntry[] = [
   admin("admin-comisiones", "/admin/comisiones", <CommissionsAdmin />, { label: "Comisiones", group: "admin" }),
   admin("admin-ventas", "/admin/ventas", <SalesAdmin />, { label: "Ventas", group: "admin" }),
   admin("admin-featured", "/admin/featured", <FeaturedManager />, { label: "Destacados", group: "admin" }),
+  admin("admin-branding-fichas", "/admin/branding-fichas", <FichaBranding />, { label: "Branding fichas", group: "admin" }),
   admin("admin-soporte", "/admin/soporte", <SupportAdmin />, { label: "Soporte", group: "admin" }),
   admin("admin-audit", "/admin/audit", <AuditLog />, { label: "Auditoría", group: "admin" }),
 ];
