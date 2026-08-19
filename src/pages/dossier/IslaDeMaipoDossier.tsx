@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useSEO } from '@/hooks/useSEO';
 import { useStaticMapToken } from '@/hooks/useStaticMapToken';
 import { generateIslaMaipoDossierPdf } from '@/lib/dossierPdf';
+import { generatePredioUrbanoFicha } from '@/lib/pdf/fichaTemplates';
 import { DOCUMENTOS, PROPIEDAD, type DossierDoc } from './islaMaipoData';
 import OtLiveValuation from './OtLiveValuation';
 
@@ -225,6 +226,33 @@ export default function IslaDeMaipoDossier() {
                         </a>
                       ))}
                   </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-2"
+                    onClick={() =>
+                      generatePredioUrbanoFicha(
+                        {
+                          rol: p.rol,
+                          direccion: p.direccion,
+                          destino: p.destino,
+                          propietario: p.propietario,
+                          avaluoTotal: p.avaluoTotal,
+                          avaluoActualizado: p.avaluoActualizado,
+                          contribucionSemestral: p.contribucionSemestral,
+                          periodo: p.periodo,
+                          expropiacion: p.expropiacion,
+                          comuna: PROPIEDAD.comuna,
+                          documentos: p.docs
+                            .map((id) => DOCUMENTOS.find((d) => d.id === id)?.titulo)
+                            .filter((t): t is string => Boolean(t)),
+                        },
+                        { qrUrl: '/ficha/isla-de-maipo-galvez-1458', sociedad: p.propietario }
+                      )
+                    }
+                  >
+                    <FileDown className="mr-2 h-4 w-4" /> Ficha PDF del predio
+                  </Button>
                 </CardContent>
               </Card>
             ))}

@@ -1,5 +1,6 @@
 import { Lot, LotFeatures } from '@/hooks/useLots';
-import { BRAND, createFichaDoc, fetchImageAsBase64, publicUrl } from '@/lib/pdf/fichaShell';
+import { BRAND, fetchImageAsBase64, publicUrl } from '@/lib/pdf/fichaShell';
+import { renderFicha } from '@/lib/pdf/fichaTemplates';
 
 const TERRACOTTA = [184, 80, 66] as [number, number, number];
 const SAND = [232, 220, 200] as [number, number, number];
@@ -45,20 +46,17 @@ export const generateLotDataCardPdf = async (
   features: LotFeatures,
   options: { mapboxToken?: string | null } = {}
 ) => {
-  const f = createFichaDoc({
-    footerNote: 'OFERTA TERRENOS · Ficha de lote · ofertaterrenos.com',
-  });
-  const { doc, margin, contentW, W } = f;
-
   const lotPath = `/proyecto/${lot.project_id}?lote=${encodeURIComponent(lot.lot_number)}`;
 
-  await f.header({
+  await renderFicha({
+    template: 'lote',
     eyebrow: `Ficha de lote · ${projectName}`,
     title: `Lote ${lot.lot_number}`,
     subtitle: lot.name && lot.name !== lot.lot_number ? lot.name : undefined,
     qrUrl: lotPath,
-    qrCaption: 'Ver ficha online',
-  });
+    filename: `Ficha-Lote-${lot.lot_number}.pdf`,
+    body: async (f) => {
+      const { doc, margin, contentW, W } = f;
 
   // ── Estado + precio ──
   const statusLabel =
@@ -165,9 +163,6 @@ export const generateLotDataCardPdf = async (
   });
   f.y += 8;
 
-  f.note(
-    `Documento generado por ofertaterrenos.com el ${new Date().toLocaleDateString('es-CL')}. Los precios y la disponibilidad pueden variar sin previo aviso.`
-  );
-
-  f.save(`Ficha-Lote-${lot.lot_number}.pdf`);
+    },
+  });
 };
