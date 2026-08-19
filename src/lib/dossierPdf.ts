@@ -1,5 +1,8 @@
 import jsPDF from 'jspdf';
+import QRCode from 'qrcode';
 import { DOCUMENTOS, PROPIEDAD } from '@/pages/dossier/islaMaipoData';
+
+const PUBLIC_PATH = '/ficha/isla-de-maipo-galvez-1458';
 
 const GREEN = [34, 94, 62] as const;
 const DARK = [30, 35, 32] as const;
@@ -107,20 +110,39 @@ export async function generateIslaMaipoDossierPdf(options: { mapboxToken?: strin
   };
 
   // ── Portada / cabecera ──
+  const publicUrl = 'https://ofertaterrenos.com' + PUBLIC_PATH;
+
   doc.setFillColor(...GREEN);
-  doc.rect(0, 0, W, 44, 'F');
+  doc.rect(0, 0, W, 52, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.text('EXPEDIENTE DE PRESENTACION · ENTIDAD FINANCIERA', margin, 14);
   doc.setFontSize(17);
   doc.setFont('helvetica', 'bold');
-  doc.text(doc.splitTextToSize(PROPIEDAD.nombre, contentW), margin, 24);
+  doc.text(doc.splitTextToSize(PROPIEDAD.nombre, contentW - 36), margin, 24);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.text(`${PROPIEDAD.direccion} · Sector ${PROPIEDAD.sector} · ${PROPIEDAD.region}`, margin, 36);
+  doc.setFontSize(7.5);
+  doc.text(`Ficha digital: ${publicUrl}`, margin, 44);
 
-  y = 54;
+  // QR al link publico de la ficha
+  try {
+    const qr = await QRCode.toDataURL(publicUrl, { margin: 1, width: 320 });
+    const qrSize = 28;
+    const qx = W - margin - qrSize;
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(qx - 2, 8, qrSize + 4, qrSize + 4, 2, 2, 'F');
+    doc.addImage(qr, 'PNG', qx, 10, qrSize, qrSize);
+    doc.setFontSize(6.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text('Escanear ficha online', qx + qrSize / 2, 45, { align: 'center' });
+  } catch {
+    // QR opcional
+  }
+
+  y = 62;
 
   // ── KPIs ──
   const kpis: [string, string, string][] = [
@@ -214,6 +236,67 @@ export async function generateIslaMaipoDossierPdf(options: { mapboxToken?: strin
   section('Deslindes');
   PROPIEDAD.deslindes.forEach((d) => kv(d.lado, `${d.con} · ${d.metros}`));
   y += 2;
+
+  // ── Predios urbanos de la misma sociedad ──
+  const predios = (PROPIEDAD as any).prediosUrbanos as
+    | {
+        rol: string;
+        direccion: string;
+        destino: string;
+        propietario: string;
+        avaluoTotal: number;
+        avaluoActualizado: number;
+        contribucionSemestral: number;
+        periodo: string;
+        expropiacion: string;
+        docs: string[];
+      }[]
+    | undefined;
+
+  if (predios && predios.length > 0) {
+    section('Predios urbanos de la misma sociedad');
+    paragraph(
+      'Inmuebles urbanos adicionales de propiedad de la misma sociedad, con antecedentes tributarios y urbanisticos disponibles en el data room.'
+    );
+    predios.forEach((p) => {
+      ensure(34);
+      doc.setDrawColor(226, 230, 227);
+      doc.setFillColor(248, 250, 248);
+      const docTitles = p.docs
+        .map((id) => DOCUMENTOS.find((d) => d.id === id)?.titulo)
+        .filter(Boolean) as string[];
+      const docLines = doc.splitTextToSize(
+        `Antecedentes: ${docTitles.length ? docTitles.join(' · ') : 'ver data room'}`,
+        contentW - 10
+      );
+      const boxH = 24 + docLines.length * 3.8;
+      ensure(boxH + 4);
+      doc.roundedRect(margin, y, contentW, boxH, 2, 2, 'FD');
+      doc.setFontSize(9.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...DARK);
+      doc.text(`ROL ${p.rol} · ${p.direccion}`, margin + 5, y + 6.5);
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...GRAY);
+      doc.text(`${p.destino} · ${p.propietario}`, margin + 5, y + 11.5);
+      doc.setFontSize(8);
+      doc.setTextColor(...DARK);
+      doc.text(
+        `Avaluo total ${clp(p.avaluoTotal)} · Actualizado ${clp(p.avaluoActualizado)} · Contribucion ${clp(
+          p.contribucionSemestral
+        )} (${p.periodo})`,
+        margin + 5,
+        y + 17
+      );
+      doc.setFontSize(7.5);
+      doc.setTextColor(...GRAY);
+      doc.text(doc.splitTextToSize(p.expropiacion, contentW - 10)[0], margin + 5, y + 21.5);
+      doc.text(docLines, margin + 5, y + 25.5);
+      y += boxH + 4;
+    });
+    y += 2;
+  }
 
   // ── Normativa ──
   section('Normativa urbanistica');
