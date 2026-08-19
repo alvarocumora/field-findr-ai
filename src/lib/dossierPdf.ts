@@ -110,20 +110,40 @@ export async function generateIslaMaipoDossierPdf(options: { mapboxToken?: strin
   };
 
   // ── Portada / cabecera ──
+  const publicUrl =
+    (typeof window !== 'undefined' ? window.location.origin : 'https://ofertaterrenos.com') + PUBLIC_PATH;
+
   doc.setFillColor(...GREEN);
-  doc.rect(0, 0, W, 44, 'F');
+  doc.rect(0, 0, W, 52, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.text('EXPEDIENTE DE PRESENTACION · ENTIDAD FINANCIERA', margin, 14);
   doc.setFontSize(17);
   doc.setFont('helvetica', 'bold');
-  doc.text(doc.splitTextToSize(PROPIEDAD.nombre, contentW), margin, 24);
+  doc.text(doc.splitTextToSize(PROPIEDAD.nombre, contentW - 36), margin, 24);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.text(`${PROPIEDAD.direccion} · Sector ${PROPIEDAD.sector} · ${PROPIEDAD.region}`, margin, 36);
+  doc.setFontSize(7.5);
+  doc.text(`Ficha digital: ${publicUrl}`, margin, 44);
 
-  y = 54;
+  // QR al link publico de la ficha
+  try {
+    const qr = await QRCode.toDataURL(publicUrl, { margin: 1, width: 320 });
+    const qrSize = 28;
+    const qx = W - margin - qrSize;
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(qx - 2, 8, qrSize + 4, qrSize + 4, 2, 2, 'F');
+    doc.addImage(qr, 'PNG', qx, 10, qrSize, qrSize);
+    doc.setFontSize(6.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text('Escanear ficha online', qx + qrSize / 2, 45, { align: 'center' });
+  } catch {
+    // QR opcional
+  }
+
+  y = 62;
 
   // ── KPIs ──
   const kpis: [string, string, string][] = [
