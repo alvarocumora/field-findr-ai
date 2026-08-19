@@ -1,38 +1,15 @@
-import jsPDF from 'jspdf';
 import { Lot, LotFeatures } from '@/hooks/useLots';
+import { BRAND, createFichaDoc, fetchImageAsBase64, publicUrl } from '@/lib/pdf/fichaShell';
 
-const FOREST_GREEN = [44, 95, 45] as const;
-const SAND = [232, 220, 200] as const;
-const TERRACOTTA = [184, 80, 66] as const;
-const DARK = [40, 40, 40] as const;
-const GRAY = [120, 120, 120] as const;
+const TERRACOTTA = [184, 80, 66] as [number, number, number];
+const SAND = [232, 220, 200] as [number, number, number];
 
 const formatCLP = (n: number | null) => {
   if (!n) return 'Consultar';
   return '$' + n.toLocaleString('es-CL');
 };
 
-const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    return await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
-  }
-};
-
-const buildMapboxStaticUrl = (
-  lot: Lot,
-  token: string,
-  width = 800,
-  height = 450
-): string | null => {
+const buildMapboxStaticUrl = (lot: Lot, token: string, width = 800, height = 450): string | null => {
   const lng = lot.longitude ? Number(lot.longitude) : null;
   const lat = lot.latitude ? Number(lot.latitude) : null;
   if (lng == null || lat == null || Number.isNaN(lng) || Number.isNaN(lat)) return null;
@@ -40,7 +17,6 @@ const buildMapboxStaticUrl = (
   const polygon = (lot as any).polygon as number[][] | null;
   let overlay = '';
   if (polygon && polygon.length >= 3) {
-    // GeoJSON polygon overlay (fill + stroke) — encoded
     const coords = [...polygon];
     const first = coords[0];
     const last = coords[coords.length - 1];
@@ -48,234 +24,150 @@ const buildMapboxStaticUrl = (
     const geojson = {
       type: 'Feature',
       properties: {
-        stroke: '#2C5F2D',
+        stroke: '#22C55E',
         'stroke-width': 3,
-        fill: '#2C5F2D',
+        fill: '#22C55E',
         'fill-opacity': 0.25,
       },
       geometry: { type: 'Polygon', coordinates: [coords] },
     };
     overlay = `geojson(${encodeURIComponent(JSON.stringify(geojson))})`;
   } else {
-    overlay = `pin-l+b85042(${lng},${lat})`;
+    overlay = `pin-l+22c55e(${lng},${lat})`;
   }
   return `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${overlay}/${lng},${lat},15,0/${width}x${height}@2x?access_token=${token}`;
 };
 
+/** Ficha pública de un lote, generada con el shell único de fichas. */
 export const generateLotDataCardPdf = async (
   lot: Lot,
   projectName: string,
   features: LotFeatures,
   options: { mapboxToken?: string | null } = {}
 ) => {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const W = 210;
-  const margin = 15;
-  const contentW = W - margin * 2;
-  let y = 0;
+  const f = createFichaDoc({
+    footerNote: 'OFERTA TERRENOS · Ficha de lote · ofertaterrenos.com',
+  });
+  const { doc, margin, contentW, W } = f;
 
-  // ── Header bar ──
-  doc.setFillColor(...FOREST_GREEN);
-  doc.rect(0, 0, W, 32, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text('FICHA DE LOTE', margin, 15);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Proyecto: ${projectName}`, margin, 24);
-  doc.setFontSize(8);
-  doc.text('ofertaterrenos.com', W - margin, 24, { align: 'right' });
+  const lotPath = `/proyecto/${lot.project_id}?lote=${encodeURIComponent(lot.lot_number)}`;
 
-  y = 40;
+  await f.header({
+    eyebrow: `Ficha de lote · ${projectName}`,
+    title: `Lote ${lot.lot_number}`,
+    subtitle: lot.name && lot.name !== lot.lot_number ? lot.name : undefined,
+    qrUrl: lotPath,
+    qrCaption: 'Ver ficha online',
+  });
 
-  // ── Lot hero image ──
-  const images = (lot as any).images as string[] | null;
-  if (images && images.length > 0) {
-    const base64 = await fetchImageAsBase64(images[0]);
-    if (base64) {
-      const imgW = contentW;
-      const imgH = imgW * (9 / 16);
-      doc.addImage(base64, 'JPEG', margin, y, imgW, imgH);
-      y += imgH + 6;
-    }
-  }
+  // ── Estado + precio ──
+  const statusLabel =
+    lot.status === 'available' ? 'DISPONIBLE' : lot.status === 'reserved' ? 'RESERVADO' : 'VENDIDO';
+  const statusColor: [number, number, number] =
+    lot.status === 'available' ? BRAND.emerald : lot.status === 'reserved' ? [200, 150, 30] : [120, 120, 120];
 
-  // ── Lot Number + Status ──
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...DARK);
-  doc.text(`Lote ${lot.lot_number}`, margin, y + 8);
-
-  const statusLabel = lot.status === 'available' ? 'DISPONIBLE' : lot.status === 'reserved' ? 'RESERVADO' : 'VENDIDO';
-  if (lot.status === 'available') {
-    doc.setFillColor(44, 95, 45);
-  } else if (lot.status === 'reserved') {
-    doc.setFillColor(200, 150, 30);
-  } else {
-    doc.setFillColor(120, 120, 120);
-  }
-  const statusW = doc.getTextWidth(statusLabel) * 0.5 + 8;
-  doc.roundedRect(W - margin - statusW, y, statusW, 8, 2, 2, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.text(statusLabel, W - margin - statusW / 2, y + 5.5, { align: 'center' });
-
-  y += 16;
-
-  if (lot.name && lot.name !== lot.lot_number) {
-    doc.setTextColor(...GRAY);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(lot.name, margin, y);
-    y += 7;
-  }
-
-  // ── Price highlight ──
+  f.ensure(26);
   doc.setFillColor(...SAND);
-  doc.roundedRect(margin, y, contentW, 20, 3, 3, 'F');
-  doc.setFontSize(20);
+  doc.roundedRect(margin, f.y, contentW, 20, 3, 3, 'F');
+  doc.setFontSize(19);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TERRACOTTA);
-  doc.text(formatCLP(lot.price), margin + 6, y + 13);
+  doc.text(formatCLP(lot.price), margin + 6, f.y + 13);
 
   const pricePerSqm = lot.price && lot.area ? lot.price / Number(lot.area) : null;
   if (pricePerSqm) {
-    doc.setFontSize(10);
-    doc.setTextColor(...GRAY);
-    doc.text(`${formatCLP(pricePerSqm)}/m²`, W - margin - 6, y + 13, { align: 'right' });
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...BRAND.gray);
+    doc.text(`${formatCLP(pricePerSqm)}/m²`, W - margin - 34, f.y + 13, { align: 'right' });
   }
-  y += 28;
 
-  // ── Technical Data Table ──
-  doc.setFillColor(...FOREST_GREEN);
-  doc.rect(margin, y, contentW, 8, 'F');
+  const statusW = doc.getTextWidth(statusLabel) * 0.55 + 8;
+  doc.setFillColor(...statusColor);
+  doc.roundedRect(W - margin - statusW - 6, f.y + 6, statusW, 8, 2, 2, 'F');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(9);
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
-  doc.text('DATOS TÉCNICOS', margin + 4, y + 5.5);
-  y += 10;
+  doc.text(statusLabel, W - margin - 6 - statusW / 2, f.y + 11.5, { align: 'center' });
+  f.y += 26;
 
-  const rows: [string, string][] = [
-    ['Superficie', `${Number(lot.area).toLocaleString('es-CL')} m²`],
-    ['Número de Lote', lot.lot_number],
-  ];
+  // ── Imagen principal ──
+  const images = (lot as any).images as string[] | null;
+  if (images && images.length > 0) {
+    const base64 = await fetchImageAsBase64(images[0]);
+    if (base64) f.image(base64, contentW * (9 / 16));
+  }
 
+  // ── Datos tecnicos ──
+  f.section('Datos tecnicos');
+  f.kv('Superficie', `${Number(lot.area).toLocaleString('es-CL')} m²`);
+  f.kv('Numero de lote', lot.lot_number);
+  f.kv('Proyecto', projectName);
   if (lot.latitude && lot.longitude) {
-    rows.push(['Coordenadas', `${Number(lot.latitude).toFixed(5)}, ${Number(lot.longitude).toFixed(5)}`]);
+    f.kv('Coordenadas', `${Number(lot.latitude).toFixed(5)}, ${Number(lot.longitude).toFixed(5)}`);
   }
+  if (lot.elevation_avg) f.kv('Elevacion', `${Math.round(Number(lot.elevation_avg))} m snm`);
 
-  if (lot.elevation_avg) {
-    rows.push(['Elevación', `${Math.round(Number(lot.elevation_avg))}m snm`]);
-  }
-
-  const slopeMap: Record<string, string> = { flat: 'Plano', gentle: 'Pendiente suave', steep: 'Pendiente fuerte' };
+  const slopeMap: Record<string, string> = {
+    flat: 'Plano',
+    gentle: 'Pendiente suave',
+    steep: 'Pendiente fuerte',
+  };
   if (lot.slope_category && slopeMap[lot.slope_category]) {
-    rows.push(['Topografía', slopeMap[lot.slope_category]]);
+    f.kv('Topografia', slopeMap[lot.slope_category]);
   }
 
   const services: string[] = [];
   if (features.hasWater) services.push('Agua');
   if (features.hasElectricity) services.push('Electricidad');
   if (features.hasRoad) services.push('Acceso vial');
-  if (services.length > 0) {
-    rows.push(['Servicios', services.join(', ')]);
+  if (services.length > 0) f.kv('Servicios', services.join(', '));
+  if (features.additionalFeatures?.length) {
+    f.kv('Caracteristicas', features.additionalFeatures.join(', '));
   }
+  f.y += 2;
 
-  if (features.additionalFeatures && features.additionalFeatures.length > 0) {
-    rows.push(['Características', features.additionalFeatures.join(', ')]);
-  }
-
-  doc.setFontSize(9);
-  rows.forEach((row, i) => {
-    if (i % 2 === 0) {
-      doc.setFillColor(248, 248, 248);
-      doc.rect(margin, y, contentW, 7, 'F');
-    }
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...DARK);
-    doc.text(row[0], margin + 4, y + 5);
-    doc.setFont('helvetica', 'normal');
-    doc.text(row[1], margin + contentW / 2, y + 5);
-    y += 7;
-  });
-
-  y += 8;
-
-  // ── Description ──
+  // ── Descripcion ──
   if (lot.description) {
-    doc.setFontSize(9);
-    doc.setTextColor(...GRAY);
-    const lines = doc.splitTextToSize(lot.description, contentW - 8);
-    doc.text(lines, margin + 4, y);
-    y += lines.length * 4 + 6;
+    f.section('Descripcion');
+    f.paragraph(lot.description);
   }
 
-  // ── Map (satellite + polygon) ──
-  const token = options.mapboxToken;
-  if (token) {
-    const mapUrl = buildMapboxStaticUrl(lot, token);
+  // ── Mapa ──
+  if (options.mapboxToken) {
+    const mapUrl = buildMapboxStaticUrl(lot, options.mapboxToken);
     if (mapUrl) {
       const mapBase64 = await fetchImageAsBase64(mapUrl);
       if (mapBase64) {
-        const mapH = 70;
-        if (y + mapH + 20 > 275) {
-          doc.addPage();
-          y = 20;
-        }
-        doc.setFillColor(...FOREST_GREEN);
-        doc.rect(margin, y, contentW, 8, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'bold');
-        doc.text('UBICACIÓN', margin + 4, y + 5.5);
-        y += 10;
-        try {
-          doc.addImage(mapBase64, 'PNG', margin, y, contentW, mapH);
-        } catch {
-          // ignore image errors
-        }
-        y += mapH + 6;
+        f.section('Ubicacion');
+        f.image(mapBase64, contentW * (450 / 800), 'Imagen satelital Mapbox con el poligono del lote', 'PNG');
       }
     }
   }
 
-  // ── Links ──
-  const projectUrl = `${window.location.origin}/proyecto/${lot.project_id}?lote=${lot.lot_number}`;
-  const compareUrl = `${window.location.origin}/comparar?lotes=${lot.id}`;
-
-  doc.setFontSize(8);
-  doc.setTextColor(...FOREST_GREEN);
+  // ── Enlaces ──
+  f.section('Enlaces');
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...BRAND.emerald);
   if (lot.latitude && lot.longitude) {
-    const mapsUrl = `https://www.google.com/maps?q=${lot.latitude},${lot.longitude}`;
-    doc.textWithLink('📍 Ver ubicación en Google Maps', margin, y, { url: mapsUrl });
-    y += 6;
+    f.ensure(8);
+    doc.textWithLink('Ver ubicacion en Google Maps', margin, f.y, {
+      url: `https://www.google.com/maps?q=${lot.latitude},${lot.longitude}`,
+    });
+    f.y += 6;
   }
-  doc.textWithLink('🔗 Ver ficha en línea', margin, y, { url: projectUrl });
-  y += 6;
-  doc.textWithLink('⚖️  Comparar este lote', margin, y, { url: compareUrl });
-  y += 10;
+  f.ensure(14);
+  doc.textWithLink('Ver ficha en linea', margin, f.y, { url: publicUrl(lotPath) });
+  f.y += 6;
+  doc.textWithLink('Comparar este lote', margin, f.y, {
+    url: publicUrl(`/comparar?lotes=${lot.id}`),
+  });
+  f.y += 8;
 
-  // ── Footer ──
-  const footerY = 280;
-  doc.setDrawColor(...SAND);
-  doc.setLineWidth(0.5);
-  doc.line(margin, footerY, W - margin, footerY);
-  doc.setFontSize(7);
-  doc.setTextColor(...GRAY);
-  doc.text(
-    'Documento generado por ofertaterrenos.com · Los precios y disponibilidad pueden variar sin previo aviso.',
-    W / 2,
-    footerY + 5,
-    { align: 'center' }
-  );
-  doc.text(
-    `Generado el ${new Date().toLocaleDateString('es-CL')}`,
-    W / 2,
-    footerY + 9,
-    { align: 'center' }
+  f.note(
+    `Documento generado por ofertaterrenos.com el ${new Date().toLocaleDateString('es-CL')}. Los precios y la disponibilidad pueden variar sin previo aviso.`
   );
 
-  doc.save(`Ficha-Lote-${lot.lot_number}.pdf`);
+  f.save(`Ficha-Lote-${lot.lot_number}.pdf`);
 };
