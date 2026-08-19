@@ -141,7 +141,9 @@ Deno.serve(async (req) => {
   const regionRaw = url.searchParams.get('region');
   const region = regionRaw ? regionRaw.slice(0, 40).replace(/[^\p{L}\p{N} '-]/gu, '') : null;
   const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') ?? '60', 10) || 60, 1), 100);
-  const key = cacheKey({ country, region, limit, v: 1 });
+  const zoneRaw = (url.searchParams.get('zone') ?? '').toLowerCase();
+  const zone = ZONE_QUERIES[zoneRaw] ? zoneRaw : null;
+  const key = cacheKey({ country, region, limit, zone, v: 1 });
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
