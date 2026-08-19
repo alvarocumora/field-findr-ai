@@ -374,6 +374,10 @@ export default function IslaDeMaipoDossier() {
           </div>
         </section>
 
+        <OtLiveValuation />
+
+
+
         <footer className="mt-12 border-t pt-6 text-xs leading-relaxed text-muted-foreground">
           <p>
             Documento informativo preparado para evaluación financiera. Los antecedentes se entregan tal como
