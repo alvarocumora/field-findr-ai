@@ -7,6 +7,17 @@ import { rateLimit, clientIp, tooManyRequests } from '../_shared/rateLimit.ts';
 // mint unlimited cache keys and bypass the 6h cache to drain Firecrawl credits.
 const ALLOWED_COUNTRIES = new Set(['all', 'chile', 'argentina', 'peru', 'perú', 'colombia', 'mexico', 'méxico']);
 
+// Zonas de comparables acotadas (allowlist) para tasaciones en vivo.
+const ZONE_QUERIES: Record<string, { portal: string; country: string; currency: string; query: string }[]> = {
+  'isla-de-maipo': [
+    { portal: 'Portalinmobiliario', country: 'Chile', currency: 'UF', query: 'site:portalinmobiliario.com terreno OR parcela venta "Isla de Maipo"' },
+    { portal: 'Portalinmobiliario', country: 'Chile', currency: 'UF', query: 'site:portalinmobiliario.com terreno venta Talagante OR "El Monte" OR Peñaflor' },
+    { portal: 'Yapo', country: 'Chile', currency: 'CLP', query: 'site:yapo.cl terreno venta "Isla de Maipo" OR Talagante' },
+    { portal: 'Mercado Libre', country: 'Chile', currency: 'CLP', query: 'site:terreno.mercadolibre.cl OR site:inmuebles.mercadolibre.cl terreno venta Talagante OR "Isla de Maipo" OR Melipilla' },
+  ],
+};
+
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-api-version',
