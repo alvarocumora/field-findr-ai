@@ -14,6 +14,8 @@ const ZONE_QUERIES: Record<string, { portal: string; country: string; currency: 
     { portal: 'Portalinmobiliario', country: 'Chile', currency: 'UF', query: 'site:portalinmobiliario.com terreno venta Talagante OR "El Monte" OR Peñaflor' },
     { portal: 'Yapo', country: 'Chile', currency: 'CLP', query: 'site:yapo.cl terreno venta "Isla de Maipo" OR Talagante' },
     { portal: 'Mercado Libre', country: 'Chile', currency: 'CLP', query: 'site:terreno.mercadolibre.cl OR site:inmuebles.mercadolibre.cl terreno venta Talagante OR "Isla de Maipo" OR Melipilla' },
+    { portal: 'Portalinmobiliario', country: 'Chile', currency: 'UF', query: 'site:portalinmobiliario.com sitio OR terreno venta hectáreas Talagante OR Melipilla OR "Isla de Maipo"' },
+    { portal: 'Goplaceit', country: 'Chile', currency: 'UF', query: 'site:goplaceit.com terreno venta "Isla de Maipo" OR Talagante OR "El Monte"' },
   ],
 };
 
