@@ -1,5 +1,8 @@
 import jsPDF from 'jspdf';
+import QRCode from 'qrcode';
 import { DOCUMENTOS, PROPIEDAD } from '@/pages/dossier/islaMaipoData';
+
+const PUBLIC_PATH = '/ficha/isla-de-maipo-galvez-1458';
 
 const GREEN = [34, 94, 62] as const;
 const DARK = [30, 35, 32] as const;
