@@ -16,11 +16,32 @@ import noExp1632 from '@/assets/dossier-isla-maipo/no-expropiacion-16-32.pdf.ass
 import noExp1633 from '@/assets/dossier-isla-maipo/no-expropiacion-16-33.pdf.asset.json';
 import protocolizacion from '@/assets/dossier-isla-maipo/protocolizacion-notarial-2020.pdf.asset.json';
 import repLegal from '@/assets/dossier-isla-maipo/antecedentes-representante.pdf.asset.json';
+import vigenciaSociedad from '@/assets/dossier-isla-maipo/vigencia-sociedad-rfg.pdf.asset.json';
+import vigenciaPoderes from '@/assets/dossier-isla-maipo/vigencia-poderes-rfg.pdf.asset.json';
+import hipotecasAguas from '@/assets/dossier-isla-maipo/hipotecas-gravamenes-aguas.pdf.asset.json';
+import dominioAguas from '@/assets/dossier-isla-maipo/dominio-vigente-aguas.pdf.asset.json';
+import deudaTgr from '@/assets/dossier-isla-maipo/certificado-deuda-tgr.pdf.asset.json';
+import antecedentes1632 from '@/assets/dossier-isla-maipo/antecedentes-bien-raiz-16-32.pdf.asset.json';
+import antecedentes1633 from '@/assets/dossier-isla-maipo/antecedentes-bien-raiz-16-33.pdf.asset.json';
+import cip1632 from '@/assets/dossier-isla-maipo/cip-16-32.pdf.asset.json';
+import cip1633 from '@/assets/dossier-isla-maipo/cip-16-33.pdf.asset.json';
+import contratoAridos from '@/assets/dossier-isla-maipo/contrato-aridos.pdf.asset.json';
+import contratoAridosProt from '@/assets/dossier-isla-maipo/contrato-aridos-protocolizado.pdf.asset.json';
+import autorizacionContrato from '@/assets/dossier-isla-maipo/autorizacion-contrato.pdf.asset.json';
+import contratoAnexo from '@/assets/dossier-isla-maipo/contrato-anexo.pdf.asset.json';
 
 export interface DossierDoc {
   id: string;
   titulo: string;
-  categoria: 'Legal' | 'Tributario' | 'Urbanístico' | 'Valoración' | 'Planos' | 'Societario';
+  categoria:
+    | 'Legal'
+    | 'Tributario'
+    | 'Urbanístico'
+    | 'Valoración'
+    | 'Planos'
+    | 'Societario'
+    | 'Aguas'
+    | 'Contratos';
   descripcion: string;
   emisor: string;
   fecha: string;
@@ -98,7 +119,20 @@ export const PROPIEDAD = {
     'Certificado de no expropiación SERVIU N°2500535 del 28-02-2022.',
     'Certificados SERVIU RM de no afectación a expropiación para los 3 roles, emitidos el 24-07-2026 (N°3517815, N°3517810 y N°3517797).',
     'Dominio vigente y copia vigente de inscripción fojas 1814 N°1731 de 2019, CBR Talagante (julio 2026).',
+    'Derechos de aprovechamiento de aguas de regadío: 25 acciones de la Asociación de Canalistas del Canal Valdés, fojas 148 N°114 Registro de Propiedad de Aguas 2019.',
   ],
+  derechosAgua: {
+    acciones: 25,
+    asociacion: 'Asociación de Canalistas del Canal Valdés',
+    inscripcion: 'Fojas 148 N°114 · Registro de Propiedad de Aguas 2019 · CBR Talagante',
+    gravamenes: 'Sin hipotecas, gravámenes, prohibiciones ni interdicciones vigentes (revisión 30 años, al 20-07-2026).',
+  },
+  deudaTgr: {
+    monto: 331031,
+    rol: '087-00119-040',
+    detalle: 'Contribuciones formulario 30, vencimiento 30-06-2026 (neto $328.956 + reajustes e intereses).',
+    fecha: '20-07-2026',
+  },
 };
 
 export const DOCUMENTOS: DossierDoc[] = [
@@ -293,5 +327,145 @@ export const DOCUMENTOS: DossierDoc[] = [
     fecha: '24-07-2026',
     url: repLegal.url,
     filename: 'Antecedentes-Representante-Legal.pdf',
+  },
+  {
+    id: 'vigencia-sociedad',
+    titulo: 'Certificado de vigencia — Inversiones RFG SpA',
+    categoria: 'Societario',
+    descripcion:
+      'La sociedad se encuentra inscrita y sin disolución registrada. Valor probatorio de instrumento público (art. 22 Ley 20.659). CVE CRyjscMQFmyi.',
+    emisor: 'Registro de Empresas y Sociedades · Ministerio de Economía',
+    fecha: '14-01-2026',
+    url: vigenciaSociedad.url,
+    filename: 'Vigencia-Sociedad-RFG-SpA.pdf',
+  },
+  {
+    id: 'vigencia-poderes',
+    titulo: 'Certificado de vigencia de poderes — Inversiones RFG SpA',
+    categoria: 'Societario',
+    descripcion:
+      'Acredita que no consta revocación de designaciones, poderes ni delegaciones de facultades de representación de la sociedad propietaria.',
+    emisor: 'Registro de Empresas y Sociedades · Ministerio de Economía',
+    fecha: '23-07-2026',
+    url: vigenciaPoderes.url,
+    filename: 'Vigencia-Poderes-RFG-SpA.pdf',
+  },
+  {
+    id: 'hipotecas-aguas',
+    titulo: 'Certificado de hipotecas y gravámenes — Derechos de agua',
+    categoria: 'Aguas',
+    descripcion:
+      '25 acciones del Canal Valdés a nombre de Inversiones RFG SpA: sin inscripciones vigentes de hipotecas, gravámenes, prohibiciones ni interdicciones (revisión 30 años). Certificado N°123457021375.',
+    emisor: 'Conservador de Bienes Raíces de Talagante',
+    fecha: '20-07-2026',
+    url: hipotecasAguas.url,
+    filename: 'Hipotecas-Gravamenes-Aguas.pdf',
+  },
+  {
+    id: 'dominio-aguas',
+    titulo: 'Dominio vigente de derechos de aprovechamiento de aguas',
+    categoria: 'Aguas',
+    descripcion:
+      'Copia vigente de la inscripción de fojas 148 N°114 del Registro de Propiedad de Aguas 2019, vigente al 20-07-2026. Certificado N°123457021376.',
+    emisor: 'Conservador de Bienes Raíces de Talagante',
+    fecha: '20-07-2026',
+    url: dominioAguas.url,
+    filename: 'Dominio-Vigente-Aguas.pdf',
+  },
+  {
+    id: 'deuda-tgr',
+    titulo: 'Certificado de deuda de contribuciones — ROL 119-40',
+    categoria: 'Tributario',
+    descripcion:
+      'Tesorería General de la República: deuda morosa liquidada de $331.031 (formulario 30, vencimiento 30-06-2026). Sin otras obligaciones vencidas.',
+    emisor: 'Tesorería General de la República',
+    fecha: '20-07-2026',
+    url: deudaTgr.url,
+    filename: 'Certificado-Deuda-TGR-119-40.pdf',
+  },
+  {
+    id: 'antecedentes-16-32',
+    titulo: 'Documento de antecedentes de bien raíz — ROL 16-32',
+    categoria: 'Tributario',
+    descripcion:
+      'Gálvez 1458 Lt. 1, urbano, sitio eriazo. Avalúo actualizado $124.141.101 y contribución total semestral $775.650. Folio V2744722.',
+    emisor: 'Servicio de Impuestos Internos',
+    fecha: '16-02-2026',
+    url: antecedentes1632.url,
+    filename: 'Antecedentes-Bien-Raiz-16-32.pdf',
+  },
+  {
+    id: 'antecedentes-16-33',
+    titulo: 'Documento de antecedentes de bien raíz — ROL 16-33',
+    categoria: 'Tributario',
+    descripcion:
+      'Gálvez 1458 Lt. 2, urbano, sitio eriazo. Avalúo actualizado $124.141.101 y contribución total semestral $775.650. Folio V2744750.',
+    emisor: 'Servicio de Impuestos Internos',
+    fecha: '16-02-2026',
+    url: antecedentes1633.url,
+    filename: 'Antecedentes-Bien-Raiz-16-33.pdf',
+  },
+  {
+    id: 'cip-16-32',
+    titulo: 'Certificado de informaciones previas — ROL 16-32',
+    categoria: 'Urbanístico',
+    descripcion: 'Normativa urbanística aplicable al Lote 1 (Gálvez 1458 Lt. 1) según PRC de Isla de Maipo.',
+    emisor: 'I. Municipalidad de Isla de Maipo',
+    fecha: 'Vigente',
+    url: cip1632.url,
+    filename: 'CIP-16-32.pdf',
+  },
+  {
+    id: 'cip-16-33',
+    titulo: 'Certificado de informaciones previas — ROL 16-33',
+    categoria: 'Urbanístico',
+    descripcion: 'Normativa urbanística aplicable al Lote 2 (Gálvez 1458 Lt. 2) según PRC de Isla de Maipo.',
+    emisor: 'I. Municipalidad de Isla de Maipo',
+    fecha: 'Vigente',
+    url: cip1633.url,
+    filename: 'CIP-16-33.pdf',
+  },
+  {
+    id: 'contrato-aridos',
+    titulo: 'Contrato de explotación de áridos',
+    categoria: 'Contratos',
+    descripcion:
+      'Contrato vigente sobre explotación de áridos en el predio, reducido a escritura ante notaría. CVE 034-2025123014073487.',
+    emisor: 'Primera Notaría y Conservador de Minas de San Vicente',
+    fecha: '30-12-2025',
+    url: contratoAridos.url,
+    filename: 'Contrato-Aridos.pdf',
+  },
+  {
+    id: 'contrato-aridos-prot',
+    titulo: 'Contrato de áridos — copia protocolizada',
+    categoria: 'Contratos',
+    descripcion: 'Copia autorizada y protocolizada del contrato de áridos, con verificación electrónica notarial.',
+    emisor: 'Primera Notaría y Conservador de Minas de San Vicente',
+    fecha: '30-12-2025',
+    url: contratoAridosProt.url,
+    filename: 'Contrato-Aridos-Protocolizado.pdf',
+  },
+  {
+    id: 'autorizacion-contrato',
+    titulo: 'Autorización de contrato',
+    categoria: 'Contratos',
+    descripcion:
+      'Autorización notarial asociada al contrato sobre el predio. CVE 034-2025072815181932, verificable en ajs.cl.',
+    emisor: 'Primera Notaría y Conservador de Minas de San Vicente',
+    fecha: '28-07-2025',
+    url: autorizacionContrato.url,
+    filename: 'Autorizacion-Contrato.pdf',
+  },
+  {
+    id: 'contrato-anexo',
+    titulo: 'Anexo de contrato',
+    categoria: 'Contratos',
+    descripcion:
+      'Anexo que modifica y complementa el contrato principal sobre el predio. CVE 034-2025072815181932.',
+    emisor: 'Primera Notaría y Conservador de Minas de San Vicente',
+    fecha: '28-07-2025',
+    url: contratoAnexo.url,
+    filename: 'Contrato-Anexo.pdf',
   },
 ];

@@ -7,6 +7,19 @@ import { rateLimit, clientIp, tooManyRequests } from '../_shared/rateLimit.ts';
 // mint unlimited cache keys and bypass the 6h cache to drain Firecrawl credits.
 const ALLOWED_COUNTRIES = new Set(['all', 'chile', 'argentina', 'peru', 'perú', 'colombia', 'mexico', 'méxico']);
 
+// Zonas de comparables acotadas (allowlist) para tasaciones en vivo.
+const ZONE_QUERIES: Record<string, { portal: string; country: string; currency: string; query: string }[]> = {
+  'isla-de-maipo': [
+    { portal: 'Portalinmobiliario', country: 'Chile', currency: 'UF', query: 'site:portalinmobiliario.com terreno OR parcela venta "Isla de Maipo"' },
+    { portal: 'Portalinmobiliario', country: 'Chile', currency: 'UF', query: 'site:portalinmobiliario.com terreno venta Talagante OR "El Monte" OR Peñaflor' },
+    { portal: 'Yapo', country: 'Chile', currency: 'CLP', query: 'site:yapo.cl terreno venta "Isla de Maipo" OR Talagante' },
+    { portal: 'Mercado Libre', country: 'Chile', currency: 'CLP', query: 'site:terreno.mercadolibre.cl OR site:inmuebles.mercadolibre.cl terreno venta Talagante OR "Isla de Maipo" OR Melipilla' },
+    { portal: 'Portalinmobiliario', country: 'Chile', currency: 'UF', query: 'site:portalinmobiliario.com sitio OR terreno venta hectáreas Talagante OR Melipilla OR "Isla de Maipo"' },
+    { portal: 'Goplaceit', country: 'Chile', currency: 'UF', query: 'site:goplaceit.com terreno venta "Isla de Maipo" OR Talagante OR "El Monte"' },
+  ],
+};
+
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-api-version',
@@ -58,7 +71,11 @@ const EXTRACT_SCHEMA = {
 };
 
 function cacheKey(params: Record<string, unknown>): string {
-  return btoa(JSON.stringify(params)).slice(0, 64);
+  // Hash estable: el base64 truncado colisionaba cuando sólo cambiaban campos finales.
+  const s = JSON.stringify(params);
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+  return `${btoa(s).slice(0, 40)}-${h.toString(36)}`;
 }
 
 async function firecrawlSearch(query: string, apiKey: string): Promise<string[]> {
@@ -73,14 +90,25 @@ async function firecrawlSearch(query: string, apiKey: string): Promise<string[]>
       console.error('search http error', r.status, query, text.slice(0, 200));
       return [];
     }
-    let j: { data?: unknown; web?: unknown; results?: unknown };
+    let j: Record<string, unknown>;
     try { j = JSON.parse(text); } catch { return []; }
-    const raw = (j?.data ?? j?.web ?? j?.results ?? []) as { results?: unknown[] } | unknown[];
-    const results = Array.isArray(raw) ? raw : (Array.isArray(raw?.results) ? raw.results : []);
-    return results
+    // Firecrawl v2: { success, data: { web: [{url,...}] } }. Se aceptan también
+    // formas antiguas (data como array, web/results en la raíz).
+    const data = j?.data as Record<string, unknown> | unknown[] | undefined;
+    const candidates: unknown[] = [
+      Array.isArray(data) ? data : undefined,
+      !Array.isArray(data) ? (data?.web as unknown) : undefined,
+      !Array.isArray(data) ? (data?.results as unknown) : undefined,
+      j?.web,
+      j?.results,
+    ].filter(Array.isArray) as unknown[];
+    const results = (candidates[0] as unknown[]) ?? [];
+    const urls = results
       .map((it: unknown) => (typeof it === 'string' ? it : (it as { url?: string })?.url))
       .filter((u: unknown): u is string => typeof u === 'string' && u.length > 0)
       .slice(0, 8);
+    console.log('search ok', query.slice(0, 60), 'urls:', urls.length);
+    return urls;
   } catch (e) {
     console.error('search failed', query, e);
     return [];
@@ -130,7 +158,9 @@ Deno.serve(async (req) => {
   const regionRaw = url.searchParams.get('region');
   const region = regionRaw ? regionRaw.slice(0, 40).replace(/[^\p{L}\p{N} '-]/gu, '') : null;
   const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') ?? '60', 10) || 60, 1), 100);
-  const key = cacheKey({ country, region, limit, v: 1 });
+  const zoneRaw = (url.searchParams.get('zone') ?? '').toLowerCase();
+  const zone = ZONE_QUERIES[zoneRaw] ? zoneRaw : null;
+  const key = cacheKey({ country, region, limit, zone, v: 2 });
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -148,9 +178,11 @@ Deno.serve(async (req) => {
   }
 
   // 2. Scrape
-  const queries = country === 'all'
-    ? SEARCH_QUERIES
-    : SEARCH_QUERIES.filter((q) => q.country.toLowerCase().includes(country.toLowerCase()));
+  const queries = zone
+    ? ZONE_QUERIES[zone]
+    : country === 'all'
+      ? SEARCH_QUERIES
+      : SEARCH_QUERIES.filter((q) => q.country.toLowerCase().includes(country.toLowerCase()));
 
   const allListings: RealListing[] = [];
   const portalsUsed = new Set<string>();
