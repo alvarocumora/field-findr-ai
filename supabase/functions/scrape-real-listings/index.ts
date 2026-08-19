@@ -71,7 +71,11 @@ const EXTRACT_SCHEMA = {
 };
 
 function cacheKey(params: Record<string, unknown>): string {
-  return btoa(JSON.stringify(params)).slice(0, 64);
+  // Hash estable: el base64 truncado colisionaba cuando sólo cambiaban campos finales.
+  const s = JSON.stringify(params);
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+  return `${btoa(s).slice(0, 40)}-${h.toString(36)}`;
 }
 
 async function firecrawlSearch(query: string, apiKey: string): Promise<string[]> {
