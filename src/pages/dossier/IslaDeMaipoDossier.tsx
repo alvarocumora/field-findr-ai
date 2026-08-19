@@ -172,7 +172,67 @@ export default function IslaDeMaipoDossier() {
           </div>
         </section>
 
+        {/* Predios urbanos de la misma sociedad */}
+        <section className="mt-8" aria-label="Predios urbanos de la misma sociedad">
+          <h2 className="text-lg font-semibold text-foreground">
+            Predios urbanos de la misma sociedad
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Roles adicionales inscritos a nombre de {PROPIEDAD.sociedad.razonSocial} (RUT{' '}
+            {PROPIEDAD.sociedad.rut}), colindantes al predio principal y con antecedentes vigentes en
+            el data room.
+          </p>
+          <div className="mt-4 grid gap-5 md:grid-cols-2">
+            {PROPIEDAD.prediosUrbanos.map((p) => (
+              <Card key={p.rol}>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between gap-3 text-base">
+                    <span>ROL {p.rol}</span>
+                    <Badge variant="secondary">{p.destino}</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <p className="font-medium text-foreground">{p.direccion}</p>
+                  <p className="text-muted-foreground">Propietario: {p.propietario}</p>
+                  <Separator />
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-muted-foreground">Avalúo fiscal ({p.periodo})</span>
+                    <span className="tabular-nums font-medium text-foreground">{clp(p.avaluoTotal)}</span>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-muted-foreground">Avalúo actualizado</span>
+                    <span className="tabular-nums text-foreground">{clp(p.avaluoActualizado)}</span>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-muted-foreground">Contribución semestral</span>
+                    <span className="tabular-nums text-foreground">{clp(p.contribucionSemestral)}</span>
+                  </div>
+                  <Separator />
+                  <p className="text-xs text-muted-foreground">{p.expropiacion}</p>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {p.docs
+                      .map((id) => DOCUMENTOS.find((d) => d.id === id))
+                      .filter((d): d is (typeof DOCUMENTOS)[number] => Boolean(d))
+                      .map((d) => (
+                        <a
+                          key={d.id}
+                          href={d.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {d.categoria} <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
         {/* Ficha */}
+
         <section className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4" aria-label="Ficha técnica">
           <Card>
             <CardHeader>
