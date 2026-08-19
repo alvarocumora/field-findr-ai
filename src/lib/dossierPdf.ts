@@ -110,8 +110,7 @@ export async function generateIslaMaipoDossierPdf(options: { mapboxToken?: strin
   };
 
   // ── Portada / cabecera ──
-  const publicUrl =
-    (typeof window !== 'undefined' ? window.location.origin : 'https://ofertaterrenos.com') + PUBLIC_PATH;
+  const publicUrl = 'https://ofertaterrenos.com' + PUBLIC_PATH;
 
   doc.setFillColor(...GREEN);
   doc.rect(0, 0, W, 52, 'F');
