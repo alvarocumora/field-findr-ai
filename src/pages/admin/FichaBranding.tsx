@@ -1,5 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -52,6 +51,10 @@ export default function FichaBranding() {
     () => Object.keys(theme.colors) as (keyof FichaThemeColors)[],
     [theme.colors]
   );
+
+  useEffect(() => {
+    document.title = 'Branding de fichas PDF | Configuración';
+  }, []);
 
   const patch = (p: Partial<FichaTheme>) => setTheme((t) => ({ ...t, ...p }));
 
@@ -110,14 +113,6 @@ export default function FichaBranding() {
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 space-y-6">
-      <Helmet>
-        <title>Branding de fichas PDF | Configuración</title>
-        <meta
-          name="description"
-          content="Configura logo, colores y tipografías de todas las fichas PDF y regenera los documentos con el nuevo tema."
-        />
-      </Helmet>
-
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Branding de fichas</h1>
         <p className="text-sm text-muted-foreground">
