@@ -238,6 +238,67 @@ export async function generateIslaMaipoDossierPdf(options: { mapboxToken?: strin
   PROPIEDAD.deslindes.forEach((d) => kv(d.lado, `${d.con} · ${d.metros}`));
   y += 2;
 
+  // ── Predios urbanos de la misma sociedad ──
+  const predios = (PROPIEDAD as any).prediosUrbanos as
+    | {
+        rol: string;
+        direccion: string;
+        destino: string;
+        propietario: string;
+        avaluoTotal: number;
+        avaluoActualizado: number;
+        contribucionSemestral: number;
+        periodo: string;
+        expropiacion: string;
+        docs: string[];
+      }[]
+    | undefined;
+
+  if (predios && predios.length > 0) {
+    section('Predios urbanos de la misma sociedad');
+    paragraph(
+      'Inmuebles urbanos adicionales de propiedad de la misma sociedad, con antecedentes tributarios y urbanisticos disponibles en el data room.'
+    );
+    predios.forEach((p) => {
+      ensure(34);
+      doc.setDrawColor(226, 230, 227);
+      doc.setFillColor(248, 250, 248);
+      const docTitles = p.docs
+        .map((id) => DOCUMENTOS.find((d) => d.id === id)?.titulo)
+        .filter(Boolean) as string[];
+      const docLines = doc.splitTextToSize(
+        `Antecedentes: ${docTitles.length ? docTitles.join(' · ') : 'ver data room'}`,
+        contentW - 10
+      );
+      const boxH = 24 + docLines.length * 3.8;
+      ensure(boxH + 4);
+      doc.roundedRect(margin, y, contentW, boxH, 2, 2, 'FD');
+      doc.setFontSize(9.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...DARK);
+      doc.text(`ROL ${p.rol} · ${p.direccion}`, margin + 5, y + 6.5);
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...GRAY);
+      doc.text(`${p.destino} · ${p.propietario}`, margin + 5, y + 11.5);
+      doc.setFontSize(8);
+      doc.setTextColor(...DARK);
+      doc.text(
+        `Avaluo total ${clp(p.avaluoTotal)} · Actualizado ${clp(p.avaluoActualizado)} · Contribucion ${clp(
+          p.contribucionSemestral
+        )} (${p.periodo})`,
+        margin + 5,
+        y + 17
+      );
+      doc.setFontSize(7.5);
+      doc.setTextColor(...GRAY);
+      doc.text(doc.splitTextToSize(p.expropiacion, contentW - 10)[0], margin + 5, y + 21.5);
+      doc.text(docLines, margin + 5, y + 25.5);
+      y += boxH + 4;
+    });
+    y += 2;
+  }
+
   // ── Normativa ──
   section('Normativa urbanistica');
   doc.setFontSize(8.5);
