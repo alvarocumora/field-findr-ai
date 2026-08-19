@@ -1,0 +1,116 @@
+name: Deploy DreamHost
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-dreamhost
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy production
+    if: ${{ vars.DREAMHOST_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Bun for prebuild sitemap
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build production
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN }}
+        run: npm run build
+
+      - name: Write release metadata
+        run: |
+          cat > dist/version.json <<EOF
+          {
+            "commit": "${GITHUB_SHA}",
+            "run_id": "${GITHUB_RUN_ID}",
+            "deployed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+
+      - name: Configure SSH
+        env:
+          DREAMHOST_SSH_KEY: ${{ secrets.DREAMHOST_SSH_KEY }}
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DREAMHOST_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$DREAMHOST_HOST" >> ~/.ssh/known_hosts
+
+      - name: Validate DreamHost configuration
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USER: ${{ secrets.DREAMHOST_USER }}
+          DREAMHOST_PATH: ${{ secrets.DREAMHOST_PATH }}
+        run: |
+          test -n "$DREAMHOST_HOST"
+          test -n "$DREAMHOST_USER"
+          test -n "$DREAMHOST_PATH"
+          case "$DREAMHOST_PATH" in
+            /home/*) ;;
+            *) echo "DREAMHOST_PATH must be an absolute /home/... path"; exit 1 ;;
+          esac
+
+      - name: Deploy with backup
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USER: ${{ secrets.DREAMHOST_USER }}
+          DREAMHOST_PATH: ${{ secrets.DREAMHOST_PATH }}
+        run: |
+          BACKUP_DIR=".deploy-backups/${GITHUB_SHA}"
+          ssh "$DREAMHOST_USER@$DREAMHOST_HOST" "mkdir -p '$DREAMHOST_PATH' '$DREAMHOST_PATH/.deploy-backups'"
+          rsync -az --delete \
+            --exclude '.deploy-backups/' \
+            --backup --backup-dir="$BACKUP_DIR" \
+            dist/ "$DREAMHOST_USER@$DREAMHOST_HOST:$DREAMHOST_PATH/"
+
+      - name: Health checks
+        env:
+          PROD_URL: https://ofertaterrenos.com
+        run: |
+          set -euo pipefail
+          for path in / /planes-loteos /contacto-loteos /explorar /version.json; do
+            echo "Checking ${PROD_URL}${path}"
+            curl --fail --silent --show-error --location \
+              --retry 4 --retry-delay 5 --max-time 30 \
+              -o /dev/null "${PROD_URL}${path}"
+          done
+
+      - name: Verify deployed commit
+        run: |
+          curl --fail --silent --show-error --location https://ofertaterrenos.com/version.json \
+            | grep -q "$GITHUB_SHA"
