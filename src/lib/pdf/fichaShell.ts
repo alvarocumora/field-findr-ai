@@ -1,5 +1,11 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
+import {
+  getFichaTheme,
+  themeRgb,
+  type FichaThemeColors,
+  type RGB,
+} from '@/lib/pdf/fichaTheme';
 
 /**
  * Sistema único de generación de fichas PDF (OFERTA TERRENOS).
@@ -10,22 +16,26 @@ import QRCode from 'qrcode';
  * pares clave/valor, párrafos, viñetas, KPIs, imágenes).
  */
 
-export const BRAND = {
-  emerald: [34, 197, 94] as [number, number, number],
-  sky: [14, 165, 233] as [number, number, number],
-  forest: [22, 78, 52] as [number, number, number],
-  dark: [30, 35, 32] as [number, number, number],
-  gray: [110, 118, 114] as [number, number, number],
-  line: [226, 230, 227] as [number, number, number],
-  soft: [248, 250, 248] as [number, number, number],
-  white: [255, 255, 255] as [number, number, number],
-};
+/**
+ * Paleta de marca. Se resuelve en cada acceso desde el tema configurable
+ * (/admin/branding-fichas), por lo que cambiar el branding no requiere código.
+ */
+export const BRAND = new Proxy({} as Record<keyof FichaThemeColors, RGB>, {
+  get: (_t, key: string) => themeRgb(key as keyof FichaThemeColors),
+}) as Record<keyof FichaThemeColors, RGB>;
 
+/** Familia tipográfica activa del tema. */
+export const themeFont = (kind: 'body' | 'heading' = 'body') => getFichaTheme().fonts[kind];
+
+/** Origen público configurable (tema de fichas). */
+export const getPublicOrigin = () => getFichaTheme().publicOrigin;
+
+/** @deprecated usar getPublicOrigin() */
 export const PUBLIC_ORIGIN = 'https://ofertaterrenos.com';
 
 /** URL absoluta y estable para los QR de las fichas. */
 export const publicUrl = (path: string) =>
-  path.startsWith('http') ? path : `${PUBLIC_ORIGIN}${path.startsWith('/') ? path : `/${path}`}`;
+  path.startsWith('http') ? path : `${getPublicOrigin()}${path.startsWith('/') ? path : `/${path}`}`;
 
 export const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
   try {
@@ -69,23 +79,37 @@ export const drawBrandMark = (doc: jsPDF, x: number, y: number, size = 10) => {
   doc.setLineWidth(0.2);
 };
 
-/** Logotipo completo: marca + wordmark. */
+/** Logotipo completo: imagen del tema, o marca vectorial + wordmark. */
 export const drawBrandLogo = (
   doc: jsPDF,
   x: number,
   y: number,
   opts: { size?: number; color?: [number, number, number] } = {}
 ) => {
+  const theme = getFichaTheme();
   const size = opts.size ?? 10;
   const color = opts.color ?? BRAND.white;
+
+  if (theme.logo.imageDataUrl) {
+    try {
+      const h = theme.logo.imageHeight ?? size + 2;
+      const props = doc.getImageProperties(theme.logo.imageDataUrl);
+      const w = (props.width / props.height) * h;
+      doc.addImage(theme.logo.imageDataUrl, x, y, w, h);
+      return;
+    } catch {
+      // si la imagen falla, se dibuja el logo vectorial
+    }
+  }
+
   drawBrandMark(doc, x, y, size);
   doc.setTextColor(...color);
   doc.setFontSize(size * 0.82);
-  doc.setFont('helvetica', 'bold');
-  doc.text('OFERTA', x + size + 3, y + size * 0.62);
-  const w = doc.getTextWidth('OFERTA ');
-  doc.setFont('helvetica', 'normal');
-  doc.text('TERRENOS', x + size + 3 + w, y + size * 0.62);
+  doc.setFont(themeFont('heading'), 'bold');
+  doc.text(theme.logo.primary, x + size + 3, y + size * 0.62);
+  const w = doc.getTextWidth(`${theme.logo.primary} `);
+  doc.setFont(themeFont('body'), 'normal');
+  doc.text(theme.logo.secondary, x + size + 3 + w, y + size * 0.62);
 };
 
 export interface FichaHeaderOptions {
@@ -140,7 +164,7 @@ export const createFichaDoc = (
     doc.setLineWidth(0.2);
     doc.line(margin, H - 16, W - margin, H - 16);
     doc.setFontSize(7.5);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(themeFont('body'), 'normal');
     doc.setTextColor(...BRAND.gray);
     doc.text(footerNote, margin, H - 11);
     doc.text(`Pagina ${page}`, W - margin, H - 11, { align: 'right' });
@@ -187,23 +211,23 @@ export const createFichaDoc = (
       doc.setTextColor(255, 255, 255);
       if (o.eyebrow) {
         doc.setFontSize(7.5);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont(themeFont('body'), 'normal');
         doc.text(o.eyebrow.toUpperCase(), margin, 25);
       }
       doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont(themeFont('heading'), 'bold');
       const titleLines = doc.splitTextToSize(o.title, textW).slice(0, 2);
       doc.text(titleLines, margin, 33);
       let cursor = 33 + titleLines.length * 6.4;
       if (o.subtitle) {
         doc.setFontSize(8.5);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont(themeFont('body'), 'normal');
         doc.text(doc.splitTextToSize(o.subtitle, textW)[0], margin, cursor);
         cursor += 5;
       }
       if (hasQr) {
         doc.setFontSize(7.5);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont(themeFont('body'), 'normal');
         doc.text(publicUrl(o.qrUrl!), margin, Math.min(cursor, barH - 4));
         try {
           const png = await QRCode.toDataURL(publicUrl(o.qrUrl!), { margin: 1, width: 320 });
@@ -229,7 +253,7 @@ export const createFichaDoc = (
       doc.setFillColor(...BRAND.emerald);
       doc.rect(margin, y, 3, 6, 'F');
       doc.setFontSize(11.5);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont(themeFont('heading'), 'bold');
       doc.setTextColor(...BRAND.dark);
       doc.text(title.toUpperCase(), margin + 6, y + 4.8);
       y += 11;
@@ -239,10 +263,10 @@ export const createFichaDoc = (
       const lines = doc.splitTextToSize(value, contentW - 52);
       ensure(lines.length * 4.6 + 3);
       doc.setFontSize(8.5);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont(themeFont('heading'), 'bold');
       doc.setTextColor(...BRAND.gray);
       doc.text(label, margin, y);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(themeFont('body'), 'normal');
       doc.setTextColor(...BRAND.dark);
       doc.text(lines, margin + 50, y);
       y += lines.length * 4.6 + 2.2;
@@ -253,7 +277,7 @@ export const createFichaDoc = (
       const lines = doc.splitTextToSize(text, contentW);
       ensure(lines.length * (size / 2 + 0.15) + 3);
       doc.setFontSize(size);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(themeFont('body'), 'normal');
       doc.setTextColor(...(opts.color ?? BRAND.dark));
       doc.text(lines, margin, y);
       y += lines.length * 4.4 + 3;
@@ -264,7 +288,7 @@ export const createFichaDoc = (
         const lines = doc.splitTextToSize(it, contentW - 6);
         ensure(lines.length * 4.4 + 2);
         doc.setFontSize(8.5);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont(themeFont('body'), 'normal');
         doc.setTextColor(...BRAND.dark);
         doc.text('•', margin, y);
         doc.text(lines, margin + 5, y);
@@ -287,16 +311,16 @@ export const createFichaDoc = (
         doc.setFillColor(...BRAND.soft);
         doc.roundedRect(bx, by, boxW, 20, 2, 2, 'FD');
         doc.setFontSize(7);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont(themeFont('body'), 'normal');
         doc.setTextColor(...BRAND.gray);
         doc.text(k[0].toUpperCase(), bx + 4, by + 6);
         doc.setFontSize(11.5);
-        doc.setFont('helvetica', 'bold');
+        doc.setFont(themeFont('heading'), 'bold');
         doc.setTextColor(...BRAND.dark);
         doc.text(doc.splitTextToSize(k[1], boxW - 8)[0], bx + 4, by + 12.5);
         if (k[2]) {
           doc.setFontSize(7);
-          doc.setFont('helvetica', 'normal');
+          doc.setFont(themeFont('body'), 'normal');
           doc.setTextColor(...BRAND.gray);
           doc.text(doc.splitTextToSize(k[2], boxW - 8)[0], bx + 4, by + 17.5);
         }
@@ -319,7 +343,7 @@ export const createFichaDoc = (
       y += height + 3;
       if (caption) {
         doc.setFontSize(7);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont(themeFont('body'), 'normal');
         doc.setTextColor(...BRAND.gray);
         doc.text(caption, margin, y);
         y += 6;
@@ -333,7 +357,7 @@ export const createFichaDoc = (
       doc.setFillColor(...BRAND.soft);
       doc.roundedRect(margin, y, contentW, lines.length * 4 + 8, 2, 2, 'FD');
       doc.setFontSize(7.5);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(themeFont('body'), 'normal');
       doc.setTextColor(...BRAND.gray);
       doc.text(lines, margin + 4, y + 6);
       y += lines.length * 4 + 12;

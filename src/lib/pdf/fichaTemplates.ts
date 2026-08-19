@@ -1,4 +1,5 @@
 import { BRAND, createFichaDoc, type FichaDoc } from '@/lib/pdf/fichaShell';
+import { getFichaTheme } from '@/lib/pdf/fichaTheme';
 
 /**
  * Plantillas del shell único de fichas.
@@ -27,10 +28,13 @@ export interface FichaTemplate {
   disclaimer: (ctx: { date: string }) => string;
 }
 
-export const FICHA_TEMPLATES: Record<FichaTemplateId, FichaTemplate> = {
+const buildTemplates = (): Record<FichaTemplateId, FichaTemplate> => {
+  const theme = getFichaTheme();
+  const foot = (label: string) => `${theme.brandName} · ${label} · ${theme.footerSuffix}`;
+  return {
   dossier: {
     id: 'dossier',
-    footerNote: 'OFERTA TERRENOS · Expediente confidencial · ofertaterrenos.com',
+    footerNote: foot('Expediente confidencial'),
     eyebrow: 'Expediente de presentacion · entidad financiera',
     headerColor: BRAND.forest,
     headerHeight: 54,
@@ -40,7 +44,7 @@ export const FICHA_TEMPLATES: Record<FichaTemplateId, FichaTemplate> = {
   },
   lote: {
     id: 'lote',
-    footerNote: 'OFERTA TERRENOS · Ficha de lote · ofertaterrenos.com',
+    footerNote: foot('Ficha de lote'),
     eyebrow: 'Ficha de lote',
     headerColor: BRAND.forest,
     headerHeight: 50,
@@ -50,15 +54,24 @@ export const FICHA_TEMPLATES: Record<FichaTemplateId, FichaTemplate> = {
   },
   'predio-urbano': {
     id: 'predio-urbano',
-    footerNote: 'OFERTA TERRENOS · Ficha de predio urbano · ofertaterrenos.com',
+    footerNote: foot('Ficha de predio urbano'),
     eyebrow: 'Ficha de predio urbano',
-    headerColor: [22, 60, 78],
+    headerColor: BRAND.accent,
     headerHeight: 50,
     qrCaption: 'Ver antecedentes online',
     disclaimer: ({ date }) =>
       `Antecedentes tributarios y urbanisticos vigentes a la fecha de emision (${date}). Documento informativo; los certificados originales estan disponibles en el data room de la ficha.`,
-  },
+    },
+  };
 };
+
+/** Plantillas resueltas con el tema activo (branding configurable). */
+export const getFichaTemplate = (id: FichaTemplateId): FichaTemplate => buildTemplates()[id];
+
+/** Acceso compatible: siempre devuelve la plantilla con el tema vigente. */
+export const FICHA_TEMPLATES = new Proxy({} as Record<FichaTemplateId, FichaTemplate>, {
+  get: (_t, key: string) => getFichaTemplate(key as FichaTemplateId),
+}) as Record<FichaTemplateId, FichaTemplate>;
 
 export interface RenderFichaOptions {
   template: FichaTemplateId;
@@ -80,7 +93,7 @@ export interface RenderFichaOptions {
  * mismo header/logo/QR/pie, contenido intercambiable.
  */
 export async function renderFicha(options: RenderFichaOptions): Promise<void> {
-  const t = FICHA_TEMPLATES[options.template];
+  const t = getFichaTemplate(options.template);
   const f = createFichaDoc({ footerNote: t.footerNote });
 
   await f.header({
