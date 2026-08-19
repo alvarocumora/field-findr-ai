@@ -191,11 +191,6 @@ export async function generateIslaMaipoDossierPdf(options: { mapboxToken?: strin
     doc.text(desc, margin + 5, f.y);
     f.y += desc.length * 4.2 + 4;
   });
-
-  // ── Disclaimer ──
-  f.note(
-    `Documento de caracter informativo y confidencial, preparado para la evaluacion de una entidad financiera. Las cifras de valoracion provienen de ${PROPIEDAD.tasador} y no constituyen oferta ni compromiso de credito. Los antecedentes completos estan disponibles en el data room digital de la ficha.`
-  );
-
-  f.save('Ficha-Resumen-Galvez-1458-Isla-de-Maipo.pdf');
+    },
+  });
 }
