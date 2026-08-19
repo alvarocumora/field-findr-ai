@@ -161,9 +161,11 @@ Deno.serve(async (req) => {
   }
 
   // 2. Scrape
-  const queries = country === 'all'
-    ? SEARCH_QUERIES
-    : SEARCH_QUERIES.filter((q) => q.country.toLowerCase().includes(country.toLowerCase()));
+  const queries = zone
+    ? ZONE_QUERIES[zone]
+    : country === 'all'
+      ? SEARCH_QUERIES
+      : SEARCH_QUERIES.filter((q) => q.country.toLowerCase().includes(country.toLowerCase()));
 
   const allListings: RealListing[] = [];
   const portalsUsed = new Set<string>();
