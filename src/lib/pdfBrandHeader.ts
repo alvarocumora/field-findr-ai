@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { drawBrandLogo } from './pdf/fichaShell';
 
 /**
  * Shared PDF logo header for all Ofertaterrenos documents.
