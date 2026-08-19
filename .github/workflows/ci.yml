@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Typecheck, tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Bun for prebuild sitemap
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # main currently has a package.json/package-lock drift (jspdf pin).
+      # npm install is intentionally used until the lockfile is regenerated
+      # and committed; after that this should be tightened back to npm ci.
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Verify DreamHost SPA rules are packaged
+        run: test -f dist/.htaccess
+
+      - name: Verify critical static routes are in sitemap
+        run: |
+          grep -q 'https://ofertaterrenos.com/planes-loteos' dist/sitemap.xml
+          grep -q 'https://ofertaterrenos.com/contacto-loteos' dist/sitemap.xml
+
+      - name: Upload production bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: oferta-terrenos-dist-${{ github.sha }}
+          path: dist/
+          retention-days: 7

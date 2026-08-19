@@ -1,0 +1,37 @@
+# OfertaTerrenos — DreamHost / Apache production rules
+
+Options -MultiViews
+RewriteEngine On
+RewriteBase /
+
+# Never rewrite real files or directories (assets, sitemap, manifest, PDFs, etc.).
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# React Router / BrowserRouter SPA fallback.
+# Direct refreshes such as /planes-loteos, /contacto-loteos and /p/:slug
+# must be served by index.html and resolved client-side.
+RewriteRule ^ index.html [L]
+
+# Basic production hardening.
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+
+  # HTML must revalidate so it never points at deleted hashed bundles.
+  <FilesMatch "\.(html)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+
+  # Hashed Vite assets are immutable.
+  <FilesMatch "\.(js|css|woff|woff2|png|jpg|jpeg|gif|svg|webp|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Service worker must always revalidate after a release.
+  <FilesMatch "^(sw\.js|registerSW\.js)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+</IfModule>
