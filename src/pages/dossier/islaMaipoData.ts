@@ -119,7 +119,20 @@ export const PROPIEDAD = {
     'Certificado de no expropiación SERVIU N°2500535 del 28-02-2022.',
     'Certificados SERVIU RM de no afectación a expropiación para los 3 roles, emitidos el 24-07-2026 (N°3517815, N°3517810 y N°3517797).',
     'Dominio vigente y copia vigente de inscripción fojas 1814 N°1731 de 2019, CBR Talagante (julio 2026).',
+    'Derechos de aprovechamiento de aguas de regadío: 25 acciones de la Asociación de Canalistas del Canal Valdés, fojas 148 N°114 Registro de Propiedad de Aguas 2019.',
   ],
+  derechosAgua: {
+    acciones: 25,
+    asociacion: 'Asociación de Canalistas del Canal Valdés',
+    inscripcion: 'Fojas 148 N°114 · Registro de Propiedad de Aguas 2019 · CBR Talagante',
+    gravamenes: 'Sin hipotecas, gravámenes, prohibiciones ni interdicciones vigentes (revisión 30 años, al 20-07-2026).',
+  },
+  deudaTgr: {
+    monto: 331031,
+    rol: '087-00119-040',
+    detalle: 'Contribuciones formulario 30, vencimiento 30-06-2026 (neto $328.956 + reajustes e intereses).',
+    fecha: '20-07-2026',
+  },
 };
 
 export const DOCUMENTOS: DossierDoc[] = [
