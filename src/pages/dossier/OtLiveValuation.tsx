@@ -75,8 +75,15 @@ export default function OtLiveValuation() {
           'scrape-real-listings?zone=isla-de-maipo&country=chile&limit=24',
           { method: 'GET' },
         );
+        // Se descartan páginas de resultados/agregadores y superficies fuera de rango.
+        const RUIDO = /^(resultados|lotes y terrenos|propiedades|inmuebles en venta)/i;
         const raw = ((data?.listings ?? []) as RawComp[]).filter(
-          (l) => l.price > 0 && l.area_m2 && l.area_m2 > 300,
+          (l) =>
+            l.price > 0 &&
+            l.area_m2 &&
+            l.area_m2 >= 1000 &&
+            l.area_m2 <= 2_000_000 &&
+            !RUIDO.test(l.title.trim()),
         );
         if (!token) {
           if (!cancelled) { setComps([]); setLoading(false); }
