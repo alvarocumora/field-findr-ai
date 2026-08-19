@@ -1,5 +1,6 @@
 import { DOCUMENTOS, PROPIEDAD } from '@/pages/dossier/islaMaipoData';
-import { BRAND, createFichaDoc, fetchImageAsBase64 } from '@/lib/pdf/fichaShell';
+import { BRAND, fetchImageAsBase64 } from '@/lib/pdf/fichaShell';
+import { renderFicha } from '@/lib/pdf/fichaTemplates';
 
 const PUBLIC_PATH = '/ficha/isla-de-maipo-galvez-1458';
 
@@ -8,20 +9,19 @@ const m2 = (n: number) => n.toLocaleString('es-CL') + ' m2';
 
 /**
  * Resumen ejecutivo (PDF) de la ficha del predio para presentar a una entidad
- * financiera. Construido con el shell único de fichas (logo, QR, pie de marca).
+ * financiera. Usa la plantilla "dossier" del shell único de fichas.
  */
 export async function generateIslaMaipoDossierPdf(options: { mapboxToken?: string | null } = {}) {
-  const f = createFichaDoc({
-    footerNote: 'OFERTA TERRENOS · Expediente confidencial · ofertaterrenos.com',
-  });
-  const { doc, margin, contentW } = f;
-
-  await f.header({
-    eyebrow: 'Expediente de presentacion · entidad financiera',
+  await renderFicha({
+    template: 'dossier',
     title: PROPIEDAD.nombre,
     subtitle: `${PROPIEDAD.direccion} · Sector ${PROPIEDAD.sector} · ${PROPIEDAD.region}`,
     qrUrl: PUBLIC_PATH,
-  });
+    filename: 'Ficha-Resumen-Galvez-1458-Isla-de-Maipo.pdf',
+    disclaimer: `Documento de caracter informativo y confidencial, preparado para la evaluacion de una entidad financiera. Las cifras de valoracion provienen de ${PROPIEDAD.tasador} y no constituyen oferta ni compromiso de credito. Los antecedentes completos estan disponibles en el data room digital de la ficha.`,
+    body: async (f) => {
+      const { doc, margin, contentW } = f;
+
 
   // ── KPIs ──
   f.kpis([
