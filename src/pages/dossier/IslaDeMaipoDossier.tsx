@@ -9,6 +9,7 @@ import { useSEO } from '@/hooks/useSEO';
 import { useStaticMapToken } from '@/hooks/useStaticMapToken';
 import { generateIslaMaipoDossierPdf } from '@/lib/dossierPdf';
 import { DOCUMENTOS, PROPIEDAD, type DossierDoc } from './islaMaipoData';
+import OtLiveValuation from './OtLiveValuation';
 
 
 const clp = (n: number) => '$' + n.toLocaleString('es-CL');
