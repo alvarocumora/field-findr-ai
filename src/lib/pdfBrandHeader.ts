@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { drawBrandLogo } from './pdf/fichaShell';
 
 /**
  * Shared PDF logo header for all Ofertaterrenos documents.
@@ -47,14 +48,8 @@ export const drawPdfHeaderLogo = (
     doc.rect(0, 0, pw, headerHeight, 'F');
   }
 
-  // Logo text: "OFERTA TERRENOS"
-  doc.setTextColor(...WHITE);
-  doc.setFontSize(20);
-  doc.setFont('helvetica', 'bold');
-  doc.text('OFERTA', 20, headerHeight * 0.55);
-  const ofertaW = doc.getTextWidth('OFERTA ');
-  doc.setFont('helvetica', 'normal');
-  doc.text('TERRENOS', 20 + ofertaW, headerHeight * 0.55);
+  // Logo de marca (mismo sistema que las fichas)
+  drawBrandLogo(doc, 20, headerHeight * 0.55 - 8, { size: 11, color: WHITE });
 
   // Subtitle
   if (subtitle) {
