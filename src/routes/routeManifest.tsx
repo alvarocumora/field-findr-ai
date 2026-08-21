@@ -469,12 +469,32 @@ export const routeExists = (path: string): boolean => {
   );
 };
 
+export interface NavLink extends NavMeta {
+  path: string;
+}
+
 /** Links de navegación de un área, filtrados por plan cuando aplica. */
-export const navFor = (area: RouteArea, plan?: string) =>
+export const navFor = (area: RouteArea, plan?: string): NavLink[] =>
   routeManifest
     .filter((r) => r.area === area && r.nav)
     .filter((r) => !r.nav!.plans || (plan ? r.nav!.plans.includes(plan) : false))
     .map((r) => ({ path: r.path, ...r.nav! }));
+
+/** Links de un área agrupados y ordenados según `navGroupOrder`. */
+export const navGroupsFor = (
+  area: RouteArea,
+  plan?: string,
+): { group: string; items: NavLink[] }[] => {
+  const links = navFor(area, plan);
+  const order = navGroupOrder[area] ?? [];
+  const groups = Array.from(new Set(links.map((l) => l.group))).sort(
+    (a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99),
+  );
+  return groups.map((group) => ({
+    group,
+    items: links.filter((l) => l.group === group),
+  }));
+};
 
 /** Rutas públicas indexables, base para el sitemap. */
 export const indexableRoutes = () =>
