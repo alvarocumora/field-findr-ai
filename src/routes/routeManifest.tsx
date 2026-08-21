@@ -21,6 +21,10 @@ export interface NavMeta {
   group: string;
   /** Planes que ven el link; ausente = todos los del área. */
   plans?: string[];
+  /** Nombre del icono (ver `src/routes/navIcons.ts`). */
+  icon?: string;
+  /** Link primario del área: se muestra siempre, fuera de los grupos. */
+  primary?: boolean;
 }
 
 export interface RouteEntry {
