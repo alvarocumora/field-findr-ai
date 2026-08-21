@@ -1,47 +1,155 @@
-# Routes Map — OfertaTerrenos / Field Findr AI
+# Mapa de rutas
 
-## Sistema único de rutas
+> Archivo generado automáticamente por `scripts/generate-routes-map.ts`.
+> Fuente de verdad: `src/routes/routeManifest.tsx`. No editar a mano.
 
-Toda la plataforma se declara en **un solo archivo**: `src/routes/routeManifest.tsx`.
-No se declaran rutas en ningún otro lugar.
+Total de rutas: **114** · alias/redirects: **29**
 
-```
-src/routes/
-  routeManifest.tsx   ← fuente de verdad (path, área, acceso, layout, nav, SEO)
-  RouteGuard.tsx      ← guard único: sesión + rol + layout
-  AppRouter.tsx       ← deriva el router del manifiesto (rutas anidadas)
-  elements/           ← elementos compuestos (dashboards por plan)
-  routeUtils.tsx      ← PageLoader
-  navLinks.test.ts    ← red anti-links-muertos contra el manifiesto
-```
+## Público
 
-### Anatomía de una ruta
+| Ruta | Label | Grupo | Acceso | Layout | Planes |
+| --- | --- | --- | --- | --- | --- |
+| `/` | Inicio | principal | public | none | todos |
+| `/brokers` | Brokers | principal | public | none | todos |
+| `/contacto` | Contacto | principal | public | none | todos |
+| `/explorar` | Explorar | principal | public | none | todos |
+| `/pricing` | Planes | principal | public | none | todos |
+| `/tools` | Herramientas | principal | public | none | todos |
+| `/ayuda` | Ayuda | soporte | public | none | todos |
+| `/alertas` | — | — | public | none | todos |
+| `/auth` | — | — | public | none | todos |
+| `/b/:slug` | — | — | public | none | todos |
+| `/blog` | — | — | public | none | todos |
+| `/brokers/inscripcion` | — | — | public | none | todos |
+| `/brokers/ranking` | — | — | public | none | todos |
+| `/ciudad/:slug` | — | — | public | none | todos |
+| `/comparar` | — | — | public | none | todos |
+| `/contacto-loteos` | — | — | public | none | todos |
+| `/demo/visual-scenarios` | — | — | public | none | todos |
+| `/diseno/:token` | — | — | public | none | todos |
+| `/explora-park` | — | — | public | none | todos |
+| `/ficha/isla-de-maipo-galvez-1458` | — | — | public | none | todos |
+| `/forestal-valle-escondido` | — | — | public | none | todos |
+| `/forestal-valle-escondido/investors` | — | — | public | none | todos |
+| `/huellelhue` | — | — | public | none | todos |
+| `/inmobiliaria/:slug` | — | — | public | none | todos |
+| `/instalar` | — | — | public | none | todos |
+| `/oportunidades` | — | — | public | none | todos |
+| `/p/:slug` | — | — | public | none | todos |
+| `/pais/:code` | — | — | public | none | todos |
+| `/para-corredoras` | — | — | public | none | todos |
+| `/para-inmobiliarias` | — | — | public | none | todos |
+| `/planes-loteos` | — | — | public | none | todos |
+| `/playa-alvaro` | — | — | public | none | todos |
+| `/propiedad/:id` | — | — | public | none | todos |
+| `/proyecto/:id` | — | — | public | none | todos |
+| `/proyecto/:id/experiencia` | — | — | public | none | todos |
+| `/quiz` | — | — | public | none | todos |
+| `/referidos` | — | — | public | none | todos |
+| `/region/:slug` | — | — | public | none | todos |
+| `/reserva/error` | — | — | public | none | todos |
+| `/reserva/exito` | — | — | public | none | todos |
+| `/reserva/pendiente` | — | — | public | none | todos |
+| `/reset-password` | — | — | public | none | todos |
+| `/search` | — | — | public | none | todos |
+| `/subscription/failure` | — | — | public | none | todos |
+| `/subscription/pending` | — | — | public | none | todos |
+| `/subscription/success` | — | — | public | none | todos |
+| `/tasacion/v/:id` | — | — | public | none | todos |
+| `/tasacion/validar` | — | — | public | none | todos |
 
-| Campo | Valores | Uso |
-|---|---|---|
-| `id` | único | key estable |
-| `path` | absoluto | URL |
-| `area` | `public` / `buyer` / `agent` / `admin` | agrupación y navegación |
-| `access` | `public` / `auth` / `agent` / `admin` | lo aplica `RouteGuard` |
-| `layout` | `none` / `public` / `buyer` / `dashboard` | layout padre con `<Outlet />` |
-| `nav` | `{ label, group, plans? }` | navegación derivada por plan |
-| `indexable` | boolean | SEO / sitemap |
+## Comprador
 
-Las rutas se agrupan por `(access, layout)` y cada grupo comparte **un solo**
-guard y layout padre. Ninguna página se envuelve individualmente.
+| Ruta | Label | Grupo | Acceso | Layout | Planes |
+| --- | --- | --- | --- | --- | --- |
+| `/comprador/inicio` | Inicio | comprador | auth | buyer | todos |
+| `/favoritos` | Favoritos | comprador | auth | buyer | todos |
+| `/mi-terreno` | Mi Terreno | comprador | auth | buyer | todos |
+| `/perfil` | Mi Perfil | comprador | auth | buyer | todos |
+| `/suscripcion` | Suscripción | comprador | auth | buyer | todos |
 
-### Alias y redirects
+## Asesor / Inmobiliaria
 
-`routeAliases` en el manifiesto concentra tanto los redirects legacy como la
-normalización al español. Cada alias renderiza `<Navigate replace />`.
+| Ruta | Label | Grupo | Acceso | Layout | Planes |
+| --- | --- | --- | --- | --- | --- |
+| `/asesor/dashboard` | Dashboard | principal | agent | dashboard | todos |
+| `/publicar` | Publicar | principal | agent | none | todos |
+| `/asesor/captaciones` | Mis captaciones | captación | agent | dashboard | todos |
+| `/asesor/opportunities` | Oportunidades | captación | agent | dashboard | todos |
+| `/asesor/proyectos-en-venta` | Proyectos en venta | captación | agent | dashboard | todos |
+| `/asesor/listings` | Inventario | inventario | agent | dashboard | todos |
+| `/asesor/loteos` | Control de loteo | inventario | agent | dashboard | todos |
+| `/asesor/lots` | Lotes | inventario | agent | dashboard | todos |
+| `/asesor/projects` | Proyectos | inventario | agent | dashboard | todos |
+| `/asesor/subdivision` | Estudio de subdivisión | inventario | agent | dashboard | todos |
+| `/asesor/contacts` | Contactos | crm | agent | dashboard | todos |
+| `/asesor/crm` | CRM | crm | agent | dashboard | todos |
+| `/asesor/leads` | Leads | crm | agent | dashboard | todos |
+| `/asesor/messages` | Mensajes | crm | agent | dashboard | todos |
+| `/asesor/notificaciones/plantillas` | Plantillas de aviso | crm | agent | dashboard | todos |
+| `/asesor/closing` | Cierre | ventas | agent | dashboard | todos |
+| `/asesor/comisiones` | Comisiones | ventas | agent | dashboard | todos |
+| `/asesor/credits` | Créditos | ventas | agent | dashboard | todos |
+| `/asesor/payments` | Pagos | ventas | agent | dashboard | todos |
+| `/asesor/pipeline` | Pipeline | ventas | agent | dashboard | todos |
+| `/asesor/reservations` | Reservas | ventas | agent | dashboard | todos |
+| `/asesor/sales` | Ventas | ventas | agent | dashboard | todos |
+| `/asesor/analytics` | Analytics | análisis | agent | dashboard | todos |
+| `/asesor/demand` | Demanda | análisis | agent | dashboard | todos |
+| `/asesor/executive` | Ejecutivo | análisis | agent | dashboard | inmobiliaria, grupo, enterprise |
+| `/asesor/financial` | Financiero | análisis | agent | dashboard | todos |
+| `/asesor/mi-negocio` | Mi negocio | análisis | agent | dashboard | todos |
+| `/asesor/multi-project` | Multi proyecto | análisis | agent | dashboard | inmobiliaria, grupo, enterprise |
+| `/asesor/performance` | Performance | análisis | agent | dashboard | todos |
+| `/asesor/red` | Red y atribución | análisis | agent | dashboard | todos |
+| `/asesor/reports` | Reportes | análisis | agent | dashboard | todos |
+| `/asesor/api` | API | cuenta | agent | dashboard | enterprise |
+| `/asesor/enterprise` | Empresa | cuenta | agent | dashboard | inmobiliaria, grupo, enterprise |
+| `/asesor/notifications` | Notificaciones | cuenta | agent | dashboard | todos |
+| `/asesor/profile` | Mi perfil | cuenta | agent | dashboard | todos |
+| `/asesor/soporte` | Soporte | cuenta | agent | dashboard | todos |
+| `/asesor/team` | Equipo | cuenta | agent | dashboard | inmobiliaria, grupo, enterprise |
+| `/asesor/tools` | Herramientas | cuenta | agent | dashboard | todos |
+| `/asesor/opportunity/:id` | — | — | agent | dashboard | todos |
+| `/publish` | — | — | agent | none | todos |
 
-| Alias | Canónico |
-|---|---|
+## Administración
+
+| Ruta | Label | Grupo | Acceso | Layout | Planes |
+| --- | --- | --- | --- | --- | --- |
+| `/admin/dashboard` | Panel admin | principal | admin | dashboard | todos |
+| `/admin/agents` | Agentes | gestión | admin | dashboard | todos |
+| `/admin/brokers` | Brokers | gestión | admin | dashboard | todos |
+| `/admin/documents` | Documentos | gestión | admin | dashboard | todos |
+| `/admin/featured` | Destacados | gestión | admin | dashboard | todos |
+| `/admin/projects` | Proyectos | gestión | admin | dashboard | todos |
+| `/admin/reservations` | Reservas | gestión | admin | dashboard | todos |
+| `/admin/users` | Usuarios | gestión | admin | dashboard | todos |
+| `/admin/approvals` | Propiedades | aprobaciones | admin | dashboard | todos |
+| `/admin/captaciones` | Captaciones | aprobaciones | admin | dashboard | todos |
+| `/admin/commercial-leads` | Leads comerciales | aprobaciones | admin | dashboard | todos |
+| `/admin/project-approvals` | Loteos | aprobaciones | admin | dashboard | todos |
+| `/admin/analytics` | Analytics | finanzas | admin | dashboard | todos |
+| `/admin/comisiones` | Comisiones | finanzas | admin | dashboard | todos |
+| `/admin/credits` | Créditos | finanzas | admin | dashboard | todos |
+| `/admin/financial` | Financiero | finanzas | admin | dashboard | todos |
+| `/admin/ventas` | Ventas | finanzas | admin | dashboard | todos |
+| `/admin/audit` | Auditoría | sistema | admin | dashboard | todos |
+| `/admin/branding-fichas` | Branding fichas | sistema | admin | dashboard | todos |
+| `/admin/soporte` | Soporte | sistema | admin | dashboard | todos |
+| `/admin/visual-scenarios` | Escenarios visuales | sistema | admin | dashboard | todos |
+
+## Alias y redirects
+
+| Desde | Hacia |
+| --- | --- |
 | `/profile` | `/perfil` |
 | `/subscription` | `/suscripcion` |
 | `/buyer/home` | `/comprador/inicio` |
 | `/favorites` | `/favoritos` |
 | `/compare` | `/comparar` |
+| `/pricing-loteos` | `/planes-loteos` |
+| `/precios-loteos` | `/planes-loteos` |
 | `/dashboard` | `/asesor/dashboard` |
 | `/inventory` | `/asesor/listings` |
 | `/leads` | `/asesor/leads` |
@@ -52,38 +160,15 @@ normalización al español. Cada alias renderiza `<Navigate replace />`.
 | `/sales` | `/asesor/sales` |
 | `/urbanization` | `/asesor/projects` |
 | `/agents` | `/admin/agents` |
-| `/calculators`, `/price-predictor`, `/risk-analysis`, `/ai-recommendations` | `/tools` |
-
-### Áreas
-
-- **public** (`access: public`, layout propio de cada página): home, explorar,
-  fichas de propiedad y proyecto, landings de región/país/ciudad, marketing,
-  tasaciones públicas, resultados de pago, y las landings de proyecto con URL
-  congelada por SEO (`/explora-park`, `/huellelhue`, `/playa-alvaro`,
-  `/forestal-valle-escondido`, `/p/:slug`).
-- **buyer** (`access: auth`, `BuyerLayout`): `/comprador/inicio`, `/favoritos`,
-  `/mi-terreno`, `/perfil`, `/suscripcion`.
-- **agent** (`access: agent`, `DashboardLayout`): todo `/asesor/*`.
-  `/publicar` y `/publish` usan `layout: none` (flujo enfocado sin sidebar).
-- **admin** (`access: admin`, `DashboardLayout`): todo `/admin/*`.
-
-### Navegación
-
-`navFor(area, plan)` devuelve los links del área filtrados por plan
-(`nav.plans` limita, por ejemplo, `/asesor/api` a Enterprise). El test
-`navLinks.test.ts` valida que ningún componente de navegación apunte a una URL
-inexistente y que no haya ids, paths o alias duplicados.
-
-### Añadir una ruta
-
-1. Agregar la entrada en `routeManifest.tsx` con `area`, `access` y `layout`.
-2. Si debe aparecer en el menú, agregar `nav`.
-3. Si reemplaza una URL antigua, agregar el alias en `routeAliases`.
-4. `bunx vitest run src/routes/navLinks.test.ts`.
-
-## QA mínimo después de modificar rutas
-
-- `/`, `/explorar`, `/propiedad/:id`, `/explora-park`.
-- `/comprador/inicio`, `/asesor/dashboard`, `/admin/dashboard` sin sesión → `/auth?redirect=…`.
-- `/dashboard` → `/asesor/dashboard`; `/favorites` → `/favoritos`; `/profile` → `/perfil`.
-- Una URL inexistente → `NotFound`.
+| `/help` | `/ayuda` |
+| `/soporte` | `/ayuda` |
+| `/calculators` | `/tools` |
+| `/price-predictor` | `/tools` |
+| `/risk-analysis` | `/tools` |
+| `/ai-recommendations` | `/tools` |
+| `/inmobiliaria/dashboard` | `/asesor/dashboard` |
+| `/asesor` | `/asesor/dashboard` |
+| `/admin` | `/admin/dashboard` |
+| `/asesor/notificaciones` | `/asesor/notificaciones/plantillas` |
+| `/asesor/mercado` | `/asesor/proyectos-en-venta` |
+| `/asesor/executive-dashboard` | `/asesor/executive` |

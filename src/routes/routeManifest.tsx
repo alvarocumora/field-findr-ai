@@ -21,6 +21,10 @@ export interface NavMeta {
   group: string;
   /** Planes que ven el link; ausente = todos los del área. */
   plans?: string[];
+  /** Nombre del icono (ver `src/routes/navIcons.ts`). */
+  icon?: string;
+  /** Link primario del área: se muestra siempre, fuera de los grupos. */
+  primary?: boolean;
 }
 
 export interface RouteEntry {
@@ -276,52 +280,65 @@ export const projectLandingEntries: RouteEntry[] = [
 ];
 
 export const buyerRouteEntries: RouteEntry[] = [
-  buyer("buyer-home", "/comprador/inicio", <BuyerHome />, { label: "Inicio", group: "comprador" }),
-  buyer("favoritos", "/favoritos", <Favorites />, { label: "Favoritos", group: "comprador" }),
-  buyer("mi-terreno", "/mi-terreno", <MiTerreno />, { label: "Mi Terreno", group: "comprador" }),
-  buyer("perfil", "/perfil", <Profile />, { label: "Mi Perfil", group: "comprador" }),
-  buyer("suscripcion", "/suscripcion", <Subscription />, { label: "Suscripción", group: "comprador" }),
+  buyer("buyer-home", "/comprador/inicio", <BuyerHome />, { label: "Inicio", group: "comprador", icon: "home", primary: true }),
+  buyer("favoritos", "/favoritos", <Favorites />, { label: "Favoritos", group: "comprador", icon: "heart" }),
+  buyer("mi-terreno", "/mi-terreno", <MiTerreno />, { label: "Mi Terreno", group: "comprador", icon: "map-pin" }),
+  buyer("perfil", "/perfil", <Profile />, { label: "Mi Perfil", group: "comprador", icon: "user" }),
+  buyer("suscripcion", "/suscripcion", <Subscription />, { label: "Suscripción", group: "comprador", icon: "credit-card" }),
 ];
 
 export const agentRouteEntries: RouteEntry[] = [
-  agent("asesor-dashboard", "/asesor/dashboard", <AgentDashboard />, { label: "Dashboard", group: "gestión" }),
-  agent("asesor-opportunities", "/asesor/opportunities", <LandOpportunities />, { label: "Oportunidades", group: "captación" }),
+  agent("asesor-dashboard", "/asesor/dashboard", <AgentDashboard />, { label: "Dashboard", group: "principal", icon: "dashboard", primary: true }),
+
+  // Captación
+  agent("asesor-opportunities", "/asesor/opportunities", <LandOpportunities />, { label: "Oportunidades", group: "captación", icon: "target" }),
   agent("asesor-opportunity", "/asesor/opportunity/:id", <OpportunityDetail />),
-  agent("asesor-captaciones", "/asesor/captaciones", <MyCaptaciones />, { label: "Mis captaciones", group: "captación" }),
-  agent("asesor-broker-marketplace", "/asesor/proyectos-en-venta", <BrokerMarketplace />, { label: "Proyectos en venta", group: "captación" }),
-  agent("asesor-mi-negocio", "/asesor/mi-negocio", <MyBrokerBusiness />, { label: "Mi negocio", group: "gestión" }),
-  agent("asesor-red", "/asesor/red", <BrokerNetwork />, { label: "Red y atribución", group: "análisis" }),
-  agent("asesor-contacts", "/asesor/contacts", <Contacts />, { label: "Contactos", group: "crm" }),
-  agent("asesor-listings", "/asesor/listings", <PropertyInventory />, { label: "Inventario", group: "gestión" }),
-  agent("asesor-leads", "/asesor/leads", <LeadManagement />, { label: "Leads", group: "crm" }),
-  agent("asesor-projects", "/asesor/projects", <ProjectsManagement />, { label: "Proyectos", group: "gestión" }),
-  agent("asesor-lots", "/asesor/lots", <LotManagement />, { label: "Lotes", group: "gestión" }),
-  agent("asesor-loteos", "/asesor/loteos", <LoteoControlCenter />, { label: "Loteos", group: "gestión" }),
-  agent("asesor-subdivision", "/asesor/subdivision", <SubdivisionStudio />, { label: "Subdivisión", group: "gestión" }),
-  agent("asesor-analytics", "/asesor/analytics", <BusinessIntelligence />, { label: "Analytics", group: "análisis" }),
-  agent("asesor-crm", "/asesor/crm", <CRMSystem />, { label: "CRM", group: "crm" }),
-  agent("asesor-sales", "/asesor/sales", <SalesManagement />, { label: "Ventas", group: "ventas" }),
-  agent("asesor-reservations", "/asesor/reservations", <ReservationsManager />, { label: "Reservas", group: "ventas" }),
-  agent("asesor-credits", "/asesor/credits", <CreditManager />, { label: "Créditos", group: "ventas" }),
-  agent("asesor-closing", "/asesor/closing", <ClosingManager />, { label: "Cierre", group: "ventas" }),
-  agent("asesor-messages", "/asesor/messages", <Messages />, { label: "Mensajes", group: "crm" }),
-  agent("asesor-notificaciones", "/asesor/notificaciones", <NotificationTemplates />, { label: "Notificaciones", group: "crm" }),
-  agent("asesor-enterprise", "/asesor/enterprise", <EnterpriseSettings />, { label: "Empresa", group: "cuenta", plans: ["inmobiliaria", "grupo", "enterprise"] }),
-  agent("asesor-executive", "/asesor/executive", <ExecutiveDashboard />, { label: "Ejecutivo", group: "análisis", plans: ["inmobiliaria", "grupo", "enterprise"] }),
-  agent("asesor-financial", "/asesor/financial", <FinancialDashboard />, { label: "Financiero", group: "análisis" }),
-  agent("asesor-performance", "/asesor/performance", <AgentPerformance />, { label: "Performance", group: "análisis" }),
-  agent("asesor-comisiones", "/asesor/comisiones", <Commissions />, { label: "Comisiones", group: "ventas" }),
-  agent("asesor-team", "/asesor/team", <TeamManagement />, { label: "Equipo", group: "cuenta", plans: ["inmobiliaria", "grupo", "enterprise"] }),
-  agent("asesor-pipeline", "/asesor/pipeline", <SalesPipeline />, { label: "Pipeline", group: "ventas" }),
-  agent("asesor-multi-project", "/asesor/multi-project", <MultiProjectDashboard />, { label: "Multi proyecto", group: "análisis" }),
-  agent("asesor-payments", "/asesor/payments", <PaymentManagement />, { label: "Pagos", group: "ventas" }),
-  agent("asesor-reports", "/asesor/reports", <Reports />, { label: "Reportes", group: "análisis" }),
-  agent("asesor-notifications", "/asesor/notifications", <NotificationCenter />, { label: "Notificaciones", group: "cuenta" }),
-  agent("asesor-demand", "/asesor/demand", <DemandHeatmapDashboard />, { label: "Demanda", group: "análisis" }),
-  agent("asesor-api", "/asesor/api", <APIPortal />, { label: "API", group: "cuenta", plans: ["enterprise"] }),
-  agent("asesor-tools", "/asesor/tools", <Tools />, { label: "Herramientas", group: "cuenta" }),
-  agent("asesor-soporte", "/asesor/soporte", <SupportTickets />, { label: "Soporte", group: "cuenta" }),
-  agent("asesor-profile", "/asesor/profile", <Profile />, { label: "Mi perfil", group: "cuenta" }),
+  agent("asesor-captaciones", "/asesor/captaciones", <MyCaptaciones />, { label: "Mis captaciones", group: "captación", icon: "handshake" }),
+  agent("asesor-broker-marketplace", "/asesor/proyectos-en-venta", <BrokerMarketplace />, { label: "Proyectos en venta", group: "captación", icon: "store" }),
+
+  // Inventario
+  agent("asesor-listings", "/asesor/listings", <PropertyInventory />, { label: "Inventario", group: "inventario", icon: "building" }),
+  agent("asesor-projects", "/asesor/projects", <ProjectsManagement />, { label: "Proyectos", group: "inventario", icon: "folder" }),
+  agent("asesor-lots", "/asesor/lots", <LotManagement />, { label: "Lotes", group: "inventario", icon: "grid" }),
+  agent("asesor-loteos", "/asesor/loteos", <LoteoControlCenter />, { label: "Control de loteo", group: "inventario", icon: "gauge" }),
+  agent("asesor-subdivision", "/asesor/subdivision", <SubdivisionStudio />, { label: "Estudio de subdivisión", group: "inventario", icon: "grid" }),
+
+  // CRM
+  agent("asesor-leads", "/asesor/leads", <LeadManagement />, { label: "Leads", group: "crm", icon: "users" }),
+  agent("asesor-contacts", "/asesor/contacts", <Contacts />, { label: "Contactos", group: "crm", icon: "users" }),
+  agent("asesor-crm", "/asesor/crm", <CRMSystem />, { label: "CRM", group: "crm", icon: "workflow" }),
+  agent("asesor-messages", "/asesor/messages", <Messages />, { label: "Mensajes", group: "crm", icon: "message" }),
+  agent("asesor-notificaciones", "/asesor/notificaciones/plantillas", <NotificationTemplates />, { label: "Plantillas de aviso", group: "crm", icon: "bell" }),
+
+  // Ventas
+  agent("asesor-pipeline", "/asesor/pipeline", <SalesPipeline />, { label: "Pipeline", group: "ventas", icon: "workflow" }),
+  agent("asesor-reservations", "/asesor/reservations", <ReservationsManager />, { label: "Reservas", group: "ventas", icon: "calendar" }),
+  agent("asesor-sales", "/asesor/sales", <SalesManagement />, { label: "Ventas", group: "ventas", icon: "handshake" }),
+  agent("asesor-closing", "/asesor/closing", <ClosingManager />, { label: "Cierre", group: "ventas", icon: "scale" }),
+  agent("asesor-credits", "/asesor/credits", <CreditManager />, { label: "Créditos", group: "ventas", icon: "credit-card" }),
+  agent("asesor-payments", "/asesor/payments", <PaymentManagement />, { label: "Pagos", group: "ventas", icon: "dollar" }),
+  agent("asesor-comisiones", "/asesor/comisiones", <Commissions />, { label: "Comisiones", group: "ventas", icon: "dollar" }),
+
+  // Análisis
+  agent("asesor-mi-negocio", "/asesor/mi-negocio", <MyBrokerBusiness />, { label: "Mi negocio", group: "análisis", icon: "trending" }),
+  agent("asesor-red", "/asesor/red", <BrokerNetwork />, { label: "Red y atribución", group: "análisis", icon: "share" }),
+  agent("asesor-analytics", "/asesor/analytics", <BusinessIntelligence />, { label: "Analytics", group: "análisis", icon: "chart" }),
+  agent("asesor-financial", "/asesor/financial", <FinancialDashboard />, { label: "Financiero", group: "análisis", icon: "trending" }),
+  agent("asesor-performance", "/asesor/performance", <AgentPerformance />, { label: "Performance", group: "análisis", icon: "gauge" }),
+  agent("asesor-demand", "/asesor/demand", <DemandHeatmapDashboard />, { label: "Demanda", group: "análisis", icon: "flame" }),
+  agent("asesor-reports", "/asesor/reports", <Reports />, { label: "Reportes", group: "análisis", icon: "report" }),
+  agent("asesor-executive", "/asesor/executive", <ExecutiveDashboard />, { label: "Ejecutivo", group: "análisis", icon: "pie", plans: ["inmobiliaria", "grupo", "enterprise"] }),
+  agent("asesor-multi-project", "/asesor/multi-project", <MultiProjectDashboard />, { label: "Multi proyecto", group: "análisis", icon: "chart", plans: ["inmobiliaria", "grupo", "enterprise"] }),
+
+  // Cuenta
+  agent("asesor-team", "/asesor/team", <TeamManagement />, { label: "Equipo", group: "cuenta", icon: "users", plans: ["inmobiliaria", "grupo", "enterprise"] }),
+  agent("asesor-enterprise", "/asesor/enterprise", <EnterpriseSettings />, { label: "Empresa", group: "cuenta", icon: "building", plans: ["inmobiliaria", "grupo", "enterprise"] }),
+  agent("asesor-api", "/asesor/api", <APIPortal />, { label: "API", group: "cuenta", icon: "code", plans: ["enterprise"] }),
+  agent("asesor-notifications", "/asesor/notifications", <NotificationCenter />, { label: "Notificaciones", group: "cuenta", icon: "bell" }),
+  agent("asesor-tools", "/asesor/tools", <Tools />, { label: "Herramientas", group: "cuenta", icon: "sparkles" }),
+  agent("asesor-soporte", "/asesor/soporte", <SupportTickets />, { label: "Soporte", group: "cuenta", icon: "lifebuoy" }),
+  agent("asesor-profile", "/asesor/profile", <Profile />, { label: "Mi perfil", group: "cuenta", icon: "user" }),
+
   // Publicación: hub y formulario. Sin sidebar de dashboard (flujo enfocado).
   {
     id: "publicar",
@@ -330,7 +347,7 @@ export const agentRouteEntries: RouteEntry[] = [
     access: "agent",
     layout: "none",
     element: <Publicar />,
-    nav: { label: "Publicar", group: "gestión" },
+    nav: { label: "Publicar", group: "principal", icon: "plus", primary: true },
   },
   {
     id: "publish",
@@ -343,27 +360,35 @@ export const agentRouteEntries: RouteEntry[] = [
 ];
 
 export const adminRouteEntries: RouteEntry[] = [
-  admin("admin-dashboard", "/admin/dashboard", <DashboardAdminPage />, { label: "Dashboard", group: "admin" }),
-  admin("admin-users", "/admin/users", <AdminUsers />, { label: "Usuarios", group: "admin" }),
-  admin("admin-agents", "/admin/agents", <AgentManagement />, { label: "Agentes", group: "admin" }),
-  admin("admin-reservations", "/admin/reservations", <ReservationsManager />, { label: "Reservas", group: "admin" }),
-  admin("admin-approvals", "/admin/approvals", <PropertyApprovalQueue />, { label: "Aprobaciones", group: "admin" }),
-  admin("admin-project-approvals", "/admin/project-approvals", <ProjectApprovalQueue />, { label: "Aprobación proyectos", group: "admin" }),
-  admin("admin-credits", "/admin/credits", <CreditManager />, { label: "Créditos", group: "admin" }),
-  admin("admin-analytics", "/admin/analytics", <BusinessIntelligence />, { label: "Analytics", group: "admin" }),
-  admin("admin-financial", "/admin/financial", <FinancialDashboard />, { label: "Financiero", group: "admin" }),
-  admin("admin-documents", "/admin/documents", <DocumentCenter />, { label: "Documentos", group: "admin" }),
-  admin("admin-projects", "/admin/projects", <ProjectsManagement />, { label: "Proyectos", group: "admin" }),
-  admin("admin-visual-scenarios", "/admin/visual-scenarios", <VisualScenariosAdmin />, { label: "Escenarios visuales", group: "admin" }),
-  admin("admin-commercial-leads", "/admin/commercial-leads", <CommercialLeadsAdmin />, { label: "Leads comerciales", group: "admin" }),
-  admin("admin-captaciones", "/admin/captaciones", <CaptacionesQueue />, { label: "Captaciones", group: "admin" }),
-  admin("admin-brokers", "/admin/brokers", <BrokersAdmin />, { label: "Brokers", group: "admin" }),
-  admin("admin-comisiones", "/admin/comisiones", <CommissionsAdmin />, { label: "Comisiones", group: "admin" }),
-  admin("admin-ventas", "/admin/ventas", <SalesAdmin />, { label: "Ventas", group: "admin" }),
-  admin("admin-featured", "/admin/featured", <FeaturedManager />, { label: "Destacados", group: "admin" }),
-  admin("admin-branding-fichas", "/admin/branding-fichas", <FichaBranding />, { label: "Branding fichas", group: "admin" }),
-  admin("admin-soporte", "/admin/soporte", <SupportAdmin />, { label: "Soporte", group: "admin" }),
-  admin("admin-audit", "/admin/audit", <AuditLog />, { label: "Auditoría", group: "admin" }),
+  admin("admin-dashboard", "/admin/dashboard", <DashboardAdminPage />, { label: "Panel admin", group: "principal", icon: "dashboard", primary: true }),
+
+  // Gestión
+  admin("admin-users", "/admin/users", <AdminUsers />, { label: "Usuarios", group: "gestión", icon: "users" }),
+  admin("admin-agents", "/admin/agents", <AgentManagement />, { label: "Agentes", group: "gestión", icon: "shield" }),
+  admin("admin-brokers", "/admin/brokers", <BrokersAdmin />, { label: "Brokers", group: "gestión", icon: "handshake" }),
+  admin("admin-projects", "/admin/projects", <ProjectsManagement />, { label: "Proyectos", group: "gestión", icon: "folder" }),
+  admin("admin-featured", "/admin/featured", <FeaturedManager />, { label: "Destacados", group: "gestión", icon: "sparkles" }),
+  admin("admin-reservations", "/admin/reservations", <ReservationsManager />, { label: "Reservas", group: "gestión", icon: "calendar" }),
+  admin("admin-documents", "/admin/documents", <DocumentCenter />, { label: "Documentos", group: "gestión", icon: "clipboard" }),
+
+  // Aprobaciones
+  admin("admin-approvals", "/admin/approvals", <PropertyApprovalQueue />, { label: "Propiedades", group: "aprobaciones", icon: "clipboard" }),
+  admin("admin-project-approvals", "/admin/project-approvals", <ProjectApprovalQueue />, { label: "Loteos", group: "aprobaciones", icon: "clipboard" }),
+  admin("admin-captaciones", "/admin/captaciones", <CaptacionesQueue />, { label: "Captaciones", group: "aprobaciones", icon: "map-pin" }),
+  admin("admin-commercial-leads", "/admin/commercial-leads", <CommercialLeadsAdmin />, { label: "Leads comerciales", group: "aprobaciones", icon: "handshake" }),
+
+  // Finanzas
+  admin("admin-comisiones", "/admin/comisiones", <CommissionsAdmin />, { label: "Comisiones", group: "finanzas", icon: "dollar" }),
+  admin("admin-ventas", "/admin/ventas", <SalesAdmin />, { label: "Ventas", group: "finanzas", icon: "handshake" }),
+  admin("admin-credits", "/admin/credits", <CreditManager />, { label: "Créditos", group: "finanzas", icon: "credit-card" }),
+  admin("admin-financial", "/admin/financial", <FinancialDashboard />, { label: "Financiero", group: "finanzas", icon: "trending" }),
+  admin("admin-analytics", "/admin/analytics", <BusinessIntelligence />, { label: "Analytics", group: "finanzas", icon: "chart" }),
+
+  // Sistema
+  admin("admin-visual-scenarios", "/admin/visual-scenarios", <VisualScenariosAdmin />, { label: "Escenarios visuales", group: "sistema", icon: "sparkles" }),
+  admin("admin-branding-fichas", "/admin/branding-fichas", <FichaBranding />, { label: "Branding fichas", group: "sistema", icon: "palette" }),
+  admin("admin-soporte", "/admin/soporte", <SupportAdmin />, { label: "Soporte", group: "sistema", icon: "lifebuoy" }),
+  admin("admin-audit", "/admin/audit", <AuditLog />, { label: "Auditoría", group: "sistema", icon: "shield" }),
 ];
 
 export const routeManifest: RouteEntry[] = [
@@ -406,7 +431,23 @@ export const routeAliases: RouteAlias[] = [
   { from: "/price-predictor", to: "/tools" },
   { from: "/risk-analysis", to: "/tools" },
   { from: "/ai-recommendations", to: "/tools" },
+
+  // Consolidación de paneles (Fase 1: un dashboard por rol)
+  { from: "/inmobiliaria/dashboard", to: "/asesor/dashboard" },
+  { from: "/asesor", to: "/asesor/dashboard" },
+  { from: "/admin", to: "/admin/dashboard" },
+  { from: "/asesor/notificaciones", to: "/asesor/notificaciones/plantillas" },
+  { from: "/asesor/mercado", to: "/asesor/proyectos-en-venta" },
+  { from: "/asesor/executive-dashboard", to: "/asesor/executive" },
 ];
+
+/** Orden canónico de los grupos de navegación por área. */
+export const navGroupOrder: Record<RouteArea, string[]> = {
+  public: ["principal", "soporte"],
+  buyer: ["comprador"],
+  agent: ["principal", "captación", "inventario", "crm", "ventas", "análisis", "cuenta"],
+  admin: ["principal", "gestión", "aprobaciones", "finanzas", "sistema"],
+};
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -428,12 +469,32 @@ export const routeExists = (path: string): boolean => {
   );
 };
 
+export interface NavLink extends NavMeta {
+  path: string;
+}
+
 /** Links de navegación de un área, filtrados por plan cuando aplica. */
-export const navFor = (area: RouteArea, plan?: string) =>
+export const navFor = (area: RouteArea, plan?: string): NavLink[] =>
   routeManifest
     .filter((r) => r.area === area && r.nav)
     .filter((r) => !r.nav!.plans || (plan ? r.nav!.plans.includes(plan) : false))
     .map((r) => ({ path: r.path, ...r.nav! }));
+
+/** Links de un área agrupados y ordenados según `navGroupOrder`. */
+export const navGroupsFor = (
+  area: RouteArea,
+  plan?: string,
+): { group: string; items: NavLink[] }[] => {
+  const links = navFor(area, plan);
+  const order = navGroupOrder[area] ?? [];
+  const groups = Array.from(new Set(links.map((l) => l.group))).sort(
+    (a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99),
+  );
+  return groups.map((group) => ({
+    group,
+    items: links.filter((l) => l.group === group),
+  }));
+};
 
 /** Rutas públicas indexables, base para el sitemap. */
 export const indexableRoutes = () =>
