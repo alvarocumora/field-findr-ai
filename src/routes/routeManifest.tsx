@@ -431,7 +431,23 @@ export const routeAliases: RouteAlias[] = [
   { from: "/price-predictor", to: "/tools" },
   { from: "/risk-analysis", to: "/tools" },
   { from: "/ai-recommendations", to: "/tools" },
+
+  // Consolidación de paneles (Fase 1: un dashboard por rol)
+  { from: "/inmobiliaria/dashboard", to: "/asesor/dashboard" },
+  { from: "/asesor", to: "/asesor/dashboard" },
+  { from: "/admin", to: "/admin/dashboard" },
+  { from: "/asesor/notificaciones", to: "/asesor/notificaciones/plantillas" },
+  { from: "/asesor/mercado", to: "/asesor/proyectos-en-venta" },
+  { from: "/asesor/executive-dashboard", to: "/asesor/executive" },
 ];
+
+/** Orden canónico de los grupos de navegación por área. */
+export const navGroupOrder: Record<RouteArea, string[]> = {
+  public: ["principal", "soporte"],
+  buyer: ["comprador"],
+  agent: ["principal", "captación", "inventario", "crm", "ventas", "análisis", "cuenta"],
+  admin: ["principal", "gestión", "aprobaciones", "finanzas", "sistema"],
+};
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
