@@ -484,7 +484,7 @@ def build() -> str:
         [[f["lote"], clp(f["v_before"]), f"{num(f['pes'])} m²", f"{num(f['rem'])} m²",
           f"{num(f['k'] * 100, 0)} %", clp(f["v_after"]), clp(f["dano"]),
           "Alta" if f["clase"] in ("I4", "I2") else "Media"] for f in filas],
-        widths=[0.5, 1.15, 0.8, 0.8, 0.7, 1.15, 1.15, 0.75],
+        widths=[0.45, 1.1, 0.75, 0.8, 0.6, 1.1, 1.1, 0.6],
         align=["L", "R", "R", "R", "R", "R", "R", "C"],
     )
     r.kpis([
