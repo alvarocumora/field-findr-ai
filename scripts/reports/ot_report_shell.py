@@ -199,7 +199,7 @@ class Report:
         self.page = 1
         self._started = True
 
-        band_h = 118 * mm
+        band_h = 102 * mm
         c.setFillColor(FOREST)
         c.rect(0, PAGE_H - band_h, PAGE_W, band_h, stroke=0, fill=1)
         # Textura de deslindes sutil
@@ -221,7 +221,7 @@ class Report:
         if m.confidential:
             c.drawRightString(PAGE_W - MR, PAGE_H - 25 * mm, "Documento confidencial")
 
-        y = PAGE_H - 52 * mm
+        y = PAGE_H - 46 * mm
         c.setFont(FONT_B, 8.5)
         c.setFillColor(EMERALD)
         c.drawString(ML, y, m.doc_type.upper())
@@ -384,7 +384,7 @@ class Report:
             self.c.setFont(FONT, size)
             self.c.setFillColor(color)
             self.c.drawString(ML, self.y, line)
-            self.y -= size * 0.52 * mm + 1.6 * mm
+            self.y -= size * 1.45 * 0.3528 * mm
         self.y -= 2 * mm
 
     def bullets(self, items: Iterable[str], size: float = 9.3) -> None:
