@@ -30,6 +30,12 @@ def main():
     tx = [t[0] for t in geo["torres"]]
     ty = [t[1] for t in geo["torres"]]
     ax.scatter(tx, ty, s=9, marker="^", color="#12181A", zorder=5, label="Estructuras LT 220 kV")
+    xs = [c for r in geo["predios"].values() for c in
+          (shwkt.loads(x["wkt"]).bounds[0], shwkt.loads(x["wkt"]).bounds[2]) for x in [r]]
+    bb = [shwkt.loads(x["wkt"]).bounds for arr in geo["predios"].values() for x in arr]
+    pad = 350
+    ax.set_xlim(min(b[0] for b in bb) - pad, max(b[2] for b in bb) + pad)
+    ax.set_ylim(min(b[1] for b in bb) - pad, max(b[3] for b in bb) + pad)
     ax.set_aspect("equal")
     ax.set_xlabel("Este UTM 19S (m)", fontsize=7)
     ax.set_ylabel("Norte UTM 19S (m)", fontsize=7)
@@ -37,7 +43,7 @@ def main():
     hs = [plt.Line2D([], [], marker="s", ls="", color=COL[k], label=f"Clase {k}")
           for k in ("V0", "V1", "V2", "V3", "V4")]
     hs.append(plt.Line2D([], [], marker="^", ls="", color="#12181A", label="Estructuras"))
-    ax.legend(handles=hs, fontsize=6.5, loc="upper right", frameon=False, ncol=2)
+    ax.legend(handles=hs, fontsize=6.5, loc="lower left", frameon=True, framealpha=0.9, edgecolor="none", ncol=3)
     ax.set_title("Clasificación de dominancia visual · 675 lotes de predios vecinos",
                  fontsize=9, color="#164E34")
     fig.tight_layout()
