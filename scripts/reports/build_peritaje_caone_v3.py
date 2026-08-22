@@ -143,8 +143,8 @@ def build() -> str:
         subtitle="Afectación sobre proyecto de parcelación rural · Hualañé, Región del Maule",
         folio="OT-PER-2026-0087",
         date="22 de agosto de 2026",
-        prepared_for="Propiedad afectada · Uso en Comisión Tasadora o sede judicial",
-        author="Oferta Terrenos · Valuation — Comité pericial independiente",
+        prepared_for="Propiedad afectada · Comisión Tasadora",
+        author="Oferta Terrenos · Valuation",
         qr_url="https://ofertaterrenos.com/tasacion/validar",
         footer_note=(
             "Informe emitido con criterio independiente. No representa los intereses de ninguna de "
