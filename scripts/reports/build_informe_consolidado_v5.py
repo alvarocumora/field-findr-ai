@@ -241,7 +241,7 @@ def build() -> str:
                 [num(st.mean([x["idv"] for x in L]), 3).replace(".", ",")])
     r.table(["Rol", "Lotes", "V0", "V1", "V2", "V3", "V4", "IDV medio"], rows,
             widths=[74, 52, 44, 44, 44, 44, 44, 76], align=["l"] + ["r"] * 7)
-    r.image(f"{WORK}/mapa_v4b.png", 180,
+    r.image(f"{WORK}/mapa_v4b.png", 340,
             f"Figura 1 · Clasificación de dominancia visual de los {num(len(L))} lotes de los "
             f"{len(roles)} predios respecto del corredor de 220 kV.")
     r.image(f"{WORK}/graficos_v4b.png", 180,
@@ -263,13 +263,21 @@ def build() -> str:
     )
     r.table(
         ["Conjunto", "Lotes", "Valor de referencia neto", "Conservador", "Central", "Cota superior"],
-        [["Reclamante 168-915", num(len(re_vis)), clp(round(sum(valor(x) for x in re_vis))),
+        [["Reclamante", num(len(re_vis)), clp(round(sum(valor(x) for x in re_vis))),
           clp(round(re_A)), clp(round(re_B)), clp(round(re_C))],
          ["Predios vecinos", num(len(VE)), clp(round(sum(valor(x) for x in VE))),
           clp(round(ve_A)), clp(round(ve_B)), clp(round(ve_C))],
          ["TOTAL", num(len(re_vis) + len(VE)), clp(round(sum(valor(x) for x in re_vis + VE))),
           clp(round(re_A + ve_A)), clp(round(re_B + ve_B)), clp(round(re_C + ve_C))]],
-        widths=[92, 40, 104, 82, 82, 82], align=["l", "r", "r", "r", "r", "r"])
+        widths=[104, 36, 100, 80, 80, 82], align=["l", "r", "r", "r", "r", "r"])
+
+    r.p(
+        "El anexo V4-A determinó para el predio del reclamante una depreciación visual central de "
+        "$19.562.638 sobre precios de lista reales del proyecto. La cifra de esta tabla se calcula sobre el "
+        "valor unitario sectorial homogéneo, para que los nueve predios sean comparables entre sí; la "
+        "diferencia se explica íntegramente por la base de valor y no por la clasificación visual. Para "
+        "efectos de pretensión del reclamante prevalece la cifra del anexo V4-A."
+    )
 
     # ------------------------------------------------------------------ 08
     r.section("Cuadro económico consolidado", kicker="Sección 08")
