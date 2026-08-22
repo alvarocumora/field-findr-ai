@@ -316,14 +316,14 @@ def build() -> str:
         "precio de cierre y neto a propietario."
     )
     r.table(
-        ["Nivel", "Fuente", "Indicador", "$/m² implícito", "Peso", "Fuerza probatoria"],
+        ["Nivel", "Fuente", "Indicador", "$/m² implícito", "Peso", "Prueba"],
         [
             ["N2", "Precios de comercialización histórica", f"{clp(LISTA_MIN)} – {clp(LISTA_MAX)}", "2.907 – 5.453", "50 %", "Media-alta"],
             ["N4", "Contrato CTP — VNGP tramo 5.000–8.000 m²", clp(10_000_000), "1.667 – 2.000", "20 %", "Alta (piso)"],
             ["N7", "Permuta valorizada", f"{clp(PERMUTA)} por lote", "≈ 3.818", "15 %", "Media-baja"],
             ["N5", "Triangulación pericial V3", f"{clp(UV_V3)}/m²", num(UV_V3), "15 %", "Media"],
         ],
-        widths=[0.5, 1.75, 1.25, 1.05, 0.55, 0.9],
+        widths=[0.45, 1.7, 1.2, 1.0, 0.5, 0.85],
         align=["C", "L", "R", "R", "C", "L"],
     )
     r.subsection("Reconciliación al neto de propietario")
