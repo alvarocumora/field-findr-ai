@@ -30,8 +30,6 @@ def main():
     tx = [t[0] for t in geo["torres"]]
     ty = [t[1] for t in geo["torres"]]
     ax.scatter(tx, ty, s=9, marker="^", color="#12181A", zorder=5, label="Estructuras LT 220 kV")
-    xs = [c for r in geo["predios"].values() for c in
-          (shwkt.loads(x["wkt"]).bounds[0], shwkt.loads(x["wkt"]).bounds[2]) for x in [r]]
     bb = [shwkt.loads(x["wkt"]).bounds for arr in geo["predios"].values() for x in arr]
     pad = 350
     ax.set_xlim(min(b[0] for b in bb) - pad, max(b[2] for b in bb) + pad)
