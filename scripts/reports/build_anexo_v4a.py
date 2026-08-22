@@ -57,9 +57,9 @@ def build() -> str:
     tabla = {t["clase"]: t for t in d["tabla"]}
 
     valor_neto = sum((p["price"] or 0) for p in P) * F_NETO
-    A = escenario(P, DEP_LOW, 1.0, 0.0)
-    B = escenario(P, DEP_CEN, 1.0, 0.0)
-    C = escenario(P, DEP_HI, 0.3, 1.0)
+    A = escenario(P, DEP_LOW, 0.0, 0.0)
+    B = escenario(P, DEP_CEN, 0.0, 0.0)
+    C = escenario(P, DEP_HI, 0.7, 1.0)
     n_atrib = sum(1 for p in P if p["status"] == "available" and p["n"] not in CRUZADAS)
 
     meta = DocMeta(
@@ -68,7 +68,7 @@ def build() -> str:
         subtitle="LT 1x220 kV Caone–Mataquito · Parcelación rural, comuna de Hualañé, Región del Maule",
         folio="OT-PER-2026-0087-V4-A",
         date="17 de febrero de 2026",
-        prepared_for="Equipo pericial independiente · Anexo al informe OT-PER-2026-0087-V4",
+        prepared_for="Anexo al informe OT-PER-2026-0087-V4",
         author="Oferta Terrenos · Valuation",
         qr_url="https://ofertaterrenos.com/tasacion/validar",
         footer_note="Anexo complementario. No sustituye ni modifica la determinación de daño directo del informe V4.",
