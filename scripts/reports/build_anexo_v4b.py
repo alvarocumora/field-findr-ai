@@ -255,14 +255,15 @@ def build() -> str:
         "resultado es un orden de magnitud comparativo, no una liquidación."
     )
     r.table(
-        ["Clase", "Lotes", "Superficie", "Valor de referencia neto", "Depreciación central", "Monto central"],
+        ["Clase", "Lotes", "Superficie", "Valor de referencia neto", "Depr. central", "Monto central"],
         [[k, num(cnt[k]),
           f"{num(sum(x['area_gis'] for x in L if x['clase'] == k) / 1e4, 1)} ha",
           clp(round(sum(valor(x) for x in L if x["clase"] == k))),
           f"{num(DEP_CEN[k] * 100, 1)} %",
           clp(round(sum(valor(x) * DEP_CEN[k] for x in L if x["clase"] == k)))]
          for k in ("V0", "V1", "V2", "V3", "V4")],
-        widths=[46, 46, 74, 128, 88, 110], align=["l", "r", "r", "r", "r", "r"])
+        widths=[44, 42, 66, 130, 72, 108], align=["L", "L", "L", "L", "L", "L"])
+
     r.kpis([
         ("Escenario conservador", clp(round(A)), "Sólo clases altas, tasas mínimas"),
         ("Escenario central", clp(round(B)),
