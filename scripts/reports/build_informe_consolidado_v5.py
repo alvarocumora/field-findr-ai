@@ -262,7 +262,7 @@ def build() -> str:
         f"{len(re_cruz)} lotes cruzados, ya indemnizados en el V4."
     )
     r.table(
-        ["Conjunto", "Lotes", "Valor de referencia neto", "Conservador", "Central", "Cota superior"],
+        ["Conjunto", "Lotes", "Valor ref. neto", "Conservador", "Central", "Cota sup."],
         [["Reclamante", num(len(re_vis)), clp(round(sum(valor(x) for x in re_vis))),
           clp(round(re_A)), clp(round(re_B)), clp(round(re_C))],
          ["Predios vecinos", num(len(VE)), clp(round(sum(valor(x) for x in VE))),
