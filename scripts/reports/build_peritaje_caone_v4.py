@@ -803,18 +803,18 @@ def build() -> str:
     # ---------------------------------------------------------------- 20
     r.section("Salida final", kicker="Sección 20")
     r.table(
-        ["Concepto", "Monto", "Confianza", "% dependiente de prueba pendiente"],
+        ["Concepto", "Monto", "Confianza", "% sujeto a prueba"],
         [
             ["Valor directo", clp(E1), "Alta", "8 %"],
             ["Valor pericial central", clp(E2), "Media-alta", "22 %"],
             ["Rango pericial", f"{clp(E1)} – {clp(E3_BASE)}", "Media", "35 %"],
             ["Valor económico ampliado", f"{clp(E3_BASE)} – {clp(E3_MAX)}", "Baja", "72 %"],
-            ["Apertura transaccional razonable", clp(E4_APERTURA), "No aplica", "No es indemnización"],
-            ["Objetivo transaccional", clp(E4_OBJETIVO), "No aplica", "No es indemnización"],
+            ["Apertura transaccional razonable", clp(E4_APERTURA), "No aplica", "No aplica"],
+            ["Objetivo transaccional", clp(E4_OBJETIVO), "No aplica", "No aplica"],
             ["Zona de acuerdo", f"{clp(ZONA_MIN)} – {clp(ZONA_MAX)}", "Media", "—"],
             ["Umbral para evaluar litigación", clp(UMBRAL_LITIGIO), "Media-alta", "—"],
         ],
-        widths=[1.85, 1.95, 0.9, 1.6],
+        widths=[1.8, 1.95, 0.85, 1.1],
         align=["L", "R", "C", "R"],
     )
 
