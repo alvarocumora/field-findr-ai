@@ -367,12 +367,12 @@ def build() -> str:
         "superficie residual, bipartición y exposición. No se aplica ninguna regla automática por porcentaje."
     )
     r.table(
-        ["Lote", "Gr.", "% afect.", "Faja m²", "Remanente m²", "Castigo rem.", "V. Before", "V. After", "Daño"],
+        ["Lote", "Gr.", "% af.", "Faja m²", "Rem. m²", "Castigo", "V. Before", "V. After", "Daño"],
         [[
             rw["lote"], rw["grupo"], f"{num(rw['pct'], 1)} %", num(rw["afect"], 0), num(rw["rem"], 0),
             f"{num(rw['k'] * 100, 0)} %", clp(rw["v_before"]), clp(rw["v_after"]), clp(rw["perd"]),
         ] for rw in rows_lote],
-        widths=[0.6, 0.45, 0.8, 0.85, 1.0, 0.85, 1.35, 1.35, 1.35],
+        widths=[0.55, 0.4, 0.65, 0.8, 0.8, 0.75, 1.35, 1.35, 1.35],
         align=["L", "L", "R", "R", "R", "R", "R", "R", "R"],
         size=7.6,
     )
