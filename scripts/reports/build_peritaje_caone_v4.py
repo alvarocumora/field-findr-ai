@@ -863,11 +863,10 @@ def build() -> str:
     ])
 
     r.closing(
-        "Este valor no fue construido hacia una cifra objetivo. Las diferencias respecto de V3 obedecen "
-        "exclusivamente a evidencia adicional, corrección de datos o revisión metodológica. El informe no "
-        "constituye tasación bancaria certificada, oferta ni recomendación de inversión, y no determina el "
-        "precio de una eventual transacción entre las partes."
+        "Ninguna partida fue construida hacia una cifra objetivo. El informe no constituye tasación "
+        "bancaria certificada, oferta ni recomendación de inversión, y no fija el precio de transacción."
     )
+
     r.signature(
         "Comité pericial independiente",
         "Tasación rural · Servidumbres eléctricas · Economía inmobiliaria · GIS · Derecho eléctrico",
