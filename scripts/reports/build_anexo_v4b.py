@@ -79,7 +79,7 @@ def build() -> str:
         subtitle="LT 1x220 kV Caone–Mataquito · Comuna de Hualañé, Región del Maule",
         folio="OT-PER-2026-0087-V4-B",
         date="22 de agosto de 2026",
-        prepared_for="Anexo a los informes OT-PER-2026-0087-V4 y V4-A",
+        prepared_for="Anexos V4 y V4-A del expediente",
         author="Oferta Terrenos · Valuation",
         qr_url="https://ofertaterrenos.com/tasacion/validar",
         footer_note="Anexo complementario. No sustituye ni modifica el daño directo determinado en el informe V4.",
@@ -174,7 +174,7 @@ def build() -> str:
         ("Lotes cruzados por la faja", str(len(cruz)), "Rol 168-916"),
         ("Superficie en faja", f"{num(faja_area)} m²", "Restricción de uso permanente"),
         ("Valor asociado", clp(round(daño_faja)),
-         f"Valor unitario ${num(VU)}/m² · pérdida de utilidad {int(K_FAJA * 100)} %"),
+         f"${num(VU)}/m² · utilidad perdida {int(K_FAJA * 100)} %"),
     ])
 
     # ------------------------------------------------------------------ 04
@@ -199,7 +199,7 @@ def build() -> str:
         "parcelación del reclamante y refuerza la consistencia interna del modelo."
     )
 
-    r.image(f"{WORK}/mapa_v4b.png", 138,
+    r.image(f"{WORK}/mapa_v4b.png", 190,
             "Figura 1 · Clasificación de dominancia visual de los 675 lotes de predios vecinos respecto del "
             "corredor de 220 kV. En gris el eje de estructuras.")
 
@@ -236,7 +236,7 @@ def build() -> str:
                 [num(st.mean([x["idv"] for x in L]), 3).replace(".", ",")])
     r.table(["Rol", "Lotes", "V0", "V1", "V2", "V3", "V4", "IDV medio"], rows,
             widths=[74, 52, 44, 44, 44, 44, 44, 76], align=["l"] + ["r"] * 7)
-    r.image(f"{WORK}/graficos_v4b.png", 74,
+    r.image(f"{WORK}/graficos_v4b.png", 90,
             "Figura 2 · Distribución del índice de dominancia visual, relación IDV–distancia y composición de "
             "clases por predio.")
     r.p(
