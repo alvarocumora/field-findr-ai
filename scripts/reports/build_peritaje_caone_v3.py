@@ -132,7 +132,7 @@ R3_BASE = R2 + visual_base + delay_dano * 0.5
 # ---- Resultado 4: rango transaccional
 R4_MIN = R2 * 1.15
 R4_OBJ = (R2 + R3_BASE) / 2
-R4_APERTURA = R3_MAX * 1.10
+R4_APERTURA = R3_MAX
 UMBRAL_LITIGIO = R2 * 0.85
 
 
@@ -360,7 +360,6 @@ def build() -> str:
     )
 
     # 9 -------------------------------------------------------------------
-    r.page_break()
     r.section("Análisis lote por lote (Before / After)", kicker="Sección 09")
     r.p(
         "Para cada lote se aplica: pérdida del 85 % del valor del suelo comprendido en la faja (se conserva "
@@ -510,7 +509,6 @@ def build() -> str:
     )
 
     # 15 ------------------------------------------------------------------
-    r.page_break()
     r.section("Control de causalidad por partida", kicker="Sección 15")
     r.table(
         ["Partida", "¿Preexistente?", "¿La línea la causa?", "Causalidad", "Tratamiento"],
