@@ -11,8 +11,11 @@ import zipfile
 from collections import defaultdict
 
 from pyproj import Transformer
-from shapely.geometry import MultiLineString, Point, Polygon, shape
+from shapely.geometry import LineString, MultiLineString, Point, Polygon
 from shapely.ops import polygonize, unary_union
+
+SNAP = 0.5  # m — cierre de vértices CAD
+EXC = ("mtext", "block reference", "circle", "text")
 
 UP = "/mnt/user-uploads"
 WORK = "/tmp/anexo4b/work"
@@ -100,12 +103,15 @@ def parse_predio(key):
                     except ValueError:
                         pass
         elif kind in ("LineString", "Polygon") and len(cs) >= 2:
-            if kind == "Polygon":
-                segs.append(cs + [cs[0]])
-            else:
-                segs.append(cs)
+            if any(e in name.lower() for e in EXC):
+                continue
+            ring = cs + [cs[0]] if kind == "Polygon" else cs
+            snapped = [(round(x / SNAP) * SNAP, round(y / SNAP) * SNAP) for x, y in ring]
+            ln = LineString(snapped)
+            if ln.length > 0.1:
+                segs.append(snapped)
     net = unary_union(MultiLineString(segs))
-    polys = [p for p in polygonize(net) if p.area > 300]
+    polys = [p for p in polygonize(net) if p.area > 1500]
     out = []
     used = set()
     for num, pt in sorted(labels):
@@ -130,7 +136,6 @@ def main():
     os.makedirs(WORK, exist_ok=True)
     torres, faja = load_lt()
     trace_pts = sorted((t.centroid for t in torres), key=lambda p: (p.x, p.y))
-    from shapely.geometry import LineString
     trace = LineString([(p.x, p.y) for p in trace_pts])
 
     res = defaultdict(list)
