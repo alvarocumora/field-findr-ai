@@ -516,7 +516,7 @@ def build() -> str:
             ["Suelo ocupado por torres y caminos", "No", "Sí, íntegramente", "Alta", "Valor central"],
             ["Pérdida de uso bajo la faja", "No", "Sí, íntegramente", "Alta", "Valor central"],
             ["Depreciación de remanentes Grupo A", "No", "Sí", "Alta", "Valor central"],
-            ["Fragmentación funcional Grupo B", "No", "Sí", "Media-alta", "Valor central"],
+            ["Fragmentación funcional Grupo B", "No", "Sí", "Media", "Valor central"],
             ["Rediseño y replanteo del loteo", "No", "Sí", "Alta", "Valor central"],
             ["Proximidad lote 62", "No", "Parcialmente", "Media", "Valor central (monto menor)"],
             ["Depreciación visual del resto del inventario", "No", "Agrava, magnitud no probada", "Media", "Sólo escenario ampliado"],
@@ -538,7 +538,7 @@ def build() -> str:
              "No — se descontó la superficie de torres", "Se computa"],
             [f"Torres {num(TORRES)} m² al 100 %", "69 N°1", clp(r1_torres), "Alta",
              "No — excluida de la faja", "Se computa"],
-            [f"Caminos fuera de faja {num(CAMINOS_FUERA)} m²", "69 N°1 y N°3", clp(r1_caminos), "Media-alta",
+            [f"Caminos fuera de faja {num(CAMINOS_FUERA)} m²", "69 N°1 y N°3", clp(r1_caminos), "Media",
              "No — los 2.720 m² dentro de la faja se excluyen", "Se computa"],
             ["Incremento del 20 %", "Art. 70", clp(r1_art70), "Alta",
              "No — sólo sobre terrenos ocupados del N°1", "Se computa"],
@@ -553,7 +553,7 @@ def build() -> str:
              "Sí — se calcula sobre el valor After", "Excluido"],
             ["Estigma de mercado", "69 N°2", "$ 0", "Baja", "Sí — solapado con depreciación visual", "Excluido"],
         ],
-        widths=[2.0, 0.8, 1.25, 0.55, 2.3, 1.1],
+        widths=[1.95, 0.8, 1.2, 0.75, 2.2, 1.1],
         align=["L", "L", "R", "L", "L", "L"],
         size=7.3,
     )
@@ -746,7 +746,7 @@ def build() -> str:
         ("Valor ampliado con prueba", f"{clp(R3_BASE)} – {clp(R3_MAX)}", "Requiere viewshed y paired sales"),
         ("Apertura transaccional sugerida", clp(R4_APERTURA), "No es daño indemnizable"),
         ("Nivel general de confianza", "Medio", "Alta en directo, baja en visual"),
-        ("Superficie base del cálculo", f"{num(FAJA_14)} m²", "Cifra conservadora entre las dos disponibles"),
+        ("Superficie base del cálculo", f"{num(FAJA_14)} m²", "Cifra conservadora"),
     ])
     r.subsection("Diez razones que explican estos valores")
     r.bullets([
