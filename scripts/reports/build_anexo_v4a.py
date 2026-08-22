@@ -199,9 +199,9 @@ def build() -> str:
         rows.append([t["id"], num(t["x"]), num(t["y"]), "38,0 (estimada)", "26,0 (estimada)",
                      "Interior" if 6124800 < t["y"] < 6126200 else "Exterior"])
     r.table(
-        ["Estructura", "Este (m)", "Norte (m)", "Altura total (m)", "Amarre conductor (m)", "Condición"],
+        ["Estructura", "Este (m)", "Norte (m)", "Altura total (m)", "Amarre (m)", "Condición"],
         rows,
-        widths=[66, 78, 82, 78, 90, 62],
+        widths=[66, 78, 82, 84, 62, 74],
         align=["l", "r", "r", "r", "r", "l"],
     )
     r.p(
@@ -310,8 +310,10 @@ def build() -> str:
 
     # ---------------------------------------------------------------- 10
     r.section("Clasificación V0 – V4", kicker="Sección 10")
+    r.image(f"{WORK}/mapa_clases.png", height=430,
+            caption="Clasificación de impacto visual por parcela y trazado de la LT 1x220 kV. Proyección UTM 19S.")
     r.table(
-        ["Clase", "Definición", "Corte IDV", "Parcelas", "Sup. media", "Dist. media al eje"],
+        ["Clase", "Definición", "Corte IDV", "Parcelas", "Sup. media", "Dist. eje"],
         [[c,
           {"V0": "Sin impacto relevante", "V1": "Impacto bajo", "V2": "Impacto medio",
            "V3": "Impacto alto", "V4": "Impacto crítico / dominante"}[c],
@@ -320,7 +322,7 @@ def build() -> str:
           f"{num(tabla[c].get('sup', 0))} m²" if tabla[c]["n"] else "—",
           f"{num(tabla[c].get('d', 0))} m" if tabla[c]["n"] else "—"]
          for c in ["V0", "V1", "V2", "V3", "V4"]],
-        widths=[42, 150, 66, 54, 66, 68],
+        widths=[42, 146, 62, 56, 70, 70],
         align=["l", "l", "r", "r", "r", "r"],
     )
     r.callout(
@@ -331,8 +333,6 @@ def build() -> str:
         "proximidad.",
         kind="info",
     )
-    r.image(f"{WORK}/mapa_clases.png", height=430,
-            caption="Clasificación de impacto visual por parcela y trazado de la LT 1x220 kV. Proyección UTM 19S.")
 
     # ---------------------------------------------------------------- 11
     r.section("Resultado GIS por parcela", kicker="Sección 11")
@@ -369,14 +369,14 @@ def build() -> str:
         "precio unitario de lista y el estado comercial de cada parcela."
     )
     r.table(
-        ["Clase", "Parcelas", "Precio unitario medio", "Mediana", "Vendidas o reservadas", "Tasa de absorción"],
+        ["Clase", "Parcelas", "Precio unitario medio", "Mediana", "Vend./Res.", "Absorción"],
         [[c, str(tabla[c]["n"]),
           f"$ {num(tabla[c]['ppm2'])} /m²" if tabla[c]["n"] else "—",
           f"$ {num(tabla[c]['ppm2_med'])} /m²" if tabla[c]["n"] else "—",
           str(tabla[c].get("vendidos", 0)) if tabla[c]["n"] else "—",
           f"{num(tabla[c].get('tasa', 0), 1)} %" if tabla[c]["n"] else "—"]
          for c in ["V1", "V2", "V3", "V4"]],
-        widths=[42, 56, 110, 82, 92, 64],
+        widths=[42, 56, 116, 84, 70, 78],
         align=["l", "r", "r", "r", "r", "r"],
     )
     r.kpis([
@@ -455,7 +455,7 @@ def build() -> str:
         ("Parcelas atribuibles", str(n_atrib)),
     ])
     r.table(
-        ["Escenario", "Criterio", "Depreciación visual", "% del valor neto"],
+        ["Escenario", "Criterio", "Depreciación visual", "% neto"],
         [["A · Conservador",
           "Rango bajo, sin parcelas cruzadas ni de terceros",
           clp(round(A)), f"{num(A / valor_neto * 100, 2)} %"],
@@ -465,7 +465,7 @@ def build() -> str:
          ["C · Cota superior",
           "Hipótesis V4, terceros incluidos, cruzadas al 30 %",
           clp(round(C)), f"{num(C / valor_neto * 100, 2)} %"]],
-        widths=[92, 190, 100, 64],
+        widths=[92, 186, 106, 62],
         align=["l", "l", "r", "r"],
     )
     r.subsection("Desglose del escenario central por clase")
