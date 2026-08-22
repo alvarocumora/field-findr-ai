@@ -217,7 +217,7 @@ def build() -> str:
         highlights=[
             ("Valor pericial central", clp(E2)),
             ("Rango pericial", f"{clp(E1)} – {clp(E3_BASE)}"),
-            ("Variación vs V3", "-1,2 % en el valor central"),
+            ("Variación vs V3", "+7,0 % en el valor central"),
         ],
     )
 
@@ -232,13 +232,14 @@ def build() -> str:
         "sobre el KMZ Sol de Caone Rev0-3."
     )
     r.p(
-        "El efecto neto de las correcciones es levemente descendente respecto de V3. La superficie de "
+        "El efecto neto de las correcciones es mixto. La superficie de "
         f"plataformas de estructuras baja de {num(TORRES_V3)} m² a {num(TORRES_GIS)} m² —dos de las cinco "
         "estructuras contabilizadas en V3 (T29 y T34) están fuera de los 14 lotes— y la superficie de "
         f"caminos de servidumbre sobre los lotes baja de {num(CAMINOS_V3)} m² a {num(CAMINOS_STRIP)} m². "
         "En sentido contrario, la evidencia contractual de comercialización permite subir el valor "
-        f"unitario Before de {clp(UV_V3)}/m² a {clp(UV)}/m², un ajuste de 3,7 % que no altera el orden de "
-        "magnitud del resultado."
+        f"unitario Before de {clp(UV_V3)}/m² a {clp(UV)}/m², un ajuste de 3,7 %, y las superficies reales "
+        "por lote elevan la depreciación de remanentes respecto del reparto equiárea de V3. El resultado "
+        f"directo baja {pct(E1, 101_650_735)} y el valor central sube {pct(E2, 138_838_423)}."
     )
     r.kpis([
         ("Valor directo (Escenario 1)", clp(E1), "Alta causalidad y alta prueba"),
@@ -789,11 +790,15 @@ def build() -> str:
         align=["L", "R", "R", "R", "L"],
     )
     r.callout(
-        "V4 es menor que V3 en el valor central",
-        f"El valor central baja {clp(138_838_423 - E2)} ({pct(E2, 138_838_423)}). El comité informa la baja "
-        "sin compensarla: proviene de que dos estructuras y buena parte de los caminos contabilizados en V3 "
-        "no recaen sobre los lotes afectados. El alza del valor unitario no alcanza a compensar esa "
-        "corrección, y no se introdujo ninguna partida nueva para nivelar el resultado.",
+        "Origen exacto de la variación",
+        f"El resultado directo BAJA {clp(101_650_735 - E1)} ({pct(E1, 101_650_735)}) porque dos estructuras "
+        "(T29 y T34) y buena parte de los caminos contabilizados en V3 no recaen sobre los 14 lotes. El "
+        f"valor central SUBE {clp(E2 - 138_838_423)} ({pct(E2, 138_838_423)}) por tres causas verificables: "
+        "las superficies individuales por lote elevan la base de los remanentes frente al reparto equiárea, "
+        "el patio de montaje pasa a indemnizarse como ocupación temporal de obra —partida ausente en V3— y "
+        "el valor unitario sube 3,7 % con la evidencia contractual. El escenario ampliado y la apertura "
+        "transaccional BAJAN al recalibrarse el módulo visual. Ninguna partida se creó para nivelar el "
+        "resultado.",
         kind="brand",
     )
 
