@@ -42,8 +42,8 @@ def main():
           for k in ("V0", "V1", "V2", "V3", "V4")]
     hs.append(plt.Line2D([], [], marker="^", ls="", color="#12181A", label="Estructuras"))
     ax.legend(handles=hs, fontsize=6.5, loc="lower left", frameon=True, framealpha=0.9, edgecolor="none", ncol=3)
-    ax.set_title("Clasificación de dominancia visual · 675 lotes de predios vecinos",
-                 fontsize=9, color="#164E34")
+    ax.set_title(f"Clasificación de dominancia visual · {len(sc['lotes'])} lotes · "
+                 f"{len(geo['predios'])} predios", fontsize=9, color="#164E34")
     fig.tight_layout()
     fig.savefig(f"{WORK}/mapa_v4b.png")
     plt.close(fig)
