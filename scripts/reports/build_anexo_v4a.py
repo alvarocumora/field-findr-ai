@@ -528,7 +528,7 @@ def build() -> str:
     ])
     r.signature(
         "Equipo pericial independiente",
-        "GIS y geomática · Topografía · Tasación rural · Economía inmobiliaria · Paisaje · Estadística · Revisión legal LGSE",
+        "GIS · Topografía · Tasación rural · Economía inmobiliaria · Paisaje · Estadística",
         "Anexo V4-A del informe OT-PER-2026-0087-V4 · Emitido en Santiago de Chile",
     )
     r.closing(
