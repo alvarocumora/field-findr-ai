@@ -480,11 +480,11 @@ def build() -> str:
     # ---------------------------------------------------------------- 09
     r.section("Cálculo lote a lote", kicker="Sección 09")
     r.table(
-        ["Lote", "V_before", "Faja", "Remanente", "Castigo", "V_after", "Daño", "Confianza"],
+        ["Lote", "V_before", "Faja", "Remanente", "Castigo", "V_after", "Daño", "Conf."],
         [[f["lote"], clp(f["v_before"]), f"{num(f['pes'])} m²", f"{num(f['rem'])} m²",
           f"{num(f['k'] * 100, 0)} %", clp(f["v_after"]), clp(f["dano"]),
           "Alta" if f["clase"] in ("I4", "I2") else "Media"] for f in filas],
-        widths=[0.45, 1.1, 0.75, 0.8, 0.6, 1.1, 1.1, 0.6],
+        widths=[0.42, 1.02, 0.7, 0.78, 0.58, 1.02, 1.02, 0.46],
         align=["L", "R", "R", "R", "R", "R", "R", "C"],
     )
     r.kpis([
@@ -542,7 +542,7 @@ def build() -> str:
         "transacciones."
     )
     r.table(
-        ["Variable comercial", "Before (24 meses)", "Tras el conocimiento del trazado", "Estado"],
+        ["Variable comercial", "Before (24 meses)", "Tras el trazado", "Estado"],
         [
             ["Absorción", "3,0 parcelas/mes", "Serie no aportada", "PENDIENTE"],
             ["Precio de lista", f"{clp(LISTA_MIN)} – {clp(LISTA_MAX)}", "Sin variación acreditada", "PENDIENTE"],
@@ -550,7 +550,7 @@ def build() -> str:
             ["Cancelaciones y desistimientos", "No aportado", "No aportado", "PENDIENTE"],
             ["Comentarios de clientes sobre la línea", "No aplica", "Referidos, sin registro documental", "PENDIENTE"],
         ],
-        widths=[1.5, 1.35, 1.85, 1.3],
+        widths=[1.5, 1.35, 1.75, 1.4],
         align=["L", "L", "L", "C"],
     )
     r.p(
