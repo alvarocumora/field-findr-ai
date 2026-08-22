@@ -385,7 +385,7 @@ def build() -> str:
         f"inclusión en V3 explica los {num(TORRES_V3 - TORRES_GIS)} m² de exceso."
     )
     r.table(
-        ["Componente", "Superficie", "Naturaleza", "Art. 70 – sí/no", "Fundamento"],
+        ["Componente", "Superficie", "Naturaleza", "Art. 70", "Fundamento"],
         [
             ["Fundaciones y patas", f"{num(TORRES_N * TORRE_FUND)} m²", "Ocupación permanente", "SÍ",
              "Terreno ocupado por las torres, Art. 69 N°1"],
@@ -402,7 +402,7 @@ def build() -> str:
             ["Tránsito de custodia", f"{num(TRANSITO_ANCHO * LARGO)} m²", "Gravamen permanente", "NO",
              "Art. 69 N°3, tope legal de 2 m de ancho"],
         ],
-        widths=[1.35, 0.85, 1.1, 0.7, 2.0],
+        widths=[1.3, 0.8, 1.05, 0.65, 2.2],
         align=["L", "R", "L", "C", "L"],
     )
     r.callout(
@@ -477,7 +477,6 @@ def build() -> str:
         "de cruce. Castigo de 10 % por proximidad. CAUSALIDAD MEDIA, monto inmaterial.",
     ])
 
-    r.page_break()
     # ---------------------------------------------------------------- 09
     r.section("Cálculo lote a lote", kicker="Sección 09")
     r.table(
@@ -543,7 +542,7 @@ def build() -> str:
         "transacciones."
     )
     r.table(
-        ["Variable comercial", "Before (24 meses)", "Después del conocimiento del trazado", "Estado"],
+        ["Variable comercial", "Before (24 meses)", "Tras el conocimiento del trazado", "Estado"],
         [
             ["Absorción", "3,0 parcelas/mes", "Serie no aportada", "PENDIENTE"],
             ["Precio de lista", f"{clp(LISTA_MIN)} – {clp(LISTA_MAX)}", "Sin variación acreditada", "PENDIENTE"],
@@ -551,7 +550,7 @@ def build() -> str:
             ["Cancelaciones y desistimientos", "No aportado", "No aportado", "PENDIENTE"],
             ["Comentarios de clientes sobre la línea", "No aplica", "Referidos, sin registro documental", "PENDIENTE"],
         ],
-        widths=[1.55, 1.45, 1.9, 1.1],
+        widths=[1.5, 1.35, 1.85, 1.3],
         align=["L", "L", "L", "C"],
     )
     r.p(
@@ -697,7 +696,6 @@ def build() -> str:
         kind="warn",
     )
 
-    r.page_break()
     # ---------------------------------------------------------------- 17
     r.section("Los cuatro escenarios", kicker="Sección 17")
     r.table(
