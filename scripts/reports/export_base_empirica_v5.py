@@ -20,6 +20,18 @@ OUT = "/mnt/documents/Base_Empirica_V5_LT220_Caone_Mataquito.xlsx"
 RECL = "Rol 168-915"
 CLASES = ["V0", "V1", "V2", "V3", "V4"]
 
+PLANOS = {
+    "Rol 168-915": "168-915 lám. 3 (reclamante)",
+    "Rol 168-916": "00005617-168-916",
+    "Rol 168-917": "00005595-168-917",
+    "Rol 168-918": "00005596-168-918",
+    "Rol 168-922": "00005600-168-922",
+    "Rol 168-223": "168-223 rev. 2",
+    "Rol 168-224": "168-224 rev. 2",
+    "Rol 168-225": "168-225 rev. 2",
+    "Rol 163-211": "163-211 lám. 1 rev. 2",
+}
+
 HDR = PatternFill("solid", start_color="0F3D2E")
 HDR_F = Font(name="Arial", size=10, bold=True, color="FFFFFF")
 BASE_F = Font(name="Arial", size=10)
@@ -139,7 +151,7 @@ def main():
     hdr = ["Rol", "Plano", "Lotes", "Superficie m2", "V0", "V1", "V2", "V3", "V4",
            "IDV promedio", "IDV mediana", "Lotes cruzados por faja", "Sup. faja m2",
            "Predio reclamante"]
-    widths = [14, 12, 9, 15, 7, 7, 7, 7, 7, 14, 14, 22, 15, 17]
+    widths = [14, 26, 9, 15, 7, 7, 7, 7, 7, 14, 14, 22, 15, 17]
     rs.append(hdr)
     for i, w in enumerate(widths, 1):
         c = rs.cell(1, i)
@@ -157,7 +169,7 @@ def main():
         g = by[rol]
         cnt = Counter(x["clase"] for x in g)
         rs.append([
-            rol, "lám. adjunta", len(g), sum(x["area_gis"] for x in g),
+            rol, PLANOS[rol], len(g), sum(x["area_gis"] for x in g),
             *[cnt.get(c, 0) for c in CLASES],
             round(st.mean(x["idv"] for x in g), 3),
             round(st.median(x["idv"] for x in g), 3),
