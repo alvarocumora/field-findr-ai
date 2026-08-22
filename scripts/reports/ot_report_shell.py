@@ -551,8 +551,11 @@ class Report:
         if caption:
             self.c.setFont(FONT, 7.6)
             self.c.setFillColor(GRAY)
-            self.c.drawString(ML, self.y, caption)
-            self.y -= 5 * mm
+            for line in _wrap(caption, FONT, 7.6, CONTENT_W):
+                self.c.drawString(ML, self.y, line)
+                self.y -= 4 * mm
+            self.y -= 1 * mm
+
         self.y -= 2 * mm
 
     def signature(self, name: str, role: str, extra: str = "") -> None:
