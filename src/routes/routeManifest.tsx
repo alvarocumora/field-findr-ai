@@ -27,6 +27,12 @@ export interface NavMeta {
   primary?: boolean;
 }
 
+/** Metadatos SEO por defecto de una ruta (la página puede sobrescribirlos). */
+export interface RouteSeo {
+  title: string;
+  description: string;
+}
+
 export interface RouteEntry {
   id: string;
   /** Path absoluto tal como se navega. */
@@ -38,6 +44,8 @@ export interface RouteEntry {
   nav?: NavMeta;
   /** Indexable por buscadores (solo aplica a `public`). */
   indexable?: boolean;
+  /** Título/descripción por defecto para páginas sin SEO propio. */
+  seo?: RouteSeo;
 }
 
 export interface RouteAlias {
