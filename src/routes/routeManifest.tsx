@@ -451,6 +451,20 @@ export const routeAliases: RouteAlias[] = [
   { from: "/asesor/notificaciones", to: "/asesor/notificaciones/plantillas" },
   { from: "/asesor/mercado", to: "/asesor/proyectos-en-venta" },
   { from: "/asesor/executive-dashboard", to: "/asesor/executive" },
+
+  // Entrada unificada: /panel/* como atajo estable a las secciones del panel
+  { from: "/panel/inicio", to: "/panel" },
+  { from: "/panel/inventario", to: "/asesor/listings" },
+  { from: "/panel/loteos", to: "/asesor/loteos" },
+  { from: "/panel/leads", to: "/asesor/leads" },
+  { from: "/panel/ventas", to: "/asesor/sales" },
+  { from: "/panel/comisiones", to: "/asesor/comisiones" },
+  { from: "/panel/publicar", to: "/publicar" },
+  { from: "/panel/perfil", to: "/perfil" },
+
+  // Comunidad
+  { from: "/community", to: "/comunidad" },
+  { from: "/brokers/comunidad", to: "/comunidad" },
 ];
 
 /** Orden canónico de los grupos de navegación por área. */
