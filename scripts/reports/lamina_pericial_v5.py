@@ -224,57 +224,62 @@ def dibujar_mapa(ax, lotes, base, faja, torres, caminos, bbox, etiquetas=None,
 
 
 # ------------------------------------------------------------ panel lateral --
-def caja(ax, y, h, titulo):
-    ax.add_patch(Rectangle((0, y - h), 1, h, transform=ax.transAxes, facecolor="none",
-                           edgecolor="black", lw=0.7, clip_on=False))
-    ax.add_patch(Rectangle((0, y - 0.021), 1, 0.021, transform=ax.transAxes,
-                           facecolor="#e8e8e8", edgecolor="black", lw=0.7, clip_on=False))
-    ax.text(0.012, y - 0.0105, titulo, transform=ax.transAxes, fontsize=6.6,
-            fontweight="bold", va="center")
-    return y - 0.028
+class Panel:
+    """Panel técnico con cajas de altura adaptativa (dos pasadas: medir y dibujar)."""
+
+    def __init__(self, ax, sc=1.0, draw=True):
+        self.ax, self.sc, self.draw, self.y = ax, sc, draw, 1.0
+
+    # --- primitivas -------------------------------------------------------
+    def _t(self, x, y, s, size, **kw):
+        if self.draw:
+            self.ax.text(x, y, s, transform=self.ax.transAxes, fontsize=size * self.sc,
+                         va="top", linespacing=1.35, **kw)
+
+    def kv(self, y, k, v, bold=False):
+        w = "bold" if bold else "normal"
+        self._t(0.02, y, k, 5.7, fontweight=w)
+        self._t(0.98, y, v, 5.7, fontweight=w, ha="right")
+        return y - 0.0128 * self.sc
+
+    def row(self, y, cells, bold=False, size=5.1):
+        w = "bold" if bold else "normal"
+        for t, x, al in cells:
+            self._t(x, y, t, size, fontweight=w, ha="left" if al == "l" else "right")
+        return y - 0.0092 * self.sc
+
+    def para(self, y, txt, size=5.0):
+        self._t(0.02, y, txt, size)
+        return y - 0.0092 * self.sc * (txt.count("\n") + 1)
+
+    def rule(self, y):
+        if self.draw:
+            self.ax.plot([0.02, 0.98], [y + 0.004, y + 0.004], transform=self.ax.transAxes,
+                         color="black", lw=0.5)
+        return y - 0.002 * self.sc
+
+    # --- caja -------------------------------------------------------------
+    def box(self, titulo, content):
+        sc = self.sc
+        top = self.y
+        hdr = 0.021 * sc
+        y_end = content(self, top - hdr - 0.008 * sc)
+        h = top - y_end + 0.004 * sc
+        if self.draw:
+            ax = self.ax
+            ax.add_patch(Rectangle((0, top - h), 1, h, transform=ax.transAxes,
+                                   facecolor="none", edgecolor="black", lw=0.7, clip_on=False))
+            ax.add_patch(Rectangle((0, top - hdr), 1, hdr, transform=ax.transAxes,
+                                   facecolor="#e8e8e8", edgecolor="black", lw=0.7, clip_on=False))
+            ax.text(0.012, top - hdr / 2, titulo, transform=ax.transAxes,
+                    fontsize=6.3 * sc, fontweight="bold", va="center")
+        self.y = top - h - 0.011 * sc
+        return self.y
 
 
-def kv(ax, y, k, v, dy=0.0158, bold=False):
-    ax.text(0.02, y, k, transform=ax.transAxes, fontsize=5.9, va="top",
-            fontweight="bold" if bold else "normal")
-    ax.text(0.98, y, v, transform=ax.transAxes, fontsize=5.9, va="top", ha="right",
-            fontweight="bold" if bold else "normal")
-    return y - dy
-
-
-def parrafo(ax, y, txt, dy=0.0125, size=5.2):
-    ax.text(0.02, y, txt, transform=ax.transAxes, fontsize=size, va="top", ha="left",
-            wrap=False, linespacing=1.35)
-    return y - dy * (txt.count("\n") + 1)
-
-
-def cartucho(ax, y, lamina, escala_txt):
-    y = caja(ax, y, 0.185, "CARTUCHO TÉCNICO")
-    campos = [
-        ("PROYECTO", "LT 1x220 kV Caone–Mataquito"),
-        ("MANDANTE", "Forestal Valle Escondido SpA"),
-        ("DOCUMENTO", "Plano Pericial de Afectación"),
-        ("", "Directa y Visual"),
-        ("LÁMINA", lamina),
-        ("FOLIO", f"{FOLIO}-{lamina}"),
-        ("SISTEMA", "UTM 19S – EPSG:32719"),
-        ("ESCALA", escala_txt),
-        ("FECHA", "agosto 2026"),
-        ("FUENTE", "PES notificados / KMZ concesionaria /"),
-        ("", "cartografía parcelaria / Base Empírica V5"),
-        ("ELABORADO POR", "OfertaTerrenos · Valuation"),
-        ("ESTADO", "Documento técnico para análisis pericial"),
-    ]
-    for k, v in campos:
-        ax.text(0.02, y, k, transform=ax.transAxes, fontsize=5.2, va="top", color="#333333")
-        ax.text(0.36, y, v, transform=ax.transAxes, fontsize=5.4, va="top")
-        y -= 0.0125
-    return y
-
-
-def simbologia(ax, y, con_clases=True):
-    h = 0.205 if con_clases else 0.115
-    y = caja(ax, y, h, "SIMBOLOGÍA")
+# --- contenidos reutilizables ------------------------------------------------
+def c_simbologia(p, y):
+    sc = p.sc
     items = [
         ("predial", "Límite predial (rol)"),
         ("lote", "Límite de lote"),
@@ -284,174 +289,231 @@ def simbologia(ax, y, con_clases=True):
         ("camino", "Camino de acceso"),
     ]
     for kind, label in items:
-        yy = y - 0.004
-        if kind == "predial":
-            ax.plot([0.03, 0.10], [yy, yy], transform=ax.transAxes, color="black", lw=1.1)
-        elif kind == "lote":
-            ax.plot([0.03, 0.10], [yy, yy], transform=ax.transAxes, color="#555555", lw=0.5)
-        elif kind == "faja":
-            ax.add_patch(Rectangle((0.03, yy - 0.0045), 0.07, 0.009, transform=ax.transAxes,
-                                   facecolor="none", edgecolor="#b00020", lw=0.7, hatch="////"))
-        elif kind == "eje":
-            ax.plot([0.03, 0.10], [yy, yy], transform=ax.transAxes, color="#8b005d",
-                    lw=0.9, ls=(0, (5, 3)))
-        elif kind == "torre":
-            ax.plot([0.065], [yy], transform=ax.transAxes, marker="o", ms=3.2,
-                    mfc="white", mec="#8b005d", mew=0.9, ls="none")
+        yy = y - 0.0035 * sc
+        if p.draw:
+            ax = p.ax
+            if kind == "predial":
+                ax.plot([0.03, 0.10], [yy, yy], transform=ax.transAxes, color="black", lw=1.1)
+            elif kind == "lote":
+                ax.plot([0.03, 0.10], [yy, yy], transform=ax.transAxes, color="#555555", lw=0.5)
+            elif kind == "faja":
+                ax.add_patch(Rectangle((0.03, yy - 0.004), 0.07, 0.008, transform=ax.transAxes,
+                                       facecolor="none", edgecolor="#b00020", lw=0.7,
+                                       hatch="////"))
+            elif kind == "eje":
+                ax.plot([0.03, 0.10], [yy, yy], transform=ax.transAxes, color="#8b005d",
+                        lw=0.9, ls=(0, (5, 3)))
+            elif kind == "torre":
+                ax.plot([0.065], [yy], transform=ax.transAxes, marker="o", ms=3.0,
+                        mfc="white", mec="#8b005d", mew=0.9, ls="none")
+            else:
+                ax.plot([0.03, 0.10], [yy, yy], transform=ax.transAxes, color="#7a6a55", lw=0.7)
+        p._t(0.13, y, label, 5.2)
+        y -= 0.0115 * sc
+    y -= 0.003 * sc
+    p._t(0.02, y, "CLASE DE EXPOSICIÓN / DOMINANCIA VISUAL (modelo V5)", 5.1,
+         fontweight="bold")
+    y -= 0.0115 * sc
+    for c in CLASES:
+        if p.draw:
+            p.ax.add_patch(Rectangle((0.03, y - 0.0085 * sc), 0.07, 0.008 * sc,
+                                     transform=p.ax.transAxes, facecolor=FILL[c], alpha=0.45,
+                                     edgecolor="#555555", lw=0.4))
+        p._t(0.13, y, f"{c} – {CLASE_TXT[c]}", 5.2)
+        y -= 0.0115 * sc
+    y = p.para(y, "V0–V4 expresa clase de exposición visual; no constituye por sí\n"
+                  "sola un porcentaje de depreciación económica.", size=4.8)
+    return y
+
+
+def c_cartucho(lamina, escala_txt):
+    campos = [
+        ("PROYECTO", "LT 1x220 kV Caone–Mataquito"),
+        ("MANDANTE", "Forestal Valle Escondido SpA"),
+        ("DOCUMENTO", "Plano Pericial de Afectación Directa y Visual"),
+        ("LÁMINA", lamina),
+        ("FOLIO", f"{FOLIO}-{lamina}"),
+        ("SISTEMA", "UTM 19S – EPSG:32719"),
+        ("ESCALA", escala_txt),
+        ("FECHA", "agosto 2026"),
+        ("FUENTE", "PES notificados / KMZ concesionaria /\ncartografía parcelaria / Base Empírica V5"),
+        ("ELABORADO", "OfertaTerrenos · Valuation"),
+        ("ESTADO", "Documento técnico para análisis pericial"),
+    ]
+
+    def fn(p, y):
+        for k, v in campos:
+            p._t(0.02, y, k, 5.0, color="#333333")
+            p._t(0.34, y, v, 5.2)
+            y -= 0.0105 * p.sc * (v.count("\n") + 1)
+        return y
+    return fn
+
+
+def c_tabla_pes(base, con_remanente=False):
+    def fn(p, y):
+        if con_remanente:
+            cols = [("Lote", 0.02, "l"), ("Sup. m²", 0.235, "r"), ("PES m²", 0.43, "r"),
+                    ("% afect.", 0.62, "r"), ("Rem. m²", 0.82, "r"), ("Clase", 0.99, "r")]
         else:
-            ax.plot([0.03, 0.10], [yy, yy], transform=ax.transAxes, color="#7a6a55", lw=0.7)
-        ax.text(0.13, y, label, transform=ax.transAxes, fontsize=5.4, va="top")
-        y -= 0.0135
-    if con_clases:
-        y -= 0.004
-        ax.text(0.02, y, "CLASE DE EXPOSICIÓN / DOMINANCIA VISUAL (modelo V5)",
-                transform=ax.transAxes, fontsize=5.2, fontweight="bold", va="top")
-        y -= 0.014
-        for c in CLASES:
-            ax.add_patch(Rectangle((0.03, y - 0.0085), 0.07, 0.009, transform=ax.transAxes,
-                                   facecolor=FILL[c], alpha=0.45, edgecolor="#555555", lw=0.4))
-            ax.text(0.13, y, f"{c} – {CLASE_TXT[c]}", transform=ax.transAxes,
-                    fontsize=5.4, va="top")
-            y -= 0.0135
-        y -= 0.002
-        ax.text(0.02, y, "V0–V4 expresa clase de exposición visual; no constituye\n"
-                         "por sí sola un porcentaje de depreciación económica.",
-                transform=ax.transAxes, fontsize=4.9, va="top", color="#333333", linespacing=1.3)
-    return y - 0.03
+            cols = [("Lote", 0.02, "l"), ("Sup. m²", 0.30, "r"), ("PES m²", 0.55, "r"),
+                    ("% afect.", 0.78, "r"), ("Clase V5", 0.99, "r")]
+        y = p.row(y, cols, bold=True)
+        for n, (s, pes, pct) in sorted(PES.items(), key=lambda kv2: -kv2[1][2]):
+            cl = base[(RECL, n)]["clase"]
+            f = f"{pct:.1f}".replace(".", ",") + " %"
+            if con_remanente:
+                cells = [(str(n), 0.02, "l"), (f"{s:,}".replace(",", "."), 0.235, "r"),
+                         (f"{pes:,}".replace(",", "."), 0.43, "r"), (f, 0.62, "r"),
+                         (f"{s - pes:,}".replace(",", "."), 0.82, "r"), (cl, 0.99, "r")]
+            else:
+                cells = [(str(n), 0.02, "l"), (f"{s:,}".replace(",", "."), 0.30, "r"),
+                         (f"{pes:,}".replace(",", "."), 0.55, "r"), (f, 0.78, "r"),
+                         (cl, 0.99, "r")]
+            y = p.row(y, cells, bold=n in (61, 60, 57, 56, 55))
+        y = p.rule(y)
+        if con_remanente:
+            tot = [("TOTAL 14 lotes", 0.02, "l"), ("76.700", 0.235, "r"), ("35.777", 0.43, "r"),
+                   ("46,6 %", 0.62, "r"), ("40.923", 0.82, "r"), ("—", 0.99, "r")]
+        else:
+            tot = [("TOTAL 14 lotes", 0.02, "l"), ("76.700", 0.30, "r"), ("35.777", 0.55, "r"),
+                   ("46,6 %", 0.78, "r"), ("—", 0.99, "r")]
+        y = p.row(y, tot, bold=True)
+        y = p.para(y, "En negrita los lotes 61, 60, 57, 56 y 55: mayor porcentaje de\n"
+                      "afectación física según los PES notificados.", size=4.8)
+        return y
+    return fn
 
 
-def marco(fig, titulo, subt):
-    fig.patches.append(Rectangle((0.014, 0.014), 0.972, 0.972, transform=fig.transFigure,
-                                 facecolor="none", edgecolor="black", lw=1.1))
-    fig.patches.append(Rectangle((0.021, 0.021), 0.958, 0.958, transform=fig.transFigure,
-                                 facecolor="none", edgecolor="#777777", lw=0.5))
-    fig.text(0.032, 0.958, titulo, fontsize=13, fontweight="bold", va="center")
-    fig.text(0.032, 0.934, subt, fontsize=7.2, va="center", color="#222222", linespacing=1.4)
+OBS = [
+    "1. La lámina integra la afectación física de los Planos Especiales de Servidumbre\n"
+    "     con el análisis de exposición visual desarrollado en la Base Empírica V5.",
+    "2. Para efectos de superficie jurídicamente afectada prevalecen los PES oficiales\n"
+    "     notificados: 35.777 m² sobre 14 lotes (76.700 m²), equivalentes al 46,6 %.",
+    "3. La clasificación V0–V4 corresponde al modelo de dominancia/exposición visual V5\n"
+    "     y no constituye por sí sola un porcentaje de depreciación económica.",
+    "4. La infraestructura aérea genera una zona de influencia visual que excede\n"
+    "     físicamente la superficie comprendida en la servidumbre.",
+    "5. La eventual depreciación comercial debe determinarse mediante evidencia de\n"
+    "     mercado y análisis pericial separado, sin doble contabilización.",
+]
+
+PREVAL = ("Para efectos indemnizatorios prevalecen los Planos Especiales de Servidumbre\n"
+          "notificados. La reconstrucción GIS V5 se emplea para análisis espacial y visual.\n"
+          "La reconstrucción GIS identifica 13 cruces geométricos; la pretensión jurídica\n"
+          "conserva los 14 lotes y 35.777 m² de los PES (el lote 62 registra 244 m² de faja,\n"
+          "bajo la tolerancia de la reconstrucción). Diferencia informada expresamente.")
+
+CTX = ("Se ha identificado la existencia de oposición local organizada respecto de\n"
+       "infraestructura de transmisión en el sector. Este antecedente se incorpora sólo\n"
+       "como contexto territorial y no constituye por sí mismo prueba de depreciación\n"
+       "económica; no se le asigna valor monetario.")
+
+
+def panel_p01(p, base, cnt, esc_txt):
+    def resumen(p, y):
+        y = p.kv(y, "Superficie 14 lotes notificados", "76.700 m²")
+        y = p.kv(y, "Superficie PES notificada", "35.777 m²")
+        y = p.kv(y, "Afectación directa", "46,6 %", bold=True)
+        y = p.kv(y, "Longitud aproximada afectada", "1.198,33 m")
+        y = p.kv(y, "Ancho medio faja PES", "aprox. 29,86 m")
+        y = p.kv(y, "N° de lotes notificados", "14")
+        return p.kv(y, "Tensión", "220 kV")
+
+    def control(p, y):
+        y = p.kv(y, "Planos / roles analizados", "9")
+        y = p.kv(y, "Lotes analizados", "754")
+        y = p.kv(y, "Superficie total analizada", "433,7 ha")
+        y = p.kv(y, "Estructuras georreferenciadas", "59")
+        y = p.kv(y, "V0 / V1 / V2 / V3 / V4",
+                 f"{cnt['V0']} / {cnt['V1']} / {cnt['V2']} / {cnt['V3']} / {cnt['V4']}")
+        return p.kv(y, "Suma de clases (control)", f"{sum(cnt.values())} = 754 OK", bold=True)
+
+    def obs(p, y):
+        for t in OBS:
+            y = p.para(y, t)
+        return y
+
+    p.box("CUADRO RESUMEN – AFECTACIÓN DIRECTA (PES OFICIAL)", resumen)
+    p.box("LOTES NOTIFICADOS – SUPERFICIE / PES / % AFECTACIÓN", c_tabla_pes(base))
+    p.box("CONTROL DEL UNIVERSO VISUAL V5", control)
+    p.box("SIMBOLOGÍA", c_simbologia)
+    p.box("OBSERVACIONES TÉCNICAS", obs)
+    p.box("NOTA DE PREVALENCIA Y TRAZABILIDAD", lambda p, y: p.para(y, PREVAL))
+    p.box("CONTEXTO TERRITORIAL (NOTA SECUNDARIA)", lambda p, y: p.para(y, CTX))
+    p.box("CARTUCHO TÉCNICO", c_cartucho("P01", esc_txt))
+    return 1.0 - p.y
+
+
+def panel_p02(p, base, esc_txt):
+    def sup(p, y):
+        y = p.kv(y, "Superficie notificada total", "76.700 m²")
+        y = p.kv(y, "Superficie gravada por PES", "35.777 m²")
+        return p.kv(y, "Superficie remanente libre", "40.923 m²", bold=True)
+
+    nota = ("El hachurado representa la afectación física (faja PES). El color de fondo del\n"
+            "polígono representa la clase de exposición visual V5 (V0–V4). Ambos conceptos\n"
+            "son independientes y no deben sumarse ni contabilizarse dos veces. Los\n"
+            "porcentajes rotulados corresponden a los PES oficiales notificados y no a la\n"
+            "reconstrucción GIS del V5.")
+
+    p.box("CUADRO DE LOS 14 LOTES NOTIFICADOS", c_tabla_pes(base, con_remanente=True))
+    p.box("SUPERFICIE REMANENTE Y LIBRE", sup)
+    p.box("SIMBOLOGÍA", c_simbologia)
+    p.box("NOTA METODOLÓGICA", lambda p, y: p.para(y, nota))
+    p.box("CARTUCHO TÉCNICO", c_cartucho("P02", esc_txt))
+    return 1.0 - p.y
+
+
+def render_panel(fig, fn):
+    """Dos pasadas: mide con sc=1 en un eje descartable y dibuja ajustado."""
+    tmp = fig.add_axes([0.663, 0.045, 0.305, 0.855])
+    tmp.axis("off")
+    total = fn(Panel(tmp, 1.0, draw=False))
+    fig.delaxes(tmp)
+    sc = min(1.0, 0.995 / total)
+    ax = fig.add_axes([0.663, 0.045, 0.305, 0.855])
+    ax.axis("off")
+    fn(Panel(ax, sc, draw=True))
+    return sc
 
 
 # ------------------------------------------------------------------ láminas --
+MAP_BOX = [0.032, 0.045, 0.615, 0.855]
+
+
+def _bbox(geom, factor):
+    fx0, fy0, fx1, fy1 = geom.bounds
+    cx, cy = (fx0 + fx1) / 2, (fy0 + fy1) / 2
+    w = max((fx1 - fx0) / (MAP_BOX[2] * 16.54 / (MAP_BOX[3] * 11.69)), fy1 - fy0) * factor
+    ratio = MAP_BOX[2] * 16.54 / (MAP_BOX[3] * 11.69)
+    return (cx - w * ratio / 2, cy - w / 2, cx + w * ratio / 2, cy + w / 2)
+
+
+def _decorar(ax, bbox):
+    ancho_m = bbox[2] - bbox[0]
+    esc = escala_real(MAP_BOX[2] * 16.54, ancho_m)
+    barra_escala(ax, bbox[0] + ancho_m * 0.045, bbox[1] + ancho_m * 0.05, ancho_m)
+    norte(ax, bbox[2] - ancho_m * 0.05, bbox[1] + ancho_m * 0.045, ancho_m * 0.055)
+    ax.set_xlabel("Este UTM 19S (m) – EPSG:32719", fontsize=5.8)
+    ax.set_ylabel("Norte UTM 19S (m) – EPSG:32719", fontsize=5.8)
+    return f"1:{round(esc / 100) * 100:,}".replace(",", ".") + " (A3)"
+
+
 def lamina_p01(lotes, base, faja, torres, caminos, cnt):
     fig = plt.figure(figsize=(16.54, 11.69))
     marco(fig, "PLANO PERICIAL DE AFECTACIÓN DIRECTA Y VISUAL",
           "Proyecto Valle Escondido / Fundo Hualañé  ·  Línea Eléctrica 1x220 kV Caone–Mataquito\n"
           "Hualañé – Región del Maule  ·  Folio " + FOLIO + "-P01")
-
-    ax = fig.add_axes([0.032, 0.045, 0.615, 0.855])
-    recl = unary_union([l["poly"] for l in lotes if l["rol"] == RECL])
-    fx0, fy0, fx1, fy1 = unary_union([recl, faja]).bounds
-    cx, cy = (fx0 + fx1) / 2, (fy0 + fy1) / 2
-    w = max(fx1 - fx0, fy1 - fy0) * 1.45
-    ratio = 0.615 * 16.54 / (0.855 * 11.69)
-    half_x, half_y = w * ratio / 2, w / 2
-    bbox = (cx - half_x, cy - half_y, cx + half_x, cy + half_y)
-    dibujar_mapa(ax, lotes, base, faja, torres, caminos, bbox,
+    ax = fig.add_axes(MAP_BOX)
+    universo = unary_union([l["poly"] for l in lotes])
+    bbox = _bbox(universo, 1.10)
+    win = Polygon([(bbox[0], bbox[1]), (bbox[2], bbox[1]), (bbox[2], bbox[3]), (bbox[0], bbox[3])])
+    dibujar_mapa(ax, lotes, base, faja.intersection(win), torres,
+                 [c.intersection(win) for c in caminos if c.intersects(win)], bbox,
                  etiquetas={(RECL, n) for n in PES})
-    ancho_m = bbox[2] - bbox[0]
-    esc = escala_real(0.615 * 16.54, ancho_m)
-    barra_escala(ax, bbox[0] + ancho_m * 0.04, bbox[1] + ancho_m * 0.045, ancho_m)
-    norte(ax, bbox[2] - ancho_m * 0.05, bbox[1] + ancho_m * 0.04, ancho_m * 0.06)
-    ax.set_xlabel("Este UTM 19S (m) – EPSG:32719", fontsize=5.8)
-    ax.set_ylabel("Norte UTM 19S (m) – EPSG:32719", fontsize=5.8)
-    esc_txt = f"1:{round(esc / 100) * 100:,}".replace(",", ".") + " (A3)"
-
-    p = fig.add_axes([0.663, 0.045, 0.305, 0.855])
-    p.axis("off")
-    y = 1.0
-    y = caja(p, y, 0.135, "CUADRO RESUMEN – AFECTACIÓN DIRECTA (PES OFICIAL)")
-    y = kv(p, y, "Superficie 14 lotes notificados", "76.700 m²")
-    y = kv(p, y, "Superficie PES notificada", "35.777 m²")
-    y = kv(p, y, "Afectación directa", "46,6 %", bold=True)
-    y = kv(p, y, "Longitud aproximada afectada", "1.198,33 m")
-    y = kv(p, y, "Ancho medio faja PES", "aprox. 29,86 m")
-    y = kv(p, y, "N° de lotes notificados", "14")
-    y = kv(p, y, "Tensión", "220 kV")
-    y -= 0.014
-
-    y = caja(p, y, 0.152, "LOTES NOTIFICADOS – SUPERFICIE / PES / % AFECTACIÓN")
-    p.text(0.02, y, "Lote", transform=p.transAxes, fontsize=5.2, fontweight="bold", va="top")
-    p.text(0.30, y, "Sup. m²", transform=p.transAxes, fontsize=5.2, fontweight="bold",
-           va="top", ha="right")
-    p.text(0.55, y, "PES m²", transform=p.transAxes, fontsize=5.2, fontweight="bold",
-           va="top", ha="right")
-    p.text(0.78, y, "% afect.", transform=p.transAxes, fontsize=5.2, fontweight="bold",
-           va="top", ha="right")
-    p.text(0.98, y, "Clase V5", transform=p.transAxes, fontsize=5.2, fontweight="bold",
-           va="top", ha="right")
-    y -= 0.0115
-    for n, (s, pes, pct) in sorted(PES.items(), key=lambda kv2: -kv2[1][2]):
-        cl = base[(RECL, n)]["clase"]
-        p.text(0.02, y, str(n), transform=p.transAxes, fontsize=5.2, va="top")
-        p.text(0.30, y, f"{s:,}".replace(",", "."), transform=p.transAxes, fontsize=5.2,
-               va="top", ha="right")
-        p.text(0.55, y, f"{pes:,}".replace(",", "."), transform=p.transAxes, fontsize=5.2,
-               va="top", ha="right")
-        p.text(0.78, y, f"{pct:.1f} %".replace(".", ","), transform=p.transAxes,
-               fontsize=5.2, va="top", ha="right")
-        p.text(0.98, y, cl, transform=p.transAxes, fontsize=5.2, va="top", ha="right")
-        y -= 0.0092
-    p.plot([0.02, 0.98], [y + 0.0055, y + 0.0055], transform=p.transAxes, color="black", lw=0.5)
-    y -= 0.001
-    p.text(0.02, y, "TOTAL (14 lotes)", transform=p.transAxes, fontsize=5.2,
-           fontweight="bold", va="top")
-    p.text(0.30, y, "76.700", transform=p.transAxes, fontsize=5.2, fontweight="bold",
-           va="top", ha="right")
-    p.text(0.55, y, "35.777", transform=p.transAxes, fontsize=5.2, fontweight="bold",
-           va="top", ha="right")
-    p.text(0.78, y, "46,6 %", transform=p.transAxes, fontsize=5.2, fontweight="bold",
-           va="top", ha="right")
-    y -= 0.024
-
-    y = caja(p, y, 0.086, "CONTROL DEL UNIVERSO VISUAL V5")
-    y = kv(p, y, "Planos / roles analizados", "9", dy=0.0125)
-    y = kv(p, y, "Lotes analizados", "754", dy=0.0125)
-    y = kv(p, y, "Superficie total analizada", "433,7 ha", dy=0.0125)
-    y = kv(p, y, "Estructuras georreferenciadas", "59", dy=0.0125)
-    y = kv(p, y, "V0 / V1 / V2 / V3 / V4",
-           f"{cnt['V0']} / {cnt['V1']} / {cnt['V2']} / {cnt['V3']} / {cnt['V4']}", dy=0.0125)
-    y = kv(p, y, "Suma de clases (control)",
-           f"{sum(cnt.values())} = 754 ✓", dy=0.0125, bold=True)
-    y -= 0.012
-
-    y = simbologia(p, y)
-
-    y = caja(p, y, 0.118, "OBSERVACIONES TÉCNICAS")
-    obs = [
-        "1. La lámina integra la afectación física de los Planos Especiales de\n"
-        "    Servidumbre con el análisis de exposición visual desarrollado en V5.",
-        "2. Para efectos de superficie jurídicamente afectada prevalecen los PES\n"
-        "    oficiales notificados (35.777 m² sobre 14 lotes).",
-        "3. La clasificación V0–V4 corresponde al modelo de dominancia/exposición\n"
-        "    visual V5 y no constituye por sí sola un porcentaje de depreciación.",
-        "4. La infraestructura aérea genera una zona de influencia visual que excede\n"
-        "    físicamente la superficie comprendida en la servidumbre.",
-        "5. La eventual depreciación comercial debe determinarse mediante evidencia\n"
-        "    de mercado y análisis pericial separado.",
-    ]
-    for t in obs:
-        y = parrafo(p, y, t, dy=0.0105)
-    y -= 0.012
-
-    y = caja(p, y, 0.062, "NOTA DE PREVALENCIA Y TRAZABILIDAD")
-    y = parrafo(p, y,
-                "Para efectos indemnizatorios prevalecen los Planos Especiales de\n"
-                "Servidumbre notificados. La reconstrucción GIS V5 se utiliza para\n"
-                "análisis espacial y visual. La reconstrucción GIS identifica 13 cruces\n"
-                "geométricos principales; la pretensión jurídica conserva los 14 lotes y\n"
-                "35.777 m² de los PES (el lote 62 registra 244 m² de faja en el PES, bajo\n"
-                "la tolerancia de la reconstrucción GIS). Diferencia informada expresamente.",
-                dy=0.0105)
-    y -= 0.010
-
-    y = caja(p, y, 0.040, "CONTEXTO TERRITORIAL (NOTA SECUNDARIA)")
-    y = parrafo(p, y,
-                "Se ha identificado la existencia de oposición local organizada respecto\n"
-                "de infraestructura de transmisión en el sector. Este antecedente se\n"
-                "incorpora sólo como contexto territorial y no constituye por sí mismo\n"
-                "prueba de depreciación económica. No se le asigna valor monetario.",
-                dy=0.0105)
-    y -= 0.012
-    cartucho(p, y, "P01", esc_txt)
-
+    esc_txt = _decorar(ax, bbox)
+    render_panel(fig, lambda p: panel_p01(p, base, cnt, esc_txt))
     fig.savefig(f"{OUT}/Lamina_Pericial_P01_Valle_Escondido_LT220_Caone.pdf")
     fig.savefig("/tmp/qa/P01.png", dpi=300)
     plt.close(fig)
@@ -463,84 +525,21 @@ def lamina_p02(lotes, base, faja, torres, caminos):
     marco(fig, "P-02 · DETALLE DE LOS 14 LOTES DIRECTAMENTE AFECTADOS",
           "Proyecto Valle Escondido / Fundo Hualañé  ·  Línea Eléctrica 1x220 kV Caone–Mataquito\n"
           "Hualañé – Región del Maule  ·  Folio " + FOLIO + "-P02")
-
-    ax = fig.add_axes([0.032, 0.045, 0.615, 0.855])
+    ax = fig.add_axes(MAP_BOX)
     sel = [l for l in lotes if l["rol"] == RECL and l["n"] in PES]
     u = unary_union([l["poly"] for l in sel])
-    fx0, fy0, fx1, fy1 = u.bounds
-    cx, cy = (fx0 + fx1) / 2, (fy0 + fy1) / 2
-    w = max(fx1 - fx0, fy1 - fy0) * 1.25
-    ratio = 0.615 * 16.54 / (0.855 * 11.69)
-    bbox = (cx - w * ratio / 2, cy - w / 2, cx + w * ratio / 2, cy + w / 2)
-    faja_loc = faja.intersection(u.buffer(220))
-    dibujar_mapa(ax, sel, base, faja_loc, torres, caminos, bbox,
+    bbox = _bbox(u, 1.22)
+    win = Polygon([(bbox[0], bbox[1]), (bbox[2], bbox[1]), (bbox[2], bbox[3]), (bbox[0], bbox[3])])
+    dibujar_mapa(ax, sel, base, faja.intersection(win), torres,
+                 [c.intersection(win) for c in caminos if c.intersects(win)], bbox,
                  etiquetas={(RECL, n) for n in PES}, label_pct=True)
-    ancho_m = bbox[2] - bbox[0]
-    esc = escala_real(0.615 * 16.54, ancho_m)
-    barra_escala(ax, bbox[0] + ancho_m * 0.04, bbox[1] + ancho_m * 0.045, ancho_m)
-    norte(ax, bbox[2] - ancho_m * 0.05, bbox[1] + ancho_m * 0.04, ancho_m * 0.06)
-    ax.set_xlabel("Este UTM 19S (m) – EPSG:32719", fontsize=5.8)
-    ax.set_ylabel("Norte UTM 19S (m) – EPSG:32719", fontsize=5.8)
-    esc_txt = f"1:{round(esc / 100) * 100:,}".replace(",", ".") + " (A3)"
-
-    p = fig.add_axes([0.663, 0.045, 0.305, 0.855])
-    p.axis("off")
-    y = 1.0
-    y = caja(p, y, 0.215, "CUADRO DE LOS 14 LOTES NOTIFICADOS")
-    cols = [("Lote", 0.02, "l"), ("Sup. m²", 0.235, "r"), ("PES m²", 0.42, "r"),
-            ("% af.", 0.575, "r"), ("Rem. m²", 0.755, "r"), ("Clase", 0.98, "r")]
-    for t, xx, al in cols:
-        p.text(xx, y, t, transform=p.transAxes, fontsize=5.2, fontweight="bold", va="top",
-               ha="left" if al == "l" else "right")
-    y -= 0.0125
-    for n, (s, pes, pct) in sorted(PES.items(), key=lambda kv2: -kv2[1][2]):
-        cl = base[(RECL, n)]["clase"]
-        destacado = n in (61, 60, 57, 56, 55)
-        fw = "bold" if destacado else "normal"
-        vals = [(str(n), 0.02, "l"), (f"{s:,}".replace(",", "."), 0.235, "r"),
-                (f"{pes:,}".replace(",", "."), 0.42, "r"),
-                (f"{pct:.1f}".replace(".", ",") + " %", 0.575, "r"),
-                (f"{s - pes:,}".replace(",", "."), 0.755, "r"), (cl, 0.98, "r")]
-        for t, xx, al in vals:
-            p.text(xx, y, t, transform=p.transAxes, fontsize=5.2, va="top",
-                   ha="left" if al == "l" else "right", fontweight=fw)
-        y -= 0.0105
-    p.plot([0.02, 0.98], [y + 0.006, y + 0.006], transform=p.transAxes, color="black", lw=0.5)
-    y -= 0.002
-    tot = [("TOTAL", 0.02, "l"), ("76.700", 0.235, "r"), ("35.777", 0.42, "r"),
-           ("46,6 %", 0.575, "r"), ("40.923", 0.755, "r"), ("—", 0.98, "r")]
-    for t, xx, al in tot:
-        p.text(xx, y, t, transform=p.transAxes, fontsize=5.2, va="top", fontweight="bold",
-               ha="left" if al == "l" else "right")
-    y -= 0.0135
-    y = parrafo(p, y, "En negrita los lotes 61, 60, 57, 56 y 55: mayor porcentaje de\n"
-                      "afectación física por la faja PES notificada.", dy=0.0105)
-    y -= 0.018
-
-    y = caja(p, y, 0.062, "SUPERFICIE REMANENTE Y LIBRE")
-    y = kv(p, y, "Superficie notificada total", "76.700 m²", dy=0.0135)
-    y = kv(p, y, "Superficie gravada por PES", "35.777 m²", dy=0.0135)
-    y = kv(p, y, "Superficie remanente libre", "40.923 m²", dy=0.0135, bold=True)
-    y -= 0.014
-
-    y = simbologia(p, y)
-
-    y = caja(p, y, 0.070, "NOTA")
-    y = parrafo(p, y,
-                "El hachurado representa la afectación física (faja PES). El color de\n"
-                "fondo del polígono representa la clase de exposición visual V5 (V0–V4).\n"
-                "Ambos conceptos son independientes y no deben sumarse ni contabilizarse\n"
-                "dos veces. Los porcentajes rotulados corresponden a los PES oficiales\n"
-                "notificados y no a la reconstrucción GIS.", dy=0.0105)
-    y -= 0.014
-    cartucho(p, y, "P02", esc_txt)
-
+    esc_txt = _decorar(ax, bbox)
+    render_panel(fig, lambda p: panel_p02(p, base, esc_txt))
     fig.savefig(f"{OUT}/Lamina_Pericial_P02_14_Lotes_Afectados_LT220_Caone.pdf")
     fig.savefig("/tmp/qa/P02.png", dpi=300)
     plt.close(fig)
 
 
-# ----------------------------------------------------------------- tablas --
 def exportar_tablas(lotes, base, faja):
     hdr = ["Rol", "Lote", "Superficie GIS m2", "Superficie PES oficial m2",
            "% afectacion PES", "IDV", "Clase V", "Dist. min. faja (m)",
