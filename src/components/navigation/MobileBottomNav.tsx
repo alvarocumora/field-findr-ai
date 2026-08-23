@@ -9,7 +9,7 @@ const navItems = [
   { path: '/favoritos', icon: Heart, label: 'Favoritos' },
   { path: '/explorar?search=true', icon: Search, label: 'Buscar', isCenter: true },
   { path: '/mi-terreno', icon: MapPin, label: 'Mi Terreno' },
-  { path: '/profile', icon: User, label: 'Perfil' },
+  { path: '/perfil', icon: User, label: 'Perfil' },
 ];
 
 const MobileBottomNav = () => {
