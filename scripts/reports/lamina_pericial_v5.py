@@ -544,33 +544,53 @@ def lamina_p02(lotes, base, faja, torres, caminos):
     marco(fig, "P-02 · DETALLE DE LOS 14 LOTES DIRECTAMENTE AFECTADOS",
           "Proyecto Valle Escondido / Fundo Hualañé  ·  Línea Eléctrica 1x220 kV Caone–Mataquito\n"
           "Hualañé – Región del Maule  ·  Folio " + FOLIO + "-P02")
-    ax = fig.add_axes(MAP_BOX)
     sel = [l for l in lotes if l["rol"] == RECL and l["n"] in PES]
     u0 = unary_union([l["poly"] for l in sel])
-    x0, y0, x1, y1 = u0.bounds
-    ang = 90.0 if (y1 - y0) > (x1 - x0) else 0.0
-    orig = u0.centroid
+    ang, orig = 90.0, u0.centroid
 
     def R(g):
         return shrotate(g, -ang, origin=orig)
 
     selr = [dict(l, poly=R(l["poly"])) for l in sel]
-    u = unary_union([l["poly"] for l in selr])
-    bbox = _bbox(u, 1.16)
-    win = Polygon([(bbox[0], bbox[1]), (bbox[2], bbox[1]), (bbox[2], bbox[3]), (bbox[0], bbox[3])])
-    fajar = R(faja).intersection(win)
-    caminosr = [g for g in (R(c).intersection(win) for c in caminos) if not g.is_empty]
     torresr = [(pt.x, pt.y) for pt in (R(Point(t)) for t in torres)]
-    dibujar_mapa(ax, selr, base, fajar, torresr, caminosr, bbox,
-                 etiquetas={(RECL, n) for n in PES}, label_pct=True, grid=False)
-    ax.set_xticks([])
-    ax.set_yticks([])
-    esc_txt = _decorar(ax, bbox, ang=ang, ejes=False)
-    ax.text(0.5, -0.018,
-            "Lámina girada 90° respecto del norte geográfico para ajustar la faja al formato de hoja. "
-            "Sistema UTM 19S – EPSG:32719; grilla de coordenadas omitida por la rotación "
-            "(coordenadas de centroide de cada lote en la tabla de respaldo).",
-            transform=ax.transAxes, ha="center", va="top", fontsize=5.4, color="#222222")
+
+    def vista(rect, lotes_v, factor, etiquetas, titulo):
+        ax = fig.add_axes(rect)
+        u = unary_union([l["poly"] for l in lotes_v])
+        fx0, fy0, fx1, fy1 = u.bounds
+        cx, cy = (fx0 + fx1) / 2, (fy0 + fy1) / 2
+        ratio = rect[2] * 16.54 / (rect[3] * 11.69)
+        h = max((fx1 - fx0) / ratio, fy1 - fy0) * factor
+        bbox = (cx - h * ratio / 2, cy - h / 2, cx + h * ratio / 2, cy + h / 2)
+        win = Polygon([(bbox[0], bbox[1]), (bbox[2], bbox[1]),
+                       (bbox[2], bbox[3]), (bbox[0], bbox[3])])
+        cam = [g for g in (R(c).intersection(win) for c in caminos) if not g.is_empty]
+        dibujar_mapa(ax, selr, base, R(faja).intersection(win), torresr, cam, bbox,
+                     etiquetas=etiquetas, label_pct=True, grid=False)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ancho_m = bbox[2] - bbox[0]
+        esc = escala_real(rect[2] * 16.54, ancho_m)
+        barra_escala(ax, bbox[0] + ancho_m * 0.035, bbox[1] + ancho_m * 0.055, ancho_m)
+        norte(ax, bbox[2] - ancho_m * 0.055, bbox[1] + ancho_m * 0.05, ancho_m * 0.05, ang)
+        ax.text(0.004, 1.012, titulo, transform=ax.transAxes, fontsize=7.0,
+                fontweight="bold", va="bottom")
+        ax.text(0.996, 1.012, f"Escala aprox. 1:{round(esc / 100) * 100:,}".replace(",", "."),
+                transform=ax.transAxes, fontsize=6.0, va="bottom", ha="right")
+        return f"1:{round(esc / 100) * 100:,}".replace(",", ".") + " (A3)"
+
+    esc_txt = vista([0.032, 0.615, 0.615, 0.255], selr, 1.10,
+                    {(RECL, n) for n in PES},
+                    "VISTA GENERAL · 14 LOTES NOTIFICADOS Y FAJA PES")
+    top5 = {(RECL, n) for n in (61, 60, 57, 56, 55)}
+    vista([0.032, 0.075, 0.615, 0.45],
+          [l for l in selr if (l["rol"], l["n"]) in top5], 1.18, top5,
+          "DETALLE · LOTES 61, 60, 57, 56 Y 55 (MAYOR AFECTACIÓN PES)")
+    fig.text(0.032 + 0.615 / 2, 0.048,
+             "Láminas giradas 90° respecto del norte geográfico para ajustar la faja al formato de hoja. "
+             "Sistema UTM 19S – EPSG:32719; grilla de coordenadas omitida por la rotación "
+             "(coordenadas de centroide de cada lote en la tabla de respaldo).",
+             ha="center", va="top", fontsize=5.6, color="#222222")
     render_panel(fig, lambda p: panel_p02(p, base, esc_txt))
     fig.savefig(f"{OUT}/Lamina_Pericial_P02_14_Lotes_Afectados_LT220_Caone.pdf")
     fig.savefig("/tmp/qa/P02.png", dpi=300)
