@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Map as MapIcon, Store, Loader2, ExternalLink, PenTool } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import LotMapView from './LotMapView';
+import { LotMapView } from './LotMapView';
 import { useBulkPublishLots } from '@/hooks/useBulkPublishLots';
 import { publishableLots } from '@/lib/marketplace/lotToListing';
 import type { Lot } from '@/hooks/useLots';
