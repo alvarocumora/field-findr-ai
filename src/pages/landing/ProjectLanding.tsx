@@ -66,7 +66,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
 
   // SEO único por proyecto + canónica histórica cuando existe.
   const seoTitle = project
-    ? `${(cfg.hero.title as string | undefined) ?? project.name} — ${stats.total || 'Lotes'} en venta`
+    ? `${(cfg.hero.title as string | undefined) ?? project.name}${stats.total ? ` — ${stats.total} lotes` : ''} en venta`
     : 'Proyecto de lotes';
   const seoDescription = project
     ? ((cfg.hero.subtitle as string | undefined) ??
