@@ -223,6 +223,15 @@ def dibujar_mapa(ax, lotes, base, faja, torres, caminos, bbox, etiquetas=None,
         s.set_color("black")
 
 
+def marco(fig, titulo, subt):
+    fig.patches.append(Rectangle((0.014, 0.014), 0.972, 0.972, transform=fig.transFigure,
+                                 facecolor="none", edgecolor="black", lw=1.1))
+    fig.patches.append(Rectangle((0.021, 0.021), 0.958, 0.958, transform=fig.transFigure,
+                                 facecolor="none", edgecolor="#777777", lw=0.5))
+    fig.text(0.032, 0.958, titulo, fontsize=13, fontweight="bold", va="center")
+    fig.text(0.032, 0.934, subt, fontsize=7.2, va="center", color="#222222", linespacing=1.4)
+
+
 # ------------------------------------------------------------ panel lateral --
 class Panel:
     """Panel técnico con cajas de altura adaptativa (dos pasadas: medir y dibujar)."""
