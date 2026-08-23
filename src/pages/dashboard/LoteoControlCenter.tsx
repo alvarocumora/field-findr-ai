@@ -44,6 +44,7 @@ import { useAgentCommissions, useMarkCommissionPaid } from '@/hooks/useAgentComm
 import ConvertToSaleDialog from '@/components/reservations/ConvertToSaleDialog';
 import LotQuoteDialog from '@/components/lots/LotQuoteDialog';
 import BulkPriceAdjustDialog from '@/components/lots/BulkPriceAdjustDialog';
+import LoteoPlanPublishCard from '@/components/lots/LoteoPlanPublishCard';
 import type { Lot } from '@/hooks/useLots';
 import { Percent } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -433,6 +434,15 @@ const LoteoControlCenter = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Plano + publicación al marketplace */}
+      <LoteoPlanPublishCard
+        project={activeProject}
+        lots={lots}
+        onLotClick={(lot) => setQuoteLot(lot)}
+      />
+
+
 
       {/* Commissions */}
       <Card className="border-border/40">
