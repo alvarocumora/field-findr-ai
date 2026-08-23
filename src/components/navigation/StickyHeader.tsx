@@ -46,20 +46,21 @@ const StickyHeader = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Tres puertas de entrada: Explorar (comprar), Vender, Comunidad.
   const publicNavigation = [
-    { name: 'Buscar Terrenos', href: '/explorar' },
+    { name: 'Explorar', href: '/explorar' },
     { name: 'Oportunidades', href: '/oportunidades' },
-    { name: 'Publicar', href: '/auth?role=agent&redirect=/publicar' },
-    { name: 'Corredores', href: '/pricing' },
+    { name: 'Vender', href: '/auth?role=agent&redirect=/publicar' },
+    { name: 'Comunidad', href: '/comunidad' },
+    { name: 'Planes', href: '/pricing' },
     { name: 'Planes Loteos', href: '/planes-loteos', badge: 'B2B' },
-    { name: 'Blog', href: '/blog' },
   ];
 
   // Contextual nav items based on role.
   // Admin access is intentionally NOT surfaced in the public top nav —
   // it lives in the personal avatar dropdown and the footer only.
   const roleNavigation = isAgent
-    ? [{ name: 'Mi Dashboard', href: '/asesor/dashboard' }]
+    ? [{ name: 'Mi Panel', href: '/panel' }]
     : user && !isAdmin
       ? [{ name: 'Mi Terreno', href: '/mi-terreno' }]
       : [];
