@@ -91,6 +91,7 @@ const BrokerSignup = lazy(() => import("@/pages/brokers/BrokerSignup"));
 const BrokerRanking = lazy(() => import("@/pages/brokers/BrokerRanking"));
 const BrokerShowcase = lazy(() => import("@/pages/brokers/BrokerShowcase"));
 const Comunidad = lazy(() => import("@/pages/Comunidad"));
+const Comenzar = lazy(() => import("@/pages/Comenzar"));
 const Panel = lazy(() => import("@/pages/Panel"));
 
 // Landings de proyecto (SEO vivo: URLs congeladas)
