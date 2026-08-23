@@ -106,6 +106,11 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://ofertaterrenos.com/comunidad</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://ofertaterrenos.com/ayuda</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
