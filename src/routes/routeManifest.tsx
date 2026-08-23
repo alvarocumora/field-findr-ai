@@ -181,7 +181,7 @@ const pub = (
   id: string,
   path: string,
   element: ReactNode,
-  opts: { indexable?: boolean; nav?: NavMeta } = {},
+  opts: { indexable?: boolean; nav?: NavMeta; seo?: RouteSeo } = {},
 ): RouteEntry => ({
   id,
   path,
@@ -193,6 +193,7 @@ const pub = (
   element,
   indexable: opts.indexable ?? true,
   nav: opts.nav,
+  seo: opts.seo,
 });
 
 const buyer = (id: string, path: string, element: ReactNode, nav?: NavMeta): RouteEntry => ({
