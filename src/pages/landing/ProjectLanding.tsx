@@ -63,24 +63,39 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
   const cfg = useMemo(() => parseLandingConfig(project?.landing_config), [project?.landing_config]);
   const stats = useMemo(() => summarizeLots(lots), [lots]);
 
-  // Canónica única por proyecto: la URL histórica manda cuando existe.
-  useEffect(() => {
-    if (!slug) return;
-    const href = `${window.location.origin}${canonicalPathForSlug(slug)}`;
-    let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    const created = !link;
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'canonical';
-      document.head.appendChild(link);
-    }
-    const prev = link.href;
-    link.href = href;
-    return () => {
-      if (created) link!.remove();
-      else link!.href = prev;
-    };
-  }, [slug]);
+  // SEO único por proyecto + canónica histórica cuando existe.
+  const seoTitle = project
+    ? `${(cfg.hero.title as string | undefined) ?? project.name} — ${stats.total || 'Lotes'} en venta`
+    : 'Proyecto de lotes';
+  const seoDescription = project
+    ? ((cfg.hero.subtitle as string | undefined) ??
+        (project.description as string | null) ??
+        `Lotes en venta en ${[project.location, project.region].filter(Boolean).join(', ')}. Plano, precios y disponibilidad en línea.`
+      ).slice(0, 155)
+    : undefined;
+
+  useSEO({
+    title: seoTitle,
+    description: seoDescription,
+    type: 'website',
+    url: slug ? `https://ofertaterrenos.com${canonicalPathForSlug(slug)}` : undefined,
+    canonicalUrl: slug ? `https://ofertaterrenos.com${canonicalPathForSlug(slug)}` : undefined,
+    image: (cfg.hero.image as string | undefined) ??
+      ((Array.isArray(project?.images) ? (project?.images as string[])[0] : undefined) || undefined),
+    jsonLd: project
+      ? buildProjectJsonLd({
+          id: project.id,
+          name: project.name,
+          description: (project.description as string | null) ?? null,
+          city: (project.location as string | null) ?? null,
+          region: (project.region as string | null) ?? null,
+          images: Array.isArray(project.images) ? (project.images as string[]) : null,
+          total_lots: stats.total || null,
+          available_lots: stats.available || null,
+        })
+      : undefined,
+  });
+
 
   if (Bespoke) {
     return (
