@@ -579,14 +579,18 @@ def lamina_p02(lotes, base, faja, torres, caminos):
                 transform=ax.transAxes, fontsize=6.0, va="bottom", ha="right")
         return f"1:{round(esc / 100) * 100:,}".replace(",", ".") + " (A3)"
 
-    esc_txt = vista([0.032, 0.615, 0.615, 0.255], selr, 1.10,
+    esc_txt = vista([0.032, 0.610, 0.615, 0.265], selr, 1.10,
                     {(RECL, n) for n in PES},
                     "VISTA GENERAL · 14 LOTES NOTIFICADOS Y FAJA PES")
-    top5 = {(RECL, n) for n in (61, 60, 57, 56, 55)}
-    vista([0.032, 0.075, 0.615, 0.45],
-          [l for l in selr if (l["rol"], l["n"]) in top5], 1.18, top5,
-          "DETALLE · LOTES 61, 60, 57, 56 Y 55 (MAYOR AFECTACIÓN PES)")
-    fig.text(0.032 + 0.615 / 2, 0.048,
+    gA = {(RECL, n) for n in (61, 60, 62)}
+    gB = {(RECL, n) for n in (57, 56, 55)}
+    vista([0.032, 0.095, 0.295, 0.435],
+          [l for l in selr if (l["rol"], l["n"]) in gA], 1.14, gA,
+          "DETALLE A · LOTES 61, 60 Y 62")
+    vista([0.352, 0.095, 0.295, 0.435],
+          [l for l in selr if (l["rol"], l["n"]) in gB], 1.14, gB,
+          "DETALLE B · LOTES 57, 56 Y 55")
+    fig.text(0.032 + 0.615 / 2, 0.068,
              "Láminas giradas 90° respecto del norte geográfico para ajustar la faja al formato de hoja. "
              "Sistema UTM 19S – EPSG:32719; grilla de coordenadas omitida por la rotación "
              "(coordenadas de centroide de cada lote en la tabla de respaldo).",
