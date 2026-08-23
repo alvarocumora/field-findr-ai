@@ -183,7 +183,7 @@ def dibujar_mapa(ax, lotes, base, faja, torres, caminos, bbox, etiquetas=None,
         for g in geoms:
             ax.plot(*g.exterior.xy, color="black", lw=0.9, zorder=4)
     # faja PES (hachurado)
-    fg = faja.geoms if faja.geom_type == "MultiPolygon" else [faja]
+    fg = [g for g in getattr(faja, "geoms", [faja]) if g.geom_type == "Polygon"]
     for g in fg:
         ax.add_patch(MplPoly(list(g.exterior.coords), closed=True, facecolor="none",
                              edgecolor="#b00020", lw=0.7, hatch="////", zorder=5))
@@ -191,7 +191,12 @@ def dibujar_mapa(ax, lotes, base, faja, torres, caminos, bbox, etiquetas=None,
                              alpha=0.10, edgecolor="none", zorder=3))
     # caminos
     for c in caminos:
-        ax.plot(*c.xy, color="#7a6a55", lw=0.6, zorder=4)
+        parts = list(getattr(c, "geoms", [c]))
+        for g in parts:
+            if g.geom_type == "LineString" and not g.is_empty:
+                ax.plot(*g.xy, color="#7a6a55", lw=0.6, zorder=4)
+            elif g.geom_type == "Polygon":
+                ax.plot(*g.exterior.xy, color="#7a6a55", lw=0.6, zorder=4)
     # eje LT + torres
     eje = LineString(sorted(torres, key=lambda t: (t[0], t[1])))
     ax.plot(*eje.xy, color="#8b005d", lw=0.8, ls=(0, (6, 3)), zorder=6)
