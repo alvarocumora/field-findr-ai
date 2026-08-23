@@ -22,10 +22,13 @@ const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
  * por projects.landing_config. Reemplaza el patrón de landings hardcodeadas
  * por proyecto, cuyos datos divergían de la plataforma.
  */
-const ProjectLanding = () => {
-  const { slug } = useParams<{ slug: string }>();
+const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
+  const params = useParams<{ slug: string }>();
+  const slug = slugProp ?? params.slug;
+  const Bespoke = slug ? bespokeLandings[slug] : undefined;
   const [leadLot, setLeadLot] = useState<{ id: string; lot_number?: string | null } | null>(null);
   const [leadOpen, setLeadOpen] = useState(false);
+
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['landing-project', slug],
