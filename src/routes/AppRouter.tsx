@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import NotFound from "@/pages/NotFound";
 import RootErrorBoundary from "@/components/RootErrorBoundary";
 import RouteGuard from "./RouteGuard";
+import RouteSeo from "./RouteSeo";
 import { PageLoader } from "./routeUtils";
 import {
   routeAliases,
@@ -28,6 +29,7 @@ const groups = routeManifest.reduce<Record<GroupKey, RouteEntry[]>>((acc, entry)
 const AppRouter = () => (
   <BrowserRouter>
     <RootErrorBoundary>
+      <RouteSeo />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {Object.entries(groups).map(([key, entries]) => {
