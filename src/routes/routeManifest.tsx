@@ -90,6 +90,8 @@ const BrokersLanding = lazy(() => import("@/pages/brokers/BrokersLanding"));
 const BrokerSignup = lazy(() => import("@/pages/brokers/BrokerSignup"));
 const BrokerRanking = lazy(() => import("@/pages/brokers/BrokerRanking"));
 const BrokerShowcase = lazy(() => import("@/pages/brokers/BrokerShowcase"));
+const Comunidad = lazy(() => import("@/pages/Comunidad"));
+const Panel = lazy(() => import("@/pages/Panel"));
 
 // Landings de proyecto (SEO vivo: URLs congeladas)
 const ForestalLanding = lazy(() => import("@/pages/forestal/ForestalLanding"));
