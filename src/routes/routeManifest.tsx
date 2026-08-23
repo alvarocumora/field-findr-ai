@@ -440,6 +440,7 @@ export const routeAliases: RouteAlias[] = [
   { from: "/soporte", to: "/ayuda" },
   // Herramientas unificadas
   { from: "/calculators", to: "/tools" },
+  { from: "/roi-calculator", to: "/tools" },
   { from: "/price-predictor", to: "/tools" },
   { from: "/risk-analysis", to: "/tools" },
   { from: "/ai-recommendations", to: "/tools" },
