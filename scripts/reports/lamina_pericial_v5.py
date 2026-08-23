@@ -149,6 +149,9 @@ def barra_escala(ax, x0, y0, ancho_m):
     for cand in (25, 50, 100, 200, 250, 500, 1000, 2000):
         if cand * 4 <= ancho_m * 0.32:
             paso = cand
+    ax.add_patch(Rectangle((x0 - paso * 0.35, y0 - ancho_m * 0.030),
+                           paso * 4.7, ancho_m * 0.062,
+                           facecolor="white", alpha=0.88, edgecolor="none", zorder=7))
     for i in range(4):
         ax.add_patch(Rectangle((x0 + i * paso, y0), paso, ancho_m * 0.006,
                                facecolor="black" if i % 2 == 0 else "white",
@@ -157,6 +160,7 @@ def barra_escala(ax, x0, y0, ancho_m):
         ax.text(x0 + i * paso, y0 - ancho_m * 0.012, f"{i * paso:,}".replace(",", "."),
                 ha="center", va="top", fontsize=5.5, zorder=8)
     ax.text(x0 + 2 * paso, y0 + ancho_m * 0.016, "metros", ha="center", fontsize=5.5, zorder=8)
+
 
 
 def norte(ax, x, y, h, ang=0.0):
