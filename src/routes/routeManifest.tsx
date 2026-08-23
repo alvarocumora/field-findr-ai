@@ -233,29 +233,110 @@ const admin = (id: string, path: string, element: ReactNode, nav?: NavMeta): Rou
 export const publicRouteEntries: RouteEntry[] = [
   pub("home", "/", <Index />, { nav: { label: "Inicio", group: "principal" } }),
   pub("auth", "/auth", <Auth />, { indexable: false }),
-  pub("explorar", "/explorar", <Explorar />, { nav: { label: "Explorar", group: "principal" } }),
+  pub("explorar", "/explorar", <Explorar />, {
+    nav: { label: "Explorar", group: "principal" },
+    seo: {
+      title: "Explorar terrenos y parcelas en venta | Oferta Terrenos",
+      description:
+        "Busca terrenos, parcelas y loteos en venta con mapa, filtros por superficie, precio y servicios. Fichas verificadas en Chile y LATAM.",
+    },
+  }),
   pub("propiedad", "/propiedad/:id", <PropertyDetail />),
   pub("proyecto", "/proyecto/:id", <ProjectDetail />),
   pub("proyecto-experiencia", "/proyecto/:id/experiencia", <ProjectExperience />),
-  pub("pricing", "/pricing", <Pricing />, { nav: { label: "Planes", group: "principal" } }),
-  pub("planes-loteos", "/planes-loteos", <PricingLoteos />),
-  pub("contacto-loteos", "/contacto-loteos", <ContactLoteos />),
-  pub("para-corredoras", "/para-corredoras", <CorredorasLanding />),
-  pub("para-inmobiliarias", "/para-inmobiliarias", <InmobiliariasLanding />),
-  pub("tools", "/tools", <Tools />, { nav: { label: "Herramientas", group: "principal" } }),
-  pub("search", "/search", <IntelligentSearch />),
+  pub("pricing", "/pricing", <Pricing />, {
+    nav: { label: "Planes", group: "principal" },
+    seo: {
+      title: "Planes y precios para publicar terrenos | Oferta Terrenos",
+      description:
+        "Compara los planes de Oferta Terrenos: publicaciones, herramientas de gestión de loteos, CRM y comisiones para corredores e inmobiliarias.",
+    },
+  }),
+  pub("planes-loteos", "/planes-loteos", <PricingLoteos />, {
+    seo: {
+      title: "Planes para loteos y parcelaciones | Oferta Terrenos",
+      description:
+        "Software y vitrina para vender loteos: gestión de parcelas, reservas, contratos y comisiones. Precios por tamaño de proyecto.",
+    },
+  }),
+  pub("contacto-loteos", "/contacto-loteos", <ContactLoteos />, {
+    seo: {
+      title: "Contacto para proyectos de loteo | Oferta Terrenos",
+      description:
+        "Cuéntanos de tu loteo o parcelación y te mostramos cómo publicarlo, gestionarlo y venderlo con Oferta Terrenos.",
+    },
+  }),
+  pub("para-corredoras", "/para-corredoras", <CorredorasLanding />, {
+    seo: {
+      title: "Oferta Terrenos para corredoras de propiedades",
+      description:
+        "Publica tu cartera de terrenos, capta leads calificados y gestiona comisiones y referidos desde un solo panel.",
+    },
+  }),
+  pub("para-inmobiliarias", "/para-inmobiliarias", <InmobiliariasLanding />, {
+    seo: {
+      title: "Oferta Terrenos para inmobiliarias y loteadoras",
+      description:
+        "Gestiona proyectos, inventario de parcelas, reservas y equipo de ventas con landings propias y reportes en tiempo real.",
+    },
+  }),
+  pub("tools", "/tools", <Tools />, {
+    nav: { label: "Herramientas", group: "principal" },
+    seo: {
+      title: "Calculadoras y herramientas de terrenos | Oferta Terrenos",
+      description:
+        "Calculadora de ROI, simulador de crédito, estimador de subdivisión y análisis de riesgo para invertir en terrenos.",
+    },
+  }),
+  pub("search", "/search", <IntelligentSearch />, {
+    seo: {
+      title: "Búsqueda inteligente de terrenos | Oferta Terrenos",
+      description:
+        "Describe el terreno que buscas en lenguaje natural y la búsqueda inteligente filtra por zona, superficie, precio y uso.",
+    },
+  }),
   pub("demo-visual-scenarios", "/demo/visual-scenarios", <VisualScenariosDemo />, { indexable: false }),
-  pub("instalar", "/instalar", <Install />),
-  pub("referidos", "/referidos", <Referrals />),
+  pub("instalar", "/instalar", <Install />, {
+    seo: {
+      title: "Instalar la app de Oferta Terrenos",
+      description:
+        "Instala Oferta Terrenos en tu teléfono para explorar terrenos con mapas offline, alertas y acceso rápido a tu panel.",
+    },
+  }),
+  pub("referidos", "/referidos", <Referrals />, {
+    seo: {
+      title: "Programa de referidos | Oferta Terrenos",
+      description:
+        "Invita brokers y compradores con tu código y gana recompensas y comisiones de override por cada venta atribuida.",
+    },
+  }),
   pub("region", "/region/:slug", <RegionLanding />),
   pub("pais", "/pais/:code", <CountryLanding />),
   pub("ciudad", "/ciudad/:slug", <CityLanding />),
   pub("contacto", "/contacto", <Contact />, { nav: { label: "Contacto", group: "principal" } }),
-  pub("comparar", "/comparar", <Comparar />),
-  pub("alertas", "/alertas", <Alertas />),
+  pub("comparar", "/comparar", <Comparar />, {
+    seo: {
+      title: "Comparar terrenos lado a lado | Oferta Terrenos",
+      description:
+        "Compara precio, superficie, valor por m², servicios y ubicación de varios terrenos antes de decidir tu compra.",
+    },
+  }),
+  pub("alertas", "/alertas", <Alertas />, {
+    seo: {
+      title: "Alertas de terrenos y bajadas de precio | Oferta Terrenos",
+      description:
+        "Guarda tus búsquedas y recibe avisos cuando aparezca un terreno que calce contigo o baje de precio.",
+    },
+  }),
   pub("blog", "/blog", <Blog />),
   pub("oportunidades", "/oportunidades", <Oportunidades />),
-  pub("quiz", "/quiz", <BuyerQuiz />),
+  pub("quiz", "/quiz", <BuyerQuiz />, {
+    seo: {
+      title: "Test: encuentra tu terreno ideal | Oferta Terrenos",
+      description:
+        "Responde unas preguntas sobre uso, presupuesto y zona y te mostramos los terrenos con mayor porcentaje de match.",
+    },
+  }),
   pub("reset-password", "/reset-password", <ResetPassword />, { indexable: false }),
   pub("subscription-success", "/subscription/success", <SubscriptionSuccess />, { indexable: false }),
   pub("subscription-failure", "/subscription/failure", <SubscriptionFailure />, { indexable: false }),
