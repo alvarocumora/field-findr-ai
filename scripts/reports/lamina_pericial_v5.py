@@ -143,12 +143,10 @@ def escala_real(ax_w_in, ancho_m):
 
 def barra_escala(ax, x0, y0, ancho_m):
     """Barra de escala gráfica en unidades de terreno."""
-    for cand in (100, 200, 250, 500, 1000, 2000):
-        if ancho_m / cand <= 6:
+    paso = 100
+    for cand in (25, 50, 100, 200, 250, 500, 1000, 2000):
+        if cand * 4 <= ancho_m * 0.32:
             paso = cand
-            break
-    else:
-        paso = 2000
     for i in range(4):
         ax.add_patch(Rectangle((x0 + i * paso, y0), paso, ancho_m * 0.006,
                                facecolor="black" if i % 2 == 0 else "white",
@@ -211,8 +209,9 @@ def dibujar_mapa(ax, lotes, base, faja, torres, caminos, bbox, etiquetas=None,
             txt = str(l["n"])
             if label_pct:
                 txt = f"{l['n']}\n{PES[l['n']][2]:.1f}%".replace(".", ",")
-            ax.text(c.x, c.y, txt, ha="center", va="center", fontsize=5.2,
-                    color="black", zorder=9, linespacing=1.1)
+            ax.text(c.x, c.y, txt, ha="center", va="center", fontsize=4.6,
+                    color="black", zorder=9, linespacing=1.1,
+                    bbox=dict(boxstyle="square,pad=0.08", fc="white", ec="none", alpha=0.75))
     ax.set_xlim(x0, x1)
     ax.set_ylim(y0, y1)
     ax.set_aspect("equal")
@@ -267,6 +266,7 @@ class Panel:
         return y - 0.0092 * self.sc * (txt.count("\n") + 1)
 
     def rule(self, y):
+        y -= 0.003 * self.sc
         if self.draw:
             self.ax.plot([0.02, 0.98], [y + 0.004, y + 0.004], transform=self.ax.transAxes,
                          color="black", lw=0.5)
@@ -359,7 +359,7 @@ def c_cartucho(lamina, escala_txt):
         for k, v in campos:
             p._t(0.02, y, k, 5.0, color="#333333")
             p._t(0.34, y, v, 5.2)
-            y -= 0.0105 * p.sc * (v.count("\n") + 1)
+            y -= 0.0115 * p.sc * (v.count("\n") + 1)
         return y
     return fn
 
