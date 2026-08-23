@@ -78,7 +78,7 @@ const StickyHeader = () => {
     }
 
     if (isAgent || isAdmin) {
-      items.push({ label: 'Mi Dashboard', href: '/asesor/dashboard', icon: LayoutDashboard });
+      items.push({ label: 'Mi Panel', href: '/panel', icon: LayoutDashboard });
       items.push({ label: 'Mis Propiedades', href: '/asesor/listings', icon: Building2 });
     }
 
@@ -87,7 +87,7 @@ const StickyHeader = () => {
       items.push({ label: 'Mis Favoritos', href: '/favoritos', icon: Heart });
     }
 
-    items.push({ label: 'Configuración', href: '/profile', icon: Settings });
+    items.push({ label: 'Configuración', href: '/perfil', icon: Settings });
     return items;
   };
 
