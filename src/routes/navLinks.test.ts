@@ -70,3 +70,41 @@ describe('links estáticos de navegación', () => {
     });
   }
 });
+
+/** Barrido global: ningún archivo de `src` puede apuntar a una ruta inexistente. */
+describe('links estáticos en todo src', () => {
+  const walk = (dir: string): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+      const full = join(dir, e.name);
+      if (e.isDirectory()) return e.name === 'node_modules' ? [] : walk(full);
+      return /\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name) ? [full] : [];
+    });
+
+  it('no hay destinos internos rotos', () => {
+    const broken = new Map<string, Set<string>>();
+    for (const file of walk(SRC)) {
+      const src = readFileSync(file, 'utf-8');
+      const patterns = [
+        /\bto="(\/[^"]*)"/g,
+        /\bto=\{'(\/[^']*)'\}/g,
+        /navigate\('(\/[^']*)'/g,
+        /\bhref="(\/[^"]*)"/g,
+        /\bhref:\s*'(\/[^']*)'/g,
+        /\broute:\s*'(\/[^']*)'/g,
+      ];
+      for (const re of patterns) {
+        for (const m of src.matchAll(re)) {
+          const path = m[1].split(/[?#]/)[0];
+          if (path === '/' || path.startsWith('//')) continue;
+          if (routeExists(path)) continue;
+          const entry = broken.get(path) ?? new Set<string>();
+          entry.add(file.replace(SRC, 'src'));
+          broken.set(path, entry);
+        }
+      }
+    }
+    const report = [...broken].map(([p, files]) => `${p} (${[...files].join(', ')})`);
+    expect(report, `links rotos:\n${report.join('\n')}`).toEqual([]);
+  });
+});
+
