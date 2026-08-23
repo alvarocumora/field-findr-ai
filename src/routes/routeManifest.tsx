@@ -267,6 +267,7 @@ export const publicRouteEntries: RouteEntry[] = [
   pub("brokers-ranking", "/brokers/ranking", <BrokerRanking />),
   pub("broker-showcase", "/b/:slug", <BrokerShowcase />),
   pub("comunidad", "/comunidad", <Comunidad />, { nav: { label: "Comunidad", group: "principal" } }),
+  pub("comenzar", "/comenzar", <Comenzar />, { nav: { label: "Comenzar", group: "principal" } }),
   pub("ayuda", "/ayuda", <HelpCenter />, { nav: { label: "Ayuda", group: "soporte" } }),
 ];
 

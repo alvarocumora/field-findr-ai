@@ -50,7 +50,7 @@ const StickyHeader = () => {
   const publicNavigation = [
     { name: 'Explorar', href: '/explorar' },
     { name: 'Oportunidades', href: '/oportunidades' },
-    { name: 'Vender', href: '/auth?role=agent&redirect=/publicar' },
+    { name: 'Vender', href: '/comenzar' },
     { name: 'Comunidad', href: '/comunidad' },
     { name: 'Planes', href: '/pricing' },
     { name: 'Planes Loteos', href: '/planes-loteos', badge: 'B2B' },
