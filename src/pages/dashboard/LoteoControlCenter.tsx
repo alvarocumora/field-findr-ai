@@ -434,6 +434,15 @@ const LoteoControlCenter = () => {
         </CardContent>
       </Card>
 
+      {/* Plano + publicación al marketplace */}
+      <LoteoPlanPublishCard
+        project={activeProject}
+        lots={lots}
+        onLotClick={(lot) => setQuoteLot(lot)}
+      />
+
+
+
       {/* Commissions */}
       <Card className="border-border/40">
         <CardHeader className="pb-3">
