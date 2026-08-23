@@ -95,11 +95,7 @@ const Comenzar = lazy(() => import("@/pages/Comenzar"));
 const Panel = lazy(() => import("@/pages/Panel"));
 
 // Landings de proyecto (SEO vivo: URLs congeladas)
-const ForestalLanding = lazy(() => import("@/pages/forestal/ForestalLanding"));
 const InvestorsLogin = lazy(() => import("@/pages/forestal/InvestorsLogin"));
-const HuellelhueLanding = lazy(() => import("@/pages/huellelhue/HuellelhueLanding"));
-const PlayaAlvaroLanding = lazy(() => import("@/pages/playaAlvaro/PlayaAlvaroLanding"));
-const ExploraParkLanding = lazy(() => import("@/pages/exploraPark/ExploraParkLanding"));
 const IslaDeMaipoDossier = lazy(() => import("@/pages/dossier/IslaDeMaipoDossier"));
 const ProjectLanding = lazy(() => import("@/pages/landing/ProjectLanding"));
 
@@ -273,11 +269,13 @@ export const publicRouteEntries: RouteEntry[] = [
 
 /** Landings de proyecto: URLs congeladas por SEO, agrupadas para no ser casos sueltos. */
 export const projectLandingEntries: RouteEntry[] = [
-  pub("forestal-landing", "/forestal-valle-escondido", <ForestalLanding />),
+  // Todas pasan por el motor único (`ProjectLanding`); el slug decide si se
+  // renderiza la experiencia a medida o la landing por configuración.
+  pub("forestal-landing", "/forestal-valle-escondido", <ProjectLanding slug="forestal-valle-escondido" />),
   pub("forestal-investors", "/forestal-valle-escondido/investors", <InvestorsLogin />, { indexable: false }),
-  pub("huellelhue", "/huellelhue", <HuellelhueLanding />),
-  pub("playa-alvaro", "/playa-alvaro", <PlayaAlvaroLanding />),
-  pub("explora-park", "/explora-park", <ExploraParkLanding />),
+  pub("huellelhue", "/huellelhue", <ProjectLanding slug="huellelhue" />),
+  pub("playa-alvaro", "/playa-alvaro", <ProjectLanding slug="playa-alvaro" />),
+  pub("explora-park", "/explora-park", <ProjectLanding slug="explora-park" />),
   pub("dossier-isla-maipo", "/ficha/isla-de-maipo-galvez-1458", <IslaDeMaipoDossier />, {
     indexable: false,
   }),
