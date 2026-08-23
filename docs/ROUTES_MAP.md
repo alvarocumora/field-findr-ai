@@ -3,7 +3,7 @@
 > Archivo generado automáticamente por `scripts/generate-routes-map.ts`.
 > Fuente de verdad: `src/routes/routeManifest.tsx`. No editar a mano.
 
-Total de rutas: **117** · alias/redirects: **39**
+Total de rutas: **117** · alias/redirects: **40**
 
 ## Público
 
@@ -166,6 +166,7 @@ Total de rutas: **117** · alias/redirects: **39**
 | `/help` | `/ayuda` |
 | `/soporte` | `/ayuda` |
 | `/calculators` | `/tools` |
+| `/roi-calculator` | `/tools` |
 | `/price-predictor` | `/tools` |
 | `/risk-analysis` | `/tools` |
 | `/ai-recommendations` | `/tools` |
