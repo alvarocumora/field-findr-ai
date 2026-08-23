@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -13,6 +13,7 @@ import { LotMapView } from '@/components/lots/LotMapView';
 import { supabase } from '@/integrations/supabase/client';
 import { parseLandingConfig, summarizeLots } from '@/lib/landing/config';
 import { LandingLeadForm } from './LandingLeadForm';
+import { bespokeLandings, canonicalPathForSlug } from '@/lib/landing/registry';
 
 const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
 
@@ -22,10 +23,13 @@ const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
  * por projects.landing_config. Reemplaza el patrón de landings hardcodeadas
  * por proyecto, cuyos datos divergían de la plataforma.
  */
-const ProjectLanding = () => {
-  const { slug } = useParams<{ slug: string }>();
+const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
+  const params = useParams<{ slug: string }>();
+  const slug = slugProp ?? params.slug;
+  const Bespoke = slug ? bespokeLandings[slug] : undefined;
   const [leadLot, setLeadLot] = useState<{ id: string; lot_number?: string | null } | null>(null);
   const [leadOpen, setLeadOpen] = useState(false);
+
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['landing-project', slug],
@@ -40,7 +44,7 @@ const ProjectLanding = () => {
         id: string; user_id: string; name: string;
       }) | null;
     },
-    enabled: !!slug,
+    enabled: !!slug && !Bespoke,
   });
 
   const { data: lots = [] } = useQuery({
@@ -53,11 +57,38 @@ const ProjectLanding = () => {
         area: number | null; price: number | null;
       }>;
     },
-    enabled: !!project?.id,
+    enabled: !!project?.id && !Bespoke,
   });
 
   const cfg = useMemo(() => parseLandingConfig(project?.landing_config), [project?.landing_config]);
   const stats = useMemo(() => summarizeLots(lots), [lots]);
+
+  // Canónica única por proyecto: la URL histórica manda cuando existe.
+  useEffect(() => {
+    if (!slug) return;
+    const href = `${window.location.origin}${canonicalPathForSlug(slug)}`;
+    let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    const created = !link;
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'canonical';
+      document.head.appendChild(link);
+    }
+    const prev = link.href;
+    link.href = href;
+    return () => {
+      if (created) link!.remove();
+      else link!.href = prev;
+    };
+  }, [slug]);
+
+  if (Bespoke) {
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-background" />}>
+        <Bespoke />
+      </Suspense>
+    );
+  }
 
   if (projectLoading) {
     return (
