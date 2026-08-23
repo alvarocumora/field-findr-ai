@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { parseLandingConfig, summarizeLots } from '@/lib/landing/config';
 import { LandingLeadForm } from './LandingLeadForm';
 import { bespokeLandings, canonicalPathForSlug } from '@/lib/landing/registry';
+import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
 
 const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
 
