@@ -11,6 +11,7 @@ Salidas: PDF A3 apaisado vectorial, PNG 300 dpi y tabla XLSX/CSV/GeoJSON.
 """
 import csv
 import json
+import math
 import os
 import re
 import zipfile
@@ -23,7 +24,8 @@ from matplotlib.patches import Patch, Polygon as MplPoly, Rectangle
 from openpyxl import Workbook, load_workbook
 from pyproj import Transformer
 from shapely import wkt as shwkt
-from shapely.geometry import LineString, MultiLineString, Polygon, mapping
+from shapely.geometry import LineString, MultiLineString, Point, Polygon, mapping
+from shapely.affinity import rotate as shrotate
 from shapely.ops import unary_union
 
 WORK = "/tmp/anexo4b/work"
@@ -157,10 +159,12 @@ def barra_escala(ax, x0, y0, ancho_m):
     ax.text(x0 + 2 * paso, y0 + ancho_m * 0.016, "metros", ha="center", fontsize=5.5, zorder=8)
 
 
-def norte(ax, x, y, h):
-    ax.annotate("", xy=(x, y + h), xytext=(x, y),
+def norte(ax, x, y, h, ang=0.0):
+    dx, dy = math.sin(math.radians(ang)) * h, math.cos(math.radians(ang)) * h
+    ax.annotate("", xy=(x + dx, y + dy), xytext=(x, y),
                 arrowprops=dict(arrowstyle="-|>", color="black", lw=0.9), zorder=8)
-    ax.text(x, y + h * 1.05, "N", ha="center", va="bottom", fontsize=8, fontweight="bold", zorder=8)
+    ax.text(x + dx * 1.15, y + dy * 1.15, "N", ha="center", va="bottom", fontsize=8,
+            fontweight="bold", zorder=8)
 
 
 def dibujar_mapa(ax, lotes, base, faja, torres, caminos, bbox, etiquetas=None,
@@ -266,7 +270,7 @@ class Panel:
         return y - 0.0092 * self.sc * (txt.count("\n") + 1)
 
     def rule(self, y):
-        y -= 0.003 * self.sc
+        y -= 0.006 * self.sc
         if self.draw:
             self.ax.plot([0.02, 0.98], [y + 0.004, y + 0.004], transform=self.ax.transAxes,
                          color="black", lw=0.5)
@@ -504,13 +508,14 @@ def _bbox(geom, factor):
     return (cx - w * ratio / 2, cy - w / 2, cx + w * ratio / 2, cy + w / 2)
 
 
-def _decorar(ax, bbox):
+def _decorar(ax, bbox, ang=0.0, ejes=True):
     ancho_m = bbox[2] - bbox[0]
     esc = escala_real(MAP_BOX[2] * 16.54, ancho_m)
     barra_escala(ax, bbox[0] + ancho_m * 0.045, bbox[1] + ancho_m * 0.05, ancho_m)
-    norte(ax, bbox[2] - ancho_m * 0.05, bbox[1] + ancho_m * 0.045, ancho_m * 0.055)
-    ax.set_xlabel("Este UTM 19S (m) – EPSG:32719", fontsize=5.8)
-    ax.set_ylabel("Norte UTM 19S (m) – EPSG:32719", fontsize=5.8)
+    norte(ax, bbox[2] - ancho_m * 0.06, bbox[1] + ancho_m * 0.045, ancho_m * 0.055, ang)
+    if ejes:
+        ax.set_xlabel("Este UTM 19S (m) – EPSG:32719", fontsize=5.8)
+        ax.set_ylabel("Norte UTM 19S (m) – EPSG:32719", fontsize=5.8)
     return f"1:{round(esc / 100) * 100:,}".replace(",", ".") + " (A3)"
 
 
@@ -541,13 +546,31 @@ def lamina_p02(lotes, base, faja, torres, caminos):
           "Hualañé – Región del Maule  ·  Folio " + FOLIO + "-P02")
     ax = fig.add_axes(MAP_BOX)
     sel = [l for l in lotes if l["rol"] == RECL and l["n"] in PES]
-    u = unary_union([l["poly"] for l in sel])
-    bbox = _bbox(u, 1.22)
+    u0 = unary_union([l["poly"] for l in sel])
+    x0, y0, x1, y1 = u0.bounds
+    ang = 90.0 if (y1 - y0) > (x1 - x0) else 0.0
+    orig = u0.centroid
+
+    def R(g):
+        return shrotate(g, -ang, origin=orig)
+
+    selr = [dict(l, poly=R(l["poly"])) for l in sel]
+    u = unary_union([l["poly"] for l in selr])
+    bbox = _bbox(u, 1.16)
     win = Polygon([(bbox[0], bbox[1]), (bbox[2], bbox[1]), (bbox[2], bbox[3]), (bbox[0], bbox[3])])
-    dibujar_mapa(ax, sel, base, faja.intersection(win), torres,
-                 [c.intersection(win) for c in caminos if c.intersects(win)], bbox,
-                 etiquetas={(RECL, n) for n in PES}, label_pct=True)
-    esc_txt = _decorar(ax, bbox)
+    fajar = R(faja).intersection(win)
+    caminosr = [g for g in (R(c).intersection(win) for c in caminos) if not g.is_empty]
+    torresr = [(pt.x, pt.y) for pt in (R(Point(t)) for t in torres)]
+    dibujar_mapa(ax, selr, base, fajar, torresr, caminosr, bbox,
+                 etiquetas={(RECL, n) for n in PES}, label_pct=True, grid=False)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    esc_txt = _decorar(ax, bbox, ang=ang, ejes=False)
+    ax.text(0.5, -0.018,
+            "Lámina girada 90° respecto del norte geográfico para ajustar la faja al formato de hoja. "
+            "Sistema UTM 19S – EPSG:32719; grilla de coordenadas omitida por la rotación "
+            "(coordenadas de centroide de cada lote en la tabla de respaldo).",
+            transform=ax.transAxes, ha="center", va="top", fontsize=5.4, color="#222222")
     render_panel(fig, lambda p: panel_p02(p, base, esc_txt))
     fig.savefig(f"{OUT}/Lamina_Pericial_P02_14_Lotes_Afectados_LT220_Caone.pdf")
     fig.savefig("/tmp/qa/P02.png", dpi=300)
