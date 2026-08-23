@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import NotFound from "@/pages/NotFound";
 import RootErrorBoundary from "@/components/RootErrorBoundary";
 import RouteGuard from "./RouteGuard";
+import RouteSeo from "./RouteSeo";
 import { PageLoader } from "./routeUtils";
 import {
   routeAliases,
