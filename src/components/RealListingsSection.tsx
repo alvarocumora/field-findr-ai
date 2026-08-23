@@ -155,9 +155,10 @@ export default function RealListingsSection({
       ) : data && data.length > 0 ? (
         <>
           <div className={`grid gap-4 ${compact ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
-            {data.slice(0, limit).map((l) => (
-              <ListingCard key={l.id} l={l} mapToken={mapToken} />
+            {data.slice(0, limit).map((l, i) => (
+              <ListingCard key={`${l.id}-${i}`} l={l} mapToken={mapToken} />
             ))}
+
           </div>
           <p className="text-xs text-muted-foreground/70 text-center mt-6">
             Fuentes: Portalinmobiliario, Mercado Libre Inmuebles, Yapo · Información referencial agregada de portales públicos.
