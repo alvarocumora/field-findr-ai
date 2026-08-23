@@ -90,6 +90,9 @@ const BrokersLanding = lazy(() => import("@/pages/brokers/BrokersLanding"));
 const BrokerSignup = lazy(() => import("@/pages/brokers/BrokerSignup"));
 const BrokerRanking = lazy(() => import("@/pages/brokers/BrokerRanking"));
 const BrokerShowcase = lazy(() => import("@/pages/brokers/BrokerShowcase"));
+const Comunidad = lazy(() => import("@/pages/Comunidad"));
+const Comenzar = lazy(() => import("@/pages/Comenzar"));
+const Panel = lazy(() => import("@/pages/Panel"));
 
 // Landings de proyecto (SEO vivo: URLs congeladas)
 const ForestalLanding = lazy(() => import("@/pages/forestal/ForestalLanding"));
@@ -263,6 +266,8 @@ export const publicRouteEntries: RouteEntry[] = [
   pub("brokers-inscripcion", "/brokers/inscripcion", <BrokerSignup />),
   pub("brokers-ranking", "/brokers/ranking", <BrokerRanking />),
   pub("broker-showcase", "/b/:slug", <BrokerShowcase />),
+  pub("comunidad", "/comunidad", <Comunidad />, { nav: { label: "Comunidad", group: "principal" } }),
+  pub("comenzar", "/comenzar", <Comenzar />, { nav: { label: "Comenzar", group: "principal" } }),
   pub("ayuda", "/ayuda", <HelpCenter />, { nav: { label: "Ayuda", group: "soporte" } }),
 ];
 
@@ -280,6 +285,15 @@ export const projectLandingEntries: RouteEntry[] = [
 ];
 
 export const buyerRouteEntries: RouteEntry[] = [
+  // Puerta única del área privada: resuelve el panel según el rol.
+  {
+    id: "panel",
+    path: "/panel",
+    area: "buyer",
+    access: "auth",
+    layout: "none",
+    element: <Panel />,
+  },
   buyer("buyer-home", "/comprador/inicio", <BuyerHome />, { label: "Inicio", group: "comprador", icon: "home", primary: true }),
   buyer("favoritos", "/favoritos", <Favorites />, { label: "Favoritos", group: "comprador", icon: "heart" }),
   buyer("mi-terreno", "/mi-terreno", <MiTerreno />, { label: "Mi Terreno", group: "comprador", icon: "map-pin" }),
@@ -439,6 +453,20 @@ export const routeAliases: RouteAlias[] = [
   { from: "/asesor/notificaciones", to: "/asesor/notificaciones/plantillas" },
   { from: "/asesor/mercado", to: "/asesor/proyectos-en-venta" },
   { from: "/asesor/executive-dashboard", to: "/asesor/executive" },
+
+  // Entrada unificada: /panel/* como atajo estable a las secciones del panel
+  { from: "/panel/inicio", to: "/panel" },
+  { from: "/panel/inventario", to: "/asesor/listings" },
+  { from: "/panel/loteos", to: "/asesor/loteos" },
+  { from: "/panel/leads", to: "/asesor/leads" },
+  { from: "/panel/ventas", to: "/asesor/sales" },
+  { from: "/panel/comisiones", to: "/asesor/comisiones" },
+  { from: "/panel/publicar", to: "/publicar" },
+  { from: "/panel/perfil", to: "/perfil" },
+
+  // Comunidad
+  { from: "/community", to: "/comunidad" },
+  { from: "/brokers/comunidad", to: "/comunidad" },
 ];
 
 /** Orden canónico de los grupos de navegación por área. */

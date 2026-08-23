@@ -3,7 +3,7 @@
 > Archivo generado automáticamente por `scripts/generate-routes-map.ts`.
 > Fuente de verdad: `src/routes/routeManifest.tsx`. No editar a mano.
 
-Total de rutas: **114** · alias/redirects: **29**
+Total de rutas: **117** · alias/redirects: **39**
 
 ## Público
 
@@ -11,6 +11,8 @@ Total de rutas: **114** · alias/redirects: **29**
 | --- | --- | --- | --- | --- | --- |
 | `/` | Inicio | principal | public | none | todos |
 | `/brokers` | Brokers | principal | public | none | todos |
+| `/comenzar` | Comenzar | principal | public | none | todos |
+| `/comunidad` | Comunidad | principal | public | none | todos |
 | `/contacto` | Contacto | principal | public | none | todos |
 | `/explorar` | Explorar | principal | public | none | todos |
 | `/pricing` | Planes | principal | public | none | todos |
@@ -67,6 +69,7 @@ Total de rutas: **114** · alias/redirects: **29**
 | `/mi-terreno` | Mi Terreno | comprador | auth | buyer | todos |
 | `/perfil` | Mi Perfil | comprador | auth | buyer | todos |
 | `/suscripcion` | Suscripción | comprador | auth | buyer | todos |
+| `/panel` | — | — | auth | none | todos |
 
 ## Asesor / Inmobiliaria
 
@@ -172,3 +175,13 @@ Total de rutas: **114** · alias/redirects: **29**
 | `/asesor/notificaciones` | `/asesor/notificaciones/plantillas` |
 | `/asesor/mercado` | `/asesor/proyectos-en-venta` |
 | `/asesor/executive-dashboard` | `/asesor/executive` |
+| `/panel/inicio` | `/panel` |
+| `/panel/inventario` | `/asesor/listings` |
+| `/panel/loteos` | `/asesor/loteos` |
+| `/panel/leads` | `/asesor/leads` |
+| `/panel/ventas` | `/asesor/sales` |
+| `/panel/comisiones` | `/asesor/comisiones` |
+| `/panel/publicar` | `/publicar` |
+| `/panel/perfil` | `/perfil` |
+| `/community` | `/comunidad` |
+| `/brokers/comunidad` | `/comunidad` |

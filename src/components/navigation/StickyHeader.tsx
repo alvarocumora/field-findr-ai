@@ -46,20 +46,21 @@ const StickyHeader = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Tres puertas de entrada: Explorar (comprar), Vender, Comunidad.
   const publicNavigation = [
-    { name: 'Buscar Terrenos', href: '/explorar' },
+    { name: 'Explorar', href: '/explorar' },
     { name: 'Oportunidades', href: '/oportunidades' },
-    { name: 'Publicar', href: '/auth?role=agent&redirect=/publicar' },
-    { name: 'Corredores', href: '/pricing' },
+    { name: 'Vender', href: '/comenzar' },
+    { name: 'Comunidad', href: '/comunidad' },
+    { name: 'Planes', href: '/pricing' },
     { name: 'Planes Loteos', href: '/planes-loteos', badge: 'B2B' },
-    { name: 'Blog', href: '/blog' },
   ];
 
   // Contextual nav items based on role.
   // Admin access is intentionally NOT surfaced in the public top nav —
   // it lives in the personal avatar dropdown and the footer only.
   const roleNavigation = isAgent
-    ? [{ name: 'Mi Dashboard', href: '/asesor/dashboard' }]
+    ? [{ name: 'Mi Panel', href: '/panel' }]
     : user && !isAdmin
       ? [{ name: 'Mi Terreno', href: '/mi-terreno' }]
       : [];
@@ -77,7 +78,7 @@ const StickyHeader = () => {
     }
 
     if (isAgent || isAdmin) {
-      items.push({ label: 'Mi Dashboard', href: '/asesor/dashboard', icon: LayoutDashboard });
+      items.push({ label: 'Mi Panel', href: '/panel', icon: LayoutDashboard });
       items.push({ label: 'Mis Propiedades', href: '/asesor/listings', icon: Building2 });
     }
 
@@ -86,7 +87,7 @@ const StickyHeader = () => {
       items.push({ label: 'Mis Favoritos', href: '/favoritos', icon: Heart });
     }
 
-    items.push({ label: 'Configuración', href: '/profile', icon: Settings });
+    items.push({ label: 'Configuración', href: '/perfil', icon: Settings });
     return items;
   };
 
