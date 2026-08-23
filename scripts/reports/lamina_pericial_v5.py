@@ -584,10 +584,10 @@ def lamina_p02(lotes, base, faja, torres, caminos):
                     "VISTA GENERAL · 14 LOTES NOTIFICADOS Y FAJA PES")
     gA = {(RECL, n) for n in (61, 60, 62)}
     gB = {(RECL, n) for n in (57, 56, 55)}
-    vista([0.032, 0.095, 0.295, 0.435],
+    vista([0.032, 0.345, 0.615, 0.215],
           [l for l in selr if (l["rol"], l["n"]) in gA], 1.14, gA,
           "DETALLE A · LOTES 61, 60 Y 62")
-    vista([0.352, 0.095, 0.295, 0.435],
+    vista([0.032, 0.100, 0.615, 0.215],
           [l for l in selr if (l["rol"], l["n"]) in gB], 1.14, gB,
           "DETALLE B · LOTES 57, 56 Y 55")
     fig.text(0.032 + 0.615 / 2, 0.068,
