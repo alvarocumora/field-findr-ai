@@ -29,6 +29,7 @@ const groups = routeManifest.reduce<Record<GroupKey, RouteEntry[]>>((acc, entry)
 const AppRouter = () => (
   <BrowserRouter>
     <RootErrorBoundary>
+      <RouteSeo />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {Object.entries(groups).map(([key, entries]) => {
