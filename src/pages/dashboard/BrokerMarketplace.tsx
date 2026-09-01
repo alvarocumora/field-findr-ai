@@ -180,8 +180,13 @@ const BrokerMarketplace = () => {
                           <Send className="h-3.5 w-3.5 mr-2" /> Quiero venderlo
                         </Button>
                       )}
+                      <Button size="sm" variant="outline"
+                        onClick={() => shareLink(p)}
+                        aria-label={`Compartir ${p.name}`}>
+                        <Share2 className="h-3.5 w-3.5" />
+                      </Button>
                       <Button size="sm" variant="outline" asChild>
-                        <Link to={`/proyecto/${p.id}`} aria-label={`Ver ${p.name}`}>
+                        <Link to={p.slug ? `/p/${p.slug}` : `/proyecto/${p.id}`} aria-label={`Ver ${p.name}`}>
                           <ExternalLink className="h-3.5 w-3.5" />
                         </Link>
                       </Button>
