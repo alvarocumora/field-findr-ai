@@ -228,9 +228,16 @@ const BrokerMarketplace = () => {
                         <TableCell className="font-medium">{p?.name ?? a.project_id}</TableCell>
                         <TableCell>{a.commission_rate}%</TableCell>
                         <TableCell><Badge variant="secondary">{a.status}</Badge></TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right space-x-2 whitespace-nowrap">
+                          <Button size="sm" variant="outline"
+                            onClick={() => p && shareLink(p)}
+                            disabled={!p}>
+                            <Share2 className="h-3.5 w-3.5 mr-1" /> Compartir
+                          </Button>
                           <Button size="sm" variant="outline" asChild>
-                            <Link to={`/proyecto/${a.project_id}`}>Ver material</Link>
+                            <Link to={p?.slug ? `/p/${p.slug}` : `/proyecto/${a.project_id}`}>
+                              Ver material
+                            </Link>
                           </Button>
                         </TableCell>
                       </TableRow>
