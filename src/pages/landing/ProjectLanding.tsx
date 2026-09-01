@@ -417,6 +417,15 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
         onLead={() => openLead()}
         onSeeLots={goMasterplan}
       />
+
+      {/* Reserva real: escribe en reservations vía create_public_reservation */}
+      <LotReserveDialog
+        lot={reserveLot}
+        open={reserveOpen && !!reserveLot}
+        onOpenChange={setReserveOpen}
+        projectName={title}
+      />
+
     </div>
   );
 
