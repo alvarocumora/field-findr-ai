@@ -45,6 +45,12 @@ jobs:
 
       - name: Unit tests
         run: npm test
+        env:
+          # Some unit-test modules instantiate the generated Supabase client
+          # during import. Use syntactically valid non-secret placeholders only
+          # for tests; they must never be embedded in the production bundle.
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: ci-test-publishable-key
 
       - name: Production build
         run: npm run build
