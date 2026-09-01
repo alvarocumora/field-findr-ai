@@ -135,6 +135,8 @@ const AgentPerformance = lazy(() => import("@/pages/dashboard/AgentPerformance")
 const Messages = lazy(() => import("@/pages/dashboard/Messages"));
 const NotificationTemplates = lazy(() => import("@/pages/dashboard/NotificationTemplates"));
 const SalesPipeline = lazy(() => import("@/pages/dashboard/SalesPipeline"));
+const VisitsManager = lazy(() => import("@/pages/dashboard/VisitsManager"));
+const ClosingsManager = lazy(() => import("@/pages/dashboard/ClosingsManager"));
 const MultiProjectDashboard = lazy(() => import("@/pages/dashboard/MultiProjectDashboard"));
 const PaymentManagement = lazy(() => import("@/pages/dashboard/PaymentManagement"));
 const Reports = lazy(() => import("@/pages/dashboard/Reports"));
