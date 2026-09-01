@@ -36,30 +36,24 @@ describe('ModernSidebar — segmentación por tipo de cuenta', () => {
     mockPlan.isLoading = false;
   });
 
-  it('corredor: muestra vista de corredor SIN herramientas de agencia', () => {
+  it('corredor: muestra navegación de corredor sin identidad de inmobiliaria', () => {
     mockPlan.plan = 'corredor';
     renderSidebar();
-    expect(screen.getByText('Principal')).toBeInTheDocument();
+    expect(screen.getByText('Corredor')).toBeInTheDocument();
     expect(screen.getByText('CORREDOR')).toBeInTheDocument();
-    // Herramientas de agencia NO deben aparecer para el corredor.
-    expect(screen.queryByText('Multi-Proyecto')).not.toBeInTheDocument();
-    expect(screen.queryByText('Ejecutivo')).not.toBeInTheDocument();
-    expect(screen.queryByText('Inmobiliaria')).not.toBeInTheDocument();
+    expect(screen.queryByText('INMOBILIARIA')).not.toBeInTheDocument();
+    expect(screen.queryByText('Administración')).not.toBeInTheDocument();
   });
 
-  it('inmobiliaria: muestra el panel de agencia CON multi-proyecto y grupos internos', () => {
+  it('inmobiliaria: muestra navegación de agencia y grupos comerciales actuales', () => {
     mockPlan.plan = 'inmobiliaria';
     renderSidebar();
     expect(screen.getByText('Inmobiliaria')).toBeInTheDocument();
     expect(screen.queryByText('CORREDOR')).not.toBeInTheDocument();
     expect(screen.getByText('INMOBILIARIA')).toBeInTheDocument();
-    // Grupos internos del panel de inmobiliaria (los items viven dentro de
-    // colapsables cerrados por defecto; validamos las etiquetas de grupo).
-    expect(screen.getByText('Proyectos')).toBeInTheDocument();
-    expect(screen.getByText('Ventas & Reservas')).toBeInTheDocument();
-    expect(screen.getByText('Finanzas')).toBeInTheDocument();
-    // La vista de corredor (etiqueta "Principal") NO debe aparecer.
-    expect(screen.queryByText('Principal')).not.toBeInTheDocument();
+    expect(screen.getByText('inventario')).toBeInTheDocument();
+    expect(screen.getByText('ventas')).toBeInTheDocument();
+    expect(screen.getByText('análisis')).toBeInTheDocument();
   });
 
   it('plan grupo/enterprise también recibe el panel de inmobiliaria', () => {
@@ -68,15 +62,14 @@ describe('ModernSidebar — segmentación por tipo de cuenta', () => {
     expect(screen.getByText('INMOBILIARIA')).toBeInTheDocument();
   });
 
-  it('admin: muestra la sección Admin con sus grupos', () => {
+  it('admin: muestra la sección Administración con sus grupos actuales', () => {
     mockRedirect.isAdmin = true;
     mockRedirect.isAgent = false;
     mockPlan.plan = 'free';
     renderSidebar();
     expect(screen.getByText('ADMIN')).toBeInTheDocument();
-    expect(screen.getByText('Panel Admin')).toBeInTheDocument();
-    // Grupos admin colapsables.
-    expect(screen.getByText('Gestión')).toBeInTheDocument();
-    expect(screen.getByText('Aprobaciones')).toBeInTheDocument();
+    expect(screen.getByText('Administración')).toBeInTheDocument();
+    expect(screen.getByText('gestión')).toBeInTheDocument();
+    expect(screen.getByText('aprobaciones')).toBeInTheDocument();
   });
 });
