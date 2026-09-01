@@ -2661,6 +2661,17 @@ export type Database = {
         }
         Returns: string
       }
+      create_public_reservation: {
+        Args: {
+          p_buyer_email: string
+          p_buyer_name: string
+          p_buyer_phone?: string
+          p_buyer_rut?: string
+          p_lot_id: string
+          p_notes?: string
+        }
+        Returns: string
+      }
       create_referral_lead: {
         Args: {
           p_budget_max?: number
