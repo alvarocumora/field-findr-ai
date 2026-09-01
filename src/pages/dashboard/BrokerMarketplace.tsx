@@ -66,6 +66,18 @@ const BrokerMarketplace = () => {
 
   const mine = assignments.filter((a) => a.broker_id === user?.id);
   const incoming = assignments.filter((a) => a.owner_id === user?.id && a.status === 'pending');
+  const shareLink = (p: { id: string; name: string; slug: string | null }) => {
+    const ref = brokerProfile?.invite_code ? `?ref=${brokerProfile.invite_code}` : '';
+    const url = `${window.location.origin}${p.slug ? `/p/${p.slug}` : `/proyecto/${p.id}`}${ref}`;
+    const share = (navigator as Navigator & { share?: (d: ShareData) => Promise<void> }).share;
+    if (share) {
+      share({ title: p.name, text: `Parcelas en venta: ${p.name}`, url }).catch(() => undefined);
+      return;
+    }
+    navigator.clipboard.writeText(url);
+    toast.success('Link de venta copiado');
+  };
+
   const statusFor = (projectId: string) =>
     mine.find((a) => a.project_id === projectId)?.status;
 
