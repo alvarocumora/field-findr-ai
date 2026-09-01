@@ -417,6 +417,8 @@ export const agentRouteEntries: RouteEntry[] = [
   // Ventas
   agent("asesor-pipeline", "/asesor/pipeline", <SalesPipeline />, { label: "Pipeline", group: "ventas", icon: "workflow" }),
   agent("asesor-reservations", "/asesor/reservations", <ReservationsManager />, { label: "Reservas", group: "ventas", icon: "calendar" }),
+  agent("asesor-visitas", "/asesor/visitas", <VisitsManager />, { label: "Visitas", group: "ventas", icon: "calendar" }),
+  agent("asesor-cierres", "/asesor/cierres", <ClosingsManager />, { label: "Cierres de venta", group: "ventas", icon: "handshake" }),
   agent("asesor-sales", "/asesor/sales", <SalesManagement />, { label: "Ventas", group: "ventas", icon: "handshake" }),
   agent("asesor-closing", "/asesor/closing", <ClosingManager />, { label: "Cierre", group: "ventas", icon: "scale" }),
   agent("asesor-credits", "/asesor/credits", <CreditManager />, { label: "Créditos", group: "ventas", icon: "credit-card" }),
