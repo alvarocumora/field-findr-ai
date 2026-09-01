@@ -1,8 +1,8 @@
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  ArrowRight, CheckCircle2, MapPin, Mail, MessageCircle, Phone, Ruler, Store, Trees,
+  ArrowRight, CalendarDays, CheckCircle2, MapPin, Mail, MessageCircle, Phone, Ruler, Store, Trees,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,11 +10,14 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LotMapView } from '@/components/lots/LotMapView';
+import { LotSalesSheet, type SalesLot } from '@/components/sales/LotSalesSheet';
+import { ProjectConversionBar } from '@/components/sales/ProjectConversionBar';
 import { supabase } from '@/integrations/supabase/client';
 import { parseLandingConfig, summarizeLots } from '@/lib/landing/config';
 import { LandingLeadForm } from './LandingLeadForm';
 import { bespokeLandings, canonicalPathForSlug } from '@/lib/landing/registry';
 import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
+
 
 const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
 
@@ -30,6 +33,11 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
   const Bespoke = slug ? bespokeLandings[slug] : undefined;
   const [leadLot, setLeadLot] = useState<{ id: string; lot_number?: string | null } | null>(null);
   const [leadOpen, setLeadOpen] = useState(false);
+  const [onlyAvailable, setOnlyAvailable] = useState(true);
+  const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
+  const [lotSheetOpen, setLotSheetOpen] = useState(false);
+  const masterplanRef = useRef<HTMLDivElement>(null);
+
 
 
   const { data: project, isLoading: projectLoading } = useQuery({
@@ -56,10 +64,12 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
       return (data ?? []) as Array<{
         id: string; lot_number: string | null; status: string | null;
         area: number | null; price: number | null;
+        slope_category?: string | null; elevation_avg?: number | null; images?: string[] | null;
       }>;
     },
     enabled: !!project?.id && !Bespoke,
   });
+
 
   const cfg = useMemo(() => parseLandingConfig(project?.landing_config), [project?.landing_config]);
   const stats = useMemo(() => summarizeLots(lots), [lots]);
@@ -136,29 +146,61 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
     setLeadLot(lot ?? null);
     setLeadOpen(true);
   };
+  const goMasterplan = () => masterplanRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const visibleLots = onlyAvailable
+    ? lots.filter((l) => (l.status ?? 'available') === 'available')
+    : lots;
+  const selectedIndex = visibleLots.findIndex((l) => l.id === selectedLotId);
+  const selectedLot = (selectedIndex >= 0 ? visibleLots[selectedIndex] : null) as SalesLot | null;
+  const openLot = (id: string) => { setSelectedLotId(id); setLotSheetOpen(true); };
+  const areaLabel = stats.areaMin
+    ? `${Math.round(stats.areaMin).toLocaleString('es-CL')}–${Math.round(stats.areaMax!).toLocaleString('es-CL')} m²`
+    : '—';
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero */}
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
+      {/* Hero — sala de ventas */}
       <header className="relative min-h-[62vh] flex items-end">
         {heroImage && (
           <img src={heroImage} alt={title} className="absolute inset-0 h-full w-full object-cover" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/25" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/25" />
         <div className="relative container max-w-5xl pb-12 pt-28 text-white">
           <Badge className="bg-primary text-primary-foreground mb-3">Venta de lotes</Badge>
           <h1 className="text-4xl md:text-5xl font-bold drop-shadow">{title}</h1>
           {location && (
             <p className="mt-2 flex items-center gap-1.5 text-white/90"><MapPin className="h-4 w-4" />{location}</p>
           )}
-          {subtitle && <p className="mt-3 max-w-2xl text-white/85 line-clamp-3">{subtitle}</p>}
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm text-white/90">
+            <span><strong className="font-semibold">{stats.available}</strong> lotes disponibles</span>
+            {stats.priceFrom && <span>Desde <strong className="font-semibold">{clp(stats.priceFrom)}</strong></span>}
+            {stats.areaMin && <span>Parcelas desde <strong className="font-semibold">{Math.round(stats.areaMin).toLocaleString('es-CL')} m²</strong></span>}
+          </div>
+          {subtitle && <p className="mt-3 max-w-2xl text-white/80 line-clamp-3">{subtitle}</p>}
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button size="lg" onClick={() => openLead()}>
-              {cfg.hero.cta ?? 'Quiero información'}<ArrowRight className="h-4 w-4 ml-2" />
+            <Button size="lg" className="min-h-11" onClick={goMasterplan}>
+              Ver lotes disponibles<ArrowRight className="h-4 w-4 ml-2" />
             </Button>
-            <Button size="lg" variant="secondary" asChild>
-              <Link to={`/proyecto/${project.id}`}><Store className="h-4 w-4 mr-2" />Ver lotes y reservar</Link>
+            <Button size="lg" variant="secondary" className="min-h-11" onClick={() => openLead()}>
+              <CalendarDays className="h-4 w-4 mr-2" />{cfg.hero.cta ?? 'Agendar visita'}
             </Button>
+            {cfg.contact.whatsapp && (
+              <Button
+                size="lg"
+                variant="outline"
+                className="min-h-11 border-white/40 bg-white/10 text-white hover:bg-white/20"
+                asChild
+              >
+                <a
+                  href={`https://wa.me/${cfg.contact.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, quiero información de ${title}.`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />Hablar con un asesor
+                </a>
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -168,12 +210,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3 -mt-20 relative z-10">
           {[
             { label: 'Lotes', value: `${stats.available} disponibles de ${stats.total}` },
-            {
-              label: 'Superficies',
-              value: stats.areaMin
-                ? `${Math.round(stats.areaMin).toLocaleString('es-CL')}–${Math.round(stats.areaMax!).toLocaleString('es-CL')} m²`
-                : '—',
-            },
+            { label: 'Superficies', value: areaLabel },
             { label: 'Desde', value: stats.priceFrom ? clp(stats.priceFrom) : 'Consultar' },
             { label: 'Ubicación', value: location || '—' },
           ].map((s) => (
@@ -199,24 +236,49 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
 
         {/* Masterplan interactivo con lotes reales */}
         {cfg.sections.masterplan && lots.length > 0 && (
-          <section>
-            <h2 className="text-2xl font-bold text-foreground mb-1">Plano de lotes</h2>
+          <section ref={masterplanRef} className="scroll-mt-20">
+            <div className="flex flex-wrap items-end justify-between gap-3 mb-1">
+              <h2 className="text-2xl font-bold text-foreground">Plano de lotes</h2>
+              <div className="inline-flex rounded-full border border-border/60 p-0.5" role="group" aria-label="Filtrar lotes">
+                {([
+                  { key: true, label: `Disponibles (${stats.available})` },
+                  { key: false, label: `Todos (${stats.total})` },
+                ] as const).map((opt) => (
+                  <button
+                    key={String(opt.key)}
+                    type="button"
+                    aria-pressed={onlyAvailable === opt.key}
+                    onClick={() => setOnlyAvailable(opt.key)}
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                      onlyAvailable === opt.key
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <p className="text-muted-foreground text-sm mb-4">
-              Toca un lote para consultar por él. Verde: disponible · Ámbar: reservado · Gris: vendido.
+              Toca un lote para ver su ficha comercial. Verde: disponible · Ámbar: reservado · Gris: vendido.
             </p>
-            <div className="h-[480px] rounded-2xl overflow-hidden border border-border/60">
+            <div className="h-[420px] md:h-[520px] rounded-2xl overflow-hidden border border-border/60">
               <LotMapView
-                lots={lots as never}
+                lots={visibleLots as never}
                 projectCenter={{
                   lat: (project.latitude as number | null) ?? -33.45,
                   lng: (project.longitude as number | null) ?? -70.66,
                 }}
-                onLotClick={(lot) => openLead({ id: lot.id, lot_number: lot.lot_number })}
+                selectedLotId={selectedLotId}
+                onLotClick={(lot) => openLot(lot.id)}
                 readOnly
               />
             </div>
           </section>
         )}
+
+
 
         {/* Galería */}
         {cfg.sections.gallery && gallery.length > 1 && (
@@ -316,8 +378,44 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Ficha comercial del lote: bottom-sheet en mobile, panel en escritorio */}
+      <LotSalesSheet
+        lot={selectedLot}
+        open={lotSheetOpen && !!selectedLot}
+        onOpenChange={setLotSheetOpen}
+        projectName={title}
+        whatsapp={cfg.contact.whatsapp}
+        onLead={(lot) => {
+          setLotSheetOpen(false);
+          openLead({ id: lot.id, lot_number: lot.lot_number });
+        }}
+        onReserve={(lot) => {
+          setLotSheetOpen(false);
+          openLead({ id: lot.id, lot_number: lot.lot_number });
+        }}
+        hasPrev={selectedIndex > 0}
+        hasNext={selectedIndex >= 0 && selectedIndex < visibleLots.length - 1}
+        onPrev={() => selectedIndex > 0 && setSelectedLotId(visibleLots[selectedIndex - 1].id)}
+        onNext={() =>
+          selectedIndex >= 0 &&
+          selectedIndex < visibleLots.length - 1 &&
+          setSelectedLotId(visibleLots[selectedIndex + 1].id)
+        }
+      />
+
+      {/* Barra sticky de conversión (mobile) */}
+      <ProjectConversionBar
+        projectName={title}
+        priceFrom={stats.priceFrom}
+        availableLots={stats.available}
+        whatsapp={cfg.contact.whatsapp}
+        onLead={() => openLead()}
+        onSeeLots={goMasterplan}
+      />
     </div>
   );
+
 };
 
 export default ProjectLanding;
