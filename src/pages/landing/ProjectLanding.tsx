@@ -33,6 +33,11 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
   const Bespoke = slug ? bespokeLandings[slug] : undefined;
   const [leadLot, setLeadLot] = useState<{ id: string; lot_number?: string | null } | null>(null);
   const [leadOpen, setLeadOpen] = useState(false);
+  const [onlyAvailable, setOnlyAvailable] = useState(true);
+  const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
+  const [lotSheetOpen, setLotSheetOpen] = useState(false);
+  const masterplanRef = useRef<HTMLDivElement>(null);
+
 
 
   const { data: project, isLoading: projectLoading } = useQuery({
