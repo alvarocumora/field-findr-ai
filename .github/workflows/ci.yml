@@ -18,12 +18,6 @@ jobs:
     name: Typecheck, tests and build
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      # Tests import the generated Supabase client during module evaluation.
-      # CI only needs syntactically valid, non-secret placeholders; production
-      # credentials remain configured in the deploy environment/secrets.
-      VITE_SUPABASE_URL: https://example.supabase.co
-      VITE_SUPABASE_PUBLISHABLE_KEY: ci-test-publishable-key
 
     steps:
       - name: Checkout
@@ -51,6 +45,12 @@ jobs:
 
       - name: Unit tests
         run: npm test
+        env:
+          # Some unit-test modules instantiate the generated Supabase client
+          # during import. Use syntactically valid non-secret placeholders only
+          # for tests; they must never be embedded in the production bundle.
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: ci-test-publishable-key
 
       - name: Production build
         run: npm run build
