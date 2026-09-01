@@ -892,25 +892,32 @@ export type Database = {
       }
       leads: {
         Row: {
+          assigned_to: string | null
           budget_max: number | null
           budget_min: number | null
+          city: string | null
           created_at: string
           email: string | null
           first_name: string
           id: string
+          interest_type: string | null
+          last_contacted_at: string | null
           last_name: string | null
           last_scored_at: string | null
           lead_score: number | null
           listing_id: string | null
           lot_id: string | null
+          national_id: string | null
           next_follow_up: string | null
           notes: string | null
           phone: string | null
           preferred_area_max: number | null
           preferred_area_min: number | null
+          preferred_contact: string | null
           project_id: string | null
           referral_notes: string | null
           referring_agent_id: string | null
+          region: string | null
           score_breakdown: Json | null
           source: string | null
           status: string | null
@@ -918,25 +925,32 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          assigned_to?: string | null
           budget_max?: number | null
           budget_min?: number | null
+          city?: string | null
           created_at?: string
           email?: string | null
           first_name: string
           id?: string
+          interest_type?: string | null
+          last_contacted_at?: string | null
           last_name?: string | null
           last_scored_at?: string | null
           lead_score?: number | null
           listing_id?: string | null
           lot_id?: string | null
+          national_id?: string | null
           next_follow_up?: string | null
           notes?: string | null
           phone?: string | null
           preferred_area_max?: number | null
           preferred_area_min?: number | null
+          preferred_contact?: string | null
           project_id?: string | null
           referral_notes?: string | null
           referring_agent_id?: string | null
+          region?: string | null
           score_breakdown?: Json | null
           source?: string | null
           status?: string | null
@@ -944,25 +958,32 @@ export type Database = {
           user_id: string
         }
         Update: {
+          assigned_to?: string | null
           budget_max?: number | null
           budget_min?: number | null
+          city?: string | null
           created_at?: string
           email?: string | null
           first_name?: string
           id?: string
+          interest_type?: string | null
+          last_contacted_at?: string | null
           last_name?: string | null
           last_scored_at?: string | null
           lead_score?: number | null
           listing_id?: string | null
           lot_id?: string | null
+          national_id?: string | null
           next_follow_up?: string | null
           notes?: string | null
           phone?: string | null
           preferred_area_max?: number | null
           preferred_area_min?: number | null
+          preferred_contact?: string | null
           project_id?: string | null
           referral_notes?: string | null
           referring_agent_id?: string | null
+          region?: string | null
           score_breakdown?: Json | null
           source?: string | null
           status?: string | null
@@ -1987,6 +2008,126 @@ export type Database = {
           },
         ]
       }
+      sales_closings: {
+        Row: {
+          buyer_email: string | null
+          buyer_name: string
+          buyer_national_id: string | null
+          buyer_phone: string | null
+          closed_at: string | null
+          commission_amount: number
+          commission_id: string | null
+          commission_rate: number
+          contract_signed_at: string | null
+          contract_url: string | null
+          created_at: string
+          currency: string
+          id: string
+          lead_id: string | null
+          listing_id: string | null
+          lot_id: string | null
+          notes: string | null
+          project_id: string | null
+          referral_rate: number | null
+          referring_agent_id: string | null
+          reservation_id: string | null
+          sale_amount: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          buyer_email?: string | null
+          buyer_name: string
+          buyer_national_id?: string | null
+          buyer_phone?: string | null
+          closed_at?: string | null
+          commission_amount?: number
+          commission_id?: string | null
+          commission_rate?: number
+          contract_signed_at?: string | null
+          contract_url?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          lot_id?: string | null
+          notes?: string | null
+          project_id?: string | null
+          referral_rate?: number | null
+          referring_agent_id?: string | null
+          reservation_id?: string | null
+          sale_amount: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          buyer_email?: string | null
+          buyer_name?: string
+          buyer_national_id?: string | null
+          buyer_phone?: string | null
+          closed_at?: string | null
+          commission_amount?: number
+          commission_id?: string | null
+          commission_rate?: number
+          contract_signed_at?: string | null
+          contract_url?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          lot_id?: string | null
+          notes?: string | null
+          project_id?: string | null
+          referral_rate?: number | null
+          referring_agent_id?: string | null
+          reservation_id?: string | null
+          sale_amount?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_closings_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_closings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_closings_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_closings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_closings_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_searches: {
         Row: {
           created_at: string | null
@@ -2491,6 +2632,95 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visits: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          lead_id: string | null
+          listing_id: string | null
+          lot_id: string | null
+          mode: string
+          notes: string | null
+          outcome: string | null
+          project_id: string | null
+          scheduled_at: string
+          status: string
+          updated_at: string
+          user_id: string
+          visitor_email: string | null
+          visitor_name: string
+          visitor_phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          lot_id?: string | null
+          mode?: string
+          notes?: string | null
+          outcome?: string | null
+          project_id?: string | null
+          scheduled_at: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          visitor_email?: string | null
+          visitor_name: string
+          visitor_phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          lot_id?: string | null
+          mode?: string
+          notes?: string | null
+          outcome?: string | null
+          project_id?: string | null
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          visitor_email?: string | null
+          visitor_name?: string
+          visitor_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visits_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]

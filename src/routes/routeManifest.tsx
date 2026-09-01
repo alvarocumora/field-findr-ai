@@ -135,6 +135,8 @@ const AgentPerformance = lazy(() => import("@/pages/dashboard/AgentPerformance")
 const Messages = lazy(() => import("@/pages/dashboard/Messages"));
 const NotificationTemplates = lazy(() => import("@/pages/dashboard/NotificationTemplates"));
 const SalesPipeline = lazy(() => import("@/pages/dashboard/SalesPipeline"));
+const VisitsManager = lazy(() => import("@/pages/dashboard/VisitsManager"));
+const ClosingsManager = lazy(() => import("@/pages/dashboard/ClosingsManager"));
 const MultiProjectDashboard = lazy(() => import("@/pages/dashboard/MultiProjectDashboard"));
 const PaymentManagement = lazy(() => import("@/pages/dashboard/PaymentManagement"));
 const Reports = lazy(() => import("@/pages/dashboard/Reports"));
@@ -415,6 +417,8 @@ export const agentRouteEntries: RouteEntry[] = [
   // Ventas
   agent("asesor-pipeline", "/asesor/pipeline", <SalesPipeline />, { label: "Pipeline", group: "ventas", icon: "workflow" }),
   agent("asesor-reservations", "/asesor/reservations", <ReservationsManager />, { label: "Reservas", group: "ventas", icon: "calendar" }),
+  agent("asesor-visitas", "/asesor/visitas", <VisitsManager />, { label: "Visitas", group: "ventas", icon: "calendar" }),
+  agent("asesor-cierres", "/asesor/cierres", <ClosingsManager />, { label: "Cierres de venta", group: "ventas", icon: "handshake" }),
   agent("asesor-sales", "/asesor/sales", <SalesManagement />, { label: "Ventas", group: "ventas", icon: "handshake" }),
   agent("asesor-closing", "/asesor/closing", <ClosingManager />, { label: "Cierre", group: "ventas", icon: "scale" }),
   agent("asesor-credits", "/asesor/credits", <CreditManager />, { label: "Créditos", group: "ventas", icon: "credit-card" }),

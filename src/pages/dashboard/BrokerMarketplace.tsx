@@ -12,7 +12,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { MapPin, Percent, Search, Store, Send, ExternalLink } from 'lucide-react';
+import { MapPin, Percent, Search, Store, Send, ExternalLink, Share2 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   useProjectAssignments, useRequestProjectAssignment, useDecideAssignment,
   useMyBrokerProfile,
@@ -65,6 +66,18 @@ const BrokerMarketplace = () => {
 
   const mine = assignments.filter((a) => a.broker_id === user?.id);
   const incoming = assignments.filter((a) => a.owner_id === user?.id && a.status === 'pending');
+  const shareLink = (p: { id: string; name: string; slug: string | null }) => {
+    const ref = brokerProfile?.invite_code ? `?ref=${brokerProfile.invite_code}` : '';
+    const url = `${window.location.origin}${p.slug ? `/p/${p.slug}` : `/proyecto/${p.id}`}${ref}`;
+    const share = (navigator as Navigator & { share?: (d: ShareData) => Promise<void> }).share;
+    if (share) {
+      share({ title: p.name, text: `Parcelas en venta: ${p.name}`, url }).catch(() => undefined);
+      return;
+    }
+    navigator.clipboard.writeText(url);
+    toast.success('Link de venta copiado');
+  };
+
   const statusFor = (projectId: string) =>
     mine.find((a) => a.project_id === projectId)?.status;
 
@@ -167,8 +180,13 @@ const BrokerMarketplace = () => {
                           <Send className="h-3.5 w-3.5 mr-2" /> Quiero venderlo
                         </Button>
                       )}
+                      <Button size="sm" variant="outline"
+                        onClick={() => shareLink(p)}
+                        aria-label={`Compartir ${p.name}`}>
+                        <Share2 className="h-3.5 w-3.5" />
+                      </Button>
                       <Button size="sm" variant="outline" asChild>
-                        <Link to={`/proyecto/${p.id}`} aria-label={`Ver ${p.name}`}>
+                        <Link to={p.slug ? `/p/${p.slug}` : `/proyecto/${p.id}`} aria-label={`Ver ${p.name}`}>
                           <ExternalLink className="h-3.5 w-3.5" />
                         </Link>
                       </Button>
@@ -210,9 +228,16 @@ const BrokerMarketplace = () => {
                         <TableCell className="font-medium">{p?.name ?? a.project_id}</TableCell>
                         <TableCell>{a.commission_rate}%</TableCell>
                         <TableCell><Badge variant="secondary">{a.status}</Badge></TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right space-x-2 whitespace-nowrap">
+                          <Button size="sm" variant="outline"
+                            onClick={() => p && shareLink(p)}
+                            disabled={!p}>
+                            <Share2 className="h-3.5 w-3.5 mr-1" /> Compartir
+                          </Button>
                           <Button size="sm" variant="outline" asChild>
-                            <Link to={`/proyecto/${a.project_id}`}>Ver material</Link>
+                            <Link to={p?.slug ? `/p/${p.slug}` : `/proyecto/${a.project_id}`}>
+                              Ver material
+                            </Link>
                           </Button>
                         </TableCell>
                       </TableRow>
