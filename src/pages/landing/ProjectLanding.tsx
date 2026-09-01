@@ -1,8 +1,8 @@
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  ArrowRight, CheckCircle2, MapPin, Mail, MessageCircle, Phone, Ruler, Store, Trees,
+  ArrowRight, CalendarDays, CheckCircle2, MapPin, Mail, MessageCircle, Phone, Ruler, Store, Trees,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,11 +10,14 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LotMapView } from '@/components/lots/LotMapView';
+import { LotSalesSheet, type SalesLot } from '@/components/sales/LotSalesSheet';
+import { ProjectConversionBar } from '@/components/sales/ProjectConversionBar';
 import { supabase } from '@/integrations/supabase/client';
 import { parseLandingConfig, summarizeLots } from '@/lib/landing/config';
 import { LandingLeadForm } from './LandingLeadForm';
 import { bespokeLandings, canonicalPathForSlug } from '@/lib/landing/registry';
 import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
+
 
 const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
 
