@@ -64,10 +64,12 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
       return (data ?? []) as Array<{
         id: string; lot_number: string | null; status: string | null;
         area: number | null; price: number | null;
+        slope_category?: string | null; elevation_avg?: number | null; images?: string[] | null;
       }>;
     },
     enabled: !!project?.id && !Bespoke,
   });
+
 
   const cfg = useMemo(() => parseLandingConfig(project?.landing_config), [project?.landing_config]);
   const stats = useMemo(() => summarizeLots(lots), [lots]);
