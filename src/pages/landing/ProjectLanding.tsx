@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LotMapView } from '@/components/lots/LotMapView';
 import { LotSalesSheet, type SalesLot } from '@/components/sales/LotSalesSheet';
+import { LotReserveDialog } from '@/components/sales/LotReserveDialog';
 import { ProjectConversionBar } from '@/components/sales/ProjectConversionBar';
 import { supabase } from '@/integrations/supabase/client';
 import { parseLandingConfig, summarizeLots } from '@/lib/landing/config';
@@ -36,6 +37,8 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
   const [onlyAvailable, setOnlyAvailable] = useState(true);
   const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
   const [lotSheetOpen, setLotSheetOpen] = useState(false);
+  const [reserveLot, setReserveLot] = useState<SalesLot | null>(null);
+  const [reserveOpen, setReserveOpen] = useState(false);
   const masterplanRef = useRef<HTMLDivElement>(null);
 
 
@@ -392,7 +395,8 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
         }}
         onReserve={(lot) => {
           setLotSheetOpen(false);
-          openLead({ id: lot.id, lot_number: lot.lot_number });
+          setReserveLot(lot);
+          setReserveOpen(true);
         }}
         hasPrev={selectedIndex > 0}
         hasNext={selectedIndex >= 0 && selectedIndex < visibleLots.length - 1}
@@ -413,6 +417,15 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
         onLead={() => openLead()}
         onSeeLots={goMasterplan}
       />
+
+      {/* Reserva real: escribe en reservations vía create_public_reservation */}
+      <LotReserveDialog
+        lot={reserveLot}
+        open={reserveOpen && !!reserveLot}
+        onOpenChange={setReserveOpen}
+        projectName={title}
+      />
+
     </div>
   );
 
