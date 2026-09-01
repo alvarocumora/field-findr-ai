@@ -37,7 +37,7 @@ const emptyForm = {
 const VisitsManager = () => {
   const { visits, isLoading, createVisit, updateVisit } = useVisits();
   const { leads } = useLeads();
-  const { projects = [] } = useProjects() as { projects?: { id: string; name: string }[] };
+  const { projects } = useProjects();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
