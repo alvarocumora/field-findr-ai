@@ -12,7 +12,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { MapPin, Percent, Search, Store, Send, ExternalLink } from 'lucide-react';
+import { MapPin, Percent, Search, Store, Send, ExternalLink, Share2 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   useProjectAssignments, useRequestProjectAssignment, useDecideAssignment,
   useMyBrokerProfile,
