@@ -378,8 +378,44 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Ficha comercial del lote: bottom-sheet en mobile, panel en escritorio */}
+      <LotSalesSheet
+        lot={selectedLot}
+        open={lotSheetOpen && !!selectedLot}
+        onOpenChange={setLotSheetOpen}
+        projectName={title}
+        whatsapp={cfg.contact.whatsapp}
+        onLead={(lot) => {
+          setLotSheetOpen(false);
+          openLead({ id: lot.id, lot_number: lot.lot_number });
+        }}
+        onReserve={(lot) => {
+          setLotSheetOpen(false);
+          openLead({ id: lot.id, lot_number: lot.lot_number });
+        }}
+        hasPrev={selectedIndex > 0}
+        hasNext={selectedIndex >= 0 && selectedIndex < visibleLots.length - 1}
+        onPrev={() => selectedIndex > 0 && setSelectedLotId(visibleLots[selectedIndex - 1].id)}
+        onNext={() =>
+          selectedIndex >= 0 &&
+          selectedIndex < visibleLots.length - 1 &&
+          setSelectedLotId(visibleLots[selectedIndex + 1].id)
+        }
+      />
+
+      {/* Barra sticky de conversión (mobile) */}
+      <ProjectConversionBar
+        projectName={title}
+        priceFrom={stats.priceFrom}
+        availableLots={stats.available}
+        whatsapp={cfg.contact.whatsapp}
+        onLead={() => openLead()}
+        onSeeLots={goMasterplan}
+      />
     </div>
   );
+
 };
 
 export default ProjectLanding;
