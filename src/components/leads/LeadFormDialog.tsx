@@ -41,6 +41,11 @@ const leadSchema = z.object({
   phone: z.string().trim().max(20).optional(),
   status: z.enum(['new', 'contacted', 'qualified', 'negotiating', 'converted', 'lost']),
   source: z.string().max(50).optional(),
+  national_id: z.string().trim().max(30).optional(),
+  city: z.string().trim().max(80).optional(),
+  region: z.string().trim().max(80).optional(),
+  interest_type: z.string().max(30).optional(),
+  preferred_contact: z.string().max(30).optional(),
   budget_min: z.number().min(0).optional().nullable(),
   budget_max: z.number().min(0).optional().nullable(),
   notes: z.string().max(1000).optional(),
@@ -68,6 +73,11 @@ export function LeadFormDialog({ trigger, onSuccess }: LeadFormDialogProps) {
       phone: '',
       status: 'new',
       source: '',
+      national_id: '',
+      city: '',
+      region: '',
+      interest_type: '',
+      preferred_contact: '',
       budget_min: null,
       budget_max: null,
       notes: '',
@@ -90,6 +100,11 @@ export function LeadFormDialog({ trigger, onSuccess }: LeadFormDialogProps) {
         phone: data.phone || null,
         status: data.status,
         source: data.source || null,
+        national_id: data.national_id || null,
+        city: data.city || null,
+        region: data.region || null,
+        interest_type: data.interest_type || null,
+        preferred_contact: data.preferred_contact || null,
         budget_min: data.budget_min,
         budget_max: data.budget_max,
         notes: data.notes || null,
@@ -240,6 +255,98 @@ export function LeadFormDialog({ trigger, onSuccess }: LeadFormDialogProps) {
                 )}
               />
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="national_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>RUT / documento</FormLabel>
+                    <FormControl>
+                      <Input placeholder="12.345.678-9" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="preferred_contact"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Canal preferido</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona canal" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                        <SelectItem value="phone">Teléfono</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ciudad / comuna</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Hualañé" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="region"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Región</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Maule" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="interest_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de interés</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona interés" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="primera_vivienda">Primera vivienda</SelectItem>
+                      <SelectItem value="segunda_vivienda">Segunda vivienda</SelectItem>
+                      <SelectItem value="inversion">Inversión</SelectItem>
+                      <SelectItem value="agricola">Agrícola / productivo</SelectItem>
+                      <SelectItem value="desarrollo">Desarrollo inmobiliario</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
