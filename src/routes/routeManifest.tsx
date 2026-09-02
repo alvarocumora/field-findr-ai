@@ -110,6 +110,7 @@ const ProjectLanding = lazy(() => import("@/pages/landing/ProjectLanding"));
 // Comprador
 const BuyerHome = lazy(() => import("@/pages/BuyerHome"));
 const BuyerProgress = lazy(() => import("@/pages/BuyerProgress"));
+const InventoryMap = lazy(() => import("@/pages/dashboard/InventoryMap"));
 const Favorites = lazy(() => import("@/components/Favorites"));
 const MiTerreno = lazy(() => import("@/pages/MiTerreno"));
 const Profile = lazy(() => import("@/pages/Profile"));
@@ -386,6 +387,7 @@ export const buyerRouteEntries: RouteEntry[] = [
     element: <Panel />,
   },
   buyer("buyer-home", "/comprador/inicio", <BuyerHome />, { label: "Inicio", group: "comprador", icon: "home", primary: true }),
+  buyer("comprador-progreso", "/comprador", <BuyerProgress />, { label: "Mi Progreso", group: "comprador", icon: "trending-up" }),
   buyer("favoritos", "/favoritos", <Favorites />, { label: "Favoritos", group: "comprador", icon: "heart" }),
   buyer("mi-terreno", "/mi-terreno", <MiTerreno />, { label: "Mi Terreno", group: "comprador", icon: "map-pin" }),
   buyer("perfil", "/perfil", <Profile />, { label: "Mi Perfil", group: "comprador", icon: "user" }),
@@ -402,6 +404,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-broker-marketplace", "/asesor/proyectos-en-venta", <BrokerMarketplace />, { label: "Proyectos en venta", group: "red comercial", icon: "store" }),
 
   // Inventario
+  agent("panel-inventario", "/panel/inventario", <InventoryMap />, { label: "Mapa de inventario", group: "proyectos", icon: "map" }),
   agent("asesor-listings", "/asesor/listings", <PropertyInventory />, { label: "Inventario", group: "proyectos", icon: "building" }),
   agent("asesor-projects", "/asesor/projects", <ProjectsManagement />, { label: "Proyectos", group: "proyectos", icon: "folder" }),
   agent("asesor-lots", "/asesor/lots", <LotManagement />, { label: "Lotes", group: "proyectos", icon: "grid" }),
@@ -550,7 +553,6 @@ export const routeAliases: RouteAlias[] = [
 
   // Entrada unificada: /panel/* como atajo estable a las secciones del panel
   { from: "/panel/inicio", to: "/panel" },
-  { from: "/panel/inventario", to: "/asesor/listings" },
   { from: "/panel/loteos", to: "/asesor/loteos" },
   { from: "/panel/leads", to: "/asesor/leads" },
   { from: "/panel/ventas", to: "/asesor/sales" },

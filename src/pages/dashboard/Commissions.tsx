@@ -13,6 +13,7 @@ import {
   useReferralCommissionsOwed,
   useMarkReferralPaid,
 } from '@/hooks/useReferrals.commissions';
+import ReferralCodeCard from '@/components/commissions/ReferralCodeCard';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n || 0);
@@ -71,6 +72,12 @@ const CommissionsPage = () => {
         <StatCard icon={<Handshake className="h-5 w-5" />} label="Referidos · cobradas" value={fmt(totals.earnedPaid)} tone="emerald" />
         <StatCard icon={<Users className="h-5 w-5" />} label="Referidos · por cobrar" value={fmt(totals.earnedPending)} tone="amber" />
       </div>
+
+      <ReferralCodeCard
+        pendingBalance={totals.earnedPending}
+        paidBalance={totals.earnedPaid}
+        referredSales={earned.length}
+      />
 
       <Tabs defaultValue="mine">
         <TabsList>

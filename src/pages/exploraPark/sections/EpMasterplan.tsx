@@ -6,7 +6,8 @@ import { motion } from 'framer-motion';
 import { Loader2, Compass, Layers } from 'lucide-react';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { EXPLORA_PARK_PROJECT } from '../data/project';
-import { EXPLORA_PARK_LOTS, type EpLotStatus } from '../data/lots';
+import { type EpLotStatus } from '../data/lots';
+import { useEpLots } from '../data/useEpLots';
 import { useExploraParkState } from '../state/ExploraParkContext';
 
 type StatusFilter = EpLotStatus;
@@ -25,6 +26,10 @@ export default function EpMasterplan() {
   const [styleReady, setStyleReady] = useState(false);
   const { token, loading: tokenLoading } = useMapboxToken();
 
+  const { lots } = useEpLots();
+  const lotsRef = useRef(lots);
+  lotsRef.current = lots;
+
   const {
     activeStatus,
     toggleStatus,
@@ -35,13 +40,13 @@ export default function EpMasterplan() {
 
   const counts = useMemo(() => {
     const c: Record<StatusFilter, number> = { available: 0, reserved: 0, sold: 0 };
-    for (const l of EXPLORA_PARK_LOTS) c[l.status]++;
+    for (const l of lots) c[l.status]++;
     return c;
-  }, []);
+  }, [lots]);
 
   // Live summary based on active filters
   const summary = useMemo(() => {
-    const visible = EXPLORA_PARK_LOTS.filter((l) => activeStatus.has(l.status));
+    const visible = lots.filter((l) => activeStatus.has(l.status));
     const total = visible.length;
     const totalArea = visible.reduce((s, l) => s + l.area_m2, 0);
     const totalPrice = visible.reduce((s, l) => s + l.price_clp, 0);
@@ -51,7 +56,7 @@ export default function EpMasterplan() {
       avgAreaM2: total ? Math.round(totalArea / total) : 0,
       avgPriceClp: total ? Math.round(totalPrice / total) : 0,
     };
-  }, [activeStatus]);
+  }, [activeStatus, lots]);
 
   useEffect(() => {
     if (!containerRef.current || tokenLoading || !token || mapRef.current) return;
@@ -80,7 +85,7 @@ export default function EpMasterplan() {
     map.on('load', () => {
       const fc: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
-        features: EXPLORA_PARK_LOTS.map((l) => ({
+        features: lotsRef.current.map((l) => ({
           type: 'Feature',
           properties: {
             id: l.id,
@@ -141,7 +146,7 @@ export default function EpMasterplan() {
       // Lot numbers
       const nums: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
-        features: EXPLORA_PARK_LOTS.map((l) => ({
+        features: lotsRef.current.map((l) => ({
           type: 'Feature',
           properties: { num: l.lot_number, status: l.status },
           geometry: { type: 'Point', coordinates: l.centroid },
@@ -199,6 +204,35 @@ export default function EpMasterplan() {
      
   }, [token, tokenLoading]);
 
+  // Refresca la fuente cuando llegan los datos en vivo (precio/estado/ficha).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !styleReady) return;
+    const fillSrc = map.getSource('lots') as mapboxgl.GeoJSONSource | undefined;
+    const numsSrc = map.getSource('nums') as mapboxgl.GeoJSONSource | undefined;
+    if (!fillSrc || !numsSrc) return;
+    fillSrc.setData({
+      type: 'FeatureCollection',
+      features: lots.map((l) => ({
+        type: 'Feature',
+        id: l.id,
+        properties: {
+          id: l.id, num: l.lot_number, status: l.status,
+          area: l.area_m2, price: l.price_clp, listing_id: l.listing_id ?? '',
+        },
+        geometry: { type: 'Polygon', coordinates: [[...l.polygon, l.polygon[0]]] },
+      })),
+    } as GeoJSON.FeatureCollection);
+    numsSrc.setData({
+      type: 'FeatureCollection',
+      features: lots.map((l) => ({
+        type: 'Feature',
+        properties: { num: l.lot_number, status: l.status },
+        geometry: { type: 'Point', coordinates: l.centroid },
+      })),
+    } as GeoJSON.FeatureCollection);
+  }, [lots, styleReady]);
+
   // Apply status filter
   useEffect(() => {
     const map = mapRef.current;
@@ -233,7 +267,7 @@ export default function EpMasterplan() {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !styleReady || !focusRequest) return;
-    const lot = EXPLORA_PARK_LOTS.find((l) => l.id === focusRequest.lotId);
+    const lot = lotsRef.current.find((l) => l.id === focusRequest.lotId);
     if (!lot) return;
 
     // clear previous focus
@@ -413,7 +447,7 @@ export default function EpMasterplan() {
               </div>
               {hoveredLotId && (
                 <div className="pointer-events-none absolute top-3 right-3 z-10 rounded-sm bg-black/60 backdrop-blur-md px-3 py-1.5 text-[10px] tracking-[0.22em] uppercase text-[var(--hue-bone)]/85">
-                  Lote {EXPLORA_PARK_LOTS.find((l) => l.id === hoveredLotId)?.lot_number ?? ''}
+                  Lote {lots.find((l) => l.id === hoveredLotId)?.lot_number ?? ''}
                 </div>
               )}
             </div>
