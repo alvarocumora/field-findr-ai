@@ -128,9 +128,9 @@ const InventoryMap = () => {
     let any = false;
 
     for (const lot of lots) {
-      const norm = normalizePolygon(lot.polygon);
+      const norm = normalizePolygon(lot.polygon as number[][] | null);
       if (!norm.valid) continue;
-      const ring = norm.coordinates as [number, number][];
+      const ring = norm.coords as [number, number][];
       ring.forEach(c => bounds.extend(c));
       any = true;
       features.push({
