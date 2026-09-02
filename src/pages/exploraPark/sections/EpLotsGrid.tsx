@@ -63,7 +63,7 @@ export default function EpLotsGrid() {
       default: arr.sort((a, b) => parseInt(a.lot_number) - parseInt(b.lot_number));
     }
     return arr;
-  }, [activeStatus, query, sort]);
+  }, [activeStatus, query, sort, lots]);
 
   const shown = filtered.slice(0, visible);
 
