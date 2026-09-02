@@ -109,6 +109,7 @@ const ProjectLanding = lazy(() => import("@/pages/landing/ProjectLanding"));
 
 // Comprador
 const BuyerHome = lazy(() => import("@/pages/BuyerHome"));
+const BuyerProgress = lazy(() => import("@/pages/BuyerProgress"));
 const Favorites = lazy(() => import("@/components/Favorites"));
 const MiTerreno = lazy(() => import("@/pages/MiTerreno"));
 const Profile = lazy(() => import("@/pages/Profile"));
