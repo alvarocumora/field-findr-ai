@@ -22,6 +22,7 @@ import { useSalesClosings, CLOSING_STATUS, ClosingStatus } from '@/hooks/useSale
 import { useLeads } from '@/hooks/useLeads';
 import { useProjects } from '@/hooks/useProjects';
 import { cn } from '@/lib/utils';
+import CloseSaleWizard, { CloseSaleResult } from '@/components/sales/CloseSaleWizard';
 
 const emptyForm = {
   buyer_name: '',
@@ -47,6 +48,8 @@ const ClosingsManager = () => {
   const { projects } = useProjects();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [closingTarget, setClosingTarget] = useState<string | null>(null);
+  const target = closings.find((c) => c.id === closingTarget) ?? null;
 
   const set = (k: keyof typeof emptyForm, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -252,7 +255,17 @@ const ClosingsManager = () => {
                       <TableCell>
                         <Badge variant="outline" className={cn('border', st.className)}>{st.label}</Badge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right space-y-2">
+                        {c.status !== 'closed' && c.status !== 'void' && (
+                          <Button
+                            size="sm"
+                            className="w-[11rem] ml-auto flex"
+                            onClick={() => setClosingTarget(c.id)}
+                          >
+                            <FileSignature className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                            Cerrar venta
+                          </Button>
+                        )}
                         <Select
                           value={c.status}
                           onValueChange={(status) => updateClosing.mutate({
@@ -288,6 +301,17 @@ const ClosingsManager = () => {
           )}
         </CardContent>
       </Card>
+      <CloseSaleWizard
+        closing={target}
+        open={!!closingTarget}
+        onOpenChange={(v) => setClosingTarget(v ? closingTarget : null)}
+        isSubmitting={updateClosing.isPending}
+        onConfirm={async (payload: CloseSaleResult) => {
+          if (!target) return;
+          await updateClosing.mutateAsync({ id: target.id, ...payload });
+          setClosingTarget(null);
+        }}
+      />
     </div>
   );
 };
