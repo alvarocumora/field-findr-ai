@@ -3016,6 +3016,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_my_buyer_progress: { Args: never; Returns: Json }
       get_owner_lot_buyer: {
         Args: { p_lot_id: string }
         Returns: {
