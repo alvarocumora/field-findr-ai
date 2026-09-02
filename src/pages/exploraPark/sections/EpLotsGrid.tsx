@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, ArrowUpDown, MapPin, MessageSquare, Crosshair } from 'lucide-react';
-import { EXPLORA_PARK_LOTS, type EpLotStatus } from '../data/lots';
+import { type EpLotStatus } from '../data/lots';
+import { useEpLots } from '../data/useEpLots';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EpLeadForm from '../components/EpLeadForm';
 import { useExploraParkState } from '../state/ExploraParkContext';
@@ -33,22 +34,23 @@ export default function EpLotsGrid() {
     requestFocus,
   } = useExploraParkState();
 
+  const { lots } = useEpLots();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('num');
   const [visible, setVisible] = useState(PAGE);
   const [leadLot, setLeadLot] = useState<{ id: string; number: string; status: EpLotStatus } | null>(null);
 
   const counts = useMemo(() => {
-    const c = { all: EXPLORA_PARK_LOTS.length, available: 0, reserved: 0, sold: 0 };
-    for (const l of EXPLORA_PARK_LOTS) c[l.status]++;
+    const c = { all: lots.length, available: 0, reserved: 0, sold: 0 };
+    for (const l of lots) c[l.status]++;
     return c;
-  }, []);
+  }, [lots]);
 
   const allActive = ALL_STATUSES.every((s) => activeStatus.has(s));
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const arr = EXPLORA_PARK_LOTS.filter((l) => {
+    const arr = lots.filter((l) => {
       if (!activeStatus.has(l.status)) return false;
       if (q && !l.lot_number.includes(q)) return false;
       return true;
