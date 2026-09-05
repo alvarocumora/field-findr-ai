@@ -18,6 +18,7 @@ import { parseLandingConfig, summarizeLots } from '@/lib/landing/config';
 import { LandingLeadForm } from './LandingLeadForm';
 import { bespokeLandings, canonicalPathForSlug } from '@/lib/landing/registry';
 import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
+import { ProjectDownloads } from '@/components/projects/ProjectDownloads';
 
 
 const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
