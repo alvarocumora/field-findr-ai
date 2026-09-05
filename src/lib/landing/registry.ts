@@ -18,6 +18,7 @@ export const bespokeLandings: Record<string, LazyExoticComponent<ComponentType>>
   huellelhue: lazy(() => import('@/pages/huellelhue/HuellelhueLanding')),
   'playa-alvaro': lazy(() => import('@/pages/playaAlvaro/PlayaAlvaroLanding')),
   'forestal-valle-escondido': lazy(() => import('@/pages/forestal/ForestalLanding')),
+  'valle-escondido-licanten': lazy(() => import('@/pages/valleEscondidoLicanten/VelLanding')),
 };
 
 /** URL canónica pública de cada landing (las históricas mandan por SEO). */
