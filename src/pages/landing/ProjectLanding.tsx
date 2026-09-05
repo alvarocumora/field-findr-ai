@@ -329,7 +329,27 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
           </section>
         )}
 
+        {/* Material descargable (dossier, precios, plano) */}
+        <ProjectDownloads
+          project={{
+            id: project.id,
+            name: title,
+            slug: slug ?? null,
+            description: (project.description as string | null) ?? null,
+            location: (project.location as string | null) ?? null,
+            region: (project.region as string | null) ?? null,
+            latitude: (project.latitude as number | null) ?? null,
+            longitude: (project.longitude as number | null) ?? null,
+            images: gallery,
+            highlights: cfg.highlights,
+            contact: cfg.contact,
+          }}
+          lots={lots}
+          projectOwnerId={project.user_id}
+        />
+
         {/* Contacto */}
+
         {cfg.sections.contact && (
           <section className="grid md:grid-cols-2 gap-6 items-start">
             <div>
