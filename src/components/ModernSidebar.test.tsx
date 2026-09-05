@@ -51,9 +51,11 @@ describe('ModernSidebar — segmentación por tipo de cuenta', () => {
     expect(screen.getByText('Inmobiliaria')).toBeInTheDocument();
     expect(screen.queryByText('CORREDOR')).not.toBeInTheDocument();
     expect(screen.getByText('INMOBILIARIA')).toBeInTheDocument();
-    expect(screen.getByText('inventario')).toBeInTheDocument();
+    expect(screen.getByText('proyectos')).toBeInTheDocument();
     expect(screen.getByText('ventas')).toBeInTheDocument();
-    expect(screen.getByText('análisis')).toBeInTheDocument();
+    expect(screen.getByText('red comercial')).toBeInTheDocument();
+    expect(screen.getByText('administración')).toBeInTheDocument();
+    expect(screen.getByText('configuración')).toBeInTheDocument();
   });
 
   it('plan grupo/enterprise también recibe el panel de inmobiliaria', () => {
