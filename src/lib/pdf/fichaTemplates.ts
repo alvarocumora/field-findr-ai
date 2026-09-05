@@ -10,7 +10,7 @@ import { getFichaTheme } from '@/lib/pdf/fichaTheme';
  * y las primitivas de contenido son siempre los mismos (fichaShell).
  */
 
-export type FichaTemplateId = 'dossier' | 'lote' | 'predio-urbano';
+export type FichaTemplateId = 'dossier' | 'lote' | 'predio-urbano' | 'proyecto';
 
 export interface FichaTemplate {
   id: FichaTemplateId;
