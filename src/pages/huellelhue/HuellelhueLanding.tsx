@@ -9,6 +9,7 @@ import HueArchitecture from './sections/HueArchitecture';
 import HueConservation from './sections/HueConservation';
 import HueContact from './sections/HueContact';
 import HueFooter from './sections/HueFooter';
+import { ProjectDownloadsBySlug } from '@/components/projects/ProjectDownloadsBySlug';
 
 export default function HuellelhueLanding() {
   // Cinematic cursor glow
@@ -45,6 +46,11 @@ export default function HuellelhueLanding() {
       <HueEcosystem />
       <HueArchitecture />
       <HueConservation />
+      <div className="bg-background py-14">
+        <div className="container max-w-5xl">
+          <ProjectDownloadsBySlug slug="huellelhue" />
+        </div>
+      </div>
       <HueContact />
       <HueFooter />
     </div>

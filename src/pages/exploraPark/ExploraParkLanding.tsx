@@ -9,6 +9,7 @@ import EpLotsGrid from './sections/EpLotsGrid';
 import EpContact from './sections/EpContact';
 import EpFooter from './sections/EpFooter';
 import { ExploraParkStateProvider } from './state/ExploraParkContext';
+import { ProjectDownloadsBySlug } from '@/components/projects/ProjectDownloadsBySlug';
 
 export default function ExploraParkLanding() {
   useEffect(() => {
@@ -55,6 +56,11 @@ export default function ExploraParkLanding() {
         <EpGallery />
         <EpMasterplan />
         <EpLotsGrid />
+        <div className="bg-background py-14">
+          <div className="container max-w-5xl">
+            <ProjectDownloadsBySlug slug="explora-park" />
+          </div>
+        </div>
         <EpContact />
         <EpFooter />
       </ExploraParkStateProvider>

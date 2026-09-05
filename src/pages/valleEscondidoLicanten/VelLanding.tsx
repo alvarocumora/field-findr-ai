@@ -10,6 +10,7 @@ import VelContacto from './sections/VelContacto';
 import VelFooter from './sections/VelFooter';
 import { VelStateProvider } from './state/VelContext';
 import { VEL_PROJECT } from './data/project';
+import { ProjectDownloadsBySlug } from '@/components/projects/ProjectDownloadsBySlug';
 
 export default function VelLanding() {
   useEffect(() => {
@@ -43,6 +44,11 @@ export default function VelLanding() {
         <VelGallery />
         <VelMasterplan />
         <VelLotsGrid />
+        <div className="bg-background py-14">
+          <div className="container max-w-5xl">
+            <ProjectDownloadsBySlug slug="valle-escondido-licanten" />
+          </div>
+        </div>
         <VelContacto />
         <VelFooter />
       </VelStateProvider>

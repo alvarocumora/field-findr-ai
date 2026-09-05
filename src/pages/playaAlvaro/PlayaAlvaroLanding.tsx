@@ -8,6 +8,7 @@ import PaEcosystem from './sections/PaEcosystem';
 import PaComparables from './sections/PaComparables';
 import PaContact from './sections/PaContact';
 import PaFooter from './sections/PaFooter';
+import { ProjectDownloadsBySlug } from '@/components/projects/ProjectDownloadsBySlug';
 
 export default function PlayaAlvaroLanding() {
   useEffect(() => {
@@ -51,6 +52,11 @@ export default function PlayaAlvaroLanding() {
       <PaTour3D />
       <PaEcosystem />
       <PaComparables />
+      <div className="bg-background py-14">
+        <div className="container max-w-5xl">
+          <ProjectDownloadsBySlug slug="playa-alvaro" />
+        </div>
+      </div>
       <PaContact />
       <PaFooter />
     </div>

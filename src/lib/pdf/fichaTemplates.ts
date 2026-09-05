@@ -10,7 +10,7 @@ import { getFichaTheme } from '@/lib/pdf/fichaTheme';
  * y las primitivas de contenido son siempre los mismos (fichaShell).
  */
 
-export type FichaTemplateId = 'dossier' | 'lote' | 'predio-urbano';
+export type FichaTemplateId = 'dossier' | 'lote' | 'predio-urbano' | 'proyecto';
 
 export interface FichaTemplate {
   id: FichaTemplateId;
@@ -41,6 +41,16 @@ const buildTemplates = (): Record<FichaTemplateId, FichaTemplate> => {
     qrCaption: 'Escanear ficha online',
     disclaimer: () =>
       'Documento de caracter informativo y confidencial, preparado para la evaluacion de una entidad financiera. Las cifras de valoracion no constituyen oferta ni compromiso de credito. Los antecedentes completos estan disponibles en el data room digital de la ficha.',
+  },
+  proyecto: {
+    id: 'proyecto',
+    footerNote: foot('Material del proyecto'),
+    eyebrow: 'Material del proyecto',
+    headerColor: BRAND.forest,
+    headerHeight: 54,
+    qrCaption: 'Ver proyecto online',
+    disclaimer: ({ date }) =>
+      `Documento generado por ofertaterrenos.com el ${date}. Superficies, precios y disponibilidad son referenciales y pueden variar sin previo aviso; las imagenes y planos son referenciales.`,
   },
   lote: {
     id: 'lote',
