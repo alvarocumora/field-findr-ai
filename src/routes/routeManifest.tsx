@@ -139,6 +139,7 @@ const NotificationTemplates = lazy(() => import("@/pages/dashboard/NotificationT
 const SalesPipeline = lazy(() => import("@/pages/dashboard/SalesPipeline"));
 const VisitsManager = lazy(() => import("@/pages/dashboard/VisitsManager"));
 const ClosingsManager = lazy(() => import("@/pages/dashboard/ClosingsManager"));
+const ClientsBook = lazy(() => import("@/pages/dashboard/ClientsBook"));
 const MultiProjectDashboard = lazy(() => import("@/pages/dashboard/MultiProjectDashboard"));
 const PaymentManagement = lazy(() => import("@/pages/dashboard/PaymentManagement"));
 const Reports = lazy(() => import("@/pages/dashboard/Reports"));
@@ -412,6 +413,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-subdivision", "/asesor/subdivision", <SubdivisionStudio />, { label: "Estudio de subdivisión", group: "proyectos", icon: "grid" }),
 
   // CRM
+  agent("clientes", "/clientes", <ClientsBook />, { label: "Clientes", group: "ventas", icon: "users" }),
   agent("asesor-leads", "/asesor/leads", <LeadManagement />, { label: "Leads", group: "ventas", icon: "users" }),
   agent("asesor-contacts", "/asesor/contacts", <Contacts />, { label: "Contactos", group: "ventas", icon: "users" }),
   agent("asesor-crm", "/asesor/crm", <CRMSystem />, { label: "CRM", group: "ventas", icon: "workflow" }),
