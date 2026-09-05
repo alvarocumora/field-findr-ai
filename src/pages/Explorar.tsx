@@ -6,6 +6,7 @@ import ExploreMapPanel, { MapBounds } from '@/components/explore/ExploreMapPanel
 import MobileExploreView from '@/components/explore/MobileExploreView';
 import PropertyPreviewSheet from '@/components/explore/PropertyPreviewSheet';
 import ProjectsRail from '@/components/explore/ProjectsRail';
+import LifestyleChips from '@/components/explore/LifestyleChips';
 import EnhancedAISearch from '@/components/ai/EnhancedAISearch';
 import CompareFloatingBar from '@/components/compare/CompareFloatingBar';
 import CompareSheet from '@/components/compare/CompareSheet';
@@ -145,6 +146,17 @@ const Explorar = () => {
       };
       result = result.filter(l => l.lat != null && l.lng != null && inside(Number(l.lng), Number(l.lat)));
     }
+    // Orden por completitud: primero destacados, luego las publicaciones con
+    // material completo (fotos, ubicación, precio, descripción) — no por antigüedad.
+    const completeness = (l: Listing) =>
+      (l.featured ? 100 : 0) +
+      Math.min(((l.images?.length ?? 0) as number), 4) * 6 +
+      (l.lat != null && l.lng != null ? 8 : 0) +
+      (l.price ? 6 : 0) +
+      (l.area_m2 ? 4 : 0) +
+      ((l.description?.length ?? 0) > 120 ? 5 : 0) +
+      Math.min((l.tags?.length ?? 0), 4) * 2;
+    result.sort((a, b) => completeness(b) - completeness(a));
     return result;
   }, [listings, searchQuery, selectedTags, selectedSlopes, selectedValuation, drawnPolygon]);
 
@@ -382,6 +394,11 @@ const Explorar = () => {
         {/* Left panel – scrollable list */}
         <div className="w-[420px] min-w-[380px] flex-shrink-0 border-r border-border/30 flex flex-col min-h-0">
           <ProjectsRail />
+          <LifestyleChips
+            selectedTags={selectedTags}
+            onToggleTag={toggleTag}
+            className="border-b border-border/30"
+          />
           <div className="flex-1 min-h-0">
           <ExploreListPanel
             listings={filteredListings}
