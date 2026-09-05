@@ -101,6 +101,7 @@ const BrokerShowcase = lazy(() => import("@/pages/brokers/BrokerShowcase"));
 const Comunidad = lazy(() => import("@/pages/Comunidad"));
 const Comenzar = lazy(() => import("@/pages/Comenzar"));
 const Panel = lazy(() => import("@/pages/Panel"));
+const Agendar = lazy(() => import("@/pages/Agendar"));
 
 // Landings de proyecto (SEO vivo: URLs congeladas)
 const InvestorsLogin = lazy(() => import("@/pages/forestal/InvestorsLogin"));
@@ -159,6 +160,7 @@ const MyBrokerBusiness = lazy(() => import("@/pages/dashboard/MyBrokerBusiness")
 const BrokerNetwork = lazy(() => import("@/pages/dashboard/BrokerNetwork"));
 const SupportTickets = lazy(() => import("@/pages/dashboard/SupportTickets"));
 const HelpCenter = lazy(() => import("@/pages/HelpCenter"));
+const MeetingsManager = lazy(() => import("@/pages/dashboard/MeetingsManager"));
 
 // Admin
 const DashboardAdminPage = lazy(() => import("./elements/AdminDashboard"));
@@ -342,6 +344,12 @@ export const publicRouteEntries: RouteEntry[] = [
         "Responde unas preguntas sobre uso, presupuesto y zona y te mostramos los terrenos con mayor porcentaje de match.",
     },
   }),
+  pub("agendar", "/agendar", <Agendar />, {
+    seo: {
+      title: "Agendar reunión | Oferta Terrenos",
+      description: "Solicita una reunión comercial, visita a terreno o conversación sobre tu campo con Oferta Terrenos.",
+    },
+  }),
   pub("reset-password", "/reset-password", <ResetPassword />, { indexable: false }),
   pub("subscription-success", "/subscription/success", <SubscriptionSuccess />, { indexable: false }),
   pub("subscription-failure", "/subscription/failure", <SubscriptionFailure />, { indexable: false }),
@@ -424,6 +432,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-pipeline", "/asesor/pipeline", <SalesPipeline />, { label: "Pipeline", group: "ventas", icon: "workflow" }),
   agent("asesor-reservations", "/asesor/reservations", <ReservationsManager />, { label: "Reservas", group: "ventas", icon: "calendar" }),
   agent("asesor-visitas", "/asesor/visitas", <VisitsManager />, { label: "Visitas", group: "ventas", icon: "calendar" }),
+  agent("asesor-reuniones", "/asesor/reuniones", <MeetingsManager />, { label: "Reuniones", group: "ventas", icon: "calendar" }),
   agent("asesor-cierres", "/asesor/cierres", <ClosingsManager />, { label: "Cierres de venta", group: "ventas", icon: "handshake" }),
   agent("asesor-sales", "/asesor/sales", <SalesManagement />, { label: "Ventas", group: "ventas", icon: "handshake" }),
   agent("asesor-closing", "/asesor/closing", <ClosingManager />, { label: "Cierre", group: "ventas", icon: "scale" }),
