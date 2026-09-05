@@ -36,7 +36,9 @@ const LifestyleChips = ({ selectedTags, onToggleTag, className }: Props) => (
           key={c.key}
           type="button"
           aria-pressed={active}
-          onClick={() => c.tags.forEach((t, i) => (i === 0 || selectedTags.includes(t)) && onToggleTag(t))}
+          onClick={() =>
+            (active ? c.tags.filter((t) => selectedTags.includes(t)) : c.tags).forEach((t) => onToggleTag(t))
+          }
           className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
             active
               ? 'border-primary bg-primary text-primary-foreground'
