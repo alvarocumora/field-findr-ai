@@ -110,6 +110,36 @@ const centerOf = (project: KitProject, lots: KitLot[]) => {
   };
 };
 
+/** Codifica un número en el formato polyline de Google/Mapbox (precisión 5). */
+const encodeNumber = (value: number): string => {
+  let num = value < 0 ? ~(value << 1) : value << 1;
+  let out = '';
+  while (num >= 0x20) {
+    out += String.fromCharCode((0x20 | (num & 0x1f)) + 63);
+    num >>= 5;
+  }
+  return out + String.fromCharCode(num + 63);
+};
+
+/** Convierte un anillo [lng,lat][] en polyline codificada. */
+const encodeRing = (ring: [number, number][]): string => {
+  const pts = [...ring];
+  if (pts.length && (pts[0][0] !== pts[pts.length - 1][0] || pts[0][1] !== pts[pts.length - 1][1])) {
+    pts.push(pts[0]);
+  }
+  let lat = 0;
+  let lng = 0;
+  let out = '';
+  for (const [x, y] of pts) {
+    const la = Math.round(y * 1e5);
+    const ln = Math.round(x * 1e5);
+    out += encodeNumber(la - lat) + encodeNumber(ln - lng);
+    lat = la;
+    lng = ln;
+  }
+  return out;
+};
+
 /** URL de mapa satelital estático con los polígonos del loteo. */
 export const buildProjectMapUrl = (
   project: KitProject,
@@ -122,25 +152,18 @@ export const buildProjectMapUrl = (
 
   let overlay = '';
   if (rings.length) {
-    const features = rings.map((coords, i) => ({
-      type: 'Feature',
-      properties: {
-        stroke: '#22C55E',
-        'stroke-width': 1.4,
-        'stroke-opacity': 0.95,
-        fill: '#22C55E',
-        'fill-opacity': (lots[i]?.status ?? 'available') === 'available' ? 0.22 : 0.1,
-      },
-      geometry: { type: 'Polygon', coordinates: [coords] },
-    }));
-    // Mapbox Static limita la URL: recortamos features hasta caber.
-    let used = features;
-    let encoded = encodeURIComponent(JSON.stringify({ type: 'FeatureCollection', features: used }));
-    while (encoded.length > 6800 && used.length > 1) {
+    // Polyline codificada: ~7x más compacto que GeoJSON, permite dibujar todo el loteo.
+    let used = rings.map((ring, i) => {
+      const status = lots[i]?.status ?? 'available';
+      const fill = status === 'available' ? '0.25' : '0.1';
+      return `path-1.2+22c55e-1+22c55e-${fill}(${encodeURIComponent(encodeRing(ring))})`;
+    });
+    overlay = used.join(',');
+    while (overlay.length > 6800 && used.length > 1) {
       used = used.filter((_, i) => i % 2 === 0);
-      encoded = encodeURIComponent(JSON.stringify({ type: 'FeatureCollection', features: used }));
+      overlay = used.join(',');
     }
-    if (encoded.length <= 6800) overlay = `geojson(${encoded})`;
+    if (overlay.length > 6800) overlay = '';
   }
   if (!overlay) {
     if (!center) return null;
@@ -150,6 +173,7 @@ export const buildProjectMapUrl = (
   const view = rings.length ? 'auto' : `${center!.lng},${center!.lat},13,0`;
   return `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${overlay}/${view}/${size.w}x${size.h}@2x?padding=40&access_token=${token}`;
 };
+
 
 /** Tabla simple con cabecera de marca y filas zebra. */
 const table = (
