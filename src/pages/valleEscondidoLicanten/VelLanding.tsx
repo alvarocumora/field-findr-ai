@@ -43,6 +43,11 @@ export default function VelLanding() {
         <VelGallery />
         <VelMasterplan />
         <VelLotsGrid />
+        <div className="bg-background py-14">
+          <div className="container max-w-5xl">
+            <ProjectDownloadsBySlug slug="valle-escondido-licanten" />
+          </div>
+        </div>
         <VelContacto />
         <VelFooter />
       </VelStateProvider>
