@@ -17,6 +17,7 @@ import FveProceso from './sections/FveProceso';
 import FveFaqs from './sections/FveFaqs';
 import FveContacto from './sections/FveContacto';
 import FveFooter from './sections/FveFooter';
+import { ProjectDownloadsBySlug } from '@/components/projects/ProjectDownloadsBySlug';
 
 export default function ForestalLanding() {
   useSEO({
@@ -79,6 +80,11 @@ export default function ForestalLanding() {
       <FveDesarrollador />
       <FveProceso />
       <FveFaqs />
+      <div className="bg-background py-14">
+        <div className="container max-w-5xl">
+          <ProjectDownloadsBySlug slug="forestal-valle-escondido" />
+        </div>
+      </div>
       <FveContacto />
       <FveFooter />
     </div>
