@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 import type { VelLotStatus } from '../data/lots';
 
 type FocusRequest = { lotId: string; nonce: number } | null;
+type PoiRequest = { poiKey: string; nonce: number } | null;
 
 interface Ctx {
   activeStatus: Set<VelLotStatus>;
@@ -11,6 +12,8 @@ interface Ctx {
   setHoveredLotId: (id: string | null) => void;
   focusRequest: FocusRequest;
   requestFocus: (lotId: string) => void;
+  poiRequest: PoiRequest;
+  requestPoi: (poiKey: string) => void;
 }
 
 const VelStateContext = createContext<Ctx | null>(null);
@@ -21,6 +24,7 @@ export function VelStateProvider({ children }: { children: ReactNode }) {
   );
   const [hoveredLotId, setHoveredLotId] = useState<string | null>(null);
   const [focusRequest, setFocusRequest] = useState<FocusRequest>(null);
+  const [poiRequest, setPoiRequest] = useState<PoiRequest>(null);
 
   const toggleStatus = useCallback((s: VelLotStatus) => {
     setActiveStatus((prev) => {
@@ -41,6 +45,10 @@ export function VelStateProvider({ children }: { children: ReactNode }) {
     setFocusRequest({ lotId, nonce: Date.now() });
   }, []);
 
+  const requestPoi = useCallback((poiKey: string) => {
+    setPoiRequest({ poiKey, nonce: Date.now() });
+  }, []);
+
   const value = useMemo<Ctx>(
     () => ({
       activeStatus,
@@ -50,8 +58,10 @@ export function VelStateProvider({ children }: { children: ReactNode }) {
       setHoveredLotId,
       focusRequest,
       requestFocus,
+      poiRequest,
+      requestPoi,
     }),
-    [activeStatus, toggleStatus, setOnlyStatus, hoveredLotId, focusRequest, requestFocus],
+    [activeStatus, toggleStatus, setOnlyStatus, hoveredLotId, focusRequest, requestFocus, poiRequest, requestPoi],
   );
 
   return (
@@ -72,6 +82,8 @@ export function useVelState(): Ctx {
       setHoveredLotId: noop,
       focusRequest: null,
       requestFocus: noop,
+      poiRequest: null,
+      requestPoi: noop,
     };
   }
   return ctx;
