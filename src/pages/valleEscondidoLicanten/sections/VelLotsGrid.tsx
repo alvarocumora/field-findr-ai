@@ -1,12 +1,16 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, ArrowUpDown, MapPin, MessageSquare, Crosshair } from 'lucide-react';
+import { Search, ArrowUpDown, MapPin, MessageSquare, Crosshair, FileDown } from 'lucide-react';
 import { type VelLotStatus } from '../data/lots';
 import { useVelLots } from '../data/useVelLots';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import VelLeadForm from '../components/VelLeadForm';
 import { useVelState } from '../state/VelContext';
+import { VEL_PROJECT } from '../data/project';
+import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { toast } from 'sonner';
 
 type SortKey = 'num' | 'area_asc' | 'area_desc' | 'price_asc' | 'price_desc';
 
@@ -39,6 +43,36 @@ export default function VelLotsGrid() {
   const [sort, setSort] = useState<SortKey>('num');
   const [visible, setVisible] = useState(PAGE);
   const [leadLot, setLeadLot] = useState<{ id: string; number: string; status: VelLotStatus } | null>(null);
+  const [pdfLot, setPdfLot] = useState<string | null>(null);
+  const { token: mapboxToken } = useMapboxToken();
+
+  const downloadFicha = async (lot: (typeof lots)[number]) => {
+    setPdfLot(lot.id);
+    try {
+      await generateLotDataCardPdf(
+        {
+          id: lot.id,
+          project_id: VEL_PROJECT.id,
+          lot_number: lot.lot_number,
+          name: null,
+          area: lot.area_m2,
+          price: lot.price_clp || null,
+          price_per_sqm: lot.price_clp ? Math.round(lot.price_clp / lot.area_m2) : null,
+          status: lot.status,
+          latitude: lot.centroid[1],
+          longitude: lot.centroid[0],
+          polygon: lot.polygon,
+        } as never,
+        VEL_PROJECT.name,
+        { hasRoad: true } as never,
+        { mapboxToken }
+      );
+    } catch {
+      toast.error('No pudimos generar la ficha PDF');
+    } finally {
+      setPdfLot(null);
+    }
+  };
 
   const counts = useMemo(() => {
     const c = { all: lots.length, available: 0, reserved: 0, sold: 0 };
@@ -186,7 +220,7 @@ export default function VelLotsGrid() {
                       </span>
                     </div>
                     <div className="mt-3 text-[11px] text-[var(--hue-bone)]/55 flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> Hualañé · Maule
+                      <MapPin className="h-3 w-3" /> Licantén · Maule
                     </div>
                     <div className="mt-3 space-y-1">
                       <div className="flex items-baseline justify-between text-[11px]">
@@ -197,10 +231,18 @@ export default function VelLotsGrid() {
                       </div>
                       <div className="flex items-baseline justify-between text-[11px]">
                         <span className="text-[var(--hue-bone)]/50">Precio</span>
-                        <span className="tabular-nums text-[var(--hue-bone)] font-medium">
-                          ${l.price_clp.toLocaleString('es-CL')}
+                        <span className="tabular-nums font-medium text-[var(--hue-bone)]">
+                          {l.price_clp ? `$${l.price_clp.toLocaleString('es-CL')}` : 'Consultar'}
                         </span>
                       </div>
+                      {l.price_clp > 0 && (
+                        <div className="flex items-baseline justify-between text-[11px]">
+                          <span className="text-[var(--hue-bone)]/50">Precio/m²</span>
+                          <span className="tabular-nums text-[var(--hue-bone)]/70">
+                            ${Math.round(l.price_clp / l.area_m2).toLocaleString('es-CL')}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="mt-3 flex items-center gap-1.5 border-t border-white/5 pt-2">
                       <Link
@@ -226,6 +268,16 @@ export default function VelLotsGrid() {
                         aria-label="Consultar por este lote"
                       >
                         <MessageSquare className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => downloadFicha(l)}
+                        disabled={pdfLot === l.id}
+                        className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 transition hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] disabled:opacity-40"
+                        title="Descargar ficha PDF con QR"
+                        aria-label="Descargar ficha PDF con QR"
+                      >
+                        <FileDown className="h-3 w-3" />
                       </button>
                     </div>
                   </div>
