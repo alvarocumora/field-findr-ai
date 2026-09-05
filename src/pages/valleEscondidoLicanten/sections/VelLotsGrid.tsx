@@ -24,7 +24,7 @@ const STATUS_TONE: Record<VelLotStatus, string> = {
 const PAGE = 60;
 const ALL_STATUSES: VelLotStatus[] = ['available', 'reserved', 'sold'];
 
-export default function EpLotsGrid() {
+export default function VelLotsGrid() {
   const {
     activeStatus,
     toggleStatus,
@@ -163,7 +163,7 @@ export default function EpLotsGrid() {
               {shown.map((l) => {
                 const href = l.listing_id
                   ? `/propiedad/${l.listing_id}`
-                  : `/proyecto/6e6f62be-a81a-4374-a3ef-cf296bd638d0`;
+                  : `/loteo/valle-escondido-licanten/parcela/${l.lot_number}`;
                 const isHovered = hoveredLotId === l.id;
                 return (
                   <div

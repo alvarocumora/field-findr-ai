@@ -18,7 +18,7 @@ const STATUS_META: Record<StatusFilter, { color: string; label: string; sub: str
   sold: { color: '#64748b', label: 'Vendida', sub: 'No disponible' },
 };
 
-export default function EpMasterplan() {
+export default function VelMasterplan() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
