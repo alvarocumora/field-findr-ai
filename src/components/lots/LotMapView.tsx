@@ -1050,9 +1050,6 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         },
       });
 
-      // Vista inicial del masterplan (solo disponibles por defecto).
-      applyAvailabilityView(map.current, onlyAvailableRef.current, colorMode, lots);
-
       // Curvas de nivel (Mapbox Terrain v2): cotas reales del relieve bajo el
       // loteo, con etiquetas de elevación. Ocultas por defecto; el toggle
       // "Curvas" las muestra. Van bajo las etiquetas de lote.
@@ -1116,6 +1113,11 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           'text-halo-width': 1.5,
         },
       });
+
+      // Aplica la vista inicial solo cuando la capa de etiquetas ya existe.
+      // Esto asegura el filtro y el texto abreviado también en carga inicial
+      // y después de cambios de estilo del mapa.
+      applyAvailabilityView(map.current, onlyAvailableRef.current, colorMode, lots);
 
       // Add roads layer if available
       if (roadGeojson && roadGeojson.features.length > 0) {
