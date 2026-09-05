@@ -9,6 +9,7 @@ import { VEL_PROJECT } from '../data/project';
 import { type VelLotStatus } from '../data/lots';
 import { useVelLots } from '../data/useVelLots';
 import { useVelState } from '../state/VelContext';
+import { VEL_POIS } from '../data/poi';
 
 type StatusFilter = VelLotStatus;
 
@@ -36,6 +37,7 @@ export default function VelMasterplan() {
     hoveredLotId,
     setHoveredLotId,
     focusRequest,
+    poiRequest,
   } = useVelState();
 
   const counts = useMemo(() => {
@@ -262,6 +264,38 @@ export default function VelMasterplan() {
     lastHoverRef.current = hoveredLotId;
   }, [hoveredLotId, styleReady]);
 
+  // Puntos de interés del entorno
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !styleReady) return;
+    const markers = VEL_POIS.map((poi) => {
+      const el = document.createElement('div');
+      el.className = 'vel-poi-marker';
+      el.style.cssText =
+        'display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;' +
+        'background:rgba(6,17,10,.82);border:1px solid rgba(201,176,107,.45);' +
+        'color:#efe7d6;font-size:10px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap';
+      el.textContent = `${poi.name} · ${poi.distanceKm} km`;
+      return new mapboxgl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([poi.lng, poi.lat])
+        .addTo(map);
+    });
+    return () => markers.forEach((m) => m.remove());
+  }, [styleReady]);
+
+  // POI focus request (desde la sección Entorno)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !styleReady || !poiRequest) return;
+    const poi = VEL_POIS.find((p) => p.key === poiRequest.poiKey);
+    if (!poi) return;
+    const bounds = new mapboxgl.LngLatBounds(
+      [VEL_PROJECT.center.lng, VEL_PROJECT.center.lat],
+      [VEL_PROJECT.center.lng, VEL_PROJECT.center.lat],
+    ).extend([poi.lng, poi.lat]);
+    map.fitBounds(bounds, { padding: 90, duration: 1200, maxZoom: 13 });
+  }, [poiRequest, styleReady]);
+
   // Focus request: fly to the lot & open popup
   const lastFocusRef = useRef<string | null>(null);
   useEffect(() => {
@@ -344,7 +378,7 @@ export default function VelMasterplan() {
           className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between px-2"
         >
           <div>
-            <div className="hue-eyebrow mb-3">Masterplan · 437 parcelas interactivas</div>
+            <div className="hue-eyebrow mb-3">Masterplan · {VEL_PROJECT.totalLots} parcelas interactivas</div>
             <h2 className="serif text-[clamp(2rem,4.5vw,3.2rem)] leading-[0.95]">
               Valle Escondido Licantén <span className="italic text-[var(--hue-bone)]/55">explora cada lote.</span>
             </h2>
@@ -362,9 +396,9 @@ export default function VelMasterplan() {
                 <div className="text-[10px] tracking-[0.32em] uppercase text-[var(--hue-amber)] font-medium">
                   OFERTA TERRENOS
                 </div>
-                <h3 className="serif text-3xl leading-none mt-2">EXPLORA PARK</h3>
+                <h3 className="serif text-3xl leading-none mt-2">VALLE ESCONDIDO</h3>
                 <p className="text-[11px] tracking-[0.18em] uppercase text-[var(--hue-bone)]/55 mt-2">
-                  Hualañé · Maule
+                  Licantén · Maule
                 </p>
               </div>
 
