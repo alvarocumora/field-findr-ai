@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { generateProjectBrochurePDF, type BrochureAIContent } from '@/lib/brochurePdfGenerator';
 import { useBrochureGenerator } from '@/hooks/useBrochureGenerator';
+import { ProjectDownloads } from '@/components/projects/ProjectDownloads';
 
 interface CommercialConditions {
   min_down_payment_pct?: number;
@@ -84,6 +85,27 @@ export const ProjectBrochureTab = ({ project, lots }: Props) => {
 
   return (
     <div className="space-y-6">
+      {/* Kit de material del proyecto (mismo que ve el cliente) */}
+      <ProjectDownloads
+        project={{
+          id: project.id,
+          name: project.name,
+          slug: project.slug ?? null,
+          description: project.description ?? null,
+          location: project.city ?? project.location ?? null,
+          region: project.region ?? null,
+          latitude: project.latitude ?? null,
+          longitude: project.longitude ?? null,
+          images: Array.isArray(project.images) ? project.images : null,
+          conditions: hasConditions ? conditions : null,
+        }}
+        lots={lots}
+        requireLead={false}
+        showLotSheets
+        title="Material descargable"
+        description="El mismo kit que se ofrece en la página pública del proyecto, listo para enviar a un cliente."
+      />
+
       {/* Commercial Conditions */}
       {hasConditions ? (
         <Card>
