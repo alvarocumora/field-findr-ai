@@ -1,0 +1,20 @@
+// AUTO-GENERADO · Valle Escondido Licantén
+export const VEL_PROJECT = {
+  id: 'b4363fda-e99f-400d-ae95-2cbc8244b770',
+  ownerId: '92f58f83-8218-4949-a258-7aea393c37c6',
+  name: 'Valle Escondido Licantén',
+  slug: 'valle-escondido-licanten',
+  city: 'Licantén',
+  region: 'Región del Maule',
+  country: 'Chile',
+  totalLots: 76,
+  availableLots: 70,
+  totalAreaHa: 44.00,
+  priceFromClp: 19990000,
+  priceToClp: 42990000,
+  avgPriceClp: 23961428,
+  avgAreaM2: 5789,
+  center: { lng: -71.960015, lat: -34.972745 },
+  bbox: { minLng: -71.96256, maxLng: -71.95747, minLat: -34.98474, maxLat: -34.96075 },
+  registro: 'Insc. Fs. 243 N° 133 (2012) · Plano N° 192 (2023) · CBR Licantén',
+} as const;
