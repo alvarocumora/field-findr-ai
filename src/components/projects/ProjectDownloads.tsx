@@ -13,11 +13,12 @@ import {
   generateProjectMasterplanPdf,
   generateProjectPriceListPdf,
   exportProjectPriceListCsv,
+  generateProjectLotSheetsPdf,
   type KitLot,
   type KitProject,
 } from '@/lib/pdf/projectKit';
 
-type KitId = 'dossier' | 'precios' | 'plano' | 'csv';
+type KitId = 'dossier' | 'precios' | 'plano' | 'csv' | 'fichas';
 
 interface Props {
   project: KitProject;
@@ -26,6 +27,8 @@ interface Props {
   projectOwnerId?: string | null;
   /** En el panel no se pide contacto (el usuario ya es del equipo). */
   requireLead?: boolean;
+  /** Añade el compendio con una ficha por parcela (uso comercial interno). */
+  showLotSheets?: boolean;
   className?: string;
   title?: string;
   description?: string;
@@ -43,6 +46,7 @@ export const ProjectDownloads = ({
   lots,
   projectOwnerId,
   requireLead = true,
+  showLotSheets = false,
   className,
   title = 'Material del proyecto',
   description = 'Descarga el dossier, la lista de precios y el plano para revisarlos o compartirlos.',
@@ -71,6 +75,7 @@ export const ProjectDownloads = ({
       if (id === 'precios') await generateProjectPriceListPdf(project, lots, opts);
       if (id === 'plano') await generateProjectMasterplanPdf(project, lots, opts);
       if (id === 'csv') exportProjectPriceListCsv(project, lots);
+      if (id === 'fichas') await generateProjectLotSheetsPdf(project, lots, opts);
       track('project_material_download', { project_id: project.id, material: id });
     } catch (e) {
       console.error('project material download failed', e);
@@ -94,6 +99,9 @@ export const ProjectDownloads = ({
     { id: 'precios', label: 'Lista de precios', hint: 'PDF · todas las parcelas', icon: Table2 },
     { id: 'plano', label: 'Plano del loteo', hint: 'PDF · cuadro de superficies', icon: MapIcon },
     { id: 'csv', label: 'Lista de precios (Excel)', hint: 'CSV · para trabajarlo aparte', icon: Download },
+    ...(showLotSheets
+      ? [{ id: 'fichas' as KitId, label: 'Fichas de parcelas', hint: 'PDF · una ficha por parcela', icon: FileText }]
+      : []),
   ];
 
   return (
