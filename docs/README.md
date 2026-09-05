@@ -4,6 +4,9 @@ Esta carpeta organiza la estrategia, producto, arquitectura, sprints y criterios
 
 ## Documentos principales
 
+0. [`GUIA_CORREDORA_DISRUPTIVA.md`](./GUIA_CORREDORA_DISRUPTIVA.md)
+   - **Guía maestra.** Tesis, actores, modelo de negocio, manual operativo, estándares de publicación, playbooks, métricas, reglas de ingeniería y plan por fases. Si otro documento la contradice, manda esta.
+
 1. [`MASTER_PLAN.md`](./MASTER_PLAN.md)
    - Visión general, posicionamiento, objetivos, líneas de producto y prioridades ejecutivas.
 
