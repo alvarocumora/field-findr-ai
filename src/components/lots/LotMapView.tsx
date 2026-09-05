@@ -185,6 +185,38 @@ const getColorExpression = (mode: 'status' | 'price' | 'area', lots: Lot[]): any
   ];
 };
 
+/**
+ * Aplica la vista del masterplan sobre las capas ya montadas.
+ * only=true (plano comercial): solo disponibles con relleno verde y número;
+ * el resto del loteo queda como deslinde blanco fino sobre el satélite.
+ * only=false: todos los lotes pintados según el modo de color activo.
+ */
+const applyAvailabilityView = (
+  m: mapboxgl.Map,
+  only: boolean,
+  mode: 'status' | 'price' | 'area',
+  lots: Lot[],
+) => {
+  if (!m.getLayer('lots-fill')) return;
+  if (only) {
+    m.setFilter('lots-fill', ['==', ['get', 'status'], 'available']);
+    m.setFilter('lots-labels', ['==', ['get', 'status'], 'available']);
+    m.setPaintProperty('lots-fill', 'fill-color', '#3fae49');
+    m.setPaintProperty('lots-fill', 'fill-opacity', 0.88);
+    m.setPaintProperty('lots-outline', 'line-width', 0.8);
+    m.setPaintProperty('lots-outline', 'line-opacity', 0.55);
+    m.setLayoutProperty('lots-labels', 'text-field', ['get', 'lot_number']);
+  } else {
+    m.setFilter('lots-fill', null);
+    m.setFilter('lots-labels', null);
+    m.setPaintProperty('lots-fill', 'fill-color', getColorExpression(mode, lots));
+    m.setPaintProperty('lots-fill', 'fill-opacity', 0.75);
+    m.setPaintProperty('lots-outline', 'line-width', 1.5);
+    m.setPaintProperty('lots-outline', 'line-opacity', 0.9);
+    m.setLayoutProperty('lots-labels', 'text-field', ['concat', 'Lote ', ['get', 'lot_number']]);
+  }
+};
+
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
   return new Intl.NumberFormat('es-CL', {
@@ -208,6 +240,11 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   // El cambio de estilo re-crea el mapa: el handler de load lee el ref para
   // restaurar la visibilidad de las curvas sin depender del ciclo de React.
   const showContoursRef = useRef(false);
+  // Vista "solo disponibles" (estilo plano comercial): deslindes de todo el
+  // loteo en línea fina y SOLO las parcelas disponibles pintadas de verde con
+  // su número — evita la nube de polígonos en loteos grandes. Por defecto ON.
+  const [onlyAvailable, setOnlyAvailable] = useState(true);
+  const onlyAvailableRef = useRef(true);
   const [importing, setImporting] = useState(false);
   const [loadingKmz, setLoadingKmz] = useState(false);
   const [kmzLoaded, setKmzLoaded] = useState(false);
@@ -1013,6 +1050,9 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         },
       });
 
+      // Vista inicial del masterplan (solo disponibles por defecto).
+      applyAvailabilityView(map.current, onlyAvailableRef.current, colorMode, lots);
+
       // Curvas de nivel (Mapbox Terrain v2): cotas reales del relieve bajo el
       // loteo, con etiquetas de elevación. Ocultas por defecto; el toggle
       // "Curvas" las muestra. Van bajo las etiquetas de lote.
@@ -1289,6 +1329,23 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           Curvas
         </Button>
 
+        {/* Available-only view toggle (plano comercial) */}
+        <Button
+          variant={onlyAvailable ? "default" : "secondary"}
+          size="sm"
+          className="gap-2 bg-background/80 backdrop-blur-md border border-border/50 shadow-md"
+          onClick={() => {
+            const next = !onlyAvailable;
+            setOnlyAvailable(next);
+            onlyAvailableRef.current = next;
+            if (map.current && map.current.isStyleLoaded()) {
+              applyAvailabilityView(map.current, next, colorMode, lots);
+            }
+          }}
+        >
+          {onlyAvailable ? 'Disponibles' : 'Todos'}
+        </Button>
+
         {/* Roads toggle */}
         {roadGeojson && roadGeojson.features.length > 0 && (
           <Button
@@ -1480,8 +1537,11 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             key={m.key}
             onClick={() => {
               setColorMode(m.key);
-              if (map.current && map.current.isStyleLoaded() && map.current.getLayer('lots-fill')) {
-                map.current.setPaintProperty('lots-fill', 'fill-color', getColorExpression(m.key, lots));
+              // Analizar por precio/superficie/estado implica ver TODOS los lotes.
+              setOnlyAvailable(false);
+              onlyAvailableRef.current = false;
+              if (map.current && map.current.isStyleLoaded()) {
+                applyAvailabilityView(map.current, false, m.key, lots);
               }
             }}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
@@ -1496,7 +1556,15 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       {/* Dynamic Legend */}
       <div className="absolute bottom-16 left-3 md:bottom-4 md:left-4 bg-background/90 backdrop-blur-md rounded-xl p-2.5 md:p-3 shadow-lg border border-border/50 space-y-1.5 md:space-y-2">
 
-        {colorMode === 'status' && (
+        {onlyAvailable ? (
+          <div className="flex items-center gap-2">
+            <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#3fae49' }} />
+            <span className="text-xs font-medium">
+              Disponible · {lots.filter((l) => (l.status ?? 'available') === 'available').length} parcelas
+            </span>
+          </div>
+        ) : null}
+        {!onlyAvailable && colorMode === 'status' && (
           <>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Estado</p>
             <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-sm bg-emerald-600" /><span className="text-xs font-medium">Disponible</span></div>
@@ -1504,7 +1572,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-sm bg-slate-500" /><span className="text-xs font-medium">Vendido</span></div>
           </>
         )}
-        {colorMode === 'price' && (
+        {!onlyAvailable && colorMode === 'price' && (
           <>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Precio</p>
             <div className="flex items-center gap-2">
@@ -1515,7 +1583,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             </div>
           </>
         )}
-        {colorMode === 'area' && (
+        {!onlyAvailable && colorMode === 'area' && (
           <>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Superficie</p>
             <div className="flex items-center gap-2">
