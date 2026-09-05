@@ -433,3 +433,42 @@ export const exportProjectPriceListCsv = (project: KitProject, lots: KitLot[]) =
   a.click();
   URL.revokeObjectURL(url);
 };
+
+/** Compendio: una ficha por parcela en un solo PDF (uso interno/comercial). */
+export const generateProjectLotSheetsPdf = async (
+  project: KitProject,
+  lots: KitLot[],
+  options: KitOptions = {}
+) => {
+  const path = projectPath(project, options);
+  const ordered = sortLots(lots);
+
+  await renderFicha({
+    template: 'proyecto',
+    eyebrow: 'Fichas de parcelas',
+    title: project.name,
+    subtitle: `${ordered.length} parcelas · ${new Date().toLocaleDateString('es-CL')}`,
+    qrUrl: path,
+    filename: `Fichas-Parcelas-${safeName(project.name)}.pdf`,
+    body: (f) => {
+      ordered.forEach((l, i) => {
+        if (i > 0) f.newPage();
+        f.section(`Parcela ${l.lot_number ?? i + 1}`);
+        f.kpis(
+          [
+            ['Superficie', m2(l.area)],
+            ['Precio', clp(l.price)],
+            ['Precio m²', l.price && l.area ? clp(Number(l.price) / Number(l.area)) : '—'],
+            ['Estado', statusOf(l)],
+          ] as [string, string, string?][],
+          2
+        );
+        if (l.latitude != null && l.longitude != null) {
+          f.kv('Coordenadas', `${Number(l.latitude).toFixed(5)}, ${Number(l.longitude).toFixed(5)}`);
+        }
+        f.kv('Proyecto', project.name);
+        f.kv('Ficha online', `ofertaterrenos.com${path}`);
+      });
+    },
+  });
+};
