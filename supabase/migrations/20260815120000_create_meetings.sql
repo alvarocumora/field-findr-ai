@@ -31,12 +31,19 @@ create index if not exists idx_meetings_created_at on public.meetings(created_at
 
 alter table public.meetings enable row level security;
 
--- Cualquier visitante puede solicitar una reunión desde el sitio público.
+-- Cualquier visitante puede solicitar una reunión desde el sitio público,
+-- pero no puede autoconfirmarla ni inyectar campos de gestión interna.
 drop policy if exists "Public can request meetings" on public.meetings;
 create policy "Public can request meetings"
   on public.meetings
   for insert
-  with check (true);
+  with check (
+    status = 'pending'
+    and scheduled_at is null
+    and meeting_url is null
+    and assigned_to is null
+    and internal_notes is null
+  );
 
 -- El equipo (asesores y admins) gestiona la agenda.
 drop policy if exists "Team can read meetings" on public.meetings;
