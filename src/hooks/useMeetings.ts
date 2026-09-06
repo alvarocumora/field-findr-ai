@@ -96,14 +96,11 @@ export const useCreateMeetingRequest = () => {
           preferred_date: clean(input.preferredDate),
           preferred_block: input.preferredBlock ?? null,
           source: input.source ?? 'web',
-        })
-        .select('*')
-        .single();
+        });
 
       if (error) throw error;
-      if (!data) throw new Error('No se pudo registrar la solicitud de reunión.');
 
-      return data;
+      return { ok: true } as const;
     },
   });
 };
