@@ -53,7 +53,8 @@ const ExecutiveDashboard = () => {
   const [reserve, setReserve] = useState({ name: '', email: '', phone: '', amount: '100000' });
 
   const projectById = useMemo(
-    () => new Map(projects.map((project) => [project.id, project])),
+    // `Map` está sombreado por el icono de lucide en este archivo.
+    () => new globalThis.Map(projects.map((project) => [project.id, project])),
     [projects],
   );
 

@@ -78,13 +78,35 @@ function cacheKey(params: Record<string, unknown>): string {
   return `${btoa(s).slice(0, 40)}-${h.toString(36)}`;
 }
 
-async function firecrawlSearch(query: string, apiKey: string): Promise<string[]> {
-  try {
-    const r = await fetch(`${FIRECRAWL_API}/search`, {
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Firecrawl aplica un límite de req/min: sin backoff toda la corrida devolvía
+ * 429 y la respuesta quedaba vacía (y sin cachear). Reintentamos respetando
+ * Retry-After, con un techo para no agotar el tiempo de la función.
+ */
+async function fcFetch(path: string, body: unknown, apiKey: string, attempts = 3): Promise<Response | null> {
+  for (let i = 0; i < attempts; i++) {
+    const r = await fetch(`${FIRECRAWL_API}${path}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, limit: 8 }),
+      body: JSON.stringify(body),
     });
+    if (r.status !== 429) return r;
+    if (i === attempts - 1) return r;
+    const retryAfter = Number(r.headers.get('retry-after'));
+    const waitMs = Math.min(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 2000 * (i + 1), 15_000);
+    console.warn('firecrawl 429, retrying in', waitMs, 'ms', path);
+    await r.body?.cancel();
+    await sleep(waitMs);
+  }
+  return null;
+}
+
+async function firecrawlSearch(query: string, apiKey: string): Promise<string[]> {
+  try {
+    const r = await fcFetch('/search', { query, limit: 8 }, apiKey);
+    if (!r) return [];
     const text = await r.text();
     if (!r.ok) {
       console.error('search http error', r.status, query, text.slice(0, 200));
@@ -117,15 +139,15 @@ async function firecrawlSearch(query: string, apiKey: string): Promise<string[]>
 
 async function firecrawlExtract(url: string, apiKey: string) {
   try {
-    const r = await fetch(`${FIRECRAWL_API}/scrape`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url,
-        formats: [{ type: 'json', schema: EXTRACT_SCHEMA }, 'markdown'],
-        onlyMainContent: true,
-      }),
-    });
+    const r = await fcFetch('/scrape', {
+      url,
+      formats: [{ type: 'json', schema: EXTRACT_SCHEMA }, 'markdown'],
+      onlyMainContent: true,
+    }, apiKey);
+    if (!r || !r.ok) {
+      if (r) console.error('extract http error', r.status, url);
+      return null;
+    }
     const j = await r.json();
     const data = j?.data ?? j;
     return { json: data?.json, metadata: data?.metadata, markdown: data?.markdown };
@@ -187,14 +209,24 @@ Deno.serve(async (req) => {
   const allListings: RealListing[] = [];
   const portalsUsed = new Set<string>();
 
+  let firstQuery = true;
   for (const q of queries) {
     if (allListings.length >= limit) break;
+    if (!firstQuery) await sleep(1200);
+    firstQuery = false;
     const urls = await firecrawlSearch(q.query, apiKey);
     portalsUsed.add(q.portal);
 
     // Extract a handful per query (parallel, capped)
+    // Concurrencia acotada (2) + pausa entre tandas: en paralelo de 6 se
+    // disparaba el límite de req/min del proveedor.
     const slice = urls.slice(0, 6);
-    const extracted = await Promise.all(slice.map((u) => firecrawlExtract(u, apiKey)));
+    const extracted: Awaited<ReturnType<typeof firecrawlExtract>>[] = [];
+    for (let i = 0; i < slice.length; i += 2) {
+      const batch = slice.slice(i, i + 2);
+      extracted.push(...(await Promise.all(batch.map((u) => firecrawlExtract(u, apiKey)))));
+      if (i + 2 < slice.length) await sleep(1200);
+    }
 
     for (let i = 0; i < extracted.length; i++) {
       const ext = extracted[i];
@@ -233,6 +265,14 @@ Deno.serve(async (req) => {
       },
       { onConflict: 'cache_key' },
     );
+  }
+
+  // Si el proveedor falló y no hay resultados, servimos la copia caducada en
+  // vez de una lista vacía.
+  if (allListings.length === 0 && cached?.payload) {
+    return new Response(JSON.stringify({ listings: cached.payload, cached: true, stale: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   return new Response(

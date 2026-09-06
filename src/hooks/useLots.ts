@@ -62,6 +62,16 @@ export const useLots = (projectId?: string) => {
 
       if (!projectId && !user?.id) return [];
 
+      // Visitantes sin sesión: `anon` no tiene SELECT sobre `lots` (permission
+      // denied), así que se lee por el RPC público get_public_lots.
+      if (projectId && !user?.id) {
+        const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: projectId });
+        if (error) throw error;
+        return ((data ?? []) as unknown as Lot[])
+          .slice()
+          .sort((a, b) => String(a.lot_number ?? '').localeCompare(String(b.lot_number ?? ''), undefined, { numeric: true }));
+      }
+
       // Prefer selecting listing_id (marketplace link), but fall back gracefully
       // if the migration adding it hasn't been applied yet — otherwise the whole
       // lots list would error out on a missing column.

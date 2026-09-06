@@ -54,11 +54,7 @@ type MeetingUpdate = Partial<
 // (mismo patrón que useCommercialPlanLead) hasta la próxima regeneración.
 const meetingsTable = () => (supabase as unknown as {
   from: (table: 'meetings') => {
-    insert: (row: MeetingInsert) => {
-      select: (columns: string) => {
-        single: () => Promise<{ data: Meeting | null; error: Error | null }>;
-      };
-    };
+    insert: (row: MeetingInsert) => Promise<{ error: Error | null }>;
     select: (columns: string) => {
       order: (column: string, options?: { ascending?: boolean }) => {
         limit: (count: number) => Promise<{ data: Meeting[] | null; error: Error | null }>;
@@ -88,7 +84,9 @@ export const useCreateMeetingRequest = () => {
       if (!name) throw new Error('El nombre es obligatorio.');
       if (!phone) throw new Error('El teléfono es obligatorio.');
 
-      const { data, error } = await meetingsTable()
+      // Sin RETURNING: los visitantes públicos no tienen permiso de lectura
+      // sobre `meetings`, así que `.select()` haría fallar el insert válido.
+      const { error } = await meetingsTable()
         .insert({
           meeting_type: input.meetingType,
           requester_name: name,
@@ -98,14 +96,11 @@ export const useCreateMeetingRequest = () => {
           preferred_date: clean(input.preferredDate),
           preferred_block: input.preferredBlock ?? null,
           source: input.source ?? 'web',
-        })
-        .select('*')
-        .single();
+        });
 
       if (error) throw error;
-      if (!data) throw new Error('No se pudo registrar la solicitud de reunión.');
 
-      return data;
+      return { ok: true } as const;
     },
   });
 };
