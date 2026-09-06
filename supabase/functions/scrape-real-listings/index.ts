@@ -209,8 +209,11 @@ Deno.serve(async (req) => {
   const allListings: RealListing[] = [];
   const portalsUsed = new Set<string>();
 
+  let firstQuery = true;
   for (const q of queries) {
     if (allListings.length >= limit) break;
+    if (!firstQuery) await sleep(1200);
+    firstQuery = false;
     const urls = await firecrawlSearch(q.query, apiKey);
     portalsUsed.add(q.portal);
 
