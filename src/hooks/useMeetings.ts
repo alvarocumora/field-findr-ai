@@ -54,11 +54,7 @@ type MeetingUpdate = Partial<
 // (mismo patrón que useCommercialPlanLead) hasta la próxima regeneración.
 const meetingsTable = () => (supabase as unknown as {
   from: (table: 'meetings') => {
-    insert: (row: MeetingInsert) => {
-      select: (columns: string) => {
-        single: () => Promise<{ data: Meeting | null; error: Error | null }>;
-      };
-    };
+    insert: (row: MeetingInsert) => Promise<{ error: Error | null }>;
     select: (columns: string) => {
       order: (column: string, options?: { ascending?: boolean }) => {
         limit: (count: number) => Promise<{ data: Meeting[] | null; error: Error | null }>;
