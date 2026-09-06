@@ -84,7 +84,9 @@ export const useCreateMeetingRequest = () => {
       if (!name) throw new Error('El nombre es obligatorio.');
       if (!phone) throw new Error('El teléfono es obligatorio.');
 
-      const { data, error } = await meetingsTable()
+      // Sin RETURNING: los visitantes públicos no tienen permiso de lectura
+      // sobre `meetings`, así que `.select()` haría fallar el insert válido.
+      const { error } = await meetingsTable()
         .insert({
           meeting_type: input.meetingType,
           requester_name: name,
