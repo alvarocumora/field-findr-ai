@@ -195,9 +195,11 @@ export default function VelLotsGrid() {
           <>
             <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
               {shown.map((l) => {
+                // Sin ficha publicada (lotes reservados) enlazamos al proyecto,
+                // no a una ruta inexistente que caía en NotFound.
                 const href = l.listing_id
                   ? `/propiedad/${l.listing_id}`
-                  : `/loteo/valle-escondido-licanten/parcela/${l.lot_number}`;
+                  : `/proyecto/${VEL_PROJECT.id}`;
                 const isHovered = hoveredLotId === l.id;
                 return (
                   <div
