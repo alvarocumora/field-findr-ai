@@ -1,293 +1,294 @@
-import { useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  BarChart3, TrendingUp, DollarSign, Users, MapPin, Building2,
-  Target, AlertCircle, Clock, ArrowRight,
+  CalendarClock,
+  CheckCircle2,
+  ClipboardCopy,
+  FileText,
+  Map,
+  MessageCircle,
+  Search,
+  Send,
+  ShoppingCart,
+  UserRound,
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useProjects } from '@/hooks/useProjects';
-import { useLots } from '@/hooks/useLots';
+import { Lot, useLots } from '@/hooks/useLots';
 import { useLeads } from '@/hooks/useLeads';
-import { useCredits } from '@/hooks/useCredits';
-import { useReservations } from '@/hooks/useReservations';
+import { useCreateReservation, useReservations } from '@/hooks/useReservations';
 import { formatPriceLatam } from '@/lib/latam';
-import { differenceInDays, isPast, parseISO } from 'date-fns';
+import { toast } from 'sonner';
 
 const ExecutiveDashboard = () => {
-  const { projects, isLoading: projectsLoading } = useProjects();
-  const { lots, isLoading: lotsLoading } = useLots();
-  const { leads = [], isLoading: leadsLoading } = useLeads();
-  const { data: credits = [], isLoading: creditsLoading } = useCredits();
+  const { projects } = useProjects();
+  const { lots, isLoading } = useLots();
+  const { leads = [] } = useLeads();
   const { data: reservations = [] } = useReservations();
+  const createReservation = useCreateReservation();
 
-  const isLoading = projectsLoading || lotsLoading || leadsLoading || creditsLoading;
+  const [projectId, setProjectId] = useState('all');
+  const [search, setSearch] = useState('');
+  const [quoteLot, setQuoteLot] = useState<Lot | null>(null);
+  const [reserveLot, setReserveLot] = useState<Lot | null>(null);
+  const [quote, setQuote] = useState({ customer: '', phone: '', discount: '0', validDays: '7' });
+  const [reserve, setReserve] = useState({ name: '', email: '', phone: '', amount: '100000' });
 
-  const kpis = useMemo(() => {
-    const totalRevenue = lots.filter(l => l.status === 'sold').reduce((s, l) => s + Number(l.price || 0), 0);
-    const reservedRevenue = lots.filter(l => l.status === 'reserved').reduce((s, l) => s + Number(l.price || 0), 0);
-    const availableValue = lots.filter(l => l.status === 'available').reduce((s, l) => s + Number(l.price || 0), 0);
-    const totalLots = lots.length;
-    const soldLots = lots.filter(l => l.status === 'sold').length;
-    const reservedLots = lots.filter(l => l.status === 'reserved').length;
-    const availableLots = lots.filter(l => l.status === 'available').length;
-    const conversionRate = totalLots > 0 ? ((soldLots + reservedLots) / totalLots * 100).toFixed(1) : '0';
-    const activeCredits = credits.filter(c => c.status === 'active');
-    const totalFinanced = activeCredits.reduce((s, c) => s + Number(c.financed_amount), 0);
-    const monthlyRecurring = activeCredits.reduce((s, c) => s + Number(c.monthly_payment), 0);
-    const hotLeads = (leads as any[]).filter(l => (l.lead_score || 0) >= 70).length;
+  const projectById = useMemo(
+    () => new Map(projects.map((project) => [project.id, project])),
+    [projects],
+  );
 
-    return {
-      totalRevenue, reservedRevenue, availableValue,
-      totalLots, soldLots, reservedLots, availableLots,
-      conversionRate, totalFinanced, monthlyRecurring,
-      totalLeads: leads.length, hotLeads, totalProjects: projects.length,
-    };
-  }, [projects, lots, leads, credits]);
+  const visibleLots = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    return lots
+      .filter((lot) => lot.status === 'available')
+      .filter((lot) => projectId === 'all' || lot.project_id === projectId)
+      .filter((lot) => {
+        if (!needle) return true;
+        const project = projectById.get(lot.project_id);
+        return [lot.lot_number, lot.name, project?.name]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(needle));
+      });
+  }, [lots, projectId, search, projectById]);
 
-  // Sales funnel data
-  const funnel = useMemo(() => {
-    const totalLeads = leads.length;
-    const interestedLeads = (leads as any[]).filter(l => ['interested', 'negotiating', 'converted'].includes(l.status)).length;
-    const totalReservations = (reservations as any[]).filter((r: any) => ['paid', 'converted'].includes(r.status)).length;
-    const totalSales = lots.filter(l => l.status === 'sold').length;
-    return [
-      { label: 'Leads', value: totalLeads, color: 'bg-blue-500' },
-      { label: 'Interesados', value: interestedLeads, color: 'bg-amber-500' },
-      { label: 'Reservas', value: totalReservations, color: 'bg-orange-500' },
-      { label: 'Ventas', value: totalSales, color: 'bg-green-500' },
-    ];
-  }, [leads, reservations, lots]);
+  const stats = useMemo(() => ({
+    available: lots.filter((lot) => lot.status === 'available').length,
+    reserved: lots.filter((lot) => lot.status === 'reserved').length,
+    sold: lots.filter((lot) => lot.status === 'sold').length,
+    activeReservations: (reservations as any[]).filter((r) => ['pending_payment', 'paid'].includes(r.status)).length,
+    leads: leads.length,
+  }), [lots, reservations, leads]);
 
-  // Leads needing follow-up (no follow-up scheduled or overdue)
-  const overdueFollowUps = useMemo(() => {
-    return (leads as any[]).filter(l => {
-      if (l.status === 'converted' || l.status === 'lost') return false;
-      if (!l.next_follow_up) return true;
-      return isPast(parseISO(l.next_follow_up));
-    }).slice(0, 5);
-  }, [leads]);
+  const formatMoney = (value: number | string | null | undefined) =>
+    formatPriceLatam(Number(value || 0), 'CLP');
 
-  // Sales velocity (days from lead creation to sale, avg)
-  const salesVelocity = useMemo(() => {
-    const soldWithDates = lots.filter(l => l.status === 'sold' && l.sale_date && l.created_at);
-    if (soldWithDates.length === 0) return null;
-    const totalDays = soldWithDates.reduce((s, l) => {
-      return s + differenceInDays(parseISO(l.sale_date!), parseISO(l.created_at));
-    }, 0);
-    return Math.round(totalDays / soldWithDates.length);
-  }, [lots]);
+  const quoteTotal = quoteLot
+    ? Math.max(0, Number(quoteLot.price || 0) - Number(quote.discount || 0))
+    : 0;
 
-  // Project breakdown
-  const projectBreakdown = useMemo(() => {
-    return projects.map(p => {
-      const projectLots = lots.filter(l => l.project_id === p.id);
-      const sold = projectLots.filter(l => l.status === 'sold');
-      const reserved = projectLots.filter(l => l.status === 'reserved');
-      const available = projectLots.filter(l => l.status === 'available');
-      const revenue = sold.reduce((s, l) => s + Number(l.price || 0), 0);
-      const pipeline = reserved.reduce((s, l) => s + Number(l.price || 0), 0);
-      return {
-        id: p.id, name: p.name, location: p.location || p.city || '',
-        totalLots: projectLots.length, sold: sold.length, reserved: reserved.length,
-        available: available.length, revenue, pipeline,
-        progress: projectLots.length > 0 ? Math.round((sold.length / projectLots.length) * 100) : 0,
-      };
-    }).sort((a, b) => b.revenue - a.revenue);
-  }, [projects, lots]);
+  const quoteText = quoteLot
+    ? [
+        'Cotización OfertaTerrenos',
+        quote.customer ? `Cliente: ${quote.customer}` : null,
+        `Proyecto: ${projectById.get(quoteLot.project_id)?.name || 'Proyecto'}`,
+        `Parcela: ${quoteLot.name || `Lote ${quoteLot.lot_number}`}`,
+        quoteLot.area ? `Superficie: ${Number(quoteLot.area).toLocaleString('es-CL')} m²` : null,
+        `Precio lista: ${formatMoney(quoteLot.price)}`,
+        Number(quote.discount) > 0 ? `Descuento: ${formatMoney(quote.discount)}` : null,
+        `Precio cotizado: ${formatMoney(quoteTotal)}`,
+        `Vigencia: ${quote.validDays || 7} días`,
+        '',
+        'Cotización sujeta a disponibilidad de la parcela.',
+      ].filter(Boolean).join('\n')
+    : '';
 
-  const fmt = (v: number) => formatPriceLatam(v, 'CLP');
-  const maxFunnel = Math.max(...funnel.map(f => f.value), 1);
+  const copyQuote = async () => {
+    await navigator.clipboard.writeText(quoteText);
+    toast.success('Cotización copiada');
+  };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6 p-4 sm:p-6">
-        <Skeleton className="h-8 w-64" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
-        </div>
-      </div>
-    );
-  }
+  const sendWhatsApp = () => {
+    const phone = quote.phone.replace(/\D/g, '');
+    const target = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(quoteText)}` : `https://wa.me/?text=${encodeURIComponent(quoteText)}`;
+    window.open(target, '_blank', 'noopener,noreferrer');
+  };
+
+  const sendEmail = () => {
+    const subject = quoteLot ? `Cotización ${quoteLot.name || `Lote ${quoteLot.lot_number}`}` : 'Cotización OfertaTerrenos';
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(quoteText)}`;
+  };
+
+  const submitReservation = async () => {
+    if (!reserveLot || !reserve.name.trim() || !reserve.email.trim()) {
+      toast.error('Completa nombre y email del comprador');
+      return;
+    }
+
+    const result = await createReservation.mutateAsync({
+      lot_id: reserveLot.id,
+      buyer_name: reserve.name.trim(),
+      buyer_email: reserve.email.trim(),
+      buyer_phone: reserve.phone.trim() || undefined,
+      reservation_amount: Number(reserve.amount || 0) || undefined,
+      notes: 'Reserva iniciada por ejecutivo desde Dashboard Ejecutivo',
+    });
+
+    setReserveLot(null);
+    setReserve({ name: '', email: '', phone: '', amount: '100000' });
+    if (result.payment_url) {
+      window.open(result.payment_url, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard Ejecutivo</h1>
-        <p className="text-sm text-muted-foreground">Vista consolidada cross-proyecto</p>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <Badge variant="outline" className="mb-2">Sales Executive OS</Badge>
+          <h1 className="text-2xl font-bold text-foreground">Cockpit de ventas</h1>
+          <p className="text-sm text-muted-foreground">
+            Disponibilidad, cotización, reserva y visita desde un solo flujo comercial.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" asChild><Link to="/panel/inventario"><Map className="mr-2 h-4 w-4" />Masterplan</Link></Button>
+          <Button variant="outline" asChild><Link to="/asesor/reservations"><ShoppingCart className="mr-2 h-4 w-4" />Reservas</Link></Button>
+          <Button asChild><Link to="/asesor/visitas"><CalendarClock className="mr-2 h-4 w-4" />Agendar visita</Link></Button>
+        </div>
       </div>
 
-      {/* Top KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         {[
-          { label: 'Revenue Total', value: fmt(kpis.totalRevenue), icon: DollarSign, color: 'text-green-600 bg-green-500/10' },
-          { label: 'Pipeline Reservas', value: fmt(kpis.reservedRevenue), icon: Target, color: 'text-amber-600 bg-amber-500/10' },
-          { label: 'Inventario Disponible', value: fmt(kpis.availableValue), icon: Building2, color: 'text-blue-600 bg-blue-500/10' },
-          { label: 'Ingresos Recurrentes', value: fmt(kpis.monthlyRecurring) + '/mes', icon: TrendingUp, color: 'text-purple-600 bg-purple-500/10' },
-        ].map((kpi, i) => (
-          <Card key={i}>
+          ['Disponibles', stats.available, 'Listas para ofrecer'],
+          ['Reservadas', stats.reserved, 'En negociación'],
+          ['Vendidas', stats.sold, 'Cierres'],
+          ['Reservas activas', stats.activeReservations, 'Pendientes/pagadas'],
+          ['Leads', stats.leads, 'CRM comercial'],
+        ].map(([label, value, sub]) => (
+          <Card key={String(label)}>
             <CardContent className="p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${kpi.color}`}>
-                  <kpi.icon className="h-4 w-4" />
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">{kpi.label}</p>
-              <p className="text-lg font-bold text-foreground">{kpi.value}</p>
+              <p className="text-xs text-muted-foreground">{label}</p>
+              <p className="text-2xl font-bold">{value}</p>
+              <p className="text-[11px] text-muted-foreground">{sub}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Operational KPIs + Sales Velocity */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'Proyectos', value: kpis.totalProjects, sub: 'activos' },
-          { label: 'Lotes Totales', value: kpis.totalLots, sub: `${kpis.availableLots} disponibles` },
-          { label: 'Vendidos', value: kpis.soldLots, sub: `${kpis.conversionRate}% conversión` },
-          { label: 'Leads', value: kpis.totalLeads, sub: `${kpis.hotLeads} hot leads` },
-          { label: 'Velocidad Venta', value: salesVelocity ? `${salesVelocity}d` : '—', sub: 'promedio días' },
-        ].map((kpi, i) => (
-          <Card key={i}>
-            <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-foreground">{kpi.value}</p>
-              <p className="text-xs text-muted-foreground">{kpi.label}</p>
-              <p className="text-xs text-muted-foreground/70">{kpi.sub}</p>
-            </CardContent>
-          </Card>
+          { to: '/asesor/leads', icon: UserRound, title: 'Clientes y leads', text: 'Seguimiento y próximos contactos' },
+          { to: '/asesor/reservations', icon: ShoppingCart, title: 'Reservas', text: 'Pagos, vencimientos y conversión' },
+          { to: '/asesor/visitas', icon: CalendarClock, title: 'Visitas', text: 'Agenda y resultados en terreno' },
+          { to: '/asesor/pipeline', icon: CheckCircle2, title: 'Pipeline', text: 'Proceso comercial hasta el cierre' },
+        ].map((action) => (
+          <Link key={action.to} to={action.to} className="block">
+            <Card className="h-full transition-colors hover:border-primary/50 hover:bg-muted/20">
+              <CardContent className="flex items-start gap-3 p-4">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary"><action.icon className="h-4 w-4" /></div>
+                <div><p className="font-medium">{action.title}</p><p className="text-xs text-muted-foreground">{action.text}</p></div>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Sales Funnel */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Embudo de Ventas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {funnel.map((step, i) => (
-              <div key={step.label} className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">{step.label}</span>
-                    {i < funnel.length - 1 && (
-                      <ArrowRight className="h-3 w-3 text-muted-foreground/50" />
-                    )}
-                  </div>
-                  <span className="font-bold text-foreground">{step.value}</span>
-                </div>
-                <div className="h-6 bg-muted rounded-lg overflow-hidden">
-                  <div
-                    className={`h-full ${step.color} rounded-lg transition-all flex items-center justify-end pr-2`}
-                    style={{ width: `${Math.max((step.value / maxFunnel) * 100, 8)}%` }}
-                  >
-                    {step.value > 0 && i > 0 && funnel[i - 1].value > 0 && (
-                      <span className="text-[10px] text-white font-semibold">
-                        {Math.round((step.value / funnel[i - 1].value) * 100)}%
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Follow-up Alerts */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <AlertCircle className="h-5 w-5 text-amber-500" />
-              Seguimientos Pendientes
-            </CardTitle>
-            <CardDescription>Leads sin contacto reciente</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {overdueFollowUps.length === 0 ? (
-              <div className="text-center py-6 text-sm text-muted-foreground">
-                ✅ Todos los leads están al día
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {overdueFollowUps.map((lead: any) => (
-                  <div key={lead.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
-                    <div className="h-8 w-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
-                      <Clock className="h-4 w-4 text-amber-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {lead.first_name} {lead.last_name || ''}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {lead.next_follow_up
-                          ? `Vencido hace ${differenceInDays(new Date(), parseISO(lead.next_follow_up))}d`
-                          : 'Sin seguimiento programado'}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="text-xs shrink-0">
-                      {lead.lead_score || 0}pts
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Project Breakdown */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <BarChart3 className="h-5 w-5 text-primary" />
-            Comparativa por Proyecto
-          </CardTitle>
-          <CardDescription>Revenue, conversión y disponibilidad por proyecto</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y">
-            {projectBreakdown.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground text-sm">
-                No hay proyectos registrados aún
+        <CardHeader className="pb-3">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <CardTitle>Parcelas disponibles</CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">Selecciona una parcela y ejecuta la siguiente acción de venta.</p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Select value={projectId} onValueChange={setProjectId}>
+                <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="Proyecto" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los proyectos</SelectItem>
+                  {projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input className="pl-9 sm:w-64" placeholder="Buscar lote o proyecto" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
-            ) : (
-              projectBreakdown.map(p => (
-                <div key={p.id} className="px-4 py-3 flex items-center gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-sm text-foreground truncate">{p.name}</p>
-                      {p.location && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />{p.location}
-                        </span>
-                      )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">Cargando inventario…</p>
+          ) : visibleLots.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">No hay parcelas disponibles para estos filtros.</p>
+          ) : (
+            <div className="divide-y rounded-xl border">
+              {visibleLots.slice(0, 30).map((lot) => (
+                <div key={lot.id} className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold">{lot.name || `Lote ${lot.lot_number}`}</p>
+                      <Badge className="bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/10">Disponible</Badge>
+                      <span className="text-xs text-muted-foreground">{projectById.get(lot.project_id)?.name}</span>
                     </div>
-                    <div className="flex gap-3 mt-1">
-                      <span className="text-xs text-muted-foreground">{p.totalLots} lotes</span>
-                      <Badge variant="outline" className="text-xs">{p.sold} vendidos</Badge>
-                      <Badge variant="outline" className="text-xs">{p.reserved} reservados</Badge>
-                      <Badge variant="outline" className="text-xs">{p.available} disponibles</Badge>
+                    <div className="mt-1 flex flex-wrap gap-x-4 text-sm text-muted-foreground">
+                      <span>{Number(lot.area || 0).toLocaleString('es-CL')} m²</span>
+                      <span className="font-medium text-foreground">{formatMoney(lot.price)}</span>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-bold text-foreground">{fmt(p.revenue)}</p>
-                    <p className="text-xs text-muted-foreground">Pipeline: {fmt(p.pipeline)}</p>
-                  </div>
-                  <div className="w-16 shrink-0">
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${p.progress}%` }} />
-                    </div>
-                    <p className="text-xs text-center text-muted-foreground mt-1">{p.progress}%</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" onClick={() => { setQuoteLot(lot); setQuote({ customer: '', phone: '', discount: '0', validDays: '7' }); }}>
+                      <FileText className="mr-1.5 h-4 w-4" />Cotizar
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setReserveLot(lot)}>
+                      <ShoppingCart className="mr-1.5 h-4 w-4" />Reservar
+                    </Button>
+                    <Button size="sm" asChild>
+                      <Link to={`/asesor/visitas?project=${encodeURIComponent(lot.project_id)}&lot=${encodeURIComponent(lot.id)}`}>
+                        <CalendarClock className="mr-1.5 h-4 w-4" />Visita
+                      </Link>
+                    </Button>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!quoteLot} onOpenChange={(open) => !open && setQuoteLot(null)}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader><DialogTitle>Cotización rápida</DialogTitle></DialogHeader>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div><Label>Cliente</Label><Input value={quote.customer} onChange={(e) => setQuote((q) => ({ ...q, customer: e.target.value }))} placeholder="Nombre cliente" /></div>
+            <div><Label>WhatsApp</Label><Input value={quote.phone} onChange={(e) => setQuote((q) => ({ ...q, phone: e.target.value }))} placeholder="569…" /></div>
+            <div><Label>Descuento ($)</Label><Input type="number" min="0" value={quote.discount} onChange={(e) => setQuote((q) => ({ ...q, discount: e.target.value }))} /></div>
+            <div><Label>Vigencia (días)</Label><Input type="number" min="1" value={quote.validDays} onChange={(e) => setQuote((q) => ({ ...q, validDays: e.target.value }))} /></div>
+            <div className="sm:col-span-2 rounded-xl bg-muted/50 p-4 text-sm whitespace-pre-line">{quoteText}</div>
+          </div>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button variant="outline" onClick={copyQuote}><ClipboardCopy className="mr-2 h-4 w-4" />Copiar</Button>
+            <Button variant="outline" onClick={sendEmail}><Send className="mr-2 h-4 w-4" />Email</Button>
+            <Button onClick={sendWhatsApp}><MessageCircle className="mr-2 h-4 w-4" />WhatsApp</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!reserveLot} onOpenChange={(open) => !open && setReserveLot(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader><DialogTitle>Reservar {reserveLot?.name || (reserveLot ? `Lote ${reserveLot.lot_number}` : '')}</DialogTitle></DialogHeader>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2"><Label>Comprador *</Label><Input value={reserve.name} onChange={(e) => setReserve((r) => ({ ...r, name: e.target.value }))} /></div>
+            <div><Label>Email *</Label><Input type="email" value={reserve.email} onChange={(e) => setReserve((r) => ({ ...r, email: e.target.value }))} /></div>
+            <div><Label>Teléfono</Label><Input value={reserve.phone} onChange={(e) => setReserve((r) => ({ ...r, phone: e.target.value }))} /></div>
+            <div className="sm:col-span-2"><Label>Monto de reserva</Label><Input type="number" min="0" value={reserve.amount} onChange={(e) => setReserve((r) => ({ ...r, amount: e.target.value }))} /></div>
+          </div>
+          <DialogFooter>
+            <Button onClick={submitReservation} disabled={createReservation.isPending}>
+              {createReservation.isPending ? 'Creando reserva…' : 'Crear reserva'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
