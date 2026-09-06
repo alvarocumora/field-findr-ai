@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { format, isAfter } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarClock, Plus, MapPin, User } from 'lucide-react';
@@ -19,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useVisits, VISIT_STATUS, VISIT_MODES, VisitStatus, Visit } from '@/hooks/useVisits';
 import { useLeads } from '@/hooks/useLeads';
 import { useProjects } from '@/hooks/useProjects';
+import { useLots } from '@/hooks/useLots';
 import { cn } from '@/lib/utils';
 
 const emptyForm = {
@@ -38,8 +40,29 @@ const VisitsManager = () => {
   const { visits, isLoading, createVisit, updateVisit } = useVisits();
   const { leads } = useLeads();
   const { projects } = useProjects();
+  const { lots } = useLots();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+
+  useEffect(() => {
+    const projectId = searchParams.get('project') || '';
+    const lotId = searchParams.get('lot') || '';
+    if (!projectId && !lotId) return;
+
+    const lot = lotId ? lots.find((item) => item.id === lotId) : undefined;
+    const lotLabel = lot ? lot.name || `Lote ${lot.lot_number}` : lotId ? `Parcela ${lotId}` : '';
+
+    setForm((current) => ({
+      ...current,
+      project_id: projectId || lot?.project_id || current.project_id,
+      notes: lotLabel
+        ? [current.notes, `Parcela seleccionada desde Cockpit de ventas: ${lotLabel}`].filter(Boolean).join('\n')
+        : current.notes,
+    }));
+    setOpen(true);
+    setSearchParams({}, { replace: true });
+  }, [lots, searchParams, setSearchParams]);
 
   const set = (k: keyof typeof emptyForm, v: string | number) =>
     setForm((f) => ({ ...f, [k]: v }));
