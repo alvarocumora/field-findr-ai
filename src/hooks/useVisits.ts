@@ -4,9 +4,21 @@ import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/type
 import { toast } from 'sonner';
 import { useAuth } from './useAuth';
 
-export type Visit = Tables<'visits'>;
-export type VisitInsert = TablesInsert<'visits'>;
-export type VisitUpdate = TablesUpdate<'visits'>;
+export type VisitOutcome = 'interested' | 'needs_follow_up' | 'not_interested' | 'reserved' | 'other';
+export type VisitNextAction = 'quote' | 'reserve' | 'follow_up' | 'reschedule' | 'close' | 'none';
+
+type VisitSalesFields = {
+  lot_id: string | null;
+  outcome: VisitOutcome | null;
+  result_notes: string | null;
+  next_action: VisitNextAction | null;
+  follow_up_at: string | null;
+  completed_at: string | null;
+};
+
+export type Visit = Tables<'visits'> & VisitSalesFields;
+export type VisitInsert = TablesInsert<'visits'> & Partial<VisitSalesFields>;
+export type VisitUpdate = TablesUpdate<'visits'> & Partial<VisitSalesFields>;
 
 export type VisitStatus =
   | 'scheduled' | 'confirmed' | 'done' | 'no_show' | 'cancelled' | 'rescheduled';
@@ -25,6 +37,36 @@ export const VISIT_MODES = [
   { value: 'virtual', label: 'Virtual' },
   { value: 'tour', label: 'Tour guiado' },
 ];
+
+export const VISIT_OUTCOMES: Array<{ value: VisitOutcome; label: string }> = [
+  { value: 'interested', label: 'Interesado' },
+  { value: 'needs_follow_up', label: 'Requiere seguimiento' },
+  { value: 'not_interested', label: 'No interesado' },
+  { value: 'reserved', label: 'Reserva realizada' },
+  { value: 'other', label: 'Otro' },
+];
+
+export const VISIT_NEXT_ACTIONS: Array<{ value: VisitNextAction; label: string }> = [
+  { value: 'quote', label: 'Enviar cotización' },
+  { value: 'reserve', label: 'Reservar parcela' },
+  { value: 'follow_up', label: 'Seguimiento' },
+  { value: 'reschedule', label: 'Reagendar visita' },
+  { value: 'close', label: 'Avanzar a cierre' },
+  { value: 'none', label: 'Sin acción' },
+];
+
+const visitsTable = () => (supabase as unknown as {
+  from: (table: 'visits') => {
+    insert: (row: VisitInsert & { user_id: string }) => {
+      select: () => { single: () => Promise<{ data: Visit | null; error: Error | null }> };
+    };
+    update: (row: VisitUpdate) => {
+      eq: (column: string, value: string) => {
+        select: () => { single: () => Promise<{ data: Visit | null; error: Error | null }> };
+      };
+    };
+  };
+}).from('visits');
 
 export const useVisits = () => {
   const { user } = useAuth();
@@ -48,13 +90,13 @@ export const useVisits = () => {
   const createVisit = useMutation({
     mutationFn: async (input: Omit<VisitInsert, 'user_id'>) => {
       if (!user?.id) throw new Error('Sesión requerida');
-      const { data, error } = await supabase
-        .from('visits')
+      const { data, error } = await visitsTable()
         .insert({ ...input, user_id: user.id })
         .select()
         .single();
       if (error) throw error;
-      return data as Visit;
+      if (!data) throw new Error('No se pudo crear la visita.');
+      return data;
     },
     onSuccess: () => { invalidate(); toast.success('Visita agendada'); },
     onError: (e: Error) => toast.error(`No se pudo agendar: ${e.message}`),
@@ -62,10 +104,14 @@ export const useVisits = () => {
 
   const updateVisit = useMutation({
     mutationFn: async ({ id, ...updates }: VisitUpdate & { id: string }) => {
-      const { data, error } = await supabase
-        .from('visits').update(updates).eq('id', id).select().single();
+      const { data, error } = await visitsTable()
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
       if (error) throw error;
-      return data as Visit;
+      if (!data) throw new Error('No se pudo actualizar la visita.');
+      return data;
     },
     onSuccess: () => { invalidate(); toast.success('Visita actualizada'); },
     onError: (e: Error) => toast.error(`No se pudo actualizar: ${e.message}`),
