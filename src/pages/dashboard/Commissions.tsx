@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -6,21 +6,25 @@ import { Button } from '@/components/ui/button';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { DollarSign, Handshake, TrendingUp, Users, CheckCircle2 } from 'lucide-react';
-import { useAgentCommissions, useMarkCommissionPaid } from '@/hooks/useAgentCommissions';
+import { DollarSign, Handshake, TrendingUp, Users, Clock3 } from 'lucide-react';
+import { useAgentCommissions, useCommissionEvents } from '@/hooks/useAgentCommissions';
 import {
   useReferralCommissionsEarned,
   useReferralCommissionsOwed,
   useMarkReferralPaid,
 } from '@/hooks/useReferrals.commissions';
 import ReferralCodeCard from '@/components/commissions/ReferralCodeCard';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n || 0);
 
 const StatusBadge = ({ status }: { status: string }) => {
   const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
-    pending: { label: 'Pendiente', variant: 'secondary' },
+    potential: { label: 'Potencial', variant: 'outline' },
+    reserved: { label: 'Reservada', variant: 'secondary' },
+    earned: { label: 'Devengada', variant: 'secondary' },
+    approved: { label: 'Aprobada', variant: 'outline' },
     paid: { label: 'Pagada', variant: 'default' },
     cancelled: { label: 'Cancelada', variant: 'outline' },
     none: { label: '—', variant: 'outline' },
@@ -33,7 +37,8 @@ const CommissionsPage = () => {
   const { data: mine = [] } = useAgentCommissions();
   const { data: earned = [] } = useReferralCommissionsEarned();
   const { data: owed = [] } = useReferralCommissionsOwed();
-  const markPaid = useMarkCommissionPaid();
+  const [historyId, setHistoryId] = useState<string>();
+  const { data: history = [] } = useCommissionEvents(historyId);
   const markReferralPaid = useMarkReferralPaid();
 
   // My commissions net of any referral split I owe out
@@ -46,7 +51,7 @@ const CommissionsPage = () => {
   );
 
   const totals = useMemo(() => {
-    const myPending = mineNet.filter(c => c.status === 'pending')
+    const myPending = mineNet.filter(c => ['potential', 'reserved', 'earned', 'approved'].includes(c.status))
       .reduce((s, c) => s + c.net_amount, 0);
     const myPaid = mineNet.filter(c => c.status === 'paid')
       .reduce((s, c) => s + c.net_amount, 0);
@@ -99,7 +104,7 @@ const CommissionsPage = () => {
                     <TableHead>Referido</TableHead>
                     <TableHead>Neto</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acción</TableHead>
+                    <TableHead className="text-right">Seguimiento</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -115,11 +120,9 @@ const CommissionsPage = () => {
                       <TableCell className="font-medium">{fmt(c.net_amount)}</TableCell>
                       <TableCell><StatusBadge status={c.status} /></TableCell>
                       <TableCell className="text-right">
-                        {c.status === 'pending' && (
-                          <Button size="sm" variant="outline" onClick={() => markPaid.mutate(c.id)}>
-                            <CheckCircle2 className="h-4 w-4 mr-1" /> Marcar pagada
-                          </Button>
-                        )}
+                        <Button size="sm" variant="outline" onClick={() => setHistoryId(c.id)}>
+                          <Clock3 className="h-4 w-4 mr-1" /> Historial
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -203,6 +206,28 @@ const CommissionsPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!historyId} onOpenChange={(open) => !open && setHistoryId(undefined)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Historial auditable</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            {history.length === 0 && <p className="text-sm text-muted-foreground">Sin eventos registrados.</p>}
+            {history.map((event) => (
+              <div key={event.id} className="rounded-lg border p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-medium">{event.event_type === 'status_changed' ? 'Cambio de estado' : event.event_type}</p>
+                  <p className="text-xs text-muted-foreground">{new Date(event.created_at).toLocaleString('es-CL')}</p>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-sm">
+                  {event.from_status && <StatusBadge status={event.from_status} />}
+                  {event.from_status && <span>→</span>}
+                  {event.to_status && <StatusBadge status={event.to_status} />}
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

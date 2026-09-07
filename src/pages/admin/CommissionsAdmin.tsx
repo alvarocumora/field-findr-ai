@@ -25,11 +25,13 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })
     .format(n || 0);
 
-const STATUSES = ['pending', 'approved', 'paid', 'cancelled'];
+const STATUSES = ['potential', 'reserved', 'earned', 'approved', 'paid', 'cancelled'];
 
 const StatusBadge = ({ status }: { status: string }) => {
   const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
-    pending: { label: 'Pendiente', variant: 'secondary' },
+    potential: { label: 'Potencial', variant: 'outline' },
+    reserved: { label: 'Reservada', variant: 'secondary' },
+    earned: { label: 'Devengada', variant: 'secondary' },
     approved: { label: 'Aprobada', variant: 'outline' },
     paid: { label: 'Pagada', variant: 'default' },
     cancelled: { label: 'Anulada', variant: 'destructive' },
@@ -163,6 +165,7 @@ const CommissionsAdmin = () => {
                     <TableHead>Tasa</TableHead>
                     <TableHead>Comisión</TableHead>
                     <TableHead>Referido</TableHead>
+                    <TableHead>Origen / cierre</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
@@ -183,6 +186,11 @@ const CommissionsAdmin = () => {
                           ? `${fmt(r.referral_amount ?? 0)} (${r.referral_status})`
                           : '—'}
                       </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        <span title={r.originator_agent_id || ''}>Origen: {r.originator_agent_id?.slice(0, 8) || '—'}</span>
+                        <br />
+                        <span title={r.closing_agent_id || ''}>Cierre: {r.closing_agent_id?.slice(0, 8) || '—'}</span>
+                      </TableCell>
                       <TableCell><StatusBadge status={r.status} /></TableCell>
                       <TableCell className="text-right space-x-2 whitespace-nowrap">
                         <Button size="sm" variant="outline" onClick={() => openEdit(r)}>
@@ -198,7 +206,7 @@ const CommissionsAdmin = () => {
                   ))}
                   {filtered.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
                         No hay comisiones con este filtro.
                       </TableCell>
                     </TableRow>

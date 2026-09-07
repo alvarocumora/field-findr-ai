@@ -17,6 +17,8 @@ export interface AdminCommissionRow {
   referral_amount: number | null;
   referral_status: string | null;
   status: string;
+  originator_agent_id: string | null;
+  closing_agent_id: string | null;
   paid_at: string | null;
   notes: string | null;
   created_at: string;
