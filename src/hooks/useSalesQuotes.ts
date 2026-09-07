@@ -67,6 +67,14 @@ const quotesTable = () => (supabase as unknown as {
   };
 }).from('sales_quotes');
 
+const quotesCountTable = () => (supabase as unknown as {
+  from: (table: 'sales_quotes') => {
+    select: (columns: string, options: { count: 'exact'; head: true }) => {
+      in: (column: string, values: SalesQuoteStatus[]) => Promise<{ count: number | null; error: Error | null }>;
+    };
+  };
+}).from('sales_quotes');
+
 export const useSalesQuotes = (limit = 100) => useQuery({
   queryKey: ['sales-quotes', limit],
   queryFn: async () => {
@@ -77,6 +85,18 @@ export const useSalesQuotes = (limit = 100) => useQuery({
 
     if (error) throw error;
     return data ?? [];
+  },
+});
+
+export const useActiveSalesQuotesCount = () => useQuery({
+  queryKey: ['sales-quotes', 'active-count'],
+  queryFn: async () => {
+    const { count, error } = await quotesCountTable()
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['draft', 'sent']);
+
+    if (error) throw error;
+    return count ?? 0;
   },
 });
 

@@ -35,7 +35,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { Lot, useLots } from '@/hooks/useLots';
 import { useLeads } from '@/hooks/useLeads';
 import { useCreateReservation, useReservations } from '@/hooks/useReservations';
-import { useCreateSalesQuote, useMarkSalesQuoteSent, useSalesQuotes } from '@/hooks/useSalesQuotes';
+import { useActiveSalesQuotesCount, useCreateSalesQuote, useMarkSalesQuoteSent, useSalesQuotes } from '@/hooks/useSalesQuotes';
 import { formatPriceLatam } from '@/lib/latam';
 import { toast } from 'sonner';
 
@@ -45,6 +45,7 @@ const ExecutiveDashboard = () => {
   const { leads = [] } = useLeads();
   const { data: reservations = [] } = useReservations();
   const { data: salesQuotes = [] } = useSalesQuotes(20);
+  const { data: activeSalesQuotesCount = 0 } = useActiveSalesQuotesCount();
   const createReservation = useCreateReservation();
   const createQuote = useCreateSalesQuote();
   const markQuoteSent = useMarkSalesQuoteSent();
@@ -92,9 +93,9 @@ const ExecutiveDashboard = () => {
     reserved: lots.filter((lot) => lot.status === 'reserved').length,
     sold: lots.filter((lot) => lot.status === 'sold').length,
     activeReservations: (reservations as any[]).filter((r) => ['pending_payment', 'paid'].includes(r.status)).length,
-    quotes: salesQuotes.filter((q) => ['draft', 'sent'].includes(q.status)).length,
+    quotes: activeSalesQuotesCount,
     leads: leads.length,
-  }), [lots, reservations, salesQuotes, leads]);
+  }), [lots, reservations, activeSalesQuotesCount, leads]);
 
   const formatMoney = (value: number | string | null | undefined) =>
     formatPriceLatam(Number(value || 0), 'CLP');
@@ -169,14 +170,21 @@ const ExecutiveDashboard = () => {
   };
 
   const sendWhatsApp = async () => {
+    // Open synchronously from the click event so browsers do not block the tab
+    // while the quote is persisted and marked as sent.
+    const popup = window.open('about:blank', '_blank');
+    if (popup) popup.opener = null;
+
     try {
       const id = await ensureQuote();
       await markQuoteSent.mutateAsync(id);
       const phone = quote.phone.replace(/\D/g, '');
       const target = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(quoteText)}` : `https://wa.me/?text=${encodeURIComponent(quoteText)}`;
-      window.open(target, '_blank', 'noopener,noreferrer');
+      if (popup) popup.location.href = target;
+      else window.location.href = target;
       toast.success('Cotización marcada como enviada');
     } catch (error) {
+      popup?.close();
       if ((error as Error).message !== 'Cliente requerido' && (error as Error).message !== 'Descuento inválido') {
         toast.error((error as Error).message);
       }
