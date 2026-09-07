@@ -134,7 +134,7 @@ const VisitsManager = () => {
       result_notes: result.result_notes.trim() || null,
       next_action: result.next_action || null,
       follow_up_at: result.follow_up_at ? new Date(result.follow_up_at).toISOString() : null,
-      completed_at: new Date().toISOString(),
+      completed_at: resultVisit.completed_at ?? new Date().toISOString(),
     });
     setResultVisit(null);
     setResult(emptyResult);
@@ -165,7 +165,9 @@ const VisitsManager = () => {
         </div>
         <Badge variant="outline" className={cn('border', st.className)}>{st.label}</Badge>
         <div className="flex flex-wrap gap-2">
-          {v.status !== 'done' && <Button size="sm" variant="outline" onClick={() => openResult(v)}>Registrar resultado</Button>}
+          <Button size="sm" variant="outline" onClick={() => openResult(v)}>
+            {v.status === 'done' || v.outcome ? 'Editar resultado' : 'Registrar resultado'}
+          </Button>
           {v.lot_id && v.next_action === 'quote' && (
             <Button size="sm" variant="outline" asChild><Link to={`/asesor/executive?lot=${encodeURIComponent(v.lot_id)}&action=quote`}><FileText className="mr-1.5 h-4 w-4" />Cotizar</Link></Button>
           )}
@@ -215,7 +217,20 @@ const VisitsManager = () => {
               </div>
               <div className="sm:col-span-2">
                 <Label>Parcela</Label>
-                <Select value={form.lot_id} onValueChange={(v) => set('lot_id', v)}><SelectTrigger><SelectValue placeholder="Seleccionar parcela" /></SelectTrigger><SelectContent>{projectLots.map((lot) => <SelectItem key={lot.id} value={lot.id}>{lot.name || `Lote ${lot.lot_number}`}</SelectItem>)}</SelectContent></Select>
+                <Select
+                  value={form.lot_id}
+                  onValueChange={(value) => {
+                    const selectedLot = lots.find((lot) => lot.id === value);
+                    setForm((current) => ({
+                      ...current,
+                      lot_id: value,
+                      project_id: selectedLot?.project_id || current.project_id,
+                    }));
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Seleccionar parcela" /></SelectTrigger>
+                  <SelectContent>{projectLots.map((lot) => <SelectItem key={lot.id} value={lot.id}>{lot.name || `Lote ${lot.lot_number}`}</SelectItem>)}</SelectContent>
+                </Select>
               </div>
               <div className="sm:col-span-2"><Label htmlFor="v-notes">Notas previas</Label><Textarea id="v-notes" value={form.notes} onChange={(e) => set('notes', e.target.value)} /></div>
             </div>
