@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { CalendarDays, CheckCircle2, MapPin } from 'lucide-react';
-import { PublicLayout } from '@/components/layout/PublicLayout';
+import PublicLayout from '@/components/layouts/PublicLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
