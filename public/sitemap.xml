@@ -81,6 +81,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://ofertaterrenos.com/eventos</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://ofertaterrenos.com/quiz</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -97,6 +102,11 @@
   </url>
   <url>
     <loc>https://ofertaterrenos.com/brokers</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://ofertaterrenos.com/corredores</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
