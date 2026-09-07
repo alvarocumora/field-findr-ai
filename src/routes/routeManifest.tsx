@@ -161,6 +161,7 @@ const BrokerNetwork = lazy(() => import("@/pages/dashboard/BrokerNetwork"));
 const SupportTickets = lazy(() => import("@/pages/dashboard/SupportTickets"));
 const HelpCenter = lazy(() => import("@/pages/HelpCenter"));
 const MeetingsManager = lazy(() => import("@/pages/dashboard/MeetingsManager"));
+const BuyerRequirements = lazy(() => import("@/pages/dashboard/BuyerRequirements"));
 
 // Admin
 const DashboardAdminPage = lazy(() => import("./elements/AdminDashboard"));
@@ -424,6 +425,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("clientes", "/clientes", <ClientsBook />, { label: "Clientes", group: "ventas", icon: "users" }),
   agent("asesor-leads", "/asesor/leads", <LeadManagement />, { label: "Leads", group: "ventas", icon: "users" }),
   agent("asesor-contacts", "/asesor/contacts", <Contacts />, { label: "Contactos", group: "ventas", icon: "users" }),
+  agent("asesor-buyer-requirements", "/asesor/demanda-compradores", <BuyerRequirements />, { label: "Tengo comprador", group: "ventas", icon: "target" }),
   agent("asesor-crm", "/asesor/crm", <CRMSystem />, { label: "CRM", group: "ventas", icon: "workflow" }),
   agent("asesor-messages", "/asesor/messages", <Messages />, { label: "Mensajes", group: "ventas", icon: "message" }),
   agent("asesor-notificaciones", "/asesor/notificaciones/plantillas", <NotificationTemplates />, { label: "Plantillas de aviso", group: "ventas", icon: "bell" }),
