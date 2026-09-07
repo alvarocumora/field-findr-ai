@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   CalendarClock,
   CheckCircle2,
@@ -49,6 +49,7 @@ const ExecutiveDashboard = () => {
   const createReservation = useCreateReservation();
   const createQuote = useCreateSalesQuote();
   const markQuoteSent = useMarkSalesQuoteSent();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [projectId, setProjectId] = useState('all');
   const [search, setSearch] = useState('');
@@ -64,7 +65,6 @@ const ExecutiveDashboard = () => {
   };
 
   const projectById = useMemo(
-    // `Map` está sombreado por el icono de lucide en este archivo.
     () => new globalThis.Map(projects.map((project) => [project.id, project])),
     [projects],
   );
@@ -73,6 +73,28 @@ const ExecutiveDashboard = () => {
     () => new globalThis.Map(lots.map((lot) => [lot.id, lot])),
     [lots],
   );
+
+  useEffect(() => {
+    const lotId = searchParams.get('lot');
+    const action = searchParams.get('action');
+    if (!lotId || !action || lots.length === 0) return;
+
+    const lot = lots.find((item) => item.id === lotId);
+    if (!lot) return;
+
+    if (action === 'quote') {
+      setQuoteLot(lot);
+      setSavedQuoteId(null);
+      setQuote({ customer: '', email: '', phone: '', discount: '0', validDays: '7' });
+    } else if (action === 'reserve') {
+      setReserveLot(lot);
+    } else {
+      return;
+    }
+
+    setProjectId(lot.project_id);
+    setSearchParams({}, { replace: true });
+  }, [lots, searchParams, setSearchParams]);
 
   const visibleLots = useMemo(() => {
     const needle = search.trim().toLowerCase();
@@ -170,8 +192,6 @@ const ExecutiveDashboard = () => {
   };
 
   const sendWhatsApp = async () => {
-    // Open synchronously from the click event so browsers do not block the tab
-    // while the quote is persisted and marked as sent.
     const popup = window.open('about:blank', '_blank');
     if (popup) popup.opener = null;
 
