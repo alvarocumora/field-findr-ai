@@ -1,5 +1,6 @@
 -- Sales Executive OS: resultado de visita y siguiente acción comercial.
 -- Mantiene la tabla visits existente y agrega campos operativos sin cambiar su RLS actual.
+-- CI refresh after review fixes.
 
 alter table public.visits
   add column if not exists lot_id uuid references public.lots(id) on delete set null,
