@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { CalendarDays, MapPin, Users } from 'lucide-react';
-import { PublicLayout } from '@/components/layout/PublicLayout';
+import PublicLayout from '@/components/layouts/PublicLayout';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePublicEvents } from '@/hooks/useEvents';
