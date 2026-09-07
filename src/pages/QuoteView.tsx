@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { CalendarClock, CheckCircle2, Download, MapPin } from 'lucide-react';
-import { PublicLayout } from '@/components/layout/PublicLayout';
+import PublicLayout from '@/components/layouts/PublicLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
