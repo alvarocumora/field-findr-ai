@@ -57,6 +57,11 @@ const ExecutiveDashboard = () => {
   const [quote, setQuote] = useState({ customer: '', email: '', phone: '', discount: '0', validDays: '7' });
   const [reserve, setReserve] = useState({ name: '', email: '', phone: '', amount: '100000' });
 
+  const updateQuote = (values: Partial<typeof quote>) => {
+    setSavedQuoteId(null);
+    setQuote((current) => ({ ...current, ...values }));
+  };
+
   const projectById = useMemo(
     () => new Map(projects.map((project) => [project.id, project])),
     [projects],
@@ -365,11 +370,11 @@ const ExecutiveDashboard = () => {
         <DialogContent className="sm:max-w-xl">
           <DialogHeader><DialogTitle>Cotización rápida</DialogTitle></DialogHeader>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div><Label>Cliente *</Label><Input value={quote.customer} onChange={(e) => setQuote((q) => ({ ...q, customer: e.target.value }))} placeholder="Nombre cliente" /></div>
-            <div><Label>WhatsApp</Label><Input value={quote.phone} onChange={(e) => setQuote((q) => ({ ...q, phone: e.target.value }))} placeholder="569…" /></div>
-            <div className="sm:col-span-2"><Label>Email</Label><Input type="email" value={quote.email} onChange={(e) => setQuote((q) => ({ ...q, email: e.target.value }))} placeholder="cliente@email.com" /></div>
-            <div><Label>Descuento ($)</Label><Input type="number" min="0" value={quote.discount} onChange={(e) => { setSavedQuoteId(null); setQuote((q) => ({ ...q, discount: e.target.value })); }} /></div>
-            <div><Label>Vigencia (días)</Label><Input type="number" min="1" value={quote.validDays} onChange={(e) => { setSavedQuoteId(null); setQuote((q) => ({ ...q, validDays: e.target.value })); }} /></div>
+            <div><Label>Cliente *</Label><Input value={quote.customer} onChange={(e) => updateQuote({ customer: e.target.value })} placeholder="Nombre cliente" /></div>
+            <div><Label>WhatsApp</Label><Input value={quote.phone} onChange={(e) => updateQuote({ phone: e.target.value })} placeholder="569…" /></div>
+            <div className="sm:col-span-2"><Label>Email</Label><Input type="email" value={quote.email} onChange={(e) => updateQuote({ email: e.target.value })} placeholder="cliente@email.com" /></div>
+            <div><Label>Descuento ($)</Label><Input type="number" min="0" value={quote.discount} onChange={(e) => updateQuote({ discount: e.target.value })} /></div>
+            <div><Label>Vigencia (días)</Label><Input type="number" min="1" value={quote.validDays} onChange={(e) => updateQuote({ validDays: e.target.value })} /></div>
             <div className="sm:col-span-2 rounded-xl bg-muted/50 p-4 text-sm whitespace-pre-line">{quoteText}</div>
             {savedQuoteId && <p className="sm:col-span-2 text-xs text-emerald-700">Cotización registrada. Los envíos reutilizan este mismo registro.</p>}
           </div>
