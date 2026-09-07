@@ -674,14 +674,36 @@ const ProjectDetail = () => {
                   />
                 )}
 
+                {/* Sin fotos 360: mostramos el recorrido aéreo del plano en vez de un vacío */}
                 {!isOwner && tourScenes.length === 0 && (
-                  <Card>
-                    <CardContent className="py-12 text-center">
-                      <Camera className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-                      <p className="text-muted-foreground">Este proyecto aún no tiene tour virtual 360°.</p>
-                    </CardContent>
-                  </Card>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 rounded-xl border bg-muted/30 p-4">
+                      <Camera className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+                      <p className="text-sm text-muted-foreground">
+                        Este proyecto aún no tiene fotos 360°. Mientras tanto, recorre el terreno
+                        desde el aire y haz clic en cada parcela para ver su ficha.
+                      </p>
+                    </div>
+                    <div className="rounded-2xl overflow-hidden border h-[520px]">
+                      <LotMapView
+                        lots={lots}
+                        projectCenter={{
+                          lat: project.latitude || -34.9767,
+                          lng: project.longitude || -71.7856,
+                        }}
+                        onLotClick={(lot) => {
+                          setSelectedLot(lot.id);
+                          setDetailLot(lot);
+                        }}
+                        selectedLotId={selectedLot}
+                        projectId={project.id}
+                        kmzFileUrl={(project as any).kmz_file_url}
+                        readOnly
+                      />
+                    </div>
+                  </div>
                 )}
+
               </div>
             </TabsContent>
           </Tabs>
