@@ -104,6 +104,7 @@ const Comunidad = lazy(() => import("@/pages/Comunidad"));
 const Comenzar = lazy(() => import("@/pages/Comenzar"));
 const Panel = lazy(() => import("@/pages/Panel"));
 const Agendar = lazy(() => import("@/pages/Agendar"));
+const QuoteView = lazy(() => import("@/pages/QuoteView"));
 
 // Landings de proyecto (SEO vivo: URLs congeladas)
 const InvestorsLogin = lazy(() => import("@/pages/forestal/InvestorsLogin"));
@@ -350,6 +351,7 @@ export const publicRouteEntries: RouteEntry[] = [
         "Responde unas preguntas sobre uso, presupuesto y zona y te mostramos los terrenos con mayor porcentaje de match.",
     },
   }),
+  pub("cotizacion-publica", "/cotizacion/:token", <QuoteView />, { indexable: false }),
   pub("agendar", "/agendar", <Agendar />, {
     seo: {
       title: "Agendar reunión | Oferta Terrenos",

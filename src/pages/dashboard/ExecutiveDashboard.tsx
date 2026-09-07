@@ -359,14 +359,14 @@ const ExecutiveDashboard = () => {
                   <div key={item.id} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium">{item.customer_name}</p>
+                        <p className="font-medium">Cotización N° {item.quote_number} · {item.customer_name}</p>
                         <Badge variant={item.status === 'sent' ? 'default' : 'outline'}>{item.status === 'sent' ? 'Enviada' : item.status}</Badge>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {projectById.get(item.project_id)?.name || 'Proyecto'} · {lot?.name || (lot ? `Lote ${lot.lot_number}` : 'Parcela')} · vence {new Date(item.valid_until).toLocaleDateString('es-CL')}
                       </p>
                     </div>
-                    <p className="font-semibold">{formatMoney(item.quoted_price)}</p>
+                    <div className="flex items-center gap-3"><p className="font-semibold">{formatMoney(item.quoted_price)}</p><Button size="sm" variant="outline" asChild><Link to={`/cotizacion/${item.public_token}`} target="_blank">Abrir link</Link></Button></div>
                   </div>
                 );
               })}
