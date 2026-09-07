@@ -54,6 +54,12 @@ const emptyResult = {
   follow_up_at: '',
 };
 
+const toLocalDateTimeInput = (iso: string) => {
+  const date = new Date(iso);
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
 const VisitsManager = () => {
   const { visits, isLoading, createVisit, updateVisit } = useVisits();
   const { leads } = useLeads();
@@ -121,7 +127,7 @@ const VisitsManager = () => {
       outcome: visit.outcome ?? '',
       result_notes: visit.result_notes ?? '',
       next_action: visit.next_action ?? '',
-      follow_up_at: visit.follow_up_at ? visit.follow_up_at.slice(0, 16) : '',
+      follow_up_at: visit.follow_up_at ? toLocalDateTimeInput(visit.follow_up_at) : '',
     });
   };
 
