@@ -34,7 +34,7 @@ export const useAgentCommissions = (projectId?: string) => {
       if (projectId) query = query.eq('project_id', projectId);
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as AgentCommission[];
+      return (data ?? []) as unknown as AgentCommission[];
     },
     enabled: !!user,
   });
