@@ -50,6 +50,7 @@ const MyBrokerBusiness = () => {
 
   const [bio, setBio] = useState<string | null>(null);
   const [zones, setZones] = useState<string | null>(null);
+  const [specialties, setSpecialties] = useState<string | null>(null);
 
   const totals = useMemo(() => {
     const active = commissions.filter((c) => c.status !== 'cancelled');
@@ -73,6 +74,7 @@ const MyBrokerBusiness = () => {
   const steps = [
     { label: 'Completa tu perfil público', done: !!profile?.bio },
     { label: 'Define tus zonas de trabajo', done: (profile?.zones?.length ?? 0) > 0 },
+    { label: 'Agrega tus especialidades', done: (profile?.specialties?.length ?? 0) > 0 },
     { label: 'Solicita tu primer proyecto', done: assignments.length > 0 },
     { label: 'Comparte tu link personal', done: (profile?.onboarding_step ?? 0) >= 4 },
     { label: 'Registra tu primera venta', done: totals.sales > 0 },
@@ -195,10 +197,28 @@ const MyBrokerBusiness = () => {
               <Input id="zones" value={zones ?? (profile.zones ?? []).join(', ')}
                 onChange={(e) => setZones(e.target.value)} />
             </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="isPublic">Aparecer en el ranking público</Label>
+            <div className="space-y-2">
+              <Label htmlFor="specialties">Especialidades (separadas por coma)</Label>
+              <Input id="specialties"
+                value={specialties ?? (profile.specialties ?? []).join(', ')}
+                onChange={(e) => setSpecialties(e.target.value)}
+                placeholder="Parcelas, agrícola, industrial" />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <Label htmlFor="isPublic">Aparecer en el directorio público</Label>
+                <p className="text-xs text-muted-foreground">Publica tu nombre, bio, zonas y especialidades.</p>
+              </div>
               <Switch id="isPublic" checked={profile.is_public}
                 onCheckedChange={(v) => updateProfile.mutate({ is_public: v })} />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <Label htmlFor="publicContact">Mostrar teléfono y email públicamente</Label>
+                <p className="text-xs text-muted-foreground">Requiere consentimiento independiente del perfil público.</p>
+              </div>
+              <Switch id="publicContact" checked={profile.public_contact_opt_in}
+                onCheckedChange={(v) => updateProfile.mutate({ public_contact_opt_in: v })} />
             </div>
             <Button
               disabled={updateProfile.isPending}
@@ -206,6 +226,8 @@ const MyBrokerBusiness = () => {
                 bio: bio ?? profile.bio,
                 zones: (zones ?? (profile.zones ?? []).join(', '))
                   .split(',').map((z) => z.trim()).filter(Boolean),
+                specialties: (specialties ?? (profile.specialties ?? []).join(', '))
+                  .split(',').map((value) => value.trim()).filter(Boolean),
               })}
             >
               Guardar perfil
