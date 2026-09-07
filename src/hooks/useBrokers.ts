@@ -35,6 +35,7 @@ export interface BrokerProfile {
   base_commission_rate: number;
   network_override_rate: number;
   zones: string[];
+  specialties: string[];
   bio: string | null;
   avatar_url: string | null;
   phone: string | null;
@@ -44,6 +45,8 @@ export interface BrokerProfile {
   referred_by: string | null;
   is_active: boolean;
   is_public: boolean;
+  public_contact_opt_in: boolean;
+  verified_at: string | null;
   onboarding_step: number;
   created_at: string;
 }

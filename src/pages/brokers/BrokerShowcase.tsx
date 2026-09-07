@@ -6,23 +6,34 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Mail, Phone, Building2 } from 'lucide-react';
+import { MapPin, Mail, Phone, Building2, BadgeCheck } from 'lucide-react';
 import { useSEO } from '@/hooks/useSEO';
+
+interface PublicBrokerProfile {
+  slug: string;
+  display_name: string;
+  company_name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  level: string;
+  zones: string[];
+  specialties: string[];
+  is_verified: boolean;
+  phone: string | null;
+  email: string | null;
+}
 
 const useBrokerBySlug = (slug?: string) =>
   useQuery({
     queryKey: ['broker-showcase', slug],
     queryFn: async () => {
       if (!slug) return null;
-      const { data, error } = await supabase
-        .from('broker_profiles')
-        .select('slug,display_name,company_name,bio,avatar_url,level,zones,phone,email')
-        .eq('slug', slug)
-        .eq('is_active', true)
-        .eq('is_public', true)
-        .maybeSingle();
+      const { data, error } = await (supabase.rpc as CallableFunction)(
+        'get_public_broker_profile',
+        { p_slug: slug },
+      );
       if (error) throw error;
-      return data;
+      return ((data ?? []) as PublicBrokerProfile[])[0] ?? null;
     },
     enabled: !!slug,
   });
@@ -80,13 +91,33 @@ const BrokerShowcase = () => {
               <Building2 className="h-4 w-4" aria-hidden="true" /> {broker.company_name}
             </p>
           )}
-          <Badge variant="secondary" className="mt-3">Broker {broker.level}</Badge>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <Badge variant="secondary">Broker {broker.level}</Badge>
+            {broker.is_verified && (
+              <Badge className="gap-1 bg-emerald-600">
+                <BadgeCheck className="h-3.5 w-3.5" /> Verificado
+              </Badge>
+            )}
+          </div>
         </header>
 
         {broker.bio && (
           <Card>
             <CardContent className="p-6">
               <p className="text-muted-foreground whitespace-pre-line">{broker.bio}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {broker.specialties && broker.specialties.length > 0 && (
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="font-semibold mb-3">Especialidades</h2>
+              <div className="flex flex-wrap gap-2">
+                {broker.specialties.map((specialty) => (
+                  <Badge key={specialty}>{specialty}</Badge>
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}
