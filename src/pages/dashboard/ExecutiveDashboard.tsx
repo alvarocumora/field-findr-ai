@@ -35,6 +35,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { Lot, useLots } from '@/hooks/useLots';
 import { useLeads } from '@/hooks/useLeads';
 import { useCreateReservation, useReservations } from '@/hooks/useReservations';
+import { useCreateSalesQuote, useMarkSalesQuoteSent, useSalesQuotes } from '@/hooks/useSalesQuotes';
 import { formatPriceLatam } from '@/lib/latam';
 import { toast } from 'sonner';
 
@@ -43,19 +44,33 @@ const ExecutiveDashboard = () => {
   const { lots, isLoading } = useLots();
   const { leads = [] } = useLeads();
   const { data: reservations = [] } = useReservations();
+  const { data: salesQuotes = [] } = useSalesQuotes(20);
   const createReservation = useCreateReservation();
+  const createQuote = useCreateSalesQuote();
+  const markQuoteSent = useMarkSalesQuoteSent();
 
   const [projectId, setProjectId] = useState('all');
   const [search, setSearch] = useState('');
   const [quoteLot, setQuoteLot] = useState<Lot | null>(null);
   const [reserveLot, setReserveLot] = useState<Lot | null>(null);
-  const [quote, setQuote] = useState({ customer: '', phone: '', discount: '0', validDays: '7' });
+  const [savedQuoteId, setSavedQuoteId] = useState<string | null>(null);
+  const [quote, setQuote] = useState({ customer: '', email: '', phone: '', discount: '0', validDays: '7' });
   const [reserve, setReserve] = useState({ name: '', email: '', phone: '', amount: '100000' });
+
+  const updateQuote = (values: Partial<typeof quote>) => {
+    setSavedQuoteId(null);
+    setQuote((current) => ({ ...current, ...values }));
+  };
 
   const projectById = useMemo(
     // `Map` está sombreado por el icono de lucide en este archivo.
     () => new globalThis.Map(projects.map((project) => [project.id, project])),
     [projects],
+  );
+
+  const lotById = useMemo(
+    () => new Map(lots.map((lot) => [lot.id, lot])),
+    [lots],
   );
 
   const visibleLots = useMemo(() => {
@@ -77,8 +92,9 @@ const ExecutiveDashboard = () => {
     reserved: lots.filter((lot) => lot.status === 'reserved').length,
     sold: lots.filter((lot) => lot.status === 'sold').length,
     activeReservations: (reservations as any[]).filter((r) => ['pending_payment', 'paid'].includes(r.status)).length,
+    quotes: salesQuotes.filter((q) => ['draft', 'sent'].includes(q.status)).length,
     leads: leads.length,
-  }), [lots, reservations, leads]);
+  }), [lots, reservations, salesQuotes, leads]);
 
   const formatMoney = (value: number | string | null | undefined) =>
     formatPriceLatam(Number(value || 0), 'CLP');
@@ -103,20 +119,82 @@ const ExecutiveDashboard = () => {
       ].filter(Boolean).join('\n')
     : '';
 
+  const ensureQuote = async () => {
+    if (savedQuoteId) return savedQuoteId;
+    if (!quoteLot) throw new Error('Selecciona una parcela.');
+    if (!quote.customer.trim()) {
+      toast.error('Ingresa el nombre del cliente antes de guardar o enviar');
+      throw new Error('Cliente requerido');
+    }
+
+    const listPrice = Number(quoteLot.price || 0);
+    const discount = Math.max(0, Number(quote.discount || 0));
+    const validDays = Math.max(1, Number(quote.validDays || 7));
+    if (discount > listPrice) {
+      toast.error('El descuento no puede superar el precio de lista');
+      throw new Error('Descuento inválido');
+    }
+
+    const validUntil = new Date();
+    validUntil.setDate(validUntil.getDate() + validDays);
+
+    const saved = await createQuote.mutateAsync({
+      project_id: quoteLot.project_id,
+      lot_id: quoteLot.id,
+      customer_name: quote.customer,
+      customer_email: quote.email || null,
+      customer_phone: quote.phone || null,
+      list_price: listPrice,
+      discount_amount: discount,
+      quoted_price: listPrice - discount,
+      valid_until: validUntil.toISOString(),
+      notes: 'Cotización creada desde Sales Executive OS',
+    });
+
+    setSavedQuoteId(saved.id);
+    toast.success('Cotización guardada');
+    return saved.id;
+  };
+
   const copyQuote = async () => {
-    await navigator.clipboard.writeText(quoteText);
-    toast.success('Cotización copiada');
+    try {
+      await ensureQuote();
+      await navigator.clipboard.writeText(quoteText);
+      toast.success('Cotización copiada y registrada');
+    } catch (error) {
+      if ((error as Error).message !== 'Cliente requerido' && (error as Error).message !== 'Descuento inválido') {
+        toast.error((error as Error).message);
+      }
+    }
   };
 
-  const sendWhatsApp = () => {
-    const phone = quote.phone.replace(/\D/g, '');
-    const target = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(quoteText)}` : `https://wa.me/?text=${encodeURIComponent(quoteText)}`;
-    window.open(target, '_blank', 'noopener,noreferrer');
+  const sendWhatsApp = async () => {
+    try {
+      const id = await ensureQuote();
+      await markQuoteSent.mutateAsync(id);
+      const phone = quote.phone.replace(/\D/g, '');
+      const target = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(quoteText)}` : `https://wa.me/?text=${encodeURIComponent(quoteText)}`;
+      window.open(target, '_blank', 'noopener,noreferrer');
+      toast.success('Cotización marcada como enviada');
+    } catch (error) {
+      if ((error as Error).message !== 'Cliente requerido' && (error as Error).message !== 'Descuento inválido') {
+        toast.error((error as Error).message);
+      }
+    }
   };
 
-  const sendEmail = () => {
-    const subject = quoteLot ? `Cotización ${quoteLot.name || `Lote ${quoteLot.lot_number}`}` : 'Cotización OfertaTerrenos';
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(quoteText)}`;
+  const sendEmail = async () => {
+    try {
+      const id = await ensureQuote();
+      await markQuoteSent.mutateAsync(id);
+      const subject = quoteLot ? `Cotización ${quoteLot.name || `Lote ${quoteLot.lot_number}`}` : 'Cotización OfertaTerrenos';
+      window.location.href = `mailto:${encodeURIComponent(quote.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(quoteText)}`;
+      toast.success('Cotización marcada como enviada');
+    } catch (error) {
+      if ((error as Error).message !== 'Cliente requerido' && (error as Error).message !== 'Descuento inválido') {
+        toast.error((error as Error).message);
+      }
+    }
   };
 
   const submitReservation = async () => {
@@ -158,12 +236,13 @@ const ExecutiveDashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         {[
           ['Disponibles', stats.available, 'Listas para ofrecer'],
           ['Reservadas', stats.reserved, 'En negociación'],
           ['Vendidas', stats.sold, 'Cierres'],
           ['Reservas activas', stats.activeReservations, 'Pendientes/pagadas'],
+          ['Cotizaciones', stats.quotes, 'Borrador/enviadas'],
           ['Leads', stats.leads, 'CRM comercial'],
         ].map(([label, value, sub]) => (
           <Card key={String(label)}>
@@ -237,7 +316,7 @@ const ExecutiveDashboard = () => {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="outline" onClick={() => { setQuoteLot(lot); setQuote({ customer: '', phone: '', discount: '0', validDays: '7' }); }}>
+                    <Button size="sm" variant="outline" onClick={() => { setQuoteLot(lot); setSavedQuoteId(null); setQuote({ customer: '', email: '', phone: '', discount: '0', validDays: '7' }); }}>
                       <FileText className="mr-1.5 h-4 w-4" />Cotizar
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => setReserveLot(lot)}>
@@ -256,20 +335,54 @@ const ExecutiveDashboard = () => {
         </CardContent>
       </Card>
 
-      <Dialog open={!!quoteLot} onOpenChange={(open) => !open && setQuoteLot(null)}>
+      <Card id="cotizaciones">
+        <CardHeader>
+          <CardTitle>Cotizaciones recientes</CardTitle>
+          <p className="text-sm text-muted-foreground">Historial comercial guardado por ejecutivo, cliente y parcela.</p>
+        </CardHeader>
+        <CardContent>
+          {salesQuotes.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">Aún no hay cotizaciones guardadas.</p>
+          ) : (
+            <div className="divide-y rounded-xl border">
+              {salesQuotes.slice(0, 8).map((item) => {
+                const lot = lotById.get(item.lot_id);
+                return (
+                  <div key={item.id} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium">{item.customer_name}</p>
+                        <Badge variant={item.status === 'sent' ? 'default' : 'outline'}>{item.status === 'sent' ? 'Enviada' : item.status}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {projectById.get(item.project_id)?.name || 'Proyecto'} · {lot?.name || (lot ? `Lote ${lot.lot_number}` : 'Parcela')} · vence {new Date(item.valid_until).toLocaleDateString('es-CL')}
+                      </p>
+                    </div>
+                    <p className="font-semibold">{formatMoney(item.quoted_price)}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!quoteLot} onOpenChange={(open) => { if (!open) { setQuoteLot(null); setSavedQuoteId(null); } }}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader><DialogTitle>Cotización rápida</DialogTitle></DialogHeader>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div><Label>Cliente</Label><Input value={quote.customer} onChange={(e) => setQuote((q) => ({ ...q, customer: e.target.value }))} placeholder="Nombre cliente" /></div>
-            <div><Label>WhatsApp</Label><Input value={quote.phone} onChange={(e) => setQuote((q) => ({ ...q, phone: e.target.value }))} placeholder="569…" /></div>
-            <div><Label>Descuento ($)</Label><Input type="number" min="0" value={quote.discount} onChange={(e) => setQuote((q) => ({ ...q, discount: e.target.value }))} /></div>
-            <div><Label>Vigencia (días)</Label><Input type="number" min="1" value={quote.validDays} onChange={(e) => setQuote((q) => ({ ...q, validDays: e.target.value }))} /></div>
+            <div><Label>Cliente *</Label><Input value={quote.customer} onChange={(e) => updateQuote({ customer: e.target.value })} placeholder="Nombre cliente" /></div>
+            <div><Label>WhatsApp</Label><Input value={quote.phone} onChange={(e) => updateQuote({ phone: e.target.value })} placeholder="569…" /></div>
+            <div className="sm:col-span-2"><Label>Email</Label><Input type="email" value={quote.email} onChange={(e) => updateQuote({ email: e.target.value })} placeholder="cliente@email.com" /></div>
+            <div><Label>Descuento ($)</Label><Input type="number" min="0" value={quote.discount} onChange={(e) => updateQuote({ discount: e.target.value })} /></div>
+            <div><Label>Vigencia (días)</Label><Input type="number" min="1" value={quote.validDays} onChange={(e) => updateQuote({ validDays: e.target.value })} /></div>
             <div className="sm:col-span-2 rounded-xl bg-muted/50 p-4 text-sm whitespace-pre-line">{quoteText}</div>
+            {savedQuoteId && <p className="sm:col-span-2 text-xs text-emerald-700">Cotización registrada. Los envíos reutilizan este mismo registro.</p>}
           </div>
           <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button variant="outline" onClick={copyQuote}><ClipboardCopy className="mr-2 h-4 w-4" />Copiar</Button>
-            <Button variant="outline" onClick={sendEmail}><Send className="mr-2 h-4 w-4" />Email</Button>
-            <Button onClick={sendWhatsApp}><MessageCircle className="mr-2 h-4 w-4" />WhatsApp</Button>
+            <Button variant="outline" onClick={copyQuote} disabled={createQuote.isPending}><ClipboardCopy className="mr-2 h-4 w-4" />Guardar y copiar</Button>
+            <Button variant="outline" onClick={sendEmail} disabled={createQuote.isPending || markQuoteSent.isPending}><Send className="mr-2 h-4 w-4" />Email</Button>
+            <Button onClick={sendWhatsApp} disabled={createQuote.isPending || markQuoteSent.isPending}><MessageCircle className="mr-2 h-4 w-4" />WhatsApp</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
