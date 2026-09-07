@@ -12,7 +12,9 @@ export interface AgentCommission {
   sale_amount: number;
   commission_rate: number;
   commission_amount: number;
-  status: string; // 'pending' | 'paid'
+  status: 'potential' | 'reserved' | 'earned' | 'approved' | 'paid' | 'cancelled';
+  originator_agent_id: string | null;
+  closing_agent_id: string | null;
   paid_at: string | null;
   notes: string | null;
   created_at: string;
@@ -60,3 +62,31 @@ export const useMarkCommissionPaid = () => {
     },
   });
 };
+
+
+export interface CommissionEvent {
+  id: string;
+  commission_id: string;
+  actor_id: string | null;
+  event_type: string;
+  from_status: string | null;
+  to_status: string | null;
+  details: Record<string, unknown>;
+  created_at: string;
+}
+
+export const useCommissionEvents = (commissionId?: string) =>
+  useQuery({
+    queryKey: ['commission-events', commissionId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as unknown as {
+        from: (table: string) => ReturnType<typeof supabase.from>;
+      }).from('commission_events')
+        .select('*')
+        .eq('commission_id', commissionId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as CommissionEvent[];
+    },
+    enabled: !!commissionId,
+  });
