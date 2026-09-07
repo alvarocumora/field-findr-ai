@@ -82,6 +82,12 @@ const ExecutiveDashboard = () => {
     const lot = lots.find((item) => item.id === lotId);
     if (!lot) return;
 
+    if (lot.status !== 'available') {
+      toast.error('La parcela ya no está disponible para cotizar o reservar.');
+      setSearchParams({}, { replace: true });
+      return;
+    }
+
     if (action === 'quote') {
       setQuoteLot(lot);
       setSavedQuoteId(null);
