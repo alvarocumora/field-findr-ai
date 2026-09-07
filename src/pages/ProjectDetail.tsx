@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LotReservationDialog } from '@/components/lots/LotReservationDialog';
 import { TourViewer360 } from '@/components/tour/TourViewer360';
+import { TourMinimap } from '@/components/tour/TourMinimap';
 import { TourSceneManager } from '@/components/tour/TourSceneManager';
 import { TourEditor } from '@/components/tour/TourEditor';
 import { useTourScenes } from '@/hooks/useTourScenes';
@@ -171,6 +172,7 @@ const ProjectDetail = () => {
   const [designerLot, setDesignerLot] = useState<any | null>(null);
   const [showCompare, setShowCompare] = useState(false);
   const [editingSceneIdx, setEditingSceneIdx] = useState<number | null>(null);
+  const [tourYaw, setTourYaw] = useState(0);
   const { scenes: tourScenes } = useTourScenes(id);
   const bulkPublish = useBulkPublishLots();
 
