@@ -253,6 +253,13 @@ export const publicRouteEntries: RouteEntry[] = [
     },
   }),
   pub("propiedad", "/propiedad/:id", <PropertyDetail />),
+  pub("mercado", "/mercado", <Mercado />, {
+    seo: {
+      title: "Mercado de terrenos: precios y tendencias | Oferta Terrenos",
+      description:
+        "Precios por región, plusvalía, categorías de terreno y oportunidades de inversión en Chile y LATAM, con publicaciones comparadas de otros portales.",
+    },
+  }),
   pub("proyecto", "/proyecto/:id", <ProjectDetail />),
   pub("proyecto-experiencia", "/proyecto/:id/experiencia", <ProjectExperience />),
   pub("pricing", "/pricing", <Pricing />, {
