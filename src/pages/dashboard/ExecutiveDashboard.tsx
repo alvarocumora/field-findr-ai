@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   CalendarClock,
   CheckCircle2,
@@ -35,7 +35,12 @@ import { useProjects } from '@/hooks/useProjects';
 import { Lot, useLots } from '@/hooks/useLots';
 import { useLeads } from '@/hooks/useLeads';
 import { useCreateReservation, useReservations } from '@/hooks/useReservations';
-import { useCreateSalesQuote, useMarkSalesQuoteSent, useSalesQuotes } from '@/hooks/useSalesQuotes';
+import {
+  useActiveSalesQuoteCount,
+  useCreateSalesQuote,
+  useMarkSalesQuoteSent,
+  useSalesQuotes,
+} from '@/hooks/useSalesQuotes';
 import { formatPriceLatam } from '@/lib/latam';
 import { toast } from 'sonner';
 
@@ -45,9 +50,11 @@ const ExecutiveDashboard = () => {
   const { leads = [] } = useLeads();
   const { data: reservations = [] } = useReservations();
   const { data: salesQuotes = [] } = useSalesQuotes(20);
+  const { data: activeQuoteCount = 0 } = useActiveSalesQuoteCount();
   const createReservation = useCreateReservation();
   const createQuote = useCreateSalesQuote();
   const markQuoteSent = useMarkSalesQuoteSent();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [projectId, setProjectId] = useState('all');
   const [search, setSearch] = useState('');
@@ -63,15 +70,34 @@ const ExecutiveDashboard = () => {
   };
 
   const projectById = useMemo(
-    // `Map` está sombreado por el icono de lucide en este archivo.
     () => new globalThis.Map(projects.map((project) => [project.id, project])),
     [projects],
   );
 
   const lotById = useMemo(
-    () => new Map(lots.map((lot) => [lot.id, lot])),
+    () => new globalThis.Map(lots.map((lot) => [lot.id, lot])),
     [lots],
   );
+
+  useEffect(() => {
+    const lotId = searchParams.get('lot');
+    const action = searchParams.get('action');
+    if (!lotId || !action || lots.length === 0) return;
+
+    const lot = lotById.get(lotId);
+    if (!lot) return;
+
+    setProjectId(lot.project_id);
+    if (action === 'quote') {
+      setQuoteLot(lot);
+      setSavedQuoteId(null);
+      setQuote({ customer: '', email: '', phone: '', discount: '0', validDays: '7' });
+    }
+    if (action === 'reserve') {
+      setReserveLot(lot);
+    }
+    setSearchParams({}, { replace: true });
+  }, [lots.length, lotById, searchParams, setSearchParams]);
 
   const visibleLots = useMemo(() => {
     const needle = search.trim().toLowerCase();
@@ -92,9 +118,9 @@ const ExecutiveDashboard = () => {
     reserved: lots.filter((lot) => lot.status === 'reserved').length,
     sold: lots.filter((lot) => lot.status === 'sold').length,
     activeReservations: (reservations as any[]).filter((r) => ['pending_payment', 'paid'].includes(r.status)).length,
-    quotes: salesQuotes.filter((q) => ['draft', 'sent'].includes(q.status)).length,
+    quotes: activeQuoteCount,
     leads: leads.length,
-  }), [lots, reservations, salesQuotes, leads]);
+  }), [lots, reservations, activeQuoteCount, leads]);
 
   const formatMoney = (value: number | string | null | undefined) =>
     formatPriceLatam(Number(value || 0), 'CLP');
@@ -169,14 +195,24 @@ const ExecutiveDashboard = () => {
   };
 
   const sendWhatsApp = async () => {
+    const popup = window.open('about:blank', '_blank');
+    if (!popup) {
+      toast.error('El navegador bloqueó WhatsApp. Habilita ventanas emergentes e intenta nuevamente.');
+      return;
+    }
+
     try {
       const id = await ensureQuote();
-      await markQuoteSent.mutateAsync(id);
       const phone = quote.phone.replace(/\D/g, '');
-      const target = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(quoteText)}` : `https://wa.me/?text=${encodeURIComponent(quoteText)}`;
-      window.open(target, '_blank', 'noopener,noreferrer');
-      toast.success('Cotización marcada como enviada');
+      const target = phone
+        ? `https://wa.me/${phone}?text=${encodeURIComponent(quoteText)}`
+        : `https://wa.me/?text=${encodeURIComponent(quoteText)}`;
+      popup.opener = null;
+      popup.location.href = target;
+      await markQuoteSent.mutateAsync(id);
+      toast.success('Cotización enviada por WhatsApp');
     } catch (error) {
+      popup.close();
       if ((error as Error).message !== 'Cliente requerido' && (error as Error).message !== 'Descuento inválido') {
         toast.error((error as Error).message);
       }
@@ -186,10 +222,10 @@ const ExecutiveDashboard = () => {
   const sendEmail = async () => {
     try {
       const id = await ensureQuote();
-      await markQuoteSent.mutateAsync(id);
       const subject = quoteLot ? `Cotización ${quoteLot.name || `Lote ${quoteLot.lot_number}`}` : 'Cotización OfertaTerrenos';
       window.location.href = `mailto:${encodeURIComponent(quote.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(quoteText)}`;
-      toast.success('Cotización marcada como enviada');
+      await markQuoteSent.mutateAsync(id);
+      toast.success('Cotización enviada por email');
     } catch (error) {
       if ((error as Error).message !== 'Cliente requerido' && (error as Error).message !== 'Descuento inválido') {
         toast.error((error as Error).message);
