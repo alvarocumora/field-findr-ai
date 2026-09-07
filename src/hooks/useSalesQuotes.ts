@@ -7,6 +7,12 @@ export type SalesQuoteStatus = 'draft' | 'sent' | 'accepted' | 'expired' | 'canc
 export type SalesQuote = {
   id: string;
   agent_id: string;
+  quote_number: number;
+  public_token: string;
+  project_name_snapshot: string | null;
+  lot_label_snapshot: string | null;
+  lot_area_snapshot: number | null;
+  sent_channel: string | null;
   project_id: string;
   lot_id: string;
   lead_id: string | null;
