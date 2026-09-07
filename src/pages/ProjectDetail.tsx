@@ -618,17 +618,38 @@ const ProjectDetail = () => {
             <TabsContent value="tour360">
               <div className="space-y-6">
                 {tourScenes.length > 0 && editingSceneIdx === null && (
-                  <TourViewer360
-                    scenes={tourScenes}
-                    onLotClick={(lotId) => {
-                      const lot = lots.find(l => l.id === lotId);
-                      if (lot) {
-                        setSelectedLot(lot.id);
-                        setDetailLot(lot);
-                      }
-                    }}
-                  />
+                  <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+                    <TourViewer360
+                      scenes={tourScenes}
+                      onYawChange={setTourYaw}
+                      onLotClick={(lotId) => {
+                        const lot = lots.find(l => l.id === lotId);
+                        if (lot) {
+                          setSelectedLot(lot.id);
+                          setDetailLot(lot);
+                        }
+                      }}
+                    />
+                    <div className="hidden lg:block rounded-2xl overflow-hidden border h-[600px]">
+                      <TourMinimap
+                        center={{
+                          lat: project.latitude || -34.9767,
+                          lng: project.longitude || -71.7856,
+                        }}
+                        lots={lots}
+                        yaw={tourYaw}
+                        onLotClick={(lotId) => {
+                          const lot = lots.find(l => l.id === lotId);
+                          if (lot) {
+                            setSelectedLot(lot.id);
+                            setDetailLot(lot);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
                 )}
+
 
                 {isOwner && editingSceneIdx !== null && tourScenes[editingSceneIdx] && (
                   <div>
