@@ -44,27 +44,29 @@ export type CreateSalesQuoteInput = {
 type SalesQuoteInsert = CreateSalesQuoteInput & { agent_id: string };
 type SalesQuoteUpdate = Partial<Pick<SalesQuote, 'status' | 'sent_at' | 'accepted_at' | 'notes'>>;
 
-// Temporary typed wrapper until Supabase generated types include sales_quotes.
-const quotesTable = () => (supabase as unknown as {
-  from: (table: 'sales_quotes') => {
-    insert: (row: SalesQuoteInsert) => {
+type SalesQuoteTable = {
+  insert: (row: SalesQuoteInsert) => {
+    select: (columns: string) => {
+      single: () => Promise<{ data: SalesQuote | null; error: Error | null }>;
+    };
+  };
+  select: (columns: string, options?: { count?: 'exact'; head?: boolean }) => {
+    order: (column: string, options?: { ascending?: boolean }) => {
+      limit: (count: number) => Promise<{ data: SalesQuote[] | null; error: Error | null }>;
+    };
+    in: (column: string, values: string[]) => Promise<{ count: number | null; error: Error | null }>;
+  };
+  update: (row: SalesQuoteUpdate) => {
+    eq: (column: string, value: string) => {
       select: (columns: string) => {
         single: () => Promise<{ data: SalesQuote | null; error: Error | null }>;
       };
     };
-    select: (columns: string) => {
-      order: (column: string, options?: { ascending?: boolean }) => {
-        limit: (count: number) => Promise<{ data: SalesQuote[] | null; error: Error | null }>;
-      };
-    };
-    update: (row: SalesQuoteUpdate) => {
-      eq: (column: string, value: string) => {
-        select: (columns: string) => {
-          single: () => Promise<{ data: SalesQuote | null; error: Error | null }>;
-        };
-      };
-    };
   };
+};
+
+const quotesTable = () => (supabase as unknown as {
+  from: (table: 'sales_quotes') => SalesQuoteTable;
 }).from('sales_quotes');
 
 export const useSalesQuotes = (limit = 100) => useQuery({
@@ -77,6 +79,18 @@ export const useSalesQuotes = (limit = 100) => useQuery({
 
     if (error) throw error;
     return data ?? [];
+  },
+});
+
+export const useActiveSalesQuoteCount = () => useQuery({
+  queryKey: ['sales-quotes', 'active-count'],
+  queryFn: async () => {
+    const { count, error } = await quotesTable()
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['draft', 'sent']);
+
+    if (error) throw error;
+    return count ?? 0;
   },
 });
 
