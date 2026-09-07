@@ -78,6 +78,8 @@ const Comparar = lazy(() => import("@/pages/Comparar"));
 const Alertas = lazy(() => import("@/pages/Alertas"));
 const Blog = lazy(() => import("@/pages/Blog"));
 const Oportunidades = lazy(() => import("@/pages/Oportunidades"));
+const Events = lazy(() => import("@/pages/Events"));
+const EventDetail = lazy(() => import("@/pages/EventDetail"));
 const BuyerQuiz = lazy(() => import("@/pages/BuyerQuiz"));
 const ProjectExperience = lazy(() => import("@/pages/ProjectExperience"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
@@ -161,6 +163,7 @@ const BrokerNetwork = lazy(() => import("@/pages/dashboard/BrokerNetwork"));
 const SupportTickets = lazy(() => import("@/pages/dashboard/SupportTickets"));
 const HelpCenter = lazy(() => import("@/pages/HelpCenter"));
 const MeetingsManager = lazy(() => import("@/pages/dashboard/MeetingsManager"));
+const EventsManager = lazy(() => import("@/pages/dashboard/EventsManager"));
 const BuyerRequirements = lazy(() => import("@/pages/dashboard/BuyerRequirements"));
 
 // Admin
@@ -338,6 +341,8 @@ export const publicRouteEntries: RouteEntry[] = [
   }),
   pub("blog", "/blog", <Blog />),
   pub("oportunidades", "/oportunidades", <Oportunidades />),
+  pub("eventos", "/eventos", <Events />, { nav: { label: "Eventos", group: "principal" } }),
+  pub("evento-detalle", "/eventos/:slug", <EventDetail />),
   pub("quiz", "/quiz", <BuyerQuiz />, {
     seo: {
       title: "Test: encuentra tu terreno ideal | Oferta Terrenos",
@@ -430,6 +435,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-buyer-requirements", "/asesor/demanda-compradores", <BuyerRequirements />, { label: "Tengo comprador", group: "ventas", icon: "target" }),
   agent("asesor-crm", "/asesor/crm", <CRMSystem />, { label: "CRM", group: "ventas", icon: "workflow" }),
   agent("asesor-messages", "/asesor/messages", <Messages />, { label: "Mensajes", group: "ventas", icon: "message" }),
+  agent("asesor-eventos", "/asesor/eventos", <EventsManager />, { label: "Eventos", group: "ventas", icon: "calendar" }),
   agent("asesor-notificaciones", "/asesor/notificaciones/plantillas", <NotificationTemplates />, { label: "Plantillas de aviso", group: "ventas", icon: "bell" }),
 
   // Ventas
