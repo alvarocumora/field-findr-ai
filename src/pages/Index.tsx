@@ -1,80 +1,72 @@
 import { lazy, Suspense } from 'react';
+import { Link } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import CartographicHero from '@/components/landing/CartographicHero';
 import FloatingCTA from '@/components/landing/FloatingCTA';
 import TestimonialMarquee from '@/components/landing/TestimonialMarquee';
 import TrustBadges from '@/components/landing/TrustBadges';
-import ValueProposition from '@/components/landing/ValueProposition';
-import InvestmentShowcase from '@/components/landing/InvestmentShowcase';
-import AgentCTA from '@/components/landing/AgentCTA';
-import CategoryShowcase from '@/components/landing/CategoryShowcase';
-import MarketInsights from '@/components/landing/MarketInsights';
-import RegionStatsCards from '@/components/landing/RegionStatsCards';
 import FeaturedListings from '@/components/landing/FeaturedListings';
 import HowItWorksFlow from '@/components/landing/HowItWorksFlow';
 import ConversationalSearch from '@/components/explore/ConversationalSearch';
-import RealListingsSection from '@/components/RealListingsSection';
 import CTASection from '@/components/CTASection';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, BarChart3 } from 'lucide-react';
 
-// Hero is above-the-fold (LCP) — load eagerly.
-// Only truly heavy below-fold work stays lazy.
+// Recorrido inmersivo del proyecto estrella: pesado, se carga bajo demanda.
 const ScrollytellingSection = lazy(() => import('@/components/landing/ScrollytellingSection'));
 
 const Index = () => {
   return (
     <PublicLayout showFooter={true}>
-      {/* ===== HERO — Globe zoom to Chile (LCP) ===== */}
+      {/* 1 · Portada + buscador */}
       <CartographicHero />
 
-      {/* ===== AI CONVERSATIONAL SEARCH ===== */}
       <section className="container px-4 -mt-8 relative z-10">
         <div className="max-w-3xl mx-auto">
           <ConversationalSearch className="bg-card rounded-2xl shadow-xl p-6 border" />
         </div>
       </section>
 
-      {/* ===== VALUE PROPOSITION — 3 audiences (justify before converting) ===== */}
-      <ValueProposition />
-
-      {/* ===== CATEGORY SHOWCASE ===== */}
-      <CategoryShowcase />
-
-      {/* ===== FEATURED LISTINGS ===== */}
+      {/* 2 · Proyectos destacados */}
       <FeaturedListings />
 
-      {/* ===== HOW IT WORKS ===== */}
+      {/* 3 · Cómo comprar en 3 pasos */}
       <HowItWorksFlow />
 
-      {/* ===== REAL LISTINGS — scraped LATAM portals (fail-silent if empty/error) ===== */}
-      <RealListingsSection limit={16} />
-
-      {/* ===== INVESTMENT SHOWCASE — KPIs ===== */}
-      <InvestmentShowcase />
-
-      {/* ===== SCROLLYTELLING PROJECTS ===== */}
+      {/* 4 · Recorrido del proyecto estrella */}
       <Suspense fallback={null}>
         <ScrollytellingSection />
       </Suspense>
 
-      {/* ===== REGION STATS ===== */}
-      <RegionStatsCards />
-
-      {/* ===== MARKET INSIGHTS ===== */}
-      <MarketInsights />
-
-      {/* ===== AGENT CTA — Broker lead-gen ===== */}
-      <AgentCTA />
-
-      {/* ===== TESTIMONIALS ===== */}
-      <TestimonialMarquee />
-
-      {/* ===== TRUST ===== */}
+      {/* 5 · Confianza */}
       <TrustBadges />
 
-      {/* ===== FINAL CTA — Conversion close ===== */}
+      {/* 6 · Testimonios */}
+      <TestimonialMarquee />
+
+      {/* Puerta al contenido analítico que salió de la portada */}
+      <section className="container px-4 py-10">
+        <div className="rounded-2xl border bg-muted/30 p-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+          <div className="flex items-start gap-3">
+            <BarChart3 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <h2 className="font-semibold">¿Quieres los números del mercado?</h2>
+              <p className="text-sm text-muted-foreground">
+                Precios por región, plusvalía, oportunidades de inversión y portales comparados.
+              </p>
+            </div>
+          </div>
+          <Button asChild variant="outline" className="shrink-0">
+            <Link to="/mercado">
+              Ver mercado de terrenos <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* 7 · Llamada final */}
       <CTASection />
 
-      {/* ===== FLOATING CTA ===== */}
       <FloatingCTA />
     </PublicLayout>
   );

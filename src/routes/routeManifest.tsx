@@ -62,6 +62,7 @@ const Index = lazy(() => import("@/pages/Index"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const Tools = lazy(() => import("@/pages/Tools"));
 const Explorar = lazy(() => import("@/pages/Explorar"));
+const Mercado = lazy(() => import("@/pages/Mercado"));
 const PropertyDetail = lazy(() => import("@/pages/PropertyDetail"));
 const ProjectDetail = lazy(() => import("@/pages/ProjectDetail"));
 const Install = lazy(() => import("@/pages/Install"));
@@ -254,6 +255,13 @@ export const publicRouteEntries: RouteEntry[] = [
     },
   }),
   pub("propiedad", "/propiedad/:id", <PropertyDetail />),
+  pub("mercado", "/mercado", <Mercado />, {
+    seo: {
+      title: "Mercado de terrenos: precios y tendencias | Oferta Terrenos",
+      description:
+        "Precios por región, plusvalía, categorías de terreno y oportunidades de inversión en Chile y LATAM, con publicaciones comparadas de otros portales.",
+    },
+  }),
   pub("proyecto", "/proyecto/:id", <ProjectDetail />),
   pub("proyecto-experiencia", "/proyecto/:id/experiencia", <ProjectExperience />),
   pub("pricing", "/pricing", <Pricing />, {

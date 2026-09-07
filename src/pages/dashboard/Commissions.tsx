@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { DollarSign, Handshake, TrendingUp, Users, Clock3 } from 'lucide-react';
+import { DollarSign, Handshake, TrendingUp, Users, Clock3, CheckCircle2 } from 'lucide-react';
 import { useAgentCommissions, useCommissionEvents } from '@/hooks/useAgentCommissions';
 import {
   useReferralCommissionsEarned,

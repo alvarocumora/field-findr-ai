@@ -70,7 +70,7 @@ const ExecutiveDashboard = () => {
   );
 
   const lotById = useMemo(
-    () => new Map(lots.map((lot) => [lot.id, lot])),
+    () => new globalThis.Map(lots.map((lot) => [lot.id, lot])),
     [lots],
   );
 

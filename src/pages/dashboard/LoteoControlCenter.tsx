@@ -121,7 +121,7 @@ const LoteoControlCenter = () => {
     const monthsToSellOut = monthlyRate > 0 ? Math.ceil(available.length / monthlyRate) : null;
 
     const pendingCommissions = commissions
-      .filter((c) => c.status === 'pending')
+      .filter((c) => (c.status as string) === 'pending')
       .reduce((s, c) => s + Number(c.commission_amount || 0), 0);
 
     return {
@@ -172,7 +172,7 @@ const LoteoControlCenter = () => {
     [lots],
   );
 
-  const pendingCommissionRows = commissions.filter((c) => c.status === 'pending');
+  const pendingCommissionRows = commissions.filter((c) => (c.status as string) === 'pending');
   const paidCommissionRows = commissions.filter((c) => c.status === 'paid');
 
   if (isLoading) {
@@ -478,7 +478,7 @@ const LoteoControlCenter = () => {
                       {c.notes ? ` · ${c.notes}` : ''}
                     </p>
                   </div>
-                  {c.status === 'pending' ? (
+                  {(c.status as string) === 'pending' ? (
                     <Button
                       size="sm"
                       variant="outline"

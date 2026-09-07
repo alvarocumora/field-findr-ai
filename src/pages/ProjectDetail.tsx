@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LotReservationDialog } from '@/components/lots/LotReservationDialog';
 import { TourViewer360 } from '@/components/tour/TourViewer360';
+import { TourMinimap } from '@/components/tour/TourMinimap';
 import { TourSceneManager } from '@/components/tour/TourSceneManager';
 import { TourEditor } from '@/components/tour/TourEditor';
 import { useTourScenes } from '@/hooks/useTourScenes';
@@ -171,6 +172,7 @@ const ProjectDetail = () => {
   const [designerLot, setDesignerLot] = useState<any | null>(null);
   const [showCompare, setShowCompare] = useState(false);
   const [editingSceneIdx, setEditingSceneIdx] = useState<number | null>(null);
+  const [tourYaw, setTourYaw] = useState(0);
   const { scenes: tourScenes } = useTourScenes(id);
   const bulkPublish = useBulkPublishLots();
 
@@ -618,17 +620,38 @@ const ProjectDetail = () => {
             <TabsContent value="tour360">
               <div className="space-y-6">
                 {tourScenes.length > 0 && editingSceneIdx === null && (
-                  <TourViewer360
-                    scenes={tourScenes}
-                    onLotClick={(lotId) => {
-                      const lot = lots.find(l => l.id === lotId);
-                      if (lot) {
-                        setSelectedLot(lot.id);
-                        setDetailLot(lot);
-                      }
-                    }}
-                  />
+                  <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+                    <TourViewer360
+                      scenes={tourScenes}
+                      onYawChange={setTourYaw}
+                      onLotClick={(lotId) => {
+                        const lot = lots.find(l => l.id === lotId);
+                        if (lot) {
+                          setSelectedLot(lot.id);
+                          setDetailLot(lot);
+                        }
+                      }}
+                    />
+                    <div className="hidden lg:block rounded-2xl overflow-hidden border h-[600px]">
+                      <TourMinimap
+                        center={{
+                          lat: project.latitude || -34.9767,
+                          lng: project.longitude || -71.7856,
+                        }}
+                        lots={lots}
+                        yaw={tourYaw}
+                        onLotClick={(lotId) => {
+                          const lot = lots.find(l => l.id === lotId);
+                          if (lot) {
+                            setSelectedLot(lot.id);
+                            setDetailLot(lot);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
                 )}
+
 
                 {isOwner && editingSceneIdx !== null && tourScenes[editingSceneIdx] && (
                   <div>
@@ -651,14 +674,36 @@ const ProjectDetail = () => {
                   />
                 )}
 
+                {/* Sin fotos 360: mostramos el recorrido aéreo del plano en vez de un vacío */}
                 {!isOwner && tourScenes.length === 0 && (
-                  <Card>
-                    <CardContent className="py-12 text-center">
-                      <Camera className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-                      <p className="text-muted-foreground">Este proyecto aún no tiene tour virtual 360°.</p>
-                    </CardContent>
-                  </Card>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 rounded-xl border bg-muted/30 p-4">
+                      <Camera className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+                      <p className="text-sm text-muted-foreground">
+                        Este proyecto aún no tiene fotos 360°. Mientras tanto, recorre el terreno
+                        desde el aire y haz clic en cada parcela para ver su ficha.
+                      </p>
+                    </div>
+                    <div className="rounded-2xl overflow-hidden border h-[520px]">
+                      <LotMapView
+                        lots={lots}
+                        projectCenter={{
+                          lat: project.latitude || -34.9767,
+                          lng: project.longitude || -71.7856,
+                        }}
+                        onLotClick={(lot) => {
+                          setSelectedLot(lot.id);
+                          setDetailLot(lot);
+                        }}
+                        selectedLotId={selectedLot}
+                        projectId={project.id}
+                        kmzFileUrl={(project as any).kmz_file_url}
+                        readOnly
+                      />
+                    </div>
+                  </div>
                 )}
+
               </div>
             </TabsContent>
           </Tabs>
