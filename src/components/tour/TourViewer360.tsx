@@ -1,20 +1,30 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { ReactPhotoSphereViewer } from 'react-photo-sphere-viewer';
 import { MarkersPlugin } from '@photo-sphere-viewer/markers-plugin';
+import { CompassPlugin } from '@photo-sphere-viewer/compass-plugin';
+import { AutorotatePlugin } from '@photo-sphere-viewer/autorotate-plugin';
 import '@photo-sphere-viewer/markers-plugin/index.css';
+import '@photo-sphere-viewer/compass-plugin/index.css';
 import '@photo-sphere-viewer/core/index.css';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Maximize2, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import type { TourScene, TourHotspot, PolygonOverlay } from '@/hooks/useTourScenes';
 
 interface TourViewer360Props {
   scenes: TourScene[];
   initialSceneIndex?: number;
   onLotClick?: (lotId: string) => void;
+  /** Yaw actual de la cámara (radianes) para sincronizar el mini-mapa. */
+  onYawChange?: (yaw: number) => void;
 }
 
-export function TourViewer360({ scenes, initialSceneIndex = 0, onLotClick }: TourViewer360Props) {
+export function TourViewer360({
+  scenes,
+  initialSceneIndex = 0,
+  onLotClick,
+  onYawChange,
+}: TourViewer360Props) {
   const [currentIndex, setCurrentIndex] = useState(initialSceneIndex);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -22,22 +32,22 @@ export function TourViewer360({ scenes, initialSceneIndex = 0, onLotClick }: Tou
 
   const currentScene = scenes[currentIndex] || null;
 
-  const navigateToScene = useCallback((sceneId: string) => {
-    const idx = scenes.findIndex(s => s.id === sceneId);
-    if (idx >= 0) setCurrentIndex(idx);
-  }, [scenes]);
+  const navigateToScene = useCallback(
+    (sceneId: string) => {
+      const idx = scenes.findIndex((s) => s.id === sceneId);
+      if (idx >= 0) setCurrentIndex(idx);
+    },
+    [scenes],
+  );
 
-  const handleReady = useCallback((instance: any) => {
-    viewerRef.current = instance;
-    try {
-      const markersPlugin = instance.getPlugin(MarkersPlugin);
+  /** Pinta hotspots y polígonos de la escena activa. */
+  const renderMarkers = useCallback(
+    (instance: any, scene: TourScene) => {
+      const markersPlugin = instance?.getPlugin?.(MarkersPlugin);
       if (!markersPlugin) return;
-
-      // Clear existing markers
       markersPlugin.clearMarkers();
 
-      // Add hotspot markers
-      currentScene.hotspots.forEach((hs: TourHotspot) => {
+      scene.hotspots.forEach((hs: TourHotspot) => {
         markersPlugin.addMarker({
           id: `hotspot-${hs.id}`,
           position: { yaw: hs.yaw, pitch: hs.pitch },
@@ -51,12 +61,11 @@ export function TourViewer360({ scenes, initialSceneIndex = 0, onLotClick }: Tou
         });
       });
 
-      // Add polygon overlay markers
-      currentScene.polygon_overlays.forEach((poly: PolygonOverlay) => {
+      scene.polygon_overlays.forEach((poly: PolygonOverlay) => {
         if (poly.points.length < 3) return;
         markersPlugin.addMarker({
           id: `poly-${poly.id}`,
-          polygon: poly.points.map(p => [p.yaw, p.pitch]) as [number, number][],
+          polygon: poly.points.map((p) => [p.yaw, p.pitch]) as [number, number][],
           svgStyle: {
             fill: poly.color || 'rgba(5, 150, 105, 0.3)',
             stroke: poly.color || 'rgba(5, 150, 105, 0.9)',
@@ -66,20 +75,59 @@ export function TourViewer360({ scenes, initialSceneIndex = 0, onLotClick }: Tou
           data: { type: 'polygon', lotId: poly.lot_id },
         });
       });
+    },
+    [],
+  );
 
-      // Handle marker clicks
-      markersPlugin.addEventListener('select-marker', (e: any) => {
-        const marker = e.marker;
-        if (marker.data?.type === 'hotspot' && marker.data.targetId) {
-          navigateToScene(marker.data.targetId);
-        } else if (marker.data?.type === 'polygon' && marker.data.lotId) {
-          onLotClick?.(marker.data.lotId);
-        }
+  const handleReady = useCallback(
+    (instance: any) => {
+      viewerRef.current = instance;
+      try {
+        renderMarkers(instance, currentScene);
+
+        const markersPlugin = instance.getPlugin(MarkersPlugin);
+        markersPlugin?.addEventListener('select-marker', (e: any) => {
+          const marker = e.marker;
+          if (marker.data?.type === 'hotspot' && marker.data.targetId) {
+            navigateToScene(marker.data.targetId);
+          } else if (marker.data?.type === 'polygon' && marker.data.lotId) {
+            onLotClick?.(marker.data.lotId);
+          }
+        });
+
+        // Giro suave al entrar; se detiene en cuanto el visitante interactúa.
+        const autorotate = instance.getPlugin(AutorotatePlugin);
+        autorotate?.start?.();
+
+        instance.addEventListener('position-updated', (e: any) => {
+          onYawChange?.(e.position?.yaw ?? 0);
+        });
+      } catch (err) {
+        console.warn('Plugins del tour no disponibles:', err);
+      }
+    },
+    [currentScene, navigateToScene, onLotClick, onYawChange, renderMarkers],
+  );
+
+  /** Cambio de escena con transición suave (sin remontar el visor). */
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !currentScene) return;
+    viewer
+      .setPanorama(currentScene.panorama_url, {
+        transition: 1000,
+        showLoader: true,
+        position: {
+          yaw: currentScene.yaw_default || 0,
+          pitch: currentScene.pitch_default || 0,
+        },
+      })
+      .then(() => renderMarkers(viewer, currentScene))
+      .catch(() => {
+        /* el visor ya muestra su propio error de carga */
       });
-    } catch (err) {
-      console.warn('Markers plugin not available:', err);
-    }
-  }, [currentScene, navigateToScene, onLotClick]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentScene?.id]);
 
   const toggleFullscreen = useCallback(() => {
     if (!containerRef.current) return;
@@ -100,7 +148,19 @@ export function TourViewer360({ scenes, initialSceneIndex = 0, onLotClick }: Tou
 
   const plugins: any[] = [
     [MarkersPlugin, { markers: [] }],
+    [
+      CompassPlugin,
+      {
+        size: '90px',
+        navigation: true,
+        backgroundSvg:
+          '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="49" fill="rgba(0,0,0,.55)" stroke="rgba(255,255,255,.35)"/></svg>',
+      },
+    ],
+    [AutorotatePlugin, { autostartDelay: 2500, autorotateSpeed: '0.25rpm' }],
   ];
+
+  const firstSceneUrl = scenes[0]?.panorama_url;
 
   if (!currentScene) return null;
 
@@ -111,45 +171,44 @@ export function TourViewer360({ scenes, initialSceneIndex = 0, onLotClick }: Tou
       style={{ height: isFullscreen ? '100vh' : '600px' }}
     >
       <ReactPhotoSphereViewer
-        key={currentScene.id}
-        src={currentScene.panorama_url}
+        src={firstSceneUrl}
         width="100%"
         height="100%"
-        defaultYaw={currentScene.yaw_default || 0}
-        defaultPitch={currentScene.pitch_default || 0}
+        defaultYaw={scenes[0]?.yaw_default || 0}
+        defaultPitch={scenes[0]?.pitch_default || 0}
         plugins={plugins}
         navbar={['zoom', 'move', 'caption', 'fullscreen']}
         onReady={handleReady}
         littlePlanet={false}
       />
 
-      {/* Scene info overlay */}
+      {/* Nombre de la escena */}
       <div className="absolute top-4 left-4 z-10">
         <Badge className="bg-black/60 text-white backdrop-blur-md border-0 text-sm px-3 py-1.5">
           {currentScene.name}
         </Badge>
       </div>
 
-      {/* Controls */}
       <div className="absolute top-4 right-4 z-10 flex gap-2">
         <Button
           size="icon"
           variant="ghost"
           className="bg-black/50 text-white hover:bg-black/70 backdrop-blur-md h-9 w-9"
           onClick={toggleFullscreen}
+          aria-label="Pantalla completa"
         >
           <Maximize2 className="h-4 w-4" />
         </Button>
       </div>
 
-      {/* Scene navigation arrows */}
       {scenes.length > 1 && (
         <>
           <Button
             size="icon"
             variant="ghost"
             className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white hover:bg-black/70 backdrop-blur-md h-10 w-10"
-            onClick={() => setCurrentIndex(i => (i - 1 + scenes.length) % scenes.length)}
+            onClick={() => setCurrentIndex((i) => (i - 1 + scenes.length) % scenes.length)}
+            aria-label="Escena anterior"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
@@ -157,28 +216,35 @@ export function TourViewer360({ scenes, initialSceneIndex = 0, onLotClick }: Tou
             size="icon"
             variant="ghost"
             className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white hover:bg-black/70 backdrop-blur-md h-10 w-10"
-            onClick={() => setCurrentIndex(i => (i + 1) % scenes.length)}
+            onClick={() => setCurrentIndex((i) => (i + 1) % scenes.length)}
+            aria-label="Escena siguiente"
           >
             <ChevronRight className="h-5 w-5" />
           </Button>
         </>
       )}
 
-      {/* Scene thumbnails bar */}
+      {/* Miniaturas deslizables (pensadas para el celular) */}
       {scenes.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2 bg-black/60 backdrop-blur-md rounded-xl p-2 max-w-[80%] overflow-x-auto">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2 bg-black/60 backdrop-blur-md rounded-xl p-2 max-w-[86%] overflow-x-auto snap-x">
           {scenes.map((scene, idx) => (
             <button
               key={scene.id}
               onClick={() => setCurrentIndex(idx)}
-              className={`shrink-0 w-16 h-10 rounded-lg overflow-hidden border-2 transition-all ${
+              aria-label={scene.name}
+              className={`shrink-0 snap-start w-20 h-12 rounded-lg overflow-hidden border-2 transition-all ${
                 idx === currentIndex
                   ? 'border-primary ring-2 ring-primary/30'
                   : 'border-transparent opacity-70 hover:opacity-100'
               }`}
             >
               {scene.thumbnail_url ? (
-                <img src={scene.thumbnail_url} alt={scene.name} className="w-full h-full object-cover" />
+                <img
+                  src={scene.thumbnail_url}
+                  alt={scene.name}
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <div className="w-full h-full bg-muted flex items-center justify-center text-[10px] text-white">
                   {idx + 1}
