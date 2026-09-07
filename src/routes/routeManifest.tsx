@@ -62,6 +62,7 @@ const Index = lazy(() => import("@/pages/Index"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const Tools = lazy(() => import("@/pages/Tools"));
 const Explorar = lazy(() => import("@/pages/Explorar"));
+const Mercado = lazy(() => import("@/pages/Mercado"));
 const PropertyDetail = lazy(() => import("@/pages/PropertyDetail"));
 const ProjectDetail = lazy(() => import("@/pages/ProjectDetail"));
 const Install = lazy(() => import("@/pages/Install"));
