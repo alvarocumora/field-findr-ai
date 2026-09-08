@@ -14,7 +14,7 @@ interface InteractiveEarthProps {
 
 const CHILE_LAT = -33.45;
 const CHILE_LON = -70.67;
-const SOUTH_AMERICA_ROTATION = 0.72;
+const SOUTH_AMERICA_ROTATION = 0;
 const assetUrl = (path: string) => path.startsWith('/__l5e/') ? `https://ofertaterrenos.com${path}` : path;
 
 class EarthErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {

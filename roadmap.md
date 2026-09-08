@@ -8,7 +8,7 @@
 
 ## Globo 3D e identidad terrestre
 
-- [ ] Integrar planeta 3D interactivo con foco en Chile y respaldo estático
-- [ ] Reemplazar símbolo y wordmarks por la identidad globo + OFERTA TERRENOS
-- [ ] Regenerar favicon, PWA y kit social con la nueva identidad
-- [ ] Verificar movimiento, WebGL, modo reducido, escritorio y móvil
+- [x] Integrar planeta 3D interactivo con foco en Chile y respaldo estático
+- [x] Reemplazar símbolo y wordmarks por la identidad globo + OFERTA TERRENOS
+- [x] Regenerar favicon, PWA y kit social con la nueva identidad
+- [x] Verificar movimiento, WebGL, modo reducido, escritorio y móvil
