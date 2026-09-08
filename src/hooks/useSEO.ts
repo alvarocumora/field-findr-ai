@@ -74,10 +74,9 @@ export const useSEO = ({ title, description, image, url, type = 'website', canon
     setMetaTag('twitter:title', title);
     setMetaTag('og:type', type);
 
-    if (image) {
-      setMetaTag('og:image', image);
-      setMetaTag('twitter:image', image);
-    }
+    const socialImage = image || 'https://ofertaterrenos.com/og-oferta-terrenos.png';
+    setMetaTag('og:image', socialImage);
+    setMetaTag('twitter:image', socialImage);
 
     if (url) {
       setMetaTag('og:url', url);

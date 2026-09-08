@@ -1,4 +1,4 @@
-import { Mail, Phone, MapPin, Linkedin, Twitter, Instagram, ShieldCheck } from 'lucide-react';
+import { Mail, Phone, MapPin, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Logo from '@/components/brand/Logo';
 import { useLandingStats } from '@/hooks/useLandingStats';
@@ -23,26 +23,21 @@ const FooterSection = () => {
       { name: 'Blog', href: '/blog' },
     ],
     regions: [
-      { name: 'Valparaíso', href: '/region/valparaiso' },
-      { name: 'O\'Higgins', href: '/region/ohiggins' },
-      { name: 'Maule', href: '/region/maule' },
-      { name: 'Biobío', href: '/region/biobio' },
-      { name: 'La Araucanía', href: '/region/araucania' },
-      { name: 'Los Lagos', href: '/region/los-lagos' },
+      { name: 'Explorar por mapa', href: '/explorar?view=map' },
+      { name: 'Proyectos destacados', href: '/explorar' },
+      { name: 'Mercado de terrenos', href: '/mercado' },
+      { name: 'Agendar una visita', href: '/agendar' },
     ],
     pro: [
       { name: 'Para Corredores', href: '/pricing' },
       { name: 'Registrarse', href: '/auth' },
       { name: 'Contacto', href: '/contacto' },
     ],
-    legal: [
-      { name: 'Términos de uso', href: '/contacto' },
-      { name: 'Privacidad', href: '/contacto' },
-    ],
+    legal: [{ name: 'Contacto y consultas legales', href: '/contacto' }],
   };
 
   return (
-    <footer className="relative border-t border-border/50 bg-background">
+    <footer className="relative overflow-x-hidden border-t border-border/50 bg-background">
       <div className="container px-4 py-16">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-10">
           {/* Brand */}
@@ -51,7 +46,7 @@ const FooterSection = () => {
               <Logo size="md" />
             </Link>
             <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-              La plataforma de inteligencia territorial más avanzada de Chile.
+              Proyectos de terrenos, loteos y parcelas para explorar con información clara.
             </p>
 
             {/* Live counter */}
@@ -59,22 +54,14 @@ const FooterSection = () => {
               <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                 <span className="text-xs text-foreground font-medium">
-                  {stats.totalListings} terrenos disponibles
+                  {stats.totalListings} publicaciones activas
                 </span>
               </div>
             )}
 
-            <div className="flex items-center gap-2 mb-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <ShieldCheck className="h-4 w-4 text-primary" />
-              Datos verificados por SII
-            </div>
-
-            <div className="flex gap-3">
-              {[Linkedin, Twitter, Instagram].map((Icon, i) => (
-                <a key={i} href="#" className="w-9 h-9 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors">
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
+              Información y documentos visibles por proyecto
             </div>
           </div>
 
@@ -92,7 +79,7 @@ const FooterSection = () => {
 
           {/* Investors */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4 text-sm">Para Inversionistas</h4>
+            <h4 className="font-semibold text-foreground mb-4 text-sm">Herramientas</h4>
             <ul className="space-y-2.5">
               {links.investors.map((link) => (
                 <li key={link.name}>
@@ -104,7 +91,7 @@ const FooterSection = () => {
 
           {/* Regions */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4 text-sm">Regiones</h4>
+            <h4 className="font-semibold text-foreground mb-4 text-sm">Descubrir</h4>
             <ul className="space-y-2.5">
               {links.regions.map((link) => (
                 <li key={link.name}>

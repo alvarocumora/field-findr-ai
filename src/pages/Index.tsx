@@ -1,64 +1,54 @@
-import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import CartographicHero from '@/components/landing/CartographicHero';
 import FloatingCTA from '@/components/landing/FloatingCTA';
-import TestimonialMarquee from '@/components/landing/TestimonialMarquee';
 import TrustBadges from '@/components/landing/TrustBadges';
 import FeaturedListings from '@/components/landing/FeaturedListings';
 import HowItWorksFlow from '@/components/landing/HowItWorksFlow';
-import ConversationalSearch from '@/components/explore/ConversationalSearch';
 import CTASection from '@/components/CTASection';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, BarChart3 } from 'lucide-react';
-
-// Recorrido inmersivo del proyecto estrella: pesado, se carga bajo demanda.
-const ScrollytellingSection = lazy(() => import('@/components/landing/ScrollytellingSection'));
+import { useSEO } from '@/hooks/useSEO';
 
 const Index = () => {
+  useSEO({
+    title: 'Proyectos de terrenos y loteos en Chile',
+    description: 'Explora proyectos completos, planos, lotes disponibles y recorridos. Agenda una visita o inicia tu reserva en Ofertaterrenos.',
+    image: 'https://ofertaterrenos.com/og-oferta-terrenos.png',
+    url: 'https://ofertaterrenos.com/',
+    canonicalUrl: 'https://ofertaterrenos.com/',
+  });
+
   return (
     <PublicLayout showFooter={true}>
-      {/* 1 · Portada + buscador */}
+      {/* 1 · Mapa + búsqueda + proyectos */}
       <CartographicHero />
-
-      <section className="container px-4 -mt-8 relative z-10">
-        <div className="max-w-3xl mx-auto">
-          <ConversationalSearch className="bg-card rounded-2xl shadow-xl p-6 border" />
-        </div>
-      </section>
 
       {/* 2 · Proyectos destacados */}
       <FeaturedListings />
 
-      {/* 3 · Cómo comprar en 3 pasos */}
-      <HowItWorksFlow />
-
-      {/* 4 · Recorrido del proyecto estrella */}
-      <Suspense fallback={null}>
-        <ScrollytellingSection />
-      </Suspense>
-
-      {/* 5 · Confianza */}
+      {/* 3 · Evidencia y confianza */}
       <TrustBadges />
 
-      {/* 6 · Testimonios */}
-      <TestimonialMarquee />
+      {/* 4 · Cómo comprar en 3 pasos */}
+      <HowItWorksFlow />
 
-      {/* Puerta al contenido analítico que salió de la portada */}
-      <section className="container px-4 py-10">
-        <div className="rounded-2xl border bg-muted/30 p-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+      {/* 5 · Experiencia del proyecto */}
+      <section className="border-y border-border/50 bg-muted/20 py-16 md:py-24">
+        <div className="container px-4 flex flex-col sm:flex-row sm:items-center gap-6 justify-between">
           <div className="flex items-start gap-3">
             <BarChart3 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
             <div>
-              <h2 className="font-semibold">¿Quieres los números del mercado?</h2>
-              <p className="text-sm text-muted-foreground">
-                Precios por región, plusvalía, oportunidades de inversión y portales comparados.
+              <p className="text-xs font-semibold uppercase text-primary">Plano, recorrido y ficha</p>
+              <h2 className="mt-2 text-2xl font-heading font-bold md:text-4xl">Conoce el proyecto antes de visitarlo.</h2>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground md:text-base">
+                Revisa polígonos, disponibilidad, fotografías, documentos y recorridos desde cada proyecto.
               </p>
             </div>
           </div>
-          <Button asChild variant="outline" className="shrink-0">
-            <Link to="/mercado">
-              Ver mercado de terrenos <ArrowRight className="ml-2 h-4 w-4" />
+          <Button asChild className="shrink-0">
+            <Link to="/explorar">
+              Explorar proyectos <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         </div>

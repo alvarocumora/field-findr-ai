@@ -49,7 +49,10 @@ const ProjectScene3D = ({ latitude, longitude }: ProjectScene3DProps) => {
       fadeDuration: 0,
     });
 
+    let disposed = false;
+
     map.on('load', () => {
+      if (disposed || map._removed) return;
       // Add terrain for 3D relief
       map.addSource('mapbox-dem', {
         type: 'raster-dem',
@@ -66,7 +69,7 @@ const ProjectScene3D = ({ latitude, longitude }: ProjectScene3DProps) => {
     let bearing = -20;
     let frame: number;
     const rotate = () => {
-      if (map && !map._removed) {
+      if (!disposed && !map._removed && map.getContainer().isConnected) {
         bearing += 0.05;
         map.jumpTo({ bearing });
         frame = requestAnimationFrame(rotate);
@@ -77,9 +80,11 @@ const ProjectScene3D = ({ latitude, longitude }: ProjectScene3DProps) => {
     mapRef.current = map;
 
     return () => {
+      disposed = true;
       cancelAnimationFrame(frame);
-      map.remove();
+      if (!map._removed) map.remove();
       mapRef.current = null;
+      setMapReady(false);
     };
   }, [isVisible, token, loading, center]);
 

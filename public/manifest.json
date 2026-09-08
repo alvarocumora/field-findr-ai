@@ -1,7 +1,7 @@
 {
   "name": "Ofertaterrenos.com",
   "short_name": "Ofertaterrenos",
-  "description": "La plataforma más avanzada para comprar y vender terrenos rurales e industriales en Chile con IA",
+  "description": "Explora proyectos completos, planos, lotes disponibles y recorridos de terrenos en Chile.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0A0A0B",
@@ -16,11 +16,6 @@
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
-    },
-    {
-      "src": "/favicon.ico",
-      "sizes": "48x48",
-      "type": "image/x-icon"
     },
     {
       "src": "/icons/icon-72x72.png",
@@ -63,36 +58,18 @@
       "type": "image/png"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/screenshots/home.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Página de inicio de Ofertaterrenos"
-    },
-    {
-      "src": "/screenshots/explore.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Explorador de propiedades con mapa 3D"
-    }
-  ],
   "shortcuts": [
     {
       "name": "Explorar Terrenos",
       "short_name": "Explorar",
       "description": "Buscar terrenos disponibles",
-      "url": "/explorar",
-      "icons": [{ "src": "/icons/explore.png", "sizes": "96x96" }]
+      "url": "/explorar"
     },
     {
       "name": "Mis Favoritos",
       "short_name": "Favoritos",
       "description": "Ver terrenos guardados",
-      "url": "/favoritos",
-      "icons": [{ "src": "/icons/favorites.png", "sizes": "96x96" }]
+      "url": "/favoritos"
     }
   ],
   "related_applications": [],

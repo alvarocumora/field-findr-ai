@@ -1,26 +1,24 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { Search, BarChart3, ShieldCheck, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { Search, CalendarDays, KeyRound } from 'lucide-react';
 
 const STEPS = [
   {
     number: '01',
     icon: Search,
-    title: 'Busca',
-    description: 'Filtra por región, tipo de terreno, aptitud, superficie y precio. Usa IA para encontrar exactamente lo que necesitas.',
+    title: 'Explora',
+    description: 'Compara proyectos completos por ubicación, precio, superficie y disponibilidad.',
   },
   {
     number: '02',
-    icon: BarChart3,
-    title: 'Compara',
-    description: 'Analiza terrenos lado a lado con datos del SII, scoring de inversión, plusvalía estimada y factibilidad legal.',
+    icon: CalendarDays,
+    title: 'Visita',
+    description: 'Revisa el plano, las fichas y los documentos disponibles. Luego agenda una visita.',
   },
   {
     number: '03',
-    icon: ShieldCheck,
-    title: 'Invierte',
-    description: 'Reserva digitalmente, simula financiamiento y accede a due diligence automatizada. Todo en un solo lugar.',
+    icon: KeyRound,
+    title: 'Reserva',
+    description: 'Elige una unidad disponible y sigue el avance de tu compra desde un solo lugar.',
   },
 ];
 
@@ -46,10 +44,10 @@ const HowItWorksFlow = () => {
           transition={{ duration: 0.5 }}
         >
           <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-primary/70 mb-3">
-            Simple y poderoso
+            Una ruta clara
           </p>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold tracking-tight text-foreground">
-            Cómo funciona
+            De la búsqueda a la reserva
           </h2>
         </motion.div>
 
@@ -88,20 +86,6 @@ const HowItWorksFlow = () => {
           ))}
         </motion.div>
 
-        <motion.div
-          className="text-center mt-12"
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <Button asChild size="lg" className="btn-glow">
-            <Link to="/explorar">
-              Comenzar ahora
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Link>
-          </Button>
-        </motion.div>
       </div>
     </section>
   );

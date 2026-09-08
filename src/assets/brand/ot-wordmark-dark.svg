@@ -1,0 +1,14 @@
+<svg width="1400" height="320" viewBox="0 0 1400 320" xmlns="http://www.w3.org/2000/svg">
+<rect width="1400" height="320" fill="none"/>
+<g transform="translate(32,32) scale(.5)">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22C55E"/><stop offset="1" stop-color="#0EA5E9"/></linearGradient></defs>
+
+<path d="M256 62 424 159v194L256 450 88 353V159Z" fill="url(#g)"/>
+<path d="M256 99 392 178v156l-136 79-136-79V178Z" fill="#070A0D" fill-opacity=".88"/>
+<circle cx="256" cy="256" r="91" fill="none" stroke="#F7F7F2" stroke-width="32"/>
+<path d="M256 165v182M165 256h182" stroke="url(#g)" stroke-width="18" stroke-linecap="round"/>
+<circle cx="256" cy="256" r="18" fill="#F7F7F2"/>
+</g>
+<text x="330" y="188" fill="#070A0D" font-family="Space Grotesk,Arial,sans-serif" font-size="112" font-weight="700" letter-spacing="0">OFERTA</text>
+<text x="745" y="188" fill="#22C55E" font-family="Space Grotesk,Arial,sans-serif" font-size="112" font-weight="700" letter-spacing="0">TERRENOS</text>
+</svg>
