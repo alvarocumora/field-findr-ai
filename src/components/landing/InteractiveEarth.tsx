@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef } from 'react';
+import { Component, ReactNode, Suspense, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
@@ -14,7 +14,20 @@ interface InteractiveEarthProps {
 
 const CHILE_LAT = -33.45;
 const CHILE_LON = -70.67;
+const SOUTH_AMERICA_ROTATION = 0.72;
 const assetUrl = (path: string) => path.startsWith('/__l5e/') ? `https://ofertaterrenos.com${path}` : path;
+
+class EarthErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 const latLonToVector = (latitude: number, longitude: number, radius: number) => {
   const phi = THREE.MathUtils.degToRad(90 - latitude);
@@ -91,7 +104,7 @@ const EarthModel = ({ pointer, reducedMotion, onReady }: EarthModelProps) => {
     earth.rotation.x = THREE.MathUtils.lerp(earth.rotation.x, targetX, damping);
     earth.rotation.y = THREE.MathUtils.lerp(
       earth.rotation.y,
-      targetY + (reducedMotion ? 0 : state.clock.elapsedTime * 0.018),
+      SOUTH_AMERICA_ROTATION + targetY + (reducedMotion ? 0 : state.clock.elapsedTime * 0.018),
       damping,
     );
     if (cloudRef.current && !reducedMotion) cloudRef.current.rotation.y += delta * 0.012;
@@ -102,7 +115,7 @@ const EarthModel = ({ pointer, reducedMotion, onReady }: EarthModelProps) => {
   });
 
   return (
-    <group ref={earthRef} rotation={[0, -1.22, -0.12]}>
+    <group ref={earthRef} rotation={[0, SOUTH_AMERICA_ROTATION, -0.12]}>
       <mesh>
         <sphereGeometry args={[1, 96, 96]} />
         <meshPhongMaterial
@@ -167,16 +180,18 @@ const InteractiveEarth = ({ reducedMotion, onReady }: InteractiveEarthProps) => 
         };
       }}
     >
-      <Canvas
-        dpr={[1, 1.5]}
-        camera={{ position: [0, 0, 3.05], fov: 39 }}
-        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-        frameloop="always"
-      >
-        <Suspense fallback={null}>
-          <Scene pointer={pointer} reducedMotion={reducedMotion} onReady={onReady} />
-        </Suspense>
-      </Canvas>
+      <EarthErrorBoundary>
+        <Canvas
+          dpr={[1, 1.5]}
+          camera={{ position: [0, 0, 3.05], fov: 39 }}
+          gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+          frameloop={reducedMotion ? 'demand' : 'always'}
+        >
+          <Suspense fallback={null}>
+            <Scene pointer={pointer} reducedMotion={reducedMotion} onReady={onReady} />
+          </Suspense>
+        </Canvas>
+      </EarthErrorBoundary>
     </div>
   );
 };

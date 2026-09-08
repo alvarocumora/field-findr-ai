@@ -82,9 +82,9 @@ const CartographicHero = () => {
           </Suspense>
         </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/10" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/60" />
-      <div className="absolute inset-0 grid-topo opacity-20" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/10" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/60" />
+      <div className="pointer-events-none absolute inset-0 grid-topo opacity-20" aria-hidden="true" />
 
       <div className="container pointer-events-none relative z-content flex min-h-[calc(100svh-4rem)] flex-col justify-between px-4 pb-7 pt-12 md:pb-10 md:pt-16">
         <motion.div
