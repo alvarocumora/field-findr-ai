@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -11,12 +11,25 @@ import { useTrackEvent } from '@/hooks/useTrackEvent';
 import ProjectCommercialCard, { CommercialProject } from './ProjectCommercialCard';
 import globeImage from '@/assets/brand/ot-globe-wide.jpg';
 
+const InteractiveEarth = lazy(() => import('./InteractiveEarth'));
+
 const CartographicHero = () => {
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
   const [search, setSearch] = useState('');
+  const [earthReady, setEarthReady] = useState(false);
+  const [webglAvailable, setWebglAvailable] = useState(false);
   const { data: stats } = useLandingStats();
   const { track } = useTrackEvent();
+
+  useEffect(() => {
+    try {
+      const canvas = document.createElement('canvas');
+      setWebglAvailable(Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl')));
+    } catch {
+      setWebglAvailable(false);
+    }
+  }, []);
 
   const { data: projects = [] } = useQuery({
     queryKey: ['commercial-hero-projects'],
@@ -57,18 +70,25 @@ const CartographicHero = () => {
       <img
         src={globeImage}
         alt="Globo cartográfico centrado en Sudamérica"
-        className="absolute inset-0 h-full w-full object-cover object-[62%_center] opacity-80"
+        className={`absolute inset-0 h-full w-full object-cover object-[62%_center] transition-opacity duration-1000 ${earthReady ? 'opacity-20' : 'opacity-80'}`}
         width={1920}
         height={1088}
         loading="eager"
       />
+      {webglAvailable && (
+        <div className={`absolute inset-y-0 right-0 w-full transition-opacity duration-1000 md:w-[72%] ${earthReady ? 'opacity-100' : 'opacity-0'}`}>
+          <Suspense fallback={null}>
+            <InteractiveEarth reducedMotion={Boolean(prefersReducedMotion)} onReady={() => setEarthReady(true)} />
+          </Suspense>
+        </div>
+      )}
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/10" />
       <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/60" />
       <div className="absolute inset-0 grid-topo opacity-20" aria-hidden="true" />
 
-      <div className="container relative z-content flex min-h-[calc(100svh-4rem)] flex-col justify-between px-4 pb-7 pt-12 md:pb-10 md:pt-16">
+      <div className="container pointer-events-none relative z-content flex min-h-[calc(100svh-4rem)] flex-col justify-between px-4 pb-7 pt-12 md:pb-10 md:pt-16">
         <motion.div
-          className="max-w-3xl"
+          className="pointer-events-auto max-w-3xl"
           initial={prefersReducedMotion ? false : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
@@ -104,7 +124,7 @@ const CartographicHero = () => {
           </form>
         </motion.div>
 
-        <div className="mt-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="pointer-events-auto mt-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-xs font-semibold uppercase text-foreground">Proyectos para explorar</p>
