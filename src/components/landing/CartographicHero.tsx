@@ -1,286 +1,139 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { motion, useScroll, useTransform, useReducedMotion, MotionValue } from 'framer-motion';
-import { useMapboxToken } from '@/hooks/useMapboxToken';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useLandingStats } from '@/hooks/useLandingStats';
+import { FormEvent, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion, useReducedMotion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowRight, Map, Search } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Compass } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useLandingStats } from '@/hooks/useLandingStats';
+import { useTrackEvent } from '@/hooks/useTrackEvent';
+import ProjectCommercialCard, { CommercialProject } from './ProjectCommercialCard';
+import globeImage from '@/assets/brand/ot-globe-wide.jpg';
 
-const CHILE_CENTER: [number, number] = [-70.6693, -33.4489];
-
-/* ─── Hero Content overlay ─── */
-const HeroContent = ({
-  prefersReducedMotion,
-  titleY,
-  coordOpacity,
-  coordY,
-}: {
-  prefersReducedMotion: boolean | null;
-  titleY: MotionValue<string>;
-  coordOpacity: MotionValue<number>;
-  coordY: MotionValue<string>;
-}) => {
-  const { data: stats } = useLandingStats();
-
-  // Fallback cualitativo cuando el número es débil (evita mostrar "1 región")
-  const q = (n: number, min: number, weak: string, format: (v: number) => string) =>
-    n >= min ? format(n) : weak;
-
-  const metrics = [
-    {
-      value: q(stats?.totalListings ?? 0, 10, 'Catálogo en crecimiento', (v) => `+${v.toLocaleString()}`),
-      label: 'Terrenos publicados',
-    },
-    {
-      value: q(stats?.totalRegions ?? 0, 3, 'LATAM', (v) => `${v}`),
-      label: 'Regiones activas',
-    },
-    {
-      value: q(stats?.totalHectares ?? 0, 100, 'Mapeo activo', (v) => `${v.toLocaleString()} ha`),
-      label: 'Hectáreas mapeadas',
-    },
-  ];
-
-  return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 px-4">
-      <motion.div
-        className="text-center max-w-4xl"
-        style={prefersReducedMotion ? {} : { y: titleY }}
-      >
-        <motion.p
-          className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.4em] text-primary mb-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 1 }}
-        >
-          Inteligencia Territorial para Invertir con Certeza
-        </motion.p>
-
-        <motion.h1
-          id="hero-title"
-          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-heading font-bold tracking-tight leading-[0.9] text-foreground"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.8, ease: 'easeOut' as const }}
-        >
-          <span className="block">OFERTA</span>
-          <span className="block gradient-text-hero">TERRENOS</span>
-        </motion.h1>
-
-        <motion.p
-          className="mt-6 max-w-2xl mx-auto text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.55, duration: 0.6 }}
-        >
-          El marketplace inteligente para terrenos rurales, industriales y de inversión en LATAM.
-          Datos verificados, análisis IA y contacto directo con corredores.
-        </motion.p>
-
-        {/* Animated metrics */}
-        <motion.ul
-          className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-10 list-none"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-          aria-label="Métricas de la plataforma"
-        >
-          {metrics.map((m) => (
-            <li key={m.label} className="text-center min-w-[110px]">
-              <p className="text-base sm:text-xl md:text-2xl font-heading font-bold text-foreground">
-                <span className="sr-only">{m.label}: </span>
-                {m.value}
-              </p>
-              <p aria-hidden="true" className="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground mt-1">{m.label}</p>
-            </li>
-          ))}
-        </motion.ul>
-
-        {/* Coordinates */}
-        <motion.p
-          className="mt-5 hidden sm:block font-mono text-[10px] sm:text-xs text-muted-foreground tracking-[0.2em]"
-          style={prefersReducedMotion ? {} : { opacity: coordOpacity, y: coordY }}
-        >
-          <span className="sr-only">Ubicación de referencia: latitud 33.4489 sur, longitud 70.6693 oeste, Santiago, Chile.</span>
-          <span aria-hidden="true">
-            <span className="text-primary">−33.4489° S</span>
-            <span className="mx-3 text-border">|</span>
-            <span className="text-primary">−70.6693° W</span>
-            <span className="mx-3 text-border">|</span>
-            <span>Santiago, Chile</span>
-          </span>
-        </motion.p>
-
-        {/* Triple CTA */}
-        <motion.nav
-          className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 pointer-events-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.1, duration: 0.6 }}
-          aria-label="Acciones principales"
-        >
-          <Button asChild size="lg" className="btn-glow text-base px-8 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-            <Link to="/explorar" aria-label="Explorar terrenos disponibles en el mapa">
-              <Compass className="h-4 w-4 mr-2" aria-hidden="true" />
-              Explorar Terrenos
-            </Link>
-          </Button>
-          <Button variant="outline" asChild size="lg" className="border-border backdrop-blur-sm bg-background/70 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-            <Link to="/oportunidades" aria-label="Ver oportunidades de inversión destacadas">
-              Ver Oportunidades
-              <ArrowRight className="h-4 w-4 ml-2" aria-hidden="true" />
-            </Link>
-          </Button>
-          <Button variant="ghost" asChild size="lg" className="text-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-            <Link to="/pricing" aria-label="Soy corredor: ver planes y precios">Soy Corredor</Link>
-          </Button>
-        </motion.nav>
-      </motion.div>
-    </div>
-  );
-};
-
-/* ─── Main Component ─── */
 const CartographicHero = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const progressRef = useRef(0);
-  const easedRef = useRef(0);
-  const spinRef = useRef(0);
-  const [mapReady, setMapReady] = useState(false);
-  const { token, loading: tokenLoading } = useMapboxToken();
+  const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
-  const isMobile = useIsMobile();
+  const [search, setSearch] = useState('');
+  const { data: stats } = useLandingStats();
+  const { track } = useTrackEvent();
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end start'],
+  const { data: projects = [] } = useQuery({
+    queryKey: ['commercial-hero-projects'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, slug, name, description, city, region, images, total_lots, available_lots, featured, created_at')
+        .eq('status', 'active')
+        .order('featured', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(8);
+      if (error) throw error;
+
+      const visible = (data ?? []).filter((project) => Array.isArray(project.images) && project.images.length > 0).slice(0, 3);
+      const enriched = await Promise.all(visible.map(async (project) => {
+        const { data: lots } = await supabase.rpc('get_public_lots', { p_project_id: project.id });
+        const prices = (lots ?? [])
+          .map((lot) => Number(lot.price))
+          .filter((price) => Number.isFinite(price) && price > 0);
+        return { ...project, minPrice: prices.length ? Math.min(...prices) : undefined };
+      }));
+      return enriched as CommercialProject[];
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
-  const opacity = useTransform(scrollYProgress, [0, 0.55, 0.95], [1, 1, 0]);
-  const titleY = useTransform(scrollYProgress, [0, 0.5], ['0%', '-22%']);
-  const coordOpacity = useTransform(scrollYProgress, [0.25, 0.55], [0, 1]);
-  const coordY = useTransform(scrollYProgress, [0.25, 0.55], ['16px', '0px']);
-  const progressWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+  const totalProjects = useMemo(() => projects.length, [projects]);
 
-  useEffect(() => {
-    if (!mapContainerRef.current || !token || tokenLoading) return;
-    mapboxgl.accessToken = token;
-    const map = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/satellite-v9',
-      center: [-30, 20],
-      zoom: 1.5,
-      projection: 'globe',
-      interactive: false,
-      attributionControl: false,
-      fadeDuration: 0,
-    });
-    map.on('style.load', () => {
-      map.setFog({
-        color: 'rgb(8, 12, 18)',
-        'high-color': 'rgb(20, 30, 45)',
-        'horizon-blend': 0.08,
-        'space-color': 'rgb(5, 5, 12)',
-        'star-intensity': 0.6,
-      });
-      setMapReady(true);
-    });
-    mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; };
-  }, [token, tokenLoading]);
-
-  // Track scroll into a ref only — never drive the camera directly (avoids jitter).
-  useEffect(() => {
-    const unsub = scrollYProgress.on('change', (v) => { progressRef.current = v; });
-    return () => unsub();
-  }, [scrollYProgress]);
-
-  // Single damped rAF loop: idle spin + scroll-driven camera in one place.
-  useEffect(() => {
-    if (!mapReady) return;
-    const map = mapRef.current;
-    if (!map) return;
-
-    if (prefersReducedMotion) {
-      map.jumpTo({ center: CHILE_CENTER, zoom: isMobile ? 3.2 : 3.8, pitch: 0, bearing: 0 });
-      return;
-    }
-
-    let frame = 0;
-    const maxZoom = isMobile ? 7.5 : 9.5;
-    const tick = () => {
-      const target = progressRef.current;
-      // critically-damped follow → no stutter between scroll events
-      easedRef.current += (target - easedRef.current) * 0.12;
-      const t = easedRef.current;
-      if (t < 0.015) spinRef.current += 0.02;
-
-      const e = t * t * (3 - 2 * t); // smoothstep
-      map.jumpTo({
-        center: [-30 + e * (CHILE_CENTER[0] + 30), 20 + e * (CHILE_CENTER[1] - 20)],
-        zoom: 1.5 + e * (maxZoom - 1.5),
-        pitch: e * (isMobile ? 30 : 45),
-        bearing: spinRef.current * (1 - e) + e * -12,
-      });
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [mapReady, prefersReducedMotion, isMobile]);
+  const submitSearch = (event: FormEvent) => {
+    event.preventDefault();
+    const query = search.trim();
+    void track('landing_search_started', { query });
+    navigate(query ? `/explorar?q=${encodeURIComponent(query)}` : '/explorar');
+  };
 
   return (
-    <section
-      ref={containerRef}
-      className="relative h-[180vh] md:h-[240vh]"
-      aria-labelledby="hero-title"
-    >
-      <div className="sticky top-0 h-[100svh] w-full overflow-hidden bg-background">
-        <motion.div className="absolute inset-0" style={{ opacity }} aria-hidden="true">
-          <div
-            ref={mapContainerRef}
-            className="w-full h-full"
-            role="img"
-            aria-label="Mapa satelital animado del globo terráqueo con acercamiento a Chile"
-          />
-          {(!mapReady || tokenLoading) && (
-            <div className="absolute inset-0 flex items-center justify-center bg-background" role="status">
-              <span className="sr-only">Cargando mapa del hero</span>
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            </div>
-          )}
-        </motion.div>
+    <section className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-background" aria-labelledby="hero-title">
+      <img
+        src={globeImage}
+        alt="Globo cartográfico centrado en Sudamérica"
+        className="absolute inset-0 h-full w-full object-cover object-[62%_center] opacity-80"
+        width={1920}
+        height={1088}
+        loading="eager"
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/60" />
+      <div className="absolute inset-0 grid-topo opacity-20" aria-hidden="true" />
 
-        {/* Vignette overlays */}
-        <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,hsl(var(--background)/0.55)_0%,hsl(var(--background)/0.35)_45%,hsl(var(--background))_88%)]" />
-        <div aria-hidden="true" className="absolute bottom-0 left-0 right-0 h-40 md:h-48 bg-gradient-to-t from-background via-background/60 to-transparent pointer-events-none" />
-        <div aria-hidden="true" className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background/50 to-transparent pointer-events-none" />
-
-
-        <HeroContent
-          prefersReducedMotion={prefersReducedMotion}
-          titleY={titleY}
-          coordOpacity={coordOpacity}
-          coordY={coordY}
-        />
-
-        {/* Scroll indicator — desktop only (evita choque con los CTA en móvil) */}
+      <div className="container relative z-content flex min-h-[calc(100svh-4rem)] flex-col justify-between px-4 pb-7 pt-12 md:pb-10 md:pt-16">
         <motion.div
-          aria-hidden="true"
-          className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-3 z-10 pointer-events-none"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
+          className="max-w-3xl"
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
         >
-          <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-muted-foreground">Scroll</span>
-          <div className="w-px h-10 bg-gradient-to-b from-primary/60 to-transparent" />
+          <div className="mb-5 flex items-center gap-2 text-[11px] font-semibold uppercase text-primary">
+            <span className="h-2 w-2 rounded-full bg-primary" aria-hidden="true" />
+            Proyectos disponibles en Chile
+          </div>
+          <h1 id="hero-title" className="max-w-3xl font-heading text-5xl font-bold leading-[0.95] text-foreground sm:text-6xl lg:text-7xl">
+            Encuentra tierra con futuro.
+          </h1>
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+            Explora loteos completos, revisa sus planos y disponibilidad, y agenda una visita desde una sola plataforma.
+          </p>
+
+          <form onSubmit={submitSearch} className="mt-7 flex max-w-2xl flex-col gap-2 sm:flex-row" role="search">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Comuna, región o tipo de terreno"
+                aria-label="Buscar proyectos por comuna, región o tipo"
+                className="h-12 rounded-md border-border/70 bg-background/80 pl-11 backdrop-blur-md"
+              />
+            </div>
+            <Button type="submit" size="lg" className="h-12 rounded-md px-6">
+              Explorar proyectos <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+            </Button>
+            <Button asChild type="button" variant="outline" size="lg" className="h-12 rounded-md border-border/70 bg-background/60 px-5 backdrop-blur-md">
+              <Link to="/explorar?view=map"><Map className="mr-2 h-4 w-4" aria-hidden="true" />Ver mapa</Link>
+            </Button>
+          </form>
         </motion.div>
 
-        <motion.div aria-hidden="true" className="absolute bottom-0 left-0 h-px bg-primary/40 z-20" style={{ width: progressWidth }} />
+        <div className="mt-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase text-foreground">Proyectos para explorar</p>
+              <Link to="/explorar" className="text-xs text-primary hover:underline">Ver todos</Link>
+            </div>
+            <div className="flex max-w-full gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {projects.slice(0, 3).map((project) => (
+                <ProjectCommercialCard
+                  key={project.id}
+                  project={project}
+                  compact
+                  onOpen={(selected) => void track('landing_project_opened', { project_id: selected.id })}
+                />
+              ))}
+              {totalProjects === 0 && (
+                <div className="flex h-48 w-[15.5rem] items-center justify-center rounded-md border border-border/60 bg-card/70 px-6 text-center text-sm text-muted-foreground">
+                  Cargando proyectos disponibles…
+                </div>
+              )}
+            </div>
+          </div>
+
+          {stats?.totalListings ? (
+            <dl className="flex shrink-0 gap-6 border-t border-border/60 pt-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+              <div><dt className="text-[10px] uppercase text-muted-foreground">Publicados</dt><dd className="font-heading text-xl font-bold">{stats.totalListings}</dd></div>
+              <div><dt className="text-[10px] uppercase text-muted-foreground">Disponibles</dt><dd className="font-heading text-xl font-bold text-primary">{stats.totalLots}</dd></div>
+            </dl>
+          ) : null}
+        </div>
       </div>
     </section>
   );
