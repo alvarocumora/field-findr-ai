@@ -127,10 +127,10 @@ const CartographicHero = () => {
             </div>
           </div>
 
-          {stats?.totalListings ? (
+          {stats?.totalProjects ? (
             <dl className="flex shrink-0 gap-6 border-t border-border/60 pt-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
-              <div><dt className="text-[10px] uppercase text-muted-foreground">Publicados</dt><dd className="font-heading text-xl font-bold">{stats.totalListings}</dd></div>
-              <div><dt className="text-[10px] uppercase text-muted-foreground">Disponibles</dt><dd className="font-heading text-xl font-bold text-primary">{stats.totalLots}</dd></div>
+              <div><dt className="text-[10px] uppercase text-muted-foreground">Proyectos activos</dt><dd className="font-heading text-xl font-bold">{stats.totalProjects}</dd></div>
+              <div><dt className="text-[10px] uppercase text-muted-foreground">Lotes trazados</dt><dd className="font-heading text-xl font-bold text-primary">{stats.totalLots}</dd></div>
             </dl>
           ) : null}
         </div>
