@@ -1,9 +1,18 @@
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22C55E"/><stop offset="1" stop-color="#0EA5E9"/></linearGradient></defs>
-
-<path d="M256 62 424 159v194L256 450 88 353V159Z" fill="url(#g)"/>
-<path d="M256 99 392 178v156l-136 79-136-79V178Z" fill="#070A0D" fill-opacity=".88"/>
-<circle cx="256" cy="256" r="91" fill="none" stroke="#F7F7F2" stroke-width="32"/>
-<path d="M256 165v182M165 256h182" stroke="url(#g)" stroke-width="18" stroke-linecap="round"/>
-<circle cx="256" cy="256" r="18" fill="#F7F7F2"/>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ocean" x1="104" y1="80" x2="408" y2="432" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B2630"/>
+      <stop offset="1" stop-color="#071015"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="122" y1="92" x2="404" y2="422" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22C55E"/>
+      <stop offset="1" stop-color="#0EA5E9"/>
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="204" fill="url(#ocean)" stroke="url(#brand)" stroke-width="18"/>
+  <ellipse cx="256" cy="256" rx="103" ry="204" stroke="#F7F7F2" stroke-opacity=".38" stroke-width="9"/>
+  <path d="M58 256H454M92 170C139 192 201 202 256 202C311 202 373 192 420 170M92 342C139 320 201 310 256 310C311 310 373 320 420 342" stroke="#F7F7F2" stroke-opacity=".34" stroke-width="9" stroke-linecap="round"/>
+  <path d="M226 129L265 116L294 130L321 127L343 145L338 166L358 182L344 206L329 224L317 247L300 262L297 286L282 305L276 335L263 356L254 391L240 410L229 382L227 350L215 323L211 294L195 270L186 244L194 222L181 199L194 180L207 159L226 148Z" fill="url(#brand)" stroke="#F7F7F2" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M242 288C239 316 241 346 238 376C237 389 233 401 229 414" stroke="#0EA5E9" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="238" cy="300" r="10" fill="#F7F7F2" stroke="#22C55E" stroke-width="6"/>
 </svg>
