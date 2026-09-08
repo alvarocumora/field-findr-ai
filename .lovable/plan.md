@@ -48,6 +48,7 @@ Se elegirá una composición y se trasladará fielmente a escritorio y móvil.
 - Eliminar duplicación entre proyectos destacados y el recorrido actual.
 - Mantener análisis, mercado y contenidos en `/mercado`, enlazados desde navegación secundaria.
 - Usar cifras reales de la plataforma; retirar cualquier volumen, satisfacción o transacción no respaldados.
+- Retirar testimonios con fotos de stock y logos presentados como aliados; usar reseñas reales verificables o una prueba documental honesta.
 - Separar claramente el viaje del comprador del mensaje B2B para inmobiliarias y corredores.
 
 ## 4. Sistema de tarjetas y prueba comercial
@@ -77,6 +78,7 @@ Crear un sistema único partiendo de la geometría cartográfica existente y la 
 
 ## 6. Navegación, móvil y accesibilidad
 - Navegación pública breve: Explorar, Vender, Comunidad y acceso; ofertas B2B bajo un menú contextual.
+- Corregir destinos inconsistentes (`/explorar` frente a `/search`) y retirar enlaces sociales o legales sin destino real.
 - En móvil: proyectos deslizables, búsqueda de una sola columna y CTA de visita/reserva siempre accesible sin tapar contenido.
 - Contraste AA, foco visible, controles con nombre, texto ampliable y navegación completa por teclado.
 - Mantener dimensiones estables para evitar saltos durante la carga de mapas e imágenes.
