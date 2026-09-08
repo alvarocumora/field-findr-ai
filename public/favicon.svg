@@ -1,49 +1,9 @@
-<svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#22C55E"/>
-      <stop offset="50%" stop-color="#10B981"/>
-      <stop offset="100%" stop-color="#0EA5E9"/>
-    </linearGradient>
-    <linearGradient id="innerGlow" x1="50%" y1="0%" x2="50%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3"/>
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-    </linearGradient>
-  </defs>
-  
-  <!-- Background rounded square -->
-  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#bgGradient)"/>
-  
-  <!-- Inner glow -->
-  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#innerGlow)"/>
-  
-  <!-- Hexagon frame - geometric minimalist -->
-  <path d="M256 96L400 180V348L256 432L112 348V180L256 96Z" 
-        fill="none" 
-        stroke="rgba(255,255,255,0.9)" 
-        stroke-width="16"
-        stroke-linejoin="round"/>
-  
-  <!-- Inner terrain mountain symbol -->
-  <path d="M160 320L256 180L352 320H160Z" 
-        fill="rgba(255,255,255,0.85)"/>
-  
-  <!-- Secondary peak for depth -->
-  <path d="M200 320L280 220L360 320H200Z" 
-        fill="rgba(255,255,255,0.5)"/>
-  
-  <!-- Diamond center accent -->
-  <path d="M256 220L290 280H222L256 220Z" 
-        fill="rgba(255,255,255,0.3)"/>
-  
-  <!-- Base line -->
-  <line x1="140" y1="340" x2="372" y2="340" 
-        stroke="rgba(255,255,255,0.95)" 
-        stroke-width="12" 
-        stroke-linecap="round"/>
-  
-  <!-- Grid markers -->
-  <line x1="200" y1="320" x2="200" y2="360" stroke="rgba(255,255,255,0.6)" stroke-width="8" stroke-linecap="round"/>
-  <line x1="256" y1="320" x2="256" y2="370" stroke="rgba(255,255,255,0.6)" stroke-width="8" stroke-linecap="round"/>
-  <line x1="312" y1="320" x2="312" y2="360" stroke="rgba(255,255,255,0.6)" stroke-width="8" stroke-linecap="round"/>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22C55E"/><stop offset="1" stop-color="#0EA5E9"/></linearGradient></defs>
+<rect width="512" height="512" rx="112" fill="#070A0D"/>
+<path d="M256 62 424 159v194L256 450 88 353V159Z" fill="url(#g)"/>
+<path d="M256 99 392 178v156l-136 79-136-79V178Z" fill="#070A0D" fill-opacity=".88"/>
+<circle cx="256" cy="256" r="91" fill="none" stroke="#F7F7F2" stroke-width="32"/>
+<path d="M256 165v182M165 256h182" stroke="url(#g)" stroke-width="18" stroke-linecap="round"/>
+<circle cx="256" cy="256" r="18" fill="#F7F7F2"/>
 </svg>
