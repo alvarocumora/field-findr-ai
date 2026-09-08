@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-api-key, x-supabase-api-version, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-api-key, x-supabase-api-version, x-client-platform, x-client-platform-version, x-client-runtime, x-client-runtime-version",
 };
 
 const MERCADOPAGO_ACCESS_TOKEN = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
@@ -18,114 +18,101 @@ interface ReservationRequest {
   buyer_rut?: string;
   reservation_amount?: number;
   notes?: string;
+  source_quote_id?: string;
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Get the authorization header
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "No authorization header" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "No authorization header" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Create Supabase client with user's token
     const supabaseUser = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } }
+      global: { headers: { Authorization: authHeader } },
     });
-
-    // Get user
     const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
     if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const body: ReservationRequest = await req.json();
-    // NOTE: reservation_amount is intentionally NOT read from the client — the
-    // amount is derived server-side from the project's reservation_deposit to
-    // prevent price manipulation (reserving a lot for an arbitrary amount).
-    const { lot_id, buyer_name, buyer_email, buyer_phone, buyer_rut, notes } = body;
-
+    const { lot_id, buyer_name, buyer_email, buyer_phone, buyer_rut, notes, source_quote_id } = body;
     if (!lot_id || !buyer_name || !buyer_email) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields: lot_id, buyer_name, buyer_email" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Missing required fields: lot_id, buyer_name, buyer_email" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Use service role for database operations
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    // Fetch lot details with project info
     const { data: lot, error: lotError } = await supabase
       .from("lots")
-      .select(`
-        id,
-        lot_number,
-        area,
-        price,
-        status,
-        project_id,
-        projects (
-          id,
-          name,
-          user_id,
-          reservation_deposit
-        )
-      `)
+      .select(`id, lot_number, area, price, status, project_id, projects (id, name, user_id, reservation_deposit)`)
       .eq("id", lot_id)
       .single();
 
     if (lotError || !lot) {
-      return new Response(
-        JSON.stringify({ error: "Lot not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Lot not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Server-authoritative reservation amount (never trust the client body).
     const reservation_amount = Number((lot as any).projects?.reservation_deposit) || 500000;
     if (!(reservation_amount > 0)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid reservation amount configuration" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Invalid reservation amount configuration" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Check if lot is available
     if (lot.status !== "available") {
-      return new Response(
-        JSON.stringify({ error: "Lot is not available for reservation" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Lot is not available for reservation" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Check for existing pending reservation
     const { data: existingReservation } = await supabase
       .from("reservations")
       .select("id")
       .eq("lot_id", lot_id)
       .eq("status", "pending_payment")
       .gt("expires_at", new Date().toISOString())
-      .single();
+      .maybeSingle();
 
     if (existingReservation) {
-      return new Response(
-        JSON.stringify({ error: "Lot already has a pending reservation" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Lot already has a pending reservation" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Create reservation in pending_payment status
+    if (source_quote_id) {
+      const { data: quote } = await supabase
+        .from("sales_quotes")
+        .select("id, lot_id, agent_id")
+        .eq("id", source_quote_id)
+        .eq("lot_id", lot_id)
+        .eq("agent_id", user.id)
+        .maybeSingle();
+      if (!quote) {
+        return new Response(JSON.stringify({ error: "Invalid source quote" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 48);
 
@@ -142,42 +129,36 @@ serve(async (req) => {
         status: "pending_payment",
         expires_at: expiresAt.toISOString(),
         notes,
+        source_quote_id: source_quote_id || null,
       })
       .select()
       .single();
 
     if (reservationError) {
       console.error("Error creating reservation:", reservationError);
-      return new Response(
-        JSON.stringify({ error: "Failed to create reservation" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Failed to create reservation" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // If MercadoPago is not configured, return reservation without payment link
     if (!MERCADOPAGO_ACCESS_TOKEN) {
-      return new Response(
-        JSON.stringify({
-          reservation,
-          message: "Reservation created. Payment processing not configured.",
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({
+        reservation,
+        message: "Reservation created. Payment processing not configured.",
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Create MercadoPago preference
     const projectName = (lot as any).projects?.name || "Proyecto";
     const preferenceData = {
-      items: [
-        {
-          id: reservation.id,
-          title: `Reserva Lote ${lot.lot_number} - ${projectName}`,
-          description: `Señal de reserva para Lote ${lot.lot_number} (${lot.area} m²)`,
-          quantity: 1,
-          currency_id: "CLP",
-          unit_price: reservation_amount,
-        },
-      ],
+      items: [{
+        id: reservation.id,
+        title: `Reserva Lote ${lot.lot_number} - ${projectName}`,
+        description: `Señal de reserva para Lote ${lot.lot_number} (${lot.area} m²)`,
+        quantity: 1,
+        currency_id: "CLP",
+        unit_price: reservation_amount,
+      }],
       payer: {
         name: buyer_name,
         email: buyer_email,
@@ -188,6 +169,7 @@ serve(async (req) => {
         reservation_id: reservation.id,
         lot_id,
         user_id: user.id,
+        source_quote_id: source_quote_id || null,
       }),
       back_urls: {
         success: `${req.headers.get("origin")}/reserva/exito?reservation_id=${reservation.id}`,
@@ -211,47 +193,38 @@ serve(async (req) => {
     });
 
     if (!mpResponse.ok) {
-      const errorText = await mpResponse.text();
-      console.error("MercadoPago error:", errorText);
-
-      // Without a payment link the buyer can never pay, so keeping the
-      // reservation would block the lot for 48h for nothing. Cancel it and
-      // surface a real error the UI can act on.
-      await supabase
-        .from("reservations")
-        .update({ status: "cancelled" })
-        .eq("id", reservation.id);
-
-      return new Response(
-        JSON.stringify({ error: "No pudimos generar el link de pago. Intenta nuevamente." }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.error("MercadoPago error:", await mpResponse.text());
+      await supabase.from("reservations").update({ status: "cancelled" }).eq("id", reservation.id);
+      return new Response(JSON.stringify({ error: "No pudimos generar el link de pago. Intenta nuevamente." }), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const mpPreference = await mpResponse.json();
+    const paymentUrl = mpPreference.init_point as string;
 
-    // Update reservation with MercadoPago preference ID
     await supabase
       .from("reservations")
-      .update({ mercadopago_preference_id: mpPreference.id })
+      .update({ mercadopago_preference_id: mpPreference.id, payment_url: paymentUrl })
       .eq("id", reservation.id);
 
-    return new Response(
-      JSON.stringify({
-        reservation: { ...reservation, mercadopago_preference_id: mpPreference.id },
-        payment_url: mpPreference.init_point,
-        sandbox_url: mpPreference.sandbox_init_point,
-        expires_at: expiresAt.toISOString(),
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-
+    return new Response(JSON.stringify({
+      reservation: {
+        ...reservation,
+        mercadopago_preference_id: mpPreference.id,
+        payment_url: paymentUrl,
+      },
+      payment_url: paymentUrl,
+      sandbox_url: mpPreference.sandbox_init_point,
+      expires_at: expiresAt.toISOString(),
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error: unknown) {
     console.error("Error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
