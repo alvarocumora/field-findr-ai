@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSmartRedirect } from "@/hooks/useSmartRedirect";
 import BuyerLayout from "@/components/layouts/BuyerLayout";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
+import ExecutiveTodayPanel from "@/components/executive/ExecutiveTodayPanel";
 import { PageLoader } from "./routeUtils";
 import type { RouteAccess, RouteLayout } from "./routeManifest";
 
@@ -68,6 +69,11 @@ const RouteGuard = ({ access, layout }: RouteGuardProps) => {
   if (layout === "dashboard") {
     return (
       <DashboardLayout>
+        {location.pathname === "/asesor/executive" && (
+          <div className="px-4 pt-4 sm:px-6 sm:pt-6">
+            <ExecutiveTodayPanel />
+          </div>
+        )}
         <Outlet />
       </DashboardLayout>
     );
