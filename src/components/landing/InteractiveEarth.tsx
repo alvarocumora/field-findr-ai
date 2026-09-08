@@ -14,6 +14,7 @@ interface InteractiveEarthProps {
 
 const CHILE_LAT = -33.45;
 const CHILE_LON = -70.67;
+const assetUrl = (path: string) => path.startsWith('/__l5e/') ? `https://ofertaterrenos.com${path}` : path;
 
 const latLonToVector = (latitude: number, longitude: number, radius: number) => {
   const phi = THREE.MathUtils.degToRad(90 - latitude);
@@ -60,10 +61,10 @@ const EarthModel = ({ pointer, reducedMotion, onReady }: EarthModelProps) => {
   const cloudRef = useRef<THREE.Mesh>(null);
   const pulseRef = useRef<THREE.Mesh>(null);
   const [day, normal, specular, clouds] = useTexture([
-    dayAsset.url,
-    normalAsset.url,
-    specularAsset.url,
-    cloudsAsset.url,
+    assetUrl(dayAsset.url),
+    assetUrl(normalAsset.url),
+    assetUrl(specularAsset.url),
+    assetUrl(cloudsAsset.url),
   ]);
 
   useEffect(() => {
@@ -101,7 +102,7 @@ const EarthModel = ({ pointer, reducedMotion, onReady }: EarthModelProps) => {
   });
 
   return (
-    <group ref={earthRef} rotation={[0, 0, -0.12]}>
+    <group ref={earthRef} rotation={[0, -1.22, -0.12]}>
       <mesh>
         <sphereGeometry args={[1, 96, 96]} />
         <meshPhongMaterial
