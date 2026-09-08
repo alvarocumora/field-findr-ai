@@ -37,7 +37,7 @@ const FooterSection = () => {
   };
 
   return (
-    <footer className="relative border-t border-border/50 bg-background">
+    <footer className="relative overflow-x-hidden border-t border-border/50 bg-background">
       <div className="container px-4 py-16">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-10">
           {/* Brand */}
