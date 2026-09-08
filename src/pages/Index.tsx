@@ -8,8 +8,17 @@ import HowItWorksFlow from '@/components/landing/HowItWorksFlow';
 import CTASection from '@/components/CTASection';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, BarChart3 } from 'lucide-react';
+import { useSEO } from '@/hooks/useSEO';
 
 const Index = () => {
+  useSEO({
+    title: 'Proyectos de terrenos y loteos en Chile',
+    description: 'Explora proyectos completos, planos, lotes disponibles y recorridos. Agenda una visita o inicia tu reserva en Ofertaterrenos.',
+    image: 'https://ofertaterrenos.com/og-oferta-terrenos.png',
+    url: 'https://ofertaterrenos.com/',
+    canonicalUrl: 'https://ofertaterrenos.com/',
+  });
+
   return (
     <PublicLayout showFooter={true}>
       {/* 1 · Mapa + búsqueda + proyectos */}
