@@ -49,11 +49,9 @@ const StickyHeader = () => {
   // Tres puertas de entrada: Explorar (comprar), Vender, Comunidad.
   const publicNavigation = [
     { name: 'Explorar', href: '/explorar' },
-    { name: 'Oportunidades', href: '/oportunidades' },
     { name: 'Vender', href: '/comenzar' },
     { name: 'Comunidad', href: '/comunidad' },
-    { name: 'Planes', href: '/pricing' },
-    { name: 'Planes Loteos', href: '/planes-loteos', badge: 'B2B' },
+    { name: 'Para profesionales', href: '/planes-loteos', badge: 'B2B' },
   ];
 
   // Contextual nav items based on role.

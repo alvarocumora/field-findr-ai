@@ -1,15 +1,11 @@
-import { Shield, Award, Clock, Users } from 'lucide-react';
+import { ShieldCheck, Map, FileCheck2, CalendarCheck } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 
 const BADGES = [
-  { icon: Shield, title: 'Datos Verificados', description: 'Información validada del SII y Conservador' },
-  { icon: Award, title: 'IA de Precisión', description: 'Análisis con datos reales del mercado' },
-  { icon: Clock, title: 'Tiempo Real', description: 'Precios y disponibilidad actualizados' },
-  { icon: Users, title: 'Soporte Experto', description: 'Equipo inmobiliario a tu disposición' },
-];
-
-const LOGOS = [
-  'Mapbox', 'OpenAI', 'MercadoPago', 'SII Chile',
+  { icon: Map, title: 'Polígonos reales', description: 'Revisa ubicación, forma y superficie antes de consultar.' },
+  { icon: FileCheck2, title: 'Documentos visibles', description: 'Cada proyecto publica el respaldo que tiene disponible.' },
+  { icon: CalendarCheck, title: 'Visita coordinada', description: 'Agenda con el equipo comercial desde la misma ficha.' },
+  { icon: ShieldCheck, title: 'Proceso trazable', description: 'Consulta, visita y reserva quedan conectadas a tu avance.' },
 ];
 
 const container = {
@@ -25,11 +21,16 @@ const TrustBadges = () => {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <section className="py-16 border-t border-border/50">
+    <section className="py-16 md:py-24 border-y border-border/50 bg-muted/20" aria-labelledby="trust-title">
       <div className="container px-4">
+        <div className="max-w-2xl mb-10">
+          <p className="text-xs font-semibold uppercase text-primary">Decide con evidencia</p>
+          <h2 id="trust-title" className="mt-3 text-3xl md:text-4xl font-heading font-bold">El terreno antes que la promesa.</h2>
+          <p className="mt-3 text-muted-foreground">Información concreta para pasar del interés a una visita informada.</p>
+        </div>
         {/* Trust badges */}
         <motion.div
-          className="flex flex-wrap justify-center gap-8 md:gap-12 mb-12"
+          className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4"
           variants={prefersReducedMotion ? {} : container}
           initial="hidden"
           whileInView="visible"
@@ -52,14 +53,6 @@ const TrustBadges = () => {
           ))}
         </motion.div>
 
-        {/* Logo cloud integrated */}
-        <div className="flex items-center justify-center gap-8 opacity-40">
-          {LOGOS.map((name) => (
-            <span key={name} className="text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground">
-              {name}
-            </span>
-          ))}
-        </div>
       </div>
     </section>
   );
