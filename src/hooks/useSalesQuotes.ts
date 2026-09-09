@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/integrations/supabase/client';
 
-export type SalesQuoteStatus = 'draft' | 'sent' | 'accepted' | 'expired' | 'cancelled';
+export type SalesQuoteStatus = 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected' | 'expired' | 'cancelled';
 
 export type SalesQuote = {
   id: string;
@@ -94,12 +94,29 @@ export const useSalesQuotes = (limit = 100) => useQuery({
   },
 });
 
+export const useExpiringSalesQuotes = (hours = 72) => useQuery({
+  queryKey: ['sales-quotes', 'expiring', hours],
+  queryFn: async () => {
+    const now = new Date();
+    const end = new Date(now.getTime() + hours * 60 * 60 * 1000);
+    const { data, error } = await (supabase.from('sales_quotes') as any)
+      .select('*')
+      .in('status', ['draft', 'sent', 'viewed'])
+      .gte('valid_until', now.toISOString())
+      .lte('valid_until', end.toISOString())
+      .order('valid_until', { ascending: true });
+    if (error) throw error;
+    return (data ?? []) as SalesQuote[];
+  },
+  refetchInterval: 60_000,
+});
+
 export const useActiveSalesQuotesCount = () => useQuery({
   queryKey: ['sales-quotes', 'active-count'],
   queryFn: async () => {
     const { count, error } = await quotesCountTable()
       .select('id', { count: 'exact', head: true })
-      .in('status', ['draft', 'sent']);
+      .in('status', ['draft', 'sent', 'viewed']);
 
     if (error) throw error;
     return count ?? 0;

@@ -1,10 +1,12 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Clock3, MessageCircle, ShoppingCart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useReservations } from '@/hooks/useReservations';
+import { useAuth } from '@/hooks/useAuth';
+import { useProjects } from '@/hooks/useProjects';
 
 const money = (value: number) => new Intl.NumberFormat('es-CL', {
   style: 'currency',
@@ -13,33 +15,42 @@ const money = (value: number) => new Intl.NumberFormat('es-CL', {
 }).format(value || 0);
 
 const ExecutiveCommercialDesk = () => {
+  const { user } = useAuth();
+  const { projects } = useProjects();
   const { data: reservations = [] } = useReservations();
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const ownedProjectIds = useMemo(
+    () => new Set(projects.filter((project) => project.user_id === user?.id).map((project) => project.id)),
+    [projects, user?.id],
+  );
 
   const commercial = useMemo(() => {
-    const now = new Date();
     const next24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const rows = reservations as any[];
+    const rows = (reservations as any[]).filter((reservation) => ownedProjectIds.has(reservation.lots?.project_id));
 
     const pendingPayment = rows
-      .filter((reservation) => reservation.status === 'pending_payment')
+      .filter((reservation) => reservation.status === 'pending_payment' && new Date(reservation.expires_at) >= now)
       .sort((a, b) => new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime());
 
     const urgentPayment = pendingPayment.filter((reservation) => {
       const expiry = new Date(reservation.expires_at);
-      return expiry >= now && expiry <= next24h;
+      return expiry <= next24h;
     });
 
     const paidToClose = rows
       .filter((reservation) => reservation.status === 'paid')
       .sort((a, b) => new Date(a.paid_at ?? a.updated_at ?? 0).getTime() - new Date(b.paid_at ?? b.updated_at ?? 0).getTime());
 
-    const closingVolume = paidToClose.reduce((sum, reservation) => {
-      const lotPrice = Number(reservation.lots?.price || 0);
-      return sum + lotPrice;
-    }, 0);
+    const closingVolume = paidToClose.reduce((sum, reservation) => sum + Number(reservation.lots?.price || 0), 0);
 
     return { pendingPayment, urgentPayment, paidToClose, closingVolume };
-  }, [reservations]);
+  }, [reservations, ownedProjectIds, now]);
 
   if (commercial.pendingPayment.length === 0 && commercial.paidToClose.length === 0) return null;
 
