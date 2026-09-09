@@ -2902,6 +2902,19 @@ export type Database = {
         }
         Returns: string
       }
+      create_public_visit_request: {
+        Args: {
+          p_email?: string
+          p_lot_id?: string
+          p_mode?: string
+          p_name?: string
+          p_notes?: string
+          p_phone?: string
+          p_project_id: string
+          p_scheduled_at?: string
+        }
+        Returns: string
+      }
       create_referral_lead: {
         Args: {
           p_budget_max?: number
