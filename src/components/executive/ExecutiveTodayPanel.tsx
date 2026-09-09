@@ -1,12 +1,13 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, CalendarClock, FileText, MessageCircle, ShoppingCart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useVisits } from '@/hooks/useVisits';
-import { useSalesQuotes } from '@/hooks/useSalesQuotes';
+import { useExpiringSalesQuotes } from '@/hooks/useSalesQuotes';
 import { useReservations } from '@/hooks/useReservations';
+import { useAuth } from '@/hooks/useAuth';
 
 const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const endOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
@@ -17,34 +18,40 @@ const inRange = (iso: string | null | undefined, start: Date, end: Date) => {
 };
 
 const ExecutiveTodayPanel = () => {
+  const { user } = useAuth();
   const { visits } = useVisits();
-  const { data: quotes = [] } = useSalesQuotes(100);
+  const { data: quotes = [] } = useExpiringSalesQuotes(72);
   const { data: reservations = [] } = useReservations();
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const priorities = useMemo(() => {
-    const now = new Date();
     const todayStart = startOfDay(now);
     const todayEnd = endOfDay(now);
-    const next72h = new Date(now.getTime() + 72 * 60 * 60 * 1000);
 
     const todayVisits = visits
       .filter((visit) => inRange(visit.scheduled_at, todayStart, todayEnd) && !['cancelled', 'rescheduled'].includes(visit.status ?? ''))
       .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
 
     const overdueFollowUps = visits
-      .filter((visit) => visit.follow_up_at && new Date(visit.follow_up_at) < now && !['cancelled'].includes(visit.status ?? '') && visit.next_action && visit.next_action !== 'none')
+      .filter((visit) => visit.follow_up_at && new Date(visit.follow_up_at) < now && visit.status !== 'cancelled' && visit.next_action && visit.next_action !== 'none')
       .sort((a, b) => new Date(a.follow_up_at ?? 0).getTime() - new Date(b.follow_up_at ?? 0).getTime());
 
     const expiringQuotes = quotes
-      .filter((quote) => ['draft', 'sent'].includes(quote.status) && new Date(quote.valid_until) >= now && new Date(quote.valid_until) <= next72h)
+      .filter((quote) => new Date(quote.valid_until) >= now)
       .sort((a, b) => new Date(a.valid_until).getTime() - new Date(b.valid_until).getTime());
 
     const pendingReservations = (reservations as any[])
+      .filter((reservation) => reservation.lots?.projects?.user_id === user?.id)
       .filter((reservation) => ['pending_payment', 'paid'].includes(reservation.status))
       .sort((a, b) => new Date(a.expires_at ?? a.created_at ?? 0).getTime() - new Date(b.expires_at ?? b.created_at ?? 0).getTime());
 
     return { todayVisits, overdueFollowUps, expiringQuotes, pendingReservations };
-  }, [visits, quotes, reservations]);
+  }, [visits, quotes, reservations, now, user?.id]);
 
   const total = priorities.todayVisits.length + priorities.overdueFollowUps.length + priorities.expiringQuotes.length + priorities.pendingReservations.length;
 
