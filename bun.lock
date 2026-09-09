@@ -10,11 +10,11 @@
         "@lovable.dev/mcp-js": "^0.20.0",
         "@mapbox/mapbox-gl-draw": "^1.5.1",
         "@mapbox/togeojson": "^0.16.2",
-        "@photo-sphere-viewer/autorotate-plugin": "^5.14.1",
-        "@photo-sphere-viewer/compass-plugin": "^5.14.1",
-        "@photo-sphere-viewer/core": "^5.14.1",
-        "@photo-sphere-viewer/gallery-plugin": "^5.14.1",
-        "@photo-sphere-viewer/markers-plugin": "^5.14.1",
+        "@photo-sphere-viewer/autorotate-plugin": "5.14.1",
+        "@photo-sphere-viewer/compass-plugin": "5.14.1",
+        "@photo-sphere-viewer/core": "5.14.1",
+        "@photo-sphere-viewer/gallery-plugin": "5.14.1",
+        "@photo-sphere-viewer/markers-plugin": "5.14.1",
         "@radix-ui/react-accordion": "^1.2.0",
         "@radix-ui/react-alert-dialog": "^1.1.1",
         "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -505,13 +505,13 @@
 
     "@nodelib/fs.walk": ["@nodelib/fs.walk@1.2.8", "", { "dependencies": { "@nodelib/fs.scandir": "2.1.5", "fastq": "^1.6.0" } }, "sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg=="],
 
-    "@photo-sphere-viewer/autorotate-plugin": ["@photo-sphere-viewer/autorotate-plugin@5.15.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@photo-sphere-viewer/autorotate-plugin/-/autorotate-plugin-5.15.1.tgz", { "peerDependencies": { "@photo-sphere-viewer/core": "5.15.1" } }, "sha512-qmiDUqsj9Kok2CQwh7Jvt78z/+o79nIgNUQMWV5Itg9iNV40qhGxzNjHfTCwRaVel+0heHNWMpd4VWmn0rv3Og=="],
+    "@photo-sphere-viewer/autorotate-plugin": ["@photo-sphere-viewer/autorotate-plugin@5.14.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@photo-sphere-viewer/autorotate-plugin/-/autorotate-plugin-5.14.1.tgz", { "peerDependencies": { "@photo-sphere-viewer/core": "5.14.1" } }, "sha512-Iis0SCw6+qPfX9W4fQzGW5be7b4z7CnvEzT69irXQAqOF8Fl86mO9vOutwP4BUbXDSPOyi8yxn3q7wCyAYSrBw=="],
 
     "@photo-sphere-viewer/compass-plugin": ["@photo-sphere-viewer/compass-plugin@5.14.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@photo-sphere-viewer/compass-plugin/-/compass-plugin-5.14.1.tgz", { "peerDependencies": { "@photo-sphere-viewer/core": "5.14.1" } }, "sha512-zuGhxpdqhh0cwoWsnwyx8996Qyf0eOWwAX4C8vrMt/YEHbJu1tEAnxvWhdW+yOOz20NZiNRR+YcwHtgNGdxr0A=="],
 
     "@photo-sphere-viewer/core": ["@photo-sphere-viewer/core@5.14.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@photo-sphere-viewer/core/-/core-5.14.1.tgz", { "dependencies": { "three": "^0.179.0" } }, "sha512-qrwUudrX9YZms4c2shlY/H3jUP0oh9FyGEqIDr/95ulNZgKbhQ6C/i8zDQ4j8ooFR4+z5FDORQtGvLgPyX8VCA=="],
 
-    "@photo-sphere-viewer/gallery-plugin": ["@photo-sphere-viewer/gallery-plugin@5.15.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@photo-sphere-viewer/gallery-plugin/-/gallery-plugin-5.15.1.tgz", { "peerDependencies": { "@photo-sphere-viewer/core": "5.15.1" } }, "sha512-cdSI96X+fa8aLXXjjdGvgIuubDonGyOw1aw2hmZerLVu+66tA5y3IGia0IgbNoE2YygkJWggJVDyJblGHqCNwA=="],
+    "@photo-sphere-viewer/gallery-plugin": ["@photo-sphere-viewer/gallery-plugin@5.14.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@photo-sphere-viewer/gallery-plugin/-/gallery-plugin-5.14.1.tgz", { "peerDependencies": { "@photo-sphere-viewer/core": "5.14.1" } }, "sha512-MzIB4Kc652yfdgPkh3xh/Kvu3XY84VkmshqZhXxa9UV4E2uNMop+vttkWeKogsaNSDT5/aEkMaFgwL/Bs/ZmRw=="],
 
     "@photo-sphere-viewer/markers-plugin": ["@photo-sphere-viewer/markers-plugin@5.14.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@photo-sphere-viewer/markers-plugin/-/markers-plugin-5.14.1.tgz", { "peerDependencies": { "@photo-sphere-viewer/core": "5.14.1" } }, "sha512-tKMrVem19sZFVQwH6IlubEIucDD2EtwxzmWClHCEojM/+ajucuTDvO2N+I6HEqJClBcNsdHAUwA/zyY6MGOu2Q=="],
 
