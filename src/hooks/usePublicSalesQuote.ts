@@ -10,7 +10,14 @@ export interface PublicSalesQuote {
 
 export const usePublicSalesQuote = (token?: string) => {
   useEffect(() => {
-    if (token) void (supabase.rpc as CallableFunction)('track_sales_quote_view', { p_token: token });
+    if (!token) return;
+    let cancelled = false;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled && !data.session) {
+        void (supabase.rpc as CallableFunction)('track_sales_quote_view', { p_token: token });
+      }
+    });
+    return () => { cancelled = true; };
   }, [token]);
 
   return useQuery({
