@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,7 @@ interface LotReserveDialogProps {
  * de modo que la reserva aparece de inmediato en el panel del vendedor.
  */
 export const LotReserveDialog = ({ lot, open, onOpenChange, projectName }: LotReserveDialogProps) => {
+  const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -47,12 +49,15 @@ export const LotReserveDialog = ({ lot, open, onOpenChange, projectName }: LotRe
         p_buyer_email: email.trim(),
         p_buyer_phone: phone.trim() || undefined,
         p_buyer_rut: rut.trim() || undefined,
-        p_notes:
-          [`Reserva desde landing ${projectName}`, notes.trim() || null].filter(Boolean).join(' · '),
+        p_notes: [`Reserva desde landing ${projectName}`, notes.trim() || null].filter(Boolean).join(' · '),
       });
       if (error) throw error;
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['vel-public-lots'] }),
+        queryClient.invalidateQueries({ queryKey: ['reservations'] }),
+      ]);
       setDone(true);
-      toast.success('Reserva registrada. El equipo comercial te contactará para confirmarla.');
+      toast.success('Reserva registrada. El inventario se actualizará automáticamente.');
     } catch (err) {
       toast.error(
         err instanceof Error && err.message
@@ -68,6 +73,10 @@ export const LotReserveDialog = ({ lot, open, onOpenChange, projectName }: LotRe
     onOpenChange(v);
     if (!v) {
       setDone(false);
+      setName('');
+      setEmail('');
+      setPhone('');
+      setRut('');
       setNotes('');
     }
   };
@@ -78,15 +87,13 @@ export const LotReserveDialog = ({ lot, open, onOpenChange, projectName }: LotRe
         <DialogHeader>
           <DialogTitle>Reservar lote {lot?.lot_number ?? ''}</DialogTitle>
           <DialogDescription>
-            {projectName} · La reserva queda vigente 48 horas mientras se confirma con el equipo
-            comercial.
+            {projectName} · La reserva queda vigente 48 horas mientras se confirma con el equipo comercial.
           </DialogDescription>
         </DialogHeader>
 
         {done ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            ✅ Tu reserva del lote {lot?.lot_number ?? ''} quedó registrada. Te contactaremos para
-            coordinar el pago de la señal.
+            ✅ Tu reserva del lote {lot?.lot_number ?? ''} quedó registrada. Te contactaremos para coordinar el pago de la señal.
           </p>
         ) : (
           <div className="space-y-3">
@@ -97,12 +104,7 @@ export const LotReserveDialog = ({ lot, open, onOpenChange, projectName }: LotRe
               </div>
               <div>
                 <Label htmlFor="res-email">Email *</Label>
-                <Input
-                  id="res-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <Input id="res-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               <div>
                 <Label htmlFor="res-phone">Teléfono</Label>
@@ -115,12 +117,7 @@ export const LotReserveDialog = ({ lot, open, onOpenChange, projectName }: LotRe
             </div>
             <div>
               <Label htmlFor="res-notes">Comentarios</Label>
-              <Textarea
-                id="res-notes"
-                rows={3}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
+              <Textarea id="res-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
             <Button className="w-full min-h-11" disabled={!canSubmit} onClick={submit}>
               {submitting ? 'Registrando…' : 'Confirmar reserva'}
