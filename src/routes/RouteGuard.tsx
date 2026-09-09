@@ -5,6 +5,7 @@ import { useSmartRedirect } from "@/hooks/useSmartRedirect";
 import BuyerLayout from "@/components/layouts/BuyerLayout";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import ExecutiveTodayPanel from "@/components/executive/ExecutiveTodayPanel";
+import ExecutiveCommercialDesk from "@/components/executive/ExecutiveCommercialDesk";
 import { PageLoader } from "./routeUtils";
 import type { RouteAccess, RouteLayout } from "./routeManifest";
 
@@ -70,8 +71,9 @@ const RouteGuard = ({ access, layout }: RouteGuardProps) => {
     return (
       <DashboardLayout>
         {location.pathname === "/asesor/executive" && (
-          <div className="px-4 pt-4 sm:px-6 sm:pt-6">
+          <div className="space-y-4 px-4 pt-4 sm:px-6 sm:pt-6">
             <ExecutiveTodayPanel />
+            <ExecutiveCommercialDesk />
           </div>
         )}
         <Outlet />
