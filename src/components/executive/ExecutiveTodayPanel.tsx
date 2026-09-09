@@ -8,6 +8,7 @@ import { useVisits } from '@/hooks/useVisits';
 import { useExpiringSalesQuotes } from '@/hooks/useSalesQuotes';
 import { useReservations } from '@/hooks/useReservations';
 import { useAuth } from '@/hooks/useAuth';
+import { useProjects } from '@/hooks/useProjects';
 
 const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const endOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
@@ -19,6 +20,7 @@ const inRange = (iso: string | null | undefined, start: Date, end: Date) => {
 
 const ExecutiveTodayPanel = () => {
   const { user } = useAuth();
+  const { projects } = useProjects();
   const { visits } = useVisits();
   const { data: quotes = [] } = useExpiringSalesQuotes(72);
   const { data: reservations = [] } = useReservations();
@@ -28,6 +30,11 @@ const ExecutiveTodayPanel = () => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  const ownedProjectIds = useMemo(
+    () => new Set(projects.filter((project) => project.user_id === user?.id).map((project) => project.id)),
+    [projects, user?.id],
+  );
 
   const priorities = useMemo(() => {
     const todayStart = startOfDay(now);
@@ -46,12 +53,12 @@ const ExecutiveTodayPanel = () => {
       .sort((a, b) => new Date(a.valid_until).getTime() - new Date(b.valid_until).getTime());
 
     const pendingReservations = (reservations as any[])
-      .filter((reservation) => reservation.lots?.projects?.user_id === user?.id)
+      .filter((reservation) => ownedProjectIds.has(reservation.lots?.project_id))
       .filter((reservation) => ['pending_payment', 'paid'].includes(reservation.status))
       .sort((a, b) => new Date(a.expires_at ?? a.created_at ?? 0).getTime() - new Date(b.expires_at ?? b.created_at ?? 0).getTime());
 
     return { todayVisits, overdueFollowUps, expiringQuotes, pendingReservations };
-  }, [visits, quotes, reservations, now, user?.id]);
+  }, [visits, quotes, reservations, now, ownedProjectIds]);
 
   const total = priorities.todayVisits.length + priorities.overdueFollowUps.length + priorities.expiringQuotes.length + priorities.pendingReservations.length;
 
