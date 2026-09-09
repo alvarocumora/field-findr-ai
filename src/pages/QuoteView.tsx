@@ -16,7 +16,12 @@ const QuoteView = () => {
   if (isLoading) return <PublicLayout><p className="py-24 text-center">Cargando cotización…</p></PublicLayout>;
   if (!quote) return <PublicLayout><p className="py-24 text-center">Cotización no encontrada o aún no enviada.</p></PublicLayout>;
 
-  const expired = quote.status === 'expired' || new Date(quote.valid_until) < new Date();
+  const inactiveStatus = ['expired', 'cancelled', 'rejected'].includes(quote.status);
+  const inactive = inactiveStatus || new Date(quote.valid_until) < new Date();
+  const statusLabel = inactive
+    ? quote.status === 'cancelled' ? 'Cancelada' : quote.status === 'rejected' ? 'Rechazada' : 'Vencida'
+    : quote.status === 'accepted' ? 'Aceptada' : 'Vigente';
+  const authReturn = `/cotizacion/${token}`;
 
   return (
     <PublicLayout>
@@ -29,7 +34,7 @@ const QuoteView = () => {
           </div>
           <CardHeader className="flex-row items-start justify-between gap-4">
             <div><CardTitle>{quote.lot_label || 'Parcela seleccionada'}</CardTitle>{quote.lot_area && <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="h-4 w-4" />{quote.lot_area.toLocaleString('es-CL')} m²</p>}</div>
-            <Badge variant={expired ? 'destructive' : 'default'}>{expired ? 'Vencida' : quote.status === 'accepted' ? 'Aceptada' : 'Vigente'}</Badge>
+            <Badge variant={inactive ? 'destructive' : 'default'}>{statusLabel}</Badge>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="rounded-xl bg-muted/50 p-5">
@@ -39,9 +44,19 @@ const QuoteView = () => {
             </div>
             <p className="flex items-center gap-2 text-sm text-muted-foreground"><CalendarClock className="h-4 w-4" />Válida hasta {new Date(quote.valid_until).toLocaleDateString('es-CL')}</p>
             {quote.notes && <p className="whitespace-pre-line text-sm text-muted-foreground">{quote.notes}</p>}
+            {inactive && <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">Esta cotización ya no admite nuevas visitas ni reservas.</p>}
             <div className="flex flex-wrap gap-2 print:hidden">
-              <Button asChild disabled={expired}><Link to={`/agendar?quote=${token}`}><CalendarClock className="mr-2 h-4 w-4" />Solicitar visita</Link></Button>
-              <Button variant="outline" asChild disabled={expired}><Link to={`/auth?quote=${token}`}><CheckCircle2 className="mr-2 h-4 w-4" />Quiero reservar</Link></Button>
+              {inactive ? (
+                <>
+                  <Button disabled><CalendarClock className="mr-2 h-4 w-4" />Solicitar visita</Button>
+                  <Button variant="outline" disabled><CheckCircle2 className="mr-2 h-4 w-4" />Quiero reservar</Button>
+                </>
+              ) : (
+                <>
+                  <Button asChild><Link to={`/agendar?quote=${token}`}><CalendarClock className="mr-2 h-4 w-4" />Solicitar visita</Link></Button>
+                  <Button variant="outline" asChild><Link to={`/auth?redirect=${encodeURIComponent(authReturn)}`}><CheckCircle2 className="mr-2 h-4 w-4" />Quiero reservar</Link></Button>
+                </>
+              )}
               <Button variant="ghost" onClick={() => window.print()}><Download className="mr-2 h-4 w-4" />Guardar PDF</Button>
             </div>
           </CardContent>
