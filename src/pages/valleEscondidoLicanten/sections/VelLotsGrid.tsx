@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, ArrowUpDown, MapPin, MessageSquare, Crosshair, FileDown } from 'lucide-react';
+import { Search, ArrowUpDown, MapPin, MessageSquare, Crosshair, FileDown, CalendarCheck, ShoppingCart } from 'lucide-react';
 import { type VelLotStatus } from '../data/lots';
 import { useVelLots } from '../data/useVelLots';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -11,6 +11,9 @@ import { VEL_PROJECT } from '../data/project';
 import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { toast } from 'sonner';
+import VisitScheduleDialog from '@/components/visits/VisitScheduleDialog';
+import { LotReserveDialog } from '@/components/sales/LotReserveDialog';
+import type { SalesLot } from '@/components/sales/LotSalesSheet';
 
 type SortKey = 'num' | 'area_asc' | 'area_desc' | 'price_asc' | 'price_desc';
 
@@ -44,6 +47,8 @@ export default function VelLotsGrid() {
   const [visible, setVisible] = useState(PAGE);
   const [leadLot, setLeadLot] = useState<{ id: string; number: string; status: VelLotStatus } | null>(null);
   const [pdfLot, setPdfLot] = useState<string | null>(null);
+  const [visitLot, setVisitLot] = useState<{ id: string; number: string } | null>(null);
+  const [reserveLot, setReserveLot] = useState<SalesLot | null>(null);
   const { token: mapboxToken } = useMapboxToken();
 
   const downloadFicha = async (lot: (typeof lots)[number]) => {
