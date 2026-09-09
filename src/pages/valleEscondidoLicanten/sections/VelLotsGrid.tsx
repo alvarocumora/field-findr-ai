@@ -51,6 +51,14 @@ export default function VelLotsGrid() {
   const [reserveLot, setReserveLot] = useState<SalesLot | null>(null);
   const { token: mapboxToken } = useMapboxToken();
 
+  const toSalesLot = (lot: (typeof lots)[number]): SalesLot => ({
+    id: lot.id,
+    lot_number: lot.lot_number,
+    status: lot.status,
+    area: lot.area_m2,
+    price: lot.price_clp || null,
+  });
+
   const downloadFicha = async (lot: (typeof lots)[number]) => {
     setPdfLot(lot.id);
     try {
@@ -129,37 +137,26 @@ export default function VelLotsGrid() {
           className="mb-10 flex flex-col gap-3 md:flex-row md:items-end md:justify-between"
         >
           <div>
-            <div className="hue-eyebrow mb-3">
-              Grilla de lotes · {filtered.length} de {counts.all} visibles
-            </div>
+            <div className="hue-eyebrow mb-3">Grilla de lotes · {filtered.length} de {counts.all} visibles</div>
             <h2 className="serif text-[clamp(2rem,4.5vw,3rem)] leading-tight">
               Filtra, ordena <span className="italic text-[var(--hue-bone)]/55">y elige tu parcela.</span>
             </h2>
           </div>
           <p className="max-w-md text-[13px] text-[var(--hue-bone)]/55">
-            Filtros sincronizados con el masterplan. Pasa el mouse sobre una tarjeta para
-            resaltarla en el mapa, o usa <Crosshair className="inline h-3 w-3" /> para centrarlo.
+            Filtros sincronizados con el masterplan. Pasa el mouse sobre una tarjeta para resaltarla en el mapa, o usa <Crosshair className="inline h-3 w-3" /> para centrarlo.
           </p>
         </motion.div>
 
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => { setOnlyStatus('all'); setVisible(PAGE); }}
-              className={chipClasses(allActive)}
-            >
+            <button onClick={() => { setOnlyStatus('all'); setVisible(PAGE); }} className={chipClasses(allActive)}>
               Todas <span className="tabular-nums opacity-70">{counts.all}</span>
             </button>
             {ALL_STATUSES.map((k) => {
               const active = activeStatus.has(k) && !allActive;
               return (
-                <button
-                  key={k}
-                  onClick={() => { toggleStatus(k); setVisible(PAGE); }}
-                  className={chipClasses(active)}
-                >
-                  {STATUS_LABEL[k]}
-                  <span className="tabular-nums opacity-70">{counts[k]}</span>
+                <button key={k} onClick={() => { toggleStatus(k); setVisible(PAGE); }} className={chipClasses(active)}>
+                  {STATUS_LABEL[k]} <span className="tabular-nums opacity-70">{counts[k]}</span>
                 </button>
               );
             })}
@@ -193,19 +190,14 @@ export default function VelLotsGrid() {
         </div>
 
         {filtered.length === 0 ? (
-          <div className="rounded-sm border border-white/10 bg-white/[0.02] p-12 text-center text-[var(--hue-bone)]/60">
-            No hay parcelas que coincidan con tu filtro.
-          </div>
+          <div className="rounded-sm border border-white/10 bg-white/[0.02] p-12 text-center text-[var(--hue-bone)]/60">No hay parcelas que coincidan con tu filtro.</div>
         ) : (
           <>
             <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
               {shown.map((l) => {
-                // Sin ficha publicada (lotes reservados) enlazamos al proyecto,
-                // no a una ruta inexistente que caía en NotFound.
-                const href = l.listing_id
-                  ? `/propiedad/${l.listing_id}`
-                  : `/proyecto/${VEL_PROJECT.id}`;
+                const href = l.listing_id ? `/propiedad/${l.listing_id}` : `/proyecto/${VEL_PROJECT.id}`;
                 const isHovered = hoveredLotId === l.id;
+                const available = l.status === 'available';
                 return (
                   <div
                     id={`vel-lot-${l.id}`}
@@ -219,73 +211,51 @@ export default function VelLotsGrid() {
                     }`}
                   >
                     <div className="flex items-start justify-between">
-                      <div className="serif text-xl font-light text-[var(--hue-bone)]">
-                        Lote {l.lot_number}
-                      </div>
-                      <span className={`text-[9px] tracking-[0.18em] uppercase rounded border px-1.5 py-0.5 ${STATUS_TONE[l.status]}`}>
-                        {STATUS_LABEL[l.status]}
-                      </span>
+                      <div className="serif text-xl font-light text-[var(--hue-bone)]">Lote {l.lot_number}</div>
+                      <span className={`text-[9px] tracking-[0.18em] uppercase rounded border px-1.5 py-0.5 ${STATUS_TONE[l.status]}`}>{STATUS_LABEL[l.status]}</span>
                     </div>
-                    <div className="mt-3 text-[11px] text-[var(--hue-bone)]/55 flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> Licantén · Maule
-                    </div>
+                    <div className="mt-3 text-[11px] text-[var(--hue-bone)]/55 flex items-center gap-1"><MapPin className="h-3 w-3" /> Licantén · Maule</div>
                     <div className="mt-3 space-y-1">
                       <div className="flex items-baseline justify-between text-[11px]">
                         <span className="text-[var(--hue-bone)]/50">Superficie</span>
-                        <span className="tabular-nums text-[var(--hue-bone)]">
-                          {l.area_m2.toLocaleString('es-CL')} m²
-                        </span>
+                        <span className="tabular-nums text-[var(--hue-bone)]">{l.area_m2.toLocaleString('es-CL')} m²</span>
                       </div>
                       <div className="flex items-baseline justify-between text-[11px]">
                         <span className="text-[var(--hue-bone)]/50">Precio</span>
-                        <span className="tabular-nums font-medium text-[var(--hue-bone)]">
-                          {l.price_clp ? `$${l.price_clp.toLocaleString('es-CL')}` : 'Consultar'}
-                        </span>
+                        <span className="tabular-nums font-medium text-[var(--hue-bone)]">{l.price_clp ? `$${l.price_clp.toLocaleString('es-CL')}` : 'Consultar'}</span>
                       </div>
                       {l.price_clp > 0 && (
                         <div className="flex items-baseline justify-between text-[11px]">
                           <span className="text-[var(--hue-bone)]/50">Precio/m²</span>
-                          <span className="tabular-nums text-[var(--hue-bone)]/70">
-                            ${Math.round(l.price_clp / l.area_m2).toLocaleString('es-CL')}
-                          </span>
+                          <span className="tabular-nums text-[var(--hue-bone)]/70">${Math.round(l.price_clp / l.area_m2).toLocaleString('es-CL')}</span>
                         </div>
                       )}
                     </div>
+
+                    {available && (
+                      <div className="mt-3 grid grid-cols-2 gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setVisitLot({ id: l.id, number: l.lot_number })}
+                          className="inline-flex min-h-9 items-center justify-center gap-1 rounded-sm border border-white/15 bg-white/[0.03] px-2 text-[10px] uppercase tracking-[0.08em] text-[var(--hue-bone)] transition hover:border-[var(--hue-amber)]/50"
+                        >
+                          <CalendarCheck className="h-3 w-3" /> Visitar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setReserveLot(toSalesLot(l))}
+                          className="inline-flex min-h-9 items-center justify-center gap-1 rounded-sm border border-[var(--hue-amber)]/50 bg-[var(--hue-amber)]/10 px-2 text-[10px] uppercase tracking-[0.08em] text-[var(--hue-bone)] transition hover:bg-[var(--hue-amber)]/20"
+                        >
+                          <ShoppingCart className="h-3 w-3" /> Reservar
+                        </button>
+                      </div>
+                    )}
+
                     <div className="mt-3 flex items-center gap-1.5 border-t border-white/5 pt-2">
-                      <Link
-                        to={href}
-                        className="flex-1 text-[10px] tracking-[0.18em] uppercase text-[var(--hue-amber)] hover:text-[var(--hue-bone)] transition"
-                      >
-                        Ficha →
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => handleFocusOnMap(l.id)}
-                        className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition"
-                        title="Ver en el mapa"
-                        aria-label="Ver en el mapa"
-                      >
-                        <Crosshair className="h-3 w-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setLeadLot({ id: l.id, number: l.lot_number, status: l.status })}
-                        className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition"
-                        title="Consultar por este lote"
-                        aria-label="Consultar por este lote"
-                      >
-                        <MessageSquare className="h-3 w-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => downloadFicha(l)}
-                        disabled={pdfLot === l.id}
-                        className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 transition hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] disabled:opacity-40"
-                        title="Descargar ficha PDF con QR"
-                        aria-label="Descargar ficha PDF con QR"
-                      >
-                        <FileDown className="h-3 w-3" />
-                      </button>
+                      <Link to={href} className="flex-1 text-[10px] tracking-[0.18em] uppercase text-[var(--hue-amber)] hover:text-[var(--hue-bone)] transition">Ficha →</Link>
+                      <button type="button" onClick={() => handleFocusOnMap(l.id)} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition" title="Ver en el mapa" aria-label="Ver en el mapa"><Crosshair className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => setLeadLot({ id: l.id, number: l.lot_number, status: l.status })} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition" title="Consultar por este lote" aria-label="Consultar por este lote"><MessageSquare className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => downloadFicha(l)} disabled={pdfLot === l.id} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 transition hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] disabled:opacity-40" title="Descargar ficha PDF con QR" aria-label="Descargar ficha PDF con QR"><FileDown className="h-3 w-3" /></button>
                     </div>
                   </div>
                 );
@@ -294,12 +264,7 @@ export default function VelLotsGrid() {
 
             {visible < filtered.length && (
               <div className="mt-8 flex justify-center">
-                <button
-                  onClick={() => setVisible((v) => v + PAGE)}
-                  className="hue-pill hover:bg-white/8 transition"
-                >
-                  Cargar más ({filtered.length - visible} restantes)
-                </button>
+                <button onClick={() => setVisible((v) => v + PAGE)} className="hue-pill hover:bg-white/8 transition">Cargar más ({filtered.length - visible} restantes)</button>
               </div>
             )}
           </>
@@ -308,11 +273,7 @@ export default function VelLotsGrid() {
 
       <Dialog open={!!leadLot} onOpenChange={(o) => !o && setLeadLot(null)}>
         <DialogContent className="max-w-lg bg-[#0d1b12] border-white/10 text-[var(--hue-bone)]">
-          <DialogHeader>
-            <DialogTitle className="serif text-2xl">
-              Consultar por Lote {leadLot?.number}
-            </DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle className="serif text-2xl">Consultar por Lote {leadLot?.number}</DialogTitle></DialogHeader>
           {leadLot && (
             <VelLeadForm
               lotId={leadLot.id}
@@ -325,6 +286,22 @@ export default function VelLotsGrid() {
           )}
         </DialogContent>
       </Dialog>
+
+      <VisitScheduleDialog
+        open={!!visitLot}
+        onOpenChange={(open) => !open && setVisitLot(null)}
+        projectId={VEL_PROJECT.id}
+        projectName={VEL_PROJECT.name}
+        lotId={visitLot?.id}
+        lotNumber={visitLot?.number}
+      />
+
+      <LotReserveDialog
+        lot={reserveLot}
+        open={!!reserveLot}
+        onOpenChange={(open) => !open && setReserveLot(null)}
+        projectName={VEL_PROJECT.name}
+      />
     </section>
   );
 }

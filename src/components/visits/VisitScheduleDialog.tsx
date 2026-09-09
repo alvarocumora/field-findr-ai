@@ -36,6 +36,11 @@ const MODES = [
   { value: 'virtual', label: 'Videollamada' },
 ];
 
+const toLocalDateInput = (value: Date) => {
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
+};
+
 /**
  * Agendamiento público de visitas: escribe interesado + visita programada con
  * la función `create_public_visit_request`, sin lectura de tablas protegidas.
@@ -59,9 +64,9 @@ export const VisitScheduleDialog = ({
   const [done, setDone] = useState(false);
 
   const minDate = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return d.toISOString().slice(0, 10);
+    const nextDay = new Date();
+    nextDay.setDate(nextDay.getDate() + 1);
+    return toLocalDateInput(nextDay);
   }, []);
 
   const canSubmit =

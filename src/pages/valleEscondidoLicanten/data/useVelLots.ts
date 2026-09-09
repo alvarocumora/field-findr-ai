@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { VEL_LOTS, type VelLot, type VelLotStatus } from './lots';
 import { VEL_PROJECT } from './project';
@@ -21,6 +21,8 @@ type PublicLot = {
   listing_id: string | null;
 };
 
+const QUERY_KEY = ['vel-public-lots'] as const;
+
 const toStatus = (s: string | null | undefined): VelLotStatus | null => {
   switch ((s ?? '').toLowerCase()) {
     case 'available':
@@ -40,9 +42,12 @@ const toStatus = (s: string | null | undefined): VelLotStatus | null => {
 };
 
 export const useVelLots = () => {
+  const queryClient = useQueryClient();
   const { data: live, isLoading } = useQuery({
-    queryKey: ['vel-public-lots'],
-    staleTime: 60_000,
+    queryKey: QUERY_KEY,
+    staleTime: 15_000,
+    refetchInterval: 20_000,
+    refetchIntervalInBackground: true,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_public_lots', {
         p_project_id: VEL_PROJECT.id,
@@ -51,6 +56,28 @@ export const useVelLots = () => {
       return (data ?? []) as unknown as PublicLot[];
     },
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`vel-lots-${VEL_PROJECT.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'lots',
+          filter: `project_id=eq.${VEL_PROJECT.id}`,
+        },
+        () => {
+          void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const lots = useMemo<VelLot[]>(() => {
     if (!live?.length) return VEL_LOTS;

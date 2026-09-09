@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, MapPin } from 'lucide-react';
+import { CalendarCheck, ChevronDown, MapPin, ShoppingCart } from 'lucide-react';
+import VisitScheduleDialog from '@/components/visits/VisitScheduleDialog';
 import { VEL_PROJECT } from '../data/project';
 import heroImg from '@/assets/valle-escondido-licanten/vel-valle.jpg';
 
 export default function VelHero() {
+  const [visitOpen, setVisitOpen] = useState(false);
+
   return (
     <section className="relative h-screen min-h-[680px] w-full overflow-hidden">
       <motion.div
@@ -42,27 +46,22 @@ export default function VelHero() {
           </h1>
           <div className="hue-divider my-6 max-w-md" />
           <p className="serif text-[clamp(1.2rem,3vw,1.9rem)] italic font-light text-[var(--hue-bone)]/85">
-            {VEL_PROJECT.totalLots} parcelas sobre {VEL_PROJECT.totalAreaHa} hectáreas, camino al lago
-            Vichuquén
+            {VEL_PROJECT.totalLots} parcelas sobre {VEL_PROJECT.totalAreaHa} hectáreas, camino al lago Vichuquén
           </p>
           <p className="mt-6 inline-flex items-baseline gap-3 rounded-sm border border-[var(--hue-amber)]/40 bg-[var(--hue-amber)]/10 px-5 py-3">
-            <span className="text-[10px] uppercase tracking-[0.28em] text-[var(--hue-bone)]/70">
-              Parcelas desde
-            </span>
+            <span className="text-[10px] uppercase tracking-[0.28em] text-[var(--hue-bone)]/70">Parcelas desde</span>
             <span className="serif text-[clamp(1.5rem,4vw,2.4rem)] font-light leading-none text-[var(--hue-bone)]">
               ${VEL_PROJECT.priceFromClp.toLocaleString('es-CL')}
             </span>
           </p>
 
           <div className="mt-10 flex flex-wrap gap-3">
-            <a href="#masterplan" className="hue-pill transition hover:bg-white/10">
-              Ver plano interactivo
-            </a>
+            <a href="#masterplan" className="hue-pill transition hover:bg-white/10">Ver plano interactivo</a>
+            <button type="button" onClick={() => setVisitOpen(true)} className="hue-pill transition hover:bg-white/10">
+              <CalendarCheck className="h-3.5 w-3.5" /> Agendar visita
+            </button>
             <a href="#lotes" className="hue-pill transition hover:bg-white/10">
-              Explorar {VEL_PROJECT.availableLots} parcelas disponibles
-            </a>
-            <a href="#contacto" className="hue-pill transition hover:bg-white/10">
-              Agendar visita
+              <ShoppingCart className="h-3.5 w-3.5" /> Reservar parcela
             </a>
           </div>
         </motion.div>
@@ -81,9 +80,7 @@ export default function VelHero() {
             ].map(([k, v]) => (
               <div key={k}>
                 <div className="serif text-3xl font-light md:text-4xl">{v}</div>
-                <div className="mt-1 text-[10px] uppercase tracking-[0.28em] text-[var(--hue-bone)]/55">
-                  {k}
-                </div>
+                <div className="mt-1 text-[10px] uppercase tracking-[0.28em] text-[var(--hue-bone)]/55">{k}</div>
               </div>
             ))}
           </div>
@@ -97,9 +94,14 @@ export default function VelHero() {
         </motion.div>
       </div>
 
-      <div className="absolute bottom-3 right-4 z-10 rounded-sm bg-black/50 px-2 py-1 text-[9px] uppercase tracking-[0.2em] text-white/60">
-        Imagen referencial
-      </div>
+      <div className="absolute bottom-3 right-4 z-10 rounded-sm bg-black/50 px-2 py-1 text-[9px] uppercase tracking-[0.2em] text-white/60">Imagen referencial</div>
+
+      <VisitScheduleDialog
+        open={visitOpen}
+        onOpenChange={setVisitOpen}
+        projectId={VEL_PROJECT.id}
+        projectName={VEL_PROJECT.name}
+      />
     </section>
   );
 }

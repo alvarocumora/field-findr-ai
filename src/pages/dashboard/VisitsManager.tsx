@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { format, isAfter } from 'date-fns';
+import { addDays, addWeeks, endOfDay, format, isAfter, startOfDay, startOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarClock, FileText, MapPin, Plus, ShoppingCart, User } from 'lucide-react';
+import { CalendarClock, ChevronLeft, ChevronRight, FileText, MapPin, Plus, ShoppingCart, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,27 +31,16 @@ import {
 import { useLeads } from '@/hooks/useLeads';
 import { useProjects } from '@/hooks/useProjects';
 import { useLots } from '@/hooks/useLots';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 const emptyForm = {
-  visitor_name: '',
-  visitor_email: '',
-  visitor_phone: '',
-  date: '',
-  time: '',
-  duration_minutes: 60,
-  mode: 'presencial',
-  lead_id: '',
-  project_id: '',
-  lot_id: '',
-  notes: '',
+  visitor_name: '', visitor_email: '', visitor_phone: '', date: '', time: '',
+  duration_minutes: 60, mode: 'presencial', lead_id: '', project_id: '', lot_id: '', notes: '',
 };
 
 const emptyResult = {
-  outcome: '' as VisitOutcome | '',
-  result_notes: '',
-  next_action: '' as VisitNextAction | '',
-  follow_up_at: '',
+  outcome: '' as VisitOutcome | '', result_notes: '', next_action: '' as VisitNextAction | '', follow_up_at: '',
 };
 
 const toLocalDateTimeInput = (iso: string) => {
@@ -61,6 +50,7 @@ const toLocalDateTimeInput = (iso: string) => {
 };
 
 const VisitsManager = () => {
+  const { user } = useAuth();
   const { visits, isLoading, createVisit, updateVisit } = useVisits();
   const { leads } = useLeads();
   const { projects } = useProjects();
@@ -70,29 +60,22 @@ const VisitsManager = () => {
   const [form, setForm] = useState(emptyForm);
   const [resultVisit, setResultVisit] = useState<Visit | null>(null);
   const [result, setResult] = useState(emptyResult);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [projectFilter, setProjectFilter] = useState('all');
+  const [advisorFilter, setAdvisorFilter] = useState('all');
 
   useEffect(() => {
     const projectId = searchParams.get('project') || '';
     const lotId = searchParams.get('lot') || '';
     if (!projectId && !lotId) return;
-
     const lot = lotId ? lots.find((item) => item.id === lotId) : undefined;
-    setForm((current) => ({
-      ...current,
-      project_id: projectId || lot?.project_id || current.project_id,
-      lot_id: lotId || current.lot_id,
-    }));
+    setForm((current) => ({ ...current, project_id: projectId || lot?.project_id || current.project_id, lot_id: lotId || current.lot_id }));
     setOpen(true);
     setSearchParams({}, { replace: true });
   }, [lots, searchParams, setSearchParams]);
 
-  const set = (k: keyof typeof emptyForm, v: string | number) =>
-    setForm((f) => ({ ...f, [k]: v }));
-
-  const projectLots = useMemo(
-    () => lots.filter((lot) => !form.project_id || lot.project_id === form.project_id),
-    [lots, form.project_id],
-  );
+  const set = (k: keyof typeof emptyForm, v: string | number) => setForm((f) => ({ ...f, [k]: v }));
+  const projectLots = useMemo(() => lots.filter((lot) => !form.project_id || lot.project_id === form.project_id), [lots, form.project_id]);
 
   const { upcoming, past } = useMemo(() => {
     const now = new Date();
@@ -102,20 +85,24 @@ const VisitsManager = () => {
     };
   }, [visits]);
 
+  const advisors = useMemo(() => Array.from(new Set(visits.map((visit) => visit.user_id).filter(Boolean))) as string[], [visits]);
+  const weekStart = useMemo(() => startOfWeek(addWeeks(new Date(), weekOffset), { weekStartsOn: 1 }), [weekOffset]);
+  const weekDays = useMemo(() => Array.from({ length: 7 }, (_, index) => addDays(weekStart, index)), [weekStart]);
+  const weeklyVisits = useMemo(() => visits.filter((visit) => {
+    const date = new Date(visit.scheduled_at);
+    const inWeek = date >= startOfDay(weekStart) && date <= endOfDay(addDays(weekStart, 6));
+    const projectMatches = projectFilter === 'all' || visit.project_id === projectFilter;
+    const advisorMatches = advisorFilter === 'all' || visit.user_id === advisorFilter;
+    return inWeek && projectMatches && advisorMatches && !['cancelled', 'rescheduled'].includes(visit.status ?? '');
+  }), [visits, weekStart, projectFilter, advisorFilter]);
+
   const submit = async () => {
     if (!form.visitor_name.trim() || !form.date || !form.time) return;
     await createVisit.mutateAsync({
-      visitor_name: form.visitor_name.trim(),
-      visitor_email: form.visitor_email || null,
-      visitor_phone: form.visitor_phone || null,
-      scheduled_at: new Date(`${form.date}T${form.time}`).toISOString(),
-      duration_minutes: Number(form.duration_minutes) || 60,
-      mode: form.mode,
-      status: 'scheduled',
-      lead_id: form.lead_id || null,
-      project_id: form.project_id || null,
-      lot_id: form.lot_id || null,
-      notes: form.notes || null,
+      visitor_name: form.visitor_name.trim(), visitor_email: form.visitor_email || null,
+      visitor_phone: form.visitor_phone || null, scheduled_at: new Date(`${form.date}T${form.time}`).toISOString(),
+      duration_minutes: Number(form.duration_minutes) || 60, mode: form.mode, status: 'scheduled',
+      lead_id: form.lead_id || null, project_id: form.project_id || null, lot_id: form.lot_id || null, notes: form.notes || null,
     });
     setForm(emptyForm);
     setOpen(false);
@@ -124,9 +111,7 @@ const VisitsManager = () => {
   const openResult = (visit: Visit) => {
     setResultVisit(visit);
     setResult({
-      outcome: visit.outcome ?? '',
-      result_notes: visit.result_notes ?? '',
-      next_action: visit.next_action ?? '',
+      outcome: visit.outcome ?? '', result_notes: visit.result_notes ?? '', next_action: visit.next_action ?? '',
       follow_up_at: visit.follow_up_at ? toLocalDateTimeInput(visit.follow_up_at) : '',
     });
   };
@@ -134,11 +119,8 @@ const VisitsManager = () => {
   const saveResult = async () => {
     if (!resultVisit || !result.outcome) return;
     await updateVisit.mutateAsync({
-      id: resultVisit.id,
-      status: 'done',
-      outcome: result.outcome,
-      result_notes: result.result_notes.trim() || null,
-      next_action: result.next_action || null,
+      id: resultVisit.id, status: 'done', outcome: result.outcome,
+      result_notes: result.result_notes.trim() || null, next_action: result.next_action || null,
       follow_up_at: result.follow_up_at ? new Date(result.follow_up_at).toISOString() : null,
       completed_at: resultVisit.completed_at ?? new Date().toISOString(),
     });
@@ -159,32 +141,17 @@ const VisitsManager = () => {
         </div>
         <div className="min-w-[12rem] flex-1">
           <p className="flex items-center gap-1.5 font-medium"><User className="h-3.5 w-3.5 text-muted-foreground" />{v.visitor_name}</p>
-          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5" />{project?.name ?? 'Sin proyecto'}{lot ? ` · ${lot.name || `Lote ${lot.lot_number}`}` : ''} · {v.mode}
-          </p>
-          {v.outcome && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              Resultado: {VISIT_OUTCOMES.find((item) => item.value === v.outcome)?.label ?? v.outcome}
-              {nextActionLabel ? ` · Próxima acción: ${nextActionLabel}` : ''}
-            </p>
-          )}
+          <p className="flex items-center gap-1.5 text-sm text-muted-foreground"><MapPin className="h-3.5 w-3.5" />{project?.name ?? 'Sin proyecto'}{lot ? ` · ${lot.name || `Lote ${lot.lot_number}`}` : ''} · {v.mode}</p>
+          {v.outcome && <p className="mt-1 text-xs text-muted-foreground">Resultado: {VISIT_OUTCOMES.find((item) => item.value === v.outcome)?.label ?? v.outcome}{nextActionLabel ? ` · Próxima acción: ${nextActionLabel}` : ''}</p>}
         </div>
         <Badge variant="outline" className={cn('border', st.className)}>{st.label}</Badge>
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={() => openResult(v)}>
-            {v.status === 'done' || v.outcome ? 'Editar resultado' : 'Registrar resultado'}
-          </Button>
-          {v.lot_id && v.next_action === 'quote' && (
-            <Button size="sm" variant="outline" asChild><Link to={`/asesor/executive?lot=${encodeURIComponent(v.lot_id)}&action=quote`}><FileText className="mr-1.5 h-4 w-4" />Cotizar</Link></Button>
-          )}
-          {v.lot_id && v.next_action === 'reserve' && (
-            <Button size="sm" asChild><Link to={`/asesor/executive?lot=${encodeURIComponent(v.lot_id)}&action=reserve`}><ShoppingCart className="mr-1.5 h-4 w-4" />Reservar</Link></Button>
-          )}
+          <Button size="sm" variant="outline" onClick={() => openResult(v)}>{v.status === 'done' || v.outcome ? 'Editar resultado' : 'Registrar resultado'}</Button>
+          {v.lot_id && v.next_action === 'quote' && <Button size="sm" variant="outline" asChild><Link to={`/asesor/executive?lot=${encodeURIComponent(v.lot_id)}&action=quote`}><FileText className="mr-1.5 h-4 w-4" />Cotizar</Link></Button>}
+          {v.lot_id && v.next_action === 'reserve' && <Button size="sm" asChild><Link to={`/asesor/executive?lot=${encodeURIComponent(v.lot_id)}&action=reserve`}><ShoppingCart className="mr-1.5 h-4 w-4" />Reservar</Link></Button>}
           <Select value={v.status} onValueChange={(status) => updateVisit.mutate({ id: v.id, status })}>
             <SelectTrigger className="w-[10.5rem]" aria-label={`Estado de la visita de ${v.visitor_name}`}><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {Object.entries(VISIT_STATUS).map(([k, cfg]) => <SelectItem key={k} value={k}>{cfg.label}</SelectItem>)}
-            </SelectContent>
+            <SelectContent>{Object.entries(VISIT_STATUS).map(([k, cfg]) => <SelectItem key={k} value={k}>{cfg.label}</SelectItem>)}</SelectContent>
           </Select>
         </div>
       </div>
@@ -209,35 +176,10 @@ const VisitsManager = () => {
               <div><Label htmlFor="v-date">Fecha *</Label><Input id="v-date" type="date" value={form.date} onChange={(e) => set('date', e.target.value)} /></div>
               <div><Label htmlFor="v-time">Hora *</Label><Input id="v-time" type="time" value={form.time} onChange={(e) => set('time', e.target.value)} /></div>
               <div><Label htmlFor="v-dur">Duración (min)</Label><Input id="v-dur" type="number" min={15} step={15} value={form.duration_minutes} onChange={(e) => set('duration_minutes', Number(e.target.value))} /></div>
-              <div>
-                <Label>Modalidad</Label>
-                <Select value={form.mode} onValueChange={(v) => set('mode', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{VISIT_MODES.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent></Select>
-              </div>
-              <div>
-                <Label>Lead</Label>
-                <Select value={form.lead_id} onValueChange={(v) => set('lead_id', v)}><SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger><SelectContent>{leads.map((l) => <SelectItem key={l.id} value={l.id}>{l.first_name} {l.last_name ?? ''}</SelectItem>)}</SelectContent></Select>
-              </div>
-              <div>
-                <Label>Proyecto</Label>
-                <Select value={form.project_id} onValueChange={(v) => { set('project_id', v); set('lot_id', ''); }}><SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger><SelectContent>{projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select>
-              </div>
-              <div className="sm:col-span-2">
-                <Label>Parcela</Label>
-                <Select
-                  value={form.lot_id}
-                  onValueChange={(value) => {
-                    const selectedLot = lots.find((lot) => lot.id === value);
-                    setForm((current) => ({
-                      ...current,
-                      lot_id: value,
-                      project_id: selectedLot?.project_id || current.project_id,
-                    }));
-                  }}
-                >
-                  <SelectTrigger><SelectValue placeholder="Seleccionar parcela" /></SelectTrigger>
-                  <SelectContent>{projectLots.map((lot) => <SelectItem key={lot.id} value={lot.id}>{lot.name || `Lote ${lot.lot_number}`}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              <div><Label>Modalidad</Label><Select value={form.mode} onValueChange={(v) => set('mode', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{VISIT_MODES.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label>Lead</Label><Select value={form.lead_id} onValueChange={(v) => set('lead_id', v)}><SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger><SelectContent>{leads.map((l) => <SelectItem key={l.id} value={l.id}>{l.first_name} {l.last_name ?? ''}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label>Proyecto</Label><Select value={form.project_id} onValueChange={(v) => { set('project_id', v); set('lot_id', ''); }}><SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger><SelectContent>{projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></div>
+              <div className="sm:col-span-2"><Label>Parcela</Label><Select value={form.lot_id} onValueChange={(value) => { const selectedLot = lots.find((lot) => lot.id === value); setForm((current) => ({ ...current, lot_id: value, project_id: selectedLot?.project_id || current.project_id })); }}><SelectTrigger><SelectValue placeholder="Seleccionar parcela" /></SelectTrigger><SelectContent>{projectLots.map((lot) => <SelectItem key={lot.id} value={lot.id}>{lot.name || `Lote ${lot.lot_number}`}</SelectItem>)}</SelectContent></Select></div>
               <div className="sm:col-span-2"><Label htmlFor="v-notes">Notas previas</Label><Textarea id="v-notes" value={form.notes} onChange={(e) => set('notes', e.target.value)} /></div>
             </div>
             <DialogFooter><Button onClick={submit} disabled={createVisit.isPending}>Agendar</Button></DialogFooter>
@@ -245,8 +187,63 @@ const VisitsManager = () => {
         </Dialog>
       </div>
 
-      <Tabs defaultValue="upcoming">
-        <TabsList><TabsTrigger value="upcoming">Próximas ({upcoming.length})</TabsTrigger><TabsTrigger value="past">Historial ({past.length})</TabsTrigger></TabsList>
+      <Tabs defaultValue="week">
+        <TabsList className="flex-wrap"><TabsTrigger value="week">Semana</TabsTrigger><TabsTrigger value="upcoming">Próximas ({upcoming.length})</TabsTrigger><TabsTrigger value="past">Historial ({past.length})</TabsTrigger></TabsList>
+
+        <TabsContent value="week">
+          <Card>
+            <CardHeader className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <CardTitle className="flex items-center gap-2 text-base"><CalendarClock className="h-4 w-4" />Semana del {format(weekStart, 'd MMM', { locale: es })}</CardTitle>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setWeekOffset((value) => value - 1)}><ChevronLeft className="h-4 w-4" /></Button>
+                  <Button size="sm" variant="outline" onClick={() => setWeekOffset(0)}>Hoy</Button>
+                  <Button size="sm" variant="outline" onClick={() => setWeekOffset((value) => value + 1)}><ChevronRight className="h-4 w-4" /></Button>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Select value={projectFilter} onValueChange={setProjectFilter}>
+                  <SelectTrigger className="sm:w-64"><SelectValue placeholder="Proyecto" /></SelectTrigger>
+                  <SelectContent><SelectItem value="all">Todos los proyectos</SelectItem>{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>)}</SelectContent>
+                </Select>
+                <Select value={advisorFilter} onValueChange={setAdvisorFilter}>
+                  <SelectTrigger className="sm:w-56"><SelectValue placeholder="Asesor" /></SelectTrigger>
+                  <SelectContent><SelectItem value="all">Todos los asesores</SelectItem>{advisors.map((id) => <SelectItem key={id} value={id}>{id === user?.id ? 'Yo' : `Asesor · ${id.slice(0, 6)}`}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? <Skeleton className="h-48 w-full" /> : (
+                <div className="grid gap-2 md:grid-cols-7">
+                  {weekDays.map((day) => {
+                    const dayVisits = weeklyVisits.filter((visit) => {
+                      const date = new Date(visit.scheduled_at);
+                      return date >= startOfDay(day) && date <= endOfDay(day);
+                    });
+                    return (
+                      <div key={day.toISOString()} className="min-h-36 rounded-xl border p-2">
+                        <div className="mb-2 border-b pb-2 text-xs font-medium capitalize">{format(day, 'EEE d', { locale: es })}</div>
+                        <div className="space-y-2">
+                          {dayVisits.map((visit) => {
+                            const project = projects.find((item) => item.id === visit.project_id);
+                            return (
+                              <button key={visit.id} type="button" onClick={() => openResult(visit)} className="w-full rounded-lg bg-muted/50 p-2 text-left transition hover:bg-muted">
+                                <p className="text-xs font-semibold">{format(new Date(visit.scheduled_at), 'HH:mm')} · {visit.visitor_name}</p>
+                                <p className="mt-1 truncate text-[11px] text-muted-foreground">{project?.name ?? 'Sin proyecto'}</p>
+                              </button>
+                            );
+                          })}
+                          {dayVisits.length === 0 && <p className="py-4 text-center text-[11px] text-muted-foreground">Sin visitas</p>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {(['upcoming', 'past'] as const).map((tab) => (
           <TabsContent key={tab} value={tab}>
             <Card>
