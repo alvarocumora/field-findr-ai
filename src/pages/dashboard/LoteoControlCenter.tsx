@@ -30,6 +30,8 @@ import {
   Wallet,
   CalendarClock,
   Building2,
+  Tags,
+  EyeOff,
 } from 'lucide-react';
 import { format, formatDistanceToNow, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -40,7 +42,7 @@ import {
   useExtendReservation,
   useExpireStaleReservations,
 } from '@/hooks/useReservations';
-import { useAgentCommissions, useMarkCommissionPaid } from '@/hooks/useAgentCommissions';
+import { useAgentCommissions } from '@/hooks/useAgentCommissions';
 import ConvertToSaleDialog from '@/components/reservations/ConvertToSaleDialog';
 import LotQuoteDialog from '@/components/lots/LotQuoteDialog';
 import BulkPriceAdjustDialog from '@/components/lots/BulkPriceAdjustDialog';
@@ -65,6 +67,17 @@ const LOT_STATUS_STYLE: Record<string, string> = {
   sold: 'bg-sky-600/80 hover:bg-sky-600',
 };
 
+const COMMISSION_STATUS: Record<string, { label: string; className: string }> = {
+  potential: { label: 'Potencial', className: 'bg-muted text-muted-foreground border-border' },
+  reserved: { label: 'Reservada', className: 'bg-amber-500/10 text-amber-700 border-amber-500/20' },
+  earned: { label: 'Devengada · aprobar', className: 'bg-violet-500/10 text-violet-700 border-violet-500/20' },
+  approved: { label: 'Aprobada · pagar', className: 'bg-sky-500/10 text-sky-700 border-sky-500/20' },
+  paid: { label: 'Pagada', className: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' },
+  cancelled: { label: 'Cancelada', className: 'bg-muted text-muted-foreground border-border' },
+};
+
+type LotWithListing = Lot & { listing_id?: string | null };
+
 /**
  * Control de Loteo — per-project sales command center.
  * Unifies inventory, absorption/velocity, action-required reservations and
@@ -87,7 +100,6 @@ const LoteoControlCenter = () => {
 
   const extendReservation = useExtendReservation();
   const expireStale = useExpireStaleReservations();
-  const markPaid = useMarkCommissionPaid();
 
   // One expiry sweep on mount so the "expiring soon" panel reflects reality.
   const sweptRef = useRef(false);
@@ -120,8 +132,10 @@ const LoteoControlCenter = () => {
     const monthlyRate = recentSales / 3;
     const monthsToSellOut = monthlyRate > 0 ? Math.ceil(available.length / monthlyRate) : null;
 
+    // #104 replaced legacy `pending` with an auditable earned → approved → paid lifecycle.
+    // Only earned/approved are a real payable balance; potential/reserved are not yet due.
     const pendingCommissions = commissions
-      .filter((c) => (c.status as string) === 'pending')
+      .filter((c) => c.status === 'earned' || c.status === 'approved')
       .reduce((s, c) => s + Number(c.commission_amount || 0), 0);
 
     return {
@@ -159,6 +173,13 @@ const LoteoControlCenter = () => {
     [reservations],
   );
 
+  const inventoryAlerts = useMemo(() => {
+    const sellableLots = lots.filter((lot) => lot.status !== 'sold');
+    const withoutPrice = sellableLots.filter((lot) => Number(lot.price || 0) <= 0);
+    const unpublished = sellableLots.filter((lot) => !Boolean((lot as LotWithListing).listing_id));
+    return { withoutPrice, unpublished };
+  }, [lots]);
+
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['reservations'] });
     queryClient.invalidateQueries({ queryKey: ['lots'] });
@@ -172,8 +193,10 @@ const LoteoControlCenter = () => {
     [lots],
   );
 
-  const pendingCommissionRows = commissions.filter((c) => (c.status as string) === 'pending');
-  const paidCommissionRows = commissions.filter((c) => c.status === 'paid');
+  const openCommissionRows = commissions.filter((c) => c.status === 'earned' || c.status === 'approved');
+  const otherCommissionRows = commissions.filter(
+    (c) => c.status !== 'earned' && c.status !== 'approved' && c.status !== 'cancelled',
+  );
 
   if (isLoading) {
     return (
@@ -242,7 +265,6 @@ const LoteoControlCenter = () => {
         </div>
       </div>
 
-
       {/* KPI row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
@@ -251,7 +273,7 @@ const LoteoControlCenter = () => {
           { label: 'Reservados', value: String(kpis.reserved), sub: 'en proceso', icon: Clock, color: 'text-amber-500' },
           { label: 'Señas cobradas', value: formatShort(kpis.senasCollected), sub: 'pagadas + convertidas', icon: Wallet, color: 'text-emerald-500' },
           { label: 'Ventas', value: formatShort(kpis.soldValue), sub: 'lotes vendidos', icon: DollarSign, color: 'text-emerald-600' },
-          { label: 'Comisiones', value: formatShort(kpis.pendingCommissions), sub: 'pendientes de pago', icon: TrendingUp, color: 'text-violet-500' },
+          { label: 'Comisiones', value: formatShort(kpis.pendingCommissions), sub: 'devengadas + aprobadas', icon: TrendingUp, color: 'text-violet-500' },
         ].map((kpi) => (
           <Card key={kpi.label} className="border-border/40">
             <CardContent className="p-4">
@@ -265,6 +287,59 @@ const LoteoControlCenter = () => {
           </Card>
         ))}
       </div>
+
+      {/* Inventory health */}
+      <Card className={cn(
+        'border-border/40',
+        (expiringSoon.length + inventoryAlerts.withoutPrice.length + inventoryAlerts.unpublished.length) > 0 && 'border-amber-500/30',
+      )}>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex flex-wrap items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            Salud de inventario
+            {(expiringSoon.length + inventoryAlerts.withoutPrice.length + inventoryAlerts.unpublished.length) > 0 && (
+              <Badge variant="secondary" className="ml-1">
+                {expiringSoon.length + inventoryAlerts.withoutPrice.length + inventoryAlerts.unpublished.length} alertas
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl border p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <CalendarClock className="h-4 w-4 text-amber-500" /> Reservas por vencer
+                </div>
+                <Badge variant={expiringSoon.length > 0 ? 'secondary' : 'outline'}>{expiringSoon.length}</Badge>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">Pendientes de pago con menos de 24 horas de vigencia.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setBulkPriceOpen(true)}
+              className="rounded-xl border p-4 text-left transition hover:bg-muted/40"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Tags className="h-4 w-4 text-rose-500" /> Parcelas sin precio
+                </div>
+                <Badge variant={inventoryAlerts.withoutPrice.length > 0 ? 'secondary' : 'outline'}>{inventoryAlerts.withoutPrice.length}</Badge>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">Disponibles o reservadas sin precio comercial. Click para ajustar precios.</p>
+            </button>
+            <div className="rounded-xl border p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <EyeOff className="h-4 w-4 text-sky-500" /> Sin ficha publicada
+                </div>
+                <Badge variant={inventoryAlerts.unpublished.length > 0 ? 'secondary' : 'outline'}>{inventoryAlerts.unpublished.length}</Badge>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">Parcelas activas sin listing público asociado en el marketplace.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Action required */}
@@ -442,16 +517,14 @@ const LoteoControlCenter = () => {
         onLotClick={(lot) => setQuoteLot(lot)}
       />
 
-
-
       {/* Commissions */}
       <Card className="border-border/40">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Wallet className="h-4 w-4 text-violet-500" />
             Comisiones del proyecto
-            {pendingCommissionRows.length > 0 && (
-              <Badge variant="secondary" className="ml-1">{pendingCommissionRows.length} pendientes</Badge>
+            {openCommissionRows.length > 0 && (
+              <Badge variant="secondary" className="ml-1">{openCommissionRows.length} por gestionar</Badge>
             )}
           </CardTitle>
         </CardHeader>
@@ -464,37 +537,34 @@ const LoteoControlCenter = () => {
             </p>
           ) : (
             <div className="divide-y divide-border/40">
-              {[...pendingCommissionRows, ...paidCommissionRows].map((c) => (
-                <div key={c.id} className="flex items-center justify-between gap-3 py-2.5">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium tabular-nums">
-                      {formatCLP(Number(c.commission_amount))}{' '}
-                      <span className="text-xs text-muted-foreground font-normal">
-                        ({c.commission_rate}% de {formatShort(Number(c.sale_amount))})
-                      </span>
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {format(new Date(c.created_at), 'dd/MM/yyyy', { locale: es })}
-                      {c.notes ? ` · ${c.notes}` : ''}
-                    </p>
-                  </div>
-                  {(c.status as string) === 'pending' ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={markPaid.isPending}
-                      onClick={() => markPaid.mutate(c.id)}
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                      Marcar pagada
-                    </Button>
-                  ) : (
-                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                      Pagada {c.paid_at ? format(new Date(c.paid_at), 'dd/MM', { locale: es }) : ''}
+              {[...openCommissionRows, ...otherCommissionRows].map((c) => {
+                const status = COMMISSION_STATUS[c.status] ?? COMMISSION_STATUS.potential;
+                return (
+                  <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium tabular-nums">
+                        {formatCLP(Number(c.commission_amount))}{' '}
+                        <span className="text-xs text-muted-foreground font-normal">
+                          ({c.commission_rate}% de {formatShort(Number(c.sale_amount))})
+                        </span>
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {format(new Date(c.created_at), 'dd/MM/yyyy', { locale: es })}
+                        {c.notes ? ` · ${c.notes}` : ''}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className={status.className}>
+                      {status.label}
+                      {c.status === 'paid' && c.paid_at ? ` · ${format(new Date(c.paid_at), 'dd/MM', { locale: es })}` : ''}
                     </Badge>
-                  )}
-                </div>
-              ))}
+                  </div>
+                );
+              })}
+              {openCommissionRows.length > 0 && (
+                <p className="py-3 text-xs text-muted-foreground">
+                  El pago de comisiones se controla desde Administración: devengada → aprobada → pagada. Este panel no permite auto-declarar pagos.
+                </p>
+              )}
             </div>
           )}
         </CardContent>
@@ -527,7 +597,6 @@ const LoteoControlCenter = () => {
         lots={lots}
         defaultProjectId={activeProjectId}
       />
-
     </div>
   );
 };
