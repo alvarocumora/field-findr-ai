@@ -5,9 +5,11 @@ import FloatingCTA from '@/components/landing/FloatingCTA';
 import TrustBadges from '@/components/landing/TrustBadges';
 import FeaturedListings from '@/components/landing/FeaturedListings';
 import HowItWorksFlow from '@/components/landing/HowItWorksFlow';
+import DecisionStackSection from '@/components/landing/DecisionStackSection';
+import ProfessionalNetworkSection from '@/components/landing/ProfessionalNetworkSection';
 import CTASection from '@/components/CTASection';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, BarChart3 } from 'lucide-react';
+import { ArrowRight, MapPinned } from 'lucide-react';
 import { useSEO } from '@/hooks/useSEO';
 
 const Index = () => {
@@ -21,42 +23,30 @@ const Index = () => {
 
   return (
     <PublicLayout showFooter={true}>
-      {/* 1 · Mapa + búsqueda + proyectos */}
       <CartographicHero />
 
-      {/* 2 · Proyectos destacados */}
       <FeaturedListings />
 
-      {/* 3 · Evidencia y confianza */}
-      <TrustBadges />
-
-      {/* 4 · Cómo comprar en 3 pasos */}
-      <HowItWorksFlow />
-
-      {/* 5 · Experiencia del proyecto */}
-      <section className="border-y border-border/50 bg-muted/20 py-16 md:py-24">
-        <div className="container px-4 flex flex-col sm:flex-row sm:items-center gap-6 justify-between">
-          <div className="flex items-start gap-3">
-            <BarChart3 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-            <div>
-              <p className="text-xs font-semibold uppercase text-primary">Plano, recorrido y ficha</p>
-              <h2 className="mt-2 text-2xl font-heading font-bold md:text-4xl">Conoce el proyecto antes de visitarlo.</h2>
-              <p className="mt-2 max-w-2xl text-sm text-muted-foreground md:text-base">
-                Revisa polígonos, disponibilidad, fotografías, documentos y recorridos desde cada proyecto.
-              </p>
-            </div>
+      <section className="border-y border-border/50 bg-muted/20 py-12 md:py-16">
+        <div className="container flex flex-col gap-6 px-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Explora Chile por proyecto</p>
+            <h2 className="mt-3 font-heading text-3xl font-bold md:text-4xl">Una vista territorial para comparar antes de decidir.</h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
+              Recorre proyectos, comunas y regiones desde el explorador. Filtra por ubicación, superficie y precio, y cambia a mapa cuando quieras comparar territorialmente.
+            </p>
           </div>
-          <Button asChild className="shrink-0">
-            <Link to="/explorar">
-              Explorar proyectos <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+          <Button asChild size="lg" className="shrink-0">
+            <Link to="/explorar"><MapPinned className="mr-2 h-4 w-4" />Explorar terrenos <ArrowRight className="ml-2 h-4 w-4" /></Link>
           </Button>
         </div>
       </section>
 
-      {/* 7 · Llamada final */}
+      <HowItWorksFlow />
+      <DecisionStackSection />
+      <TrustBadges />
+      <ProfessionalNetworkSection />
       <CTASection />
-
       <FloatingCTA />
     </PublicLayout>
   );

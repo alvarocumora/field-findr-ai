@@ -36,12 +36,14 @@ const FeaturedListings = () => {
       <div className="container px-4">
         <div className="mb-8 flex items-end justify-between gap-4">
           <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase text-primary">Inventario destacado</p>
-            <h2 id="featured-title" className="mt-3 text-3xl font-heading font-bold md:text-5xl">Proyectos completos, listos para explorar.</h2>
-            <p className="mt-3 text-muted-foreground">Entra por el proyecto, revisa el plano y elige después la parcela que mejor encaje contigo.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Terrenos disponibles ahora</p>
+            <h2 id="featured-title" className="mt-3 font-heading text-3xl font-bold md:text-5xl">Empieza por el proyecto. Elige después la parcela.</h2>
+            <p className="mt-3 leading-relaxed text-muted-foreground">
+              Compara ubicación, superficie, precio desde y disponibilidad antes de entrar al detalle de cada lote.
+            </p>
           </div>
           <Button asChild variant="outline" className="hidden shrink-0 md:inline-flex">
-            <Link to="/explorar">Ver todos <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            <Link to="/explorar">Explorar todo el inventario <ArrowRight className="ml-2 h-4 w-4" /></Link>
           </Button>
         </div>
 
@@ -58,6 +60,12 @@ const FeaturedListings = () => {
             </motion.div>
           ))}
         </motion.div>
+
+        <div className="mt-7 md:hidden">
+          <Button asChild variant="outline" className="w-full">
+            <Link to="/explorar">Explorar todo el inventario <ArrowRight className="ml-2 h-4 w-4" /></Link>
+          </Button>
+        </div>
       </div>
     </section>
   );
