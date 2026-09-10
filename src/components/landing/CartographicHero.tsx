@@ -1,14 +1,11 @@
-import { FormEvent, lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { FormEvent, lazy, Suspense, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Map, Search } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { ArrowRight, Building2, Map, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLandingStats } from '@/hooks/useLandingStats';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
-import ProjectCommercialCard, { CommercialProject } from './ProjectCommercialCard';
 import globeImage from '@/assets/brand/ot-globe-wide.jpg';
 
 const InteractiveEarth = lazy(() => import('./InteractiveEarth'));
@@ -31,33 +28,6 @@ const CartographicHero = () => {
     }
   }, []);
 
-  const { data: projects = [] } = useQuery({
-    queryKey: ['commercial-hero-projects'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, slug, name, description, city, region, images, total_lots, available_lots, featured, created_at')
-        .eq('status', 'active')
-        .order('featured', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(8);
-      if (error) throw error;
-
-      const visible = (data ?? []).filter((project) => Array.isArray(project.images) && project.images.length > 0).slice(0, 3);
-      const enriched = await Promise.all(visible.map(async (project) => {
-        const { data: lots } = await supabase.rpc('get_public_lots', { p_project_id: project.id });
-        const prices = (lots ?? [])
-          .map((lot) => Number(lot.price))
-          .filter((price) => Number.isFinite(price) && price > 0);
-        return { ...project, minPrice: prices.length ? Math.min(...prices) : undefined };
-      }));
-      return enriched as CommercialProject[];
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const totalProjects = useMemo(() => projects.length, [projects]);
-
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     const query = search.trim();
@@ -70,41 +40,45 @@ const CartographicHero = () => {
       <img
         src={globeImage}
         alt="Globo cartográfico centrado en Sudamérica"
-        className={`absolute inset-0 h-full w-full object-cover object-[62%_center] transition-opacity duration-1000 ${earthReady ? 'opacity-20' : 'opacity-80'}`}
+        className={`absolute inset-0 h-full w-full object-cover object-[68%_center] transition-opacity duration-1000 ${earthReady ? 'opacity-15' : 'opacity-65'}`}
         width={1920}
         height={1088}
         loading="eager"
       />
+
       {webglAvailable && (
-        <div className={`absolute inset-y-0 right-0 w-full transition-opacity duration-1000 md:w-[72%] ${earthReady ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`absolute inset-y-0 right-0 w-full transition-opacity duration-1000 md:w-[68%] ${earthReady ? 'opacity-100' : 'opacity-0'}`}>
           <Suspense fallback={null}>
             <InteractiveEarth reducedMotion={Boolean(prefersReducedMotion)} onReady={() => setEarthReady(true)} />
           </Suspense>
         </div>
       )}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/10" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/60" />
+
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/15" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/55" />
       <div className="pointer-events-none absolute inset-0 grid-topo opacity-20" aria-hidden="true" />
 
-      <div className="container pointer-events-none relative z-content flex min-h-[calc(100svh-4rem)] flex-col justify-between px-4 pb-7 pt-12 md:pb-10 md:pt-16">
+      <div className="container pointer-events-none relative z-content flex min-h-[calc(100svh-4rem)] items-center px-4 py-14 md:py-20">
         <motion.div
           className="pointer-events-auto max-w-3xl"
           initial={prefersReducedMotion ? false : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
-          <div className="mb-5 flex items-center gap-2 text-[11px] font-semibold uppercase text-primary">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/65 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary backdrop-blur-md">
             <span className="h-2 w-2 rounded-full bg-primary" aria-hidden="true" />
-            Proyectos disponibles en Chile
+            La red de terrenos de Chile
           </div>
-          <h1 id="hero-title" className="max-w-3xl font-heading text-5xl font-bold leading-[0.95] text-foreground sm:text-6xl lg:text-7xl">
-            Encuentra tierra con futuro.
+
+          <h1 id="hero-title" className="max-w-3xl font-heading text-5xl font-bold leading-[0.94] text-foreground sm:text-6xl lg:text-7xl xl:text-8xl">
+            Encuentra. Visita. Reserva.
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
-            Explora loteos completos, revisa sus planos y disponibilidad, y agenda una visita desde una sola plataforma.
+
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-xl">
+            Descubre proyectos y terrenos disponibles, revisa parcelas y precios, y conecta directamente con quienes los comercializan.
           </p>
 
-          <form onSubmit={submitSearch} className="mt-7 flex max-w-2xl flex-col gap-2 sm:flex-row" role="search">
+          <form onSubmit={submitSearch} className="mt-8 flex max-w-2xl flex-col gap-2 sm:flex-row" role="search">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
               <Input
@@ -112,48 +86,31 @@ const CartographicHero = () => {
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Comuna, región o tipo de terreno"
                 aria-label="Buscar proyectos por comuna, región o tipo"
-                className="h-12 rounded-md border-border/70 bg-background/80 pl-11 backdrop-blur-md"
+                className="h-12 rounded-md border-border/70 bg-background/85 pl-11 backdrop-blur-md"
               />
             </div>
             <Button type="submit" size="lg" className="h-12 rounded-md px-6">
-              Explorar proyectos <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button asChild type="button" variant="outline" size="lg" className="h-12 rounded-md border-border/70 bg-background/60 px-5 backdrop-blur-md">
-              <Link to="/explorar?view=map"><Map className="mr-2 h-4 w-4" aria-hidden="true" />Ver mapa</Link>
+              Explorar terrenos <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
             </Button>
           </form>
-        </motion.div>
 
-        <div className="pointer-events-auto mt-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="min-w-0">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase text-foreground">Proyectos para explorar</p>
-              <Link to="/explorar" className="text-xs text-primary hover:underline">Ver todos</Link>
-            </div>
-            <div className="flex max-w-full gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {projects.slice(0, 3).map((project) => (
-                <ProjectCommercialCard
-                  key={project.id}
-                  project={project}
-                  compact
-                  onOpen={(selected) => void track('landing_project_opened', { project_id: selected.id })}
-                />
-              ))}
-              {totalProjects === 0 && (
-                <div className="flex h-48 w-[15.5rem] items-center justify-center rounded-md border border-border/60 bg-card/70 px-6 text-center text-sm text-muted-foreground">
-                  Cargando proyectos disponibles…
-                </div>
-              )}
-            </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button asChild type="button" variant="outline" className="border-border/70 bg-background/55 backdrop-blur-md">
+              <Link to="/explorar?view=map"><Map className="mr-2 h-4 w-4" aria-hidden="true" />Ver proyectos en el mapa</Link>
+            </Button>
+            <Button asChild type="button" variant="ghost" className="bg-background/25 backdrop-blur-sm">
+              <Link to="/planes-loteos"><Building2 className="mr-2 h-4 w-4" aria-hidden="true" />¿Vendes terrenos? Publica y gestiona</Link>
+            </Button>
           </div>
 
           {stats?.totalProjects ? (
-            <dl className="flex shrink-0 gap-6 border-t border-border/60 pt-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
-              <div><dt className="text-[10px] uppercase text-muted-foreground">Proyectos activos</dt><dd className="font-heading text-xl font-bold">{stats.totalProjects}</dd></div>
-              <div><dt className="text-[10px] uppercase text-muted-foreground">Lotes trazados</dt><dd className="font-heading text-xl font-bold text-primary">{stats.totalLots}</dd></div>
+            <dl className="mt-10 flex max-w-xl flex-wrap gap-x-8 gap-y-4 border-t border-border/60 pt-5">
+              <div><dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Proyectos activos</dt><dd className="mt-1 font-heading text-2xl font-bold">{stats.totalProjects}</dd></div>
+              <div><dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Lotes trazados</dt><dd className="mt-1 font-heading text-2xl font-bold text-primary">{stats.totalLots}</dd></div>
+              <div><dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Proceso</dt><dd className="mt-1 text-sm font-medium">Explora → visita → reserva</dd></div>
             </dl>
           ) : null}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
