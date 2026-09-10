@@ -12,6 +12,7 @@ interface AtlasProject {
   name: string;
   city: string | null;
   region: string | null;
+  country: string | null;
   total_lots: number | null;
   available_lots: number | null;
 }
@@ -30,12 +31,13 @@ const AtlasTerritorySection = () => {
   const travelTimers = useRef<number[]>([]);
 
   const { data: projects = [], isLoading } = useQuery({
-    queryKey: ['atlas-active-projects'],
+    queryKey: ['atlas-active-projects', 'Chile'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, name, city, region, total_lots, available_lots')
+        .select('id, name, city, region, country, total_lots, available_lots')
         .eq('status', 'active')
+        .eq('country', 'Chile')
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false });
 
@@ -195,7 +197,7 @@ const AtlasTerritorySection = () => {
               </>
             ) : (
               <div className="py-12 text-center text-sm text-background/55">
-                Atlas mostrará aquí las regiones cuando existan proyectos activos con ubicación publicada.
+                Atlas mostrará aquí las regiones de Chile cuando existan proyectos activos con ubicación publicada.
               </div>
             )}
           </div>
