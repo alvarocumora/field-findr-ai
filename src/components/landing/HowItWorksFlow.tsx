@@ -5,20 +5,20 @@ const STEPS = [
   {
     number: '01',
     icon: Search,
-    title: 'Explora',
-    description: 'Compara proyectos completos por ubicación, precio, superficie y disponibilidad.',
+    title: 'Encuentra',
+    description: 'Explora proyectos por ubicación, precio y superficie. Revisa la disponibilidad de sus parcelas desde la ficha.',
   },
   {
     number: '02',
     icon: CalendarDays,
     title: 'Visita',
-    description: 'Revisa el plano, las fichas y los documentos disponibles. Luego agenda una visita.',
+    description: 'Conoce el plano, fotografías y antecedentes disponibles. Coordina una visita directamente con el equipo comercial.',
   },
   {
     number: '03',
     icon: KeyRound,
     title: 'Reserva',
-    description: 'Elige una unidad disponible y sigue el avance de tu compra desde un solo lugar.',
+    description: 'Selecciona una unidad disponible e inicia el proceso de reserva desde la misma experiencia digital.',
   },
 ];
 
@@ -32,60 +32,46 @@ const HowItWorksFlow = () => {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <section className="py-16 md:py-24 relative">
+    <section className="relative py-16 md:py-24" aria-labelledby="how-it-works-title">
       <div className="absolute inset-0 bg-gradient-to-b from-muted/20 via-transparent to-muted/20" />
-
-      <div className="container px-4 relative">
+      <div className="container relative px-4">
         <motion.div
-          className="text-center mb-14"
-          initial={{ opacity: 0, y: 16 }}
+          className="mb-14 text-center"
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-primary/70 mb-3">
-            Una ruta clara
-          </p>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold tracking-tight text-foreground">
-            De la búsqueda a la reserva
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">Encuentra · Visita · Reserva</p>
+          <h2 id="how-it-works-title" className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+            De la búsqueda a terreno, sin perder el contexto.
           </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+            OfertaTerrenos conecta cada paso para que compradores y equipos comerciales trabajen sobre el mismo proyecto y la misma parcela.
+          </p>
         </motion.div>
 
         <motion.div
-          className="grid md:grid-cols-3 gap-8 lg:gap-12"
+          className="grid gap-8 md:grid-cols-3 lg:gap-12"
           variants={prefersReducedMotion ? {} : container}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-40px' }}
         >
           {STEPS.map((step, i) => (
-            <motion.div
-              key={step.number}
-              variants={prefersReducedMotion ? {} : item}
-              className="relative text-center md:text-left"
-            >
-              {/* Connector line (desktop only) */}
+            <motion.div key={step.number} variants={prefersReducedMotion ? {} : item} className="relative text-center md:text-left">
               {i < STEPS.length - 1 && (
-                <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-px bg-gradient-to-r from-border via-primary/20 to-border" />
+                <div className="absolute left-[60%] top-8 hidden h-px w-[80%] bg-gradient-to-r from-border via-primary/20 to-border md:block" />
               )}
-
-              <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-card border border-border/50 mb-5 mx-auto md:mx-0">
+              <div className="relative mx-auto mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-border/50 bg-card md:mx-0">
                 <step.icon className="h-7 w-7 text-primary" />
-                <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                  {step.number}
-                </span>
+                <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{step.number}</span>
               </div>
-
-              <h3 className="text-lg font-heading font-bold text-foreground mb-2">
-                {step.title}
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto md:mx-0">
-                {step.description}
-              </p>
+              <h3 className="mb-2 font-heading text-lg font-bold text-foreground">{step.title}</h3>
+              <p className="mx-auto max-w-xs text-sm leading-relaxed text-muted-foreground md:mx-0">{step.description}</p>
             </motion.div>
           ))}
         </motion.div>
-
       </div>
     </section>
   );
