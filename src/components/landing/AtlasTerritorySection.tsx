@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
@@ -27,6 +27,7 @@ const AtlasTerritorySection = () => {
   const { track } = useTrackEvent();
   const [activeRegion, setActiveRegion] = useState<string | null>(null);
   const [travel, setTravel] = useState<TravelState | null>(null);
+  const travelTimers = useRef<number[]>([]);
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['atlas-active-projects'],
@@ -43,6 +44,10 @@ const AtlasTerritorySection = () => {
     },
     staleTime: 5 * 60 * 1000,
   });
+
+  useEffect(() => () => {
+    travelTimers.current.forEach((timer) => window.clearTimeout(timer));
+  }, []);
 
   const regions = useMemo(() => {
     const grouped = new Map<string, { projects: number; lots: number; available: number }>();
@@ -80,10 +85,13 @@ const AtlasTerritorySection = () => {
       return;
     }
 
+    travelTimers.current.forEach((timer) => window.clearTimeout(timer));
     setTravel({ project, stage: 'region' });
-    window.setTimeout(() => setTravel({ project, stage: 'project' }), 520);
-    window.setTimeout(() => setTravel({ project, stage: 'parcel' }), 1040);
-    window.setTimeout(() => navigate(`/proyecto/${project.id}/experiencia`), 1600);
+    travelTimers.current = [
+      window.setTimeout(() => setTravel({ project, stage: 'project' }), 520),
+      window.setTimeout(() => setTravel({ project, stage: 'parcel' }), 1040),
+      window.setTimeout(() => navigate(`/proyecto/${project.id}/experiencia`), 1600),
+    ];
   };
 
   return (
