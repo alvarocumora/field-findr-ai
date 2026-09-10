@@ -33,11 +33,11 @@ const Index = () => {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Explora Chile por proyecto</p>
             <h2 className="mt-3 font-heading text-3xl font-bold md:text-4xl">Una vista territorial para comparar antes de decidir.</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
-              Recorre proyectos, comunas y regiones desde el mapa. Filtra por ubicación, superficie y precio para encontrar alternativas comparables.
+              Recorre proyectos, comunas y regiones desde el explorador. Filtra por ubicación, superficie y precio, y cambia a mapa cuando quieras comparar territorialmente.
             </p>
           </div>
           <Button asChild size="lg" className="shrink-0">
-            <Link to="/explorar?view=map"><MapPinned className="mr-2 h-4 w-4" />Abrir mapa nacional <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            <Link to="/explorar"><MapPinned className="mr-2 h-4 w-4" />Explorar terrenos <ArrowRight className="ml-2 h-4 w-4" /></Link>
           </Button>
         </div>
       </section>
