@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Compass, MapPinned, Sparkles } from 'lucide-react';
-import { motion, useReducedMotion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { useTrackEvent } from '@/hooks/useTrackEvent';
 
 interface AtlasProject {
   id: string;
@@ -15,9 +16,17 @@ interface AtlasProject {
   available_lots: number | null;
 }
 
+interface TravelState {
+  project: AtlasProject;
+  stage: 'region' | 'project' | 'parcel';
+}
+
 const AtlasTerritorySection = () => {
+  const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
+  const { track } = useTrackEvent();
   const [activeRegion, setActiveRegion] = useState<string | null>(null);
+  const [travel, setTravel] = useState<TravelState | null>(null);
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['atlas-active-projects'],
@@ -59,6 +68,24 @@ const AtlasTerritorySection = () => {
     [projects, selectedRegion],
   );
 
+  const travelToProject = (project: AtlasProject) => {
+    void track('atlas_travel_started', {
+      project_id: project.id,
+      project_name: project.name,
+      region: project.region,
+    });
+
+    if (prefersReducedMotion) {
+      navigate(`/proyecto/${project.id}/experiencia`);
+      return;
+    }
+
+    setTravel({ project, stage: 'region' });
+    window.setTimeout(() => setTravel({ project, stage: 'project' }), 520);
+    window.setTimeout(() => setTravel({ project, stage: 'parcel' }), 1040);
+    window.setTimeout(() => navigate(`/proyecto/${project.id}/experiencia`), 1600);
+  };
+
   return (
     <section id="atlas" className="relative overflow-hidden border-y border-border/50 bg-foreground py-20 text-background md:py-28" aria-labelledby="atlas-title">
       <div className="pointer-events-none absolute inset-0 opacity-[0.08] grid-topo" aria-hidden="true" />
@@ -93,7 +120,7 @@ const AtlasTerritorySection = () => {
             <div className="flex flex-col gap-4 border-b border-background/10 pb-5 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.16em] text-background/45">Exploración territorial</p>
-                <p className="mt-1 text-sm text-background/70">Selecciona una región para descubrir su inventario activo.</p>
+                <p className="mt-1 text-sm text-background/70">Selecciona una región y viaja desde territorio hasta la experiencia del proyecto.</p>
               </div>
               <Button asChild variant="secondary" size="sm">
                 <Link to="/explorar"><MapPinned className="mr-2 h-4 w-4" />Abrir explorador</Link>
@@ -146,9 +173,13 @@ const AtlasTerritorySection = () => {
                           <p className="text-2xl font-bold">{Number(project.available_lots ?? 0)}</p>
                           <p className="text-xs text-background/45">lotes disponibles</p>
                         </div>
-                        <Link to={`/explorar?q=${encodeURIComponent(project.name)}`} className="inline-flex items-center text-sm font-medium text-background/75 hover:text-background">
+                        <button
+                          type="button"
+                          onClick={() => travelToProject(project)}
+                          className="inline-flex items-center text-sm font-medium text-background/75 transition-colors hover:text-background"
+                        >
                           Viajar al proyecto <ArrowRight className="ml-1.5 h-4 w-4" />
-                        </Link>
+                        </button>
                       </div>
                     </motion.div>
                   ))}
@@ -162,6 +193,59 @@ const AtlasTerritorySection = () => {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {travel ? (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black text-white"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            role="status"
+            aria-live="polite"
+          >
+            <motion.div
+              className="absolute h-[26rem] w-[26rem] rounded-full border border-white/15 md:h-[40rem] md:w-[40rem]"
+              initial={{ scale: 0.35, opacity: 0.2 }}
+              animate={{ scale: travel.stage === 'parcel' ? 2.6 : travel.stage === 'project' ? 1.45 : 0.8, opacity: 0.5 }}
+              transition={{ duration: 0.52, ease: 'easeInOut' }}
+            />
+            <motion.div
+              className="absolute h-[15rem] w-[15rem] rounded-full border border-white/10 md:h-[24rem] md:w-[24rem]"
+              initial={{ scale: 0.4 }}
+              animate={{ scale: travel.stage === 'parcel' ? 2.2 : travel.stage === 'project' ? 1.25 : 0.72 }}
+              transition={{ duration: 0.52, ease: 'easeInOut' }}
+            />
+
+            <div className="relative z-10 max-w-3xl px-6 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/45">OfertaTerrenos Atlas</p>
+              <motion.p
+                key={travel.stage}
+                initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                className="mt-5 font-heading text-4xl font-bold md:text-7xl"
+              >
+                {travel.stage === 'region' && (travel.project.region || 'Chile')}
+                {travel.stage === 'project' && travel.project.name}
+                {travel.stage === 'parcel' && 'Entrando al proyecto'}
+              </motion.p>
+              <motion.div
+                className="mx-auto mt-8 h-px max-w-md origin-left bg-white/35"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 1.5, ease: 'easeInOut' }}
+              />
+              <div className="mt-5 flex items-center justify-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-white/45">
+                <span className={travel.stage === 'region' ? 'text-white' : undefined}>Región</span>
+                <span>→</span>
+                <span className={travel.stage === 'project' ? 'text-white' : undefined}>Proyecto</span>
+                <span>→</span>
+                <span className={travel.stage === 'parcel' ? 'text-white' : undefined}>Experiencia</span>
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </section>
   );
 };
