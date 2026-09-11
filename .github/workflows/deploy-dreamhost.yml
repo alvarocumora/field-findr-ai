@@ -15,7 +15,6 @@ concurrency:
 jobs:
   deploy:
     name: Build and deploy production
-    if: ${{ vars.DREAMHOST_DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     environment: production
