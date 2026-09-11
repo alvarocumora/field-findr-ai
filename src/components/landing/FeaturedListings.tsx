@@ -19,7 +19,7 @@ const FeaturedListings = () => {
         .order('created_at', { ascending: false })
         .limit(12);
       if (error) throw error;
-      const visible = (data ?? []).filter((project) => Array.isArray(project.images) && project.images.length > 0).slice(0, 6);
+      const visible = (data ?? []).filter((project) => Array.isArray(project.images) && project.images.length > 0).slice(0, 4);
       return Promise.all(visible.map(async (project) => {
         const { data: lots } = await supabase.rpc('get_public_lots', { p_project_id: project.id });
         const prices = (lots ?? []).map((lot) => Number(lot.price)).filter((price) => Number.isFinite(price) && price > 0);
@@ -36,10 +36,10 @@ const FeaturedListings = () => {
       <div className="container px-4">
         <div className="mb-8 flex items-end justify-between gap-4">
           <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Terrenos disponibles ahora</p>
-            <h2 id="featured-title" className="mt-3 font-heading text-3xl font-bold md:text-5xl">Empieza por el proyecto. Elige después la parcela.</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Selección destacada</p>
+            <h2 id="featured-title" className="mt-3 font-heading text-3xl font-bold md:text-5xl">Cuatro proyectos para entrar al territorio.</h2>
             <p className="mt-3 leading-relaxed text-muted-foreground">
-              Compara ubicación, superficie, precio desde y disponibilidad antes de entrar al detalle de cada lote.
+              Una selección corta para pasar del mapa a proyectos reales sin convertir la portada en un catálogo infinito.
             </p>
           </div>
           <Button asChild variant="outline" className="hidden shrink-0 md:inline-flex">
@@ -48,7 +48,7 @@ const FeaturedListings = () => {
         </div>
 
         <motion.div
-          className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-5 md:grid-cols-2"
           initial={prefersReducedMotion ? false : 'hidden'}
           whileInView="visible"
           viewport={{ once: true, margin: '-60px' }}
