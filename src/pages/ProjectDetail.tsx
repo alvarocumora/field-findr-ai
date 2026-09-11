@@ -189,23 +189,17 @@ const ProjectDetail = () => {
     enabled: validId,
   });
 
-  const { data: lots = [], isLoading: lotsLoading } = useQuery({
-    queryKey: ['project-lots', id, user?.id],
+  const { data: lots = [], isLoading: lotsLoading, error: lotsError } = useQuery({
+    queryKey: ['project-lots', id],
     queryFn: async () => {
-      // Owner (and admin) can read directly to get full buyer info; anyone else
-      // goes through the PII-free RPC.
-      const isOwner = !!user && !!project && project.user_id === user.id;
-      if (isOwner) {
-        const { data } = await supabase
-          .from('lots')
-          .select('*')
-          .eq('project_id', id)
-          .order('lot_number', { ascending: true });
-        return data || [];
-      }
-      const { data } = await supabase.rpc('get_public_lots', { p_project_id: id });
+      // ProjectDetail is a public commercial surface. Use the same PII-free RPC
+      // for every session so authenticated owners/admins and anonymous visitors
+      // receive the exact same stable lot shape. Direct select('*') can fail on
+      // buyer_* column grants and silently leave the cards/designer empty.
+      const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: id });
+      if (error) throw error;
       return (data || []).sort((a: any, b: any) =>
-        String(a.lot_number || '').localeCompare(String(b.lot_number || ''))
+        String(a.lot_number || '').localeCompare(String(b.lot_number || ''), undefined, { numeric: true })
       );
     },
     enabled: validId && !!project,
@@ -533,7 +527,22 @@ const ProjectDetail = () => {
 
             {/* Lots Tab */}
             <TabsContent value="lots">
-              {sortedLots.length > 0 && (
+              {lotsLoading && (
+                <div className="flex min-h-[320px] items-center justify-center text-sm text-muted-foreground">
+                  Cargando parcelas...
+                </div>
+              )}
+              {lotsError && !lotsLoading && (
+                <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-5 text-sm text-destructive">
+                  No se pudo cargar el inventario de parcelas. Recarga la página o vuelve a intentar en unos segundos.
+                </div>
+              )}
+              {!lotsLoading && !lotsError && sortedLots.length === 0 && (
+                <div className="rounded-2xl border border-border bg-muted/20 p-8 text-center text-sm text-muted-foreground">
+                  Este proyecto todavía no tiene parcelas públicas disponibles.
+                </div>
+              )}
+              {!lotsLoading && !lotsError && sortedLots.length > 0 && (
                 <div className="flex justify-end mb-4">
                   <Button
                     variant="outline"
@@ -552,7 +561,8 @@ const ProjectDetail = () => {
                   </Button>
                 </div>
               )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {!lotsLoading && !lotsError && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {sortedLots.map((lot, index) => (
                   <EnhancedLotCard
                     key={lot.id}
@@ -562,7 +572,7 @@ const ProjectDetail = () => {
                     isSelected={selectedLot === lot.id}
                     onView3D={(lot) => {
                       setSelectedLot(lot.id);
-                      setDetailLot(lot);
+                      setDesignerLot(lot);
                     }}
                     onView={(lot) => {
                       setSelectedLot(lot.id);
@@ -574,7 +584,8 @@ const ProjectDetail = () => {
                     }}
                   />
                 ))}
-              </div>
+                </div>
+              )}
             </TabsContent>
 
             {/* Info Tab - Legal + Gallery combined */}
