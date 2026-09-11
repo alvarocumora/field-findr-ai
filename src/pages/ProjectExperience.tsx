@@ -1,196 +1,330 @@
-import { useParams, Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, ChevronDown, Compass, DollarSign, MapPin, Maximize2, TreePine } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LotMapView } from '@/components/lots/LotMapView';
+import { EnhancedLotCard } from '@/components/lots/EnhancedLotCard';
+import { LotDetailSheet } from '@/components/lots/LotDetailSheet';
+import { LotDesigner3DDialog } from '@/components/lots/LotDesigner3DDialog';
+import { LotReservationDialog } from '@/components/lots/LotReservationDialog';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
+import {
+  ArrowLeft,
+  Bookmark,
+  Box,
+  Compass,
+  DollarSign,
+  Eye,
+  List,
+  Map,
+  MapPin,
+  Ruler,
+  Sparkles,
+} from 'lucide-react';
 
-const formatPrice = (price: number | null) => {
+const formatPrice = (price: number | null | undefined) => {
   if (!price) return 'Consultar';
-  return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(price);
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    maximumFractionDigits: 0,
+  }).format(price);
+};
+
+const statusLabel = (status: string | null | undefined) => {
+  if (status === 'available') return 'Disponible';
+  if (status === 'reserved') return 'Reservado';
+  if (status === 'sold') return 'Vendido';
+  return status || 'Sin estado';
+};
+
+const statusClass = (status: string | null | undefined) => {
+  if (status === 'available') return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+  if (status === 'reserved') return 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+  return 'bg-white/5 text-white/50 border-white/10';
 };
 
 const ProjectExperience = () => {
   const { id } = useParams();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const prefersReducedMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: containerRef });
   const { track } = useTrackEvent();
+  const [activeView, setActiveView] = useState('masterplan');
+  const [selectedLot, setSelectedLot] = useState<any | null>(null);
+  const [inspectorLot, setInspectorLot] = useState<any | null>(null);
+  const [designerLot, setDesignerLot] = useState<any | null>(null);
+  const [reservationLot, setReservationLot] = useState<any | null>(null);
 
   const { data: project, isLoading } = useQuery({
-    queryKey: ['project-experience', id],
+    queryKey: ['terrain-view-project', id],
     queryFn: async () => {
-      const { data } = await supabase.from('projects').select('*').eq('id', id!).single();
+      const { data, error } = await supabase.from('projects').select('*').eq('id', id!).single();
+      if (error) throw error;
       return data;
     },
     enabled: !!id,
   });
 
-  const { data: lots } = useQuery({
-    queryKey: ['project-lots-exp', id],
+  const { data: lots = [], isLoading: lotsLoading } = useQuery({
+    queryKey: ['terrain-view-lots', id],
     queryFn: async () => {
-      const { data } = await supabase.rpc('get_public_lots', { p_project_id: id! });
+      const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: id! });
+      if (error) throw error;
       return data || [];
     },
     enabled: !!id,
   });
 
   useEffect(() => {
-    if (id) void track('view_experience', { project_id: id, surface: 'atlas' });
+    if (id) void track('terrain_view_opened', { project_id: id, surface: 'atlas' });
   }, [id, track]);
 
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 1.1]);
-  const textY = useTransform(scrollYProgress, [0.1, 0.25], [100, 0]);
-  const textOpacity = useTransform(scrollYProgress, [0.1, 0.2], [0, 1]);
-  const statsY = useTransform(scrollYProgress, [0.3, 0.45], [80, 0]);
-  const statsOpacity = useTransform(scrollYProgress, [0.3, 0.4], [0, 1]);
-  const ctaOpacity = useTransform(scrollYProgress, [0.7, 0.85], [0, 1]);
+  const sortedLots = useMemo(
+    () => [...lots].sort((a: any, b: any) => (parseInt(a.lot_number) || 0) - (parseInt(b.lot_number) || 0)),
+    [lots],
+  );
+
+  const availableLots = useMemo(() => lots.filter((lot: any) => lot.status === 'available'), [lots]);
+  const reservedLots = useMemo(() => lots.filter((lot: any) => lot.status === 'reserved'), [lots]);
+  const soldLots = useMemo(() => lots.filter((lot: any) => lot.status === 'sold'), [lots]);
+
+  const prices = useMemo(
+    () => availableLots.map((lot: any) => Number(lot.price)).filter((price: number) => price > 0),
+    [availableLots],
+  );
+
+  const minPrice = prices.length ? Math.min(...prices) : null;
+
+  const selectLot = (lot: any, openInspector = true) => {
+    setSelectedLot(lot);
+    void track('terrain_view_lot_selected', {
+      project_id: id,
+      lot_id: lot.id,
+      lot_number: lot.lot_number,
+      source: activeView,
+    });
+    if (openInspector) setInspectorLot(lot);
+  };
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        <div className="animate-pulse text-lg text-white/50">Entrando al territorio...</div>
+      <div className="flex min-h-screen items-center justify-center bg-[#080a0b] text-white">
+        <div className="animate-pulse text-sm uppercase tracking-[0.2em] text-white/45">Cargando Terrain View...</div>
       </div>
     );
   }
 
   if (!project) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
-        <p>Proyecto no encontrado</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#080a0b] text-white">
+        <div className="text-center">
+          <p className="text-lg font-semibold">Proyecto no encontrado</p>
+          <Button asChild variant="outline" className="mt-4 border-white/15 bg-white/5 text-white">
+            <Link to="/explorar">Volver a explorar</Link>
+          </Button>
+        </div>
       </div>
     );
   }
 
-  const images = (project as any)?.images || [];
-  const heroImg = images[0] || '/placeholder.svg';
-  const available = lots?.filter((lot: any) => lot.status === 'available') || [];
-  const sold = lots?.filter((lot: any) => lot.status === 'sold') || [];
-  const prices = lots?.map((lot: any) => lot.price).filter(Boolean) || [];
-  const minPrice = prices.length > 0 ? Math.min(...prices) : null;
-  const areas = lots?.map((lot: any) => lot.area).filter(Boolean) || [];
-  const minArea = areas.length > 0 ? Math.min(...areas) : null;
-  const maxArea = areas.length > 0 ? Math.max(...areas) : null;
-  const location = project.location || project.city || project.region || 'Chile';
+  const location = [project.city, project.region].filter(Boolean).join(', ') || project.location || 'Chile';
+  const legalDocuments = (project as any)?.legal_documents || [];
 
   return (
-    <div ref={containerRef} className="relative bg-black text-white" style={{ height: '500vh' }}>
-      <Link
-        to={`/proyecto/${id}`}
-        aria-label="Volver a la ficha del proyecto"
-        className="fixed left-6 top-6 z-50 rounded-full border border-white/20 bg-white/10 p-3 backdrop-blur-md transition-colors hover:bg-white/20"
-      >
-        <ArrowLeft className="h-5 w-5 text-white" />
-      </Link>
-
-      <div className="fixed right-6 top-6 z-50 hidden items-center gap-2 rounded-full border border-white/15 bg-black/30 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70 backdrop-blur-md sm:flex">
-        <Compass className="h-3.5 w-3.5" /> Atlas · Terrain View
-      </div>
-
-      <motion.div
-        style={prefersReducedMotion ? undefined : { opacity: heroOpacity, scale: heroScale }}
-        className="fixed inset-0 z-0"
-      >
-        <img src={heroImg} alt={project.name} className="h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-black/90" />
-        <div className="absolute inset-0 grid-topo opacity-[0.08]" aria-hidden="true" />
-        <div className="absolute bottom-1/4 left-0 right-0 text-center">
-          <motion.div animate={prefersReducedMotion ? undefined : { y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
-            <ChevronDown className="mx-auto h-8 w-8 text-white/60" />
-          </motion.div>
-          <p className="mt-2 text-sm text-white/45">Desplaza para bajar hasta el proyecto</p>
-        </div>
-      </motion.div>
-
-      <motion.div
-        style={prefersReducedMotion ? undefined : { y: textY, opacity: textOpacity }}
-        className="pointer-events-none fixed inset-0 z-10 flex items-center justify-center"
-      >
-        <div className="max-w-4xl px-8 text-center">
-          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/45">Chile → {project.region || 'Territorio'} → Proyecto</p>
-          <Badge variant="outline" className="mb-4 border-white/30 text-white/80">
-            <MapPin className="mr-1 h-3 w-3" />
-            {location}
-          </Badge>
-          <h1 className="mb-4 text-5xl font-bold tracking-tight md:text-7xl">
-            {project.name}
-          </h1>
-          <p className="mx-auto max-w-3xl text-xl leading-relaxed text-white/70">
-            {project.description || 'Explora el proyecto, revisa su inventario real y continúa hasta la parcela que quieres conocer.'}
-          </p>
-        </div>
-      </motion.div>
-
-      <motion.div
-        style={prefersReducedMotion ? undefined : { y: statsY, opacity: statsOpacity }}
-        className="pointer-events-none fixed inset-0 z-20 flex items-center justify-center"
-      >
-        <div className="max-w-5xl px-8 text-center">
-          <p className="mb-7 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/45">Inventario vivo</p>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-            {[
-              { icon: <TreePine className="h-6 w-6" />, label: 'Disponibles ahora', value: `${available.length}` },
-              { icon: <DollarSign className="h-6 w-6" />, label: 'Precio desde', value: formatPrice(minPrice) },
-              { icon: <Maximize2 className="h-6 w-6" />, label: 'Superficies', value: minArea && maxArea ? `${minArea} – ${maxArea} m²` : '—' },
-              { icon: <Calendar className="h-6 w-6" />, label: 'Vendidos', value: `${sold.length} lotes` },
-            ].map((stat) => (
-              <div key={stat.label} className="rounded-2xl border border-white/10 bg-white/5 p-5 text-center backdrop-blur-xl md:p-6">
-                <div className="mb-2 flex justify-center text-primary">{stat.icon}</div>
-                <p className="text-xl font-bold md:text-2xl">{stat.value}</p>
-                <p className="mt-1 text-xs uppercase tracking-wider text-white/50">{stat.label}</p>
+    <div className="min-h-screen bg-[#080a0b] text-white">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#080a0b]/92 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-4 px-4 py-3 md:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <Button asChild variant="ghost" size="icon" className="shrink-0 text-white/70 hover:bg-white/10 hover:text-white">
+              <Link to={`/proyecto/${id}`} aria-label="Volver a la ficha del proyecto">
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="hidden text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400 sm:inline">OfertaTerrenos</span>
+                <span className="hidden text-white/25 sm:inline">/</span>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">
+                  <Compass className="h-3.5 w-3.5" /> Terrain View
+                </span>
               </div>
-            ))}
+              <p className="mt-0.5 truncate font-semibold text-white">{project.name}</p>
+            </div>
           </div>
-          <p className="mt-7 text-sm text-white/50">La disponibilidad proviene del inventario publicado del proyecto.</p>
+          <div className="hidden items-center gap-2 md:flex">
+            <Badge variant="outline" className="border-white/10 bg-white/5 text-white/60">
+              <MapPin className="mr-1 h-3 w-3" /> {location}
+            </Badge>
+            <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
+              {availableLots.length} disponibles
+            </Badge>
+          </div>
         </div>
-      </motion.div>
+      </header>
 
-      <div className="absolute left-0 right-0 top-[250vh] z-30 px-5 md:px-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-8 text-center">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/45">Terrain View</p>
-            <h2 className="mt-3 text-3xl font-bold md:text-4xl">Conoce el lugar antes de pisarlo.</h2>
+      <main className="mx-auto max-w-[1680px] px-4 py-5 md:px-6 md:py-6">
+        <section className="mb-5 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/10 via-white/[0.035] to-transparent p-5 md:p-6">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-emerald-400">Masterplan vivo</p>
+              <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-4xl">Explora el proyecto. Elige la parcela. Decide sin salir del contexto.</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50 md:text-base">
+                Mapa, inventario, ficha y diseño 3D comparten la misma selección de lote. Cambia de vista sin perder la parcela que estás evaluando.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:min-w-[560px]">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                <p className="text-[10px] uppercase tracking-wider text-white/35">Disponibles</p>
+                <p className="mt-1 text-xl font-bold text-emerald-300">{availableLots.length}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                <p className="text-[10px] uppercase tracking-wider text-white/35">Reservados</p>
+                <p className="mt-1 text-xl font-bold text-amber-300">{reservedLots.length}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                <p className="text-[10px] uppercase tracking-wider text-white/35">Vendidos</p>
+                <p className="mt-1 text-xl font-bold">{soldLots.length}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                <p className="text-[10px] uppercase tracking-wider text-white/35">Desde</p>
+                <p className="mt-1 truncate text-base font-bold">{formatPrice(minPrice)}</p>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {images.slice(0, 6).map((img: string, index: number) => (
-              <motion.div
-                key={img}
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: prefersReducedMotion ? 0 : index * 0.1 }}
-                className="aspect-video overflow-hidden rounded-xl border border-white/10"
-              >
-                <img src={img} alt={`Vista ${index + 1} de ${project.name}`} className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
+        </section>
 
-      <motion.div
-        style={prefersReducedMotion ? undefined : { opacity: ctaOpacity }}
-        className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black via-black/90 to-transparent p-6"
-      >
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">Siguiente destino</p>
-          <h3 className="mb-3 text-2xl font-bold">Baja del proyecto a sus parcelas.</h3>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg" className="rounded-full px-8">
-              <Link to={`/proyecto/${id}`}>Explorar lotes disponibles</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="rounded-full border-white/30 px-8 text-white hover:bg-white/10">
-              <a href={`https://wa.me/?text=${encodeURIComponent(`Quiero conocer ${project.name}: ${window.location.href}`)}`} target="_blank" rel="noopener noreferrer">
-                Consultar por WhatsApp
-              </a>
-            </Button>
-          </div>
-        </div>
-      </motion.div>
+        {selectedLot ? (
+          <section className="mb-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3 md:p-4" aria-label="Lote seleccionado">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                <div>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-emerald-400">Lote seleccionado</p>
+                  <p className="text-lg font-bold">Lote {selectedLot.lot_number}</p>
+                </div>
+                <Badge variant="outline" className={statusClass(selectedLot.status)}>{statusLabel(selectedLot.status)}</Badge>
+                <span className="inline-flex items-center gap-1.5 text-sm text-white/65">
+                  <Ruler className="h-4 w-4" /> {Number(selectedLot.area).toLocaleString('es-CL')} m²
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white">
+                  <DollarSign className="h-4 w-4 text-emerald-400" /> {formatPrice(selectedLot.price)}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10" onClick={() => setActiveView('masterplan')}>
+                  <Map className="mr-1.5 h-4 w-4" /> Ver en mapa
+                </Button>
+                <Button variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10" onClick={() => setInspectorLot(selectedLot)}>
+                  <Eye className="mr-1.5 h-4 w-4" /> Lot Inspector
+                </Button>
+                <Button variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10" onClick={() => setDesignerLot(selectedLot)}>
+                  <Box className="mr-1.5 h-4 w-4" /> Diseñar en 3D
+                </Button>
+                {selectedLot.status === 'available' && (
+                  <Button size="sm" onClick={() => setReservationLot(selectedLot)}>
+                    <Bookmark className="mr-1.5 h-4 w-4" /> Reservar
+                  </Button>
+                )}
+              </div>
+            </div>
+          </section>
+        ) : (
+          <section className="mb-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/45">
+            <Sparkles className="h-4 w-4 text-emerald-400" /> Selecciona una parcela en el masterplan o en el inventario para mantenerla activa en todas las vistas.
+          </section>
+        )}
+
+        <Tabs value={activeView} onValueChange={setActiveView} className="space-y-4">
+          <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.035] p-1.5">
+            <TabsTrigger value="masterplan" className="gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-black">
+              <Map className="h-4 w-4" /> Masterplan
+            </TabsTrigger>
+            <TabsTrigger value="lots" className="gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-black">
+              <List className="h-4 w-4" /> Lotes ({lots.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="masterplan" className="mt-0">
+            <div className="overflow-hidden rounded-3xl border border-white/10 bg-black/30">
+              {lotsLoading ? (
+                <div className="flex h-[68vh] items-center justify-center text-sm text-white/40">Cargando masterplan...</div>
+              ) : (
+                <LotMapView
+                  lots={lots as any}
+                  projectCenter={{
+                    lat: project.latitude || -34.9767,
+                    lng: project.longitude || -71.7856,
+                  }}
+                  onLotClick={(lot) => selectLot(lot, true)}
+                  selectedLotId={selectedLot?.id ?? null}
+                  projectId={project.id}
+                  kmzFileUrl={(project as any).kmz_file_url}
+                  planImages={(project as any).plan_images || []}
+                  readOnly
+                />
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="lots" className="mt-0">
+            {lotsLoading ? (
+              <div className="flex min-h-[420px] items-center justify-center text-sm text-white/40">Cargando inventario...</div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {sortedLots.map((lot: any, index: number) => (
+                  <EnhancedLotCard
+                    key={lot.id}
+                    lot={lot}
+                    index={index}
+                    totalAvailable={availableLots.length}
+                    isSelected={selectedLot?.id === lot.id}
+                    projectName={project.name}
+                    onView={(item) => selectLot(item, true)}
+                    onView3D={(item) => {
+                      setSelectedLot(item);
+                      setInspectorLot(item);
+                    }}
+                    onSimulateFinancing={(item) => selectLot(item, true)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </main>
+
+      <LotDetailSheet
+        lot={inspectorLot}
+        open={!!inspectorLot}
+        onOpenChange={(open) => !open && setInspectorLot(null)}
+        projectName={project.name}
+        legalDocuments={legalDocuments}
+        project={project as any}
+        onReserve={(lot) => {
+          setInspectorLot(null);
+          setSelectedLot(lot);
+          setReservationLot(lot);
+        }}
+        onDesign={(lot) => {
+          setInspectorLot(null);
+          setSelectedLot(lot);
+          setDesignerLot(lot);
+        }}
+      />
+
+      <LotDesigner3DDialog
+        lot={designerLot}
+        open={!!designerLot}
+        onOpenChange={(open) => !open && setDesignerLot(null)}
+      />
+
+      <LotReservationDialog
+        lot={reservationLot}
+        projectName={project.name}
+        open={!!reservationLot}
+        onOpenChange={(open) => !open && setReservationLot(null)}
+        reservationAmount={(project as any).reservation_deposit || 500000}
+      />
     </div>
   );
 };
