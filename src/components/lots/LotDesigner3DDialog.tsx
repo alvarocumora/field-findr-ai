@@ -9,6 +9,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Lot, useLots } from '@/hooks/useLots';
+import { normalizePolygon } from '@/lib/polygonUtils';
 
 const ParcelaDesigner3D = lazy(() =>
   import('@/components/parcela/ParcelaDesigner3D').then((m) => ({
@@ -46,10 +47,13 @@ export const LotDesigner3DDialog = ({
 
   if (!lot) return null;
 
-  const polygon = lot.polygon as number[][] | null;
+  const normalized = normalizePolygon(lot.polygon as any, lot.latitude ?? undefined, lot.longitude ?? undefined);
+  const polygon = normalized.valid ? normalized.coords : null;
   const neighbors = projectLots
-    .filter((l) => l.id !== lot.id && Array.isArray(l.polygon) && (l.polygon as number[][]).length >= 3)
-    .map((l) => l.polygon as number[][]);
+    .filter((l) => l.id !== lot.id)
+    .map((l) => normalizePolygon(l.polygon as any, l.latitude ?? undefined, l.longitude ?? undefined))
+    .filter((candidate) => candidate.valid)
+    .map((candidate) => candidate.coords);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
