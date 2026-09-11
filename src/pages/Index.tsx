@@ -1,9 +1,6 @@
 import PublicLayout from '@/components/layouts/PublicLayout';
 import CartographicHero from '@/components/landing/CartographicHero';
-import FloatingCTA from '@/components/landing/FloatingCTA';
-import TrustBadges from '@/components/landing/TrustBadges';
 import FeaturedListings from '@/components/landing/FeaturedListings';
-import HowItWorksFlow from '@/components/landing/HowItWorksFlow';
 import DecisionStackSection from '@/components/landing/DecisionStackSection';
 import ProfessionalNetworkSection from '@/components/landing/ProfessionalNetworkSection';
 import AtlasTerritorySection from '@/components/landing/AtlasTerritorySection';
@@ -20,16 +17,13 @@ const Index = () => {
   });
 
   return (
-    <PublicLayout showFooter={true}>
+    <PublicLayout showFooter={true} showAssistant={false}>
       <CartographicHero />
       <AtlasTerritorySection />
       <FeaturedListings />
-      <HowItWorksFlow />
       <DecisionStackSection />
-      <TrustBadges />
       <ProfessionalNetworkSection />
       <CTASection />
-      <FloatingCTA />
     </PublicLayout>
   );
 };
