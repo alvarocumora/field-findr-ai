@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router-dom';
 import StickyHeader from '@/components/navigation/StickyHeader';
 import FooterSection from '@/components/FooterSection';
 import AIFloatingButton from '@/components/AIFloatingButton';
@@ -5,27 +6,21 @@ import AIFloatingButton from '@/components/AIFloatingButton';
 interface PublicLayoutProps {
   children: React.ReactNode;
   showFooter?: boolean;
+  showAssistant?: boolean;
 }
 
-const PublicLayout = ({ children, showFooter = true }: PublicLayoutProps) => {
+const PublicLayout = ({ children, showFooter = true, showAssistant = true }: PublicLayoutProps) => {
+  const { pathname } = useLocation();
+  const isProjectSurface = pathname.startsWith('/proyecto/');
+  const shouldShowAssistant = showAssistant && !isProjectSurface;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Noise overlay for texture */}
       <div className="noise-overlay" />
-      
-      {/* Sticky Header */}
       <StickyHeader />
-      
-      {/* Main Content with top padding for fixed header */}
-      <main className="flex-1 pt-16">
-        {children}
-      </main>
-
-      {/* Footer */}
+      <main className="flex-1 pt-16">{children}</main>
       {showFooter && <FooterSection />}
-
-      {/* AI Floating Button */}
-      <AIFloatingButton />
+      {shouldShowAssistant && <AIFloatingButton />}
     </div>
   );
 };

@@ -10,12 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { Lot, parseLotFeatures } from '@/hooks/useLots';
 import {
   DollarSign,
@@ -36,6 +30,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
+  Sparkles,
+  Box,
+  ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -44,9 +41,7 @@ import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { PublishLotButton } from './PublishLotButton';
 
 const ParcelaDesigner3D = lazy(() =>
-  import('@/components/parcela/ParcelaDesigner3D').then((m) => ({
-    default: m.ParcelaDesigner3D,
-  }))
+  import('@/components/parcela/ParcelaDesigner3D').then((m) => ({ default: m.ParcelaDesigner3D }))
 );
 
 interface LotDetailSheetProps {
@@ -58,31 +53,23 @@ interface LotDetailSheetProps {
   onDesign?: (lot: Lot) => void;
   onFinance?: (lot: Lot) => void;
   legalDocuments?: any[];
-  /** Full project (needed to publish the lot to the marketplace). */
   project?: import('@/lib/marketplace/lotToListing').ProjectForListing | null;
-  /** Owner-only: enables the "publish to marketplace" control. */
   canManage?: boolean;
 }
 
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
   return new Intl.NumberFormat('es-CL', {
-    style: 'currency',
-    currency: 'CLP',
-    maximumFractionDigits: 0,
+    style: 'currency', currency: 'CLP', maximumFractionDigits: 0,
   }).format(price);
 };
 
 const getStatusConfig = (status: string | null) => {
   switch (status) {
-    case 'available':
-      return { label: 'Disponible', className: 'bg-emerald-500 text-white' };
-    case 'reserved':
-      return { label: 'Reservado', className: 'bg-amber-500 text-white' };
-    case 'sold':
-      return { label: 'Vendido', className: 'bg-muted text-muted-foreground' };
-    default:
-      return { label: status || 'Sin estado', className: 'bg-muted text-muted-foreground' };
+    case 'available': return { label: 'Disponible', className: 'bg-emerald-500 text-white border-emerald-400/30' };
+    case 'reserved': return { label: 'Reservado', className: 'bg-amber-500 text-white border-amber-400/30' };
+    case 'sold': return { label: 'Vendido', className: 'bg-zinc-700 text-zinc-200 border-zinc-600' };
+    default: return { label: status || 'Sin estado', className: 'bg-muted text-muted-foreground' };
   }
 };
 
@@ -97,9 +84,7 @@ const getSlopeLabel = (slope: string | null) => {
 
 const handleShare = (lot: Lot) => {
   const url = `${window.location.origin}/proyecto/${lot.project_id}?lote=${lot.lot_number}`;
-  navigator.clipboard.writeText(url).then(() => {
-    toast.success('Enlace copiado al portapapeles');
-  });
+  navigator.clipboard.writeText(url).then(() => toast.success('Enlace copiado al portapapeles'));
 };
 
 const handleWhatsApp = (lot: Lot, projectName: string) => {
@@ -108,54 +93,26 @@ const handleWhatsApp = (lot: Lot, projectName: string) => {
   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 };
 
-/** Image Gallery Carousel */
 const ImageGallery = ({ images }: { images: string[] }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-
   if (images.length === 0) return null;
 
   return (
-    <div className="relative rounded-xl overflow-hidden">
-      <div className="aspect-[16/9] bg-muted">
-        <img
-          src={images[currentIndex]}
-          alt={`Foto ${currentIndex + 1}`}
-          className="w-full h-full object-cover"
-        />
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+      <div className="aspect-[16/9]">
+        <img src={images[currentIndex]} alt={`Foto ${currentIndex + 1}`} className="h-full w-full object-cover" />
       </div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
       {images.length > 1 && (
         <>
-          <Button
-            size="icon"
-            variant="secondary"
-            className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 hover:bg-white shadow-md"
-            onClick={() => setCurrentIndex((i) => (i === 0 ? images.length - 1 : i - 1))}
-          >
+          <Button size="icon" variant="secondary" className="absolute left-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full bg-black/55 text-white hover:bg-black/75" onClick={() => setCurrentIndex((i) => (i === 0 ? images.length - 1 : i - 1))}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button
-            size="icon"
-            variant="secondary"
-            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 hover:bg-white shadow-md"
-            onClick={() => setCurrentIndex((i) => (i === images.length - 1 ? 0 : i + 1))}
-          >
+          <Button size="icon" variant="secondary" className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full bg-black/55 text-white hover:bg-black/75" onClick={() => setCurrentIndex((i) => (i === images.length - 1 ? 0 : i + 1))}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {images.map((_, i) => (
-              <button
-                key={i}
-                className={cn(
-                  'h-1.5 rounded-full transition-all',
-                  i === currentIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/50'
-                )}
-                onClick={() => setCurrentIndex(i)}
-              />
-            ))}
-          </div>
-          <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[10px]">
-            <ImageIcon className="h-3 w-3 mr-1" />
-            {currentIndex + 1}/{images.length}
+          <Badge className="absolute bottom-3 right-3 border-white/10 bg-black/55 text-[10px] text-white">
+            <ImageIcon className="mr-1 h-3 w-3" />{currentIndex + 1}/{images.length}
           </Badge>
         </>
       )}
@@ -183,8 +140,7 @@ export const LotDetailSheet = ({
   const features = parseLotFeatures(lot.features);
   const status = getStatusConfig(lot.status);
   const polygon = lot.polygon as number[][] | null;
-  const pricePerSqm =
-    lot.price_per_sqm || (lot.price && lot.area ? lot.price / Number(lot.area) : null);
+  const pricePerSqm = lot.price_per_sqm || (lot.price && lot.area ? lot.price / Number(lot.area) : null);
   const slopeLabel = getSlopeLabel(lot.slope_category);
   const images = ((lot as any).images as string[] | null) || [];
 
@@ -193,7 +149,7 @@ export const LotDetailSheet = ({
     try {
       await generateLotDataCardPdf(lot, projectName, features, { mapboxToken });
       toast.success('Ficha del lote descargada');
-    } catch (err) {
+    } catch {
       toast.error('Error al generar ficha PDF');
     } finally {
       setIsDownloading(false);
@@ -202,278 +158,142 @@ export const LotDetailSheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto p-0">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border px-6 pt-6 pb-4">
-          <SheetHeader className="mb-0">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-xl">Lote {lot.lot_number}</SheetTitle>
-              <Badge className={cn('shrink-0', status.className)}>{status.label}</Badge>
+      <SheetContent side="right" className="w-full overflow-y-auto border-l border-white/10 bg-zinc-950 p-0 text-white sm:max-w-xl">
+        <div className="sticky top-0 z-20 border-b border-white/10 bg-zinc-950/92 px-6 pb-5 pt-6 backdrop-blur-xl">
+          <SheetHeader className="mb-0 text-left">
+            <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/40">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-400" /> Terrain View · Lot Inspector
             </div>
-            <SheetDescription className="text-sm">
-              {projectName}
-              {lot.name && lot.name !== lot.lot_number && ` · ${lot.name}`}
-            </SheetDescription>
+            <div className="flex items-start justify-between gap-4 pr-8">
+              <div>
+                <SheetTitle className="text-3xl font-bold tracking-tight text-white">Lote {lot.lot_number}</SheetTitle>
+                <SheetDescription className="mt-1 text-sm text-white/50">
+                  {projectName}{lot.name && lot.name !== lot.lot_number && ` · ${lot.name}`}
+                </SheetDescription>
+              </div>
+              <Badge className={cn('mt-1 shrink-0 rounded-full px-3 py-1 text-xs', status.className)}>{status.label}</Badge>
+            </div>
           </SheetHeader>
+
+          <div className="mt-5 grid grid-cols-[1fr_auto] items-end gap-5">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-white/35">Precio</p>
+              <p className="mt-1 text-3xl font-bold tracking-tight text-white">{formatPrice(lot.price)}</p>
+              {pricePerSqm && <p className="mt-1 text-sm text-white/45">{formatPrice(pricePerSqm)}/m²</p>}
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-white/35">Superficie</p>
+              <p className="mt-1 text-xl font-semibold">{Number(lot.area).toLocaleString('es-CL')} m²</p>
+            </div>
+          </div>
         </div>
 
-        <div className="px-6 pb-6 space-y-5 pt-4">
-          {/* Image Gallery (if images exist) */}
+        <div className="space-y-6 px-6 pb-32 pt-5">
           {images.length > 0 && <ImageGallery images={images} />}
 
-          {/* 3D Preview */}
-          <div className="rounded-xl overflow-hidden border border-border/40 h-[280px] bg-muted/30">
-            <Suspense
-              fallback={
-                <div className="flex items-center justify-center h-full">
-                  <Skeleton className="w-full h-full" />
+          <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035]">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <div>
+                <p className="text-xs font-semibold">Vista de parcela</p>
+                <p className="text-[11px] text-white/40">Forma, escala y contexto 3D</p>
+              </div>
+              <Box className="h-4 w-4 text-emerald-400" />
+            </div>
+            <div className="h-[260px] bg-zinc-900/50">
+              <Suspense fallback={<Skeleton className="h-full w-full bg-white/5" />}>
+                <div className="h-full [&>div]:!h-full [&>div]:!rounded-none [&>div]:!border-0">
+                  <ParcelaDesigner3D polygon={polygon} lotNumber={lot.lot_number} lotArea={Number(lot.area)} lotPrice={lot.price ?? undefined} latitude={lot.latitude ?? undefined} longitude={lot.longitude ?? undefined} />
                 </div>
-              }
-            >
-              <div className="h-full [&>div]:!h-full [&>div]:!rounded-none [&>div]:!border-0">
-                <ParcelaDesigner3D
-                  polygon={polygon}
-                  lotNumber={lot.lot_number}
-                  lotArea={Number(lot.area)}
-                  lotPrice={lot.price ?? undefined}
-                  latitude={lot.latitude ?? undefined}
-                  longitude={lot.longitude ?? undefined}
-                />
-              </div>
-            </Suspense>
-          </div>
+              </Suspense>
+            </div>
+            {lot.status === 'available' && onDesign && (
+              <button type="button" onClick={() => onDesign(lot)} className="flex w-full items-center justify-between border-t border-white/10 px-4 py-3 text-sm text-white/65 transition-colors hover:bg-white/5 hover:text-white">
+                <span className="flex items-center gap-2"><Palette className="h-4 w-4 text-emerald-400" />Diseñar esta parcela</span>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </section>
 
-          {/* Key Metrics */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-xl bg-muted/50 border border-border/30">
-              <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1">
-                <Ruler className="h-3.5 w-3.5" />
-                Superficie
-              </div>
-              <p className="font-semibold text-lg">
-                {Number(lot.area).toLocaleString('es-CL')} m²
-              </p>
+          <section className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-white/35"><Ruler className="h-3.5 w-3.5" />Superficie</div>
+              <p className="mt-2 text-xl font-semibold">{Number(lot.area).toLocaleString('es-CL')} m²</p>
             </div>
-            <div className="p-3 rounded-xl bg-primary/5 border border-primary/10">
-              <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1">
-                <DollarSign className="h-3.5 w-3.5" />
-                Precio
-              </div>
-              <p className="font-bold text-lg text-primary">{formatPrice(lot.price)}</p>
+            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-white/35"><TrendingUp className="h-3.5 w-3.5" />Precio/m²</div>
+              <p className="mt-2 text-xl font-semibold text-emerald-400">{pricePerSqm ? `${formatPrice(pricePerSqm)}/m²` : '—'}</p>
             </div>
-          </div>
+          </section>
 
-          {pricePerSqm && (
-            <div className="flex items-center justify-between text-sm px-1">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <TrendingUp className="h-3.5 w-3.5" />
-                Precio/m²
-              </span>
-              <span className="font-medium">{formatPrice(pricePerSqm)}/m²</span>
-            </div>
+          {(lot.elevation_avg || slopeLabel || features.hasWater || features.hasElectricity || features.hasRoad) && (
+            <section>
+              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Condiciones del lote</p>
+              <div className="flex flex-wrap gap-2">
+                {lot.elevation_avg && <Badge variant="outline" className="border-white/10 bg-white/[0.035] text-white/70"><Mountain className="mr-1.5 h-3.5 w-3.5" />{Math.round(Number(lot.elevation_avg))}m snm</Badge>}
+                {slopeLabel && <Badge variant="outline" className="border-white/10 bg-white/[0.035] text-white/70">📐 {slopeLabel}</Badge>}
+                {features.hasWater && <Badge variant="outline" className="border-white/10 bg-white/[0.035] text-white/70"><Droplets className="mr-1.5 h-3.5 w-3.5 text-sky-400" />Agua</Badge>}
+                {features.hasElectricity && <Badge variant="outline" className="border-white/10 bg-white/[0.035] text-white/70"><Zap className="mr-1.5 h-3.5 w-3.5 text-amber-400" />Electricidad</Badge>}
+                {features.hasRoad && <Badge variant="outline" className="border-white/10 bg-white/[0.035] text-white/70"><Route className="mr-1.5 h-3.5 w-3.5" />Acceso vial</Badge>}
+              </div>
+            </section>
           )}
 
-          <Separator />
-
-          {/* Topography */}
-          {(lot.elevation_avg || slopeLabel) && (
-            <>
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold flex items-center gap-1.5">
-                  <Mountain className="h-4 w-4 text-muted-foreground" />
-                  Topografía
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {lot.elevation_avg && (
-                    <Badge variant="outline" className="text-xs gap-1">
-                      ⛰ {Math.round(Number(lot.elevation_avg))}m snm
-                    </Badge>
-                  )}
-                  {slopeLabel && (
-                    <Badge variant="outline" className="text-xs gap-1">
-                      📐 {slopeLabel}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              <Separator />
-            </>
-          )}
-
-          {/* Services */}
-          {(features.hasWater || features.hasElectricity || features.hasRoad) && (
-            <>
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold">Servicios</h4>
-                <TooltipProvider delayDuration={200}>
-                  <div className="flex flex-wrap gap-2">
-                    {features.hasWater && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge variant="outline" className="text-xs gap-1 px-2.5 py-1">
-                            <Droplets className="h-3.5 w-3.5 text-blue-500" />
-                            Agua
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>Conexión de agua disponible</TooltipContent>
-                      </Tooltip>
-                    )}
-                    {features.hasElectricity && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge variant="outline" className="text-xs gap-1 px-2.5 py-1">
-                            <Zap className="h-3.5 w-3.5 text-yellow-500" />
-                            Electricidad
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>Conexión eléctrica disponible</TooltipContent>
-                      </Tooltip>
-                    )}
-                    {features.hasRoad && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge variant="outline" className="text-xs gap-1 px-2.5 py-1">
-                            <Route className="h-3.5 w-3.5 text-muted-foreground" />
-                            Acceso vial
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>Acceso por camino</TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-                </TooltipProvider>
-              </div>
-              <Separator />
-            </>
-          )}
-
-          {/* Location with map hint */}
           {lot.latitude && lot.longitude && (
-            <>
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  Ubicación
-                </h4>
-                <div className="rounded-lg bg-muted/50 border border-border/30 p-3">
-                  <p className="text-xs text-muted-foreground">
-                    {Number(lot.latitude).toFixed(5)}, {Number(lot.longitude).toFixed(5)}
-                  </p>
-                  <a
-                    href={`https://www.google.com/maps?q=${lot.latitude},${lot.longitude}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline mt-1 inline-block"
-                  >
-                    Ver en Google Maps →
-                  </a>
-                </div>
-              </div>
-              <Separator />
-            </>
+            <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold"><MapPin className="h-4 w-4 text-emerald-400" />Ubicación</div>
+              <p className="mt-2 text-xs text-white/40">{Number(lot.latitude).toFixed(5)}, {Number(lot.longitude).toFixed(5)}</p>
+              <a href={`https://www.google.com/maps?q=${lot.latitude},${lot.longitude}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-sm text-emerald-400 hover:text-emerald-300">
+                Ver en Google Maps <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </section>
           )}
 
-          {/* Documents */}
           {legalDocuments.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold">Documentos del Proyecto</h4>
-              <div className="space-y-1.5">
-                {legalDocuments.slice(0, 5).map((doc: any, i: number) => (
-                  <a
-                    key={i}
-                    href={doc.url || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-muted/50"
-                  >
-                    📄 {doc.name || `Documento ${i + 1}`}
+            <section>
+              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Documentos del proyecto</p>
+              <div className="divide-y divide-white/10 rounded-2xl border border-white/10 bg-white/[0.025]">
+                {legalDocuments.slice(0, 4).map((doc: any, i: number) => (
+                  <a key={i} href={doc.url || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between px-4 py-3 text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white">
+                    <span>📄 {doc.name || `Documento ${i + 1}`}</span><ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Share & Download Section */}
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 gap-1.5 text-xs"
-              onClick={() => handleShare(lot)}
-            >
-              <Share2 className="h-3.5 w-3.5" />
-              Copiar Enlace
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 gap-1.5 text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 border-emerald-500/20"
-              onClick={() => handleWhatsApp(lot, projectName)}
-            >
-              <MessageCircle className="h-3.5 w-3.5" />
-              WhatsApp
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 text-xs"
-              onClick={handleDownloadFicha}
-              disabled={isDownloading}
-            >
-              <Download className="h-3.5 w-3.5" />
-              {isDownloading ? '...' : 'Ficha'}
-            </Button>
+          <Separator className="bg-white/10" />
+
+          <div className="grid grid-cols-3 gap-2">
+            <Button variant="outline" size="sm" className="border-white/10 bg-white/[0.025] text-white hover:bg-white/5" onClick={() => handleShare(lot)}><Share2 className="mr-1.5 h-3.5 w-3.5" />Compartir</Button>
+            <Button variant="outline" size="sm" className="border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300" onClick={() => handleWhatsApp(lot, projectName)}><MessageCircle className="mr-1.5 h-3.5 w-3.5" />WhatsApp</Button>
+            <Button variant="outline" size="sm" className="border-white/10 bg-white/[0.025] text-white hover:bg-white/5" onClick={handleDownloadFicha} disabled={isDownloading}><Download className="mr-1.5 h-3.5 w-3.5" />{isDownloading ? '...' : 'Ficha'}</Button>
           </div>
 
-          {/* Action Buttons */}
-          {lot.status === 'available' && (
-            <div className="space-y-2 pt-2">
-              <Button
-                className="w-full gap-2 h-11"
-                size="lg"
-                onClick={() => onReserve?.(lot)}
-              >
-                <Bookmark className="h-4 w-4" />
-                Reservar este Lote
-              </Button>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => onDesign?.(lot)}
-                >
-                  <Palette className="h-4 w-4" />
-                  Diseñar Parcela
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => onFinance?.(lot)}
-                >
-                  <Calculator className="h-4 w-4" />
-                  Simular Crédito
-                </Button>
-              </div>
-            </div>
-          )}
-
           {lot.status === 'reserved' && (
-            <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 text-sm text-amber-600 flex items-start gap-2">
-              <TriangleAlert className="h-4 w-4 mt-0.5 shrink-0" />
-              <span>Este lote se encuentra actualmente reservado.</span>
+            <div className="flex items-start gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] p-4 text-sm text-amber-300">
+              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" /><span>Este lote se encuentra actualmente reservado.</span>
             </div>
           )}
 
-          {/* Owner: publish this lot to the marketplace */}
           {canManage && project && (
-            <div className="pt-2 border-t border-border/40">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
-                Gestión
-              </p>
+            <div className="border-t border-white/10 pt-4">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Gestión</p>
               <PublishLotButton lot={lot as any} project={project} />
             </div>
           )}
         </div>
+
+        {lot.status === 'available' && (
+          <div className="fixed bottom-0 right-0 z-30 w-full border-t border-white/10 bg-zinc-950/95 p-4 backdrop-blur-xl sm:max-w-xl">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-2">
+              <Button size="lg" className="h-12 gap-2 rounded-xl bg-emerald-500 font-semibold text-black hover:bg-emerald-400" onClick={() => onReserve?.(lot)}>
+                <Bookmark className="h-4 w-4" />Reservar lote
+              </Button>
+              {onDesign && <Button variant="outline" size="lg" className="h-12 rounded-xl border-white/10 bg-white/[0.035] px-4 text-white hover:bg-white/[0.07]" onClick={() => onDesign(lot)} aria-label="Diseñar parcela"><Palette className="h-4 w-4" /></Button>}
+              {onFinance && <Button variant="outline" size="lg" className="h-12 rounded-xl border-white/10 bg-white/[0.035] px-4 text-white hover:bg-white/[0.07]" onClick={() => onFinance(lot)} aria-label="Simular financiamiento"><Calculator className="h-4 w-4" /></Button>}
+            </div>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );
