@@ -22,6 +22,7 @@ import {
   List,
   Map,
   MapPin,
+  Maximize2,
   Ruler,
   Sparkles,
 } from 'lucide-react';
@@ -48,6 +49,27 @@ const statusClass = (status: string | null | undefined) => {
   return 'bg-white/5 text-white/50 border-white/10';
 };
 
+const getLotCenter = (lot: any): { lat: number; lng: number } | null => {
+  if (Number.isFinite(Number(lot?.latitude)) && Number.isFinite(Number(lot?.longitude))) {
+    return { lat: Number(lot.latitude), lng: Number(lot.longitude) };
+  }
+
+  if (Array.isArray(lot?.polygon) && lot.polygon.length >= 3) {
+    const valid = lot.polygon.filter((point: any) => Array.isArray(point) && point.length >= 2);
+    if (!valid.length) return null;
+    const sum = valid.reduce(
+      (acc: { lat: number; lng: number }, point: any) => ({
+        lat: acc.lat + Number(point[1]),
+        lng: acc.lng + Number(point[0]),
+      }),
+      { lat: 0, lng: 0 },
+    );
+    return { lat: sum.lat / valid.length, lng: sum.lng / valid.length };
+  }
+
+  return null;
+};
+
 const ProjectExperience = () => {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -58,6 +80,8 @@ const ProjectExperience = () => {
   const [selectedLot, setSelectedLot] = useState<any | null>(null);
   const [selectionSource, setSelectionSource] = useState<'masterplan' | 'inventory' | 'deeplink'>('masterplan');
   const [focusPulse, setFocusPulse] = useState(0);
+  const [cinematicFocus, setCinematicFocus] = useState(false);
+  const [focusVersion, setFocusVersion] = useState(0);
   const [inspectorLot, setInspectorLot] = useState<any | null>(null);
   const [designerLot, setDesignerLot] = useState<any | null>(null);
   const [reservationLot, setReservationLot] = useState<any | null>(null);
@@ -102,6 +126,29 @@ const ProjectExperience = () => {
 
   const minPrice = prices.length ? Math.min(...prices) : null;
 
+  const focusLots = useMemo(() => {
+    if (!cinematicFocus || !selectedLot) return lots;
+    const selectedCenter = getLotCenter(selectedLot);
+    if (!selectedCenter) return [selectedLot];
+
+    return [...lots]
+      .map((lot: any) => {
+        const center = getLotCenter(lot);
+        const distance = center
+          ? Math.hypot(center.lat - selectedCenter.lat, center.lng - selectedCenter.lng)
+          : Number.POSITIVE_INFINITY;
+        return { lot, distance };
+      })
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 9)
+      .map(({ lot }) => lot);
+  }, [cinematicFocus, lots, selectedLot]);
+
+  const focusCenter = useMemo(() => {
+    if (cinematicFocus && selectedLot) return getLotCenter(selectedLot);
+    return null;
+  }, [cinematicFocus, selectedLot]);
+
   const updateLotDeepLink = (lot: any) => {
     const next = new URLSearchParams(searchParams);
     next.set('lote', String(lot.lot_number));
@@ -115,6 +162,7 @@ const ProjectExperience = () => {
     const { openInspector = false, source = activeView === 'lots' ? 'inventory' : 'masterplan', syncUrl = true } = options;
     setSelectedLot(lot);
     setSelectionSource(source);
+    setCinematicFocus(false);
     setFocusPulse((value) => value + 1);
     if (syncUrl) updateLotDeepLink(lot);
     void track('terrain_view_lot_selected', {
@@ -154,16 +202,32 @@ const ProjectExperience = () => {
   const focusSelectedLot = (view: 'masterplan' | 'lots') => {
     if (!selectedLot) return;
     setActiveView(view);
+    if (view === 'masterplan') {
+      setCinematicFocus(true);
+      setFocusVersion((value) => value + 1);
+    } else {
+      setCinematicFocus(false);
+    }
     setFocusPulse((value) => value + 1);
     void track('terrain_view_focus_parcel', {
       project_id: id,
       lot_id: selectedLot.id,
       lot_number: selectedLot.lot_number,
       destination: view,
+      mode: view === 'masterplan' ? 'cinematic' : 'inventory',
     });
     window.setTimeout(() => {
       stageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 60);
+  };
+
+  const resetMasterplan = () => {
+    setCinematicFocus(false);
+    setFocusVersion((value) => value + 1);
+    void track('terrain_view_focus_reset', {
+      project_id: id,
+      lot_id: selectedLot?.id,
+    });
   };
 
   if (isLoading) {
@@ -275,7 +339,7 @@ const ProjectExperience = () => {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" className="gap-1.5" onClick={() => focusSelectedLot('masterplan')}>
-                  <Crosshair className="h-4 w-4" /> Enfocar parcela
+                  <Crosshair className="h-4 w-4" /> Viajar al lote
                 </Button>
                 <Button variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10" onClick={() => focusSelectedLot('lots')}>
                   <List className="mr-1.5 h-4 w-4" /> Ver tarjeta
@@ -301,7 +365,7 @@ const ProjectExperience = () => {
         )}
 
         <div ref={stageRef} className="scroll-mt-20">
-          <Tabs value={activeView} onValueChange={setActiveView} className="space-y-4">
+          <Tabs value={activeView} onValueChange={(view) => { setActiveView(view); if (view !== 'masterplan') setCinematicFocus(false); }} className="space-y-4">
             <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.035] p-1.5">
               <TabsTrigger value="masterplan" className="gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-black">
                 <Map className="h-4 w-4" /> Masterplan
@@ -314,18 +378,35 @@ const ProjectExperience = () => {
             <TabsContent value="masterplan" className="mt-0">
               <div className={`relative overflow-hidden rounded-3xl border bg-black/30 transition-all duration-500 ${selectedLot ? 'border-emerald-500/30 shadow-[0_0_55px_rgba(16,185,129,0.10)]' : 'border-white/10'}`}>
                 {selectedLot && (
-                  <div className="pointer-events-none absolute left-4 top-4 z-20 rounded-full border border-emerald-400/30 bg-black/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-300 backdrop-blur-md">
-                    <Crosshair className="mr-1.5 inline h-3 w-3" /> Lote {selectedLot.lot_number} enfocado
+                  <div className="absolute left-4 top-4 z-20 flex items-center gap-2">
+                    <div className="pointer-events-none rounded-full border border-emerald-400/30 bg-black/75 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-300 backdrop-blur-md">
+                      <Crosshair className="mr-1.5 inline h-3 w-3" /> {cinematicFocus ? `Vista parcela · Lote ${selectedLot.lot_number}` : `Lote ${selectedLot.lot_number} activo`}
+                    </div>
+                    {cinematicFocus && (
+                      <Button size="sm" variant="secondary" className="h-8 rounded-full px-3 text-xs" onClick={resetMasterplan}>
+                        <Maximize2 className="mr-1.5 h-3.5 w-3.5" /> Ver loteo completo
+                      </Button>
+                    )}
+                  </div>
+                )}
+                {cinematicFocus && selectedLot && (
+                  <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center px-4">
+                    <div className="rounded-2xl border border-white/10 bg-black/75 px-4 py-3 text-center shadow-2xl backdrop-blur-xl">
+                      <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-emerald-300">OfertaTerrenos Atlas · Focus Mode</p>
+                      <p className="mt-1 text-sm font-semibold">Lote {selectedLot.lot_number} · {Number(selectedLot.area).toLocaleString('es-CL')} m² · {formatPrice(selectedLot.price)}</p>
+                      <p className="mt-1 text-xs text-white/45">Contexto inmediato: {focusLots.length} parcelas cercanas</p>
+                    </div>
                   </div>
                 )}
                 {lotsLoading ? (
                   <div className="flex h-[68vh] items-center justify-center text-sm text-white/40">Cargando masterplan...</div>
                 ) : (
                   <LotMapView
-                    lots={lots as any}
+                    key={`terrain-map-${cinematicFocus ? selectedLot?.id : 'all'}-${focusVersion}`}
+                    lots={(cinematicFocus ? focusLots : lots) as any}
                     projectCenter={{
-                      lat: project.latitude || -34.9767,
-                      lng: project.longitude || -71.7856,
+                      lat: focusCenter?.lat ?? project.latitude ?? -34.9767,
+                      lng: focusCenter?.lng ?? project.longitude ?? -71.7856,
                     }}
                     onLotClick={(lot) => selectLot(lot, { source: 'masterplan' })}
                     selectedLotId={selectedLot?.id ?? null}
