@@ -42,6 +42,12 @@ jobs:
 
       - name: Unit tests
         run: npm test
+        env:
+          # Keep test bootstrap aligned with CI: some modules instantiate the
+          # generated Supabase client during import and require syntactically
+          # valid public placeholders even though tests do not hit production.
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: ci-test-publishable-key
 
       - name: Build production
         env:
