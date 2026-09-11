@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { differenceInDays } from 'date-fns';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
+import { normalizePolygon } from '@/lib/polygonUtils';
 
 interface EnhancedLotCardProps {
   lot: Lot;
@@ -157,7 +158,8 @@ export const EnhancedLotCard = ({
   projectName,
 }: EnhancedLotCardProps) => {
   const features = parseLotFeatures(lot.features);
-  const polygon = lot.polygon as number[][] | null;
+  const normalizedPolygon = normalizePolygon(lot.polygon as any, lot.latitude ?? undefined, lot.longitude ?? undefined);
+  const polygon = normalizedPolygon.valid ? normalizedPolygon.coords : null;
   const pricePerSqm =
     lot.price_per_sqm || (lot.price && lot.area ? lot.price / Number(lot.area) : null);
   const images = (lot as any).images as string[] | null;
