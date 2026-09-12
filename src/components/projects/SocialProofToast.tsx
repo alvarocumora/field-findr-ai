@@ -11,9 +11,23 @@ interface SocialProofToastProps {
 export const SocialProofToast = ({ projectId }: SocialProofToastProps) => {
   const [visible, setVisible] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [hasSession, setHasSession] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (active) setHasSession(!!data.session);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const { data: recentActivity = [] } = useQuery({
     queryKey: ['social-proof', projectId],
+    // Reservations and leads are private relations: anonymous visitors get a 401.
+    // Only the project team sees this activity signal.
+    enabled: hasSession,
     queryFn: async () => {
       const since = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
       const { data } = await supabase
@@ -32,6 +46,7 @@ export const SocialProofToast = ({ projectId }: SocialProofToastProps) => {
         .gte('created_at', since)
         .order('created_at', { ascending: false })
         .limit(5);
+
 
       const activities: { name: string; action: string; timeAgo: string }[] = [];
 
