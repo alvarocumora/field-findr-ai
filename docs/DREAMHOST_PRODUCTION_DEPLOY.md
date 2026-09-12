@@ -15,7 +15,7 @@ PR
     → artifact dist
 
 merge main
-  → Deploy DreamHost (si DREAMHOST_DEPLOY_ENABLED=true)
+  → Deploy DreamHost (push a main o workflow_dispatch)
     → build
     → SSH/rsync
     → backup de archivos reemplazados
