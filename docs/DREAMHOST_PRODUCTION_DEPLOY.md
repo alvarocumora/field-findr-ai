@@ -58,27 +58,22 @@ Cuando el lockfile quede sincronizado, cambiar ambos workflows a `npm ci`.
 
 ## 3. Configurar GitHub para DreamHost
 
-En GitHub → Settings → Secrets and variables → Actions.
+En GitHub → Settings → Environments → **production** → Environment secrets.
 
-### Repository/Environment secrets requeridos
+### Secrets requeridos (environment `production`)
 
-- `DREAMHOST_HOST`: hostname SSH de DreamHost.
-- `DREAMHOST_USER`: usuario SSH del sitio.
+- `DREAMHOST_HOST`: hostname SSH de DreamHost (por ejemplo `iad1-shared-xxxx.dreamhost.com`, **no** el dominio).
+- `DREAMHOST_USER`: usuario SSH del sitio (usuario shell, no el de FTP web).
 - `DREAMHOST_PATH`: ruta absoluta del document root, por ejemplo `/home/usuario/ofertaterrenos.com`.
-- `DREAMHOST_SSH_KEY`: llave privada SSH exclusiva para deploy.
-- `VITE_SUPABASE_URL`: URL pública de Supabase.
-- `VITE_SUPABASE_PUBLISHABLE_KEY`: publishable/anon key pública usada por el frontend.
-- `VITE_MAPBOX_TOKEN`: fallback público si corresponde.
+- `DREAMHOST_SSH_KEY`: llave privada SSH completa, incluyendo las líneas `-----BEGIN ...-----` y `-----END ...-----` y el salto de línea final.
+- `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_MAPBOX_TOKEN`.
 
-### Repository variable requerida
+El job corre con `environment: production`, así que los secrets deben estar en ese environment
+(los repository secrets también funcionan, pero conviene mantenerlos en un solo lugar).
 
-Crear:
-
-```text
-DREAMHOST_DEPLOY_ENABLED=true
-```
-
-Mientras esta variable no sea exactamente `true`, el job de deploy queda deshabilitado. Esto permite mergear el pipeline sin arriesgar un deploy con credenciales incompletas.
+No existe ninguna variable de habilitación: el deploy corre en cada push a `main` y con
+`workflow_dispatch`. El workflow valida los secrets antes de tocar SSH y falla con un mensaje
+explícito si falta alguno o si la llave está truncada.
 
 ## 4. Llave SSH recomendada
 
@@ -87,13 +82,28 @@ Generar una llave exclusiva para GitHub Actions, no reutilizar una llave persona
 Ejemplo local:
 
 ```bash
-ssh-keygen -t ed25519 -C "github-actions-ofertaterrenos" -f ofertaterrenos_deploy
+ssh-keygen -t ed25519 -C "github-actions-ofertaterrenos" -f ofertaterrenos_deploy -N ""
 ```
 
-- contenido de `ofertaterrenos_deploy` → secret `DREAMHOST_SSH_KEY`;
-- contenido de `ofertaterrenos_deploy.pub` → agregar a `~/.ssh/authorized_keys` del usuario DreamHost.
+- contenido completo de `ofertaterrenos_deploy` → secret `DREAMHOST_SSH_KEY`;
+- contenido de `ofertaterrenos_deploy.pub` → agregar a `~/.ssh/authorized_keys` del usuario DreamHost:
+
+```bash
+ssh USUARIO@HOST "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys" < ofertaterrenos_deploy.pub
+ssh USUARIO@HOST "chmod 600 ~/.ssh/authorized_keys"
+```
+
+Verificación local antes de correr el workflow:
+
+```bash
+ssh -i ofertaterrenos_deploy -o BatchMode=yes USUARIO@HOST 'echo ssh-ok && pwd'
+```
+
+El paso `Configure SSH` del workflow repite esa misma prueba y aborta con un error claro si la
+llave pública no está autorizada.
 
 Nunca subir ninguna llave al repositorio.
+
 
 ## 5. Deploy
 
