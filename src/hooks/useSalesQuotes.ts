@@ -99,7 +99,7 @@ export const useExpiringSalesQuotes = (hours = 72) => useQuery({
   queryFn: async () => {
     const now = new Date();
     const end = new Date(now.getTime() + hours * 60 * 60 * 1000);
-    const { data, error } = await (supabase.from('sales_quotes') as any)
+    const { data, error } = await (supabase as any).from('sales_quotes')
       .select('*')
       .in('status', ['draft', 'sent', 'viewed'])
       .gte('valid_until', now.toISOString())
