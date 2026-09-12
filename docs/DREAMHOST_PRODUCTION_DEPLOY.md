@@ -175,7 +175,7 @@ Las Edge Functions deben desplegarse de forma explícita cuando cambien. No mezc
 
 ## 10. Activación inicial
 
-Antes de cambiar `DREAMHOST_DEPLOY_ENABLED` a `true`:
+Antes del primer deploy:
 
 - confirmar host SSH;
 - confirmar usuario;
@@ -187,8 +187,9 @@ Antes de cambiar `DREAMHOST_DEPLOY_ENABLED` a `true`:
 
 Después:
 
-1. activar variable;
+1. cargar los cuatro secrets `DREAMHOST_*` en el environment `production`;
 2. ejecutar `Deploy DreamHost` manualmente con `workflow_dispatch`;
+
 3. revisar health checks;
 4. probar refresh directo en `/planes-loteos` y `/contacto-loteos`;
 5. confirmar `/version.json`.
