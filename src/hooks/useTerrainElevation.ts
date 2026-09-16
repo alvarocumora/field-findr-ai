@@ -73,6 +73,7 @@ export const useTerrainElevation = () => {
       return cached;
     }
 
+    setData(null);
     setLoading(true);
     abortRef.current = false;
 
