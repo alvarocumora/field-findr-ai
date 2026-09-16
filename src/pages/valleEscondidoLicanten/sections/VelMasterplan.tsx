@@ -359,7 +359,7 @@ export default function VelMasterplan() {
       (b, [lng, lat]) => b.extend([lng, lat] as [number, number]),
       new mapboxgl.LngLatBounds(lot.polygon[0] as [number, number], lot.polygon[0] as [number, number]),
     );
-    map.fitBounds(bounds, { padding: 120, duration: 900, maxZoom: 18, pitch: terrain3d ? 52 : 0, bearing: terrain3d ? -18 : 0 });
+    map.fitBounds(bounds, { padding: 120, duration: 900, maxZoom: 18 });
 
     selectLot(lot.id);
   }, [focusRequest, styleReady, terrain3d, selectLot]);
