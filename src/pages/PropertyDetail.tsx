@@ -40,6 +40,8 @@ import type { VisualScenario } from '@/types/visualScenario';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { listingCoverUrl } from '@/lib/staticMapImage';
 import { useStaticMapToken } from '@/hooks/useStaticMapToken';
+import { VEL_LOTS } from './valleEscondidoLicanten/data/lots';
+import { VEL_PROJECT } from './valleEscondidoLicanten/data/project';
 
 import {
 
@@ -90,6 +92,7 @@ const PropertyDetail = () => {
   const isFavorite = listing ? favoriteIds.includes(listing.id) : false;
   const similarListings = allListings.filter(l => l.id !== id).slice(0, 3);
   const isTeno = listing?.id === TENO_LISTING_ID;
+  const isValleEscondido = !!listing && VEL_LOTS.some((lot) => lot.listing_id === listing.id);
   const mapToken = useStaticMapToken();
   // Sin fotos cargadas mostramos una portada satelital del terreno en vez de un vacío.
   const galleryImages = (() => {
@@ -222,6 +225,13 @@ const PropertyDetail = () => {
 
   const legalStatus = getLegalStatusLabel(listing.legal_status);
   const utilities = listing.utilities as { water?: boolean; electricity?: string; road_access?: string } || {};
+  const waterLabel = utilities.water
+    ? 'Disponible'
+    : isValleEscondido
+      ? 'No informado'
+      : 'No disponible';
+  const electricityLabel = utilities.electricity || (isValleEscondido ? 'No informado' : 'No disponible');
+  const roadAccessLabel = utilities.road_access || (isValleEscondido ? 'No informado' : 'No especificado');
 
   const handleShare = () => {
     navigator.share?.({
@@ -481,7 +491,10 @@ const PropertyDetail = () => {
 
             {/* Tasación Comercial — generada para cualquier propiedad */}
             <PublishedTasacionBanner listingId={listing?.id} />
-            <TasacionTeno listing={isTeno ? undefined : listing} />
+            <TasacionTeno
+              listing={isTeno ? undefined : listing}
+              valuationMode={isValleEscondido ? 'rural_comparative' : 'standard'}
+            />
 
             {/* Visual Scenarios — conditional preview */}
             {visualScenarios.length > 0 && (
@@ -545,21 +558,21 @@ const PropertyDetail = () => {
                     { 
                       icon: Droplets, 
                       label: 'Agua', 
-                      value: utilities.water ? 'Disponible' : 'No disponible',
+                      value: waterLabel,
                       active: utilities.water,
                       color: 'green'
                     },
                     { 
                       icon: Zap, 
                       label: 'Electricidad', 
-                      value: utilities.electricity || 'No disponible',
+                      value: electricityLabel,
                       active: !!utilities.electricity,
                       color: 'yellow'
                     },
                     { 
                       icon: Car, 
                       label: 'Acceso', 
-                      value: utilities.road_access || 'No especificado',
+                      value: roadAccessLabel,
                       active: !!utilities.road_access,
                       color: 'blue'
                     },
@@ -677,17 +690,46 @@ const PropertyDetail = () => {
               <CardContent>
                 <div className="space-y-2 md:space-y-3">
                   {[
-                    { name: 'Título de dominio', status: listing.legal_status === 'verified' ? 'verified' : 'pending' },
-                    { name: 'Certificado de dominio vigente', status: listing.legal_status === 'verified' ? 'verified' : 'pending' },
-                    { name: 'Plano de subdivisión', status: listing.subdivision_eligible ? 'verified' : 'pending' },
-                    { name: 'Informe de tasación', status: 'pending' },
+                    { name: 'Título de dominio', status: listing.legal_status === 'verified' ? 'verified' : 'pending', detail: null },
+                    { name: 'Certificado de dominio vigente', status: listing.legal_status === 'verified' ? 'verified' : 'pending', detail: null },
+                    ...(isValleEscondido
+                      ? [
+                          {
+                            name: 'Inscripción del proyecto',
+                            status: 'project',
+                            detail: VEL_PROJECT.registro,
+                          },
+                          {
+                            name: 'Plano de subdivisión',
+                            status: 'project',
+                            detail: 'Plano N° 192 del año 2023 · antecedente general del proyecto',
+                          },
+                        ]
+                      : [
+                          {
+                            name: 'Plano de subdivisión',
+                            status: listing.subdivision_eligible ? 'verified' : 'pending',
+                            detail: null,
+                          },
+                        ]),
+                    { name: 'Informe de tasación', status: 'pending', detail: null },
                   ].map((doc, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                      <span className="text-foreground text-sm md:text-base">{doc.name}</span>
+                    <div key={idx} className="flex flex-col gap-2 rounded-lg bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <span className="text-foreground text-sm md:text-base">{doc.name}</span>
+                        {doc.detail && (
+                          <p className="mt-0.5 text-[11px] text-muted-foreground">{doc.detail}</p>
+                        )}
+                      </div>
                       {doc.status === 'verified' ? (
                         <Badge className="bg-green-500/20 text-green-400 text-xs">
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Verificado
+                        </Badge>
+                      ) : doc.status === 'project' ? (
+                        <Badge className="bg-blue-500/20 text-blue-400 text-xs">
+                          <FileText className="h-3 w-3 mr-1" />
+                          Antecedente proyecto
                         </Badge>
                       ) : doc.status === 'reviewing' ? (
                         <Badge className="bg-blue-500/20 text-blue-400 text-xs">
