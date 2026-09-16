@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, ArrowUpDown, MapPin, MessageSquare, Crosshair, FileDown, CalendarCheck, ShoppingCart } from 'lucide-react';
+import { Search, ArrowUpDown, MapPin, MessageSquare, Crosshair, FileDown, CalendarCheck, ShoppingCart, SlidersHorizontal, RotateCcw } from 'lucide-react';
 import { type VelLotStatus } from '../data/lots';
 import { useVelLots } from '../data/useVelLots';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -44,6 +44,10 @@ export default function VelLotsGrid() {
   const { lots } = useVelLots();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('num');
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
+  const [areaMin, setAreaMin] = useState('');
+  const [areaMax, setAreaMax] = useState('');
   const [visible, setVisible] = useState(PAGE);
   const [leadLot, setLeadLot] = useState<{ id: string; number: string; status: VelLotStatus } | null>(null);
   const [pdfLot, setPdfLot] = useState<string | null>(null);
@@ -95,11 +99,34 @@ export default function VelLotsGrid() {
 
   const allActive = ALL_STATUSES.every((s) => activeStatus.has(s));
 
+  const commercialBounds = useMemo(() => {
+    const priced = lots.filter((lot) => lot.price_clp > 0);
+    const prices = priced.map((lot) => lot.price_clp);
+    const areas = lots.map((lot) => lot.area_m2);
+    return {
+      priceMin: prices.length ? Math.min(...prices) : VEL_PROJECT.priceFromClp,
+      priceMax: prices.length ? Math.max(...prices) : VEL_PROJECT.priceToClp,
+      areaMin: areas.length ? Math.min(...areas) : 0,
+      areaMax: areas.length ? Math.max(...areas) : 0,
+    };
+  }, [lots]);
+
+  const hasAdvancedFilters = Boolean(priceMin || priceMax || areaMin || areaMax);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const minPrice = priceMin ? Number(priceMin) : null;
+    const maxPrice = priceMax ? Number(priceMax) : null;
+    const minArea = areaMin ? Number(areaMin) : null;
+    const maxArea = areaMax ? Number(areaMax) : null;
+
     const arr = lots.filter((l) => {
       if (!activeStatus.has(l.status)) return false;
       if (q && !l.lot_number.includes(q)) return false;
+      if (minPrice !== null && (l.price_clp <= 0 || l.price_clp < minPrice)) return false;
+      if (maxPrice !== null && (l.price_clp <= 0 || l.price_clp > maxPrice)) return false;
+      if (minArea !== null && l.area_m2 < minArea) return false;
+      if (maxArea !== null && l.area_m2 > maxArea) return false;
       return true;
     });
     switch (sort) {
@@ -110,9 +137,17 @@ export default function VelLotsGrid() {
       default: arr.sort((a, b) => parseInt(a.lot_number) - parseInt(b.lot_number));
     }
     return arr;
-  }, [activeStatus, query, sort, lots]);
+  }, [activeStatus, query, sort, lots, priceMin, priceMax, areaMin, areaMax]);
 
   const shown = filtered.slice(0, visible);
+
+  const resetAdvancedFilters = () => {
+    setPriceMin('');
+    setPriceMax('');
+    setAreaMin('');
+    setAreaMax('');
+    setVisible(PAGE);
+  };
 
   const handleFocusOnMap = (lotId: string) => {
     requestFocus(lotId);
@@ -186,6 +221,78 @@ export default function VelLotsGrid() {
                 <option value="price_desc">Precio ↓</option>
               </select>
             </div>
+          </div>
+        </div>
+
+        <div className="mb-8 rounded-sm border border-white/10 bg-white/[0.02] p-4">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 text-[var(--hue-amber)]" />
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.16em] text-[var(--hue-bone)]">Filtros comerciales</div>
+                <div className="mt-0.5 text-[10px] text-[var(--hue-bone)]/45">Acota por presupuesto y superficie.</div>
+              </div>
+            </div>
+            {hasAdvancedFilters && (
+              <button
+                type="button"
+                onClick={resetAdvancedFilters}
+                className="inline-flex items-center gap-1.5 rounded-sm border border-white/10 px-2.5 py-1.5 text-[10px] uppercase tracking-[0.1em] text-[var(--hue-bone)]/70 transition hover:border-[var(--hue-amber)]/40 hover:text-[var(--hue-bone)]"
+              >
+                <RotateCcw className="h-3 w-3" /> Limpiar
+              </button>
+            )}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="grid gap-1.5 text-[10px] uppercase tracking-[0.12em] text-[var(--hue-bone)]/50">
+              Precio mínimo
+              <input
+                type="number"
+                min={0}
+                inputMode="numeric"
+                value={priceMin}
+                onChange={(e) => { setPriceMin(e.target.value); setVisible(PAGE); }}
+                placeholder={commercialBounds.priceMin.toLocaleString('es-CL')}
+                className="rounded-sm border border-white/10 bg-white/[0.03] px-3 py-2 text-[12px] normal-case tracking-normal text-[var(--hue-bone)] placeholder:text-[var(--hue-bone)]/30 focus:border-[var(--hue-amber)]/50 focus:outline-none"
+              />
+            </label>
+            <label className="grid gap-1.5 text-[10px] uppercase tracking-[0.12em] text-[var(--hue-bone)]/50">
+              Precio máximo
+              <input
+                type="number"
+                min={0}
+                inputMode="numeric"
+                value={priceMax}
+                onChange={(e) => { setPriceMax(e.target.value); setVisible(PAGE); }}
+                placeholder={commercialBounds.priceMax.toLocaleString('es-CL')}
+                className="rounded-sm border border-white/10 bg-white/[0.03] px-3 py-2 text-[12px] normal-case tracking-normal text-[var(--hue-bone)] placeholder:text-[var(--hue-bone)]/30 focus:border-[var(--hue-amber)]/50 focus:outline-none"
+              />
+            </label>
+            <label className="grid gap-1.5 text-[10px] uppercase tracking-[0.12em] text-[var(--hue-bone)]/50">
+              Superficie mínima (m²)
+              <input
+                type="number"
+                min={0}
+                inputMode="numeric"
+                value={areaMin}
+                onChange={(e) => { setAreaMin(e.target.value); setVisible(PAGE); }}
+                placeholder={commercialBounds.areaMin.toLocaleString('es-CL')}
+                className="rounded-sm border border-white/10 bg-white/[0.03] px-3 py-2 text-[12px] normal-case tracking-normal text-[var(--hue-bone)] placeholder:text-[var(--hue-bone)]/30 focus:border-[var(--hue-amber)]/50 focus:outline-none"
+              />
+            </label>
+            <label className="grid gap-1.5 text-[10px] uppercase tracking-[0.12em] text-[var(--hue-bone)]/50">
+              Superficie máxima (m²)
+              <input
+                type="number"
+                min={0}
+                inputMode="numeric"
+                value={areaMax}
+                onChange={(e) => { setAreaMax(e.target.value); setVisible(PAGE); }}
+                placeholder={commercialBounds.areaMax.toLocaleString('es-CL')}
+                className="rounded-sm border border-white/10 bg-white/[0.03] px-3 py-2 text-[12px] normal-case tracking-normal text-[var(--hue-bone)] placeholder:text-[var(--hue-bone)]/30 focus:border-[var(--hue-amber)]/50 focus:outline-none"
+              />
+            </label>
           </div>
         </div>
 
