@@ -26,7 +26,13 @@ export const useMapboxToken = (): UseMapboxTokenResult => {
       const cached = localStorage.getItem(CACHE_KEY);
       const expiry = localStorage.getItem(CACHE_EXPIRY_KEY);
       
-      if (cached && expiry && isValidToken(cached)) {
+      if (cached && isValidToken(cached)) {
+        if (!expiry) {
+          // useStaticMapToken comparte la misma clave pero históricamente no
+          // guardaba expiración. Adoptamos ese token válido y normalizamos TTL.
+          localStorage.setItem(CACHE_EXPIRY_KEY, String(Date.now() + CACHE_DURATION));
+          return cached;
+        }
         const expiryTime = parseInt(expiry, 10);
         if (Date.now() < expiryTime) {
           return cached;
@@ -54,7 +60,17 @@ export const useMapboxToken = (): UseMapboxTokenResult => {
     setLoading(true);
     setError(null);
 
-    // Check cache first
+    // Prefer a public build token when production provides it. This removes
+    // a network dependency for the first interactive map render.
+    const envToken = import.meta.env.VITE_MAPBOX_TOKEN;
+    if (isValidToken(envToken)) {
+      setCachedToken(envToken);
+      setToken(envToken);
+      setLoading(false);
+      return;
+    }
+
+    // Check shared cache next (also populated by static map covers).
     const cached = getCachedToken();
     if (cached) {
       setToken(cached);
@@ -62,7 +78,7 @@ export const useMapboxToken = (): UseMapboxTokenResult => {
       return;
     }
 
-    // Try fetching from backend
+    // Otherwise fetch the public token from the backend.
     try {
       const { data, error: fnError } = await supabase.functions.invoke('get-mapbox-token');
       
@@ -81,20 +97,10 @@ export const useMapboxToken = (): UseMapboxTokenResult => {
     } catch (fnErr) {
       console.warn('Backend token fetch failed, trying fallback:', fnErr);
       
-      // Fallback to VITE_MAPBOX_TOKEN
-      const fallback = import.meta.env.VITE_MAPBOX_TOKEN;
-      if (isValidToken(fallback)) {
-        setCachedToken(fallback);
-        setToken(fallback);
-        setError(null);
-        setLoading(false);
-        return;
-      }
-
       // Both methods failed
       console.error('Error fetching Mapbox token:', fnErr);
       setToken(null);
-      setError('No se pudo obtener el token de Mapbox. Verifica la configuración.');
+      setError('Mapa temporalmente no disponible. Falta configurar el token público de Mapbox.');
       setLoading(false);
     }
   }, []);
