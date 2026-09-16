@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import '../huellelhue/huellelhue.css';
 import VelHero from './sections/VelHero';
 import VelFicha from './sections/VelFicha';
@@ -8,27 +7,74 @@ import VelMasterplan from './sections/VelMasterplan';
 import VelLotsGrid from './sections/VelLotsGrid';
 import VelContacto from './sections/VelContacto';
 import VelFooter from './sections/VelFooter';
+import VelConversionBar from './components/VelConversionBar';
 import { VelStateProvider } from './state/VelContext';
 import { VEL_PROJECT } from './data/project';
 import { ProjectDownloadsBySlug } from '@/components/projects/ProjectDownloadsBySlug';
+import { useSEO } from '@/hooks/useSEO';
+import heroImg from '@/assets/valle-escondido-licanten/vel-valle.jpg';
+
+const canonicalUrl = 'https://ofertaterrenos.com/p/valle-escondido-licanten';
 
 export default function VelLanding() {
-  useEffect(() => {
-    const prevTitle = document.title;
-    document.title = `Valle Escondido Licantén — ${VEL_PROJECT.totalLots} parcelas · OFERTA TERRENOS`;
-    const meta = document.createElement('meta');
-    meta.name = 'description';
-    meta.content = `Valle Escondido Licantén · ${VEL_PROJECT.totalAreaHa} hectáreas subdivididas en ${VEL_PROJECT.totalLots} parcelas en Licantén, Región del Maule. Plano interactivo, ficha por parcela y reserva en línea desde $${VEL_PROJECT.priceFromClp.toLocaleString('es-CL')}.`;
-    document.head.appendChild(meta);
-    return () => {
-      meta.remove();
-      document.title = prevTitle;
-    };
-  }, []);
+  const description =
+    `Valle Escondido Licantén: ${VEL_PROJECT.totalLots} parcelas rurales sobre ${VEL_PROJECT.totalAreaHa} hectáreas, a pocos minutos de Licantén, con acceso asfaltado y conexión hacia Lago Vichuquén. Plano interactivo, disponibilidad en vivo y reserva desde $${VEL_PROJECT.priceFromClp.toLocaleString('es-CL')}.`;
+
+  const socialImage =
+    typeof window !== 'undefined' ? new URL(heroImg, window.location.origin).href : heroImg;
+
+  useSEO({
+    title: 'Valle Escondido Licantén · Parcelas cerca de Licantén',
+    description,
+    image: socialImage,
+    url: canonicalUrl,
+    canonicalUrl,
+    type: 'website',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'RealEstateListing',
+      name: VEL_PROJECT.name,
+      description,
+      url: canonicalUrl,
+      image: socialImage,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: VEL_PROJECT.city,
+        addressRegion: VEL_PROJECT.region,
+        addressCountry: 'CL',
+      },
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: VEL_PROJECT.center.lat,
+        longitude: VEL_PROJECT.center.lng,
+      },
+      offers: {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'CLP',
+        lowPrice: VEL_PROJECT.priceFromClp,
+        highPrice: VEL_PROJECT.priceToClp,
+        offerCount: VEL_PROJECT.availableLots,
+        availability: 'https://schema.org/InStock',
+      },
+      additionalProperty: [
+        {
+          '@type': 'PropertyValue',
+          name: 'Superficie total',
+          value: VEL_PROJECT.totalAreaHa,
+          unitText: 'ha',
+        },
+        {
+          '@type': 'PropertyValue',
+          name: 'Parcelas',
+          value: VEL_PROJECT.totalLots,
+        },
+      ],
+    },
+  });
 
   return (
     <div
-      className="hue-root hue-grain"
+      className="hue-root hue-grain pb-20 md:pb-28"
       style={
         {
           ['--hue-amber' as string]: '#c9b06b',
@@ -51,6 +97,7 @@ export default function VelLanding() {
         </div>
         <VelContacto />
         <VelFooter />
+        <VelConversionBar />
       </VelStateProvider>
     </div>
   );
