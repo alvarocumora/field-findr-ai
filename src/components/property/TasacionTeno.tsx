@@ -301,7 +301,7 @@ export default function TasacionTeno({
           <div>
             <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
               <FileBarChart className="h-6 w-6 text-primary" />
-              {L.reportTitle}
+              {valuationMode === 'rural_comparative' ? tt('Referencia Comercial Rural', 'Rural Market Reference') : L.reportTitle}
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               {L.reportSubtitle(d.comuna, d.region, d.fecha)}
@@ -859,7 +859,9 @@ export default function TasacionTeno({
 
         <SectionCard n={12} icon={Trophy} title={t.sections[12]}>
           <div className="rounded-lg bg-gradient-to-br from-emerald-500/20 to-primary/10 border border-emerald-500/30 p-4">
-            <Badge className="bg-emerald-500 text-white mb-2">Valor final</Badge>
+            <Badge className="bg-emerald-500 text-white mb-2">
+              {valuationMode === 'rural_comparative' ? tt('Referencia comercial', 'Market reference') : tt('Valor final', 'Final value')}
+            </Badge>
             <p className="text-3xl font-bold text-emerald-500">{fmtUF(d.valorComercialUF)}</p>
             <p className="text-sm text-muted-foreground mt-1">≈ {fmtCLP(d.valorComercialCLP)} ({fmtUF(d.valorM2UF)}/m²)</p>
           </div>
