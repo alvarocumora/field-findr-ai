@@ -35,6 +35,12 @@ async function loadToken(): Promise<string | null> {
   const envToken = import.meta.env.VITE_MAPBOX_TOKEN;
   if (isValid(envToken)) {
     cached = envToken;
+    try {
+      localStorage.setItem(CACHE_KEY, envToken);
+      localStorage.setItem(CACHE_EXPIRY_KEY, String(Date.now() + CACHE_DURATION));
+    } catch {
+      /* noop */
+    }
     return cached;
   }
 
