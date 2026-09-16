@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Loader2, MapPinned, Search, Sparkles } from 'lucide-react';
 import { useSmartSearch } from '@/hooks/useAI';
@@ -147,7 +147,7 @@ export default function VelAiLotMatcher() {
                           <div className="text-[11px] font-semibold text-[var(--hue-amber)]">{score}% match</div>
                         </div>
                         <div className="mt-1 text-[11px] text-[var(--hue-bone)]/55">
-                          {lot.area_m2.toLocaleString('es-CL')} m² · $${lot.price_clp.toLocaleString('es-CL')}
+                          {lot.area_m2.toLocaleString('es-CL')} m² · ${lot.price_clp.toLocaleString('es-CL')}
                         </div>
                         <div className="mt-1 truncate text-[10px] text-[var(--hue-bone)]/40">
                           {reasons.join(' · ') || 'Buen equilibrio de precio y superficie'}
