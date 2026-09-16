@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarCheck, ChevronRight, Loader2, Mountain, ShoppingCart, Sparkles, X } from 'lucide-react';
+import { CalendarCheck, ChevronRight, Cuboid, Loader2, Mountain, ShoppingCart, Sparkles, X } from 'lucide-react';
 import VisitScheduleDialog from '@/components/visits/VisitScheduleDialog';
 import { LotReserveDialog } from '@/components/sales/LotReserveDialog';
 import type { SalesLot } from '@/components/sales/LotSalesSheet';
@@ -8,6 +8,7 @@ import type { VelLot } from '../data/lots';
 import type { VelTerrainInsight } from '../data/lotIntelligence';
 import { calculateRuralScore } from '../data/lotIntelligence';
 import { VEL_PROJECT } from '../data/project';
+import VelBuildMyLotDialog from './VelBuildMyLotDialog';
 
 interface Props {
   lot: VelLot;
@@ -27,6 +28,7 @@ const STATUS_LABEL = {
 export default function VelLotPanel({ lot, allLots, terrain, terrainLoading, onClose, onFocus }: Props) {
   const [visitOpen, setVisitOpen] = useState(false);
   const [reserveOpen, setReserveOpen] = useState(false);
+  const [buildOpen, setBuildOpen] = useState(false);
   const score = useMemo(() => calculateRuralScore(lot, allLots, terrain), [lot, allLots, terrain]);
 
   const salesLot: SalesLot = {
@@ -123,7 +125,18 @@ export default function VelLotPanel({ lot, allLots, terrain, terrainLoading, onC
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => setBuildOpen(true)}
+          className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-sm border border-[var(--hue-amber)]/60 bg-[var(--hue-amber)] px-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#07110b] transition hover:brightness-110"
+        >
+          <Cuboid className="h-4 w-4" /> Diseñar mi parcela
+        </button>
+        <p className="mt-2 text-center text-[9px] text-[var(--hue-bone)]/35">
+          Casa · piscina · quincho · huerto · energía solar · accesos
+        </p>
+
+        <div className="mt-3 grid grid-cols-2 gap-2">
           <button type="button" onClick={onFocus} className="hue-pill justify-center text-[10px]">
             Ver en 3D
           </button>
@@ -156,6 +169,12 @@ export default function VelLotPanel({ lot, allLots, terrain, terrainLoading, onC
         )}
       </div>
 
+      <VelBuildMyLotDialog
+        lot={lot}
+        allLots={allLots}
+        open={buildOpen}
+        onOpenChange={setBuildOpen}
+      />
       <VisitScheduleDialog
         open={visitOpen}
         onOpenChange={setVisitOpen}
