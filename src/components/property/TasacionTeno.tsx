@@ -175,10 +175,25 @@ export default function TasacionTeno({
         fuente: c.fuente,
       }));
     }
-    if (valuationMode === 'rural_comparative' && listing && merged.superficieTerreno > 0) {
-      const ruralItems = comparablesData.items.filter(
-        (item) => item.matchTipo && (item.distanciaKm == null || item.distanciaKm <= 25),
-      );
+    if (
+      valuationMode === 'rural_comparative' &&
+      listing &&
+      merged.superficieTerreno > 0 &&
+      overrides.valorComercialUF == null &&
+      overrides.valorM2UF == null
+    ) {
+      const subjectArea = Number(listing.area_m2 || merged.superficieTerreno);
+      const ruralItems = comparablesData.items.filter((item) => {
+        const areaRatio = subjectArea > 0
+          ? item.superficie / subjectArea
+          : 1;
+        return (
+          item.matchTipo &&
+          (item.distanciaKm == null || item.distanciaKm <= 25) &&
+          areaRatio >= 0.75 &&
+          areaRatio <= 1.35
+        );
+      });
       const totalWeight = ruralItems.reduce((sum, item) => sum + item.weight, 0);
       if (totalWeight > 0) {
         const marketM2UF =
@@ -203,7 +218,7 @@ export default function TasacionTeno({
     }
     merged.avaluoFiscalTotal = (merged.avaluoFiscalTerreno || 0) + (merged.avaluoFiscalConstruccion || 0);
     return merged;
-  }, [base, overrides, ufRate, comparablesData.items]);
+  }, [base, overrides, ufRate, comparablesData.items, listing, valuationMode]);
 
   const setField = <K extends keyof TasacionData>(k: K, v: TasacionData[K]) =>
     setOverrides((o) => ({ ...o, [k]: v }));
