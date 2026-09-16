@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { VelLotStatus } from '../data/lots';
 
 type FocusRequest = { lotId: string; nonce: number } | null;
@@ -12,6 +12,9 @@ interface Ctx {
   setHoveredLotId: (id: string | null) => void;
   selectedLotId: string | null;
   selectLot: (id: string | null) => void;
+  shortlistIds: string[];
+  toggleShortlist: (id: string) => void;
+  clearShortlist: () => void;
   focusRequest: FocusRequest;
   requestFocus: (lotId: string) => void;
   poiRequest: PoiRequest;
@@ -26,6 +29,15 @@ export function VelStateProvider({ children }: { children: ReactNode }) {
   );
   const [hoveredLotId, setHoveredLotId] = useState<string | null>(null);
   const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
+  const [shortlistIds, setShortlistIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('vel-shortlist');
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed.slice(0, 4) : [];
+    } catch {
+      return [];
+    }
+  });
   const [focusRequest, setFocusRequest] = useState<FocusRequest>(null);
   const [poiRequest, setPoiRequest] = useState<PoiRequest>(null);
 
@@ -46,6 +58,24 @@ export function VelStateProvider({ children }: { children: ReactNode }) {
 
   const selectLot = useCallback((id: string | null) => setSelectedLotId(id), []);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('vel-shortlist', JSON.stringify(shortlistIds));
+    } catch {
+      // Persistencia opcional; la selección sigue funcionando durante la sesión.
+    }
+  }, [shortlistIds]);
+
+  const toggleShortlist = useCallback((id: string) => {
+    setShortlistIds((prev) => {
+      if (prev.includes(id)) return prev.filter((item) => item !== id);
+      if (prev.length >= 4) return prev;
+      return [...prev, id];
+    });
+  }, []);
+
+  const clearShortlist = useCallback(() => setShortlistIds([]), []);
+
   const requestFocus = useCallback((lotId: string) => {
     setSelectedLotId(lotId);
     setFocusRequest({ lotId, nonce: Date.now() });
@@ -64,12 +94,15 @@ export function VelStateProvider({ children }: { children: ReactNode }) {
       setHoveredLotId,
       selectedLotId,
       selectLot,
+      shortlistIds,
+      toggleShortlist,
+      clearShortlist,
       focusRequest,
       requestFocus,
       poiRequest,
       requestPoi,
     }),
-    [activeStatus, toggleStatus, setOnlyStatus, hoveredLotId, selectedLotId, selectLot, focusRequest, requestFocus, poiRequest, requestPoi],
+    [activeStatus, toggleStatus, setOnlyStatus, hoveredLotId, selectedLotId, selectLot, shortlistIds, toggleShortlist, clearShortlist, focusRequest, requestFocus, poiRequest, requestPoi],
   );
 
   return (
@@ -90,6 +123,9 @@ export function useVelState(): Ctx {
       setHoveredLotId: noop,
       selectedLotId: null,
       selectLot: noop,
+      shortlistIds: [],
+      toggleShortlist: noop,
+      clearShortlist: noop,
       focusRequest: null,
       requestFocus: noop,
       poiRequest: null,
