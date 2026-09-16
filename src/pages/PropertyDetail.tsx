@@ -40,7 +40,6 @@ import type { VisualScenario } from '@/types/visualScenario';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { listingCoverUrl } from '@/lib/staticMapImage';
 import { useStaticMapToken } from '@/hooks/useStaticMapToken';
-import { VEL_LOTS } from './valleEscondidoLicanten/data/lots';
 import { VEL_PROJECT } from './valleEscondidoLicanten/data/project';
 
 import {
@@ -92,7 +91,13 @@ const PropertyDetail = () => {
   const isFavorite = listing ? favoriteIds.includes(listing.id) : false;
   const similarListings = allListings.filter(l => l.id !== id).slice(0, 3);
   const isTeno = listing?.id === TENO_LISTING_ID;
-  const isValleEscondido = !!listing && VEL_LOTS.some((lot) => lot.listing_id === listing.id);
+  const isValleEscondido = !!listing &&
+    listing.lat != null &&
+    listing.lng != null &&
+    listing.lat >= VEL_PROJECT.bbox.minLat &&
+    listing.lat <= VEL_PROJECT.bbox.maxLat &&
+    listing.lng >= VEL_PROJECT.bbox.minLng &&
+    listing.lng <= VEL_PROJECT.bbox.maxLng;
   const mapToken = useStaticMapToken();
   // Sin fotos cargadas mostramos una portada satelital del terreno en vez de un vacío.
   const galleryImages = (() => {
