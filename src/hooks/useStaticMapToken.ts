@@ -7,6 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
  * tarjetas (a diferencia de useMapboxToken, pensado para mapas interactivos).
  */
 const CACHE_KEY = 'mapbox_public_token';
+const CACHE_EXPIRY_KEY = 'mapbox_token_expiry';
+const CACHE_DURATION = 1000 * 60 * 60;
 let cached: string | null = null;
 let inflight: Promise<string | null> | null = null;
 
@@ -44,6 +46,7 @@ async function loadToken(): Promise<string | null> {
         cached = token;
         try {
           localStorage.setItem(CACHE_KEY, token);
+          localStorage.setItem(CACHE_EXPIRY_KEY, String(Date.now() + CACHE_DURATION));
         } catch {
           /* noop */
         }
