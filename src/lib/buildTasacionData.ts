@@ -85,7 +85,13 @@ const inferComparables = (areaM2: number, valorM2UF: number, region?: string, ci
   return useReal ? [...MARKET_REFS, ...synthetic] : synthetic;
 };
 
-export function buildTasacionData(listing: ListingLike, ufRate: number = UF_REF): TasacionData {
+export type TasacionMode = 'standard' | 'rural_comparative';
+
+export function buildTasacionData(
+  listing: ListingLike,
+  ufRate: number = UF_REF,
+  mode: TasacionMode = 'standard',
+): TasacionData {
   const areaM2 = listing.area_m2 || (listing.area_ha ? listing.area_ha * 10000 : 5000);
   const priceUF = listing.currency === 'UF'
     ? (listing.price || 0)
@@ -101,7 +107,7 @@ export function buildTasacionData(listing: ListingLike, ufRate: number = UF_REF)
   // Los comparables A/B y el costo de suelo se derivan del UF/m² observado
   // (±5% / −8% / −15%); income y residual usan los coeficientes de la guía.
   const zona = listing.city || listing.region || 'del sector';
-  const metodosIVS = valorM2UF > 0
+  const metodosIVS = mode === 'standard' && valorM2UF > 0
     ? computeMethods({
         areaM2,
         tipo: listing.type ?? undefined,
@@ -120,6 +126,9 @@ export function buildTasacionData(listing: ListingLike, ufRate: number = UF_REF)
 
   // El valor comercial del informe es el FMV ponderado de los 5 métodos;
   // sin precio observable (valorM2UF=0) se mantiene el precio de oferta.
+  // Para parcelas rurales comerciales no extrapolamos supuestos industriales
+  // (renta de bodegaje, CAPEX, residual H&BU). El valor base queda anclado al
+  // precio publicado y puede ser refinado por comparables rurales reales en UI.
   const valorFinalUF = metodosIVS ? metodosIVS.fmvUF : priceUF;
   const valorFinalM2UF = metodosIVS ? metodosIVS.ufPerM2 : valorM2UF;
 
@@ -168,14 +177,18 @@ export function buildTasacionData(listing: ListingLike, ufRate: number = UF_REF)
     avaluoFiscalConstruccion: 0,
     avaluoFiscalTotal: avaluoTerreno,
     valorUnitarioSII,
-    comparables: inferComparables(areaM2, valorM2UF || 0.3, listing.region, listing.city),
+    comparables: mode === 'rural_comparative'
+      ? []
+      : inferComparables(areaM2, valorM2UF || 0.3, listing.region, listing.city),
     valorComercialUF: valorFinalUF,
     valorComercialCLP: Math.round(valorFinalUF * ufRate),
     valorM2UF: valorFinalM2UF,
     valorM2CLP: Math.round(valorFinalM2UF * ufRate),
     observaciones: metodosIVS
       ? `Valor comercial determinado como FMV ponderado de cinco métodos IVS 2022 (comparativo A/B, renta capitalizada, reposición y residual H&BU), anclados al mercado del sector. Dispersión entre métodos: ${metodosIVS.dispersion.coefVarPct.toFixed(1)}% (CV). Rango de negociación ±5%: UF ${metodosIVS.fmvRangeMinUF.toLocaleString('es-CL')} – UF ${metodosIVS.fmvRangeMaxUF.toLocaleString('es-CL')}. Superficie considerada: ${areaM2.toLocaleString('es-CL')} m², uso ${tipo}. Para uso bancario o judicial se requiere ratificación por tasador acreditado.`
-      : `Valor comercial referencial calculado a partir del precio de oferta vigente y comparables del sector. Factores considerados: ubicación, superficie (${areaM2.toLocaleString('es-CL')} m²), uso ${tipo}, accesos y servicios disponibles. Para uso bancario o judicial se requiere ratificación por tasador acreditado.`,
+      : mode === 'rural_comparative'
+        ? `Referencia comercial rural anclada al precio publicado y contrastable con ofertas activas comparables de la misma zona, tipo y escala. No se aplican supuestos industriales de renta, reposición ni desarrollo residual. Superficie considerada: ${areaM2.toLocaleString('es-CL')} m². Este valor es orientativo y no reemplaza una tasación bancaria, judicial ni un informe de tasador acreditado.`
+        : `Valor comercial referencial calculado a partir del precio de oferta vigente y comparables del sector. Factores considerados: ubicación, superficie (${areaM2.toLocaleString('es-CL')} m²), uso ${tipo}, accesos y servicios disponibles. Para uso bancario o judicial se requiere ratificación por tasador acreditado.`,
     metodosIVS,
   };
 }

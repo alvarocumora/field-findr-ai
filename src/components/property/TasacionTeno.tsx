@@ -14,7 +14,7 @@ import SignatureCanvas from '@/components/signature/SignatureCanvas';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getT, type TasacionLang } from '@/lib/tasacionI18n';
 import { Languages } from 'lucide-react';
-import { buildTasacionData, applyUfRate, UF_REF } from '@/lib/buildTasacionData';
+import { buildTasacionData, applyUfRate, UF_REF, type TasacionMode } from '@/lib/buildTasacionData';
 import { useComparables } from '@/hooks/useComparables';
 import { useUfRate } from '@/hooks/useUfRate';
 import { supabase } from '@/integrations/supabase/client';
@@ -103,9 +103,14 @@ const fmtUF = (n: number) => `UF ${n.toLocaleString('es-CL', { maximumFractionDi
 interface TasacionInformeProps {
   listing?: any;
   data?: TasacionData;
+  valuationMode?: TasacionMode;
 }
 
-export default function TasacionTeno({ listing, data }: TasacionInformeProps = {}) {
+export default function TasacionTeno({
+  listing,
+  data,
+  valuationMode = 'standard',
+}: TasacionInformeProps = {}) {
   const { today: ufToday, presets: ufHistoricos, loading: ufLoading, error: ufError } = useUfRate();
   const [ufRate, setUfRate] = useState<number>(UF_REF);
   const [userTouchedRate, setUserTouchedRate] = useState(false);
@@ -140,9 +145,9 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
 
   const base: TasacionData = useMemo(() => {
     if (data) return applyUfRate(data, ufRate);
-    if (listing) return buildTasacionData(listing, ufRate);
+    if (listing) return buildTasacionData(listing, ufRate, valuationMode);
     return applyUfRate(TENO_TASACION, ufRate);
-  }, [data, listing, ufRate]);
+  }, [data, listing, ufRate, valuationMode]);
 
   // Comparables reales desde listings (misma región/comuna), con ponderación.
   const comparablesData = useComparables(
@@ -170,6 +175,41 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
         fuente: c.fuente,
       }));
     }
+    if (
+      valuationMode === 'rural_comparative' &&
+      listing &&
+      merged.superficieTerreno > 0 &&
+      overrides.valorComercialUF == null &&
+      overrides.valorM2UF == null
+    ) {
+      const subjectArea = Number(listing.area_m2 || merged.superficieTerreno);
+      const ruralItems = comparablesData.items.filter((item) => {
+        const areaRatio = subjectArea > 0
+          ? item.superficie / subjectArea
+          : 1;
+        return (
+          item.matchTipo &&
+          (item.distanciaKm == null || item.distanciaKm <= 25) &&
+          areaRatio >= 0.75 &&
+          areaRatio <= 1.35
+        );
+      });
+      const totalWeight = ruralItems.reduce((sum, item) => sum + item.weight, 0);
+      if (totalWeight > 0) {
+        const marketM2UF =
+          ruralItems.reduce((sum, item) => sum + item.valorM2UF * item.weight, 0) / totalWeight;
+        merged.valorM2UF = +marketM2UF.toFixed(3);
+        merged.valorComercialUF = Math.round(merged.valorM2UF * merged.superficieTerreno);
+        merged.observaciones =
+          `Referencia comercial rural calculada con ${ruralItems.length} ofertas activas comparables ` +
+          `del mismo tipo y a un radio máximo de 25 km, ponderadas por superficie y distancia. ` +
+          `Valor unitario referencial: ${merged.valorM2UF.toFixed(3)} UF/m². ` +
+          'Los comparables corresponden a precios publicados, no necesariamente a precios de cierre. ' +
+          'No se aplican renta de bodegaje, CAPEX industrial ni método residual H&BU. ' +
+          'Este análisis es orientativo y no reemplaza una tasación bancaria o judicial.';
+      }
+    }
+
     merged.valorComercialCLP = Math.round(merged.valorComercialUF * ufRate);
     merged.valorM2CLP = Math.round(merged.valorM2UF * ufRate);
     if (merged.superficieTerreno > 0) {
@@ -178,7 +218,7 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
     }
     merged.avaluoFiscalTotal = (merged.avaluoFiscalTerreno || 0) + (merged.avaluoFiscalConstruccion || 0);
     return merged;
-  }, [base, overrides, ufRate, comparablesData.items]);
+  }, [base, overrides, ufRate, comparablesData.items, listing, valuationMode]);
 
   const setField = <K extends keyof TasacionData>(k: K, v: TasacionData[K]) =>
     setOverrides((o) => ({ ...o, [k]: v }));
@@ -276,7 +316,7 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
           <div>
             <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
               <FileBarChart className="h-6 w-6 text-primary" />
-              {L.reportTitle}
+              {valuationMode === 'rural_comparative' ? tt('Referencia Comercial Rural', 'Rural Market Reference') : L.reportTitle}
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               {L.reportSubtitle(d.comuna, d.region, d.fecha)}
@@ -815,17 +855,28 @@ export default function TasacionTeno({ listing, data }: TasacionInformeProps = {
             </>
           ) : (
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Se aplica el <strong>Método Comparativo de Mercado</strong>, contrastando el valor SII del predio con
-              transacciones de inmuebles equivalentes en la zona. Factores de ajuste: (i) frente a Ruta 5,
-              (ii) superficie y forma, (iii) servicios básicos, (iv) zonificación industrial vigente, y
-              (v) potencial productivo (packing, agroindustria, logística, cadena de frío).
+              {valuationMode === 'rural_comparative' ? (
+                <>
+                  Se aplica una <strong>referencia comparativa rural</strong> usando publicaciones activas del mismo
+                  tipo de terreno, priorizando cercanía y superficies semejantes. El análisis parte del precio
+                  comercial vigente y no incorpora supuestos industriales de renta, CAPEX o desarrollo residual.
+                </>
+              ) : (
+                <>
+                  Se aplica el <strong>Método Comparativo de Mercado</strong>, contrastando el valor del predio con
+                  antecedentes comparables disponibles para su zona y uso. Los resultados son referenciales y deben
+                  ratificarse con antecedentes verificables para fines bancarios o judiciales.
+                </>
+              )}
             </p>
           )}
         </SectionCard>
 
         <SectionCard n={12} icon={Trophy} title={t.sections[12]}>
           <div className="rounded-lg bg-gradient-to-br from-emerald-500/20 to-primary/10 border border-emerald-500/30 p-4">
-            <Badge className="bg-emerald-500 text-white mb-2">Valor final</Badge>
+            <Badge className="bg-emerald-500 text-white mb-2">
+              {valuationMode === 'rural_comparative' ? tt('Referencia comercial', 'Market reference') : tt('Valor final', 'Final value')}
+            </Badge>
             <p className="text-3xl font-bold text-emerald-500">{fmtUF(d.valorComercialUF)}</p>
             <p className="text-sm text-muted-foreground mt-1">≈ {fmtCLP(d.valorComercialCLP)} ({fmtUF(d.valorM2UF)}/m²)</p>
           </div>
