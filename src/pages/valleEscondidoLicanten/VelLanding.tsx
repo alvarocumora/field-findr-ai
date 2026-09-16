@@ -4,6 +4,7 @@ import VelFicha from './sections/VelFicha';
 import VelEntorno from './sections/VelEntorno';
 import VelGallery from './sections/VelGallery';
 import VelMasterplan from './sections/VelMasterplan';
+import VelAiLotMatcher from './sections/VelAiLotMatcher';
 import VelLotsGrid from './sections/VelLotsGrid';
 import VelContacto from './sections/VelContacto';
 import VelFooter from './sections/VelFooter';
@@ -88,6 +89,7 @@ export default function VelLanding() {
         <VelFicha />
         <VelEntorno />
         <VelGallery />
+        <VelAiLotMatcher />
         <VelMasterplan />
         <VelLotsGrid />
         <div className="bg-background py-14">
