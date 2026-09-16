@@ -9,6 +9,7 @@ import VelLotsGrid from './sections/VelLotsGrid';
 import VelContacto from './sections/VelContacto';
 import VelFooter from './sections/VelFooter';
 import VelConversionBar from './components/VelConversionBar';
+import VelCompareTray from './components/VelCompareTray';
 import { VelStateProvider } from './state/VelContext';
 import { VEL_PROJECT } from './data/project';
 import { ProjectDownloadsBySlug } from '@/components/projects/ProjectDownloadsBySlug';
@@ -99,6 +100,7 @@ export default function VelLanding() {
         </div>
         <VelContacto />
         <VelFooter />
+        <VelCompareTray />
         <VelConversionBar />
       </VelStateProvider>
     </div>
