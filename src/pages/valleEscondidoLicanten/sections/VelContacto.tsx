@@ -1,11 +1,22 @@
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Phone, Mail, MessageCircle } from 'lucide-react';
 import { VEL_PROJECT } from '../data/project';
+import { useVelLots } from '../data/useVelLots';
+import { VEL_CONTACT, whatsappDigits } from '../data/commercial';
 import VelLeadForm from '../components/VelLeadForm';
 
 const WHATSAPP_TEXT = encodeURIComponent('Hola, me interesa Valle Escondido Licantén');
 
 export default function VelContacto() {
+  const { lots } = useVelLots();
+  const availableLots = useMemo(
+    () => lots.filter((lot) => lot.status === 'available').length,
+    [lots],
+  );
+  const wa = whatsappDigits(VEL_CONTACT.whatsapp);
+  const waHref = wa ? `https://wa.me/${wa}?text=${WHATSAPP_TEXT}` : '';
+
   return (
     <section id="contacto" className="relative scroll-mt-16 px-6 py-24 md:px-16">
       <div className="mx-auto max-w-5xl">
@@ -23,41 +34,46 @@ export default function VelContacto() {
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-[15px] leading-relaxed text-[var(--hue-bone)]/65">
             Coordinamos visitas guiadas al loteo en Licantén y respondemos consultas sobre las{' '}
-            {VEL_PROJECT.availableLots} parcelas disponibles, formas de pago, reserva y
-            documentación legal.
+            {availableLots} parcelas disponibles, formas de pago, reserva y documentación legal.
           </p>
         </motion.div>
 
         <div className="mt-10 grid gap-8 md:grid-cols-[1fr_1.2fr]">
           <div className="grid content-start gap-4">
-            <a
-              href={`https://wa.me/56900000000?text=${WHATSAPP_TEXT}`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-4 rounded-sm border border-white/10 bg-white/[0.02] p-5 transition hover:border-[var(--hue-amber)]/40 hover:bg-white/[0.05]"
-            >
-              <MessageCircle className="h-5 w-5 text-[var(--hue-amber)]" />
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.28em] text-[var(--hue-bone)]/55">
-                  WhatsApp
+            {waHref && (
+              <a
+                href={waHref}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-4 rounded-sm border border-white/10 bg-white/[0.02] p-5 transition hover:border-[var(--hue-amber)]/40 hover:bg-white/[0.05]"
+              >
+                <MessageCircle className="h-5 w-5 text-[var(--hue-amber)]" />
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.28em] text-[var(--hue-bone)]/55">
+                    WhatsApp
+                  </div>
+                  <div className="text-[var(--hue-bone)]">Escribir por WhatsApp</div>
                 </div>
-                <div className="text-[var(--hue-bone)]">Escribir por WhatsApp</div>
-              </div>
-            </a>
-            <a
-              href="tel:+56900000000"
-              className="flex items-center gap-4 rounded-sm border border-white/10 bg-white/[0.02] p-5 transition hover:border-[var(--hue-amber)]/40 hover:bg-white/[0.05]"
-            >
-              <Phone className="h-5 w-5 text-[var(--hue-amber)]" />
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.28em] text-[var(--hue-bone)]/55">
-                  Teléfono
+              </a>
+            )}
+
+            {VEL_CONTACT.phone && (
+              <a
+                href={`tel:${VEL_CONTACT.phone.replace(/\s/g, '')}`}
+                className="flex items-center gap-4 rounded-sm border border-white/10 bg-white/[0.02] p-5 transition hover:border-[var(--hue-amber)]/40 hover:bg-white/[0.05]"
+              >
+                <Phone className="h-5 w-5 text-[var(--hue-amber)]" />
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.28em] text-[var(--hue-bone)]/55">
+                    Teléfono
+                  </div>
+                  <div className="text-[var(--hue-bone)]">{VEL_CONTACT.phone}</div>
                 </div>
-                <div className="text-[var(--hue-bone)]">+56 9 0000 0000</div>
-              </div>
-            </a>
+              </a>
+            )}
+
             <a
-              href="mailto:contacto@ofertaterrenos.com?subject=Consulta%20Valle%20Escondido%20Licant%C3%A9n"
+              href={`mailto:${VEL_CONTACT.email}?subject=Consulta%20Valle%20Escondido%20Licant%C3%A9n`}
               className="flex items-center gap-4 rounded-sm border border-white/10 bg-white/[0.02] p-5 transition hover:border-[var(--hue-amber)]/40 hover:bg-white/[0.05]"
             >
               <Mail className="h-5 w-5 text-[var(--hue-amber)]" />
@@ -65,7 +81,7 @@ export default function VelContacto() {
                 <div className="text-[10px] uppercase tracking-[0.28em] text-[var(--hue-bone)]/55">
                   Email
                 </div>
-                <div className="break-all text-[var(--hue-bone)]">contacto@ofertaterrenos.com</div>
+                <div className="break-all text-[var(--hue-bone)]">{VEL_CONTACT.email}</div>
               </div>
             </a>
           </div>

@@ -1,12 +1,26 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CalendarCheck, ChevronDown, MapPin, ShoppingCart } from 'lucide-react';
 import VisitScheduleDialog from '@/components/visits/VisitScheduleDialog';
 import { VEL_PROJECT } from '../data/project';
+import { useVelLots } from '../data/useVelLots';
 import heroImg from '@/assets/valle-escondido-licanten/vel-valle.jpg';
 
 export default function VelHero() {
   const [visitOpen, setVisitOpen] = useState(false);
+  const { lots } = useVelLots();
+
+  const commercial = useMemo(() => {
+    const available = lots.filter((lot) => lot.status === 'available');
+    const priced = available.filter((lot) => lot.price_clp > 0);
+    return {
+      availableLots: available.length,
+      priceFrom:
+        priced.length > 0
+          ? Math.min(...priced.map((lot) => lot.price_clp))
+          : VEL_PROJECT.priceFromClp,
+    };
+  }, [lots]);
 
   return (
     <section className="relative h-screen min-h-[680px] w-full overflow-hidden">
@@ -46,12 +60,15 @@ export default function VelHero() {
           </h1>
           <div className="hue-divider my-6 max-w-md" />
           <p className="serif text-[clamp(1.2rem,3vw,1.9rem)] italic font-light text-[var(--hue-bone)]/85">
-            {VEL_PROJECT.totalLots} parcelas sobre {VEL_PROJECT.totalAreaHa} hectáreas, camino al lago Vichuquén
+            {VEL_PROJECT.totalLots} parcelas sobre {VEL_PROJECT.totalAreaHa} hectáreas, a pocos minutos de Licantén
+          </p>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--hue-bone)]/70 md:text-base">
+            Acceso por carretera asfaltada y conexión directa por la ruta principal hacia Lago Vichuquén.
           </p>
           <p className="mt-6 inline-flex items-baseline gap-3 rounded-sm border border-[var(--hue-amber)]/40 bg-[var(--hue-amber)]/10 px-5 py-3">
             <span className="text-[10px] uppercase tracking-[0.28em] text-[var(--hue-bone)]/70">Parcelas desde</span>
             <span className="serif text-[clamp(1.5rem,4vw,2.4rem)] font-light leading-none text-[var(--hue-bone)]">
-              ${VEL_PROJECT.priceFromClp.toLocaleString('es-CL')}
+              ${commercial.priceFrom.toLocaleString('es-CL')}
             </span>
           </p>
 
@@ -76,7 +93,7 @@ export default function VelHero() {
             {[
               ['Superficie', `${VEL_PROJECT.totalAreaHa} ha`],
               ['Parcelas', String(VEL_PROJECT.totalLots)],
-              ['Disponibles', String(VEL_PROJECT.availableLots)],
+              ['Disponibles', String(commercial.availableLots)],
             ].map(([k, v]) => (
               <div key={k}>
                 <div className="serif text-3xl font-light md:text-4xl">{v}</div>

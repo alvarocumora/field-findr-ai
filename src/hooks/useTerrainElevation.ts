@@ -10,8 +10,6 @@ interface ElevationData {
 
 const cache = new Map<string, ElevationData>();
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
-
 /**
  * Decode Mapbox Terrain-RGB tile pixel to elevation in meters.
  * Formula: height = -10000 + ((R * 256 * 256 + G * 256 + B) * 0.1)
@@ -32,9 +30,9 @@ function lngLatToTile(lng: number, lat: number, zoom: number): { x: number; y: n
   return { x: xTile, y: yTile, px: Math.floor(xFrac * 256), py: Math.floor(yFrac * 256) };
 }
 
-async function getElevationAtPoint(lat: number, lng: number, zoom = 14): Promise<number> {
+async function getElevationAtPoint(lat: number, lng: number, token: string, zoom = 14): Promise<number> {
   const { x, y, px, py } = lngLatToTile(lng, lat, zoom);
-  const url = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${zoom}/${x}/${y}.pngraw?access_token=${MAPBOX_TOKEN}`;
+  const url = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${zoom}/${x}/${y}.pngraw?access_token=${token}`;
   
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -64,8 +62,9 @@ export const useTerrainElevation = () => {
   const [loading, setLoading] = useState(false);
   const abortRef = useRef(false);
 
-  const getElevation = useCallback(async (polygon: number[][] | null, lotId?: string) => {
-    if (!polygon || polygon.length < 3 || !MAPBOX_TOKEN) return null;
+  const getElevation = useCallback(async (polygon: number[][] | null, lotId?: string, tokenOverride?: string) => {
+    const token = tokenOverride || import.meta.env.VITE_MAPBOX_TOKEN;
+    if (!polygon || polygon.length < 3 || !token) return null;
 
     const cacheKey = lotId || polygon.map(p => `${p[0].toFixed(6)},${p[1].toFixed(6)}`).join('|');
     if (cache.has(cacheKey)) {
@@ -74,6 +73,7 @@ export const useTerrainElevation = () => {
       return cached;
     }
 
+    setData(null);
     setLoading(true);
     abortRef.current = false;
 
@@ -85,7 +85,7 @@ export const useTerrainElevation = () => {
       samplePoints.push([cx, cy]);
 
       const elevations = await Promise.all(
-        samplePoints.map(([lng, lat]) => getElevationAtPoint(lat, lng))
+        samplePoints.map(([lng, lat]) => getElevationAtPoint(lat, lng, token))
       );
 
       if (abortRef.current) return null;

@@ -3,13 +3,15 @@ import { Link } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { motion } from 'framer-motion';
-import { Loader2, Compass, Layers } from 'lucide-react';
+import { Loader2, Compass, Layers, Mountain } from 'lucide-react';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { useTerrainElevation } from '@/hooks/useTerrainElevation';
 import { VEL_PROJECT } from '../data/project';
 import { type VelLotStatus } from '../data/lots';
 import { useVelLots } from '../data/useVelLots';
 import { useVelState } from '../state/VelContext';
 import { VEL_POIS } from '../data/poi';
+import VelLotPanel from '../components/VelLotPanel';
 
 type StatusFilter = VelLotStatus;
 
@@ -22,10 +24,11 @@ const STATUS_META: Record<StatusFilter, { color: string; label: string; sub: str
 export default function VelMasterplan() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  const popupRef = useRef<mapboxgl.Popup | null>(null);
   const [loading, setLoading] = useState(true);
   const [styleReady, setStyleReady] = useState(false);
+  const [terrain3d, setTerrain3d] = useState(false);
   const { token, loading: tokenLoading } = useMapboxToken();
+  const { data: terrainData, loading: terrainLoading, getElevation } = useTerrainElevation();
 
   const { lots } = useVelLots();
   const lotsRef = useRef(lots);
@@ -36,9 +39,17 @@ export default function VelMasterplan() {
     toggleStatus,
     hoveredLotId,
     setHoveredLotId,
+    selectedLotId,
+    selectLot,
     focusRequest,
+    requestFocus,
     poiRequest,
   } = useVelState();
+
+  const selectedLot = useMemo(
+    () => lots.find((lot) => lot.id === selectedLotId) ?? null,
+    [lots, selectedLotId],
+  );
 
   const counts = useMemo(() => {
     const c: Record<StatusFilter, number> = { available: 0, reserved: 0, sold: 0 };
@@ -76,14 +87,6 @@ export default function VelMasterplan() {
     });
     mapRef.current = map;
 
-    popupRef.current = new mapboxgl.Popup({
-      closeButton: true,
-      closeOnClick: true,
-      offset: 12,
-      className: 'hue-popup',
-      maxWidth: '320px',
-    });
-
     map.on('load', () => {
       const fc: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
@@ -104,6 +107,24 @@ export default function VelMasterplan() {
         })),
       };
       map.addSource('lots', { type: 'geojson', data: fc, promoteId: 'id' });
+
+      map.addSource('vel-terrain', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14,
+      });
+      map.addLayer({
+        id: 'vel-hillshade',
+        type: 'hillshade',
+        source: 'vel-terrain',
+        layout: { visibility: 'none' },
+        paint: {
+          'hillshade-exaggeration': 0.45,
+          'hillshade-shadow-color': '#06110a',
+          'hillshade-highlight-color': '#d8c58b',
+        },
+      });
 
       map.addLayer({
         id: 'lots-fill',
@@ -190,7 +211,8 @@ export default function VelMasterplan() {
       });
       map.on('click', 'lots-fill', (e) => {
         if (!e.features?.length) return;
-        openPopupForFeature(map, e.features[0] as any, e.lngLat);
+        const lotId = (e.features[0].properties as any)?.id as string | undefined;
+        if (lotId) selectLot(lotId);
       });
 
       setStyleReady(true);
@@ -198,13 +220,34 @@ export default function VelMasterplan() {
     });
 
     return () => {
-      popupRef.current?.remove();
       mapRef.current?.remove();
       mapRef.current = null;
       setStyleReady(false);
     };
      
   }, [token, tokenLoading]);
+
+  // Terrain View: relieve Mapbox + cámara oblicua.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !styleReady) return;
+    try {
+      map.setTerrain(terrain3d ? { source: 'vel-terrain', exaggeration: 1.18 } : null);
+      map.setLayoutProperty('vel-hillshade', 'visibility', terrain3d ? 'visible' : 'none');
+      map.easeTo({
+        pitch: terrain3d ? 52 : 0,
+        bearing: terrain3d ? -18 : 0,
+        duration: 900,
+      });
+    } catch {
+      // El estilo todavía puede estar terminando de montar la fuente DEM.
+    }
+  }, [terrain3d, styleReady]);
+
+  useEffect(() => {
+    if (!selectedLot || !token) return;
+    void getElevation(selectedLot.polygon, selectedLot.id, token);
+  }, [selectedLot, token, getElevation]);
 
   // Refresca la fuente cuando llegan los datos en vivo (precio/estado/ficha).
   useEffect(() => {
@@ -318,54 +361,8 @@ export default function VelMasterplan() {
     );
     map.fitBounds(bounds, { padding: 120, duration: 900, maxZoom: 18 });
 
-    // synthetic feature for popup
-    const feat = {
-      properties: {
-        id: lot.id,
-        num: lot.lot_number,
-        status: lot.status,
-        area: lot.area_m2,
-        price: lot.price_clp,
-        listing_id: lot.listing_id ?? '',
-      },
-    } as any;
-    openPopupForFeature(map, feat, { lng: lot.centroid[0], lat: lot.centroid[1] } as any);
-  }, [focusRequest, styleReady]);
-
-  function openPopupForFeature(map: mapboxgl.Map, feature: any, lngLat: mapboxgl.LngLatLike) {
-    const p = feature.properties || {};
-    const status = String(p.status) as StatusFilter;
-    const meta = STATUS_META[status];
-    const priceStr = Number(p.price).toLocaleString('es-CL');
-    const link = p.listing_id
-      ? `<a href="/propiedad/${p.listing_id}" style="flex:1;text-align:center;padding:8px 12px;border:1px solid rgba(201,176,107,0.55);background:rgba(201,176,107,0.08);color:#e8e3d8;text-decoration:none;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;border-radius:2px;">Abrir ficha →</a>`
-      : `<span style="flex:1;text-align:center;padding:8px 12px;border:1px dashed rgba(255,255,255,0.15);color:rgba(232,227,216,0.5);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;border-radius:2px;">Sin ficha</span>`;
-    const scrollBtn = `<button data-vel-scroll-grid="${p.id}" style="padding:8px 10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.03);color:#e8e3d8;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;border-radius:2px;cursor:pointer;">En grilla</button>`;
-    const html = `
-      <div style="padding:16px 18px;min-width:220px;">
-        <div style="font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:${meta.color};margin-bottom:6px;">
-          Lote ${p.num} · ${meta.label}
-        </div>
-        <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:300;color:#e8e3d8;margin-bottom:4px;">
-          ${Number(p.area).toLocaleString('es-CL')} m²
-        </div>
-        <div style="font-size:12px;color:#b8b1a3;margin-bottom:12px;">$${priceStr} CLP</div>
-        <div style="display:flex;gap:6px;align-items:stretch;">${link}${scrollBtn}</div>
-      </div>`;
-    popupRef.current?.setLngLat(lngLat).setHTML(html).addTo(map);
-
-    // wire the "En grilla" button
-    setTimeout(() => {
-      const el = document.querySelector<HTMLButtonElement>(`button[data-vel-scroll-grid="${p.id}"]`);
-      if (el) {
-        el.addEventListener('click', () => {
-          const target = document.getElementById(`vel-lot-${p.id}`);
-          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          else document.getElementById('lotes')?.scrollIntoView({ behavior: 'smooth' });
-        }, { once: true });
-      }
-    }, 0);
-  }
+    selectLot(lot.id);
+  }, [focusRequest, styleReady, terrain3d, selectLot]);
 
   return (
     <section id="masterplan" className="relative px-3 py-24 md:px-6 lg:px-10">
@@ -384,8 +381,8 @@ export default function VelMasterplan() {
             </h2>
           </div>
           <p className="max-w-md text-sm text-[var(--hue-bone)]/55">
-            Filtros sincronizados con la grilla. Pasa el mouse sobre una parcela y se resaltará en
-            ambos. Haz click para abrir su ficha pública directamente desde el popup.
+            Explora el proyecto en satélite o relieve 3D. Selecciona una parcela para ver Rural Score,
+            elevación estimada, precio por m² y acciones comerciales en una sola ficha.
           </p>
         </motion.div>
 
@@ -468,6 +465,20 @@ export default function VelMasterplan() {
 
             <div className="order-1 lg:order-2 col-span-12 lg:col-span-9 relative h-[440px] md:h-[600px] lg:h-[720px]">
               <div ref={containerRef} className="absolute inset-0" />
+              <div className="absolute left-3 top-3 z-20">
+                <button
+                  type="button"
+                  onClick={() => setTerrain3d((value) => !value)}
+                  className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-3 text-[10px] uppercase tracking-[0.12em] backdrop-blur-md transition ${
+                    terrain3d
+                      ? 'border-[var(--hue-amber)]/70 bg-[var(--hue-amber)] text-[#07110b]'
+                      : 'border-white/15 bg-black/55 text-[var(--hue-bone)] hover:border-[var(--hue-amber)]/45'
+                  }`}
+                >
+                  <Mountain className="h-3.5 w-3.5" />
+                  {terrain3d ? 'Terrain 3D activo' : 'Terrain 3D'}
+                </button>
+              </div>
               {(loading || tokenLoading) && (
                 <div className="absolute inset-0 flex items-center justify-center bg-[#06110a]/90 backdrop-blur-sm z-10">
                   <div className="flex items-center gap-3 text-[var(--hue-bone)]/70">
@@ -477,8 +488,21 @@ export default function VelMasterplan() {
                 </div>
               )}
               <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2 rounded-sm bg-black/55 backdrop-blur-md px-3 py-1.5 text-[10px] tracking-[0.22em] uppercase text-[var(--hue-bone)]/70">
-                <Compass className="h-3 w-3" /> WGS84 · Satélite
+                <Compass className="h-3 w-3" /> WGS84 · {terrain3d ? 'Terrain 3D' : 'Satélite'}
               </div>
+              {selectedLot && (
+                <VelLotPanel
+                  lot={selectedLot}
+                  allLots={lots}
+                  terrain={terrainData}
+                  terrainLoading={terrainLoading}
+                  onClose={() => selectLot(null)}
+                  onFocus={() => {
+                    setTerrain3d(true);
+                    requestFocus(selectedLot.id);
+                  }}
+                />
+              )}
               {hoveredLotId && (
                 <div className="pointer-events-none absolute top-3 right-3 z-10 rounded-sm bg-black/60 backdrop-blur-md px-3 py-1.5 text-[10px] tracking-[0.22em] uppercase text-[var(--hue-bone)]/85">
                   Lote {lots.find((l) => l.id === hoveredLotId)?.lot_number ?? ''}

@@ -23,7 +23,7 @@ export default function VelFicha() {
     { icon: Ruler, title: 'Parcelas amplias', text: 'De 0,50 a 2,38 hectáreas, con servidumbre de tránsito incluida en el plano.' },
     { icon: Sprout, title: 'Valle agrícola', text: 'Suelos de lomaje suave en la cuenca del Mataquito, entre Licantén y la costa.' },
     { icon: ShieldCheck, title: 'Subdivisión inscrita', text: 'Plano N° 192 (2023) inscrito en el Conservador de Bienes Raíces de Licantén.' },
-    { icon: MapPin, title: 'Camino al lago', text: 'Ruta principal hacia el lago Vichuquén y salida directa a Iloca y Curicó.' },
+    { icon: MapPin, title: 'Conectado a Licantén', text: 'Acceso asfaltado, cercanía al centro de Licantén y conexión por la ruta principal hacia Lago Vichuquén.' },
   ];
 
   return (
@@ -37,15 +37,15 @@ export default function VelFicha() {
         >
           <div className="hue-eyebrow mb-4">Ficha del proyecto</div>
           <h2 className="serif text-[clamp(2rem,4.5vw,3rem)] leading-tight">
-            Un valle protegido{' '}
-            <span className="italic text-[var(--hue-bone)]/55">entre el río y el mar.</span>
+            Naturaleza y conectividad{' '}
+            <span className="italic text-[var(--hue-bone)]/55">a minutos de Licantén.</span>
           </h2>
           <div className="hue-divider my-8 max-w-xs" />
           <p className="text-[15px] leading-relaxed text-[var(--hue-bone)]/70">
-            Valle Escondido Licantén es un loteo de {VEL_PROJECT.totalLots} parcelas sobre{' '}
-            {VEL_PROJECT.totalAreaHa} hectáreas en la comuna de Licantén, Región del Maule. El
-            trazado se apoya en la vialidad existente hacia el lago Vichuquén, con acceso rodado a
-            cada parcela y superficies que permiten casa, huerto y espacio libre.
+            Valle Escondido Licantén reúne {VEL_PROJECT.totalLots} parcelas sobre{' '}
+            {VEL_PROJECT.totalAreaHa} hectáreas a pocos minutos del centro de Licantén. El proyecto
+            cuenta con acceso por carretera asfaltada y se emplaza sobre la ruta principal hacia
+            Lago Vichuquén, combinando conectividad cotidiana con un entorno rural de mayor escala.
           </p>
           <p className="mt-4 text-[15px] leading-relaxed text-[var(--hue-bone)]/70">
             La subdivisión está inscrita en el Conservador de Bienes Raíces de Licantén y cada
