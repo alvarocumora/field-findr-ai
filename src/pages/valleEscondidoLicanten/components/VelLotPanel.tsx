@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarCheck, ChevronRight, Cuboid, Loader2, Mountain, ShoppingCart, Sparkles, X } from 'lucide-react';
+import { CalendarCheck, ChevronRight, Cuboid, GitCompareArrows, Loader2, Mountain, ShoppingCart, Sparkles, X } from 'lucide-react';
 import VisitScheduleDialog from '@/components/visits/VisitScheduleDialog';
 import { LotReserveDialog } from '@/components/sales/LotReserveDialog';
 import type { SalesLot } from '@/components/sales/LotSalesSheet';
@@ -9,6 +9,7 @@ import type { VelTerrainInsight } from '../data/lotIntelligence';
 import { calculateRuralScore } from '../data/lotIntelligence';
 import { VEL_PROJECT } from '../data/project';
 import VelBuildMyLotDialog from './VelBuildMyLotDialog';
+import { useVelState } from '../state/VelContext';
 
 interface Props {
   lot: VelLot;
@@ -29,6 +30,9 @@ export default function VelLotPanel({ lot, allLots, terrain, terrainLoading, onC
   const [visitOpen, setVisitOpen] = useState(false);
   const [reserveOpen, setReserveOpen] = useState(false);
   const [buildOpen, setBuildOpen] = useState(false);
+  const { shortlistIds, toggleShortlist } = useVelState();
+  const shortlisted = shortlistIds.includes(lot.id);
+  const shortlistFull = shortlistIds.length >= 4 && !shortlisted;
   const score = useMemo(() => calculateRuralScore(lot, allLots, terrain), [lot, allLots, terrain]);
 
   const salesLot: SalesLot = {
@@ -137,15 +141,23 @@ export default function VelLotPanel({ lot, allLots, terrain, terrainLoading, onC
         </p>
 
         <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => toggleShortlist(lot.id)}
+            disabled={shortlistFull}
+            className={`hue-pill justify-center text-[10px] ${shortlisted ? '!border-[var(--hue-amber)]/70 !bg-[var(--hue-amber)]/15' : ''}`}
+          >
+            <GitCompareArrows className="h-3.5 w-3.5" /> {shortlisted ? 'En shortlist' : 'Comparar'}
+          </button>
           <button type="button" onClick={onFocus} className="hue-pill justify-center text-[10px]">
             Ver en 3D
           </button>
           {lot.listing_id ? (
-            <Link to={`/propiedad/${lot.listing_id}`} className="hue-pill justify-center text-[10px]">
+            <Link to={`/propiedad/${lot.listing_id}`} className="hue-pill col-span-2 justify-center text-[10px]">
               Ficha completa
             </Link>
           ) : (
-            <a href="#contacto" className="hue-pill justify-center text-[10px]">Consultar</a>
+            <a href="#contacto" className="hue-pill col-span-2 justify-center text-[10px]">Consultar</a>
           )}
         </div>
 
