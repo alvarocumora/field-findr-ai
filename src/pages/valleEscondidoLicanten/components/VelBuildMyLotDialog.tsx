@@ -27,13 +27,17 @@ const storageKey = (lotId: string) => `vel-build-my-lot-${lotId}`;
 
 export default function VelBuildMyLotDialog({ lot, allLots, open, onOpenChange }: Props) {
   const [savedDesign, setSavedDesign] = useState<string | null>(null);
+  const [designReady, setDesignReady] = useState(false);
 
   useEffect(() => {
     if (!open || !lot) return;
+    setDesignReady(false);
     try {
       setSavedDesign(localStorage.getItem(storageKey(lot.id)));
     } catch {
       setSavedDesign(null);
+    } finally {
+      setDesignReady(true);
     }
   }, [open, lot]);
 
@@ -77,29 +81,35 @@ export default function VelBuildMyLotDialog({ lot, allLots, open, onOpenChange }
         </div>
 
         <div className="min-h-0 flex-1">
-          <Suspense
-            fallback={
-              <div className="flex h-full items-center justify-center bg-muted/20">
-                <Skeleton className="h-full w-full" />
-              </div>
-            }
-          >
-            <div className="h-full [&>div]:!h-full [&>div]:!rounded-none [&>div]:!border-0">
-              <ParcelaDesigner3D
-                key={lot.id}
-                polygon={lot.polygon}
-                neighbors={neighbors}
-                lotNumber={lot.lot_number}
-                lotArea={lot.area_m2}
-                lotPrice={lot.price_clp || undefined}
-                latitude={lot.centroid[1]}
-                longitude={lot.centroid[0]}
-                savedDesign={savedDesign}
-                onSave={handleSave}
-                program="residencial"
-              />
+          {!designReady ? (
+            <div className="flex h-full items-center justify-center bg-muted/20">
+              <Skeleton className="h-full w-full" />
             </div>
-          </Suspense>
+          ) : (
+            <Suspense
+              fallback={
+                <div className="flex h-full items-center justify-center bg-muted/20">
+                  <Skeleton className="h-full w-full" />
+                </div>
+              }
+            >
+              <div className="h-full [&>div]:!h-full [&>div]:!rounded-none [&>div]:!border-0">
+                <ParcelaDesigner3D
+                  key={lot.id}
+                  polygon={lot.polygon}
+                  neighbors={neighbors}
+                  lotNumber={lot.lot_number}
+                  lotArea={lot.area_m2}
+                  lotPrice={lot.price_clp || undefined}
+                  latitude={lot.centroid[1]}
+                  longitude={lot.centroid[0]}
+                  savedDesign={savedDesign}
+                  onSave={handleSave}
+                  program="residencial"
+                />
+              </div>
+            </Suspense>
+          )}
         </div>
       </DialogContent>
     </Dialog>
