@@ -10,6 +10,8 @@ interface Ctx {
   setOnlyStatus: (s: VelLotStatus | 'all') => void;
   hoveredLotId: string | null;
   setHoveredLotId: (id: string | null) => void;
+  selectedLotId: string | null;
+  selectLot: (id: string | null) => void;
   focusRequest: FocusRequest;
   requestFocus: (lotId: string) => void;
   poiRequest: PoiRequest;
@@ -23,6 +25,7 @@ export function VelStateProvider({ children }: { children: ReactNode }) {
     new Set<VelLotStatus>(['available', 'reserved', 'sold']),
   );
   const [hoveredLotId, setHoveredLotId] = useState<string | null>(null);
+  const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
   const [focusRequest, setFocusRequest] = useState<FocusRequest>(null);
   const [poiRequest, setPoiRequest] = useState<PoiRequest>(null);
 
@@ -41,7 +44,10 @@ export function VelStateProvider({ children }: { children: ReactNode }) {
     else setActiveStatus(new Set<VelLotStatus>([s]));
   }, []);
 
+  const selectLot = useCallback((id: string | null) => setSelectedLotId(id), []);
+
   const requestFocus = useCallback((lotId: string) => {
+    setSelectedLotId(lotId);
     setFocusRequest({ lotId, nonce: Date.now() });
   }, []);
 
@@ -56,12 +62,14 @@ export function VelStateProvider({ children }: { children: ReactNode }) {
       setOnlyStatus,
       hoveredLotId,
       setHoveredLotId,
+      selectedLotId,
+      selectLot,
       focusRequest,
       requestFocus,
       poiRequest,
       requestPoi,
     }),
-    [activeStatus, toggleStatus, setOnlyStatus, hoveredLotId, focusRequest, requestFocus, poiRequest, requestPoi],
+    [activeStatus, toggleStatus, setOnlyStatus, hoveredLotId, selectedLotId, selectLot, focusRequest, requestFocus, poiRequest, requestPoi],
   );
 
   return (
@@ -80,6 +88,8 @@ export function useVelState(): Ctx {
       setOnlyStatus: noop,
       hoveredLotId: null,
       setHoveredLotId: noop,
+      selectedLotId: null,
+      selectLot: noop,
       focusRequest: null,
       requestFocus: noop,
       poiRequest: null,
