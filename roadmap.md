@@ -12,3 +12,7 @@
 - [x] Reemplazar símbolo y wordmarks por la identidad globo + OFERTA TERRENOS
 - [x] Regenerar favicon, PWA y kit social con la nueva identidad
 - [x] Verificar movimiento, WebGL, modo reducido, escritorio y móvil
+
+## Identidad tipográfica
+
+- [x] Unificar el logo visible como OfertaTerrenos.com sin isotipo
