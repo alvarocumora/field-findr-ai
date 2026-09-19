@@ -83,7 +83,7 @@ const InteractiveEarth = ({ reducedMotion, onReady }: InteractiveEarthProps) => 
         mapboxgl.accessToken = token;
         const map = new mapboxgl.Map({
           container: containerRef.current,
-          style: 'mapbox://styles/mapbox/satellite-v9',
+          style: 'mapbox://styles/mapbox/satellite-streets-v12',
           projection: 'globe',
           center: SOUTH_AMERICA_CENTER,
           zoom: 1.15,
@@ -105,6 +105,14 @@ const InteractiveEarth = ({ reducedMotion, onReady }: InteractiveEarthProps) => 
 
         map.on('load', async () => {
           if (cancelled) return;
+
+          map.getStyle().layers?.forEach((layer) => {
+            const isLabel = layer.type === 'symbol';
+            const isBoundary = /boundary|admin/i.test(layer.id);
+            if (isLabel || isBoundary) {
+              map.setLayoutProperty(layer.id, 'visibility', 'none');
+            }
+          });
 
           map.setFog({
             color: 'rgb(5, 10, 14)',
