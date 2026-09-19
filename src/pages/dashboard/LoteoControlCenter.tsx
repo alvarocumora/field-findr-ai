@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,10 @@ import {
   Building2,
   Tags,
   EyeOff,
+  Users,
+  CalendarCheck,
+  BarChart3,
+  MapPinned,
 } from 'lucide-react';
 import { format, formatDistanceToNow, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -180,6 +185,17 @@ const LoteoControlCenter = () => {
     return { withoutPrice, unpublished };
   }, [lots]);
 
+  const commercialReadiness = useMemo(() => {
+    const checks = [
+      { label: 'Inventario cargado', ready: kpis.total > 0 },
+      { label: 'Precios completos', ready: inventoryAlerts.withoutPrice.length === 0 },
+      { label: 'Fichas publicadas', ready: inventoryAlerts.unpublished.length === 0 },
+      { label: 'Stock disponible', ready: kpis.available > 0 },
+    ];
+    const score = Math.round((checks.filter((check) => check.ready).length / checks.length) * 100);
+    return { checks, score };
+  }, [inventoryAlerts, kpis.available, kpis.total]);
+
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['reservations'] });
     queryClient.invalidateQueries({ queryKey: ['lots'] });
@@ -264,6 +280,52 @@ const LoteoControlCenter = () => {
           </Select>
         </div>
       </div>
+
+      {/* Commercial readiness and shortcuts */}
+      <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card">
+        <CardContent className="grid gap-6 p-5 lg:grid-cols-[0.9fr_1.1fr] lg:p-6">
+          <div>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Preparación comercial</p>
+                <h2 className="mt-1 text-xl font-bold">Proyecto listo para vender</h2>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold tabular-nums">{commercialReadiness.score}%</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">completitud</p>
+              </div>
+            </div>
+            <Progress value={commercialReadiness.score} className="mt-4 h-2.5" />
+            <div className="mt-4 flex flex-wrap gap-2">
+              {commercialReadiness.checks.map((check) => (
+                <Badge key={check.label} variant={check.ready ? 'default' : 'outline'} className="gap-1.5">
+                  {check.ready ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+                  {check.label}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              { label: 'Mapa', text: 'Inventario', to: '/panel/inventario', icon: MapPinned },
+              { label: 'Leads', text: 'Seguimiento', to: '/asesor/leads', icon: Users },
+              { label: 'Reservas', text: 'Operación', to: '/asesor/reservations', icon: CalendarCheck },
+              { label: 'Reportes', text: 'Resultados', to: '/asesor/reports', icon: BarChart3 },
+            ].map((action) => (
+              <Button key={action.to} asChild variant="outline" className="h-auto min-h-24 flex-col items-start justify-between rounded-2xl bg-background/60 p-4 text-left">
+                <Link to={action.to}>
+                  <action.icon className="h-5 w-5 text-primary" />
+                  <span className="w-full">
+                    <span className="block text-sm font-semibold">{action.label}</span>
+                    <span className="block text-[10px] font-normal text-muted-foreground">{action.text}</span>
+                  </span>
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* KPI row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
