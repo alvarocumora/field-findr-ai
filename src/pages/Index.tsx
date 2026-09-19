@@ -1,5 +1,6 @@
 import PublicLayout from '@/components/layouts/PublicLayout';
 import CartographicHero from '@/components/landing/CartographicHero';
+import OpportunityHubSection from '@/components/landing/OpportunityHubSection';
 import FeaturedListings from '@/components/landing/FeaturedListings';
 import DecisionStackSection from '@/components/landing/DecisionStackSection';
 import ProfessionalNetworkSection from '@/components/landing/ProfessionalNetworkSection';
@@ -19,6 +20,7 @@ const Index = () => {
   return (
     <PublicLayout showFooter={true} showAssistant={false}>
       <CartographicHero />
+      <OpportunityHubSection />
       <AtlasTerritorySection />
       <FeaturedListings />
       <DecisionStackSection />
