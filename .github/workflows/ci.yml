@@ -63,7 +63,10 @@ jobs:
           grep -q 'https://ofertaterrenos.com/planes-loteos' dist/sitemap.xml
           grep -q 'https://ofertaterrenos.com/contacto-loteos' dist/sitemap.xml
 
+      # The artifact is a convenience download; quota exhaustion must not hide
+      # a successful typecheck/test/build validation.
       - name: Upload production bundle
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: oferta-terrenos-dist-${{ github.sha }}
