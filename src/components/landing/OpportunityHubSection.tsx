@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import {
   ArrowRight,
   BadgeDollarSign,
@@ -9,6 +10,7 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 const EXPERIENCES = [
   {
@@ -51,6 +53,24 @@ const EXPERIENCES = [
 
 const OpportunityHubSection = () => {
   const prefersReducedMotion = useReducedMotion();
+  const { data: landscapeImages = [] } = useQuery({
+    queryKey: ['landing-opportunity-landscapes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('images')
+        .eq('status', 'active')
+        .order('featured', { ascending: false })
+        .limit(12);
+
+      if (error) throw error;
+      return (data ?? [])
+        .flatMap((project) => Array.isArray(project.images) ? project.images : [])
+        .filter((image): image is string => typeof image === 'string' && image.length > 0)
+        .slice(0, EXPERIENCES.length);
+    },
+    staleTime: 10 * 60 * 1000,
+  });
 
   return (
     <section className="relative overflow-hidden border-b border-border/50 bg-background py-16 md:py-24" aria-labelledby="opportunity-hub-title">
@@ -85,7 +105,9 @@ const OpportunityHubSection = () => {
         </motion.div>
 
         <div className="mt-12 grid gap-4 md:grid-cols-2">
-          {EXPERIENCES.map((experience, index) => (
+          {EXPERIENCES.map((experience, index) => {
+            const landscape = landscapeImages[index % Math.max(landscapeImages.length, 1)];
+            return (
             <motion.div
               key={experience.title}
               initial={prefersReducedMotion ? false : { opacity: 0, y: 22 }}
@@ -98,7 +120,17 @@ const OpportunityHubSection = () => {
                 to={experience.to}
                 className="group relative flex h-full min-h-64 overflow-hidden rounded-3xl border border-border/60 bg-card/75 p-6 shadow-sm transition-colors hover:border-primary/35 md:p-8"
               >
-                <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${experience.accent} opacity-80`} aria-hidden="true" />
+                {landscape ? (
+                  <img
+                    src={landscape}
+                    alt=""
+                    loading="lazy"
+                    className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-55 transition duration-700 group-hover:scale-105 group-hover:opacity-65"
+                    aria-hidden="true"
+                  />
+                ) : null}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-background/88 to-background/20" aria-hidden="true" />
+                <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${experience.accent} opacity-70`} aria-hidden="true" />
                 <div className="relative flex w-full flex-col">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/15 bg-background/75 text-primary shadow-sm backdrop-blur">
@@ -113,7 +145,8 @@ const OpportunityHubSection = () => {
                 </div>
               </Link>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
 
         <motion.div
