@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import { PLAN_DETAILS, LATAM_PRICES } from '@/hooks/useSubscription';
+import LoteoDashboardPreview from '@/components/marketing/LoteoDashboardPreview';
 
 const CLP = (n: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
 const UF_VALUE = 37500; // referencia aproximada CLP
@@ -42,9 +43,28 @@ const InmobiliariasLanding = () => {
           <Button size="lg" onClick={() => navigate('/planes-loteos')}>
             Ver planes de loteos <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
-          <Button size="lg" variant="outline" onClick={() => navigate('/contacto?source=inmobiliarias-landing')}>
+          <Button size="lg" variant="outline" onClick={() => navigate('/contacto-loteos?source=inmobiliarias-landing')}>
             Hablar con ventas
           </Button>
+        </div>
+      </section>
+
+      {/* Product visual */}
+      <section className="container px-4 pb-20">
+        <div className="mx-auto mb-10 max-w-3xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">El panel que recibe tu equipo</p>
+          <h2 className="mt-3 text-3xl font-bold md:text-5xl">Del plano del loteo al cierre de venta.</h2>
+          <p className="mt-4 text-muted-foreground">
+            Una vista ejecutiva y operativa para saber qué está disponible, qué requiere atención y cuánto falta para cumplir la meta comercial.
+          </p>
+        </div>
+        <div className="mx-auto max-w-6xl">
+          <LoteoDashboardPreview />
+          <div className="mt-5 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+            <div className="rounded-2xl border border-border/60 bg-card p-4"><strong className="block text-foreground">Operación diaria</strong>Reservas, cotizaciones, precios y stock por parcela.</div>
+            <div className="rounded-2xl border border-border/60 bg-card p-4"><strong className="block text-foreground">Gestión comercial</strong>Leads, atribución, equipo y comisiones trazables.</div>
+            <div className="rounded-2xl border border-border/60 bg-card p-4"><strong className="block text-foreground">Dirección ejecutiva</strong>Absorción, ventas, proyección y salud del inventario.</div>
+          </div>
         </div>
       </section>
 
@@ -178,7 +198,7 @@ const InmobiliariasLanding = () => {
             Importamos tu inventario desde KMZ, Excel o tu portal actual. Sin costo de onboarding en planes anuales.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg" onClick={() => navigate('/contacto?source=inmobiliarias-final-cta')}>
+            <Button size="lg" onClick={() => navigate('/contacto-loteos?source=inmobiliarias-final-cta')}>
               Agendar demo
             </Button>
             <Button size="lg" variant="outline" onClick={() => navigate('/planes-loteos')}>
