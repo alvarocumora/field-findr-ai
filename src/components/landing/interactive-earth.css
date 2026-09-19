@@ -1,0 +1,152 @@
+.atlas-live-globe {
+  isolation: isolate;
+}
+
+.atlas-live-globe .mapboxgl-map,
+.atlas-live-globe .mapboxgl-canvas-container,
+.atlas-live-globe .mapboxgl-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.atlas-live-globe .mapboxgl-canvas {
+  outline: none;
+}
+
+.atlas-live-globe .mapboxgl-ctrl-group {
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 0.75rem;
+  background: rgb(7 12 16 / 0.72);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 0.32);
+  backdrop-filter: blur(14px);
+}
+
+.atlas-live-globe .mapboxgl-ctrl-group button + button {
+  border-top-color: rgb(255 255 255 / 0.12);
+}
+
+.atlas-live-globe .mapboxgl-ctrl-icon {
+  filter: invert(1);
+  opacity: 0.78;
+}
+
+.atlas-live-globe .mapboxgl-ctrl-attrib {
+  border-radius: 0.5rem;
+  background: rgb(7 12 16 / 0.64);
+  color: rgb(255 255 255 / 0.65);
+  backdrop-filter: blur(10px);
+}
+
+.atlas-live-globe .mapboxgl-ctrl-attrib a {
+  color: inherit;
+}
+
+.atlas-live-globe__badge {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgb(34 197 94 / 0.26);
+  border-radius: 9999px;
+  background: rgb(4 10 13 / 0.66);
+  padding: 0.45rem 0.75rem;
+  color: rgb(226 232 240 / 0.8);
+  font-size: 0.65rem;
+  font-weight: 650;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  backdrop-filter: blur(14px);
+}
+
+.atlas-live-globe__status {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 9999px;
+  background: rgb(34 197 94);
+  box-shadow: 0 0 0.85rem rgb(34 197 94 / 0.9);
+}
+
+.atlas-project-marker {
+  position: relative;
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  place-items: center;
+  border: 0;
+  background: transparent;
+}
+
+.atlas-project-marker__core {
+  position: relative;
+  z-index: 2;
+  width: 0.65rem;
+  height: 0.65rem;
+  border: 2px solid rgb(220 252 231);
+  border-radius: 9999px;
+  background: rgb(34 197 94);
+  box-shadow: 0 0 0 0.25rem rgb(6 78 59 / 0.58), 0 0 1.25rem rgb(34 197 94 / 0.9);
+  transition: transform 180ms ease, background-color 180ms ease;
+}
+
+.atlas-project-marker__pulse {
+  position: absolute;
+  inset: 0.2rem;
+  z-index: 1;
+  border: 1px solid rgb(74 222 128 / 0.72);
+  border-radius: 9999px;
+  animation: atlas-marker-pulse 2.1s ease-out infinite;
+}
+
+.atlas-project-marker:hover .atlas-project-marker__core,
+.atlas-project-marker:focus-visible .atlas-project-marker__core {
+  transform: scale(1.35);
+  background: rgb(45 212 191);
+}
+
+.atlas-project-marker:focus-visible {
+  border-radius: 9999px;
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+
+@keyframes atlas-marker-pulse {
+  0% {
+    opacity: 0.85;
+    transform: scale(0.45);
+  }
+
+  75%,
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+@media (max-width: 767px) {
+  .atlas-live-globe__badge {
+    right: 0.75rem;
+    top: 0.75rem;
+  }
+
+  .atlas-live-globe .mapboxgl-ctrl-bottom-right {
+    bottom: 0.5rem;
+    right: 0.25rem;
+  }
+
+  .atlas-live-globe .mapboxgl-ctrl-group button {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-project-marker__pulse {
+    animation: none;
+    opacity: 0.45;
+  }
+}
