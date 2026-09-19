@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils';
-import markUrl from '@/assets/brand/ot-symbol.svg';
 
 interface LogoIconProps {
   className?: string;
@@ -9,24 +8,33 @@ interface LogoIconProps {
 }
 
 const sizeClasses = {
-  sm: 'h-6 w-6',
-  md: 'h-8 w-8',
-  lg: 'h-10 w-10',
-  xl: 'h-12 w-12',
+  sm: 'text-[11px]',
+  md: 'text-xs',
+  lg: 'text-sm',
+  xl: 'text-base',
 };
 
 const LogoIcon = ({ 
   className, 
   size = 'md',
-  variant: _variant = 'default',
+  variant = 'default',
 }: LogoIconProps) => {
+  const monochrome = variant === 'monochrome';
+
   return (
-    <img
-      src={markUrl}
-      alt="Ofertaterrenos"
-      className={cn(sizeClasses[size], className)}
+    <span
+      className={cn(
+        'inline-flex min-w-0 items-baseline whitespace-nowrap font-heading font-bold leading-none',
+        sizeClasses[size],
+        className,
+      )}
       role="img"
-    />
+      aria-label="OfertaTerrenos.com"
+    >
+      <span className="text-foreground">Oferta</span>
+      <span className={cn(monochrome ? 'text-foreground' : 'gradient-text-hero')}>Terrenos</span>
+      <span className="text-[0.58em] font-semibold text-muted-foreground">.com</span>
+    </span>
   );
 };
 

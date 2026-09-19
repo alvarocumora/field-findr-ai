@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils';
-import markUrl from '@/assets/brand/ot-symbol.svg';
 
 interface LogoProps {
   className?: string;
@@ -10,7 +9,7 @@ interface LogoProps {
 }
 
 const sizeClasses = {
-  sm: 'text-lg',
+  sm: 'text-base',
   md: 'text-xl',
   lg: 'text-2xl',
   xl: 'text-3xl',
@@ -27,15 +26,15 @@ const Logo = ({
 
   return (
     <div 
-      className={cn('flex items-center gap-2.5', className)}
+      className={cn('inline-flex min-w-0 items-baseline', className)}
       role="img"
-      aria-label="Ofertaterrenos logo"
+      aria-label="OfertaTerrenos.com"
     >
-      <img src={markUrl} alt="" className={cn('shrink-0', size === 'sm' ? 'h-6 w-6' : size === 'md' ? 'h-7 w-7' : size === 'lg' ? 'h-9 w-9' : 'h-11 w-11')} />
       {showText && (
-        <span className={cn('flex items-baseline font-bold leading-none font-heading uppercase', sizeClasses[size])}>
-          <span className={variant === 'light' ? 'text-foreground' : 'text-foreground'}>OFERTA</span>
-          <span className={cn('ml-[0.16em]', isMono ? 'text-foreground/60' : 'gradient-text-hero')}>TERRENOS</span>
+        <span className={cn('flex min-w-0 items-baseline whitespace-nowrap font-heading font-bold leading-none', sizeClasses[size])}>
+          <span className="text-foreground">Oferta</span>
+          <span className={cn(isMono ? 'text-foreground' : 'gradient-text-hero')}>Terrenos</span>
+          <span className="text-[0.58em] font-semibold text-muted-foreground">.com</span>
         </span>
       )}
     </div>
