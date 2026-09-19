@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AIChatAssistant } from '@/components/ai/AIChatAssistant';
@@ -18,7 +19,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
 
 const Tools = () => {
-  const [activeTab, setActiveTab] = useState('ai-chat');
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'ai-chat');
   const { user } = useAuth();
   const { isAgent, isAdmin } = useSmartRedirect();
   const isPro = isAgent || isAdmin;
