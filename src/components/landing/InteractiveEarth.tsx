@@ -83,7 +83,7 @@ const InteractiveEarth = ({ reducedMotion, onReady }: InteractiveEarthProps) => 
         mapboxgl.accessToken = token;
         const map = new mapboxgl.Map({
           container: containerRef.current,
-          style: 'mapbox://styles/mapbox/satellite-streets-v12',
+          style: 'mapbox://styles/mapbox/satellite-v9',
           projection: 'globe',
           center: SOUTH_AMERICA_CENTER,
           zoom: 1.15,
