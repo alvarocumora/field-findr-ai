@@ -185,6 +185,8 @@ const BrokersAdmin = lazy(() => import("@/pages/admin/BrokersAdmin"));
 const CommissionsAdmin = lazy(() => import("@/pages/admin/CommissionsAdmin"));
 const SalesAdmin = lazy(() => import("@/pages/admin/SalesAdmin"));
 const SupportAdmin = lazy(() => import("@/pages/admin/SupportAdmin"));
+const OrganizationsAdmin = lazy(() => import("@/pages/admin/OrganizationsAdmin"));
+const OrganizationDetail = lazy(() => import("@/pages/admin/OrganizationDetail"));
 
 /* ------------------------------------------------------------------ */
 /* Helpers de declaración                                              */
@@ -503,7 +505,16 @@ export const agentRouteEntries: RouteEntry[] = [
 export const adminRouteEntries: RouteEntry[] = [
   admin("admin-dashboard", "/admin/dashboard", <DashboardAdminPage />, { label: "Panel admin", group: "principal", icon: "dashboard", primary: true }),
 
-  // Gestión
+  // Empresas y usuarios
+  admin("admin-organizations", "/admin/inmobiliarias", <OrganizationsAdmin />, { label: "Inmobiliarias", group: "gestión", icon: "building" }),
+  {
+    id: "admin-organization-detail",
+    path: "/admin/inmobiliarias/:id",
+    area: "admin",
+    access: "admin",
+    layout: "dashboard",
+    element: <OrganizationDetail />,
+  },
   admin("admin-users", "/admin/users", <AdminUsers />, { label: "Usuarios", group: "gestión", icon: "users" }),
   admin("admin-agents", "/admin/agents", <AgentManagement />, { label: "Agentes", group: "gestión", icon: "shield" }),
   admin("admin-brokers", "/admin/brokers", <BrokersAdmin />, { label: "Brokers", group: "gestión", icon: "handshake" }),
