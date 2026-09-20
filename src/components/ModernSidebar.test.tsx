@@ -18,12 +18,15 @@ vi.mock('@/hooks/useSidebarCounts', () => ({
 // Brand logos pull in assets/theme; stub them out.
 vi.mock('@/components/brand/Logo', () => ({ default: () => <div>logo</div> }));
 vi.mock('@/components/brand/LogoIcon', () => ({ default: () => <div>logo</div> }));
+vi.mock('@/components/organization/OrganizationSwitcher', () => ({
+  default: () => <div data-testid="organization-switcher">workspace</div>,
+}));
 
 import ModernSidebar from './ModernSidebar';
 
-const renderSidebar = () =>
+const renderSidebar = (initialEntry = '/') =>
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <ModernSidebar />
     </MemoryRouter>,
   );
@@ -68,7 +71,7 @@ describe('ModernSidebar — segmentación por tipo de cuenta', () => {
     mockRedirect.isAdmin = true;
     mockRedirect.isAgent = false;
     mockPlan.plan = 'free';
-    renderSidebar();
+    renderSidebar('/admin/dashboard');
     expect(screen.getByText('ADMIN')).toBeInTheDocument();
     expect(screen.getByText('Administración')).toBeInTheDocument();
     expect(screen.getByText('gestión')).toBeInTheDocument();

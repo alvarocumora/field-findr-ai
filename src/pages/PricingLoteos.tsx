@@ -4,62 +4,43 @@ import { Check, ArrowRight, Building2, Map, Users, BarChart3, ShieldCheck, Spark
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  LATAM_PRICES,
+  PLAN_DETAILS,
+  type PlanType,
+} from '@/hooks/useSubscription';
 
-const plans = [
-  {
-    name: 'Starter Loteo',
-    key: 'starter-loteo',
-    price: '$49.990',
+const planIds = ['corredora', 'inmobiliaria', 'enterprise'] as const satisfies readonly PlanType[];
+
+const formatMonthlyPrice = (planId: PlanType) => {
+  const price = LATAM_PRICES.CLP[planId];
+  if (price === 0) return { price: 'A medida', period: '' };
+  return {
+    price: new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      maximumFractionDigits: 0,
+    }).format(price),
     period: '/mes',
-    description: 'Para corredores o inmobiliarias que quieren publicar y validar demanda de un loteo.',
-    highlight: false,
-    features: [
-      '1 proyecto de loteo activo',
-      'Hasta 50 lotes gestionados',
-      'Vitrina pública de inmobiliaria',
-      'Captura de leads desde proyectos',
-      'Dashboard de leads y reservas',
-      'Soporte por email',
-    ],
-    cta: 'Comenzar Starter',
-  },
-  {
-    name: 'Growth Inmobiliaria',
-    key: 'growth-inmobiliaria',
-    price: '$149.990',
-    period: '/mes',
-    description: 'Para equipos que venden varios proyectos y necesitan control comercial diario.',
-    highlight: true,
-    features: [
-      'Hasta 5 proyectos activos',
-      'Hasta 500 lotes gestionados',
-      'Pipeline comercial y CRM',
-      'Reservas y pagos por proyecto',
-      'Dashboard multi-proyecto',
-      'Vitrina pública con proyectos destacados',
-      'Feed de actividad del equipo',
-      'Soporte prioritario',
-    ],
-    cta: 'Solicitar Growth',
-  },
-  {
-    name: 'Enterprise Loteos',
-    key: 'enterprise-loteos',
-    price: 'A medida',
-    period: '',
-    description: 'Para inmobiliarias con múltiples loteos, equipos comerciales y reporting ejecutivo.',
-    highlight: false,
-    features: [
-      'Proyectos y lotes ilimitados según contrato',
-      'Usuarios por rol: admin, jefe comercial y asesores',
-      'Reportes ejecutivos y financieros',
-      'Configuración de flujos de reserva',
-      'Acompañamiento de implementación',
-      'Integraciones y soporte dedicado',
-    ],
-    cta: 'Agendar demo Enterprise',
-  },
-];
+  };
+};
+
+/**
+ * Los planes de esta landing se derivan del catálogo único de suscripciones.
+ * Así pricing, checkout, límites del dashboard y marketing muestran la misma oferta.
+ */
+const plans = planIds.map((planId) => {
+  const plan = PLAN_DETAILS[planId];
+  return {
+    id: planId,
+    name: plan.name,
+    description: plan.target,
+    highlight: Boolean(plan.highlighted),
+    features: plan.features,
+    cta: plan.ctaLabel ?? (planId === 'enterprise' ? 'Agendar demo' : 'Solicitar activación'),
+    ...formatMonthlyPrice(planId),
+  };
+});
 
 const outcomes = [
   { icon: Building2, title: 'Gestión de proyectos', text: 'Centraliza proyectos, lotes, disponibilidad y avance comercial.' },
@@ -78,22 +59,22 @@ const PricingLoteos = () => {
       <section className="border-b border-border/50 bg-gradient-to-b from-primary/10 via-background to-background">
         <div className="container py-16 md:py-24">
           <div className="mx-auto max-w-4xl text-center">
-            <Badge className="mb-5" variant="secondary">Planes para inmobiliarias y loteos</Badge>
+            <Badge className="mb-5" variant="secondary">SaaS para inmobiliarias y loteos</Badge>
             <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-6xl">
               Vende, reserva y gestiona loteos desde una sola plataforma.
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-              OfertaTerrenos centraliza la operación comercial de proyectos inmobiliarios: vitrina pública, leads, CRM, reservas, pagos y dashboards por proyecto.
+              OfertaTerrenos centraliza la operación comercial: vitrina pública, inventario, CRM, reservas, pagos, comisiones y control por proyecto.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Button size="lg" asChild>
-                <Link to={getPlanContactUrl('growth-inmobiliaria', 'planes-loteos-hero')}>
+                <Link to={getPlanContactUrl('inmobiliaria', 'planes-loteos-hero')}>
                   Solicitar demo comercial
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link to={getPlanContactUrl('enterprise-loteos', 'planes-loteos-hero-secondary')}>Hablar con ventas</Link>
+                <Link to={getPlanContactUrl('enterprise', 'planes-loteos-hero-secondary')}>Hablar con ventas</Link>
               </Button>
             </div>
           </div>
@@ -117,7 +98,7 @@ const PricingLoteos = () => {
       <section className="container pb-16 md:pb-24">
         <div className="grid gap-6 lg:grid-cols-3">
           {plans.map((plan) => (
-            <Card key={plan.name} className={plan.highlight ? 'relative border-primary shadow-lg' : 'border-border/60'}>
+            <Card key={plan.id} className={plan.highlight ? 'relative border-primary shadow-lg' : 'border-border/60'}>
               {plan.highlight && (
                 <Badge className="absolute right-5 top-5 gap-1">
                   <Sparkles className="h-3 w-3" /> Recomendado
@@ -141,7 +122,7 @@ const PricingLoteos = () => {
                   ))}
                 </ul>
                 <Button className="w-full" variant={plan.highlight ? 'default' : 'outline'} asChild>
-                  <Link to={getPlanContactUrl(plan.key, 'planes-loteos-card')}>{plan.cta}</Link>
+                  <Link to={getPlanContactUrl(plan.id, 'planes-loteos-card')}>{plan.cta}</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -152,19 +133,19 @@ const PricingLoteos = () => {
       <section className="border-t border-border/50 bg-muted/30">
         <div className="container grid gap-6 py-12 md:grid-cols-[1.2fr_0.8fr] md:items-center">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Listo para vender planes de gestión de loteos</h2>
+            <h2 className="text-2xl font-bold text-foreground">Una oferta comercial, un solo catálogo</h2>
             <p className="mt-3 text-muted-foreground">
-              La propuesta comercial ya separa planes por nivel de operación y prepara el siguiente paso: checkout, activación de plan y límites por cuenta.
+              Los precios, límites, asientos y funcionalidades visibles aquí son los mismos que utiliza el dashboard y el proceso de activación.
             </p>
           </div>
           <Card>
             <CardContent className="flex items-start gap-3 p-5">
               <ShieldCheck className="mt-1 h-5 w-5 text-primary" />
               <div>
-                <p className="font-medium">Siguiente integración</p>
-                <p className="text-sm text-muted-foreground">Conectar cada plan a checkout y activar límites comerciales dentro del dashboard.</p>
+                <p className="font-medium">Implementación acompañada</p>
+                <p className="text-sm text-muted-foreground">Configuramos organización, equipo, proyectos e inventario para comenzar a operar.</p>
                 <Button className="mt-4" size="sm" asChild>
-                  <Link to={getPlanContactUrl('growth-inmobiliaria', 'planes-loteos-footer')}>Solicitar activación</Link>
+                  <Link to={getPlanContactUrl('inmobiliaria', 'planes-loteos-footer')}>Solicitar activación</Link>
                 </Button>
               </div>
             </CardContent>
