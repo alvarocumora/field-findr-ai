@@ -66,7 +66,7 @@ export const useAdminOrganizations = () =>
           supabase.from('organizations').select('id, name, slug, logo_url, owner_id, created_at'),
           supabase.from('organization_members').select('organization_id, user_id, role'),
           supabase.from('profiles').select('user_id, first_name, last_name, email'),
-          supabase.from('subscriptions').select('user_id, plan_type, status, updated_at'),
+          supabase.from('subscriptions').select('user_id, organization_id, plan_type, status, updated_at'),
           supabase
             .from('projects')
             .select('id, name, status, total_lots, sold_lots, slug, organization_id, user_id, updated_at'),
@@ -84,7 +84,12 @@ export const useAdminOrganizations = () =>
       const profiles = new Map(
         (profilesRes.data ?? []).map((p) => [p.user_id, p as typeof p]),
       );
-      const subs = new Map((subsRes.data ?? []).map((s) => [s.user_id, s]));
+      const userSubs = new Map((subsRes.data ?? []).map((subscription) => [subscription.user_id, subscription]));
+      const organizationSubs = new Map(
+        (subsRes.data ?? [])
+          .filter((subscription) => subscription.organization_id)
+          .map((subscription) => [subscription.organization_id as string, subscription]),
+      );
 
       return (orgsRes.data ?? []).map((org) => {
         const memberRows = (membersRes.data ?? []).filter((m) => m.organization_id === org.id);
@@ -92,7 +97,7 @@ export const useAdminOrganizations = () =>
 
         const members: AdminOrgMember[] = teamIds.map((uid) => {
           const p = profiles.get(uid);
-          const sub = subs.get(uid);
+          const sub = userSubs.get(uid);
           return {
             user_id: uid,
             role: uid === org.owner_id ? 'owner' : memberRows.find((m) => m.user_id === uid)?.role ?? 'member',
@@ -114,7 +119,7 @@ export const useAdminOrganizations = () =>
           }));
 
         const closings = (closingsRes.data ?? []).filter((c) => teamIds.includes(c.user_id));
-        const ownerSub = subs.get(org.owner_id);
+        const ownerSub = organizationSubs.get(org.id) ?? userSubs.get(org.owner_id);
 
         const activityDates = [
           ...(projectsRes.data ?? [])
@@ -156,21 +161,49 @@ export const useAdminOrganization = (id?: string) => {
   };
 };
 
-/** Cambia el plan del dueño de una empresa y deja registro en auditoría. */
+/** Cambia el plan de una empresa y mantiene compatibilidad con filas legacy. */
 export const useAdminSetOrgPlan = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ ownerId, plan }: { ownerId: string; plan: PlanType }) => {
-      const { error } = await supabase
+    mutationFn: async ({
+      organizationId,
+      ownerId,
+      plan,
+    }: {
+      organizationId: string;
+      ownerId: string;
+      plan: PlanType;
+    }) => {
+      const organizationUpdate = await supabase
         .from('subscriptions')
         .update({ plan_type: plan })
-        .eq('user_id', ownerId);
-      if (error) throw error;
+        .eq('organization_id', organizationId)
+        .select('id');
+      if (organizationUpdate.error) throw organizationUpdate.error;
+
+      if ((organizationUpdate.data ?? []).length === 0) {
+        const legacyUpdate = await supabase
+          .from('subscriptions')
+          .update({ plan_type: plan, organization_id: organizationId })
+          .eq('user_id', ownerId)
+          .select('id');
+        if (legacyUpdate.error) throw legacyUpdate.error;
+        if ((legacyUpdate.data ?? []).length === 0) {
+          const { error } = await supabase.from('subscriptions').insert({
+            user_id: ownerId,
+            organization_id: organizationId,
+            plan_type: plan,
+            status: plan === 'free' ? 'inactive' : 'active',
+          });
+          if (error) throw error;
+        }
+      }
+
       await supabase.from('audit_logs').insert({
         action: 'organization.plan_changed',
-        entity_type: 'organization_owner',
-        entity_id: ownerId,
-        details: { plan },
+        entity_type: 'organization',
+        entity_id: organizationId,
+        details: { plan, owner_id: ownerId },
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-organizations'] }),
