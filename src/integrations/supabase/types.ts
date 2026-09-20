@@ -1527,6 +1527,7 @@ export type Database = {
           preferred_language: string | null
           price_drop_alerts: boolean | null
           public_slug: string | null
+          public_whatsapp: string | null
           updated_at: string
           user_id: string
         }
@@ -1551,6 +1552,7 @@ export type Database = {
           preferred_language?: string | null
           price_drop_alerts?: boolean | null
           public_slug?: string | null
+          public_whatsapp?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1575,6 +1577,7 @@ export type Database = {
           preferred_language?: string | null
           price_drop_alerts?: boolean | null
           public_slug?: string | null
+          public_whatsapp?: string | null
           updated_at?: string
           user_id?: string
         }

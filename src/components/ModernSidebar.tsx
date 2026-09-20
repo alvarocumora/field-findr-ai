@@ -8,6 +8,7 @@ import LogoIcon from '@/components/brand/LogoIcon';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
 import { useSidebarCounts } from '@/hooks/useSidebarCounts';
 import { useCurrentPlan } from '@/hooks/useSubscription';
+import { usePanelContext } from '@/hooks/usePanelContext';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronLeft, ChevronRight, MapPin, Sparkles, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -33,12 +34,16 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
   const { isAdmin, isAgent } = useSmartRedirect();
   const { plan } = useCurrentPlan();
   const counts = useSidebarCounts();
-
-  const planIsAgency = plan === 'inmobiliaria' || plan === 'grupo' || plan === 'enterprise';
+  const { context, options, setContext, planIsAgency } = usePanelContext();
 
   // Toda la navegación sale del manifiesto único de rutas.
   const agentGroups = useMemo(() => navGroupsFor('agent', plan ?? undefined), [plan]);
   const adminGroups = useMemo(() => navGroupsFor('admin'), []);
+
+  // Un solo contexto visible a la vez: se acabó el menú con dos
+  // "Administración" apiladas.
+  const activeArea: 'agent' | 'admin' = context === 'plataforma' ? 'admin' : 'agent';
+  const activeGroups = activeArea === 'admin' ? adminGroups : agentGroups;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -190,12 +195,31 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
           </Button>
         </div>
 
-        {/* Rol activo */}
+        {/* Contexto activo: un solo menú por rol, con selector si hay varios */}
         {!collapsed && (isAdmin || isAgent) && (
-          <div className="flex items-center justify-between px-4 mb-2">
+          <div className="px-3 mb-2 space-y-2">
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-              {isAdmin ? 'ADMIN' : planIsAgency ? 'INMOBILIARIA' : 'CORREDOR'}
+              {context === 'plataforma' ? 'ADMIN' : planIsAgency ? 'INMOBILIARIA' : 'CORREDOR'}
             </Badge>
+            {options.length > 1 && (
+              <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted/40 p-1">
+                {options.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setContext(option.id)}
+                    className={cn(
+                      'rounded-md px-2 py-1 text-[11px] font-medium transition-colors',
+                      context === option.id
+                        ? 'bg-primary/15 text-primary'
+                        : 'text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    {option.id === 'plataforma' ? 'Plataforma' : option.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -203,18 +227,12 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
         <nav className="flex-1 overflow-y-auto px-3 space-y-1" aria-label="Navegación del panel">
           {(isAgent || isAdmin) && (
             <GroupedNav
-              area="agent"
-              title={planIsAgency ? 'Inmobiliaria' : 'Corredor'}
-              groups={agentGroups}
+              area={activeArea}
+              title={activeArea === 'admin' ? 'Administración' : planIsAgency ? 'Inmobiliaria' : 'Corredor'}
+              groups={activeGroups}
             />
           )}
 
-          {isAdmin && (
-            <>
-              <Separator className="my-2" />
-              <GroupedNav area="admin" title="Administración" groups={adminGroups} />
-            </>
-          )}
 
           <Separator className="my-2" />
           <div className="space-y-0.5 pb-4">

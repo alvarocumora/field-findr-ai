@@ -18,6 +18,7 @@ import { es } from 'date-fns/locale';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import ReservationsManager from '@/components/reservations/ReservationsManager';
+import TodayPanel from '@/components/dashboard/TodayPanel';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 // Analytics Tab
@@ -365,6 +366,8 @@ const DashboardAdmin = () => {
             <Button variant="outline" size="icon" className="rounded-xl"><Settings className="h-4 w-4" /></Button>
           </div>
         </div>
+
+        <TodayPanel scope="platform" title="Hoy en la plataforma" />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {statsConfig.map((stat, index) => (
