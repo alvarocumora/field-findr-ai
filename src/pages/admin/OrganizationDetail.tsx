@@ -43,7 +43,7 @@ const OrganizationDetail = () => {
 
   const changePlan = async (plan: PlanType) => {
     try {
-      await setPlan.mutateAsync({ ownerId: org.owner_id, plan });
+      await setPlan.mutateAsync({ organizationId: org.id, ownerId: org.owner_id, plan });
       toast.success(`Plan actualizado a ${plan}`);
     } catch (e) {
       toast.error((e as Error).message);
