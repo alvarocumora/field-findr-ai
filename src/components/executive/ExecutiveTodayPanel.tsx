@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { useVisits } from '@/hooks/useVisits';
 import { useExpiringSalesQuotes } from '@/hooks/useSalesQuotes';
 import { useReservations } from '@/hooks/useReservations';
-import { useAuth } from '@/hooks/useAuth';
 import { useProjects } from '@/hooks/useProjects';
 
 const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -19,7 +18,6 @@ const inRange = (iso: string | null | undefined, start: Date, end: Date) => {
 };
 
 const ExecutiveTodayPanel = () => {
-  const { user } = useAuth();
   const { projects } = useProjects();
   const { visits } = useVisits();
   const { data: quotes = [] } = useExpiringSalesQuotes(72);
@@ -31,9 +29,10 @@ const ExecutiveTodayPanel = () => {
     return () => window.clearInterval(timer);
   }, []);
 
+  // Incluye proyectos del equipo/organización, no solo los propios.
   const ownedProjectIds = useMemo(
-    () => new Set(projects.filter((project) => project.user_id === user?.id).map((project) => project.id)),
-    [projects, user?.id],
+    () => new Set(projects.map((project) => project.id)),
+    [projects],
   );
 
   const priorities = useMemo(() => {

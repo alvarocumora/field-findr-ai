@@ -70,7 +70,7 @@ export const useCommissionSummary = () => {
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
       const total = data?.reduce((s, c) => s + Number(c.commission_amount), 0) || 0;
-      const pending = data?.filter(c => c.status === 'pending').reduce((s, c) => s + Number(c.commission_amount), 0) || 0;
+      const pending = data?.filter(c => ['potential', 'reserved', 'earned', 'approved'].includes(c.status as string)).reduce((s, c) => s + Number(c.commission_amount), 0) || 0;
       const paid = data?.filter(c => c.status === 'paid').reduce((s, c) => s + Number(c.commission_amount), 0) || 0;
       const thisMonth = data?.filter(c => new Date(c.created_at) >= startOfMonth).reduce((s, c) => s + Number(c.commission_amount), 0) || 0;
 
@@ -143,7 +143,7 @@ export const useCreateCommission = () => {
           agent_id: user.id,
           ...commission,
           commission_amount,
-          status: 'pending',
+          status: 'earned',
         })
         .select()
         .single();

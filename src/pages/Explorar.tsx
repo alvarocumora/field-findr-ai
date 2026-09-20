@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useDeferredValue, useEffect, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import StickyHeader from '@/components/navigation/StickyHeader';
 import ExploreListPanel from '@/components/explore/ExploreListPanel';
 import ExploreMapPanel, { MapBounds } from '@/components/explore/ExploreMapPanel';
@@ -39,15 +39,22 @@ const Explorar = () => {
   const { include: includeLoteoLots } = useIncludeLoteoLots();
 
 
+  // Initial state from URL (?q=... & ?view=map|list|swipe)
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get('q') ?? '';
+  const initialView = searchParams.get('view');
+
   // View mode for mobile
-  const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>('swipe');
+  const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>(
+    initialView === 'map' || initialView === 'list' ? initialView : 'swipe',
+  );
   // Desktop: overlay swipe mode
   const [desktopSwipe, setDesktopSwipe] = useState(false);
   // Deck emitted by SwipeExplorer (category + advanced filters). Null = no swipe sync.
   const [swipeDeck, setSwipeDeck] = useState<Listing[] | null>(null);
 
   // Search & Filter state
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [showAISearch, setShowAISearch] = useState(false);
 
   // Filters
