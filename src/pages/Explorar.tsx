@@ -54,7 +54,7 @@ const Explorar = () => {
   const [swipeDeck, setSwipeDeck] = useState<Listing[] | null>(null);
 
   // Search & Filter state
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [showAISearch, setShowAISearch] = useState(false);
 
   // Filters

@@ -31,9 +31,10 @@ const ExecutiveTodayPanel = () => {
     return () => window.clearInterval(timer);
   }, []);
 
+  // Incluye proyectos del equipo/organización, no solo los propios.
   const ownedProjectIds = useMemo(
-    () => new Set(projects.filter((project) => project.user_id === user?.id).map((project) => project.id)),
-    [projects, user?.id],
+    () => new Set(projects.map((project) => project.id)),
+    [projects],
   );
 
   const priorities = useMemo(() => {
