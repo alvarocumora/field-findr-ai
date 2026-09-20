@@ -24,9 +24,9 @@ vi.mock('@/components/organization/OrganizationSwitcher', () => ({
 
 import ModernSidebar from './ModernSidebar';
 
-const renderSidebar = () =>
+const renderSidebar = (initialEntry = '/') =>
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <ModernSidebar />
     </MemoryRouter>,
   );
@@ -71,7 +71,7 @@ describe('ModernSidebar — segmentación por tipo de cuenta', () => {
     mockRedirect.isAdmin = true;
     mockRedirect.isAgent = false;
     mockPlan.plan = 'free';
-    renderSidebar();
+    renderSidebar('/admin/dashboard');
     expect(screen.getByText('ADMIN')).toBeInTheDocument();
     expect(screen.getByText('Administración')).toBeInTheDocument();
     expect(screen.getByText('gestión')).toBeInTheDocument();
