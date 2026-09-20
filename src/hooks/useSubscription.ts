@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useMyOrganization } from '@/hooks/useMyOrganization';
 import { toast } from '@/hooks/use-toast';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -25,6 +26,7 @@ export type UserRole = 'buyer' | 'agent' | 'admin';
 export interface Subscription {
   id: string;
   user_id: string;
+  organization_id: string | null;
   plan_type: string;
   status: string;
   mercadopago_subscription_id: string | null;
@@ -372,25 +374,40 @@ export const ADDON_PRICES: Record<string, Record<AddOnType, number>> = {
 // ─────────────────────────────────────────────────────────────────────────────
 export const useSubscription = () => {
   const { user } = useAuth();
+  const { data: team, isLoading: organizationLoading } = useMyOrganization();
+  const organizationId = team?.organization?.id ?? null;
 
   return useQuery({
-    queryKey: ['subscription', user?.id],
+    queryKey: ['subscription', user?.id, organizationId],
     queryFn: async () => {
       if (!user) return null;
 
+      if (organizationId) {
+        const { data: organizationSubscription, error: organizationError } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('organization_id', organizationId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (organizationError) throw organizationError;
+        if (organizationSubscription) return organizationSubscription as Subscription;
+      }
+
+      // Compatibilidad durante la migración de suscripciones personales.
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
+      if (error) throw error;
       return data as Subscription | null;
     },
-    enabled: !!user,
+    enabled: !!user && !organizationLoading,
   });
 };
 
@@ -404,29 +421,31 @@ export interface CheckoutParams {
 
 export const useCreateCheckout = () => {
   const { user } = useAuth();
+  const { data: team } = useMyOrganization();
+  const organization = team?.organization ?? null;
+  const organizationRole = team?.organizationRole ?? null;
 
   return useMutation({
     mutationFn: async (params: PlanType | CheckoutParams) => {
       if (!user) throw new Error('User not authenticated');
+      if (organization && !['owner', 'admin', 'org_admin'].includes(organizationRole ?? '')) {
+        throw new Error('Solo el propietario o un administrador puede cambiar el plan');
+      }
 
       const normalized: CheckoutParams =
         typeof params === 'string' ? { planType: params } : params;
       const { planType, billingCycle = 'monthly', firstMonthDiscount = true } = normalized;
 
-      // Enterprise / Free se manejan por sales / no requieren pago
       if (planType === 'enterprise') {
         window.location.href = '/contacto?plan=enterprise';
         return { redirected: true } as const;
       }
-      if (planType === 'free') {
-        throw new Error('El plan Free no requiere pago');
-      }
+      if (planType === 'free') throw new Error('El plan Free no requiere pago');
 
       const response = await supabase.functions.invoke('mercadopago/create-preference', {
         body: {
           plan_type: planType,
-          user_id: user.id,
-          user_email: user.email,
+          organization_id: organization?.id ?? null,
           billing_cycle: billingCycle,
           first_month_discount: firstMonthDiscount,
           success_url: `${window.location.origin}/subscription/success`,
@@ -434,10 +453,7 @@ export const useCreateCheckout = () => {
         },
       });
 
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
+      if (response.error) throw new Error(response.error.message);
       return response.data;
     },
     onSuccess: (data) => {
