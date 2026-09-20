@@ -18,17 +18,29 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { useTeamMembers, useTeamAction, type TeamMember } from '@/hooks/useTeam';
+import {
+  ORGANIZATION_ROLE_OPTIONS,
+  organizationRoleLabel,
+  type OrganizationRole,
+} from '@/lib/access/organizationPermissions';
 import { useCreateOrganization } from '@/hooks/useEnterprise';
 import { useCurrentPlan } from '@/hooks/useSubscription';
 import { seatsSummary } from '@/lib/team/seats';
 import { slugifyAgency } from '@/lib/agency/slug';
 import { useQueryClient } from '@tanstack/react-query';
 
-const ROLE_LABEL: Record<string, { label: string; icon: typeof Crown; className: string }> = {
-  owner: { label: 'Dueño', icon: Crown, className: 'bg-amber-500/15 text-amber-500 border-amber-500/30' },
-  admin: { label: 'Admin', icon: ShieldCheck, className: 'bg-sky-500/15 text-sky-400 border-sky-500/30' },
-  member: { label: 'Agente', icon: Users, className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-};
+type AssignableRole = Exclude<OrganizationRole, 'owner' | 'admin' | 'member'>;
+
+const roleMeta = (role: OrganizationRole) => ({
+  label: organizationRoleLabel(role),
+  icon: role === 'owner' ? Crown : role === 'admin' || role === 'org_admin' ? ShieldCheck : Users,
+  className:
+    role === 'owner'
+      ? 'bg-amber-500/15 text-amber-500 border-amber-500/30'
+      : role === 'admin' || role === 'org_admin'
+        ? 'bg-sky-500/15 text-sky-400 border-sky-500/30'
+        : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+});
 
 const TeamManagement = () => {
   const { data: members = [], isLoading, organization } = useTeamMembers();
@@ -95,7 +107,7 @@ const TeamManagement = () => {
         <CardContent className="p-0">
           <ul className="divide-y divide-border/40">
             {members.map((m) => {
-              const meta = ROLE_LABEL[m.org_role] ?? ROLE_LABEL.member;
+              const meta = roleMeta(m.org_role);
               const Icon = meta.icon;
               return (
                 <li key={m.user_id} className="flex items-center gap-3 px-4 py-3">
@@ -119,7 +131,7 @@ const TeamManagement = () => {
                         value={m.org_role}
                         onValueChange={(role) =>
                           teamAction.mutate(
-                            { action: 'set_role', member_user_id: m.user_id, org_role: role as 'admin' | 'member' },
+                            { action: 'set_role', member_user_id: m.user_id, org_role: role as AssignableRole },
                             {
                               onSuccess: () => toast({ title: 'Rol actualizado' }),
                               onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
@@ -129,8 +141,9 @@ const TeamManagement = () => {
                       >
                         <SelectTrigger className="w-28 h-8 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="member">Agente</SelectItem>
+                          {ORGANIZATION_ROLE_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <Button
@@ -263,15 +276,15 @@ const InviteMemberDialog = ({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  onSubmit: (p: { email: string; first_name?: string; last_name?: string; org_role: 'admin' | 'member' }) => void;
+  onSubmit: (p: { email: string; first_name?: string; last_name?: string; org_role: AssignableRole }) => void;
   pending: boolean;
 }) => {
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [orgRole, setOrgRole] = useState<'admin' | 'member'>('member');
+  const [orgRole, setOrgRole] = useState<AssignableRole>('sales_agent');
 
-  const reset = () => { setEmail(''); setFirstName(''); setLastName(''); setOrgRole('member'); };
+  const reset = () => { setEmail(''); setFirstName(''); setLastName(''); setOrgRole('sales_agent'); };
 
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) reset(); }}>
@@ -301,11 +314,12 @@ const InviteMemberDialog = ({
           </div>
           <div>
             <Label>Rol interno</Label>
-            <Select value={orgRole} onValueChange={(v) => setOrgRole(v as 'admin' | 'member')}>
+            <Select value={orgRole} onValueChange={(v) => setOrgRole(v as AssignableRole)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="member">Agente (vende y gestiona sus leads)</SelectItem>
-                <SelectItem value="admin">Admin (además administra el equipo)</SelectItem>
+                {ORGANIZATION_ROLE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

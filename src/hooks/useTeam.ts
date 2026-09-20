@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useMyOrganization } from '@/hooks/useMyOrganization';
+import type { OrganizationRole } from '@/lib/access/organizationPermissions';
 
-export type OrgRole = 'owner' | 'admin' | 'member';
+export type OrgRole = OrganizationRole;
 
 export interface TeamMember {
   user_id: string;
@@ -13,7 +14,7 @@ export interface TeamMember {
   is_owner: boolean;
 }
 
-/** Miembros de la organización propia (dueño incluido), con perfil. */
+/** Miembros del workspace activo (dueño incluido), con perfil. */
 export const useTeamMembers = () => {
   const { data: team, isLoading: orgLoading } = useMyOrganization();
   const org = team?.organization ?? null;
@@ -30,9 +31,8 @@ export const useTeamMembers = () => {
         .eq('organization_id', org.id);
       if (error) throw error;
 
-      // El dueño ocupa asiento aunque no tenga fila de miembro.
       const roleByUser = new Map<string, OrgRole>();
-      for (const m of members ?? []) roleByUser.set(m.user_id, m.role as OrgRole);
+      for (const member of members ?? []) roleByUser.set(member.user_id, member.role as OrgRole);
       if (!roleByUser.has(org.owner_id)) roleByUser.set(org.owner_id, 'owner');
 
       const userIds = [...roleByUser.keys()];
@@ -42,47 +42,55 @@ export const useTeamMembers = () => {
         .in('user_id', userIds);
       if (profilesError) throw profilesError;
 
-      const profileByUser = new Map(profiles?.map((p) => [p.user_id, p]) ?? []);
+      const profileByUser = new Map(profiles?.map((profile) => [profile.user_id, profile]) ?? []);
+      const rank = (role: OrgRole) =>
+        role === 'owner' ? 0 : role === 'admin' || role === 'org_admin' ? 1 : 2;
 
-      const rank: Record<OrgRole, number> = { owner: 0, admin: 1, member: 2 };
       return userIds
         .map((userId): TeamMember => {
-          const p = profileByUser.get(userId);
+          const profile = profileByUser.get(userId);
           const isOwner = userId === org.owner_id;
           return {
             user_id: userId,
             org_role: isOwner ? 'owner' : roleByUser.get(userId) ?? 'member',
-            name: `${p?.first_name ?? ''} ${p?.last_name ?? ''}`.trim() || p?.email || 'Invitación pendiente',
-            email: p?.email ?? null,
-            avatar_url: p?.avatar_url ?? null,
+            name: `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim() || profile?.email || 'Invitación pendiente',
+            email: profile?.email ?? null,
+            avatar_url: profile?.avatar_url ?? null,
             is_owner: isOwner,
           };
         })
-        .sort((a, b) => rank[a.org_role] - rank[b.org_role] || a.name.localeCompare(b.name));
+        .sort((a, b) => rank(a.org_role) - rank(b.org_role) || a.name.localeCompare(b.name));
     },
   });
 
   return { ...query, isLoading: orgLoading || query.isLoading, organization: org };
 };
 
-type TeamAction =
-  | { action: 'invite'; email: string; first_name?: string; last_name?: string; org_role: 'admin' | 'member' }
-  | { action: 'remove'; member_user_id: string }
-  | { action: 'set_role'; member_user_id: string; org_role: 'admin' | 'member' };
+type AssignableRole = Exclude<OrgRole, 'owner' | 'admin' | 'member'>;
 
-/** Mutaciones del equipo vía edge function manage-team (asientos + auditoría en servidor). */
+type TeamAction =
+  | { action: 'invite'; email: string; first_name?: string; last_name?: string; org_role: AssignableRole }
+  | { action: 'remove'; member_user_id: string }
+  | { action: 'set_role'; member_user_id: string; org_role: AssignableRole };
+
+/** Mutaciones del equipo del workspace activo, con asientos y auditoría en servidor. */
 export const useTeamAction = () => {
   const qc = useQueryClient();
+  const { data: team } = useMyOrganization();
+  const organizationId = team?.organization?.id;
 
   return useMutation({
     mutationFn: async (payload: TeamAction) => {
-      const { data, error } = await supabase.functions.invoke('manage-team', { body: payload });
+      if (!organizationId) throw new Error('Selecciona una inmobiliaria antes de administrar el equipo');
+      const { data, error } = await supabase.functions.invoke('manage-team', {
+        body: { ...payload, organization_id: organizationId },
+      });
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === 'string' ? data.error : 'Error');
       return data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['team-members'] });
+      qc.invalidateQueries({ queryKey: ['team-members', organizationId] });
       qc.invalidateQueries({ queryKey: ['my-organization'] });
       qc.invalidateQueries({ queryKey: ['agency-stats'] });
       qc.invalidateQueries({ queryKey: ['agency-agents'] });

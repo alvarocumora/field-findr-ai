@@ -118,8 +118,10 @@ serve(async (req) => {
         failure_url,
         billing_cycle = "monthly",
         first_month_discount = true,
+        organization_id = null,
       } = body as {
         plan_type: string;
+        organization_id?: string | null;
         success_url?: string;
         failure_url?: string;
         billing_cycle?: BillingCycle;
@@ -127,6 +129,40 @@ serve(async (req) => {
       };
       const user_id = user.id;
       const user_email = user.email;
+
+      // Billing belongs to the selected workspace. Never trust the client role.
+      if (organization_id) {
+        const service = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+          { auth: { persistSession: false, autoRefreshToken: false } },
+        );
+        const { data: organization } = await service
+          .from("organizations")
+          .select("owner_id")
+          .eq("id", organization_id)
+          .maybeSingle();
+        if (!organization) {
+          return new Response(
+            JSON.stringify({ error: "Organization not found" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        if (organization.owner_id !== user_id) {
+          const { data: membership } = await service
+            .from("organization_members")
+            .select("role")
+            .eq("organization_id", organization_id)
+            .eq("user_id", user_id)
+            .maybeSingle();
+          if (!membership || !["admin", "org_admin"].includes(membership.role)) {
+            return new Response(
+              JSON.stringify({ error: "Only organization administrators can change billing" }),
+              { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
+          }
+        }
+      }
 
       if (plan_type === "enterprise" || plan_type === "free") {
         return new Response(
@@ -168,13 +204,15 @@ serve(async (req) => {
         auto_return: "approved",
         external_reference: JSON.stringify({
           user_id,
+          organization_id,
           plan_type: key,
+          organization_id,
           billing_cycle: cycle,
           first_month_discount: cycle === "monthly" && first_month_discount,
         }),
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`,
         statement_descriptor: "OFERTATERRENOS",
-        metadata: { plan_type: key, billing_cycle: cycle },
+        metadata: { plan_type: key, billing_cycle: cycle, organization_id },
       };
 
       const response = await fetch(`${MERCADOPAGO_API_URL}/checkout/preferences`, {

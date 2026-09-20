@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { resolveTeamUserIds } from '@/lib/team/teamScope';
+import type { OrganizationRole } from '@/lib/access/organizationPermissions';
 import {
   mergeOrganizationWorkspaces,
   organizationStorageKey,
@@ -16,8 +17,6 @@ export interface MyOrganization {
   owner_id: string;
   logo_url: string | null;
 }
-
-export type OrganizationRole = 'owner' | 'admin' | 'member';
 
 export interface TeamScopeResult {
   /** Workspace activo del usuario; null si todavía no pertenece a uno. */
