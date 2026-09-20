@@ -31,6 +31,7 @@ const commonIcons = { '/explorar': MapPin, '/tools': Sparkles, '/perfil': UserCi
 
 const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAdmin, isAgent } = useSmartRedirect();
   const { plan } = useCurrentPlan();
   const counts = useSidebarCounts();
