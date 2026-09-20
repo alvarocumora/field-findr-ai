@@ -2,7 +2,15 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useSubscription, useCreateCheckout, PLAN_DETAILS, PlanType } from '@/hooks/useSubscription';
+import {
+  useSubscription,
+  useCreateCheckout,
+  PLAN_DETAILS,
+  LATAM_PRICES,
+  normalizePlanId,
+  type PlanType,
+} from '@/hooks/useSubscription';
+import { useMyOrganization } from '@/hooks/useMyOrganization';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,13 +32,27 @@ import { es } from 'date-fns/locale';
 const Subscription = () => {
   const { user } = useAuth();
   const { data: subscription, isLoading: subLoading } = useSubscription();
+  const { data: team, isLoading: organizationLoading } = useMyOrganization();
+  const organizationId = team?.organization?.id ?? null;
   const { mutate: createCheckout, isPending: checkoutLoading } = useCreateCheckout();
 
-  // Fetch payment history
+  // Historial del workspace activo, con fallback para pagos personales legacy.
   const { data: payments, isLoading: paymentsLoading } = useQuery({
-    queryKey: ['payments', user?.id],
+    queryKey: ['payments', user?.id, organizationId],
     queryFn: async () => {
       if (!user) return [];
+
+      if (organizationId) {
+        const organizationPayments = await supabase
+          .from('payments')
+          .select('*')
+          .eq('organization_id', organizationId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        if (organizationPayments.error) throw organizationPayments.error;
+        if ((organizationPayments.data ?? []).length > 0) return organizationPayments.data;
+      }
+
       const { data, error } = await supabase
         .from('payments')
         .select('*')
@@ -40,12 +62,13 @@ const Subscription = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: !!user && !organizationLoading,
   });
 
   const queryClient = useQueryClient();
-  const currentPlan = subscription?.plan_type || 'free';
-  const planDetails = PLAN_DETAILS[currentPlan as PlanType];
+  const currentPlan = normalizePlanId(subscription?.plan_type);
+  const planDetails = PLAN_DETAILS[currentPlan];
+  const currentPlanPrice = LATAM_PRICES.CLP[currentPlan];
   const isActive = subscription?.status === 'active';
 
   const handleUpgrade = (planType: PlanType) => {
@@ -64,7 +87,7 @@ const Subscription = () => {
     },
     onSuccess: () => {
       toast({ title: 'Suscripción cancelada', description: 'Mantendrás acceso hasta el final del período pagado.' });
-      queryClient.invalidateQueries({ queryKey: ['subscription', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -81,13 +104,13 @@ const Subscription = () => {
     },
     onSuccess: () => {
       toast({ title: 'Suscripción reactivada', description: 'Se renovará automáticamente al final del período.' });
-      queryClient.invalidateQueries({ queryKey: ['subscription', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
 
   // Other paid plans available to switch to
-  const CHANGEABLE_PLANS: PlanType[] = ['starter', 'growth', 'scale', 'enterprise'];
+  const CHANGEABLE_PLANS: PlanType[] = ['corredor', 'corredora', 'inmobiliaria', 'grupo', 'enterprise'];
   const otherPlans = CHANGEABLE_PLANS.filter((p) => p !== currentPlan);
 
 
@@ -147,11 +170,11 @@ const Subscription = () => {
           <CardContent className="space-y-6">
             {/* Price */}
             <div className="text-3xl font-bold text-foreground">
-              {planDetails.price === 0 ? (
+              {currentPlanPrice === 0 ? (
                 'Gratis'
               ) : (
                 <>
-                  ${planDetails.price.toLocaleString('es-CL')}
+                  ${currentPlanPrice.toLocaleString('es-CL')}
                   <span className="text-base font-normal text-muted-foreground">/mes</span>
                 </>
               )}
@@ -276,7 +299,7 @@ const Subscription = () => {
                       <div>
                         <p className="font-medium text-foreground">{target.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          ${target.price.toLocaleString('es-CL')} <span className="text-xs">/mes</span>
+                          ${LATAM_PRICES.CLP[planType].toLocaleString('es-CL')} <span className="text-xs">/mes</span>
                         </p>
                       </div>
                       <Button
