@@ -24,6 +24,7 @@ import { ListingFormDialog } from '@/components/listings/ListingFormDialog';
 import PlanLimitsCard from '@/components/subscription/PlanLimitsCard';
 import { AgencyShowcaseSettings } from '@/components/agency/AgencyShowcaseSettings';
 import { TeamActivityFeed } from '@/components/dashboard/TeamActivityFeed';
+import TodayPanel from '@/components/dashboard/TodayPanel';
 
 const DashboardInmobiliaria = () => {
   const { data: stats, isLoading: statsLoading } = useAgencyStats();
@@ -69,6 +70,9 @@ const DashboardInmobiliaria = () => {
               <ListingFormDialog />
             </div>
           </div>
+
+          {/* Pendientes del equipo, mismo bloque que el resto de los paneles */}
+          <TodayPanel scope="team" title="Hoy en tu equipo" />
 
           {/* Plan usage & limits */}
           <PlanLimitsCard />

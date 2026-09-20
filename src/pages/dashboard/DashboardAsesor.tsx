@@ -23,6 +23,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import MorningBriefing from '@/components/dashboard/MorningBriefing';
+import TodayPanel from '@/components/dashboard/TodayPanel';
 import PlanLimitsCard from '@/components/subscription/PlanLimitsCard';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
@@ -174,6 +175,9 @@ const DashboardAsesor = () => {
       <div className="container py-8 space-y-8">
         {/* Morning Briefing */}
         <MorningBriefing />
+
+        {/* Pendientes de hoy (mismo bloque en todos los paneles) */}
+        <TodayPanel scope="self" />
 
         {/* Personalized Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
