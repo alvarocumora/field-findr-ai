@@ -123,7 +123,7 @@ CREATE POLICY "Organization members can view subscriptions"
 ON public.subscriptions FOR SELECT TO authenticated
 USING (
   organization_id IS NOT NULL
-  AND public.organization_has_capability(organization_id, 'payments.read')
+  AND public.organization_role(organization_id) IS NOT NULL
 );
 
 DROP POLICY IF EXISTS "Organization members can view payments" ON public.payments;
