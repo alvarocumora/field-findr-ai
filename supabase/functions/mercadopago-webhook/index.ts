@@ -410,14 +410,11 @@ serve(async (req) => {
           description: `Suscripción ${externalRef.plan_type}`,
         });
 
-        const subscriptionScope = (query: ReturnType<typeof supabase.from>) =>
-          externalRef.organization_id
-            ? query.eq("organization_id", externalRef.organization_id)
-            : query.eq("user_id", externalRef.user_id);
-
         if (payment.status === "refunded" || payment.status === "charged_back") {
           const cancelQuery = supabase.from("subscriptions").update({ status: "cancelled" });
-          const { error } = await subscriptionScope(cancelQuery);
+          const { error } = externalRef.organization_id
+            ? await cancelQuery.eq("organization_id", externalRef.organization_id)
+            : await cancelQuery.eq("user_id", externalRef.user_id);
           if (error) console.error("Failed to cancel subscription on refund:", error);
         }
 
@@ -451,9 +448,11 @@ serve(async (req) => {
             periodEnd.setMonth(periodEnd.getMonth() + 1);
           }
 
-          let existingQuery = supabase.from("subscriptions").select("id");
-          existingQuery = subscriptionScope(existingQuery);
-          const { data: existingSub } = await existingQuery
+          const baseExistingQuery = supabase.from("subscriptions").select("id");
+          const scopedExistingQuery = externalRef.organization_id
+            ? baseExistingQuery.eq("organization_id", externalRef.organization_id)
+            : baseExistingQuery.eq("user_id", externalRef.user_id);
+          const { data: existingSub } = await scopedExistingQuery
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
