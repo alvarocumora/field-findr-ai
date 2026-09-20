@@ -18,6 +18,9 @@ vi.mock('@/hooks/useSidebarCounts', () => ({
 // Brand logos pull in assets/theme; stub them out.
 vi.mock('@/components/brand/Logo', () => ({ default: () => <div>logo</div> }));
 vi.mock('@/components/brand/LogoIcon', () => ({ default: () => <div>logo</div> }));
+vi.mock('@/components/organization/OrganizationSwitcher', () => ({
+  default: () => <div data-testid="organization-switcher">workspace</div>,
+}));
 
 import ModernSidebar from './ModernSidebar';
 
