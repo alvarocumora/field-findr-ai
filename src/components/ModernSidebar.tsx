@@ -207,7 +207,10 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
                   <button
                     key={option.id}
                     type="button"
-                    onClick={() => setContext(option.id)}
+                    onClick={() => {
+                      setContext(option.id);
+                      navigate(option.home);
+                    }}
                     className={cn(
                       'rounded-md px-2 py-1 text-[11px] font-medium transition-colors',
                       context === option.id
