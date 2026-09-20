@@ -207,7 +207,7 @@ const Subscription = () => {
               {currentPlan === 'free' && (
                 <Button onClick={() => handleUpgrade('starter')} disabled={checkoutLoading}>
                   <Crown className="h-4 w-4 mr-2" />
-                  Comenzar con Starter
+                  Elegir plan
                 </Button>
               )}
 
@@ -299,7 +299,7 @@ const Subscription = () => {
                       <div>
                         <p className="font-medium text-foreground">{target.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          ${LATAM_PRICES.CLP[planType].toLocaleString('es-CL')} <span className="text-xs">/mes</span>
+                          ${LATAM_PRICES.CLP[p].toLocaleString('es-CL')} <span className="text-xs">/mes</span>
                         </p>
                       </div>
                       <Button
