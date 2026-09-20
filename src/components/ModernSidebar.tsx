@@ -5,6 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import Logo from '@/components/brand/Logo';
 import LogoIcon from '@/components/brand/LogoIcon';
+import OrganizationSwitcher from '@/components/organization/OrganizationSwitcher';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
 import { useSidebarCounts } from '@/hooks/useSidebarCounts';
 import { useCurrentPlan } from '@/hooks/useSubscription';
@@ -199,6 +200,7 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
         {/* Contexto activo: un solo menú por rol, con selector si hay varios */}
         {!collapsed && (isAdmin || isAgent) && (
           <div className="px-3 mb-2 space-y-2">
+            {activeArea === 'agent' && <OrganizationSwitcher />}
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
               {context === 'plataforma' ? 'ADMIN' : planIsAgency ? 'INMOBILIARIA' : 'CORREDOR'}
             </Badge>
