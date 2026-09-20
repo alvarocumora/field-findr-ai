@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useReservations } from '@/hooks/useReservations';
-import { useAuth } from '@/hooks/useAuth';
 import { useProjects } from '@/hooks/useProjects';
 
 const money = (value: number) => new Intl.NumberFormat('es-CL', {
@@ -15,7 +14,6 @@ const money = (value: number) => new Intl.NumberFormat('es-CL', {
 }).format(value || 0);
 
 const ExecutiveCommercialDesk = () => {
-  const { user } = useAuth();
   const { projects } = useProjects();
   const { data: reservations = [] } = useReservations();
   const [now, setNow] = useState(() => new Date());
