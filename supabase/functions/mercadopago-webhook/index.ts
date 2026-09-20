@@ -11,14 +11,39 @@ const MERCADOPAGO_WEBHOOK_SECRET = Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Must stay aligned with PLANS in supabase/functions/mercadopago/index.ts.
-// Used only as a defense-in-depth amount assertion, never as the price source.
-const PLAN_PRICES: Record<string, number> = {
+// Must stay aligned with LATAM_PRICES.CLP and the checkout function.
+const MONTHLY_PLAN_PRICES: Record<string, number> = {
+  corredor: 38000,
+  corredora: 94000,
+  inmobiliaria: 188000,
+  grupo: 338000,
+};
+const PLAN_ALIASES: Record<string, string> = {
+  starter: "corredora",
+  growth: "inmobiliaria",
+  scale: "grupo",
+  professional: "corredora",
+};
+const LEGACY_PENDING_PRICES: Record<string, number> = {
   starter: 75000,
   growth: 168750,
   scale: 300000,
   enterprise: 562500,
   professional: 49990,
+};
+const expectedSubscriptionAmounts = (
+  planType: string,
+  cycle: "monthly" | "annual" = "monthly",
+  firstMonthDiscount = false,
+): number[] => {
+  const normalized = PLAN_ALIASES[planType] ?? planType;
+  const monthly = MONTHLY_PLAN_PRICES[normalized];
+  if (!monthly) return LEGACY_PENDING_PRICES[planType] ? [LEGACY_PENDING_PRICES[planType]] : [];
+  const current = cycle === "annual"
+    ? monthly * 10
+    : firstMonthDiscount ? Math.round(monthly * 0.5) : monthly;
+  const legacy = LEGACY_PENDING_PRICES[planType];
+  return legacy && legacy !== current ? [current, legacy] : [current];
 };
 
 /**
@@ -70,6 +95,7 @@ async function verifyMercadoPagoSignature(req: Request, dataId: string): Promise
 // deno-lint-ignore no-explicit-any
 async function recordPayment(supabase: any, row: {
   user_id?: string;
+  organization_id?: string | null;
   amount: number;
   currency: string;
   status: string;
@@ -148,7 +174,10 @@ serve(async (req) => {
       let externalRef: {
         type?: string;
         user_id?: string;
+        organization_id?: string;
         plan_type?: string;
+        billing_cycle?: "monthly" | "annual";
+        first_month_discount?: boolean;
         reservation_id?: string;
         lot_id?: string;
         project_id?: string;
@@ -368,104 +397,98 @@ serve(async (req) => {
         });
       }
 
-      // Handle SUBSCRIPTION payments (existing logic)
+      // Handle subscription payments.
       if (externalRef.user_id && externalRef.plan_type) {
-        // Record the payment (idempotent — MP retries the same notification)
         await recordPayment(supabase, {
           user_id: externalRef.user_id,
+          organization_id: externalRef.organization_id ?? null,
           amount: payment.transaction_amount,
           currency: payment.currency_id,
           status: payment.status,
           mercadopago_payment_id: paymentId.toString(),
           mercadopago_preference_id: payment.preference_id,
-          description: `Suscripción ${externalRef.plan_type}`
+          description: `Suscripción ${externalRef.plan_type}`,
         });
 
-        // Refund/chargeback: deactivate the subscription.
+        const subscriptionScope = (query: ReturnType<typeof supabase.from>) =>
+          externalRef.organization_id
+            ? query.eq("organization_id", externalRef.organization_id)
+            : query.eq("user_id", externalRef.user_id);
+
         if (payment.status === "refunded" || payment.status === "charged_back") {
-          const { error: cancelError } = await supabase
-            .from("subscriptions")
-            .update({ status: "cancelled" })
-            .eq("user_id", externalRef.user_id);
-          if (cancelError) console.error("Failed to cancel subscription on refund:", cancelError);
+          const cancelQuery = supabase.from("subscriptions").update({ status: "cancelled" });
+          const { error } = await subscriptionScope(cancelQuery);
+          if (error) console.error("Failed to cancel subscription on refund:", error);
         }
 
-        // If payment approved, update or create subscription
         if (payment.status === "approved") {
-          // Defense-in-depth: the charged amount must match the plan price.
-          const expectedPrice = PLAN_PRICES[externalRef.plan_type];
-          if (expectedPrice !== undefined && Number(payment.transaction_amount) !== expectedPrice) {
+          const expectedAmounts = expectedSubscriptionAmounts(
+            externalRef.plan_type,
+            externalRef.billing_cycle,
+            externalRef.first_month_discount,
+          );
+          if (
+            expectedAmounts.length > 0
+            && !expectedAmounts.includes(Number(payment.transaction_amount))
+          ) {
             console.error("Amount mismatch on subscription payment", {
               user_id: externalRef.user_id,
+              organization_id: externalRef.organization_id,
               plan_type: externalRef.plan_type,
-              expected: expectedPrice,
+              expected: expectedAmounts,
               received: payment.transaction_amount,
             });
             return new Response(JSON.stringify({ received: true, ignored: "amount_mismatch" }), {
-              headers: { ...corsHeaders, "Content-Type": "application/json" }
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
           }
 
           const now = new Date();
           const periodEnd = new Date(now);
-          periodEnd.setMonth(periodEnd.getMonth() + 1);
-
-          // Check if user already has a subscription
-          const { data: existingSub } = await supabase
-            .from("subscriptions")
-            .select("id")
-            .eq("user_id", externalRef.user_id)
-            .single();
-
-          if (existingSub) {
-            // Update existing subscription
-            const { error: updateError } = await supabase
-              .from("subscriptions")
-              .update({
-                plan_type: externalRef.plan_type,
-                status: "active",
-                mercadopago_payer_id: payment.payer?.id?.toString(),
-                current_period_start: now.toISOString(),
-                current_period_end: periodEnd.toISOString(),
-                cancel_at_period_end: false
-              })
-              .eq("id", existingSub.id);
-
-            if (updateError) {
-              console.error("Failed to update subscription:", updateError);
-            }
+          if (externalRef.billing_cycle === "annual") {
+            periodEnd.setFullYear(periodEnd.getFullYear() + 1);
           } else {
-            // Create new subscription
-            const { error: insertError } = await supabase.from("subscriptions").insert({
-              user_id: externalRef.user_id,
-              plan_type: externalRef.plan_type,
-              status: "active",
-              mercadopago_payer_id: payment.payer?.id?.toString(),
-              current_period_start: now.toISOString(),
-              current_period_end: periodEnd.toISOString()
-            });
-
-            if (insertError) {
-              console.error("Failed to create subscription:", insertError);
-            }
+            periodEnd.setMonth(periodEnd.getMonth() + 1);
           }
 
-          // Assign agent role for any paid corredor plan
-          const AGENT_PLANS = new Set([
+          let existingQuery = supabase.from("subscriptions").select("id");
+          existingQuery = subscriptionScope(existingQuery);
+          const { data: existingSub } = await existingQuery
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const values = {
+            user_id: externalRef.user_id,
+            organization_id: externalRef.organization_id ?? null,
+            plan_type: externalRef.plan_type,
+            status: "active",
+            mercadopago_payer_id: payment.payer?.id?.toString(),
+            current_period_start: now.toISOString(),
+            current_period_end: periodEnd.toISOString(),
+            cancel_at_period_end: false,
+          };
+
+          const { error } = existingSub
+            ? await supabase.from("subscriptions").update(values).eq("id", existingSub.id)
+            : await supabase.from("subscriptions").insert(values);
+          if (error) console.error("Failed to activate subscription:", error);
+
+          const paidPlans = new Set([
+            "corredor", "corredora", "inmobiliaria", "grupo",
             "starter", "growth", "scale", "enterprise", "professional",
           ]);
-          if (AGENT_PLANS.has(externalRef.plan_type)) {
+          if (paidPlans.has(externalRef.plan_type)) {
             const { data: existingRole } = await supabase
               .from("user_roles")
               .select("id")
               .eq("user_id", externalRef.user_id)
               .eq("role", "agent")
               .maybeSingle();
-
             if (!existingRole) {
               await supabase.from("user_roles").insert({
                 user_id: externalRef.user_id,
-                role: "agent"
+                role: "agent",
               });
             }
           }
