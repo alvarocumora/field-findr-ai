@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ShareButtons } from '@/components/social/ShareButtons';
+import { projectSocial } from '@/lib/landing/projectSocial';
 import {
   MapPin, Phone, MessageCircle, ArrowLeft, DollarSign, Maximize2, TrendingUp,
 } from 'lucide-react';
@@ -11,6 +12,7 @@ import { motion } from 'framer-motion';
 interface ProjectHeroProps {
   project: any;
   lots: any[];
+  inventoryReady?: boolean;
   availableLots: any[];
   reservedLots: any[];
   soldLots: any[];
@@ -42,10 +44,11 @@ const GlassCard = ({ icon, label, value, accent }: { icon: React.ReactNode; labe
 );
 
 export const ProjectHero = ({
-  project, lots, availableLots, reservedLots, soldLots,
+  project, lots, availableLots, reservedLots, soldLots, inventoryReady = true,
   priceRange, areaRange, isMobile, onCall, onMessage,
 }: ProjectHeroProps) => {
   const heroImage = (project as any)?.images?.[0];
+  const social = projectSocial(project, inventoryReady ? lots : undefined);
   const totalLots = lots.length;
   const soldPercent = totalLots > 0 ? Math.round((soldLots.length / totalLots) * 100) : 0;
   const reservedPercent = totalLots > 0 ? Math.round((reservedLots.length / totalLots) * 100) : 0;
@@ -106,7 +109,8 @@ export const ProjectHero = ({
               <div className="flex gap-2 shrink-0">
                 <ShareButtons
                   title={project.name}
-                  description={`Proyecto en ${project.city}. ${availableLots.length} lotes disponibles.`}
+                  description={social.description}
+                  url={social.url}
                 />
                 <Button
                   size="sm"

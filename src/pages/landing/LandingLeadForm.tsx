@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { shareAttribution } from '@/lib/landing/shareAttribution';
 
 interface Props {
   projectId: string;
@@ -32,10 +33,12 @@ export const LandingLeadForm = ({ projectId, projectOwnerId, projectSlug, lot, o
   const canSubmit = firstName.trim().length > 1 && /\S+@\S+\.\S+/.test(email);
 
   const submit = async () => {
+    if (!canSubmit || submitting) return;
     setSubmitting(true);
     try {
       const notes = [
         lot?.lot_number ? `[Lote] ${lot.lot_number}` : null,
+        shareAttribution(window.location.search),
         message.trim() ? `[Mensaje] ${message.trim()}` : null,
       ].filter(Boolean).join(' · ');
       const { data, error } = await supabase.functions.invoke('submit-interest', {

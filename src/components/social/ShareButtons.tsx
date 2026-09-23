@@ -24,36 +24,45 @@ export const ShareButtons = ({ title, description, url, variant = 'default', cla
     if (navigator.share) {
       try {
         await navigator.share({ title, text: shareText, url: shareUrl });
-      } catch {
-        // User cancelled
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          toast({ title: 'No se pudo compartir', description: 'Prueba con Copiar enlace.', variant: 'destructive' });
+        }
       }
     } else {
       handleCopyLink();
     }
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareUrl);
-    toast({ title: 'Enlace copiado', description: 'El enlace ha sido copiado al portapapeles.' });
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({ title: 'Enlace copiado', description: 'El enlace ha sido copiado al portapapeles.' });
+    } catch {
+      toast({ title: 'No se pudo copiar', description: 'Puedes copiar el enlace desde la barra del navegador.', variant: 'destructive' });
+    }
   };
 
   const openShare = (platform: string) => {
-    const encoded = encodeURIComponent(shareUrl);
-    const encodedText = encodeURIComponent(`${title} - ${shareText}`);
+    const attributedUrl = new URL(shareUrl, window.location.origin);
+    attributedUrl.searchParams.set('utm_source', platform);
+    attributedUrl.searchParams.set('utm_medium', 'share');
+    const encoded = encodeURIComponent(attributedUrl.href);
+    const encodedText = encodeURIComponent(description ? `${title}\n${description}` : title);
     const urls: Record<string, string> = {
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encoded}`,
       twitter: `https://twitter.com/intent/tweet?url=${encoded}&text=${encodedText}`,
       whatsapp: `https://wa.me/?text=${encodedText}%20${encoded}`,
       email: `mailto:?subject=${encodeURIComponent(title)}&body=${encodedText}%0A%0A${encoded}`,
     };
-    window.open(urls[platform], '_blank', 'width=600,height=400');
+    window.open(urls[platform], '_blank', 'noopener,noreferrer,width=600,height=400');
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {variant === 'icon' ? (
-          <Button variant="ghost" size="icon" className={className}>
+          <Button variant="ghost" size="icon" className={className} aria-label="Compartir proyecto">
             <Share2 className="h-5 w-5" />
           </Button>
         ) : (

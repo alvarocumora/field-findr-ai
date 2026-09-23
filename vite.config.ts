@@ -4,6 +4,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
+import { projectSocialPlugin } from './scripts/project-social-plugin';
 
 // Public browser configuration. Lovable Cloud normally injects these values,
 // but classic Vite production builds must still initialize when the managed
@@ -28,6 +29,10 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mcpPlugin(),
+    projectSocialPlugin(
+      process.env.VITE_SUPABASE_URL || PUBLIC_SUPABASE_URL,
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY || PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    ),
     mode === 'development' && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
