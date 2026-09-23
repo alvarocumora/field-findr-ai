@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bboxForPlane, staticSatelliteUrl, esriSatelliteUrl, satelliteProviders, normalizeElevations, MAX_RELIEF_M, cropResampleElevation, sampleGridBilinear, projectRingToLocal, pointInRing, hashRand, subdivideRing, gridFillPositions } from './RealisticTerrain';
+import { bboxForPlane, staticSatelliteUrl, esriSatelliteUrl, satelliteProviders, normalizeElevations, MAX_RELIEF_M, cropResampleElevation, sampleGridBilinear, projectRingToLocal, pointInRing, hashRand, subdivideRing, gridFillPositions, vegetationScoreGrid, scatterTrees, edgeLabels } from './RealisticTerrain';
 
 describe('esriSatelliteUrl', () => {
   it('builds a key-less Esri World Imagery bbox export', () => {
@@ -233,5 +233,82 @@ describe('gridFillPositions (relleno que sigue el terreno)', () => {
 
   it('devuelve null para anillos degenerados', () => {
     expect(gridFillPositions([[0, 0], [1, 1]], 200, 128, ramp, 0.3)).toBeNull();
+  });
+});
+
+describe('vegetationScoreGrid', () => {
+  const px = (r: number, g: number, b: number) => [r, g, b, 255];
+
+  it('bosque oscuro puntúa alto; suelo claro y agua puntúan ~0', () => {
+    const rgba = new Uint8ClampedArray([
+      ...px(40, 80, 35),    // bosque
+      ...px(200, 185, 150), // suelo desnudo claro
+      ...px(30, 60, 110),   // agua
+      ...px(235, 235, 235), // techo / nube
+    ]);
+    const s = vegetationScoreGrid(rgba, 2);
+    expect(s[0]).toBeGreaterThan(0.3);
+    expect(s[1]).toBeLessThan(0.05);
+    expect(s[2]).toBeLessThan(0.1);
+    expect(s[3]).toBe(0);
+  });
+
+  it('siempre queda en [0,1]', () => {
+    const rgba = new Uint8ClampedArray(16 * 4).map((_, i) => (i * 37) % 256);
+    for (const v of vegetationScoreGrid(rgba, 4)) {
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
+describe('scatterTrees', () => {
+  const lot: [number, number][] = [[-20, -20], [20, -20], [20, 20], [-20, 20]];
+
+  it('nunca pone árboles dentro del lote', () => {
+    const allForest = new Float32Array(32 * 32).fill(1);
+    const trees = scatterTrees(allForest, 32, 200, lot, 80);
+    expect(trees.length).toBeGreaterThan(0);
+    for (const t of trees) expect(pointInRing(t.x, t.y, lot)).toBe(false);
+  });
+
+  it('sin vegetación en la imagen no hay árboles', () => {
+    const bare = new Float32Array(32 * 32).fill(0);
+    expect(scatterTrees(bare, 32, 200, lot, 80)).toEqual([]);
+  });
+
+  it('solo planta donde la imagen muestra bosque (mitad oeste)', () => {
+    const res = 32;
+    const westForest = new Float32Array(res * res);
+    for (let r = 0; r < res; r++) for (let c = 0; c < res / 2; c++) westForest[r * res + c] = 1;
+    const trees = scatterTrees(westForest, res, 200, lot, 60);
+    expect(trees.length).toBeGreaterThan(0);
+    for (const t of trees) expect(t.x).toBeLessThan(0);
+  });
+
+  it('es determinista y respeta el máximo', () => {
+    const forest = new Float32Array(32 * 32).fill(0.8);
+    const a = scatterTrees(forest, 32, 200, lot, 25);
+    const b = scatterTrees(forest, 32, 200, lot, 25);
+    expect(a).toEqual(b);
+    expect(a.length).toBeLessThanOrEqual(25);
+  });
+});
+
+describe('edgeLabels', () => {
+  it('una cota por lado con el largo en metros', () => {
+    const rect: [number, number][] = [[0, 0], [90, 0], [90, 100], [0, 100]];
+    const labels = edgeLabels(rect);
+    expect(labels.map((l) => Math.round(l.lengthM))).toEqual([90, 100, 90, 100]);
+    expect(labels[0].mid).toEqual([45, 0]);
+  });
+
+  it('omite lados más cortos que el mínimo', () => {
+    const ring: [number, number][] = [[0, 0], [50, 0], [50, 4], [0, 4]];
+    expect(edgeLabels(ring, 10).map((l) => Math.round(l.lengthM))).toEqual([50, 50]);
+  });
+
+  it('anillo degenerado → sin cotas', () => {
+    expect(edgeLabels([[0, 0], [10, 0]])).toEqual([]);
   });
 });

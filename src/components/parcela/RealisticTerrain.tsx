@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback, forwardRef, useImperativeHandle, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useState, useCallback, forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import { useThree } from '@react-three/fiber';
 import { normalizePolygon, type NormalizedPolygon } from '@/lib/polygonUtils';
 
 interface RealisticTerrainProps {
@@ -57,7 +58,7 @@ function decodeRGBElevation(r: number, g: number, b: number): number {
  * the surface into white noise — real parcels rarely exceed a few tens of
  * meters of relief across their extent.
  */
-export const MAX_RELIEF_M = 45;
+export const MAX_RELIEF_M = 80;
 export function normalizeElevations(heights: Float32Array | number[]): { min: number; relief: Float32Array } {
   const arr = heights instanceof Float32Array ? heights : Float32Array.from(heights);
   let min = Infinity;
@@ -111,6 +112,85 @@ export function pointInRing(x: number, y: number, ring: [number, number][]): boo
 export function hashRand(seed: number): number {
   const s = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
   return s - Math.floor(s);
+}
+
+/**
+ * "Tree-likeness" score per cell from satellite RGBA pixels: forest reads as
+ * green-dominant AND dark. Returns a res×res grid in [0,1] (row 0 = north).
+ * Pure so tree placement can be tested against synthetic imagery.
+ */
+export function vegetationScoreGrid(rgba: Uint8ClampedArray, res: number): Float32Array {
+  const out = new Float32Array(res * res);
+  for (let i = 0; i < res * res; i++) {
+    const r = rgba[i * 4], g = rgba[i * 4 + 1], b = rgba[i * 4 + 2];
+    const lum = (r + g + b) / (3 * 255);
+    const greenDom = (g - Math.max(r, b)) / 255; // >0 when green dominates
+    const darkness = Math.max(0, 0.62 - lum) / 0.62;
+    out[i] = Math.max(0, Math.min(1, greenDom * 3 + 0.15)) * darkness;
+  }
+  return out;
+}
+
+export interface ScatteredTree {
+  x: number;
+  y: number; // local north coordinate (world z = -y)
+  scale: number;
+  tint: number; // 0..1 foliage colour variation
+}
+
+/**
+ * Deterministic tree scatter driven by the vegetation score of the imagery:
+ * candidates are hash-jittered, kept only where the satellite shows vegetation
+ * and OUTSIDE the lot ring (the buildable lot stays clear). Pure + testable.
+ */
+export function scatterTrees(
+  score: Float32Array, scoreRes: number, size: number,
+  ring: [number, number][], maxCount: number, minScore = 0.18,
+): ScatteredTree[] {
+  const half = size / 2;
+  const out: ScatteredTree[] = [];
+  const attempts = maxCount * 14;
+  for (let i = 0; i < attempts && out.length < maxCount; i++) {
+    const x = (hashRand(i * 2 + 1) * 2 - 1) * half * 0.94;
+    const y = (hashRand(i * 2 + 2) * 2 - 1) * half * 0.94;
+    if (ring.length >= 3 && pointInRing(x, y, ring)) continue;
+    // Grid lookup: col from x (west→east), row from y (north at row 0).
+    const c = Math.max(0, Math.min(scoreRes - 1, Math.floor(((x + half) / size) * scoreRes)));
+    const r = Math.max(0, Math.min(scoreRes - 1, Math.floor(((half - y) / size) * scoreRes)));
+    const s = score[r * scoreRes + c];
+    if (s < minScore) continue;
+    // Denser forest → higher keep probability.
+    if (hashRand(i * 5 + 7) > Math.min(1, s * 2.2)) continue;
+    out.push({
+      x, y,
+      scale: 0.8 + hashRand(i * 3 + 5) * 1.1,
+      tint: hashRand(i * 7 + 11),
+    });
+  }
+  return out;
+}
+
+export interface EdgeLabel {
+  mid: [number, number]; // local x,y at edge midpoint
+  lengthM: number;
+}
+
+/**
+ * One label per polygon edge (original corners, not the subdivided drape ring)
+ * with the edge length in metres — the deslinde measurements a buyer actually
+ * asks about. Edges shorter than minLen are skipped to avoid clutter.
+ */
+export function edgeLabels(ring: [number, number][], minLen = 10): EdgeLabel[] {
+  if (ring.length < 3) return [];
+  const out: EdgeLabel[] = [];
+  for (let i = 0; i < ring.length; i++) {
+    const [ax, ay] = ring[i];
+    const [bx, by] = ring[(i + 1) % ring.length];
+    const len = Math.hypot(bx - ax, by - ay);
+    if (len < minLen) continue;
+    out.push({ mid: [(ax + bx) / 2, (ay + by) / 2], lengthM: len });
+  }
+  return out;
 }
 
 /**
@@ -321,9 +401,14 @@ const loadImage = (url: string): Promise<HTMLImageElement | null> =>
     image.src = url;
   });
 
+const VEG_MASK_RES = 96;
+
 async function loadStaticSatelliteTexture(
   lat: number, lng: number, planeSize: number, token: string
-): Promise<{ texture: THREE.Texture; tilesLoaded: number; canvasDataUrl: string; provider: string } | null> {
+): Promise<{
+  texture: THREE.Texture; tilesLoaded: number; canvasDataUrl: string; provider: string;
+  vegScore: Float32Array;
+} | null> {
   const providers = satelliteProviders(lat, lng, planeSize, token);
 
   let img: HTMLImageElement | null = null;
@@ -348,24 +433,93 @@ async function loadStaticSatelliteTexture(
   prev.getContext('2d')!.drawImage(canvas, 0, 0, 128, 128);
   const canvasDataUrl = prev.toDataURL('image/jpeg', 0.6);
 
+  // Downsampled pixel grid → vegetation score, so context trees grow where
+  // the imagery actually shows forest instead of at random.
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = VEG_MASK_RES; maskCanvas.height = VEG_MASK_RES;
+  const maskCtx = maskCanvas.getContext('2d')!;
+  maskCtx.drawImage(canvas, 0, 0, VEG_MASK_RES, VEG_MASK_RES);
+  const vegScore = vegetationScoreGrid(
+    maskCtx.getImageData(0, 0, VEG_MASK_RES, VEG_MASK_RES).data, VEG_MASK_RES,
+  );
+
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = THREE.ClampToEdgeWrapping;
   tex.wrapT = THREE.ClampToEdgeWrapping;
-  tex.generateMipmaps = false;
-  tex.minFilter = THREE.LinearFilter;
+  // Mipmaps + trilinear filtering: without them the 2048px image shimmers and
+  // blurs at oblique camera angles (the most common view in the tour).
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
   tex.magFilter = THREE.LinearFilter;
   tex.needsUpdate = true;
 
   console.log('🛰️ Static satellite loaded:', { planeSize: Math.round(planeSize), provider });
-  return { texture: tex, tilesLoaded: 1, canvasDataUrl, provider };
+  return { texture: tex, tilesLoaded: 1, canvasDataUrl, provider, vegScore };
+}
+
+/** Instanced low-poly conifers (one draw call per part) with colour variation. */
+function InstancedTrees({ trees, heightAt }: {
+  trees: ScatteredTree[];
+  heightAt: (x: number, y: number) => number;
+}) {
+  const foliageRef = useRef<THREE.InstancedMesh>(null);
+  const trunkRef = useRef<THREE.InstancedMesh>(null);
+
+  const foliageGeo = useMemo(() => {
+    const g = new THREE.ConeGeometry(1.15, 3.4, 7);
+    g.translate(0, 2.1, 0);
+    return g;
+  }, []);
+  const trunkGeo = useMemo(() => {
+    const g = new THREE.CylinderGeometry(0.12, 0.2, 1.1, 5);
+    g.translate(0, 0.55, 0);
+    return g;
+  }, []);
+  useEffect(() => () => { foliageGeo.dispose(); trunkGeo.dispose(); }, [foliageGeo, trunkGeo]);
+
+  useLayoutEffect(() => {
+    const foliage = foliageRef.current;
+    const trunk = trunkRef.current;
+    if (!foliage || !trunk) return;
+    const m = new THREE.Matrix4();
+    const p = new THREE.Vector3();
+    const q = new THREE.Quaternion();
+    const s = new THREE.Vector3();
+    const color = new THREE.Color();
+    trees.forEach((t, i) => {
+      p.set(t.x, heightAt(t.x, t.y), -t.y);
+      s.set(t.scale, t.scale * (0.85 + t.tint * 0.35), t.scale);
+      m.compose(p, q, s);
+      foliage.setMatrixAt(i, m);
+      trunk.setMatrixAt(i, m);
+      color.set('#3a7a3f').offsetHSL(t.tint * 0.03 - 0.015, 0.05, t.tint * 0.08 - 0.04);
+      foliage.setColorAt(i, color);
+    });
+    foliage.instanceMatrix.needsUpdate = true;
+    trunk.instanceMatrix.needsUpdate = true;
+    if (foliage.instanceColor) foliage.instanceColor.needsUpdate = true;
+  }, [trees, heightAt]);
+
+  if (!trees.length) return null;
+  return (
+    <group key={trees.length}>
+      <instancedMesh ref={foliageRef} args={[foliageGeo, undefined, trees.length]} castShadow frustumCulled={false}>
+        <meshStandardMaterial color="#3a7a3f" roughness={0.9} flatShading />
+      </instancedMesh>
+      <instancedMesh ref={trunkRef} args={[trunkGeo, undefined, trees.length]} frustumCulled={false}>
+        <meshStandardMaterial color="#5b3d24" roughness={1} />
+      </instancedMesh>
+    </group>
+  );
 }
 
 export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>(
   ({ polygon, neighbors, latitude, longitude, mapboxToken, onElevationLoaded, onTextureLoading, onTextureError, onDebugInfo }, ref) => {
     const [heightData, setHeightData] = useState<Float32Array | null>(null);
     const [texture, setTexture] = useState<THREE.Texture | null>(null);
-    const [baseElevation, setBaseElevation] = useState(0);
+    const [vegScore, setVegScore] = useState<Float32Array | null>(null);
+    const { gl } = useThree();
 
     // Use normalizePolygon as single source of truth
     const norm: NormalizedPolygon = useMemo(
@@ -377,16 +531,19 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
     const lng = norm.centroidLng;
     const size = norm.terrainSize;
 
-    // Load elevation
+    // Load elevation. `cancelled` guards against a slow request for a previous
+    // lot resolving after this one changed (stale DEM raced the fresh one).
     useEffect(() => {
       if (!mapboxToken) { setHeightData(new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0)); return; }
+      let cancelled = false;
       loadElevationTile(lat, lng, size, mapboxToken).then((heights) => {
+        if (cancelled) return;
         const { min, relief } = normalizeElevations(heights);
-        setBaseElevation(min);
         onElevationLoaded?.(min);
         // Real 1:1 relief (clamped so DEM spikes don't explode the surface).
         setHeightData(relief);
-      }).catch(() => setHeightData(new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0)));
+      }).catch(() => { if (!cancelled) setHeightData(new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0)); });
+      return () => { cancelled = true; };
     }, [lat, lng, size, mapboxToken]);
 
     // Load satellite texture (multi-provider: Mapbox → Esri fallback). Works
@@ -396,10 +553,17 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
       onTextureLoading?.(true);
       onTextureError?.(false);
       setTexture(null);
+      setVegScore(null);
 
+      let cancelled = false;
+      let loaded: THREE.Texture | null = null;
       loadStaticSatelliteTexture(lat, lng, size, mapboxToken).then((result) => {
+        if (cancelled) { result?.texture.dispose(); return; }
         if (result) {
-          setTexture(result.texture);
+          loaded = result.texture;
+          loaded.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
+          setTexture(loaded);
+          setVegScore(result.vegScore);
           onTextureError?.(false);
           onDebugInfo?.({
             lat, lng, zoom: SAT_ZOOM, tileMeters: Math.round(tileSizeMeters(lat, SAT_ZOOM)),
@@ -414,10 +578,12 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
           });
         }
         onTextureLoading?.(false);
-      }).catch(() => { onTextureError?.(true); onTextureLoading?.(false); });
+      }).catch(() => { if (!cancelled) { onTextureError?.(true); onTextureLoading?.(false); } });
 
-      return () => { texture?.dispose(); };
-    }, [lat, lng, mapboxToken, size]);
+      // Dispose the texture this run actually created (the old cleanup captured
+      // a stale null closure, leaking every loaded texture).
+      return () => { cancelled = true; loaded?.dispose(); };
+    }, [lat, lng, mapboxToken, size, gl]);
 
     const geometry = useMemo(() => {
       const geo = new THREE.PlaneGeometry(size, size, TERRAIN_RES - 1, TERRAIN_RES - 1);
@@ -454,26 +620,58 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
     }, [norm.localCoords, heightAtLocal]);
 
     // Translucent fill that hugs the relief (tessellated at the elevation-grid
-    // resolution) + a vertical skirt so the lot reads as a 3D volume.
-    const { fillPositions, wallPositions } = useMemo(() => {
+    // resolution). The old 3m "skirt" walls hung below the boundary — mostly
+    // buried in the terrain, they only added neon clutter.
+    const fillPositions = useMemo(() => {
       const lc = norm.localCoords;
-      if (lc.length < 3) return { fillPositions: null, wallPositions: null };
-      const fill = gridFillPositions(lc, size, TERRAIN_RES, heightAtLocal, 0.3);
-      const wall: number[] = [];
-      const SKIRT = 3; // metres the wall drops below the boundary
-      const ring = subdivideRing(lc, DRAPE_STEP);
-      for (let i = 0; i < ring.length; i++) {
-        const [ax, ay] = ring[i];
-        const [bx, by] = ring[(i + 1) % ring.length];
-        const aH = heightAtLocal(ax, ay) + 0.3;
-        const bH = heightAtLocal(bx, by) + 0.3;
-        wall.push(
-          ax, aH, -ay, bx, bH, -by, bx, bH - SKIRT, -by,
-          ax, aH, -ay, bx, bH - SKIRT, -by, ax, aH - SKIRT, -ay,
-        );
-      }
-      return { fillPositions: fill, wallPositions: new Float32Array(wall) };
+      if (lc.length < 3) return null;
+      return gridFillPositions(lc, size, TERRAIN_RES, heightAtLocal, 0.3);
     }, [norm.localCoords, size, heightAtLocal]);
+
+    // Survey stakes at the lot corners + one length label per edge: the
+    // deslinde data a buyer actually reads on a plano.
+    const cornerStakes = useMemo(() => {
+      if (norm.localCoords.length < 3 || !heightData) return [];
+      return norm.localCoords.map(([x, y]) => ({
+        pos: [x, heightAtLocal(x, y), -y] as [number, number, number],
+      }));
+    }, [norm.localCoords, heightData, heightAtLocal]);
+
+    const edgeLabelSprites = useMemo(() => {
+      if (norm.localCoords.length < 3 || !heightData) return [];
+      return edgeLabels(norm.localCoords, 10).map(({ mid: [x, y], lengthM }) => {
+        const text = `${Math.round(lengthM)} m`;
+        const c = document.createElement('canvas');
+        const ctx = c.getContext('2d');
+        if (!ctx) return null;
+        const fontPx = 56;
+        ctx.font = `700 ${fontPx}px system-ui, sans-serif`;
+        const w = Math.ceil(ctx.measureText(text).width) + 44;
+        const h = fontPx + 34;
+        c.width = w; c.height = h;
+        const rctx = c.getContext('2d')!;
+        rctx.fillStyle = 'rgba(15, 40, 24, 0.78)';
+        rctx.beginPath();
+        rctx.roundRect(0, 0, w, h, h / 2);
+        rctx.fill();
+        rctx.font = `700 ${fontPx}px system-ui, sans-serif`;
+        rctx.textAlign = 'center';
+        rctx.textBaseline = 'middle';
+        rctx.fillStyle = '#eafff2';
+        rctx.fillText(text, w / 2, h / 2 + 2);
+        const tex = new THREE.CanvasTexture(c);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const worldH = 2.4;
+        return {
+          pos: [x, heightAtLocal(x, y) + 2.6, -y] as [number, number, number],
+          tex,
+          scale: [(w / h) * worldH, worldH, 1] as [number, number, number],
+        };
+      }).filter((s): s is NonNullable<typeof s> => s !== null);
+    }, [norm.localCoords, heightData, heightAtLocal]);
+
+    // Dispose label textures when they are replaced.
+    useEffect(() => () => { edgeLabelSprites.forEach((s) => s.tex.dispose()); }, [edgeLabelSprites]);
 
     // Neighbouring lots (dimmed outlines) projected into this lot's local frame
     // and draped on the terrain — the surrounding loteo context.
@@ -496,20 +694,13 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
       return seg.length ? new Float32Array(seg) : null;
     }, [neighbors, heightData, size, lat, lng, heightAtLocal]);
 
-    // Basic vegetation: deterministic scatter of low-poly trees on the terrain
-    // OUTSIDE the lot, for environmental context (not inside the buildable lot).
+    // Context vegetation: trees grow where the satellite imagery shows forest
+    // (vegetation score), never inside the lot. Count scales with plane size.
     const vegetation = useMemo(() => {
-      if (!heightData || norm.localCoords.length < 3) return [];
-      const half = size / 2;
-      const out: { pos: [number, number, number]; scale: number }[] = [];
-      for (let i = 0; i < 600 && out.length < 26; i++) {
-        const x = (hashRand(i * 2 + 1) * 2 - 1) * half * 0.92;
-        const y = (hashRand(i * 2 + 2) * 2 - 1) * half * 0.92;
-        if (pointInRing(x, y, norm.localCoords)) continue; // keep the lot clear
-        out.push({ pos: [x, heightAtLocal(x, y), -y], scale: 0.7 + hashRand(i * 3 + 5) * 0.8 });
-      }
-      return out;
-    }, [heightData, size, norm.localCoords, heightAtLocal]);
+      if (!heightData || !vegScore || norm.localCoords.length < 3) return [];
+      const maxTrees = Math.min(140, Math.max(40, Math.round(size / 3)));
+      return scatterTrees(vegScore, VEG_MASK_RES, size, norm.localCoords, maxTrees);
+    }, [heightData, vegScore, size, norm.localCoords]);
 
     // World getHeightAt(x, z): local y = -z.
     const getHeightAt = useCallback((x: number, z: number): number => heightAtLocal(x, -z), [heightAtLocal]);
@@ -524,13 +715,16 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
                 arrives (null → texture). Without it R3F reuses the same
                 material instance and only sets material.map, but the shader was
                 already compiled without USE_MAP, so the map is ignored and the
-                ground renders as the flat white base colour — the reported bug. */}
-            <meshBasicMaterial
+                ground renders as the flat white base colour — the reported bug.
+                Lit material (not basic): the DEM normals produce hillshade and
+                objects cast shadows onto the ground, so relief is visible. */}
+            <meshStandardMaterial
               key={texture ? texture.uuid : 'flat'}
               map={texture ?? undefined}
               color={texture ? '#ffffff' : '#5D8233'}
               side={THREE.DoubleSide}
-              toneMapped={false}
+              roughness={0.95}
+              metalness={0}
             />
           </mesh>
         </group>
@@ -545,50 +739,59 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
           </lineSegments>
         )}
 
-        {/* Basic vegetation scatter outside the lot (low-poly conifers). */}
-        {vegetation.map((t, i) => (
-          <group key={`veg-${i}`} position={t.pos} scale={t.scale}>
-            <mesh position={[0, 1.1, 0]}>
-              <coneGeometry args={[0.9, 2.4, 6]} />
-              <meshBasicMaterial color="#2f6b34" toneMapped={false} />
-            </mesh>
-            <mesh position={[0, 0.25, 0]}>
-              <cylinderGeometry args={[0.14, 0.18, 0.5, 5]} />
-              <meshBasicMaterial color="#5b3d24" toneMapped={false} />
-            </mesh>
-          </group>
-        ))}
+        {/* Context forest, placed by the imagery's vegetation score. */}
+        <InstancedTrees trees={vegetation} heightAt={heightAtLocal} />
 
-        {/* Lot as a 3D volume: translucent draped fill + vertical skirt walls. */}
+        {/* Soft draped fill so the lot reads as a surface, not a neon sticker. */}
         {fillPositions && fillPositions.length >= 9 && (
           <mesh renderOrder={1}>
             <bufferGeometry>
               <bufferAttribute attach="attributes-position" count={fillPositions.length / 3} array={fillPositions} itemSize={3} />
             </bufferGeometry>
-            <meshBasicMaterial color="#00FF88" transparent opacity={0.14} side={THREE.DoubleSide} depthWrite={false} toneMapped={false} />
-          </mesh>
-        )}
-        {wallPositions && wallPositions.length >= 9 && (
-          <mesh renderOrder={2}>
-            <bufferGeometry>
-              <bufferAttribute attach="attributes-position" count={wallPositions.length / 3} array={wallPositions} itemSize={3} />
-            </bufferGeometry>
-            <meshBasicMaterial color="#00E57A" transparent opacity={0.22} side={THREE.DoubleSide} depthWrite={false} toneMapped={false} />
+            <meshBasicMaterial color="#34d399" transparent opacity={0.1} side={THREE.DoubleSide} depthWrite={false} toneMapped={false} />
           </mesh>
         )}
 
-        {/* Lot polygon contour — neon green. depthTest is disabled so the lot
-            boundary always draws on top of the relief (a cadastral overlay),
-            instead of being hidden behind hills once the terrain has real 3D
-            elevation — the reason the outline vanished after cropping the DEM. */}
+        {/* Lot boundary, twice: a solid line that respects the terrain depth,
+            plus a faint x-ray pass so the deslinde never fully disappears
+            behind a hill — without the old always-on-top neon glow. */}
         {contourPositions && contourPositions.length >= 9 && (
-          <lineLoop renderOrder={999}>
-            <bufferGeometry>
-              <bufferAttribute attach="attributes-position" count={contourPositions.length / 3} array={contourPositions} itemSize={3} />
-            </bufferGeometry>
-            <lineBasicMaterial color="#00FF88" depthTest={false} transparent toneMapped={false} />
-          </lineLoop>
+          <>
+            <lineLoop renderOrder={3}>
+              <bufferGeometry>
+                <bufferAttribute attach="attributes-position" count={contourPositions.length / 3} array={contourPositions} itemSize={3} />
+              </bufferGeometry>
+              <lineBasicMaterial color="#2fd47c" transparent opacity={0.95} toneMapped={false} />
+            </lineLoop>
+            <lineLoop renderOrder={998}>
+              <bufferGeometry>
+                <bufferAttribute attach="attributes-position" count={contourPositions.length / 3} array={contourPositions} itemSize={3} />
+              </bufferGeometry>
+              <lineBasicMaterial color="#2fd47c" depthTest={false} transparent opacity={0.22} toneMapped={false} />
+            </lineLoop>
+          </>
         )}
+
+        {/* Survey stakes at the corners (white post, red cap). */}
+        {cornerStakes.map((s, i) => (
+          <group key={`stake-${i}`} position={s.pos}>
+            <mesh position={[0, 0.55, 0]} castShadow>
+              <cylinderGeometry args={[0.07, 0.09, 1.1, 6]} />
+              <meshStandardMaterial color="#f4f1e8" roughness={0.7} />
+            </mesh>
+            <mesh position={[0, 1.16, 0]}>
+              <cylinderGeometry args={[0.085, 0.085, 0.22, 6]} />
+              <meshStandardMaterial color="#d64533" roughness={0.6} />
+            </mesh>
+          </group>
+        ))}
+
+        {/* Edge-length labels (cotas del deslinde). */}
+        {edgeLabelSprites.map((s, i) => (
+          <sprite key={`cota-${i}`} position={s.pos} scale={s.scale} renderOrder={997}>
+            <spriteMaterial map={s.tex} depthTest={false} transparent toneMapped={false} />
+          </sprite>
+        ))}
       </>
     );
   }
