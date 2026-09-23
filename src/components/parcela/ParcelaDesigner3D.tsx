@@ -7,7 +7,7 @@ import { GLTFAssetObject } from './GLTFAssetLoader';
 import { ParcelaToolbar } from './ParcelaToolbar';
 import { AssetCatalog, type GLBAsset } from './AssetCatalog';
 import { ObjectPropertiesPanel } from './ObjectPropertiesPanel';
-import { SolarLight } from './SolarLight';
+import { SolarLight, computeSunPosition } from './SolarLight';
 import { MeasurementLine } from './MeasurementLine';
 import { PedestrianCamera } from './PedestrianCamera';
 import { RealisticTerrain, type TerrainHandle, type TerrainDebugInfo } from './RealisticTerrain';
@@ -455,7 +455,8 @@ export const ParcelaDesigner3D = ({
       >
         <Canvas
           shadows
-          camera={{ position: [25, 20, 25], fov: 50 }}
+          dpr={[1, 2]}
+          camera={{ position: [25, 20, 25], fov: 50, near: 0.5, far: Math.max(4000, terrainSize * 40) }}
           gl={{ preserveDrawingBuffer: true }}
           style={{ background: 'linear-gradient(180deg, #87CEEB 0%, #B0D4E8 60%, #D4E4D0 100%)' }}
         >
@@ -463,18 +464,24 @@ export const ParcelaDesigner3D = ({
             <SceneCapture captureRef={captureRef} />
             <CameraController viewMode={ps.viewMode} controlsRef={controlsRef} terrainSize={terrainSize} />
 
-            <SolarLight hour={ps.solarHour} latitude={latitude} longitude={longitude} />
+            <SolarLight hour={ps.solarHour} latitude={latitude} terrainSize={terrainSize} />
 
+            {/* Same sun for the sky and the shadows (they disagreed before),
+                with atmosphere params tuned for a rural scene. */}
             <Sky
-              sunPosition={[
-                50 * Math.cos((ps.solarHour - 12) * Math.PI / 12),
-                50 * Math.sin(Math.max(0, (ps.solarHour - 6) * Math.PI / 15)),
-                20,
-              ]}
+              sunPosition={computeSunPosition(ps.solarHour, latitude, 100).toArray()}
+              turbidity={6}
+              rayleigh={1.6}
+              mieCoefficient={0.004}
+              mieDirectionalG={0.85}
             />
 
-            {/* Ambient light boost for meshBasicMaterial fallback visibility */}
-            <ambientLight intensity={0.6} />
+            {/* Distance fog softens the hard edge of the terrain plane against
+                the sky. Skipped in top (plano) view, where the whole plane sits
+                at fog distance and would wash out. */}
+            {ps.viewMode !== 'top' && (
+              <fog attach="fog" args={['#dfe7e0', terrainSize * 1.1, terrainSize * 2.5]} />
+            )}
 
             {useRealisticTerrain ? (
               <RealisticTerrain
@@ -540,7 +547,7 @@ export const ParcelaDesigner3D = ({
                 ref={controlsRef}
                 maxPolarAngle={ps.viewMode === 'top' ? 0.01 : Math.PI / 2.2}
                 minDistance={Math.max(terrainSize * 0.12, 12)}
-                maxDistance={ps.viewMode === 'top' ? Math.max(terrainSize * 2.2, 140) : Math.max(terrainSize * 1.8, 120)}
+                maxDistance={ps.viewMode === 'top' ? Math.max(terrainSize * 2.2, 140) : Math.max(terrainSize * 1.4, 110)}
                 enableDamping
                 dampingFactor={0.1}
                 enableRotate={ps.viewMode !== 'top'}
