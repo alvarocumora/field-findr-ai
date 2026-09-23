@@ -373,6 +373,7 @@ const ProjectDetail = () => {
         <ProjectHero
           project={project}
           lots={lots}
+          inventoryReady={!lotsLoading && !lotsError}
           availableLots={availableLots}
           reservedLots={reservedLots}
           soldLots={soldLots}

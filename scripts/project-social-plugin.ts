@@ -35,8 +35,10 @@ export function projectSocialPlugin(apiUrl: string, publishableKey: string): Plu
       }
       const template = await readFile(resolve(outDir, 'index.html'), 'utf8');
       const paths = new Set<string>();
+      let exportedProjects = 0;
       for (const project of projects) {
         if (project.status !== 'active' || !uuid.test(project.id)) continue;
+        exportedProjects++;
         const lots = await request('rpc/get_public_lots', { p_project_id: project.id }) as SocialLot[];
         if (!Array.isArray(lots)) throw new Error('Invalid public inventory response');
         const html = renderProjectHtml(template, projectSocial(project, lots));
@@ -51,9 +53,9 @@ export function projectSocialPlugin(apiUrl: string, publishableKey: string): Plu
         }
       }
       await writeFile(resolve(outDir, 'project-previews.json'), JSON.stringify({
-        generatedAt: new Date().toISOString(), projects: projects.length, routes: [...paths],
+        generatedAt: new Date().toISOString(), projects: exportedProjects, routes: [...paths],
       }, null, 2));
-      console.log(`Project social HTML: ${projects.length} public projects, ${paths.size} routes`);
+      console.log(`Project social HTML: ${exportedProjects} public projects, ${paths.size} routes`);
     },
   };
 }

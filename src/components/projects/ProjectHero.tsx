@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 interface ProjectHeroProps {
   project: any;
   lots: any[];
+  inventoryReady?: boolean;
   availableLots: any[];
   reservedLots: any[];
   soldLots: any[];
@@ -43,10 +44,11 @@ const GlassCard = ({ icon, label, value, accent }: { icon: React.ReactNode; labe
 );
 
 export const ProjectHero = ({
-  project, lots, availableLots, reservedLots, soldLots,
+  project, lots, availableLots, reservedLots, soldLots, inventoryReady = true,
   priceRange, areaRange, isMobile, onCall, onMessage,
 }: ProjectHeroProps) => {
   const heroImage = (project as any)?.images?.[0];
+  const social = projectSocial(project, inventoryReady ? lots : undefined);
   const totalLots = lots.length;
   const soldPercent = totalLots > 0 ? Math.round((soldLots.length / totalLots) * 100) : 0;
   const reservedPercent = totalLots > 0 ? Math.round((reservedLots.length / totalLots) * 100) : 0;
@@ -107,8 +109,8 @@ export const ProjectHero = ({
               <div className="flex gap-2 shrink-0">
                 <ShareButtons
                   title={project.name}
-                  description={projectSocial(project, lots).description}
-                  url={projectSocial(project, lots).url}
+                  description={social.description}
+                  url={social.url}
                 />
                 <Button
                   size="sm"

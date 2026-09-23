@@ -97,13 +97,6 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
   const seoTitle = project
     ? `${(cfg.hero.title as string | undefined) ?? project.name}`
     : 'Proyecto de lotes';
-  const seoDescription = project
-    ? ((cfg.hero.subtitle as string | undefined) ??
-        (project.description as string | null) ??
-        `Lotes en venta en ${[project.location, project.region].filter(Boolean).join(', ')}. Plano, precios y disponibilidad en línea.`
-      ).slice(0, 155)
-    : undefined;
-
   useSEO({
     title: seoTitle,
     description: social?.description,
