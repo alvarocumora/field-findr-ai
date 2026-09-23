@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
+import { fetchPdfImage, fittedImage, safePdfLink } from './media';
 import {
   getFichaTheme,
   themeRgb,
@@ -37,20 +38,7 @@ export const PUBLIC_ORIGIN = 'https://ofertaterrenos.com';
 export const publicUrl = (path: string) =>
   path.startsWith('http') ? path : `${getPublicOrigin()}${path.startsWith('/') ? path : `/${path}`}`;
 
-export const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    return await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
-  }
-};
+export const fetchImageAsBase64 = fetchPdfImage;
 
 /** Marca gráfica (hexágono + brújula) dibujada vectorialmente. */
 export const drawBrandMark = (doc: jsPDF, x: number, y: number, size = 10) => {
@@ -92,24 +80,33 @@ export const drawBrandLogo = (
 
   if (theme.logo.imageDataUrl) {
     try {
-      const h = theme.logo.imageHeight ?? size + 2;
+      const h = Math.min(theme.logo.imageHeight ?? size + 2, 14);
       const props = doc.getImageProperties(theme.logo.imageDataUrl);
-      const w = (props.width / props.height) * h;
-      doc.addImage(theme.logo.imageDataUrl, x, y, w, h);
+      const scale = Math.min(h / props.height, 100 / props.width);
+      doc.addImage(theme.logo.imageDataUrl, x, y, props.width * scale, props.height * scale);
       return;
     } catch {
       // si la imagen falla, se dibuja el logo vectorial
     }
   }
 
-  drawBrandMark(doc, x, y, size);
+  // Match the portal's typographic logo; keep custom tenant wordmarks intact.
+  const isDefault = theme.logo.primary === 'OFERTA' && theme.logo.secondary === 'TERRENOS';
+  const primary = isDefault ? 'Oferta' : theme.logo.primary;
+  const secondary = isDefault ? 'Terrenos' : ` ${theme.logo.secondary}`;
   doc.setTextColor(...color);
-  doc.setFontSize(size * 0.82);
+  doc.setFontSize(size * 1.9);
   doc.setFont(themeFont('heading'), 'bold');
-  doc.text(theme.logo.primary, x + size + 3, y + size * 0.62);
-  const w = doc.getTextWidth(`${theme.logo.primary} `);
-  doc.setFont(themeFont('body'), 'normal');
-  doc.text(theme.logo.secondary, x + size + 3 + w, y + size * 0.62);
+  doc.text(primary, x, y + size * 0.72);
+  let tx = x + doc.getTextWidth(primary);
+  doc.setTextColor(...BRAND.emerald);
+  doc.text(secondary, tx, y + size * 0.72);
+  tx += doc.getTextWidth(secondary);
+  if (isDefault) {
+    doc.setFontSize(size * 1.05);
+    doc.setTextColor(...color);
+    doc.text('.com', tx, y + size * 0.72);
+  }
 };
 
 export interface FichaHeaderOptions {
@@ -144,13 +141,16 @@ export interface FichaDoc {
   card: (draw: (x: number, y: number, w: number) => number) => void;
   image: (base64: string, height: number, caption?: string, format?: string) => void;
   note: (text: string) => void;
+  actions: (items: { label: string; url: string }[]) => void;
+  gallery: (items: { data: string; caption: string }[]) => void;
+  blob: () => Blob;
   save: (filename: string) => void;
 }
 
 export const createFichaDoc = (
   options: { footerNote?: string; margin?: number } = {}
 ): FichaDoc => {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
   const W = 210;
   const H = 297;
   const margin = options.margin ?? 16;
@@ -166,15 +166,16 @@ export const createFichaDoc = (
     doc.setFontSize(7.5);
     doc.setFont(themeFont('body'), 'normal');
     doc.setTextColor(...BRAND.gray);
-    doc.text(footerNote, margin, H - 11);
-    doc.text(`Pagina ${page}`, W - margin, H - 11, { align: 'right' });
+    doc.text(doc.splitTextToSize(footerNote, contentW - 25)[0], margin, H - 11);
+    doc.text(`Página ${page}`, W - margin, H - 11, { align: 'right' });
   };
 
   const newPage = () => {
     footer();
     doc.addPage();
     page += 1;
-    y = margin + 4;
+    drawBrandLogo(doc, margin, 7, { size: 6, color: BRAND.dark });
+    y = margin + 9;
   };
 
   const ensure = (needed: number) => {
@@ -198,7 +199,7 @@ export const createFichaDoc = (
 
     async header(o: FichaHeaderOptions) {
       const color = o.color ?? BRAND.forest;
-      const barH = o.height ?? 54;
+      const barH = Math.max(o.height ?? 54, 62);
       const qrSize = 26;
       const hasQr = Boolean(o.qrUrl);
       const textW = contentW - (hasQr ? qrSize + 10 : 0);
@@ -207,12 +208,13 @@ export const createFichaDoc = (
       doc.rect(0, 0, W, barH, 'F');
 
       drawBrandLogo(doc, margin, 8, { size: 9 });
+      doc.setProperties({ title: o.title, author: getFichaTheme().brandName, subject: o.eyebrow ?? 'Ficha comercial' });
 
       doc.setTextColor(255, 255, 255);
       if (o.eyebrow) {
         doc.setFontSize(7.5);
         doc.setFont(themeFont('body'), 'normal');
-        doc.text(o.eyebrow.toUpperCase(), margin, 25);
+        doc.text(doc.splitTextToSize(o.eyebrow.toUpperCase(), textW)[0], margin, 25);
       }
       doc.setFontSize(16);
       doc.setFont(themeFont('heading'), 'bold');
@@ -228,13 +230,16 @@ export const createFichaDoc = (
       if (hasQr) {
         doc.setFontSize(7.5);
         doc.setFont(themeFont('body'), 'normal');
-        doc.text(publicUrl(o.qrUrl!), margin, Math.min(cursor, barH - 4));
+        const link = safePdfLink(publicUrl(o.qrUrl!), getPublicOrigin());
+        doc.text('Abrir ficha online', margin, Math.min(cursor, barH - 4));
+        if (link) doc.link(margin, Math.min(cursor, barH - 4) - 4, 45, 6, { url: link });
         try {
           const png = await QRCode.toDataURL(publicUrl(o.qrUrl!), { margin: 1, width: 320 });
           const qx = W - margin - qrSize;
           doc.setFillColor(255, 255, 255);
           doc.roundedRect(qx - 2, 10, qrSize + 4, qrSize + 4, 2, 2, 'F');
           doc.addImage(png, 'PNG', qx, 12, qrSize, qrSize);
+          if (link) doc.link(qx - 2, 10, qrSize + 4, qrSize + 4, { url: link });
           doc.setFontSize(6.5);
           doc.setTextColor(255, 255, 255);
           doc.text(o.qrCaption ?? 'Escanear ficha online', qx + qrSize / 2, barH - 5, {
@@ -249,17 +254,22 @@ export const createFichaDoc = (
     },
 
     section(title: string) {
-      ensure(16);
+      doc.setFontSize(11.5);
+      doc.setFont(themeFont('heading'), 'bold');
+      const lines: string[] = doc.splitTextToSize(title.toUpperCase(), contentW - 6);
+      ensure(lines.length * 5 + 12);
       doc.setFillColor(...BRAND.emerald);
       doc.rect(margin, y, 3, 6, 'F');
       doc.setFontSize(11.5);
       doc.setFont(themeFont('heading'), 'bold');
       doc.setTextColor(...BRAND.dark);
-      doc.text(title.toUpperCase(), margin + 6, y + 4.8);
-      y += 11;
+      doc.text(lines, margin + 6, y + 4.8);
+      y += lines.length * 5 + 6;
     },
 
     kv(label: string, value: string) {
+      doc.setFontSize(8.5);
+      doc.setFont(themeFont('body'), 'normal');
       const lines = doc.splitTextToSize(value, contentW - 52);
       ensure(lines.length * 4.6 + 3);
       doc.setFontSize(8.5);
@@ -274,17 +284,25 @@ export const createFichaDoc = (
 
     paragraph(text: string, opts = {}) {
       const size = opts.size ?? 8.5;
-      const lines = doc.splitTextToSize(text, contentW);
-      ensure(lines.length * (size / 2 + 0.15) + 3);
       doc.setFontSize(size);
       doc.setFont(themeFont('body'), 'normal');
-      doc.setTextColor(...(opts.color ?? BRAND.dark));
-      doc.text(lines, margin, y);
-      y += lines.length * 4.4 + 3;
+      const lines: string[] = doc.splitTextToSize(text, contentW);
+      const lineH = size * 0.3528 * 1.4;
+      for (const line of lines) {
+        ensure(lineH + 2);
+        doc.setFontSize(size);
+        doc.setFont(themeFont('body'), 'normal');
+        doc.setTextColor(...(opts.color ?? BRAND.dark));
+        doc.text(line, margin, y);
+        y += lineH;
+      }
+      y += 4;
     },
 
     bullets(items: string[]) {
       items.forEach((it) => {
+        doc.setFontSize(8.5);
+        doc.setFont(themeFont('body'), 'normal');
         const lines = doc.splitTextToSize(it, contentW - 6);
         ensure(lines.length * 4.4 + 2);
         doc.setFontSize(8.5);
@@ -333,10 +351,10 @@ export const createFichaDoc = (
       y += used + 4;
     },
 
-    image(base64: string, height: number, caption?: string, format = 'JPEG') {
+    image(base64: string, height: number, caption?: string, _format = 'JPEG') {
       ensure(height + (caption ? 10 : 6));
       try {
-        doc.addImage(base64, format, margin, y, contentW, height);
+        fittedImage(doc, base64, margin, y, contentW, height);
       } catch {
         return;
       }
@@ -351,6 +369,8 @@ export const createFichaDoc = (
     },
 
     note(text: string) {
+      doc.setFontSize(7.5);
+      doc.setFont(themeFont('body'), 'normal');
       const lines = doc.splitTextToSize(text, contentW - 8);
       ensure(lines.length * 4 + 12);
       doc.setDrawColor(...BRAND.line);
@@ -361,6 +381,46 @@ export const createFichaDoc = (
       doc.setTextColor(...BRAND.gray);
       doc.text(lines, margin + 4, y + 6);
       y += lines.length * 4 + 12;
+    },
+
+    actions(items) {
+      const valid = items.map(item => ({ ...item, url: safePdfLink(item.url, getPublicOrigin()) })).filter(item => item.url);
+      for (let i = 0; i < valid.length; i += 2) {
+        ensure(16);
+        const w = (contentW - 5) / 2;
+        valid.slice(i, i + 2).forEach((item, col) => {
+          const x = margin + col * (w + 5);
+          doc.setFillColor(...BRAND.forest);
+          doc.roundedRect(x, y, w, 12, 2, 2, 'F');
+          doc.setFont(themeFont('heading'), 'bold');
+          doc.setFontSize(8.5);
+          doc.setTextColor(...BRAND.white);
+          doc.text(doc.splitTextToSize(item.label, w - 8)[0], x + 4, y + 7.5);
+          doc.link(x, y, w, 12, { url: item.url! });
+        });
+        y += 16;
+      }
+    },
+
+    gallery(items) {
+      for (let i = 0; i < items.length; i += 2) {
+        ensure(65);
+        const w = (contentW - 5) / 2;
+        items.slice(i, i + 2).forEach((item, col) => {
+          const x = margin + col * (w + 5);
+          try { fittedImage(doc, item.data, x, y, w, 48, 'cover'); } catch { return; }
+          doc.setFont(themeFont('body'), 'normal');
+          doc.setFontSize(7);
+          doc.setTextColor(...BRAND.gray);
+          doc.text(doc.splitTextToSize(item.caption, w).slice(0, 2), x, y + 52);
+        });
+        y += 63;
+      }
+    },
+
+    blob() {
+      footer();
+      return doc.output('blob');
     },
 
     save(filename: string) {
