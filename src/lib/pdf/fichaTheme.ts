@@ -9,7 +9,7 @@
 
 export type RGB = [number, number, number];
 
-export type FichaFontFamily = 'helvetica' | 'times' | 'courier';
+export type FichaFontFamily = 'helvetica' | 'times' | 'courier' | 'montserrat';
 
 export interface FichaThemeColors {
   emerald: string;
@@ -22,6 +22,10 @@ export interface FichaThemeColors {
   white: string;
   /** Color de cabecera de la ficha de predio urbano / variantes. */
   accent: string;
+  /** Fondo de página (papel crema de la identidad). */
+  paper: string;
+  /** Verde hoja: acentos sobre fondos oscuros. */
+  leaf: string;
 }
 
 export interface FichaTheme {
@@ -51,23 +55,31 @@ export interface FichaTheme {
 export const DEFAULT_FICHA_THEME: FichaTheme = {
   brandName: 'OFERTA TERRENOS',
   logo: { primary: 'OFERTA', secondary: 'TERRENOS', imageDataUrl: null, imageHeight: 10 },
+  // Identidad de marca (manual 2026): papel crema, verdes bosque, verde hoja.
   colors: {
-    emerald: '#22C55E',
-    sky: '#0EA5E9',
-    forest: '#164E34',
-    dark: '#1E2320',
-    gray: '#6E7672',
-    line: '#E2E6E3',
-    soft: '#F8FAF8',
+    emerald: '#55803A',
+    sky: '#2F7DAB',
+    forest: '#203D27',
+    dark: '#23301F',
+    gray: '#6B6F5E',
+    line: '#E0D6BD',
+    soft: '#F7F1E1',
     white: '#FFFFFF',
-    accent: '#163C4E',
+    accent: '#2D5233',
+    paper: '#ECE4D1',
+    leaf: '#A8CB5E',
   },
-  fonts: { heading: 'helvetica', body: 'helvetica' },
+  fonts: { heading: 'montserrat', body: 'montserrat' },
   publicOrigin: 'https://ofertaterrenos.com',
   footerSuffix: 'ofertaterrenos.com',
 };
 
-const STORAGE_KEY = 'ot.ficha.theme.v1';
+const STORAGE_KEY = 'ot.ficha.theme.v2';
+/**
+ * v1 guardaba el tema completo (colores y fuentes antiguos incluidos), lo que
+ * taparía la identidad nueva. Al migrar se conservan solo los datos de marca.
+ */
+const LEGACY_STORAGE_KEY = 'ot.ficha.theme.v1';
 
 export const hexToRgb = (hex: string): RGB => {
   const h = hex.replace('#', '').trim();
@@ -97,7 +109,20 @@ const load = (): FichaTheme => {
   loaded = true;
   try {
     const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-    if (raw) current = merge(DEFAULT_FICHA_THEME, JSON.parse(raw));
+    if (raw) {
+      current = merge(DEFAULT_FICHA_THEME, JSON.parse(raw));
+    } else {
+      const legacy = typeof localStorage !== 'undefined' ? localStorage.getItem(LEGACY_STORAGE_KEY) : null;
+      if (legacy) {
+        const old = JSON.parse(legacy) as Partial<FichaTheme>;
+        const kept = Object.fromEntries(
+          (['brandName', 'logo', 'publicOrigin', 'footerSuffix'] as const)
+            .filter((k) => old[k] != null)
+            .map((k) => [k, old[k]]),
+        ) as Partial<FichaTheme>;
+        current = merge(DEFAULT_FICHA_THEME, kept);
+      }
+    }
   } catch {
     current = DEFAULT_FICHA_THEME;
   }

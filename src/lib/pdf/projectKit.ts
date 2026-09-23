@@ -1,6 +1,16 @@
-import { BRAND, fetchImageAsBase64, themeFont } from '@/lib/pdf/fichaShell';
-import { renderFicha } from '@/lib/pdf/fichaTemplates';
+import QRCode from 'qrcode';
+import {
+  BRAND, createFichaDoc, drawBrandLogo, fetchImageAsBase64, publicUrl, getPublicOrigin,
+  scriptFont, semiboldFont, themeFont,
+} from '@/lib/pdf/fichaShell';
+import { getFichaTemplate, renderFicha } from '@/lib/pdf/fichaTemplates';
 import type { FichaDoc } from '@/lib/pdf/fichaShell';
+import { ensureFichaFonts } from '@/lib/pdf/fichaFonts';
+import { fittedImage, safePdfLink } from '@/lib/pdf/media';
+import {
+  drawMasterplan, fitView, imageSizeForBox, normalizeLotState, staticImageUrl,
+  type Box, type LotState, type MapView, type MasterplanStyle, type PlanLot,
+} from '@/lib/pdf/masterplan';
 import { projectCanonicalUrl, SITE_URL } from '@/lib/landing/paths';
 import { referenceProjectMedia } from './projectMedia';
 
@@ -291,127 +301,459 @@ const conditionLines = (project: KitProject): string[] => {
 const safeName = (s: string) =>
   s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-/** Dossier comercial completo del proyecto. */
+/* ------------------------------------------------------------------ */
+/* Plano vectorial del loteo                                            */
+/* ------------------------------------------------------------------ */
+
+export const planLotsOf = (lots: KitLot[]): PlanLot[] =>
+  lots
+    .map((l) => ({ ring: toRing(l.polygon), label: String(l.lot_number ?? ''), state: normalizeLotState(l.status) }))
+    .filter((l): l is PlanLot => !!l.ring && l.ring.length >= 4);
+
+const planStyle = (onSatellite: boolean): MasterplanStyle => ({
+  available: BRAND.leaf,
+  reserved: [224, 164, 58],
+  sold: onSatellite ? [20, 26, 18] : BRAND.gray,
+  outline: onSatellite ? [255, 255, 255] : BRAND.forest,
+  labelDark: BRAND.forest,
+  paper: BRAND.soft,
+  font: themeFont('body'),
+  fontBold: themeFont('heading') === 'montserrat' ? 'montserrat' : themeFont('heading'),
+});
+
+interface PreparedPlan { lots: PlanLot[]; view: MapView; image: string | null }
+
+/** Encuadre + imagen satelital (sin overlays) para una caja dada. */
+const preparePlan = async (lots: KitLot[], box: Box, token?: string | null): Promise<PreparedPlan | null> => {
+  const planLots = planLotsOf(lots);
+  if (!planLots.length) return null;
+  const { wPx, hPx } = imageSizeForBox(box);
+  const view = fitView(planLots.map((l) => l.ring), wPx, hPx);
+  if (!view) return null;
+  const image = token ? await fetchImageAsBase64(staticImageUrl(view, token)) : null;
+  return { lots: planLots, view, image };
+};
+
+const STATE_LABEL: Record<Exclude<LotState, 'other'>, string> = {
+  available: 'Disponible',
+  reserved: 'Reservada',
+  sold: 'Vendida',
+};
+
+/** Dibuja plano + marco + leyenda con conteos. Devuelve el alto usado. */
+const drawPlanBlock = (f: FichaDoc, plan: PreparedPlan, box: Box): number => {
+  const { doc } = f;
+  const style = planStyle(Boolean(plan.image));
+  const counts = drawMasterplan(doc, plan.lots, plan.view, box, style, plan.image);
+  doc.setDrawColor(...BRAND.line);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(box.x, box.y, box.w, box.h, 2, 2, 'S');
+
+  // Legend chips
+  let lx = box.x;
+  const ly = box.y + box.h + 5;
+  (['available', 'reserved', 'sold'] as const).forEach((state) => {
+    if (!counts[state]) return;
+    const fill = state === 'available' ? style.available : state === 'reserved' ? style.reserved : BRAND.gray;
+    const text = `${STATE_LABEL[state]} · ${counts[state]}`;
+    doc.setFont(semiboldFont(), 'normal');
+    doc.setFontSize(8);
+    const w = doc.getTextWidth(text) + 12;
+    doc.setFillColor(...BRAND.soft);
+    doc.setDrawColor(...BRAND.line);
+    doc.roundedRect(lx, ly, w, 7, 3.5, 3.5, 'FD');
+    doc.setFillColor(...fill);
+    doc.circle(lx + 4, ly + 3.5, 1.6, 'F');
+    doc.setTextColor(...BRAND.dark);
+    doc.text(text, lx + 7, ly + 4.8);
+    lx += w + 3;
+  });
+  doc.setFont(themeFont('body'), 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...BRAND.gray);
+  doc.text(
+    plan.image ? 'Deslindes referenciales sobre imagen satelital · © Mapbox · © Maxar' : 'Deslindes referenciales',
+    box.x + box.w, ly + 4.6, { align: 'right' },
+  );
+  return box.h + 14;
+};
+
+/* ------------------------------------------------------------------ */
+/* Portada                                                              */
+/* ------------------------------------------------------------------ */
+
+const withOpacity = (f: FichaDoc, opacity: number, draw: () => void) => {
+  const { doc } = f;
+  const GState = (doc as unknown as { GState: new (o: { opacity: number }) => unknown }).GState;
+  doc.saveGraphicsState();
+  try {
+    if (GState) doc.setGState(new GState({ opacity }) as Parameters<typeof doc.setGState>[0]);
+    draw();
+  } finally {
+    doc.restoreGraphicsState();
+  }
+};
+
+const drawCover = async (
+  f: FichaDoc,
+  o: {
+    project: KitProject; s: ReturnType<typeof summarize>; hero: string | null; heroCaption?: string;
+    location: string; path: string; agendarUrl: string;
+  },
+) => {
+  const { doc, W, H, margin, contentW } = f;
+  const heroH = 158;
+
+  doc.setFillColor(...BRAND.forest);
+  doc.rect(0, 0, W, H, 'F');
+  if (o.hero) {
+    try { fittedImage(doc, o.hero, 0, 0, W, heroH, 'cover'); } catch { /* sin hero */ }
+    withOpacity(f, 0.18, () => { doc.setFillColor(...BRAND.forest); doc.rect(0, 0, W, heroH, 'F'); });
+    // Fade hero → forest (jsPDF has no gradients: stacked bands).
+    const steps = 14;
+    for (let i = 0; i < steps; i++) {
+      withOpacity(f, (i + 1) / steps, () => {
+        doc.setFillColor(...BRAND.forest);
+        doc.rect(0, heroH - 42 + (i * 42) / steps, W, 42 / steps + 0.3, 'F');
+      });
+    }
+  }
+
+  // Illustrative/satellite heroes must say so, like every gallery image.
+  if (o.hero && o.heroCaption) {
+    doc.setFont(themeFont('body'), 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...BRAND.paper);
+    doc.text(o.heroCaption, W - margin, heroH - 4, { align: 'right' });
+  }
+
+  // Logo on a translucent chip for legibility over any photo.
+  withOpacity(f, 0.72, () => { doc.setFillColor(...BRAND.forest); doc.roundedRect(margin - 3, 9, 72, 17, 8.5, 8.5, 'F'); });
+  drawBrandLogo(doc, margin, 12, { size: 11 });
+
+  let y = heroH + 6;
+  doc.setFont(scriptFont(), 'normal');
+  doc.setFontSize(f.brandFonts ? 22 : 10);
+  doc.setTextColor(...BRAND.leaf);
+  doc.text(f.brandFonts ? 'dossier comercial' : 'DOSSIER COMERCIAL', margin, y);
+  y += 11;
+
+  doc.setFont(themeFont('heading'), 'bold');
+  let titleSize = 32;
+  doc.setFontSize(titleSize);
+  let lines: string[] = doc.splitTextToSize(o.project.name, contentW);
+  while (lines.length > 2 && titleSize > 20) {
+    titleSize -= 2;
+    doc.setFontSize(titleSize);
+    lines = doc.splitTextToSize(o.project.name, contentW);
+  }
+  lines = lines.slice(0, 2);
+  doc.setTextColor(255, 255, 255);
+  doc.text(lines, margin, y);
+  y += lines.length * titleSize * 0.3528 * 1.1 + 1;
+
+  if (o.location) {
+    doc.setFont(themeFont('body'), 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(...BRAND.paper);
+    doc.text(o.location, margin, y);
+    y += 10;
+  }
+
+  // Stat chips
+  const stats: [string, string][] = [
+    ['Disponibles', `${o.s.available} de ${o.s.total}`],
+    ['Precio desde', clp(o.s.priceMin)],
+    ['Superficies', o.s.areaMin ? `${m2(o.s.areaMin).replace(' m²', '')}–${m2(o.s.areaMax)}` : '—'],
+  ];
+  const chipW = (contentW - 8) / 3;
+  stats.forEach(([label, value], i) => {
+    const x = margin + i * (chipW + 4);
+    doc.setFillColor(...BRAND.accent);
+    doc.setDrawColor(...BRAND.leaf);
+    doc.setLineWidth(0.35);
+    doc.roundedRect(x, y, chipW, 20, 4, 4, 'FD');
+    doc.setFont(semiboldFont(), 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...BRAND.leaf);
+    doc.setCharSpace(0.25);
+    doc.text(label.toUpperCase(), x + 5, y + 7);
+    doc.setCharSpace(0);
+    doc.setFont(themeFont('heading'), 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(255, 255, 255);
+    doc.text(doc.splitTextToSize(value, chipW - 9)[0], x + 5, y + 15);
+  });
+  y += 30;
+
+  // Primary CTA + project link
+  const origin = getPublicOrigin();
+  const agenda = safePdfLink(o.agendarUrl, origin);
+  doc.setFillColor(...BRAND.leaf);
+  doc.roundedRect(margin, y, 62, 13, 6.5, 6.5, 'F');
+  doc.setFont(themeFont('heading'), 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(...BRAND.forest);
+  doc.text('Agenda tu reunión', margin + 31, y + 8.3, { align: 'center' });
+  if (agenda) doc.link(margin, y, 62, 13, { url: agenda });
+  doc.setFont(themeFont('body'), 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...BRAND.paper);
+  const projectUrl = publicUrl(o.path);
+  doc.text(projectUrl.replace(/^https?:\/\//, ''), margin + 68, y + 8.3);
+  const link = safePdfLink(projectUrl, origin);
+  if (link) doc.link(margin + 68, y + 3, 80, 7, { url: link });
+
+  // QR bottom-right
+  try {
+    const qr = await QRCode.toDataURL(projectUrl, { margin: 1, width: 360, color: { dark: '#203D27', light: '#F7F1E1' } });
+    const size = 30;
+    const qx = W - margin - size;
+    const qy = H - margin - size - 8;
+    doc.setFillColor(...BRAND.soft);
+    doc.roundedRect(qx - 3, qy - 3, size + 6, size + 6, 3, 3, 'F');
+    doc.addImage(qr, 'PNG', qx, qy, size, size);
+    if (link) doc.link(qx - 3, qy - 3, size + 6, size + 6, { url: link });
+    doc.setFont(themeFont('body'), 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...BRAND.paper);
+    doc.text('Disponibilidad en línea', qx + size / 2, qy + size + 8, { align: 'center' });
+  } catch { /* QR opcional */ }
+
+  doc.setFont(themeFont('body'), 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(...BRAND.leaf);
+  doc.text(`ofertaterrenos.com · Material generado el ${new Date().toLocaleDateString('es-CL')}`, margin, H - margin);
+};
+
+/* ------------------------------------------------------------------ */
+/* Tabla compacta en dos columnas                                       */
+/* ------------------------------------------------------------------ */
+
+const twoColumnTable = (f: FichaDoc, headers: string[], rows: string[][], widths: number[], align: ('left' | 'right')[]) => {
+  const { doc, margin, contentW, H } = f;
+  const gap = 6;
+  const colW = (contentW - gap) / 2;
+  const cols = widths.map((w) => (w / widths.reduce((a, b) => a + b, 0)) * colW);
+  const rowH = 6;
+  const bottom = H - 24;
+
+  const head = (x: number, y: number) => {
+    doc.setFillColor(...BRAND.forest);
+    doc.roundedRect(x, y, colW, rowH, 1.5, 1.5, 'F');
+    doc.setFont(semiboldFont(), 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(255, 255, 255);
+    let cx = x;
+    headers.forEach((h, i) => {
+      const right = align[i] === 'right';
+      doc.text(h, right ? cx + cols[i] - 3 : cx + 3, y + 4.1, { align: right ? 'right' : 'left' });
+      cx += cols[i];
+    });
+  };
+  const row = (x: number, y: number, r: string[], zebra: boolean) => {
+    if (zebra) { doc.setFillColor(...BRAND.soft); doc.rect(x, y, colW, rowH, 'F'); }
+    doc.setFont(themeFont('body'), 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...BRAND.dark);
+    let cx = x;
+    r.forEach((cell, i) => {
+      const right = align[i] === 'right';
+      if (i === 0) doc.setFont(themeFont('heading'), 'bold');
+      doc.text(cell, right ? cx + cols[i] - 3 : cx + 3, y + 4.1, { align: right ? 'right' : 'left' });
+      if (i === 0) doc.setFont(themeFont('body'), 'normal');
+      cx += cols[i];
+    });
+  };
+
+  let i = 0;
+  while (i < rows.length) {
+    f.ensure(rowH * 3);
+    const top = f.y;
+    const perCol = Math.max(1, Math.floor((bottom - top - rowH) / rowH));
+    let maxY = top;
+    for (let c = 0; c < 2 && i < rows.length; c++) {
+      const x = margin + c * (colW + gap);
+      head(x, top);
+      let y = top + rowH;
+      for (let k = 0; k < perCol && i < rows.length; k++, i++) {
+        row(x, y, rows[i], k % 2 === 1);
+        y += rowH;
+      }
+      maxY = Math.max(maxY, y);
+    }
+    f.y = maxY + 4;
+    if (i < rows.length) f.newPage();
+  }
+};
+
+/** Pasos numerados en círculos (proceso de compra). */
+const purchaseSteps = (f: FichaDoc, steps: [string, string][]) => {
+  const { doc, margin, contentW } = f;
+  steps.forEach(([title, text], i) => {
+    doc.setFont(themeFont('body'), 'normal');
+    doc.setFontSize(8.5);
+    const lines: string[] = doc.splitTextToSize(text, contentW - 16);
+    const h = Math.max(12, 6 + lines.length * 4.2);
+    f.ensure(h + 2);
+    const y = f.y;
+    doc.setFillColor(...BRAND.forest);
+    doc.circle(margin + 4.5, y + 4.5, 4.5, 'F');
+    doc.setFont(themeFont('heading'), 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...BRAND.leaf);
+    doc.text(String(i + 1), margin + 4.5, y + 6, { align: 'center' });
+    doc.setTextColor(...BRAND.forest);
+    doc.setFontSize(10);
+    doc.text(title, margin + 13, y + 4);
+    doc.setFont(themeFont('body'), 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...BRAND.dark);
+    doc.text(lines, margin + 13, y + 9);
+    f.y = y + h + 2;
+  });
+  f.y += 3;
+};
+
+/* ------------------------------------------------------------------ */
+/* Dossier comercial                                                    */
+/* ------------------------------------------------------------------ */
+
+export const agendarPath = (project: KitProject) =>
+  `/agendar?source=${encodeURIComponent(`dossier-${project.slug ?? project.id}`)}`;
+
+/** Dossier comercial completo del proyecto (identidad de marca). */
 export const generateProjectDossierPdf = async (
   project: KitProject,
   lots: KitLot[],
   options: KitOptions = {}
 ) => {
+  await ensureFichaFonts();
   const s = summarize(lots);
   const path = projectPath(project, options);
   const location = [project.location, project.region].filter(Boolean).join(', ');
+  const t = getFichaTemplate('proyecto');
 
   // Load concurrently, bounded to five assets. No invented replacement photos.
   const configuredMedia = [...(project.media ?? []), ...(project.images ?? []).map(src => ({ src, caption: 'Imagen del proyecto · referencial' }))].filter(item => item.src);
   const sourceMedia = configuredMedia.length ? configuredMedia : referenceProjectMedia(project.slug);
   const uniqueMedia = sourceMedia.filter((item, i, all) => item.src && all.findIndex(other => other.src === item.src) === i).slice(0, 5);
-  const loaded = await Promise.all(uniqueMedia.map(async item => ({ ...item, data: await fetchImageAsBase64(item.src) })));
+
+  const f = createFichaDoc({ footerNote: t.footerNote, cover: true });
+  const planBox: Box = { x: f.margin, y: f.margin + 11 + 16, w: f.contentW, h: f.H - (f.margin + 11 + 16) - 42 };
+  const [loaded, plan] = await Promise.all([
+    Promise.all(uniqueMedia.map(async item => ({ ...item, data: await fetchImageAsBase64(item.src) }))),
+    preparePlan(lots, planBox, options.mapboxToken),
+  ]);
   const media = loaded.filter((item): item is typeof item & { data: string } => Boolean(item.data));
 
-  return renderFicha({
-    template: 'proyecto',
-    eyebrow: `Dossier comercial${location ? ` · ${location}` : ''}`,
-    title: project.name,
-    subtitle: location || undefined,
-    qrUrl: path,
-    filename: `Dossier-${safeName(project.name)}.pdf`,
-    output: options.output,
-    body: async (f) => {
-      if (media[0]) f.image(media[0].data, f.contentW * 0.46, media[0].caption);
-      if (loaded.some(item => !item.data)) f.note('Algunas imágenes no pudieron cargarse. Puedes revisar la galería completa en la ficha online.');
-      f.actions(projectActions(project, options).slice(0, 2));
-
-      f.kpis(
-        [
-          ['Parcelas', String(s.total), `${s.available} disponibles`],
-          ['Superficies', s.areaMin ? `${m2(s.areaMin)} – ${m2(s.areaMax)}` : '—', s.areaTotal ? `Total ${(s.areaTotal / 10000).toFixed(1)} ha` : undefined],
-          ['Precio desde', clp(s.priceMin), s.priceMax ? `Hasta ${clp(s.priceMax)}` : undefined],
-          ['Ubicación', location || '—', 'Chile'],
-        ] as [string, string, string?][],
-        2
-      );
-
-      if (options.editorial?.headline) f.paragraph(options.editorial.headline, { size: 13 });
-      if (options.editorial?.pitch || project.description) {
-        f.section('El proyecto');
-        f.paragraph(options.editorial?.pitch || project.description!);
-      }
-
-      if (media.length > 1) {
-        f.ensure(80);
-        f.section('Galería del proyecto y entorno');
-        f.gallery(media.slice(1));
-      }
-      for (const section of options.editorial?.sections ?? []) {
-        f.section(section.title);
-        f.paragraph(section.text);
-      }
-      if (options.editorial?.projection) {
-        f.section('Escenario orientativo');
-        f.paragraph(options.editorial.projection);
-        f.note('Texto asistido por IA: sus proyecciones requieren revisión comercial y no garantizan rentabilidad.');
-      }
-      if (options.editorial?.specs?.length) {
-        f.section('Ficha técnica');
-        options.editorial.specs.forEach(spec => f.kv(spec.label, spec.value));
-      }
-
-      if (project.highlights?.length) {
-        f.section('Destacados');
-        f.bullets(project.highlights.slice(0, 8));
-      }
-
-      if (options.mapboxToken) {
-        const url = buildProjectMapUrl(project, lots, options.mapboxToken);
-        if (url) {
-          const img = await fetchImageAsBase64(url);
-          if (img) {
-            f.ensure(f.contentW * (560 / 900) + 28);
-            f.section('Plano del loteo');
-            f.image(img, f.contentW * (560 / 900), 'Imagen satelital con los deslindes referenciales de las parcelas', 'PNG');
-          }
-        }
-      }
-
-      if (project.pois?.length) {
-        f.section('Entorno y accesos');
-        f.bullets(project.pois.slice(0, 10).map((p) => `${p.name} — ${p.detail}`));
-      }
-
-      const conds = conditionLines(project);
-      if (conds.length) {
-        f.section('Condiciones comerciales');
-        f.bullets(conds);
-      }
-
-      const priced = sortLots(lots.filter((l) => l.status === 'available')).slice(0, 12);
-      if (priced.length) {
-        f.section('Parcelas disponibles (muestra)');
-        table(
-          f,
-          ['Parcela', 'Superficie', 'Precio', '$/m²'],
-          priced.map((l) => [
-            l.lot_number ?? '—',
-            m2(l.area),
-            clp(l.price),
-            l.price && l.area ? clp(Number(l.price) / Number(l.area)) : '—',
-          ]),
-          [22, 26, 30, 22],
-          ['left', 'right', 'right', 'right']
-        );
-        if (s.available > priced.length) {
-          f.paragraph(`Consulta las ${s.available} parcelas disponibles en la ficha online o descarga la lista de precios completa desde el proyecto.`);
-        }
-      }
-
-      f.section('Contacto');
-      f.actions(projectActions(project, options));
-      if (project.contact?.phone) f.kv('Telefono', project.contact.phone);
-      if (project.contact?.whatsapp) f.kv('WhatsApp', project.contact.whatsapp);
-      if (project.contact?.email) f.kv('Email', project.contact.email);
-      f.kv('Ficha online', `ofertaterrenos.com${path}`);
-    },
+  f.doc.setProperties({ title: `Dossier · ${project.name}`, author: 'OFERTA TERRENOS', subject: 'Dossier comercial' });
+  await drawCover(f, {
+    project, s, location, path,
+    hero: media[0]?.data ?? plan?.image ?? null,
+    heroCaption: media[0]?.caption ?? (plan?.image ? 'Imagen satelital del sector · referencial' : undefined),
+    agendarUrl: agendarPath(project),
   });
+
+  // ---- El proyecto
+  f.newPage();
+  if (options.editorial?.headline) f.paragraph(options.editorial.headline, { size: 13, color: BRAND.forest });
+  f.section('El proyecto');
+  if (options.editorial?.pitch || project.description) f.paragraph(options.editorial?.pitch || project.description!, { size: 9.5 });
+  f.kpis(
+    [
+      ['Parcelas', String(s.total), `${s.available} disponibles`],
+      ['Superficies', s.areaMin ? `${m2(s.areaMin)} – ${m2(s.areaMax)}` : '—', s.areaTotal ? `Total ${(s.areaTotal / 10000).toFixed(1)} ha` : undefined],
+      ['Precio desde', clp(s.priceMin), s.priceMax ? `Hasta ${clp(s.priceMax)}` : undefined],
+      ['Ubicación', location || '—', 'Chile'],
+    ] as [string, string, string?][],
+    2
+  );
+  if (project.highlights?.length) {
+    f.section('Destacados');
+    f.bullets(project.highlights.slice(0, 8));
+  }
+  const gallery = media.slice(media[0] ? 1 : 0);
+  if (gallery.length) {
+    f.ensure(80);
+    f.section('Galería del proyecto y entorno');
+    f.gallery(gallery);
+  }
+  if (loaded.some(item => !item.data)) f.note('Algunas imágenes no pudieron cargarse. Puedes revisar la galería completa en la ficha online.');
+  for (const section of options.editorial?.sections ?? []) {
+    f.section(section.title);
+    f.paragraph(section.text);
+  }
+  if (options.editorial?.projection) {
+    f.section('Escenario orientativo');
+    f.paragraph(options.editorial.projection);
+    f.note('Texto asistido por IA: sus proyecciones requieren revisión comercial y no garantizan rentabilidad.');
+  }
+  if (options.editorial?.specs?.length) {
+    f.section('Ficha técnica');
+    options.editorial.specs.forEach(spec => f.kv(spec.label, spec.value));
+  }
+  if (project.pois?.length) {
+    f.section('Entorno y accesos');
+    f.bullets(project.pois.slice(0, 10).map((p) => `${p.name} — ${p.detail}`));
+  }
+  const conds = conditionLines(project);
+  if (conds.length) {
+    f.section('Condiciones comerciales');
+    f.bullets(conds);
+  }
+
+  // ---- Plano del loteo (página completa)
+  if (plan) {
+    f.newPage();
+    f.section('Plano del loteo');
+    const box = { ...planBox, y: f.y, h: f.H - f.y - 42 };
+    f.y += drawPlanBlock(f, plan, box);
+  }
+
+  // ---- Parcelas disponibles (todas)
+  const available = sortLots(lots.filter((l) => normalizeLotState(l.status) === 'available'));
+  if (available.length) {
+    f.newPage();
+    f.section(`Parcelas disponibles · ${available.length}`);
+    twoColumnTable(
+      f,
+      ['N°', 'Superficie', 'Precio', '$/m²'],
+      available.map((l) => [
+        l.lot_number ?? '—',
+        m2(l.area),
+        clp(l.price),
+        l.price && l.area ? clp(Number(l.price) / Number(l.area)) : '—',
+      ]),
+      [12, 26, 30, 20],
+      ['left', 'right', 'right', 'right'],
+    );
+  }
+
+  // ---- Cómo comprar (mismos pasos de cierre que registra la plataforma)
+  f.ensure(80);
+  f.section('Cómo comprar tu parcela');
+  purchaseSteps(f, [
+    ['Reserva', 'Eliges tu parcela y la reservas en línea o con tu ejecutivo; queda bloqueada para ti.'],
+    ['Promesa', 'Firmamos la promesa de compraventa con las condiciones de pago acordadas.'],
+    ['Escritura', 'Firma de la escritura pública de compraventa en notaría.'],
+    ['Inscripción', 'Inscripción en el Conservador de Bienes Raíces: la parcela queda a tu nombre.'],
+  ]);
+
+  // ---- Cierre
+  f.ensure(70);
+  f.section('Agenda tu reunión');
+  f.paragraph('Conversemos por videollamada o visita el proyecto: te mostramos las parcelas disponibles, las formas de pago y el paso a paso de la reserva a la escritura.', { size: 9.5 });
+  f.actions([{ label: 'Agenda tu reunión', url: agendarPath(project) }, ...projectActions(project, options)]);
+  if (project.contact?.phone) f.kv('Teléfono', project.contact.phone);
+  if (project.contact?.whatsapp) f.kv('WhatsApp', project.contact.whatsapp);
+  if (project.contact?.email) f.kv('Email', project.contact.email);
+  f.kv('Ficha online', `ofertaterrenos.com${path}`);
+  f.note(t.disclaimer({ date: new Date().toLocaleDateString('es-CL') }));
+
+  const filename = `Dossier-${safeName(project.name)}.pdf`;
+  if (options.output === 'blob') return f.blob();
+  f.save(filename);
 };
 
 /** Lista de precios completa, una fila por parcela. */
@@ -473,19 +815,11 @@ export const generateProjectMasterplanPdf = async (
     filename: `Plano-${safeName(project.name)}.pdf`,
     output: options.output,
     body: async (f) => {
-      let drew = false;
-      if (options.mapboxToken) {
-        const url = buildProjectMapUrl(project, lots, options.mapboxToken, { w: 900, h: 700 });
-        if (url) {
-          const img = await fetchImageAsBase64(url);
-          if (img) {
-            f.image(img, f.contentW * (700 / 900), 'Plano referencial sobre imagen satelital', 'PNG');
-            drew = true;
-          }
-        }
-      }
-      if (!drew) f.note('No fue posible generar la imagen del plano en este momento. Consulta el plano interactivo en la ficha online.');
-      f.actions(projectActions(project, options));
+      // Plano a toda la altura útil: los botones van al final del documento.
+      const box: Box = { x: f.margin, y: f.y, w: f.contentW, h: f.H - f.y - 40 };
+      const plan = await preparePlan(lots, box, options.mapboxToken);
+      if (plan) f.y += drawPlanBlock(f, plan, box);
+      else f.note('No hay deslindes cargados para dibujar el plano. Consulta el plano interactivo en la ficha online.');
 
       f.section('Cuadro de superficies');
       table(
@@ -495,6 +829,7 @@ export const generateProjectMasterplanPdf = async (
         [24, 30, 26],
         ['left', 'right', 'left']
       );
+      f.actions([{ label: 'Agenda tu reunión', url: agendarPath(project) }, ...projectActions(project, options)]);
     },
   });
 };

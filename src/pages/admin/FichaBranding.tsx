@@ -34,9 +34,12 @@ const COLOR_LABELS: Record<keyof FichaThemeColors, string> = {
   soft: 'Fondos suaves',
   white: 'Blanco / contraste',
   accent: 'Cabecera alternativa (predios)',
+  paper: 'Fondo de página (papel)',
+  leaf: 'Acento sobre fondos oscuros',
 };
 
 const FONTS: { value: FichaFontFamily; label: string }[] = [
+  { value: 'montserrat', label: 'Montserrat (marca)' },
   { value: 'helvetica', label: 'Helvetica (sans)' },
   { value: 'times', label: 'Times (serif)' },
   { value: 'courier', label: 'Courier (mono)' },

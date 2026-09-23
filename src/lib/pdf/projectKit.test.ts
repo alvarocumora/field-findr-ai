@@ -3,6 +3,7 @@ import { summarize, projectPath, projectActions, generateProjectDossierPdf } fro
 import { createFichaDoc } from './fichaShell';
 import { safePdfLink, fittedImage } from './media';
 
+vi.mock('./fichaFonts', async (original) => ({ ...(await original<typeof import('./fichaFonts')>()), ensureFichaFonts: vi.fn().mockResolvedValue(false) }));
 vi.mock('qrcode', () => ({ default: { toDataURL: vi.fn().mockRejectedValue(new Error('QR unavailable')) } }));
 vi.mock('./media', async (original) => ({ ...(await original<typeof import('./media')>()), fetchPdfImage: vi.fn().mockResolvedValue(null) }));
 

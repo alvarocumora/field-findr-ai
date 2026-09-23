@@ -1,5 +1,6 @@
 import { BRAND, createFichaDoc, type FichaDoc } from '@/lib/pdf/fichaShell';
 import { getFichaTheme } from '@/lib/pdf/fichaTheme';
+import { ensureFichaFonts } from '@/lib/pdf/fichaFonts';
 
 /**
  * Plantillas del shell único de fichas.
@@ -104,6 +105,7 @@ export interface RenderFichaOptions {
  * mismo header/logo/QR/pie, contenido intercambiable.
  */
 export async function renderFicha(options: RenderFichaOptions): Promise<Blob | undefined> {
+  await ensureFichaFonts();
   const t = getFichaTemplate(options.template);
   const f = createFichaDoc({ footerNote: t.footerNote });
 
