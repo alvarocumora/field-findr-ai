@@ -456,7 +456,7 @@ export const ParcelaDesigner3D = ({
         <Canvas
           shadows
           dpr={[1, 2]}
-          camera={{ position: [25, 20, 25], fov: 50 }}
+          camera={{ position: [25, 20, 25], fov: 50, near: 0.5, far: Math.max(4000, terrainSize * 40) }}
           gl={{ preserveDrawingBuffer: true }}
           style={{ background: 'linear-gradient(180deg, #87CEEB 0%, #B0D4E8 60%, #D4E4D0 100%)' }}
         >
@@ -480,7 +480,7 @@ export const ParcelaDesigner3D = ({
                 the sky. Skipped in top (plano) view, where the whole plane sits
                 at fog distance and would wash out. */}
             {ps.viewMode !== 'top' && (
-              <fog attach="fog" args={['#dde7dd', terrainSize * 1.15, terrainSize * 3.2]} />
+              <fog attach="fog" args={['#dfe7e0', terrainSize * 1.1, terrainSize * 2.5]} />
             )}
 
             {useRealisticTerrain ? (

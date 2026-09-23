@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bboxForPlane, staticSatelliteUrl, esriSatelliteUrl, satelliteProviders, normalizeElevations, MAX_RELIEF_M, cropResampleElevation, sampleGridBilinear, projectRingToLocal, pointInRing, hashRand, subdivideRing, gridFillPositions, vegetationScoreGrid, scatterTrees, edgeLabels } from './RealisticTerrain';
+import { bboxForPlane, staticSatelliteUrl, esriSatelliteUrl, satelliteProviders, normalizeElevations, MAX_RELIEF_M, cropResampleElevation, sampleGridBilinear, projectRingToLocal, pointInRing, hashRand, subdivideRing, gridFillPositions, vegetationScoreGrid, scatterTrees, edgeLabels, taperGridEdges, averageColorHex } from './RealisticTerrain';
 
 describe('esriSatelliteUrl', () => {
   it('builds a key-less Esri World Imagery bbox export', () => {
@@ -310,5 +310,49 @@ describe('edgeLabels', () => {
 
   it('anillo degenerado → sin cotas', () => {
     expect(edgeLabels([[0, 0], [10, 0]])).toEqual([]);
+  });
+});
+
+describe('taperGridEdges', () => {
+  const res = 20;
+  const bump = () => {
+    const g = new Float32Array(res * res);
+    for (let r = 0; r < res; r++) for (let c = 0; c < res; c++) g[r * res + c] = (r + c) % 7; // relieve irregular
+    return g;
+  };
+
+  it('todo el borde queda al nivel promedio del borde', () => {
+    const { grid, edgeLevel } = taperGridEdges(bump(), res, 0.2);
+    for (let i = 0; i < res; i++) {
+      expect(grid[i]).toBeCloseTo(edgeLevel, 5);
+      expect(grid[(res - 1) * res + i]).toBeCloseTo(edgeLevel, 5);
+      expect(grid[i * res]).toBeCloseTo(edgeLevel, 5);
+      expect(grid[i * res + res - 1]).toBeCloseTo(edgeLevel, 5);
+    }
+  });
+
+  it('no toca el centro (donde está el lote)', () => {
+    const src = bump();
+    const { grid } = taperGridEdges(src, res, 0.2);
+    const mid = 10 * res + 10;
+    expect(grid[mid]).toBe(src[mid]);
+  });
+
+  it('un terreno plano sigue plano', () => {
+    const flat = new Float32Array(res * res).fill(12);
+    const { grid, edgeLevel } = taperGridEdges(flat, res);
+    expect(edgeLevel).toBe(12);
+    expect([...grid].every((v) => v === 12)).toBe(true);
+  });
+});
+
+describe('averageColorHex', () => {
+  it('promedia los canales RGB', () => {
+    const rgba = new Uint8ClampedArray([0, 100, 200, 255, 100, 200, 0, 255]);
+    expect(averageColorHex(rgba)).toBe('#329664');
+  });
+
+  it('buffer vacío → verde por defecto', () => {
+    expect(averageColorHex(new Uint8ClampedArray())).toBe('#5d8233');
   });
 });

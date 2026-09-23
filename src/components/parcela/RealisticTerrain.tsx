@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useState, useCallback, forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
+import { Line } from '@react-three/drei';
 import { normalizePolygon, type NormalizedPolygon } from '@/lib/polygonUtils';
 
 interface RealisticTerrainProps {
@@ -129,6 +130,44 @@ export function vegetationScoreGrid(rgba: Uint8ClampedArray, res: number): Float
     out[i] = Math.max(0, Math.min(1, greenDom * 3 + 0.15)) * darkness;
   }
   return out;
+}
+
+/**
+ * Blend the outer `bandFrac` of a res×res height grid toward the mean height of
+ * its border, so the terrain plane meets the surrounding apron at one level
+ * instead of ending in cliffs. The centre (where the lot sits) is untouched.
+ */
+export function taperGridEdges(
+  grid: Float32Array, res: number, bandFrac = 0.12,
+): { grid: Float32Array; edgeLevel: number } {
+  let sum = 0, n = 0;
+  for (let i = 0; i < res; i++) {
+    sum += grid[i] + grid[(res - 1) * res + i] + grid[i * res] + grid[i * res + res - 1];
+    n += 4;
+  }
+  const edgeLevel = n ? sum / n : 0;
+  const band = Math.max(1, Math.round(res * bandFrac));
+  const out = new Float32Array(grid.length);
+  for (let r = 0; r < res; r++) {
+    for (let c = 0; c < res; c++) {
+      const d = Math.min(r, c, res - 1 - r, res - 1 - c); // cells from nearest edge
+      const t = Math.min(1, d / band);
+      const w = t * t * (3 - 2 * t); // smoothstep: 0 at edge, 1 inside
+      const i = r * res + c;
+      out[i] = edgeLevel + (grid[i] - edgeLevel) * w;
+    }
+  }
+  return { grid: out, edgeLevel };
+}
+
+/** Mean RGB of an RGBA pixel buffer as a hex colour (for the ground apron). */
+export function averageColorHex(rgba: Uint8ClampedArray): string {
+  let r = 0, g = 0, b = 0;
+  const px = rgba.length / 4;
+  if (!px) return '#5d8233';
+  for (let i = 0; i < rgba.length; i += 4) { r += rgba[i]; g += rgba[i + 1]; b += rgba[i + 2]; }
+  const hex = (v: number) => Math.round(v / px).toString(16).padStart(2, '0');
+  return `#${hex(r)}${hex(g)}${hex(b)}`;
 }
 
 export interface ScatteredTree {
@@ -407,7 +446,7 @@ async function loadStaticSatelliteTexture(
   lat: number, lng: number, planeSize: number, token: string
 ): Promise<{
   texture: THREE.Texture; tilesLoaded: number; canvasDataUrl: string; provider: string;
-  vegScore: Float32Array;
+  vegScore: Float32Array; avgColor: string;
 } | null> {
   const providers = satelliteProviders(lat, lng, planeSize, token);
 
@@ -439,9 +478,26 @@ async function loadStaticSatelliteTexture(
   maskCanvas.width = VEG_MASK_RES; maskCanvas.height = VEG_MASK_RES;
   const maskCtx = maskCanvas.getContext('2d')!;
   maskCtx.drawImage(canvas, 0, 0, VEG_MASK_RES, VEG_MASK_RES);
-  const vegScore = vegetationScoreGrid(
-    maskCtx.getImageData(0, 0, VEG_MASK_RES, VEG_MASK_RES).data, VEG_MASK_RES,
-  );
+  const maskPixels = maskCtx.getImageData(0, 0, VEG_MASK_RES, VEG_MASK_RES).data;
+  const vegScore = vegetationScoreGrid(maskPixels, VEG_MASK_RES);
+  const avgColor = averageColorHex(maskPixels);
+
+  // Fade the image border into its average colour so the terrain plane blends
+  // into the surrounding apron instead of ending in a hard satellite square.
+  const fade = Math.round(Math.min(canvas.width, canvas.height) * 0.12);
+  const edges: [number, number, number, number, number, number, number, number][] = [
+    [0, 0, 0, fade, 0, 0, canvas.width, fade],                                         // north
+    [0, canvas.height, 0, canvas.height - fade, 0, canvas.height - fade, canvas.width, fade], // south
+    [0, 0, fade, 0, 0, 0, fade, canvas.height],                                        // west
+    [canvas.width, 0, canvas.width - fade, 0, canvas.width - fade, 0, fade, canvas.height], // east
+  ];
+  for (const [x0, y0, x1, y1, rx, ry, rw, rh] of edges) {
+    const grad = ctx.createLinearGradient(x0, y0, x1, y1);
+    grad.addColorStop(0, avgColor);
+    grad.addColorStop(1, `${avgColor}00`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(rx, ry, rw, rh);
+  }
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -455,7 +511,7 @@ async function loadStaticSatelliteTexture(
   tex.needsUpdate = true;
 
   console.log('🛰️ Static satellite loaded:', { planeSize: Math.round(planeSize), provider });
-  return { texture: tex, tilesLoaded: 1, canvasDataUrl, provider, vegScore };
+  return { texture: tex, tilesLoaded: 1, canvasDataUrl, provider, vegScore, avgColor };
 }
 
 /** Instanced low-poly conifers (one draw call per part) with colour variation. */
@@ -466,14 +522,16 @@ function InstancedTrees({ trees, heightAt }: {
   const foliageRef = useRef<THREE.InstancedMesh>(null);
   const trunkRef = useRef<THREE.InstancedMesh>(null);
 
+  // Sized like the pine/eucalyptus stands of the Chilean central coast
+  // (≈8–17 m with the per-tree scale), so they read at loteo scale.
   const foliageGeo = useMemo(() => {
-    const g = new THREE.ConeGeometry(1.15, 3.4, 7);
-    g.translate(0, 2.1, 0);
+    const g = new THREE.ConeGeometry(2.3, 6.8, 7);
+    g.translate(0, 4.2, 0);
     return g;
   }, []);
   const trunkGeo = useMemo(() => {
-    const g = new THREE.CylinderGeometry(0.12, 0.2, 1.1, 5);
-    g.translate(0, 0.55, 0);
+    const g = new THREE.CylinderGeometry(0.24, 0.4, 2.2, 5);
+    g.translate(0, 1.1, 0);
     return g;
   }, []);
   useEffect(() => () => { foliageGeo.dispose(); trunkGeo.dispose(); }, [foliageGeo, trunkGeo]);
@@ -519,6 +577,8 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
     const [heightData, setHeightData] = useState<Float32Array | null>(null);
     const [texture, setTexture] = useState<THREE.Texture | null>(null);
     const [vegScore, setVegScore] = useState<Float32Array | null>(null);
+    const [apronColor, setApronColor] = useState('#6f7f55');
+    const [edgeLevel, setEdgeLevel] = useState(0);
     const { gl } = useThree();
 
     // Use normalizePolygon as single source of truth
@@ -540,8 +600,11 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
         if (cancelled) return;
         const { min, relief } = normalizeElevations(heights);
         onElevationLoaded?.(min);
-        // Real 1:1 relief (clamped so DEM spikes don't explode the surface).
-        setHeightData(relief);
+        // Real 1:1 relief (clamped so DEM spikes don't explode the surface),
+        // with the outer band eased to one level so it meets the apron flush.
+        const tapered = taperGridEdges(relief, TERRAIN_RES);
+        setEdgeLevel(tapered.edgeLevel);
+        setHeightData(tapered.grid);
       }).catch(() => { if (!cancelled) setHeightData(new Float32Array(TERRAIN_RES * TERRAIN_RES).fill(0)); });
       return () => { cancelled = true; };
     }, [lat, lng, size, mapboxToken]);
@@ -564,6 +627,7 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
           loaded.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
           setTexture(loaded);
           setVegScore(result.vegScore);
+          setApronColor(result.avgColor);
           onTextureError?.(false);
           onDebugInfo?.({
             lat, lng, zoom: SAT_ZOOM, tileMeters: Math.round(tileSizeMeters(lat, SAT_ZOOM)),
@@ -610,13 +674,27 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
     // corner-only sampling drew straight chords that floated over valleys and
     // cut through hills on sloped parcels.
     const DRAPE_STEP = 4; // metres between terrain samples along lot edges
-    const contourPositions = useMemo(() => {
-      if (norm.localCoords.length === 0) return null;
-      const pts: number[] = [];
-      for (const [x, y] of subdivideRing(norm.localCoords, DRAPE_STEP)) {
-        pts.push(x, heightAtLocal(x, y) + 0.4, -y);
-      }
-      return new Float32Array(pts);
+    // Apron = a square RING around the terrain plane (hole = the plane), so it
+    // never covers terrain that sits below the border level (valleys).
+    const apronGeometry = useMemo(() => {
+      const outer = size * 30; // reaches (almost) the horizon, fully fogged
+      const inner = (size / 2) * 0.998;
+      const shape = new THREE.Shape()
+        .moveTo(-outer, -outer).lineTo(outer, -outer).lineTo(outer, outer).lineTo(-outer, outer).lineTo(-outer, -outer);
+      const hole = new THREE.Path()
+        .moveTo(-inner, -inner).lineTo(-inner, inner).lineTo(inner, inner).lineTo(inner, -inner).lineTo(-inner, -inner);
+      shape.holes.push(hole);
+      return new THREE.ShapeGeometry(shape);
+    }, [size]);
+    useEffect(() => () => apronGeometry.dispose(), [apronGeometry]);
+
+    // Closed point list (first point repeated) for the screen-space fat line.
+    const contourPoints = useMemo(() => {
+      if (norm.localCoords.length < 3) return null;
+      const pts: [number, number, number][] = subdivideRing(norm.localCoords, DRAPE_STEP)
+        .map(([x, y]) => [x, heightAtLocal(x, y) + 0.4, -y]);
+      pts.push(pts[0]);
+      return pts;
     }, [norm.localCoords, heightAtLocal]);
 
     // Translucent fill that hugs the relief (tessellated at the elevation-grid
@@ -661,11 +739,14 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
         rctx.fillText(text, w / 2, h / 2 + 2);
         const tex = new THREE.CanvasTexture(c);
         tex.colorSpace = THREE.SRGBColorSpace;
-        const worldH = 2.4;
+        // Constant on-screen size (sizeAttenuation off): ~2.8% of the viewport
+        // height at any zoom. A fixed size in metres was unreadable once the
+        // scene spans hundreds of metres.
+        const screenH = 0.028;
         return {
-          pos: [x, heightAtLocal(x, y) + 2.6, -y] as [number, number, number],
+          pos: [x, heightAtLocal(x, y) + 1.5, -y] as [number, number, number],
           tex,
-          scale: [(w / h) * worldH, worldH, 1] as [number, number, number],
+          scale: [(w / h) * screenH, screenH, 1] as [number, number, number],
         };
       }).filter((s): s is NonNullable<typeof s> => s !== null);
     }, [norm.localCoords, heightData, heightAtLocal]);
@@ -729,13 +810,20 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
           </mesh>
         </group>
 
+        {/* Ground apron in the imagery's average colour, flush with the eased
+            terrain border: the view fades into land and fog instead of
+            showing the plane as a floating square against the sky. */}
+        <mesh geometry={apronGeometry} rotation={[-Math.PI / 2, 0, 0]} position={[0, edgeLevel - 0.05, 0]} receiveShadow>
+          <meshStandardMaterial color={apronColor} roughness={1} metalness={0} />
+        </mesh>
+
         {/* Neighbouring lots — dimmed outlines draped on the terrain. */}
         {neighborSegments && neighborSegments.length >= 6 && (
           <lineSegments renderOrder={0}>
             <bufferGeometry>
               <bufferAttribute attach="attributes-position" count={neighborSegments.length / 3} array={neighborSegments} itemSize={3} />
             </bufferGeometry>
-            <lineBasicMaterial color="#dbeafe" transparent opacity={0.35} toneMapped={false} />
+            <lineBasicMaterial color="#dbeafe" transparent opacity={0.28} toneMapped={false} />
           </lineSegments>
         )}
 
@@ -752,23 +840,15 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
           </mesh>
         )}
 
-        {/* Lot boundary, twice: a solid line that respects the terrain depth,
-            plus a faint x-ray pass so the deslinde never fully disappears
-            behind a hill — without the old always-on-top neon glow. */}
-        {contourPositions && contourPositions.length >= 9 && (
+        {/* Lot boundary as screen-space fat lines (WebGL line primitives are
+            always 1px, which vanished over satellite imagery), twice: a solid
+            pass that respects terrain depth + a faint x-ray pass so the
+            deslinde never fully disappears behind a hill. */}
+        {contourPoints && (
           <>
-            <lineLoop renderOrder={3}>
-              <bufferGeometry>
-                <bufferAttribute attach="attributes-position" count={contourPositions.length / 3} array={contourPositions} itemSize={3} />
-              </bufferGeometry>
-              <lineBasicMaterial color="#2fd47c" transparent opacity={0.95} toneMapped={false} />
-            </lineLoop>
-            <lineLoop renderOrder={998}>
-              <bufferGeometry>
-                <bufferAttribute attach="attributes-position" count={contourPositions.length / 3} array={contourPositions} itemSize={3} />
-              </bufferGeometry>
-              <lineBasicMaterial color="#2fd47c" depthTest={false} transparent opacity={0.22} toneMapped={false} />
-            </lineLoop>
+            <Line points={contourPoints} color="#3ee58f" lineWidth={3.5} renderOrder={3} toneMapped={false} />
+            <Line points={contourPoints} color="#3ee58f" lineWidth={2} renderOrder={998}
+              depthTest={false} transparent opacity={0.3} toneMapped={false} />
           </>
         )}
 
@@ -789,7 +869,7 @@ export const RealisticTerrain = forwardRef<TerrainHandle, RealisticTerrainProps>
         {/* Edge-length labels (cotas del deslinde). */}
         {edgeLabelSprites.map((s, i) => (
           <sprite key={`cota-${i}`} position={s.pos} scale={s.scale} renderOrder={997}>
-            <spriteMaterial map={s.tex} depthTest={false} transparent toneMapped={false} />
+            <spriteMaterial map={s.tex} depthTest={false} transparent toneMapped={false} sizeAttenuation={false} fog={false} />
           </sprite>
         ))}
       </>
