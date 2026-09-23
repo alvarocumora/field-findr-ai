@@ -1,6 +1,8 @@
 import { BRAND, fetchImageAsBase64, themeFont } from '@/lib/pdf/fichaShell';
 import { renderFicha } from '@/lib/pdf/fichaTemplates';
 import type { FichaDoc } from '@/lib/pdf/fichaShell';
+import { projectCanonicalUrl, SITE_URL } from '@/lib/landing/paths';
+import { referenceProjectMedia } from './projectMedia';
 
 /**
  * Kit único de material descargable por proyecto (OFERTA TERRENOS).
@@ -32,6 +34,8 @@ export interface KitProject {
   latitude?: number | null;
   longitude?: number | null;
   images?: string[] | null;
+  /** Optional captions; illustrative images must be explicitly labelled. */
+  media?: { src: string; caption: string }[];
   highlights?: string[];
   /** Puntos de interés: nombre + distancia legible. */
   pois?: { name: string; detail: string }[];
@@ -51,12 +55,20 @@ export interface KitOptions {
   mapboxToken?: string | null;
   /** Ruta pública del proyecto; por defecto /p/:slug. */
   path?: string;
+  output?: 'download' | 'blob';
+  editorial?: {
+    headline?: string;
+    pitch?: string;
+    sections?: { title: string; text: string }[];
+    projection?: string;
+    specs?: { label: string; value: string }[];
+  };
 }
 
 const clp = (n: number | null | undefined) =>
-  n == null || !Number.isFinite(Number(n)) ? 'Consultar' : '$' + Math.round(Number(n)).toLocaleString('es-CL');
+  n == null || !Number.isFinite(Number(n)) || Number(n) <= 0 ? 'Consultar' : '$' + Math.round(Number(n)).toLocaleString('es-CL');
 const m2 = (n: number | null | undefined) =>
-  n == null ? '—' : `${Math.round(Number(n)).toLocaleString('es-CL')} m²`;
+  n == null || !Number.isFinite(Number(n)) || Number(n) <= 0 ? '—' : `${Math.round(Number(n)).toLocaleString('es-CL')} m²`;
 
 const STATUS_LABEL: Record<string, string> = {
   available: 'Disponible',
@@ -64,7 +76,7 @@ const STATUS_LABEL: Record<string, string> = {
   sold: 'Vendido',
 };
 
-const statusOf = (l: KitLot) => STATUS_LABEL[(l.status ?? 'available') as string] ?? 'Disponible';
+const statusOf = (l: KitLot) => STATUS_LABEL[l.status ?? ''] ?? 'Por confirmar';
 
 const sortLots = (lots: KitLot[]) =>
   [...lots].sort((a, b) => {
@@ -75,7 +87,24 @@ const sortLots = (lots: KitLot[]) =>
   });
 
 export const projectPath = (p: KitProject, o: KitOptions = {}) =>
-  o.path ?? (p.slug ? `/p/${p.slug}` : `/proyecto/${p.id}`);
+  o.path ?? projectCanonicalUrl(p).slice(SITE_URL.length);
+
+export const projectActions = (project: KitProject, options: KitOptions = {}) => {
+  const path = projectPath(project, options);
+  const actions = [{ label: 'Ver proyecto y disponibilidad', url: path }];
+  const lat = project.latitude;
+  const lng = project.longitude;
+  if (lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+    actions.push({ label: 'Cómo llegar · Google Maps', url: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` });
+  }
+  const digits = project.contact?.whatsapp?.replace(/\D/g, '');
+  if (digits && /^\d{8,15}$/.test(digits)) {
+    actions.push({ label: 'Consultar por WhatsApp', url: `https://wa.me/${digits}?text=${encodeURIComponent(`Hola, quiero información de ${project.name}.`)}` });
+  }
+  const email = project.contact?.email?.trim();
+  if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) actions.push({ label: 'Escribir al equipo comercial', url: `mailto:${email}?subject=${encodeURIComponent(project.name)}` });
+  return actions;
+};
 
 const toRing = (polygon: unknown): [number, number][] | null => {
   const raw = Array.isArray(polygon) ? polygon : null;
@@ -228,10 +257,10 @@ const table = (
   f.y += 5;
 };
 
-const summarize = (lots: KitLot[]) => {
-  const priced = lots.filter((l) => Number(l.price) > 0).map((l) => Number(l.price));
-  const areas = lots.filter((l) => Number(l.area) > 0).map((l) => Number(l.area));
-  const count = (s: string) => lots.filter((l) => (l.status ?? 'available') === s).length;
+export const summarize = (lots: KitLot[]) => {
+  const priced = lots.filter((l) => l.status === 'available' && Number.isFinite(Number(l.price)) && Number(l.price) > 0).map((l) => Number(l.price));
+  const areas = lots.filter((l) => Number.isFinite(Number(l.area)) && Number(l.area) > 0).map((l) => Number(l.area));
+  const count = (s: string) => lots.filter((l) => l.status === s).length;
   return {
     total: lots.length,
     available: count('available'),
@@ -252,7 +281,7 @@ const conditionLines = (project: KitProject): string[] => {
   if (c.reservation_deposit) out.push(`Reserva desde ${clp(c.reservation_deposit)}.`);
   if (c.min_down_payment_pct) out.push(`Pie mínimo ${c.min_down_payment_pct}%.`);
   if (c.max_term_months) out.push(`Financiamiento directo hasta ${c.max_term_months} meses.`);
-  if (c.interest_rate != null) out.push(`Tasa referencial ${c.interest_rate}% anual.`);
+  if (c.interest_rate != null) out.push(`Tasa referencial ${c.interest_rate}%. Confirmar periodicidad con el equipo comercial.`);
   if (c.includes_urbanization) out.push('Precio incluye urbanización comprometida.');
   if (c.delivery_date) out.push(`Entrega estimada: ${c.delivery_date}.`);
   if (c.payment_methods?.length) out.push(`Medios de pago: ${c.payment_methods.join(', ')}.`);
@@ -272,33 +301,59 @@ export const generateProjectDossierPdf = async (
   const path = projectPath(project, options);
   const location = [project.location, project.region].filter(Boolean).join(', ');
 
-  await renderFicha({
+  // Load concurrently, bounded to five assets. No invented replacement photos.
+  const configuredMedia = [...(project.media ?? []), ...(project.images ?? []).map(src => ({ src, caption: 'Imagen del proyecto · referencial' }))].filter(item => item.src);
+  const sourceMedia = configuredMedia.length ? configuredMedia : referenceProjectMedia(project.slug);
+  const uniqueMedia = sourceMedia.filter((item, i, all) => item.src && all.findIndex(other => other.src === item.src) === i).slice(0, 5);
+  const loaded = await Promise.all(uniqueMedia.map(async item => ({ ...item, data: await fetchImageAsBase64(item.src) })));
+  const media = loaded.filter((item): item is typeof item & { data: string } => Boolean(item.data));
+
+  return renderFicha({
     template: 'proyecto',
     eyebrow: `Dossier comercial${location ? ` · ${location}` : ''}`,
     title: project.name,
     subtitle: location || undefined,
     qrUrl: path,
     filename: `Dossier-${safeName(project.name)}.pdf`,
+    output: options.output,
     body: async (f) => {
-      const cover = project.images?.[0];
-      if (cover) {
-        const base64 = await fetchImageAsBase64(cover);
-        if (base64) f.image(base64, f.contentW * 0.42, 'Imagen referencial del proyecto');
-      }
+      if (media[0]) f.image(media[0].data, f.contentW * 0.46, media[0].caption);
+      if (loaded.some(item => !item.data)) f.note('Algunas imágenes no pudieron cargarse. Puedes revisar la galería completa en la ficha online.');
+      f.actions(projectActions(project, options).slice(0, 2));
 
       f.kpis(
         [
           ['Parcelas', String(s.total), `${s.available} disponibles`],
           ['Superficies', s.areaMin ? `${m2(s.areaMin)} – ${m2(s.areaMax)}` : '—', s.areaTotal ? `Total ${(s.areaTotal / 10000).toFixed(1)} ha` : undefined],
           ['Precio desde', clp(s.priceMin), s.priceMax ? `Hasta ${clp(s.priceMax)}` : undefined],
-          ['Ubicacion', location || '—', 'Chile'],
+          ['Ubicación', location || '—', 'Chile'],
         ] as [string, string, string?][],
         2
       );
 
-      if (project.description) {
+      if (options.editorial?.headline) f.paragraph(options.editorial.headline, { size: 13 });
+      if (options.editorial?.pitch || project.description) {
         f.section('El proyecto');
-        f.paragraph(project.description);
+        f.paragraph(options.editorial?.pitch || project.description!);
+      }
+
+      if (media.length > 1) {
+        f.ensure(80);
+        f.section('Galería del proyecto y entorno');
+        f.gallery(media.slice(1));
+      }
+      for (const section of options.editorial?.sections ?? []) {
+        f.section(section.title);
+        f.paragraph(section.text);
+      }
+      if (options.editorial?.projection) {
+        f.section('Escenario orientativo');
+        f.paragraph(options.editorial.projection);
+        f.note('Texto asistido por IA: sus proyecciones requieren revisión comercial y no garantizan rentabilidad.');
+      }
+      if (options.editorial?.specs?.length) {
+        f.section('Ficha técnica');
+        options.editorial.specs.forEach(spec => f.kv(spec.label, spec.value));
       }
 
       if (project.highlights?.length) {
@@ -311,6 +366,7 @@ export const generateProjectDossierPdf = async (
         if (url) {
           const img = await fetchImageAsBase64(url);
           if (img) {
+            f.ensure(f.contentW * (560 / 900) + 28);
             f.section('Plano del loteo');
             f.image(img, f.contentW * (560 / 900), 'Imagen satelital con los deslindes referenciales de las parcelas', 'PNG');
           }
@@ -328,7 +384,7 @@ export const generateProjectDossierPdf = async (
         f.bullets(conds);
       }
 
-      const priced = sortLots(lots.filter((l) => (l.status ?? 'available') === 'available')).slice(0, 24);
+      const priced = sortLots(lots.filter((l) => l.status === 'available')).slice(0, 12);
       if (priced.length) {
         f.section('Parcelas disponibles (muestra)');
         table(
@@ -344,11 +400,12 @@ export const generateProjectDossierPdf = async (
           ['left', 'right', 'right', 'right']
         );
         if (s.available > priced.length) {
-          f.paragraph(`Listado completo (${s.available} parcelas disponibles) en la lista de precios adjunta y en ofertaterrenos.com${path}.`);
+          f.paragraph(`Consulta las ${s.available} parcelas disponibles en la ficha online o descarga la lista de precios completa desde el proyecto.`);
         }
       }
 
       f.section('Contacto');
+      f.actions(projectActions(project, options));
       if (project.contact?.phone) f.kv('Telefono', project.contact.phone);
       if (project.contact?.whatsapp) f.kv('WhatsApp', project.contact.whatsapp);
       if (project.contact?.email) f.kv('Email', project.contact.email);
@@ -366,13 +423,14 @@ export const generateProjectPriceListPdf = async (
   const s = summarize(lots);
   const path = projectPath(project, options);
 
-  await renderFicha({
+  return renderFicha({
     template: 'proyecto',
     eyebrow: 'Lista de precios',
     title: project.name,
     subtitle: `Vigente al ${new Date().toLocaleDateString('es-CL')}`,
     qrUrl: path,
     filename: `Lista-Precios-${safeName(project.name)}.pdf`,
+    output: options.output,
     body: (f) => {
       f.kpis(
         [
@@ -394,6 +452,7 @@ export const generateProjectPriceListPdf = async (
         [20, 26, 30, 22, 22],
         ['left', 'right', 'right', 'right', 'left']
       );
+      f.actions(projectActions(project, options));
     },
   });
 };
@@ -405,13 +464,14 @@ export const generateProjectMasterplanPdf = async (
   options: KitOptions = {}
 ) => {
   const path = projectPath(project, options);
-  await renderFicha({
+  return renderFicha({
     template: 'proyecto',
     eyebrow: 'Plano del loteo',
     title: project.name,
     subtitle: [project.location, project.region].filter(Boolean).join(', ') || undefined,
     qrUrl: path,
     filename: `Plano-${safeName(project.name)}.pdf`,
+    output: options.output,
     body: async (f) => {
       let drew = false;
       if (options.mapboxToken) {
@@ -425,6 +485,7 @@ export const generateProjectMasterplanPdf = async (
         }
       }
       if (!drew) f.note('No fue posible generar la imagen del plano en este momento. Consulta el plano interactivo en la ficha online.');
+      f.actions(projectActions(project, options));
 
       f.section('Cuadro de superficies');
       table(
@@ -467,13 +528,14 @@ export const generateProjectLotSheetsPdf = async (
   const path = projectPath(project, options);
   const ordered = sortLots(lots);
 
-  await renderFicha({
+  return renderFicha({
     template: 'proyecto',
     eyebrow: 'Fichas de parcelas',
     title: project.name,
     subtitle: `${ordered.length} parcelas · ${new Date().toLocaleDateString('es-CL')}`,
     qrUrl: path,
     filename: `Fichas-Parcelas-${safeName(project.name)}.pdf`,
+    output: options.output,
     body: (f) => {
       ordered.forEach((l, i) => {
         if (i > 0) f.newPage();
@@ -492,6 +554,7 @@ export const generateProjectLotSheetsPdf = async (
         }
         f.kv('Proyecto', project.name);
         f.kv('Ficha online', `ofertaterrenos.com${path}`);
+        f.actions(projectActions(project, options));
       });
     },
   });

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Download, FileText, Map as MapIcon, Table2, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Download, FileText, Map as MapIcon, Table2, Loader2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -18,7 +18,7 @@ import {
   type KitProject,
 } from '@/lib/pdf/projectKit';
 
-type KitId = 'dossier' | 'precios' | 'plano' | 'csv' | 'fichas';
+type KitId = 'dossier' | 'precios' | 'plano' | 'csv' | 'fichas' | 'preview';
 
 interface Props {
   project: KitProject;
@@ -57,6 +57,8 @@ export const ProjectDownloads = ({
   const [busy, setBusy] = useState<KitId | null>(null);
   const [gateOpen, setGateOpen] = useState(false);
   const [pending, setPending] = useState<KitId | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
   const hasLead = () => {
     if (!requireLead || user) return true;
@@ -68,15 +70,20 @@ export const ProjectDownloads = ({
   };
 
   const run = async (id: KitId) => {
+    if (busy) return;
     setBusy(id);
     try {
       const opts = { mapboxToken: token };
+      if (id === 'preview') {
+        const blob = await generateProjectDossierPdf(project, lots, { ...opts, output: 'blob' });
+        if (blob) setPreviewUrl(URL.createObjectURL(blob));
+      }
       if (id === 'dossier') await generateProjectDossierPdf(project, lots, opts);
       if (id === 'precios') await generateProjectPriceListPdf(project, lots, opts);
       if (id === 'plano') await generateProjectMasterplanPdf(project, lots, opts);
       if (id === 'csv') exportProjectPriceListCsv(project, lots);
       if (id === 'fichas') await generateProjectLotSheetsPdf(project, lots, opts);
-      track('project_material_download', { project_id: project.id, material: id });
+      if (id !== 'preview') track('project_material_download', { project_id: project.id, material: id });
     } catch (e) {
       console.error('project material download failed', e);
       toast.error('No pudimos generar el documento. Intenta nuevamente.');
@@ -95,7 +102,7 @@ export const ProjectDownloads = ({
   };
 
   const items: { id: KitId; label: string; hint: string; icon: typeof FileText }[] = [
-    { id: 'dossier', label: 'Dossier del proyecto', hint: 'PDF · resumen, plano y condiciones', icon: FileText },
+    { id: 'dossier', label: 'Dossier del proyecto', hint: 'PDF visual · galería, plano y enlaces', icon: FileText },
     { id: 'precios', label: 'Lista de precios', hint: 'PDF · todas las parcelas', icon: Table2 },
     { id: 'plano', label: 'Plano del loteo', hint: 'PDF · cuadro de superficies', icon: MapIcon },
     { id: 'csv', label: 'Lista de precios (Excel)', hint: 'CSV · para trabajarlo aparte', icon: Download },
@@ -134,10 +141,30 @@ export const ProjectDownloads = ({
                   </>
                 )}
               </Button>
+              {it.id === 'dossier' && (
+                <Button variant="ghost" size="sm" disabled={busy !== null || lots.length === 0} onClick={() => request('preview')}>
+                  {busy === 'preview' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Eye className="h-4 w-4 mr-2" />}
+                  Vista previa
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <Dialog open={Boolean(previewUrl)} onOpenChange={open => { if (!open) setPreviewUrl(null); }}>
+        <DialogContent className="max-w-5xl h-[90dvh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Dossier · {project.name}</DialogTitle>
+            <DialogDescription>Revisa las imágenes y usa los botones del PDF para abrir la ficha online o contactar al equipo.</DialogDescription>
+          </DialogHeader>
+          {previewUrl && <>
+            <iframe title={`Vista previa del dossier de ${project.name}`} src={previewUrl} className="w-full flex-1 min-h-0 rounded border" />
+            <p className="text-xs text-muted-foreground">Si tu navegador no muestra el PDF, descárgalo para abrirlo.</p>
+            <Button asChild><a href={previewUrl} download={`Dossier-${project.slug || project.id}.pdf`} onClick={() => track('project_material_download', { project_id: project.id, material: 'dossier' })}><Download className="h-4 w-4 mr-2" />Descargar este PDF</a></Button>
+          </>}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={gateOpen} onOpenChange={setGateOpen}>
         <DialogContent className="max-w-md">

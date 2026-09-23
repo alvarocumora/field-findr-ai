@@ -92,6 +92,7 @@ export interface RenderFichaOptions {
   /** Ruta o URL pública para el QR de cabecera. */
   qrUrl?: string;
   filename: string;
+  output?: 'download' | 'blob';
   /** Contenido específico de la ficha, con las primitivas del shell. */
   body: (f: FichaDoc, t: FichaTemplate) => void | Promise<void>;
   /** Reemplaza el disclaimer de la plantilla (null lo omite). */
@@ -102,7 +103,7 @@ export interface RenderFichaOptions {
  * Construye y descarga una ficha aplicando la plantilla indicada:
  * mismo header/logo/QR/pie, contenido intercambiable.
  */
-export async function renderFicha(options: RenderFichaOptions): Promise<void> {
+export async function renderFicha(options: RenderFichaOptions): Promise<Blob | undefined> {
   const t = getFichaTemplate(options.template);
   const f = createFichaDoc({ footerNote: t.footerNote });
 
@@ -122,6 +123,7 @@ export async function renderFicha(options: RenderFichaOptions): Promise<void> {
   const note = options.disclaimer === undefined ? t.disclaimer({ date }) : options.disclaimer;
   if (note) f.note(note);
 
+  if (options.output === 'blob') return f.blob();
   f.save(options.filename);
 }
 

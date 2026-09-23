@@ -14,6 +14,7 @@ import { VEL_PROJECT } from './data/project';
 import { ProjectDownloadsBySlug } from '@/components/projects/ProjectDownloadsBySlug';
 import { useSEO } from '@/hooks/useSEO';
 import heroImg from '@/assets/valle-escondido-licanten/vel-valle.jpg';
+import { VEL_CONTACT } from './data/commercial';
 
 const canonicalUrl = 'https://ofertaterrenos.com/p/valle-escondido-licanten';
 
@@ -94,7 +95,7 @@ export default function VelLanding() {
         <VelLotsGrid />
         <div className="bg-background py-14">
           <div className="container max-w-5xl">
-            <ProjectDownloadsBySlug slug="valle-escondido-licanten" />
+            <ProjectDownloadsBySlug slug="valle-escondido-licanten" fallbackContact={VEL_CONTACT} />
           </div>
         </div>
         <VelContacto />

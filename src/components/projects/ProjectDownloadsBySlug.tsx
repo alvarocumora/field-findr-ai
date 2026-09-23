@@ -1,13 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectDownloads } from '@/components/projects/ProjectDownloads';
-import type { KitLot } from '@/lib/pdf/projectKit';
+import type { KitLot, KitProject } from '@/lib/pdf/projectKit';
+import { parseLandingConfig } from '@/lib/landing/config';
 
 interface Props {
   slug: string;
   className?: string;
   title?: string;
   description?: string;
+  fallbackMedia?: KitProject['media'];
+  fallbackContact?: KitProject['contact'];
 }
 
 /**
@@ -15,20 +18,22 @@ interface Props {
  * desde la base por slug, de modo que cada experiencia cinematográfica ofrezca
  * el mismo kit (dossier, precios, plano) sin duplicar lógica.
  */
-export const ProjectDownloadsBySlug = ({ slug, className, title, description }: Props) => {
+export const ProjectDownloadsBySlug = ({ slug, className, title, description, fallbackMedia, fallbackContact }: Props) => {
   const { data: project } = useQuery({
     queryKey: ['kit-project', slug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, user_id, name, slug, description, location, region, latitude, longitude, images')
+        .select('id, user_id, name, slug, description, location, region, latitude, longitude, images, landing_config, commercial_conditions')
         .eq('slug' as never, slug as never)
+        .eq('status', 'active')
         .maybeSingle();
       if (error) throw error;
       return data as unknown as {
         id: string; user_id: string; name: string; slug: string | null;
         description: string | null; location: string | null; region: string | null;
         latitude: number | null; longitude: number | null; images: string[] | null;
+        landing_config: unknown; commercial_conditions: KitProject['conditions'];
       } | null;
     },
   });
@@ -44,6 +49,8 @@ export const ProjectDownloadsBySlug = ({ slug, className, title, description }: 
   });
 
   if (!project) return null;
+  const cfg = parseLandingConfig(project.landing_config);
+  const images = [cfg.hero.image, ...cfg.gallery, ...(project.images ?? [])].filter((src): src is string => Boolean(src));
 
   return (
     <ProjectDownloads
@@ -59,7 +66,15 @@ export const ProjectDownloadsBySlug = ({ slug, className, title, description }: 
         region: project.region,
         latitude: project.latitude,
         longitude: project.longitude,
-        images: project.images,
+        images,
+        media: images.length ? undefined : fallbackMedia,
+        highlights: cfg.highlights,
+        conditions: project.commercial_conditions,
+        contact: {
+          phone: cfg.contact.phone || fallbackContact?.phone,
+          whatsapp: cfg.contact.whatsapp || fallbackContact?.whatsapp,
+          email: cfg.contact.email || fallbackContact?.email,
+        },
       }}
       lots={lots}
       projectOwnerId={project.user_id}

@@ -11,6 +11,8 @@ import {
 import { generateProjectBrochurePDF, type BrochureAIContent } from '@/lib/brochurePdfGenerator';
 import { useBrochureGenerator } from '@/hooks/useBrochureGenerator';
 import { ProjectDownloads } from '@/components/projects/ProjectDownloads';
+import { parseLandingConfig } from '@/lib/landing/config';
+import { toast } from 'sonner';
 
 interface CommercialConditions {
   min_down_payment_pct?: number;
@@ -39,9 +41,11 @@ export const ProjectBrochureTab = ({ project, lots }: Props) => {
   const hasConditions = conditions.min_down_payment_pct || conditions.max_term_months || conditions.interest_rate;
   const { aiContent, isLoading, generateBrochureContent, clearContent } = useBrochureGenerator();
   const [showPreview, setShowPreview] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const cfg = parseLandingConfig(project.landing_config);
 
   const available = lots.filter(l => l.status === 'available');
-  const prices = lots.filter(l => l.price).map(l => l.price!);
+  const prices = available.filter(l => Number.isFinite(Number(l.price)) && Number(l.price) > 0).map(l => Number(l.price));
   const areas = lots.map(l => Number(l.area)).filter(a => a > 0);
   const priceMin = prices.length > 0 ? Math.min(...prices) : null;
   const priceMax = prices.length > 0 ? Math.max(...prices) : null;
@@ -66,21 +70,16 @@ export const ProjectBrochureTab = ({ project, lots }: Props) => {
     if (result) setShowPreview(true);
   };
 
-  const handleDownloadPremium = () => {
-    generateProjectBrochurePDF({
-      project,
-      lots,
-      conditions,
-      aiContent: aiContent || undefined,
-    });
-  };
-
-  const handleDownloadBasic = () => {
-    generateProjectBrochurePDF({
-      project,
-      lots,
-      conditions,
-    });
+  const downloadBrochure = async (premium: boolean) => {
+    if (pdfBusy) return;
+    setPdfBusy(true);
+    try {
+      await generateProjectBrochurePDF({ project, lots, conditions, aiContent: premium ? aiContent || undefined : undefined });
+    } catch {
+      toast.error('No pudimos generar el PDF. Intenta nuevamente.');
+    } finally {
+      setPdfBusy(false);
+    }
   };
 
   return (
@@ -96,8 +95,10 @@ export const ProjectBrochureTab = ({ project, lots }: Props) => {
           region: project.region ?? null,
           latitude: project.latitude ?? null,
           longitude: project.longitude ?? null,
-          images: Array.isArray(project.images) ? project.images : null,
-          conditions: hasConditions ? conditions : null,
+          images: [cfg.hero.image, ...cfg.gallery, ...(Array.isArray(project.images) ? project.images : [])].filter(Boolean),
+          conditions,
+          highlights: cfg.highlights,
+          contact: cfg.contact,
         }}
         lots={lots}
         requireLead={false}
@@ -311,10 +312,11 @@ export const ProjectBrochureTab = ({ project, lots }: Props) => {
           <Button
             size="lg"
             className="w-full gap-2"
-            onClick={handleDownloadPremium}
+            onClick={() => void downloadBrochure(true)}
+            disabled={pdfBusy}
           >
             <Download className="h-5 w-5" />
-            Descargar Brochure Premium PDF
+            {pdfBusy ? 'Generando PDF…' : 'Descargar Brochure Premium PDF'}
           </Button>
         )}
 
@@ -322,10 +324,11 @@ export const ProjectBrochureTab = ({ project, lots }: Props) => {
           variant="outline"
           size="lg"
           className="w-full gap-2"
-          onClick={handleDownloadBasic}
+          onClick={() => void downloadBrochure(false)}
+          disabled={pdfBusy}
         >
           <FileText className="h-5 w-5" />
-          Descargar Brochure Básico
+          {pdfBusy ? 'Generando PDF…' : 'Descargar Brochure Básico'}
         </Button>
       </div>
     </div>

@@ -351,7 +351,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
             region: (project.region as string | null) ?? null,
             latitude: (project.latitude as number | null) ?? null,
             longitude: (project.longitude as number | null) ?? null,
-            images: gallery,
+            images: [heroImage, ...gallery].filter((src): src is string => Boolean(src)),
             highlights: cfg.highlights,
             contact: cfg.contact,
           }}
