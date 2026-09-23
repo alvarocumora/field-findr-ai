@@ -1,0 +1,49 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { projectSocialPlugin } from '../../scripts/project-social-plugin';
+
+const id = 'b4363fda-e99f-400d-ae95-2cbc8244b770';
+const project = { id, slug: 'test-project', name: 'Paisaje real', status: 'active', images: ['https://example.com/photo.jpg'] };
+let temp: string | undefined;
+afterEach(async () => {
+  vi.unstubAllGlobals();
+  if (temp) await rm(temp, { recursive: true, force: true });
+});
+
+async function setup() {
+  temp = await mkdtemp(join(tmpdir(), 'project-social-test-'));
+  await mkdir(join(temp, 'dist'));
+  await writeFile(join(temp, 'dist/index.html'), '<head><title>Generic</title></head><body><script src="/assets/app.js"></script></body>');
+  const plugin = projectSocialPlugin('https://example.supabase.co', 'public-test-key');
+  (plugin.configResolved as Function)({ root: temp, build: { outDir: 'dist' } });
+  return () => (plugin.closeBundle as Function)();
+}
+
+describe('static social preview build', () => {
+  it('exports readable and UUID routes using only public inventory', async () => {
+    const run = await setup();
+    const fetchMock = vi.fn(async (url: string) => new Response(JSON.stringify(
+      url.includes('/rpc/') ? [{ status: 'available', price: 19000000 }, { status: 'sold', price: 1 }]
+        : [project, { ...project, id: 'private', status: 'draft' }],
+    )));
+    vi.stubGlobal('fetch', fetchMock);
+    await run();
+    const html = await readFile(join(temp!, 'dist/p/test-project/index.html'), 'utf8');
+    expect(html).toContain('Paisaje real');
+    expect(html).toContain('1 parcelas disponibles');
+    expect(html).toContain('19.000.000');
+    expect(html).toContain('https://example.com/photo.jpg');
+    expect(await readFile(join(temp!, `dist/proyecto/${id}/index.html`), 'utf8')).toBe(html);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0][0]).toContain('status=eq.active');
+    const report = JSON.parse(await readFile(join(temp!, 'dist/project-previews.json'), 'utf8'));
+    expect(report.routes).toEqual([`/proyecto/${id}`, '/p/test-project']);
+  });
+  it('fails the build on API errors instead of publishing misleading generic cards', async () => {
+    const run = await setup();
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('unavailable', { status: 503 })));
+    await expect(run()).rejects.toThrow('503');
+  });
+});

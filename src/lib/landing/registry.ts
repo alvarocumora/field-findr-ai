@@ -22,12 +22,4 @@ export const bespokeLandings: Record<string, LazyExoticComponent<ComponentType>>
 };
 
 /** URL canónica pública de cada landing (las históricas mandan por SEO). */
-export const landingCanonicalPath: Record<string, string> = {
-  'explora-park': '/explora-park',
-  huellelhue: '/huellelhue',
-  'playa-alvaro': '/playa-alvaro',
-  'forestal-valle-escondido': '/forestal-valle-escondido',
-};
-
-export const canonicalPathForSlug = (slug: string) =>
-  landingCanonicalPath[slug] ?? `/p/${slug}`;
+export { landingCanonicalPath, canonicalPathForSlug } from './paths';

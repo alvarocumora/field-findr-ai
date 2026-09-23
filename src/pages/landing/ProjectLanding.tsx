@@ -1,5 +1,5 @@
-import { Suspense, useMemo, useRef, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowRight, CalendarDays, CheckCircle2, MapPin, Mail, MessageCircle, Phone, Ruler, Store, Trees,
@@ -19,6 +19,8 @@ import { LandingLeadForm } from './LandingLeadForm';
 import { bespokeLandings, canonicalPathForSlug } from '@/lib/landing/registry';
 import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
 import { ProjectDownloads } from '@/components/projects/ProjectDownloads';
+import { ShareButtons } from '@/components/social/ShareButtons';
+import { projectSocial } from '@/lib/landing/projectSocial';
 
 
 const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
@@ -31,6 +33,9 @@ const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
  */
 const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
   const params = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  const sharedLotId = searchParams.get('lote');
+  const openedSharedLot = useRef<string | null>(null);
   const slug = slugProp ?? params.slug;
   const Bespoke = slug ? bespokeLandings[slug] : undefined;
   const [leadLot, setLeadLot] = useState<{ id: string; lot_number?: string | null } | null>(null);
@@ -51,16 +56,15 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
         .from('projects')
         .select('*')
         .eq('slug' as never, slug as never)
+        .eq('status', 'active')
         .maybeSingle();
       if (error) throw error;
-      return data as (Record<string, unknown> & {
-        id: string; user_id: string; name: string;
-      }) | null;
+      return data;
     },
     enabled: !!slug && !Bespoke,
   });
 
-  const { data: lots = [] } = useQuery({
+  const { data: lots = [], isLoading: lotsLoading, error: lotsError } = useQuery({
     queryKey: ['landing-lots', project?.id],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: project!.id });
@@ -78,9 +82,20 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
   const cfg = useMemo(() => parseLandingConfig(project?.landing_config), [project?.landing_config]);
   const stats = useMemo(() => summarizeLots(lots), [lots]);
 
+  useEffect(() => {
+    const key = `${project?.id}:${sharedLotId}`;
+    if (!sharedLotId || openedSharedLot.current === key || !lots.some(lot => lot.id === sharedLotId)) return;
+    openedSharedLot.current = key;
+    setOnlyAvailable(false);
+    setSelectedLotId(sharedLotId);
+    setLotSheetOpen(true);
+  }, [sharedLotId, lots, project?.id]);
+
+  const social = project ? projectSocial(project, lotsLoading || lotsError ? undefined : lots) : undefined;
+
   // SEO único por proyecto + canónica histórica cuando existe.
   const seoTitle = project
-    ? `${(cfg.hero.title as string | undefined) ?? project.name}${stats.total ? ` — ${stats.total} lotes` : ''} en venta`
+    ? `${(cfg.hero.title as string | undefined) ?? project.name}`
     : 'Proyecto de lotes';
   const seoDescription = project
     ? ((cfg.hero.subtitle as string | undefined) ??
@@ -91,7 +106,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
 
   useSEO({
     title: seoTitle,
-    description: seoDescription,
+    description: social?.description,
     type: 'website',
     url: slug ? `https://ofertaterrenos.com${canonicalPathForSlug(slug)}` : undefined,
     canonicalUrl: slug ? `https://ofertaterrenos.com${canonicalPathForSlug(slug)}` : undefined,
@@ -100,13 +115,14 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
     jsonLd: project
       ? buildProjectJsonLd({
           id: project.id,
+          slug: project.slug,
           name: project.name,
           description: (project.description as string | null) ?? null,
           city: (project.location as string | null) ?? null,
           region: (project.region as string | null) ?? null,
           images: Array.isArray(project.images) ? (project.images as string[]) : null,
           total_lots: stats.total || null,
-          available_lots: stats.available || null,
+          available_lots: stats.available,
         })
       : undefined,
   });
@@ -153,7 +169,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
   const goMasterplan = () => masterplanRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const visibleLots = onlyAvailable
-    ? lots.filter((l) => (l.status ?? 'available') === 'available')
+    ? lots.filter((l) => l.status === 'available')
     : lots;
   const selectedIndex = visibleLots.findIndex((l) => l.id === selectedLotId);
   const selectedLot = (selectedIndex >= 0 ? visibleLots[selectedIndex] : null) as SalesLot | null;
@@ -183,6 +199,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
           </div>
           {subtitle && <p className="mt-3 max-w-2xl text-white/80 line-clamp-3">{subtitle}</p>}
           <div className="mt-6 flex flex-wrap gap-3">
+            <ShareButtons title={project.name} description={social?.description} url={social?.url} />
             <Button size="lg" className="min-h-11" onClick={goMasterplan}>
               Ver lotes disponibles<ArrowRight className="h-4 w-4 ml-2" />
             </Button>
@@ -206,7 +223,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
                 asChild
               >
                 <a
-                  href={`https://wa.me/${cfg.contact.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, quiero información de ${title}.`)}`}
+                  href={`https://wa.me/${cfg.contact.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, quiero información de ${title}. ${social?.url}`)}`}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -418,6 +435,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
         open={lotSheetOpen && !!selectedLot}
         onOpenChange={setLotSheetOpen}
         projectName={title}
+        projectUrl={social?.url}
         whatsapp={cfg.contact.whatsapp}
         onLead={(lot) => {
           setLotSheetOpen(false);

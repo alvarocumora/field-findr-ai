@@ -102,10 +102,10 @@ export function summarizeLots(
   let areaMax: number | null = null;
   let priceFrom: number | null = null;
   for (const lot of lots) {
-    if ((lot.status ?? 'available') === 'available') {
+    if (lot.status === 'available') {
       available++;
       const price = Number(lot.price);
-      if (price > 0 && (priceFrom === null || price < priceFrom)) priceFrom = price;
+      if (Number.isFinite(price) && price > 0 && (priceFrom === null || price < priceFrom)) priceFrom = price;
     }
     const area = Number(lot.area);
     if (area > 0) {

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { projectCanonicalUrl } from '@/lib/landing/paths';
 
 interface SEOProps {
   title: string;
@@ -161,6 +162,7 @@ export const buildPropertyJsonLd = (listing: {
 // Helper to build Project JSON-LD
 export const buildProjectJsonLd = (project: {
   id: string;
+  slug?: string | null;
   name: string;
   description?: string | null;
   city?: string | null;
@@ -177,7 +179,7 @@ export const buildProjectJsonLd = (project: {
     '@type': 'Place',
     name: project.name,
     description: project.description || `Proyecto ${project.name} en ${project.city}, ${project.region}`,
-    url: `https://ofertaterrenos.com/proyecto/${project.id}`,
+    url: projectCanonicalUrl(project),
     address: {
       '@type': 'PostalAddress',
       addressLocality: project.city || '',

@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ShareButtons } from '@/components/social/ShareButtons';
+import { projectSocial } from '@/lib/landing/projectSocial';
 import {
   MapPin, Phone, MessageCircle, ArrowLeft, DollarSign, Maximize2, TrendingUp,
 } from 'lucide-react';
@@ -106,7 +107,8 @@ export const ProjectHero = ({
               <div className="flex gap-2 shrink-0">
                 <ShareButtons
                   title={project.name}
-                  description={`Proyecto en ${project.city}. ${availableLots.length} lotes disponibles.`}
+                  description={projectSocial(project, lots).description}
+                  url={projectSocial(project, lots).url}
                 />
                 <Button
                   size="sm"

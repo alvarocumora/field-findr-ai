@@ -56,9 +56,11 @@ import {
 import { useBulkPublishLots } from '@/hooks/useBulkPublishLots';
 import { publishableLots } from '@/lib/marketplace/lotToListing';
 import { useState, useMemo } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
 import { useReviewStats } from '@/hooks/useReviews';
+import { projectSocial } from '@/lib/landing/projectSocial';
+import { LandingLeadForm } from '@/pages/landing/LandingLeadForm';
 
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
@@ -166,6 +168,7 @@ const ProjectDetail = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [selectedLot, setSelectedLot] = useState<string | null>(null);
+  const [leadOpen, setLeadOpen] = useState(false);
   const [reservationLot, setReservationLot] = useState<any | null>(null);
   const [financingLot, setFinancingLot] = useState<any | null>(null);
   const [detailLot, setDetailLot] = useState<any | null>(null);
@@ -231,7 +234,7 @@ const ProjectDetail = () => {
     const sold = lots.filter(l => l.status === 'sold');
     const reserved = lots.filter(l => l.status === 'reserved');
     
-    const prices = lots.filter(l => l.price).map(l => l.price!);
+    const prices = available.filter(l => Number.isFinite(l.price) && l.price! > 0).map(l => l.price!);
     const areas = lots.map(l => Number(l.area)).filter(a => a > 0);
     
     // Filter outlier areas using median-based approach
@@ -262,6 +265,7 @@ const ProjectDetail = () => {
 
   const projectJsonLd = project ? buildProjectJsonLd({
     id: project.id,
+    slug: project.slug,
     name: project.name,
     description: project.description,
     city: project.city,
@@ -270,16 +274,18 @@ const ProjectDetail = () => {
     latitude: project.latitude,
     longitude: project.longitude,
     images: (project as any)?.images,
-    total_lots: project.total_lots,
-    available_lots: project.available_lots,
+    total_lots: lotsLoading || lotsError ? null : lots.length,
+    available_lots: lotsLoading || lotsError ? null : availableLots.length,
   }) : undefined;
+
+  const social = project ? projectSocial(project, lotsLoading || lotsError ? undefined : lots) : undefined;
 
   useSEO({
     title: project?.name || 'Proyecto',
-    description: project ? `${project.name} en ${project.city}, ${project.region}. ${lots.length} lotes disponibles.` : undefined,
-    image: (project as any)?.images?.[0] || undefined,
-    url: window.location.href,
-    canonicalUrl: project ? `https://ofertaterrenos.com/proyecto/${project.id}` : undefined,
+    description: social?.description,
+    image: social?.image,
+    url: social?.url,
+    canonicalUrl: social?.url,
     jsonLd: projectJsonLd,
   });
 
@@ -340,13 +346,12 @@ const ProjectDetail = () => {
 
   const handleMessage = () => {
     const phone = ownerProfile?.phone;
-    const message = encodeURIComponent(`Hola, me interesa el proyecto ${project.name} en ${project.city}, ${project.region}. ¿Podrían darme más información?`);
+    const message = encodeURIComponent(`Hola, me interesa el proyecto ${project.name}. ${social?.url} ¿Podrían darme más información?`);
     if (phone) {
-      const cleanPhone = phone.replace(/[^0-9+]/g, '');
+      const cleanPhone = phone.replace(/\D/g, '');
       window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
-    } else if (ownerProfile?.email) {
-      const subject = encodeURIComponent(`Consulta sobre ${project.name}`);
-      window.open(`mailto:${ownerProfile.email}?subject=${subject}&body=${message}`, '_self');
+    } else {
+      setLeadOpen(true);
     }
   };
 
@@ -377,6 +382,21 @@ const ProjectDetail = () => {
           onCall={handleCall}
           onMessage={handleMessage}
         />
+
+        <div className="container px-4 py-3">
+          <Button onClick={() => setLeadOpen(true)} className="min-h-11">Agendar visita o consultar</Button>
+        </div>
+        <Dialog open={leadOpen} onOpenChange={setLeadOpen}>
+          <DialogContent>
+            <DialogTitle>Consulta por {project.name}</DialogTitle>
+            <LandingLeadForm
+              projectId={project.id}
+              projectOwnerId={project.user_id}
+              projectSlug={project.slug || project.id}
+              onSuccess={() => setLeadOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
 
         {/* Social Proof */}
         {!isOwner && <SocialProofToast projectId={project.id} />}

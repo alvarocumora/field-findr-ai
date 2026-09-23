@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LotFinancialSummary } from './LotFinancialSummary';
+import { ShareButtons } from '@/components/social/ShareButtons';
 import {
   CalendarDays, ChevronLeft, ChevronRight, MapPin, MessageCircle, Mountain, Ruler,
 } from 'lucide-react';
@@ -24,6 +25,7 @@ interface LotSalesSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectName: string;
+  projectUrl?: string;
   /** Número de WhatsApp del proyecto (opcional). */
   whatsapp?: string;
   onLead: (lot: SalesLot) => void;
@@ -56,17 +58,19 @@ const statusMeta = (status?: string | null) => {
  * (get_public_lots): no consulta ni escribe backend.
  */
 export const LotSalesSheet = ({
-  lot, open, onOpenChange, projectName, whatsapp,
+  lot, open, onOpenChange, projectName, projectUrl, whatsapp,
   onLead, onReserve, onPrev, onNext, hasPrev, hasNext,
 }: LotSalesSheetProps) => {
   const isMobile = useIsMobile();
   if (!lot) return null;
 
   const meta = statusMeta(lot.status);
-  const available = (lot.status ?? 'available') === 'available';
+  const available = lot.status === 'available';
+  const shareUrl = projectUrl ? new URL(projectUrl) : undefined;
+  shareUrl?.searchParams.set('lote', lot.id);
   const waHref = whatsapp
     ? `https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
-        `Hola, me interesa el lote ${lot.lot_number ?? ''} de ${projectName}.`,
+        `Hola, me interesa el lote ${lot.lot_number ?? ''} de ${projectName}. ${shareUrl?.href ?? ''}`,
       )}`
     : undefined;
   const image = lot.images?.[0];
@@ -138,6 +142,13 @@ export const LotSalesSheet = ({
           <Separator />
 
           <div className="grid gap-2">
+            {shareUrl && (
+              <ShareButtons
+                title={`Lote ${lot.lot_number ?? ''} · ${projectName}`}
+                description={`${meta.label} · ${lot.area ? `${lot.area.toLocaleString('es-CL')} m² · ` : ''}${clp(lot.price)}`}
+                url={shareUrl.href}
+              />
+            )}
             <Button size="lg" className="w-full min-h-11" onClick={() => onLead(lot)}>
               <CalendarDays className="h-4 w-4 mr-2" />Agendar visita
             </Button>
