@@ -32,7 +32,7 @@ export function projectSocial(project: SocialProject, lots?: SocialLot[]) {
   const location = [project.city || project.location, project.region].filter(Boolean).join(', ');
   const description = [
     location,
-    stats ? `${stats.available} parcelas disponibles` : 'Consulta disponibilidad',
+    stats ? (stats.available === 1 ? '1 parcela disponible' : `${stats.available} parcelas disponibles`) : 'Consulta disponibilidad',
     stats?.priceFrom ? `Desde $${stats.priceFrom.toLocaleString('es-CL')} CLP` : null,
     'Ver plano y agendar visita.',
   ].filter(Boolean).join(' · ');
@@ -70,5 +70,5 @@ export function renderProjectHtml(template: string, social: ReturnType<typeof pr
       'twitter:description': social.description, 'twitter:image': social.image,
     }).map(([key, value]) => `<meta name="${key}" content="${escapeHtml(value)}" />`),
   ];
-  return clean.replace('</head>', `${tags.join('\n')}\n</head>`);
+  return clean.replace('</head>', () => `${tags.join('\n')}\n</head>`);
 }

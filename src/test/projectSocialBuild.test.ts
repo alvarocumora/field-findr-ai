@@ -32,7 +32,7 @@ describe('static social preview build', () => {
     await run();
     const html = await readFile(join(temp!, 'dist/p/test-project/index.html'), 'utf8');
     expect(html).toContain('Paisaje real');
-    expect(html).toContain('1 parcelas disponibles');
+    expect(html).toContain('1 parcela disponible');
     expect(html).toContain('19.000.000');
     expect(html).toContain('https://example.com/photo.jpg');
     expect(await readFile(join(temp!, `dist/proyecto/${id}/index.html`), 'utf8')).toBe(html);

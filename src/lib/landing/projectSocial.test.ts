@@ -36,6 +36,9 @@ describe('project sharing', () => {
     expect(html.match(/name="twitter:title"/g)).toHaveLength(1);
     expect(html.match(/rel="canonical"/g)).toHaveLength(1);
     expect(html).toContain('/assets/hash.js');
+    const literal = renderProjectHtml(template, projectSocial({ ...project, name: 'Terreno $& oferta' }, []));
+    expect(literal).toContain('Terreno $&amp; oferta');
+    expect(literal.match(/<\/head>/g)).toHaveLength(1);
   });
   it('retains only bounded campaign codes for the existing CRM', () => {
     expect(shareAttribution('?utm_source=whatsapp&utm_medium=share&email=private@example.com')).toBe('[Campaña declarada por enlace] utm_source=whatsapp utm_medium=share');
