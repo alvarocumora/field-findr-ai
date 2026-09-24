@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, FileText, MapPin, Ruler, Trees } from 'lucide-react';
+import { CheckCircle2, Copy, FileText, MapPin, PlayCircle, Ruler, Trees } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSEO } from '@/hooks/useSEO';
+import { toast } from 'sonner';
 
 const lots = [
   ['1',1.08],['2',1.33],['3',2.00],['4',1.00],['5',1.00],['6',1.00],['7',1.00],['8',1.00],['9',1.00],['10',1.00],
@@ -14,18 +15,24 @@ const lots = [
 ] as const;
 
 const clp = (value: number) => `$${value.toLocaleString('es-CL')}`;
-const launchPrice = 10_990_000;
+const launchPrice = 12_990_000;
+const projectUrl = 'https://ofertaterrenos.com/parcelas-caone-hualane';
 
 const CaoneLanding = () => {
   const eligible = useMemo(() => lots.filter(([, area]) => area >= 1), []);
 
   useSEO({
-    title: 'Parcelas Caone Hualañé · 1 ha desde $10.990.000',
-    description: 'Master plan ROL 168-921 en Sector Caone, Hualañé. 38 parcelas desde 1 hectárea con precio lanzamiento de $10.990.000 CLP.',
+    title: 'Parcelas Caone Hualañé · 1 ha desde $12.990.000',
+    description: 'Master plan ROL 168-921 en Sector Caone, Hualañé. 38 parcelas desde 1 hectárea con precio lanzamiento de $12.990.000 CLP y tour virtual satelital.',
     type: 'website',
     url: 'https://ofertaterrenos.com/parcelas-caone-hualane',
     canonicalUrl: 'https://ofertaterrenos.com/parcelas-caone-hualane',
   });
+
+  const copyProjectLink = async () => {
+    await navigator.clipboard.writeText(projectUrl);
+    toast.success('Link del proyecto copiado');
+  };
 
   return (
     <div className="min-h-screen bg-[#f7f4ec] text-[#17352d]">
@@ -48,6 +55,12 @@ const CaoneLanding = () => {
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" className="bg-white text-[#17352d] hover:bg-white/90">
               <a href="#masterplan">Ver master plan</a>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+              <Link to="/parcelas-caone-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Tour virtual</Link>
+            </Button>
+            <Button size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white" onClick={copyProjectLink}>
+              <Copy className="mr-2 h-4 w-4" />Copiar link
             </Button>
             <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
               <Link to="/contacto-loteos">Consultar disponibilidad</Link>
@@ -121,9 +134,14 @@ const CaoneLanding = () => {
               <h2 className="mt-2 text-3xl font-black">Agenda una visita o solicita antecedentes</h2>
               <p className="mt-2 max-w-2xl text-white/75">Consulta disponibilidad por lote, condiciones de reserva y documentación del proyecto.</p>
             </div>
-            <Button asChild size="lg" className="bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]/90">
-              <Link to="/contacto-loteos">Hablar con OfertaTerrenos</Link>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="lg" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                <Link to="/parcelas-caone-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Abrir tour virtual</Link>
+              </Button>
+              <Button asChild size="lg" className="bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]/90">
+                <Link to="/contacto-loteos">Hablar con OfertaTerrenos</Link>
+              </Button>
+            </div>
           </div>
         </section>
       </main>
