@@ -16,7 +16,7 @@ const lots = [
 ] as const;
 
 const clp = (value: number) => `$${value.toLocaleString('es-CL')}`;
-const launchPrice = 12_990_000;
+const pricePerHa = 12_990_000;
 const projectUrl = 'https://ofertaterrenos.com/parcelas-caone-hualane';
 
 const CaoneLanding = () => {
@@ -24,7 +24,7 @@ const CaoneLanding = () => {
 
   useSEO({
     title: 'Parcelas Caone Hualañé · 1 ha desde $12.990.000',
-    description: 'Master plan ROL 168-921 en Sector Caone, Hualañé. 38 parcelas desde 1 hectárea con precio lanzamiento de $12.990.000 CLP y tour virtual satelital.',
+    description: 'Master plan ROL 168-921 en Sector Caone, Hualañé. 38 parcelas desde 1 hectárea con valor de lanzamiento de $12.990.000 CLP por hectárea y tour virtual satelital.',
     type: 'website',
     url: 'https://ofertaterrenos.com/parcelas-caone-hualane',
     canonicalUrl: 'https://ofertaterrenos.com/parcelas-caone-hualane',
@@ -49,8 +49,8 @@ const CaoneLanding = () => {
             </div>
             <div className="rounded-3xl bg-[#f6c64e] px-7 py-6 text-center text-[#17352d] shadow-xl">
               <p className="text-xs font-bold uppercase tracking-wider">Desde</p>
-              <p className="mt-1 text-4xl font-black">{clp(launchPrice)}</p>
-              <p className="mt-1 text-xs font-semibold">CLP · parcelas ≥ 1,00 ha</p>
+              <p className="mt-1 text-4xl font-black">{clp(pricePerHa)}</p>
+              <p className="mt-1 text-xs font-semibold">CLP · por hectárea</p>
             </div>
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -168,7 +168,7 @@ const CaoneLanding = () => {
                     <span className={`h-2.5 w-2.5 rounded-full ${onPromo ? 'bg-emerald-600' : 'bg-slate-400'}`} />
                   </div>
                   <p className="mt-1 text-sm text-slate-600">{area.toFixed(2)} ha</p>
-                  <p className={`mt-2 text-xs font-bold ${onPromo ? 'text-[#1b5c49]' : 'text-slate-500'}`}>{onPromo ? clp(launchPrice) : 'Consultar'}</p>
+                  <p className={`mt-2 text-xs font-bold ${onPromo ? 'text-[#1b5c49]' : 'text-slate-500'}`}>{onPromo ? clp(pricePerHa) : 'Consultar'}</p>
                 </div>
               );
             })}
