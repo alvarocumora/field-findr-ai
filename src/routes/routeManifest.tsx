@@ -111,6 +111,7 @@ const QuoteView = lazy(() => import("@/pages/QuoteView"));
 const InvestorsLogin = lazy(() => import("@/pages/forestal/InvestorsLogin"));
 const IslaDeMaipoDossier = lazy(() => import("@/pages/dossier/IslaDeMaipoDossier"));
 const ProjectLanding = lazy(() => import("@/pages/landing/ProjectLanding"));
+const CaoneTour = lazy(() => import("@/pages/caone/CaoneTour"));
 
 // Comprador
 const BuyerHome = lazy(() => import("@/pages/BuyerHome"));
@@ -400,6 +401,7 @@ export const projectLandingEntries: RouteEntry[] = [
   pub("playa-alvaro", "/playa-alvaro", <ProjectLanding slug="playa-alvaro" />),
   pub("explora-park", "/explora-park", <ProjectLanding slug="explora-park" />),
   pub("parcelas-caone-hualane", "/parcelas-caone-hualane", <ProjectLanding slug="parcelas-caone-hualane" />),
+  pub("parcelas-caone-hualane-tour", "/parcelas-caone-hualane/tour", <CaoneTour />),
   pub("dossier-isla-maipo", "/ficha/isla-de-maipo-galvez-1458", <IslaDeMaipoDossier />, {
     indexable: false,
   }),
