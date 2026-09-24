@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import type { TourScene, TourHotspot, PolygonOverlay } from '@/hooks/useTourScenes';
+import { TourMinimap } from './TourMinimap';
 
 interface TourViewer360Props {
   scenes: TourScene[];
@@ -17,6 +18,7 @@ interface TourViewer360Props {
   onLotClick?: (lotId: string) => void;
   /** Yaw actual de la cámara (radianes) para sincronizar el mini-mapa. */
   onYawChange?: (yaw: number) => void;
+  minimap?: { center: { lat: number; lng: number }; lots: any[] };
 }
 
 export function TourViewer360({
@@ -24,9 +26,11 @@ export function TourViewer360({
   initialSceneIndex = 0,
   onLotClick,
   onYawChange,
+  minimap,
 }: TourViewer360Props) {
   const [currentIndex, setCurrentIndex] = useState(initialSceneIndex);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentYaw, setCurrentYaw] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<any>(null);
 
@@ -100,7 +104,9 @@ export function TourViewer360({
         autorotate?.start?.();
 
         instance.addEventListener('position-updated', (e: any) => {
-          onYawChange?.(e.position?.yaw ?? 0);
+          const yaw = e.position?.yaw ?? 0;
+          setCurrentYaw(yaw);
+          onYawChange?.(yaw);
         });
       } catch (err) {
         console.warn('Plugins del tour no disponibles:', err);
@@ -181,6 +187,15 @@ export function TourViewer360({
         onReady={handleReady}
         littlePlanet={false}
       />
+
+      {minimap && (
+        <TourMinimap
+          center={minimap.center}
+          lots={minimap.lots}
+          yaw={currentYaw}
+          onLotClick={onLotClick}
+        />
+      )}
 
       {/* Nombre de la escena */}
       <div className="absolute top-4 left-4 z-10">
