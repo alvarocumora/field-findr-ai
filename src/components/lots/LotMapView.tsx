@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { usePolygonDrawing } from '@/hooks/usePolygonDrawing';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Layers, Mountain, Upload, Image, PenTool, ArrowLeftRight, Hash, RefreshCw, Minimize2, RotateCcw, Route, Settings2, ChevronDown } from 'lucide-react';
+import { AlertCircle, Layers, Mountain, Upload, Image, PenTool, ArrowLeftRight, Hash, RefreshCw, Minimize2, RotateCcw, Route, Settings2, ChevronDown, Play, Map as MapIcon, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced, buildPolygonsFromMixedGeometry, extractRoadGeometries } from '@/lib/kmz';
@@ -38,6 +38,8 @@ interface LotMapViewProps {
   readOnly?: boolean;
   showAdminControls?: boolean;
   onOpenCompare?: () => void;
+  /** Commercial tour mode: satellite + terrain relief + cinematic camera controls. */
+  tourMode?: boolean;
 }
 
 // Generate GeoJSON from lots - uses real polygons if available, otherwise generates grid
@@ -226,7 +228,7 @@ const formatPrice = (price: number | null) => {
   }).format(price);
 };
 
-export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, planImages, onLotsUpdated, readOnly = false, showAdminControls = false, onOpenCompare }: LotMapViewProps) => {
+export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, planImages, onLotsUpdated, readOnly = false, showAdminControls = false, onOpenCompare, tourMode = false }: LotMapViewProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
@@ -243,8 +245,10 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   // Vista "solo disponibles" (estilo plano comercial): deslindes de todo el
   // loteo en línea fina y SOLO las parcelas disponibles pintadas de verde con
   // su número — evita la nube de polígonos en loteos grandes. Por defecto ON.
-  const [onlyAvailable, setOnlyAvailable] = useState(true);
-  const onlyAvailableRef = useRef(true);
+  const [onlyAvailable, setOnlyAvailable] = useState(!tourMode);
+  const onlyAvailableRef = useRef(!tourMode);
+  const cinematicTimerRef = useRef<number | null>(null);
+  const [terrainEnabled, setTerrainEnabled] = useState(tourMode);
   const [importing, setImporting] = useState(false);
   const [loadingKmz, setLoadingKmz] = useState(false);
   const [kmzLoaded, setKmzLoaded] = useState(false);
@@ -999,8 +1003,9 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         : 'mapbox://styles/mapbox/streets-v12',
       center: bounds ? bounds.getCenter() : [projectCenter.lng, projectCenter.lat],
       zoom: 15,
-      pitch: 0,
-      bearing: planBearing,
+      pitch: tourMode ? 58 : 0,
+      bearing: tourMode ? planBearing - 18 : planBearing,
+      antialias: true,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -1016,7 +1021,36 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         const padding = isMobile
           ? { top: 90, bottom: 140, left: 24, right: 24 }
           : 50;
-        map.current.fitBounds(bounds, { padding, pitch: 0, bearing: planBearing });
+        map.current.fitBounds(bounds, {
+          padding,
+          pitch: tourMode ? 58 : 0,
+          bearing: tourMode ? planBearing - 18 : planBearing,
+          maxZoom: tourMode ? 16.2 : undefined,
+          duration: tourMode ? 1600 : 0,
+        });
+      }
+
+      if (tourMode) {
+        if (!map.current.getSource('tour-dem')) {
+          map.current.addSource('tour-dem', {
+            type: 'raster-dem',
+            url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+            tileSize: 512,
+            maxzoom: 14,
+          });
+        }
+        map.current.setTerrain({ source: 'tour-dem', exaggeration: 1.25 });
+        try {
+          map.current.setFog({
+            color: 'rgb(215, 228, 222)',
+            'high-color': 'rgb(158, 188, 181)',
+            'horizon-blend': 0.08,
+            'space-color': 'rgb(7, 23, 18)',
+            'star-intensity': 0,
+          });
+        } catch {
+          // Fog support varies by Mapbox style/version.
+        }
       }
 
       const geojson = generateLotGeoJSON(lots, projectCenter);
@@ -1145,6 +1179,12 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         }, 'lots-fill');
       }
 
+      if (tourMode) {
+        setOnlyAvailable(false);
+        onlyAvailableRef.current = false;
+        applyAvailabilityView(map.current, false, 'status', lots);
+      }
+
       // Hover effect
       map.current.on('mouseenter', 'lots-fill', (e) => {
         if (!map.current) return;
@@ -1224,7 +1264,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       map.current?.remove();
       map.current = null;
     };
-  }, [token, lots, projectCenter, onLotClick, mapStyle, calculateBounds, planBearing]);
+  }, [token, lots, projectCenter, onLotClick, mapStyle, calculateBounds, planBearing, tourMode]);
 
   useEffect(() => {
     initializeMap();
@@ -1244,20 +1284,100 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     if (map.current.getLayer('lots-selected')) {
       map.current.removeLayer('lots-selected');
     }
+    if (map.current.getLayer('lots-selected-fill')) {
+      map.current.removeLayer('lots-selected-fill');
+    }
 
     if (selectedLotId) {
+      map.current.addLayer({
+        id: 'lots-selected-fill',
+        type: 'fill',
+        source: 'lots',
+        filter: ['==', ['get', 'id'], selectedLotId],
+        paint: {
+          'fill-color': '#f6c64e',
+          'fill-opacity': 0.48,
+        },
+      });
       map.current.addLayer({
         id: 'lots-selected',
         type: 'line',
         source: 'lots',
         filter: ['==', ['get', 'id'], selectedLotId],
         paint: {
-          'line-color': '#fbbf24',
+          'line-color': '#f6c64e',
           'line-width': 4,
         },
       });
+
+      if (tourMode) {
+        const selectedLot = lots.find((lot) => lot.id === selectedLotId);
+        const normalized = selectedLot ? normalizePolygon(selectedLot.polygon) : null;
+        if (normalized?.valid) {
+          const selectedBounds = new mapboxgl.LngLatBounds();
+          normalized.coords.forEach(([lng, lat]) => selectedBounds.extend([lng, lat]));
+          map.current.fitBounds(selectedBounds, {
+            padding: { top: 120, right: 120, bottom: 150, left: 120 },
+            pitch: 67,
+            bearing: planBearing - 18,
+            maxZoom: 17,
+            duration: 1400,
+          });
+        }
+      }
     }
-  }, [selectedLotId, mapLoaded]);
+  }, [selectedLotId, mapLoaded, tourMode, lots, planBearing]);
+
+  const stopCinematic = () => {
+    if (cinematicTimerRef.current) {
+      window.clearTimeout(cinematicTimerRef.current);
+      cinematicTimerRef.current = null;
+    }
+  };
+
+  const setTourView = (mode: 'top' | '3d' | 'cinematic') => {
+    if (!map.current) return;
+    stopCinematic();
+    const bounds = calculateBounds();
+
+    if (mode === 'top') {
+      if (bounds) map.current.fitBounds(bounds, { padding: 55, pitch: 0, bearing: planBearing, duration: 1200 });
+      return;
+    }
+
+    if (mode === '3d') {
+      if (bounds) map.current.fitBounds(bounds, { padding: 70, pitch: 58, bearing: planBearing - 18, maxZoom: 16.2, duration: 1500 });
+      return;
+    }
+
+    const center = bounds?.getCenter() ?? new mapboxgl.LngLat(projectCenter.lng, projectCenter.lat);
+    map.current.flyTo({
+      center,
+      zoom: Math.max(map.current.getZoom(), 15.2),
+      pitch: 67,
+      bearing: planBearing - 32,
+      duration: 2200,
+      essential: true,
+    });
+    cinematicTimerRef.current = window.setTimeout(() => {
+      if (!map.current) return;
+      map.current.easeTo({
+        bearing: planBearing + 35,
+        pitch: 64,
+        duration: 11000,
+        easing: (t) => t,
+        essential: true,
+      });
+      cinematicTimerRef.current = null;
+    }, 2300);
+  };
+
+  const toggleTerrain = () => {
+    if (!map.current || !tourMode) return;
+    const next = !terrainEnabled;
+    setTerrainEnabled(next);
+    map.current.setTerrain(next ? { source: 'tour-dem', exaggeration: 1.25 } : null);
+  };
 
   const toggleStyle = () => {
     const newStyle = mapStyle === 'satellite' ? 'streets' : 'satellite';
@@ -1288,7 +1408,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const hasRealPolygons = lots.some(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3);
 
   return (
-    <div className="relative w-full h-[650px] rounded-2xl overflow-hidden shadow-lg border border-border/50">
+    <div className={`relative w-full ${tourMode ? 'h-full min-h-[520px]' : 'h-[650px]'} rounded-2xl overflow-hidden shadow-lg border border-border/50`}>
       <div ref={mapContainer} className="w-full h-full" />
       
       {/* Hidden file inputs */}
@@ -1296,7 +1416,23 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       <input ref={reimportFileInputRef} type="file" accept=".kmz,.kml" onChange={handleReimportByName} className="hidden" />
       
       {/* Controls row - clean and minimal */}
-      <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
+      <div className="absolute top-3 left-3 z-10 flex gap-2 flex-wrap">
+        {tourMode && (
+          <>
+            <Button variant="secondary" size="sm" className="gap-2 bg-black/60 text-white backdrop-blur-md border border-white/15 shadow-md hover:bg-black/75 hover:text-white" onClick={() => setTourView('top')}>
+              <MapIcon className="h-4 w-4" /> Cenital
+            </Button>
+            <Button variant="secondary" size="sm" className="gap-2 bg-black/60 text-white backdrop-blur-md border border-white/15 shadow-md hover:bg-black/75 hover:text-white" onClick={() => setTourView('3d')}>
+              <Mountain className="h-4 w-4" /> 3D
+            </Button>
+            <Button variant="secondary" size="sm" className="gap-2 bg-[#f6c64e] text-[#17352d] border border-[#f6c64e] shadow-md hover:bg-[#f6c64e]/90" onClick={() => setTourView('cinematic')}>
+              <Play className="h-4 w-4" /> Recorrido
+            </Button>
+            <Button variant="secondary" size="sm" className="gap-2 bg-black/60 text-white backdrop-blur-md border border-white/15 shadow-md hover:bg-black/75 hover:text-white" onClick={toggleTerrain}>
+              <Compass className="h-4 w-4" /> Relieve {terrainEnabled ? 'ON' : 'OFF'}
+            </Button>
+          </>
+        )}
         {/* Style toggle */}
         <Button
           variant="secondary"
@@ -1309,7 +1445,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         </Button>
 
         {/* Contour lines toggle */}
-        <Button
+        {!tourMode && <Button
           variant={showContours ? "default" : "secondary"}
           size="sm"
           className="gap-2 bg-background/80 backdrop-blur-md border border-border/50 shadow-md"
@@ -1329,10 +1465,10 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         >
           <Mountain className="h-4 w-4" />
           Curvas
-        </Button>
+        </Button>}
 
         {/* Available-only view toggle (plano comercial) */}
-        <Button
+        {!tourMode && <Button
           variant={onlyAvailable ? "default" : "secondary"}
           size="sm"
           className="gap-2 bg-background/80 backdrop-blur-md border border-border/50 shadow-md"
@@ -1346,7 +1482,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           }}
         >
           {onlyAvailable ? 'Disponibles' : 'Todos'}
-        </Button>
+        </Button>}
 
         {/* Roads toggle */}
         {roadGeojson && roadGeojson.features.length > 0 && (
@@ -1528,7 +1664,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       )}
 
       {/* Color Mode Selector */}
-      <div className="absolute bottom-16 right-3 md:bottom-4 md:right-4 flex gap-1 bg-background/90 backdrop-blur-md rounded-xl p-1 shadow-lg border border-border/50 max-w-[calc(100%-1.5rem)]">
+      {!tourMode && <div className="absolute bottom-16 right-3 md:bottom-4 md:right-4 flex gap-1 bg-background/90 backdrop-blur-md rounded-xl p-1 shadow-lg border border-border/50 max-w-[calc(100%-1.5rem)]">
 
         {[
           { key: 'status' as const, label: 'Estado' },
@@ -1553,10 +1689,10 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             {m.label}
           </button>
         ))}
-      </div>
+      </div>}
 
       {/* Dynamic Legend */}
-      <div className="absolute bottom-16 left-3 md:bottom-4 md:left-4 bg-background/90 backdrop-blur-md rounded-xl p-2.5 md:p-3 shadow-lg border border-border/50 space-y-1.5 md:space-y-2">
+      {!tourMode && <div className="absolute bottom-16 left-3 md:bottom-4 md:left-4 bg-background/90 backdrop-blur-md rounded-xl p-2.5 md:p-3 shadow-lg border border-border/50 space-y-1.5 md:space-y-2">
 
         {onlyAvailable ? (
           <div className="flex items-center gap-2">
@@ -1596,7 +1732,15 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             </div>
           </>
         )}
-      </div>
+      </div>}
+
+      {tourMode && (
+        <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-xl border border-white/10 bg-black/55 px-3 py-2 text-xs text-white/80 backdrop-blur-md">
+          <span className="font-semibold text-emerald-300">Terrain Tour</span>
+          <span className="mx-2 text-white/25">•</span>
+          Arrastra para orbitar · selecciona una parcela para acercarte
+        </div>
+      )}
     </div>
   );
 };
