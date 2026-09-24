@@ -40,6 +40,8 @@ interface LotMapViewProps {
   onOpenCompare?: () => void;
   /** Commercial tour mode: satellite + terrain relief + cinematic camera controls. */
   tourMode?: boolean;
+  /** Optional road/servitude geometry already extracted from the source KMZ. */
+  externalRoads?: GeoJSON.FeatureCollection<GeoJSON.LineString> | null;
 }
 
 // Generate GeoJSON from lots - uses real polygons if available, otherwise generates grid
@@ -228,7 +230,7 @@ const formatPrice = (price: number | null) => {
   }).format(price);
 };
 
-export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, planImages, onLotsUpdated, readOnly = false, showAdminControls = false, onOpenCompare, tourMode = false }: LotMapViewProps) => {
+export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, planImages, onLotsUpdated, readOnly = false, showAdminControls = false, onOpenCompare, tourMode = false, externalRoads = null }: LotMapViewProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
@@ -259,9 +261,13 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [renumberSelectedLot, setRenumberSelectedLot] = useState<{ id: string; lot_number: string } | null>(null);
   const [compacting, setCompacting] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const [roadGeojson, setRoadGeojson] = useState<GeoJSON.FeatureCollection<GeoJSON.LineString> | null>(null);
+  const [roadGeojson, setRoadGeojson] = useState<GeoJSON.FeatureCollection<GeoJSON.LineString> | null>(externalRoads);
   const [showRoads, setShowRoads] = useState(true);
   const [colorMode, setColorMode] = useState<'status' | 'price' | 'area'>('status');
+
+  useEffect(() => {
+    if (externalRoads) setRoadGeojson(externalRoads);
+  }, [externalRoads]);
 
   // Keep ref in sync with state for use inside map event handlers
   useEffect(() => {
@@ -1008,7 +1014,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       antialias: true,
     });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.current.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
+    if (tourMode) map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right');
 
     map.current.on('load', () => {
       if (!map.current) return;
@@ -1161,9 +1168,9 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           type: 'line',
           source: 'roads-kmz',
           paint: {
-            'line-color': '#fbbf24',
-            'line-width': 4,
-            'line-opacity': 0.6,
+            'line-color': tourMode ? '#ef2b2d' : '#fbbf24',
+            'line-width': tourMode ? 5 : 4,
+            'line-opacity': tourMode ? 0.9 : 0.6,
           },
         }, 'lots-fill'); // Insert below lots
         map.current.addLayer({
@@ -1172,9 +1179,9 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           source: 'roads-kmz',
           paint: {
             'line-color': '#ffffff',
-            'line-width': 1.5,
-            'line-opacity': 0.8,
-            'line-dasharray': [4, 3],
+            'line-width': tourMode ? 1.2 : 1.5,
+            'line-opacity': tourMode ? 0.95 : 0.8,
+            'line-dasharray': tourMode ? [1, 0] : [4, 3],
           },
         }, 'lots-fill');
       }
@@ -1264,7 +1271,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       map.current?.remove();
       map.current = null;
     };
-  }, [token, lots, projectCenter, onLotClick, mapStyle, calculateBounds, planBearing, tourMode]);
+  }, [token, lots, projectCenter, onLotClick, mapStyle, calculateBounds, planBearing, tourMode, roadGeojson]);
 
   useEffect(() => {
     initializeMap();
@@ -1503,7 +1510,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             }}
           >
             <Route className="h-4 w-4" />
-            Caminos
+            {tourMode ? 'Servidumbre' : 'Caminos'}
           </Button>
         )}
         
