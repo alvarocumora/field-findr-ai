@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import { fetchPdfImage, fittedImage, safePdfLink } from './media';
+import { registerFichaFonts, CUSTOM_FONT_FAMILIES } from './fichaFonts';
 import {
   getFichaTheme,
   themeRgb,
@@ -25,8 +26,17 @@ export const BRAND = new Proxy({} as Record<keyof FichaThemeColors, RGB>, {
   get: (_t, key: string) => themeRgb(key as keyof FichaThemeColors),
 }) as Record<keyof FichaThemeColors, RGB>;
 
-/** Familia tipográfica activa del tema. */
-export const themeFont = (kind: 'body' | 'heading' = 'body') => getFichaTheme().fonts[kind];
+/** Si el documento en construcción tiene registradas las fuentes de marca. */
+let brandFontsActive = false;
+
+const usable = (family: string) => (CUSTOM_FONT_FAMILIES.has(family) && !brandFontsActive ? 'helvetica' : family);
+
+/** Familia tipográfica activa del tema (Helvetica si las de marca no cargaron). */
+export const themeFont = (kind: 'body' | 'heading' = 'body') => usable(getFichaTheme().fonts[kind]);
+
+/** Caligráfica de marca (eyebrows) y Montserrat SemiBold, con respaldo. */
+export const scriptFont = () => (brandFontsActive ? 'caveat' : 'helvetica');
+export const semiboldFont = () => (brandFontsActive && getFichaTheme().fonts.body === 'montserrat' ? 'montserrat-semibold' : themeFont('body'));
 
 /** Origen público configurable (tema de fichas). */
 export const getPublicOrigin = () => getFichaTheme().publicOrigin;
@@ -40,31 +50,28 @@ export const publicUrl = (path: string) =>
 
 export const fetchImageAsBase64 = fetchPdfImage;
 
-/** Marca gráfica (hexágono + brújula) dibujada vectorialmente. */
+/** Hoja de la marca (dos curvas) inscrita en una caja de `size` mm. */
+const drawLeaf = (doc: jsPDF, x: number, y: number, size: number, fill: RGB, vein: RGB) => {
+  const k = size / 24;
+  doc.setFillColor(...fill);
+  doc.lines(
+    [
+      [0, -8 * k, 4.667 * k, -12.667 * k, 14 * k, -14 * k],
+      [-1.333 * k, 8 * k, -6 * k, 12.667 * k, -14 * k, 14 * k],
+    ],
+    x + 5 * k, y + 19 * k, [1, 1], 'F', true,
+  );
+  doc.setDrawColor(...vein);
+  doc.setLineWidth(Math.max(0.15, size * 0.05));
+  doc.line(x + 5 * k, y + 19 * k, x + 19 * k, y + 5 * k);
+};
+
+/** Marca gráfica: círculo verde con la hoja blanca. */
 export const drawBrandMark = (doc: jsPDF, x: number, y: number, size = 10) => {
   const r = size / 2;
-  const cx = x + r;
-  const cy = y + r;
-  const pts: [number, number][] = [];
-  for (let i = 0; i < 6; i++) {
-    const a = (Math.PI / 180) * (60 * i - 90);
-    pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
-  }
-  doc.setFillColor(...BRAND.emerald);
-  doc.lines(
-    pts.slice(1).map((p, i) => [p[0] - pts[i][0], p[1] - pts[i][1]] as [number, number]).concat([
-      [pts[0][0] - pts[5][0], pts[0][1] - pts[5][1]],
-    ]),
-    pts[0][0],
-    pts[0][1],
-    [1, 1],
-    'F',
-    true
-  );
-  doc.setDrawColor(...BRAND.white);
-  doc.setLineWidth(size * 0.09);
-  doc.circle(cx, cy, r * 0.44, 'S');
-  doc.setLineWidth(0.2);
+  doc.setFillColor(...BRAND.leaf);
+  doc.circle(x + r, y + r, r, 'F');
+  drawLeaf(doc, x + size * 0.18, y + size * 0.18, size * 0.64, BRAND.white, BRAND.forest);
 };
 
 /** Logotipo completo: imagen del tema, o marca vectorial + wordmark. */
@@ -77,6 +84,7 @@ export const drawBrandLogo = (
   const theme = getFichaTheme();
   const size = opts.size ?? 10;
   const color = opts.color ?? BRAND.white;
+  const onDark = color[0] + color[1] + color[2] > 600;
 
   if (theme.logo.imageDataUrl) {
     try {
@@ -90,23 +98,46 @@ export const drawBrandLogo = (
     }
   }
 
-  // Match the portal's typographic logo; keep custom tenant wordmarks intact.
   const isDefault = theme.logo.primary === 'OFERTA' && theme.logo.secondary === 'TERRENOS';
-  const primary = isDefault ? 'Oferta' : theme.logo.primary;
-  const secondary = isDefault ? 'Terrenos' : ` ${theme.logo.secondary}`;
-  doc.setTextColor(...color);
-  doc.setFontSize(size * 1.9);
-  doc.setFont(themeFont('heading'), 'bold');
-  doc.text(primary, x, y + size * 0.72);
-  let tx = x + doc.getTextWidth(primary);
-  doc.setTextColor(...BRAND.emerald);
-  doc.text(secondary, tx, y + size * 0.72);
-  tx += doc.getTextWidth(secondary);
+  drawBrandMark(doc, x, y, size);
+  const tx = x + size + size * 0.35;
   if (isDefault) {
-    doc.setFontSize(size * 1.05);
+    doc.setFont(semiboldFont(), 'normal');
+    doc.setFontSize(size * 0.62);
+    doc.setTextColor(...(onDark ? BRAND.leaf : BRAND.emerald));
+    doc.setCharSpace(size * 0.035);
+    doc.text('BIENES RAÍCES', tx, y + size * 0.4);
+    doc.setCharSpace(0);
+    doc.setFont(themeFont('heading'), 'bold');
+    doc.setFontSize(size * 1.25);
     doc.setTextColor(...color);
-    doc.text('.com', tx, y + size * 0.72);
+    doc.text('Oferta Terrenos', tx, y + size * 0.92);
+    return;
   }
+  // Wordmark de tenant: se respeta tal cual.
+  doc.setFont(themeFont('heading'), 'bold');
+  doc.setFontSize(size * 1.25);
+  doc.setTextColor(...color);
+  doc.text(theme.logo.primary, tx, y + size * 0.72);
+  const w = doc.getTextWidth(theme.logo.primary);
+  doc.setTextColor(...(onDark ? BRAND.leaf : BRAND.emerald));
+  doc.text(` ${theme.logo.secondary}`, tx + w, y + size * 0.72);
+};
+
+/** Onda corta bajo los títulos de sección (firma gráfica de la identidad). */
+export const drawSquiggle = (doc: jsPDF, x: number, y: number, w = 18, color: RGB = BRAND.leaf) => {
+  const seg = w / 4;
+  doc.setDrawColor(...color);
+  doc.setLineWidth(0.9);
+  doc.setLineCap('round');
+  const curves: number[][] = [];
+  for (let i = 0; i < 4; i++) {
+    const up = i % 2 === 0 ? -1.3 : 1.3;
+    curves.push([seg / 3, up, (2 * seg) / 3, up, seg, 0]);
+  }
+  doc.lines(curves, x, y, [1, 1], 'S', false);
+  doc.setLineCap('butt');
+  doc.setLineWidth(0.2);
 };
 
 export interface FichaHeaderOptions {
@@ -145,12 +176,18 @@ export interface FichaDoc {
   gallery: (items: { data: string; caption: string }[]) => void;
   blob: () => Blob;
   save: (filename: string) => void;
+  /** Si las tipografías de marca quedaron registradas en este documento. */
+  brandFonts: boolean;
+  /** Pinta el fondo de papel de la página actual (lo hace solo al crearla). */
+  paintPaper: () => void;
 }
 
 export const createFichaDoc = (
-  options: { footerNote?: string; margin?: number } = {}
+  options: { footerNote?: string; margin?: number; cover?: boolean } = {}
 ): FichaDoc => {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+  const brandFonts = registerFichaFonts(doc);
+  brandFontsActive = brandFonts;
   const W = 210;
   const H = 297;
   const margin = options.margin ?? 16;
@@ -159,23 +196,32 @@ export const createFichaDoc = (
   let y = margin;
   let page = 1;
 
+  const paintPaper = () => {
+    doc.setFillColor(...BRAND.paper);
+    doc.rect(0, 0, W, H, 'F');
+  };
+  if (!options.cover) paintPaper();
+
   const footer = () => {
+    if (options.cover && page === 1) return; // la portada no lleva pie
     doc.setDrawColor(...BRAND.line);
-    doc.setLineWidth(0.2);
+    doc.setLineWidth(0.3);
     doc.line(margin, H - 16, W - margin, H - 16);
     doc.setFontSize(7.5);
     doc.setFont(themeFont('body'), 'normal');
     doc.setTextColor(...BRAND.gray);
     doc.text(doc.splitTextToSize(footerNote, contentW - 25)[0], margin, H - 11);
-    doc.text(`Página ${page}`, W - margin, H - 11, { align: 'right' });
+    doc.setFont(semiboldFont(), 'normal');
+    doc.text(`${String(page).padStart(2, '0')}`, W - margin, H - 11, { align: 'right' });
   };
 
   const newPage = () => {
     footer();
     doc.addPage();
     page += 1;
+    paintPaper();
     drawBrandLogo(doc, margin, 7, { size: 6, color: BRAND.dark });
-    y = margin + 9;
+    y = margin + 11;
   };
 
   const ensure = (needed: number) => {
@@ -196,6 +242,8 @@ export const createFichaDoc = (
     },
     ensure,
     newPage,
+    brandFonts,
+    paintPaper,
 
     async header(o: FichaHeaderOptions) {
       const color = o.color ?? BRAND.forest;
@@ -210,13 +258,15 @@ export const createFichaDoc = (
       drawBrandLogo(doc, margin, 8, { size: 9 });
       doc.setProperties({ title: o.title, author: getFichaTheme().brandName, subject: o.eyebrow ?? 'Ficha comercial' });
 
-      doc.setTextColor(255, 255, 255);
       if (o.eyebrow) {
-        doc.setFontSize(7.5);
-        doc.setFont(themeFont('body'), 'normal');
-        doc.text(doc.splitTextToSize(o.eyebrow.toUpperCase(), textW)[0], margin, 25);
+        doc.setTextColor(...BRAND.leaf);
+        doc.setFontSize(brandFontsActive ? 13 : 7.5);
+        doc.setFont(scriptFont(), 'normal');
+        const eyebrow = brandFontsActive ? o.eyebrow.toLowerCase() : o.eyebrow.toUpperCase();
+        doc.text(doc.splitTextToSize(eyebrow, textW)[0], margin, 25.5);
       }
-      doc.setFontSize(16);
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(17);
       doc.setFont(themeFont('heading'), 'bold');
       const titleLines = doc.splitTextToSize(o.title, textW).slice(0, 2);
       doc.text(titleLines, margin, 33);
@@ -236,8 +286,8 @@ export const createFichaDoc = (
         try {
           const png = await QRCode.toDataURL(publicUrl(o.qrUrl!), { margin: 1, width: 320 });
           const qx = W - margin - qrSize;
-          doc.setFillColor(255, 255, 255);
-          doc.roundedRect(qx - 2, 10, qrSize + 4, qrSize + 4, 2, 2, 'F');
+          doc.setFillColor(...BRAND.soft);
+          doc.roundedRect(qx - 2.5, 9.5, qrSize + 5, qrSize + 5, 2.5, 2.5, 'F');
           doc.addImage(png, 'PNG', qx, 12, qrSize, qrSize);
           if (link) doc.link(qx - 2, 10, qrSize + 4, qrSize + 4, { url: link });
           doc.setFontSize(6.5);
@@ -254,17 +304,19 @@ export const createFichaDoc = (
     },
 
     section(title: string) {
-      doc.setFontSize(11.5);
+      doc.setFontSize(14);
       doc.setFont(themeFont('heading'), 'bold');
-      const lines: string[] = doc.splitTextToSize(title.toUpperCase(), contentW - 6);
-      ensure(lines.length * 5 + 12);
-      doc.setFillColor(...BRAND.emerald);
-      doc.rect(margin, y, 3, 6, 'F');
-      doc.setFontSize(11.5);
+      const lines: string[] = doc.splitTextToSize(title, contentW);
+      ensure(lines.length * 6 + 16);
+      y += 2;
+      // ensure() may have started a page whose logo changed font/size.
+      doc.setFontSize(14);
       doc.setFont(themeFont('heading'), 'bold');
-      doc.setTextColor(...BRAND.dark);
-      doc.text(lines, margin + 6, y + 4.8);
-      y += lines.length * 5 + 6;
+      doc.setTextColor(...BRAND.forest);
+      doc.text(lines, margin, y + 5);
+      const under = y + 5 + (lines.length - 1) * 6 + 3.5;
+      drawSquiggle(doc, margin, under, 16);
+      y = under + 6;
     },
 
     kv(label: string, value: string) {
@@ -273,7 +325,7 @@ export const createFichaDoc = (
       const lines = doc.splitTextToSize(value, contentW - 52);
       ensure(lines.length * 4.6 + 3);
       doc.setFontSize(8.5);
-      doc.setFont(themeFont('heading'), 'bold');
+      doc.setFont(semiboldFont(), 'normal');
       doc.setTextColor(...BRAND.gray);
       doc.text(label, margin, y);
       doc.setFont(themeFont('body'), 'normal');
@@ -326,15 +378,18 @@ export const createFichaDoc = (
         const bx = margin + col * (boxW + 6);
         const by = top + row * 24;
         doc.setDrawColor(...BRAND.line);
+        doc.setLineWidth(0.3);
         doc.setFillColor(...BRAND.soft);
-        doc.roundedRect(bx, by, boxW, 20, 2, 2, 'FD');
-        doc.setFontSize(7);
-        doc.setFont(themeFont('body'), 'normal');
-        doc.setTextColor(...BRAND.gray);
-        doc.text(k[0].toUpperCase(), bx + 4, by + 6);
+        doc.roundedRect(bx, by, boxW, 20, 3, 3, 'FD');
+        doc.setFontSize(6.5);
+        doc.setFont(semiboldFont(), 'normal');
+        doc.setTextColor(...BRAND.emerald);
+        doc.setCharSpace(0.25);
+        doc.text(k[0].toUpperCase(), bx + 4.5, by + 6);
+        doc.setCharSpace(0);
         doc.setFontSize(11.5);
         doc.setFont(themeFont('heading'), 'bold');
-        doc.setTextColor(...BRAND.dark);
+        doc.setTextColor(...BRAND.forest);
         doc.text(doc.splitTextToSize(k[1], boxW - 8)[0], bx + 4, by + 12.5);
         if (k[2]) {
           doc.setFontSize(7);
@@ -374,8 +429,11 @@ export const createFichaDoc = (
       const lines = doc.splitTextToSize(text, contentW - 8);
       ensure(lines.length * 4 + 12);
       doc.setDrawColor(...BRAND.line);
+      doc.setLineWidth(0.3);
       doc.setFillColor(...BRAND.soft);
-      doc.roundedRect(margin, y, contentW, lines.length * 4 + 8, 2, 2, 'FD');
+      doc.roundedRect(margin, y, contentW, lines.length * 4 + 8, 2.5, 2.5, 'FD');
+      doc.setFillColor(...BRAND.leaf);
+      doc.rect(margin, y + 2, 1.2, lines.length * 4 + 4, 'F');
       doc.setFontSize(7.5);
       doc.setFont(themeFont('body'), 'normal');
       doc.setTextColor(...BRAND.gray);
@@ -390,12 +448,13 @@ export const createFichaDoc = (
         const w = (contentW - 5) / 2;
         valid.slice(i, i + 2).forEach((item, col) => {
           const x = margin + col * (w + 5);
-          doc.setFillColor(...BRAND.forest);
-          doc.roundedRect(x, y, w, 12, 2, 2, 'F');
+          const primary = i === 0 && col === 0;
+          doc.setFillColor(...(primary ? BRAND.leaf : BRAND.forest));
+          doc.roundedRect(x, y, w, 12, 6, 6, 'F');
           doc.setFont(themeFont('heading'), 'bold');
           doc.setFontSize(8.5);
-          doc.setTextColor(...BRAND.white);
-          doc.text(doc.splitTextToSize(item.label, w - 8)[0], x + 4, y + 7.5);
+          doc.setTextColor(...(primary ? BRAND.forest : BRAND.white));
+          doc.text(doc.splitTextToSize(item.label, w - 10)[0], x + w / 2, y + 7.5, { align: 'center' });
           doc.link(x, y, w, 12, { url: item.url! });
         });
         y += 16;
