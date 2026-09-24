@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, Copy, FileText, MapPin, PlayCircle, Ruler, Trees } from 'lucide-react';
+import { CheckCircle2, Compass, Copy, FileText, MapPin, Mountain, PlayCircle, Ruler, Trees } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSEO } from '@/hooks/useSEO';
 import { toast } from 'sonner';
+import ProjectScene3D from '@/components/landing/ProjectScene3D';
 
 const lots = [
   ['1',1.08],['2',1.33],['3',2.00],['4',1.00],['5',1.00],['6',1.00],['7',1.00],['8',1.00],['9',1.00],['10',1.00],
@@ -85,6 +86,53 @@ const CaoneLanding = () => {
               </CardContent>
             </Card>
           ))}
+        </section>
+
+        <section className="py-12">
+          <div className="grid overflow-hidden rounded-3xl border border-[#1b5c49]/15 bg-[#0b342d] shadow-xl lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="flex flex-col justify-center p-7 text-white md:p-10">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#f6c64e]">Terrain Tour · experiencia interactiva</p>
+              <h2 className="mt-3 text-3xl font-black md:text-4xl">Recorre Caone antes de visitar el terreno</h2>
+              <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/70 md:text-base">
+                Explora el loteo sobre imagen satelital y relieve 3D, cambia entre vista cenital y perspectiva,
+                inicia un recorrido aéreo y selecciona cualquier parcela para acercarte a su ubicación real.
+              </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                {[
+                  { icon: Mountain, title: 'Relieve 3D', text: 'Terreno satelital con elevación.' },
+                  { icon: Compass, title: 'KMZ real', text: 'Parcelas y servidumbres del archivo técnico.' },
+                  { icon: MapPin, title: 'Lote a lote', text: 'Acércate y comparte cada parcela.' },
+                ].map(({ icon: Icon, title, text }) => (
+                  <div key={title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <Icon className="h-5 w-5 text-[#f6c64e]" />
+                    <p className="mt-2 font-bold">{title}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-white/55">{text}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Button asChild size="lg" className="bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]/90">
+                  <Link to="/parcelas-caone-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Iniciar tour virtual</Link>
+                </Button>
+                <Button size="lg" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={copyProjectLink}>
+                  <Copy className="mr-2 h-4 w-4" />Compartir proyecto
+                </Button>
+              </div>
+            </div>
+            <Link to="/parcelas-caone-hualane/tour" className="group relative block min-h-[360px] overflow-hidden bg-black md:min-h-[430px]">
+              <ProjectScene3D latitude={-35.001545359260206} longitude={-71.65328947973632} />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/10" />
+              <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#f6c64e]">Vista satelital 3D</p>
+                  <p className="mt-1 text-lg font-bold text-white">Abrir experiencia interactiva</p>
+                </div>
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white text-[#17352d] transition group-hover:scale-105">
+                  <PlayCircle className="h-6 w-6" />
+                </div>
+              </div>
+            </Link>
+          </div>
         </section>
 
         <section id="masterplan" className="scroll-mt-8 py-12">
