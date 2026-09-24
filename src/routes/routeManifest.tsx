@@ -399,6 +399,7 @@ export const projectLandingEntries: RouteEntry[] = [
   pub("huellelhue", "/huellelhue", <ProjectLanding slug="huellelhue" />),
   pub("playa-alvaro", "/playa-alvaro", <ProjectLanding slug="playa-alvaro" />),
   pub("explora-park", "/explora-park", <ProjectLanding slug="explora-park" />),
+  pub("parcelas-caone-hualane", "/parcelas-caone-hualane", <ProjectLanding slug="parcelas-caone-hualane" />),
   pub("dossier-isla-maipo", "/ficha/isla-de-maipo-galvez-1458", <IslaDeMaipoDossier />, {
     indexable: false,
   }),
