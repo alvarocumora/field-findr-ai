@@ -26,6 +26,8 @@ type CaoneProjectData = {
   rol: string;
   center: [number, number];
   lots: CaoneLotSource[];
+  roads?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
+  road_source?: string;
 };
 
 const projectUrl = 'https://ofertaterrenos.com/parcelas-caone-hualane';
@@ -155,7 +157,7 @@ export default function CaoneTour() {
         <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
           <section className="overflow-hidden rounded-3xl border border-white/10 bg-black shadow-2xl">
             <div className="border-b border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/65">
-              <MousePointer2 className="mr-2 inline h-4 w-4" /> Explora en vista cenital o 3D, inicia el recorrido aéreo y toca una parcela para acercarte. Geometría tomada del KMZ del proyecto.
+              <MousePointer2 className="mr-2 inline h-4 w-4" /> Explora en vista cenital o 3D, inicia el recorrido aéreo y toca una parcela para acercarte. Geometría de parcelas y servidumbres tomada directamente del KMZ del proyecto.
             </div>
             <div className="h-[72vh] min-h-[560px]">
               <LotMapView
@@ -165,6 +167,7 @@ export default function CaoneTour() {
                 onLotClick={(lot) => selectLot(lot.id)}
                 readOnly
                 tourMode
+                externalRoads={data.roads ?? null}
               />
             </div>
           </section>
