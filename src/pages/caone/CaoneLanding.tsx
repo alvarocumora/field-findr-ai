@@ -168,7 +168,7 @@ const CaoneLanding = () => {
                     <span className={`h-2.5 w-2.5 rounded-full ${onPromo ? 'bg-emerald-600' : 'bg-slate-400'}`} />
                   </div>
                   <p className="mt-1 text-sm text-slate-600">{area.toFixed(2)} ha</p>
-                  <p className={`mt-2 text-xs font-bold ${onPromo ? 'text-[#1b5c49]' : 'text-slate-500'}`}>{onPromo ? clp(pricePerHa) : 'Consultar'}</p>
+                  <p className={`mt-2 text-xs font-bold ${onPromo ? 'text-[#1b5c49]' : 'text-slate-500'}`}>{onPromo ? clp(Math.round(pricePerHa * area)) : 'Consultar'}</p>
                 </div>
               );
             })}
