@@ -32,20 +32,43 @@ export function TourMinimap({ center, lots, yaw = 0, onLotClick }: TourMinimapPr
 
     // Add camera position marker
     const el = document.createElement('div');
-    el.innerHTML = `<div style="width:24px;height:24px;background:rgba(59,130,246,0.9);border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>`;
-    markerRef.current = new mapboxgl.Marker(el)
+    el.style.width = '40px';
+    el.style.height = '40px';
+    el.innerHTML = `
+      <div style="position:relative;width:40px;height:40px;">
+        <div data-tour-heading style="position:absolute;left:18px;top:0;width:4px;height:24px;transform-origin:2px 20px;transition:transform .18s ease;">
+          <div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:16px solid #f6c64e;transform:translateX(-5px);filter:drop-shadow(0 2px 3px rgba(0,0,0,.55));"></div>
+        </div>
+        <div style="position:absolute;left:8px;top:8px;width:24px;height:24px;background:rgba(5,150,105,.95);border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.45);"></div>
+      </div>`;
+    markerRef.current = new mapboxgl.Marker({ element: el, anchor: 'center' })
       .setLngLat([center.lng, center.lat])
       .addTo(map);
 
     map.on('load', () => {
       // Add lot polygons
-      const features = lots
-        .filter(l => l.polygon?.coordinates)
-        .map(l => ({
+      const features = lots.flatMap((l) => {
+        const geometry = l.polygon?.coordinates
+          ? l.polygon
+          : Array.isArray(l.polygon) && l.polygon.length >= 3
+            ? {
+                type: 'Polygon' as const,
+                coordinates: [[
+                  ...l.polygon,
+                  ...(l.polygon[0]?.[0] === l.polygon[l.polygon.length - 1]?.[0] &&
+                  l.polygon[0]?.[1] === l.polygon[l.polygon.length - 1]?.[1]
+                    ? []
+                    : [l.polygon[0]]),
+                ]],
+              }
+            : null;
+        if (!geometry) return [];
+        return [{
           type: 'Feature' as const,
           properties: { id: l.id, lot_number: l.lot_number, status: l.status },
-          geometry: l.polygon,
-        }));
+          geometry,
+        }];
+      });
 
       if (features.length > 0) {
         map.addSource('minimap-lots', {
@@ -79,6 +102,12 @@ export function TourMinimap({ center, lots, yaw = 0, onLotClick }: TourMinimapPr
           },
         });
 
+        const bounds = new mapboxgl.LngLatBounds();
+        features.forEach((feature: any) => {
+          feature.geometry.coordinates[0].forEach(([lng, lat]: [number, number]) => bounds.extend([lng, lat]));
+        });
+        if (!bounds.isEmpty()) map.fitBounds(bounds, { padding: 18, duration: 0 });
+
         // Click handler
         map.on('click', 'minimap-lots-fill', (e) => {
           const feature = e.features?.[0];
@@ -100,7 +129,14 @@ export function TourMinimap({ center, lots, yaw = 0, onLotClick }: TourMinimapPr
       map.remove();
       mapRef.current = null;
     };
-  }, [token, center, lots]);
+  }, [token, center, lots, onLotClick]);
+
+  useEffect(() => {
+    const el = markerRef.current?.getElement();
+    const heading = el?.querySelector<HTMLElement>('[data-tour-heading]');
+    if (!heading) return;
+    heading.style.transform = `rotate(${(yaw * 180) / Math.PI}deg)`;
+  }, [yaw]);
 
   return (
     <div className="absolute bottom-20 left-4 z-10 w-48 h-36 rounded-xl overflow-hidden shadow-xl border-2 border-white/30">
