@@ -27,7 +27,6 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useProjects, Project } from '@/hooks/useProjects';
-import { KMZImportDialog } from './projects/KMZImportDialog';
 import CreateProjectWizard from './projects/CreateProjectWizard';
 
 
@@ -48,8 +47,6 @@ const ProjectsManagement = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [showImportDialog, setShowImportDialog] = useState(false);
-  const [selectedProjectForImport, setSelectedProjectForImport] = useState<Project | null>(null);
 
   const filteredProjects = projects.filter(project =>
     project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -322,16 +319,11 @@ const ProjectsManagement = () => {
                       En revisión por un admin
                     </div>
                   )}
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 gap-1"
-                    onClick={() => {
-                      setSelectedProjectForImport(project);
-                      setShowImportDialog(true);
-                    }}
-                  >
-                    <FileArchive className="h-4 w-4" />
-                    KMZ
+                  <Button variant="outline" className="flex-1 gap-1" asChild>
+                    <Link to={`/asesor/spatial?project=${project.id}`}>
+                      <FileArchive className="h-4 w-4" />
+                      Spatial
+                    </Link>
                   </Button>
                   <Button variant="outline" size="icon" asChild>
                     <Link to={`/proyecto/${project.id}`}>
@@ -378,33 +370,6 @@ const ProjectsManagement = () => {
           );
         })}
       </div>
-
-      {/* KMZ Import Dialog */}
-      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileArchive className="h-5 w-5" />
-              Importar Lotes desde KMZ
-            </DialogTitle>
-          </DialogHeader>
-          {selectedProjectForImport && (
-            <KMZImportDialog
-              projectId={selectedProjectForImport.id}
-              projectName={selectedProjectForImport.name}
-              onComplete={() => {
-                setShowImportDialog(false);
-                setSelectedProjectForImport(null);
-                refetch();
-              }}
-              onCancel={() => {
-                setShowImportDialog(false);
-                setSelectedProjectForImport(null);
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Edit Project Dialog */}
       <Dialog open={showEditDialog} onOpenChange={(open) => {
