@@ -123,8 +123,9 @@ export default function ValleHualaneMasterplan() {
     description:
       'Masterplan interactivo de Valle de Hualañé, ROL 168-921, generado desde la geometría KMZ del proyecto sobre imagen satelital.',
     type: 'website',
-    url: 'https://ofertaterrenos.com/valle-de-hualane/masterplan',
-    canonicalUrl: 'https://ofertaterrenos.com/valle-de-hualane/masterplan',
+    url: 'https://ofertaterrenos.com/valle-hualane/plano',
+    canonicalUrl: 'https://ofertaterrenos.com/valle-hualane/plano',
+    image: 'https://ofertaterrenos.com/social/valle-hualane-og.png',
   });
 
   const fitProject = useCallback(() => {
@@ -253,7 +254,7 @@ export default function ValleHualaneMasterplan() {
   }, [data, fitProject, token, tokenLoading]);
 
   const share = async () => {
-    const url = 'https://ofertaterrenos.com/valle-de-hualane/masterplan';
+    const url = 'https://ofertaterrenos.com/valle-hualane/plano';
     await navigator.clipboard.writeText(url);
     toast.success('Link del masterplan copiado');
   };
@@ -376,7 +377,7 @@ export default function ValleHualaneMasterplan() {
     <div className="min-h-screen bg-[#f7f4ec] text-[#17352d]">
       <header className="border-b border-[#b98a35]/20 bg-[#082e25] text-white">
         <div className="mx-auto flex max-w-[1700px] flex-wrap items-center justify-between gap-4 px-4 py-4 md:px-7">
-          <Link to="/parcelas-caone-hualane" className="flex items-center gap-4">
+          <Link to="/valle-hualane" className="flex items-center gap-4">
             <img src={LOGO_URL} alt="Valle de Hualañé" className="h-16 w-auto md:h-20" />
           </Link>
           <div className="flex flex-wrap items-center gap-2">
@@ -418,7 +419,7 @@ export default function ValleHualaneMasterplan() {
                 <Mountain className="mr-2 h-4 w-4" />Encuadrar
               </Button>
               <Button size="sm" asChild variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                <Link to="/parcelas-caone-hualane/tour"><ExternalLink className="mr-2 h-4 w-4" />Tour 3D</Link>
+                <Link to="/valle-hualane/tour"><ExternalLink className="mr-2 h-4 w-4" />Tour 3D</Link>
               </Button>
             </div>
           </div>
