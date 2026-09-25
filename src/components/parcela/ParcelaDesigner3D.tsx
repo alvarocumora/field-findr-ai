@@ -17,6 +17,9 @@ import { normalizePolygon } from '@/lib/polygonUtils';
 import { grassTexture } from './proceduralTextures';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Camera, FileDown, Layers3, ListTree, PanelLeftClose, PanelLeftOpen, Redo2, Save, Share2, Trash2, Undo2, Wrench } from 'lucide-react';
 
 interface ParcelaDesigner3DProps {
   polygon: number[][] | null;
@@ -219,6 +222,7 @@ export const ParcelaDesigner3D = ({
   const [satelliteError, setSatelliteError] = useState(false);
   const [debugInfo, setDebugInfo] = useState<TerrainDebugInfo | null>(null);
   const [showDebug, setShowDebug] = useState(false);
+  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
 
   const norm = useMemo(() => normalizePolygon(polygon, latitude, longitude), [polygon, latitude, longitude]);
   const terrainSize = norm.terrainSize;
@@ -404,55 +408,142 @@ export const ParcelaDesigner3D = ({
 
   return (
     <div className="flex h-full w-full rounded-xl overflow-hidden border border-border/40 bg-card" style={{ minHeight: 400 }}>
-      {/* Left toolbar */}
-      <div className="flex flex-col w-60 h-full overflow-hidden">
-        <ParcelaToolbar
-          onAddObject={handleAddObject}
-          onRotate={ps.rotateSelected}
-          onScale={ps.scaleSelected}
-          onRemoveSelected={handleRemoveSelected}
-          onCapture={handleCapture}
-          onExportPdf={handleExportPdf}
-          onShare={handleShare}
-          onSave={handleSave}
-          onReset={ps.resetAll}
-          onAutoDesign={handleAutoDesign}
-          selectedId={ps.selectedId}
-          lotInfo={{ lotNumber, area: lotArea, price: lotPrice }}
-          onUndo={ps.undo}
-          onRedo={ps.redo}
-          canUndo={ps.canUndo}
-          canRedo={ps.canRedo}
-          snapEnabled={ps.snapEnabled}
-          onToggleSnap={() => ps.setSnapEnabled(!ps.snapEnabled)}
-          viewMode={ps.viewMode}
-          onSetViewMode={ps.setViewMode}
-          transformMode={ps.transformMode}
-          onSetTransformMode={ps.setTransformMode}
-          solarHour={ps.solarHour}
-          onSetSolarHour={ps.setSolarHour}
-          measureMode={ps.measureMode}
-          onToggleMeasure={() => {
-            ps.setMeasureMode(!ps.measureMode);
-            ps.clearMeasure();
-          }}
-        />
-        {/* GLB Asset Catalog */}
-        <Separator />
-        <div className="p-2 flex-shrink-0 overflow-auto">
-          <AssetCatalog
-            onSelectAsset={handleAddGLBAsset}
-            uploadedAssets={glbAssets}
-            onAssetsChange={setGlbAssets}
-            onAddPrimitive={handleAddObject}
-          />
-        </div>
-      </div>
+      {/* Unified designer dock: one place for models, tools and scene objects.
+          The previous UI stacked ParcelaToolbar + AssetCatalog in the same fixed
+          column, which caused the bottom controls to disappear on shorter screens. */}
+      {leftPanelOpen && (
+        <aside className="absolute inset-y-0 left-0 z-30 flex w-[300px] shrink-0 flex-col border-r border-border/50 bg-card/95 shadow-2xl backdrop-blur-xl lg:relative lg:z-10 lg:shadow-none">
+          <div className="flex items-center justify-between gap-2 border-b border-border/40 px-3 py-2.5">
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Diseñador de parcela</p>
+              <p className="truncate text-sm font-bold text-foreground">Lote {lotNumber} · {lotArea.toLocaleString('es-CL')} m²</p>
+            </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setLeftPanelOpen(false)} title="Ocultar panel">
+              <PanelLeftClose className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <Tabs defaultValue="models" className="flex min-h-0 flex-1 flex-col">
+            <TabsList className="mx-2 mt-2 grid h-9 grid-cols-3">
+              <TabsTrigger value="models" className="gap-1 text-[10px]"><Layers3 className="h-3.5 w-3.5" />Modelos</TabsTrigger>
+              <TabsTrigger value="tools" className="gap-1 text-[10px]"><Wrench className="h-3.5 w-3.5" />Herramientas</TabsTrigger>
+              <TabsTrigger value="scene" className="gap-1 text-[10px]"><ListTree className="h-3.5 w-3.5" />Escena</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="models" className="m-0 min-h-0 flex-1 overflow-hidden p-2">
+              <AssetCatalog
+                onSelectAsset={handleAddGLBAsset}
+                uploadedAssets={glbAssets}
+                onAssetsChange={setGlbAssets}
+                onAddPrimitive={handleAddObject}
+                fillHeight
+              />
+            </TabsContent>
+
+            <TabsContent value="tools" className="m-0 min-h-0 flex-1 overflow-y-auto">
+              <ParcelaToolbar
+                onAddObject={handleAddObject}
+                onRotate={ps.rotateSelected}
+                onScale={ps.scaleSelected}
+                onRemoveSelected={handleRemoveSelected}
+                onCapture={handleCapture}
+                onExportPdf={handleExportPdf}
+                onShare={handleShare}
+                onSave={handleSave}
+                onReset={ps.resetAll}
+                onAutoDesign={handleAutoDesign}
+                selectedId={ps.selectedId}
+                lotInfo={{ lotNumber, area: lotArea, price: lotPrice }}
+                onUndo={ps.undo}
+                onRedo={ps.redo}
+                canUndo={ps.canUndo}
+                canRedo={ps.canRedo}
+                snapEnabled={ps.snapEnabled}
+                onToggleSnap={() => ps.setSnapEnabled(!ps.snapEnabled)}
+                viewMode={ps.viewMode}
+                onSetViewMode={ps.setViewMode}
+                transformMode={ps.transformMode}
+                onSetTransformMode={ps.setTransformMode}
+                solarHour={ps.solarHour}
+                onSetSolarHour={ps.setSolarHour}
+                measureMode={ps.measureMode}
+                onToggleMeasure={() => {
+                  ps.setMeasureMode(!ps.measureMode);
+                  ps.clearMeasure();
+                }}
+                embedded
+                showCatalog={false}
+                showActions={false}
+                showLotInfo={false}
+              />
+            </TabsContent>
+
+            <TabsContent value="scene" className="m-0 min-h-0 flex-1 overflow-y-auto p-2">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-semibold text-foreground">Objetos en la parcela</p>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">{ps.objects.length}</span>
+              </div>
+              {ps.objects.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-border/60 p-4 text-center">
+                  <Layers3 className="mx-auto h-5 w-5 text-muted-foreground/60" />
+                  <p className="mt-2 text-xs font-medium">Escena vacía</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">Agrega modelos desde la pestaña Modelos o usa Auto-diseño.</p>
+                  <Button size="sm" className="mt-3 h-8 text-[10px]" onClick={handleAutoDesign}>Auto-diseño</Button>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {ps.objects.map((obj, index) => {
+                    const meta = obj.type === 'glb_custom' ? null : OBJECT_CATALOG[obj.type];
+                    const label = meta?.label || obj.modelName || 'Modelo 3D';
+                    const icon = meta?.icon || '📦';
+                    const selected = obj.id === ps.selectedId;
+                    return (
+                      <button
+                        key={obj.id}
+                        type="button"
+                        onClick={() => ps.selectObject(obj.id)}
+                        className={`flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition ${selected ? 'border-primary/50 bg-primary/10' : 'border-border/40 hover:bg-accent/40'}`}
+                      >
+                        <span className="text-base">{icon}</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[11px] font-medium text-foreground">{label}</span>
+                          <span className="block text-[9px] text-muted-foreground">Objeto {index + 1}</span>
+                        </span>
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => { e.stopPropagation(); ps.removeObject(obj.id); }}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); ps.removeObject(obj.id); } }}
+                          className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          title="Eliminar objeto"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </aside>
+      )}
 
       <div
-        className="flex-1 relative"
+        className="flex-1 relative min-w-0"
         style={{ minHeight: '100%', cursor: pendingLabel ? 'crosshair' : undefined }}
       >
+        {!leftPanelOpen && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="absolute left-3 top-3 z-30 h-9 gap-2 bg-background/90 shadow-lg backdrop-blur"
+            onClick={() => setLeftPanelOpen(true)}
+          >
+            <PanelLeftOpen className="h-4 w-4" /> Panel
+          </Button>
+        )}
+
         <Canvas
           shadows
           dpr={[1, 2]}
@@ -558,16 +649,18 @@ export const ParcelaDesigner3D = ({
           </Suspense>
         </Canvas>
 
-        {/* Properties panel */}
+        {/* Compact overlay inspector on medium screens; wide screens use the right dock. */}
         {selectedObj && (
-          <ObjectPropertiesPanel
-            obj={selectedObj}
-            onUpdate={ps.updateObject}
-            onRemove={ps.removeObject}
-            onCenterInLot={handleCenterInLot}
-            onDuplicate={handleDuplicate}
-            onSnapToGround={handleSnapToGround}
-          />
+          <div className="xl:hidden">
+            <ObjectPropertiesPanel
+              obj={selectedObj}
+              onUpdate={ps.updateObject}
+              onRemove={ps.removeObject}
+              onCenterInLot={handleCenterInLot}
+              onDuplicate={handleDuplicate}
+              onSnapToGround={handleSnapToGround}
+            />
+          </div>
         )}
 
         {/* Terrain toggle */}
@@ -650,7 +743,7 @@ export const ParcelaDesigner3D = ({
 
         {/* Pending placement banner */}
         {pendingLabel && (
-          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-primary/90 backdrop-blur-sm rounded-full pl-4 pr-2 py-1.5 text-xs font-medium text-primary-foreground border border-primary/40 shadow-lg">
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-primary/90 backdrop-blur-sm rounded-full pl-4 pr-2 py-1.5 text-xs font-medium text-primary-foreground border border-primary/40 shadow-lg">
             <span>Colocando: <strong>{pendingLabel}</strong> — haz clic en el terreno</span>
             <button
               type="button"
@@ -663,7 +756,7 @@ export const ParcelaDesigner3D = ({
         )}
 
         {/* Info overlays */}
-        <div className="absolute bottom-3 left-3 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs text-muted-foreground border border-border/40">
+        <div className="absolute bottom-16 left-3 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs text-muted-foreground border border-border/40">
           {ps.viewMode === 'pedestrian'
             ? 'Click para activar · WASD moverse · Mouse mirar · ESC salir'
             : ps.measureMode
@@ -690,7 +783,7 @@ export const ParcelaDesigner3D = ({
 
         {/* First-use hint — non-blocking, guides the initial placement */}
         {ps.objects.length === 0 && !pendingLabel && !ps.measureMode && ps.viewMode !== 'pedestrian' && (
-          <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-10 pointer-events-none max-w-xs text-center bg-background/85 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-primary/30 shadow-lg">
+          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 pointer-events-none max-w-xs text-center bg-background/85 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-primary/30 shadow-lg">
             <p className="text-xs font-medium text-foreground">Diseña tu parcela 🏡</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               Elige un elemento del catálogo (izquierda) y haz clic en el terreno para colocarlo.
@@ -710,7 +803,52 @@ export const ParcelaDesigner3D = ({
             ⊞ Snap 50cm
           </div>
         )}
+        {/* Persistent action bar: never disappears below a scroll container. */}
+        <div className="absolute bottom-3 left-3 right-3 z-30 flex items-center justify-between gap-2 rounded-2xl border border-border/50 bg-background/92 p-2 shadow-2xl backdrop-blur-xl">
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" className="h-8 px-2" onClick={ps.undo} disabled={!ps.canUndo} title="Deshacer">
+              <Undo2 className="h-4 w-4" /><span className="ml-1 hidden md:inline text-[10px]">Deshacer</span>
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8 px-2" onClick={ps.redo} disabled={!ps.canRedo} title="Rehacer">
+              <Redo2 className="h-4 w-4" /><span className="ml-1 hidden md:inline text-[10px]">Rehacer</span>
+            </Button>
+            <Separator orientation="vertical" className="mx-1 h-5" />
+            <Button variant="ghost" size="sm" className="h-8 px-2" onClick={handleCapture} title="Captura PNG">
+              <Camera className="h-4 w-4" /><span className="ml-1 hidden lg:inline text-[10px]">Captura</span>
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8 px-2" onClick={handleExportPdf} title="Descargar plano PDF">
+              <FileDown className="h-4 w-4" /><span className="ml-1 hidden lg:inline text-[10px]">Plano</span>
+            </Button>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={handleShare}>
+              <Share2 className="h-4 w-4" /><span className="hidden sm:inline text-[10px]">Compartir</span>
+            </Button>
+            <Button size="sm" className="h-8 gap-1.5 px-4" onClick={handleSave}>
+              <Save className="h-4 w-4" /><span className="text-[10px] font-semibold">Guardar</span>
+            </Button>
+          </div>
+        </div>
+
       </div>
+
+      {selectedObj && (
+        <aside className="hidden w-72 shrink-0 overflow-y-auto border-l border-border/50 bg-card/75 xl:block">
+          <div className="border-b border-border/40 px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Inspector</p>
+            <p className="text-sm font-bold text-foreground">Objeto seleccionado</p>
+          </div>
+          <ObjectPropertiesPanel
+            obj={selectedObj}
+            onUpdate={ps.updateObject}
+            onRemove={ps.removeObject}
+            onCenterInLot={handleCenterInLot}
+            onDuplicate={handleDuplicate}
+            onSnapToGround={handleSnapToGround}
+            docked
+          />
+        </aside>
+      )}
     </div>
   );
 };
