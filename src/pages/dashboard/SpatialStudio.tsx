@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Boxes,
   CheckCircle2,
@@ -38,7 +38,8 @@ type SpatialMeta = {
 
 const SpatialStudio = () => {
   const { projects, isLoading: projectsLoading, refetch: refetchProjects } = useProjects();
-  const [projectId, setProjectId] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [projectId, setProjectId] = useState(() => searchParams.get('project') || '');
   const [importOpen, setImportOpen] = useState(false);
   const [designerLot, setDesignerLot] = useState<Lot | null>(null);
 
@@ -119,7 +120,12 @@ const SpatialStudio = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={activeProjectId} onValueChange={setProjectId}>
+          <Select value={activeProjectId} onValueChange={(value) => {
+            setProjectId(value);
+            const next = new URLSearchParams(searchParams);
+            next.set('project', value);
+            setSearchParams(next, { replace: true });
+          }}>
             <SelectTrigger className="w-[280px]">
               <SelectValue placeholder="Selecciona proyecto" />
             </SelectTrigger>
