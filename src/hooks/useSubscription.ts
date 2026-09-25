@@ -372,10 +372,15 @@ export const ADDON_PRICES: Record<string, Record<AddOnType, number>> = {
 // ─────────────────────────────────────────────────────────────────────────────
 // Hooks
 // ─────────────────────────────────────────────────────────────────────────────
+/** Roles that manage the organization's billing; other members keep their personal plan. */
+export const ORG_BILLING_ROLES = ['owner', 'admin', 'org_admin'];
+export const orgBillingIdFor = (team: { organization?: { id: string } | null; organizationRole?: string | null } | null | undefined) =>
+  team?.organization && ORG_BILLING_ROLES.includes(team.organizationRole ?? '') ? team.organization.id : null;
+
 export const useSubscription = () => {
   const { user } = useAuth();
   const { data: team, isLoading: organizationLoading } = useMyOrganization();
-  const organizationId = team?.organization?.id ?? null;
+  const organizationId = orgBillingIdFor(team as any);
 
   return useQuery({
     queryKey: ['subscription', user?.id, organizationId],
@@ -422,15 +427,12 @@ export interface CheckoutParams {
 export const useCreateCheckout = () => {
   const { user } = useAuth();
   const { data: team } = useMyOrganization();
-  const organization = team?.organization ?? null;
-  const organizationRole = team?.organizationRole ?? null;
+  // Non-admin members buy/manage their own personal plan.
+  const billingOrganizationId = orgBillingIdFor(team as any);
 
   return useMutation({
     mutationFn: async (params: PlanType | CheckoutParams) => {
       if (!user) throw new Error('User not authenticated');
-      if (organization && !['owner', 'admin', 'org_admin'].includes(organizationRole ?? '')) {
-        throw new Error('Solo el propietario o un administrador puede cambiar el plan');
-      }
 
       const normalized: CheckoutParams =
         typeof params === 'string' ? { planType: params } : params;
@@ -445,7 +447,7 @@ export const useCreateCheckout = () => {
       const response = await supabase.functions.invoke('mercadopago/create-preference', {
         body: {
           plan_type: planType,
-          organization_id: organization?.id ?? null,
+          organization_id: billingOrganizationId,
           billing_cycle: billingCycle,
           first_month_discount: firstMonthDiscount,
           success_url: `${window.location.origin}/subscription/success`,

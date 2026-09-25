@@ -42,6 +42,9 @@ const roleMeta = (role: OrganizationRole) => ({
         : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
 });
 
+const normalizeLegacyOrgRole = (role: string | null | undefined) =>
+  role === 'admin' ? 'org_admin' : role === 'member' || !role ? 'sales_agent' : role;
+
 const TeamManagement = () => {
   const { data: members = [], isLoading, organization } = useTeamMembers();
   const { plan } = useCurrentPlan();
@@ -128,7 +131,7 @@ const TeamManagement = () => {
                   {!m.is_owner && (
                     <div className="flex items-center gap-1">
                       <Select
-                        value={m.org_role}
+                        value={normalizeLegacyOrgRole(m.org_role)}
                         onValueChange={(role) =>
                           teamAction.mutate(
                             { action: 'set_role', member_user_id: m.user_id, org_role: role as AssignableRole },
