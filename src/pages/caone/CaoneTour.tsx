@@ -67,11 +67,11 @@ export default function CaoneTour() {
   );
 
   useEffect(() => {
-    if (!data || selectedLotId) return;
+    if (!data) return;
     const requestedLot = lotNumber ?? searchParams.get('lote');
     if (!requestedLot) return;
     const match = data.lots.find((lot) => lot.lot_number === requestedLot);
-    if (match) setSelectedLotId(match.id);
+    if (match && match.id !== selectedLotId) setSelectedLotId(match.id);
   }, [data, lotNumber, searchParams, selectedLotId]);
 
   const selectLot = (lotId: string) => {
