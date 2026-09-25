@@ -13,9 +13,10 @@ interface ObjectPropertiesPanelProps {
   onCenterInLot: (id: string) => void;
   onDuplicate?: (id: string) => void;
   onSnapToGround?: (id: string) => void;
+  docked?: boolean;
 }
 
-export const ObjectPropertiesPanel = ({ obj, onUpdate, onRemove, onCenterInLot, onDuplicate, onSnapToGround }: ObjectPropertiesPanelProps) => {
+export const ObjectPropertiesPanel = ({ obj, onUpdate, onRemove, onCenterInLot, onDuplicate, onSnapToGround, docked = false }: ObjectPropertiesPanelProps) => {
   const catalog = obj.type !== 'glb_custom' ? OBJECT_CATALOG[obj.type] : null;
   const label = catalog?.label || obj.modelName || 'Modelo GLB';
   const icon = catalog?.icon || '📦';
@@ -23,7 +24,10 @@ export const ObjectPropertiesPanel = ({ obj, onUpdate, onRemove, onCenterInLot, 
   const rotDeg = Math.round((obj.rotation * 180) / Math.PI);
 
   return (
-    <div className="absolute top-3 left-3 z-10 bg-background/90 backdrop-blur-sm rounded-lg border border-border/40 p-3 w-52 space-y-2.5 shadow-lg">
+    <div className={docked
+      ? 'bg-background/70 p-4 w-full space-y-3'
+      : 'absolute top-14 right-3 z-20 bg-background/95 backdrop-blur-sm rounded-xl border border-border/40 p-3 w-56 space-y-2.5 shadow-xl'
+    }>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
