@@ -84,8 +84,8 @@ export const useAdminOrganizations = () =>
       const profiles = new Map(
         (profilesRes.data ?? []).map((p) => [p.user_id, p as typeof p]),
       );
-      const userSubs = new Map((subsRes.data ?? []).map((subscription) => [subscription.user_id, subscription]));
-      const organizationSubs = new Map(
+      const userSubs = new Map<string, any>((subsRes.data ?? []).map((subscription: any) => [subscription.user_id, subscription]));
+      const organizationSubs = new Map<string, any>(
         (subsRes.data ?? [])
           .filter((subscription) => subscription.organization_id)
           .map((subscription) => [subscription.organization_id as string, subscription]),
