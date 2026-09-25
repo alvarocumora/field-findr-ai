@@ -122,6 +122,39 @@ const generateLotGeoJSON = (lots: Lot[], center: { lat: number; lng: number }) =
   };
 };
 
+/**
+ * Un punto por lote (centro del polígono) para el hotspot de estado.
+ * Un layer circle sobre polígonos dibujaría un círculo en cada vértice,
+ * así que el marcador necesita su propia fuente de puntos.
+ */
+const generateLotCentersGeoJSON = (
+  polygonsGeojson: { features: GeoJSON.Feature[] },
+): GeoJSON.FeatureCollection<GeoJSON.Point> => ({
+  type: 'FeatureCollection',
+  features: polygonsGeojson.features
+    .map((feature) => {
+      const geometry = feature.geometry as GeoJSON.Polygon;
+      if (!geometry || geometry.type !== 'Polygon') return null;
+      const ring = geometry.coordinates[0] || [];
+      const points = ring.slice(0, Math.max(ring.length - 1, 1));
+      if (points.length === 0) return null;
+      const sum = points.reduce(
+        (acc, [lng, lat]) => [acc[0] + lng, acc[1] + lat],
+        [0, 0] as [number, number],
+      );
+      return {
+        type: 'Feature' as const,
+        properties: feature.properties,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [sum[0] / points.length, sum[1] / points.length],
+        },
+      };
+    })
+    .filter(Boolean) as GeoJSON.Feature<GeoJSON.Point>[],
+});
+
+
 // Align elongated master plans with the viewport while preserving geographic geometry.
 // Mapbox bearing rotates only the camera; stored [lng, lat] coordinates remain untouched.
 const calculatePlanBearing = (lots: Lot[]): number => {
@@ -203,26 +236,31 @@ const applyAvailabilityView = (
   lots: Lot[],
 ) => {
   if (!m.getLayer('lots-fill')) return;
+  const setHotspotFilter = (filter: any) => {
+    if (m.getLayer('lots-hotspot')) m.setFilter('lots-hotspot', filter);
+  };
   if (only) {
     m.setFilter('lots-fill', ['==', ['get', 'status'], 'available']);
     m.setFilter('lots-labels', ['==', ['get', 'status'], 'available']);
+    setHotspotFilter(['==', ['get', 'status'], 'available']);
     m.setPaintProperty('lots-fill', 'fill-color', '#3fae49');
     // Velo mínimo: el satélite (vegetación, caminos, relieve) debe verse.
     m.setPaintProperty('lots-fill', 'fill-opacity', 0.1);
     m.setPaintProperty('lots-outline', 'line-width', 1.8);
     m.setPaintProperty('lots-outline', 'line-opacity', 0.95);
-    m.setLayoutProperty('lots-labels', 'text-field', ['get', 'lot_number']);
   } else {
     m.setFilter('lots-fill', null);
     m.setFilter('lots-labels', null);
+    setHotspotFilter(null);
     m.setPaintProperty('lots-fill', 'fill-color', getColorExpression(mode, lots));
     m.setPaintProperty('lots-fill', 'fill-opacity', mode === 'status' ? 0.12 : 0.35);
     m.setPaintProperty('lots-outline', 'line-width', 1.8);
     m.setPaintProperty('lots-outline', 'line-opacity', 0.95);
-    m.setLayoutProperty('lots-labels', 'text-field', ['concat', 'Lote ', ['get', 'lot_number']]);
   }
-
+  // El número siempre va dentro del hotspot de estado.
+  m.setLayoutProperty('lots-labels', 'text-field', ['get', 'lot_number']);
 };
+
 
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
@@ -974,6 +1012,12 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         data: geojson,
       });
 
+      map.current.addSource('lot-centers', {
+        type: 'geojson',
+        data: generateLotCentersGeoJSON(geojson),
+      });
+
+
       // Relleno casi transparente: solo tiñe el lote, deja ver el satélite.
       map.current.addLayer({
         id: 'lots-fill',
@@ -1049,29 +1093,60 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         },
       });
 
+      // Hotspot circular por lote: el color comunica el estado comercial
+      // (verde = disponible, ámbar = reservado, gris = vendido) y el número
+      // va dentro del círculo para leerse sobre cualquier satélite.
+      map.current.addLayer({
+        id: 'lots-hotspot',
+        type: 'circle',
+        source: 'lot-centers',
+
+        paint: {
+          'circle-color': [
+            'case',
+            ['==', ['get', 'status'], 'sold'], '#475569',
+            ['==', ['get', 'status'], 'reserved'], '#d97706',
+            '#059669',
+          ],
+          'circle-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            13, 7,
+            15, 10,
+            17, 13,
+            19, 16,
+          ],
+          'circle-opacity': 0.94,
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 1.6,
+          'circle-stroke-opacity': 0.95,
+        },
+      });
+
       // Add lot numbers with better typography
       map.current.addLayer({
         id: 'lots-labels',
         type: 'symbol',
-        source: 'lots',
+        source: 'lot-centers',
+
         layout: {
-          'text-field': ['concat', 'Lote ', ['get', 'lot_number']],
+          'text-field': ['get', 'lot_number'],
           'text-size': [
             'interpolate', ['linear'], ['zoom'],
             14, 10,
-            16, 13,
-            18, 16
+            16, 12,
+            18, 14
           ],
           'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
-          'text-allow-overlap': false,
-          'text-ignore-placement': false,
+          'text-allow-overlap': true,
+          'text-ignore-placement': true,
         },
         paint: {
           'text-color': '#ffffff',
-          'text-halo-color': 'rgba(0,0,0,0.7)',
-          'text-halo-width': 1.5,
+          'text-halo-color': 'rgba(0,0,0,0.45)',
+          'text-halo-width': 0.8,
         },
       });
+
 
       // Aplica la vista inicial solo cuando la capa de etiquetas ya existe.
       // Esto asegura el filtro y el texto abreviado también en carga inicial
@@ -1162,12 +1237,13 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         popup.current?.remove();
       });
 
-      // Click handler — stored as ref so renumberMode can be read dynamically
-      map.current.on('click', 'lots-fill', (e) => {
+      // Click handler — stored as ref so renumberMode can be read dynamically.
+      // Escucha el relleno y el hotspot: tocar el número también selecciona.
+      const handleLotClick = (e: mapboxgl.MapLayerMouseEvent) => {
         if (e.features && e.features[0]) {
           const props = e.features[0].properties;
           if (!props) return;
-          
+
           const lot = lots.find(l => l.id === props.id);
           if (!lot) return;
 
@@ -1177,11 +1253,19 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             return;
           }
 
-          if (lot.status !== 'sold') {
-            onLotClick(lot);
-          }
+          // Los vendidos también se pueden consultar (ficha informativa).
+          onLotClick(lot);
         }
+      };
+      map.current.on('click', 'lots-fill', handleLotClick);
+      map.current.on('click', 'lots-hotspot', handleLotClick);
+      map.current.on('mouseenter', 'lots-hotspot', () => {
+        if (map.current) map.current.getCanvas().style.cursor = 'pointer';
       });
+      map.current.on('mouseleave', 'lots-hotspot', () => {
+        if (map.current) map.current.getCanvas().style.cursor = '';
+      });
+
     });
 
     return () => {

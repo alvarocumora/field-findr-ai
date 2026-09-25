@@ -378,8 +378,9 @@ const ProjectExperience = () => {
                   <List className="mr-1.5 h-4 w-4" /> Ver tarjeta
                 </Button>
                 <Button variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10" onClick={() => setInspectorLot(selectedLot)}>
-                  <Eye className="mr-1.5 h-4 w-4" /> Lot Inspector
+                  <Eye className="mr-1.5 h-4 w-4" /> Ver ficha
                 </Button>
+
                 <Button variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10" onClick={() => setDesignerLot(selectedLot)}>
                   <Box className="mr-1.5 h-4 w-4" /> 3D
                 </Button>
@@ -487,7 +488,7 @@ const ProjectExperience = () => {
                         lat: focusCenter?.lat ?? project.latitude ?? -34.9767,
                         lng: focusCenter?.lng ?? project.longitude ?? -71.7856,
                       }}
-                      onLotClick={(lot) => selectLot(lot, { source: 'masterplan' })}
+                      onLotClick={(lot) => selectLot(lot, { source: 'masterplan', openInspector: true })}
                       selectedLotId={selectedLot?.id ?? null}
                       projectId={project.id}
                       kmzFileUrl={(project as any).kmz_file_url}
@@ -516,7 +517,7 @@ const ProjectExperience = () => {
                         totalAvailable={availableLots.length}
                         isSelected={selectedLot?.id === lot.id}
                         projectName={project.name}
-                        onView={(item) => selectLot(item, { source: 'inventory' })}
+                        onView={(item) => selectLot(item, { source: 'inventory', openInspector: true })}
                         onView3D={(item) => {
                           selectLot(item, { source: 'inventory' });
                           setDesignerLot(item);
