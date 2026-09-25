@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 
 export type ParcelaObjectType = 
-  | 'casa_50' | 'casa_80' | 'casa_120' | 'casa_moderna'
+  | 'casa_50' | 'casa_80' | 'casa_120' | 'casa_160' | 'casa_moderna' | 'casa_mediterranea' | 'container_house'
   | 'cabana' | 'tiny_house'
   | 'piscina' | 'piscina_redonda' | 'jacuzzi'
   | 'cerco' | 'cerco_piedra' | 'entrada'
@@ -65,7 +65,10 @@ export const OBJECT_CATALOG: Record<ParcelaObjectType, CatalogItem> = {
   casa_50: { label: 'Casa 50m²', icon: '🏠', description: 'Casa pequeña compacta', defaultScale: 1, category: 'vivienda', boundingRadius: 2.5 },
   casa_80: { label: 'Casa 80m²', icon: '🏡', description: 'Casa mediana familiar', defaultScale: 1, category: 'vivienda', boundingRadius: 3.5 },
   casa_120: { label: 'Casa 120m²', icon: '🏘️', description: 'Casa grande premium', defaultScale: 1, category: 'vivienda', boundingRadius: 4.5 },
+  casa_160: { label: 'Casa 160m²', icon: '🏠', description: 'Casa amplia de 160m²', defaultScale: 1, category: 'vivienda', boundingRadius: 5.2 },
   casa_moderna: { label: 'Casa Moderna', icon: '🏗️', description: 'Casa estilo contemporáneo', defaultScale: 1, category: 'vivienda', boundingRadius: 4 },
+  casa_mediterranea: { label: 'Casa Mediterránea', icon: '🏡', description: 'Volúmenes claros y cubierta baja', defaultScale: 1, category: 'vivienda', boundingRadius: 4.5 },
+  container_house: { label: 'Casa Container', icon: '📦', description: 'Vivienda modular basada en contenedores', defaultScale: 1, category: 'vivienda', boundingRadius: 4 },
   cabana: { label: 'Cabaña', icon: '🛖', description: 'Cabaña de madera rústica', defaultScale: 1, category: 'vivienda', boundingRadius: 3 },
   tiny_house: { label: 'Tiny House', icon: '🏚️', description: 'Micro-vivienda eficiente', defaultScale: 1, category: 'vivienda', boundingRadius: 2 },
   piscina: { label: 'Piscina', icon: '🏊', description: 'Piscina rectangular 6x3m', defaultScale: 1, category: 'agua', boundingRadius: 3 },
