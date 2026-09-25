@@ -15,6 +15,10 @@ export interface PlanLot {
   label: string;
   state: LotState;
 }
+export interface PlanRoad {
+  line: [number, number][];
+  label?: string;
+}
 export interface Box { x: number; y: number; w: number; h: number }
 export interface MapView { lng: number; lat: number; zoom: number; wPx: number; hPx: number }
 
@@ -156,6 +160,7 @@ export const drawMasterplan = (
   box: Box,
   style: MasterplanStyle,
   imageData?: string | null,
+  roads: PlanRoad[] = [],
 ): Record<LotState, number> => {
   const counts: Record<LotState, number> = { available: 0, reserved: 0, sold: 0, other: 0 };
 
@@ -188,6 +193,21 @@ export const drawMasterplan = (
       doc.setLineWidth(state === 'available' ? 0.3 : 0.18);
       polygonPath(doc, lot.pts, 'S');
     }
+  }
+
+  // Roads / servitudes from the same spatial source are drawn on top of lots:
+  // a white casing keeps them legible on satellite, red centre matches the
+  // commercial masterplan convention used in the interactive map.
+  for (const road of roads) {
+    if (!road.line || road.line.length < 2) continue;
+    const pts = road.line.map(([lng, lat]) => projectToBox(lng, lat, view, box));
+    const deltas = pts.slice(1).map((p, i) => [p[0] - pts[i][0], p[1] - pts[i][1]] as [number, number]);
+    doc.setDrawColor(255, 255, 255);
+    doc.setLineWidth(1.8);
+    doc.lines(deltas, pts[0][0], pts[0][1], [1, 1], 'S', false);
+    doc.setDrawColor(220, 36, 42);
+    doc.setLineWidth(1.05);
+    doc.lines(deltas, pts[0][0], pts[0][1], [1, 1], 'S', false);
   }
 
   // Lot numbers on available parcels, sized to the parcel on paper.
