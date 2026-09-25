@@ -125,13 +125,19 @@ jobs:
         env:
           PROD_URL: https://ofertaterrenos.com
         run: |
-          set -euo pipefail
-          for path in / /planes-loteos /contacto-loteos /explorar /version.json; do
-            echo "Checking ${PROD_URL}${path}"
-            curl --fail --silent --show-error --location \
-              --retry 4 --retry-delay 5 --max-time 30 \
-              -o /dev/null "${PROD_URL}${path}"
+          set -uo pipefail
+          failed=0
+          for path in / /explorar /planes-loteos /contacto-loteos /parcelas-caone-hualane /parcelas-caone-hualane/tour /valle-de-hualane/masterplan /version.json; do
+            code=$(curl --silent --location --retry 4 --retry-delay 5 --max-time 30 \
+              -o /dev/null -w '%{http_code}' "${PROD_URL}${path}" || echo 000)
+            if [ "$code" = "200" ]; then
+              echo "OK   $code ${path}"
+            else
+              echo "::error::Health check failed: ${path} returned HTTP ${code}"
+              failed=1
+            fi
           done
+          exit $failed
 
       - name: Verify deployed commit
         run: |

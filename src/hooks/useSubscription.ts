@@ -383,7 +383,7 @@ export const useSubscription = () => {
       if (!user) return null;
 
       if (organizationId) {
-        const { data: organizationSubscription, error: organizationError } = await supabase
+        const { data: organizationSubscription, error: organizationError } = await (supabase as any)
           .from('subscriptions')
           .select('*')
           .eq('organization_id', organizationId)
@@ -396,7 +396,7 @@ export const useSubscription = () => {
       }
 
       // Compatibilidad durante la migración de suscripciones personales.
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('subscriptions')
         .select('*')
         .eq('user_id', user.id)
