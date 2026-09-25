@@ -43,6 +43,9 @@ export const ProjectBrochureTab = ({ project, lots }: Props) => {
   const [showPreview, setShowPreview] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
   const cfg = parseLandingConfig(project.landing_config);
+  const spatial = project.landing_config && typeof project.landing_config === 'object' && !Array.isArray(project.landing_config)
+    ? (project.landing_config as Record<string, any>).spatial ?? null
+    : null;
 
   const available = lots.filter(l => l.status === 'available');
   const prices = available.filter(l => Number.isFinite(Number(l.price)) && Number(l.price) > 0).map(l => Number(l.price));
@@ -99,6 +102,7 @@ export const ProjectBrochureTab = ({ project, lots }: Props) => {
           conditions,
           highlights: cfg.highlights,
           contact: cfg.contact,
+          spatial,
         }}
         lots={lots}
         requireLead={false}
