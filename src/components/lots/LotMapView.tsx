@@ -1221,7 +1221,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         filter: ['==', ['get', 'id'], selectedLotId],
         paint: {
           'fill-color': '#f6c64e',
-          'fill-opacity': 0.48,
+          // Suficiente para destacar, sin tapar los árboles ni el relieve.
+          'fill-opacity': 0.16,
         },
       });
       map.current.addLayer({
@@ -1231,9 +1232,11 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         filter: ['==', ['get', 'id'], selectedLotId],
         paint: {
           'line-color': '#f6c64e',
-          'line-width': 4,
+          'line-width': 3,
+          'line-opacity': 1,
         },
       });
+
 
       if (tourMode) {
         const selectedLot = lots.find((lot) => lot.id === selectedLotId);
