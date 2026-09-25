@@ -41,6 +41,13 @@ interface ParcelaToolbarProps {
   onSetSolarHour?: (hour: number) => void;
   measureMode?: boolean;
   onToggleMeasure?: () => void;
+  /** Embed inside the unified designer dock instead of rendering as a standalone 240px panel. */
+  embedded?: boolean;
+  /** Hide the primitive catalog when AssetCatalog is used as the single model library. */
+  showCatalog?: boolean;
+  /** Persistent designer footer can own save/share/export actions. */
+  showActions?: boolean;
+  showLotInfo?: boolean;
 }
 
 export const ParcelaToolbar = ({
@@ -52,6 +59,10 @@ export const ParcelaToolbar = ({
   transformMode, onSetTransformMode,
   solarHour = 14, onSetSolarHour,
   measureMode, onToggleMeasure,
+  embedded = false,
+  showCatalog = true,
+  showActions = true,
+  showLotInfo = true,
 }: ParcelaToolbarProps) => {
   const [expandedCategories, setExpandedCategories] = useState<Set<CatalogCategory>>(new Set(['vivienda']));
 
@@ -79,9 +90,12 @@ export const ParcelaToolbar = ({
 
   return (
     <TooltipProvider delayDuration={300}>
-      <Card className="w-60 flex flex-col h-full border-border/40 rounded-none sm:rounded-l-xl overflow-hidden">
+      <Card className={embedded
+        ? 'w-full flex flex-col h-full min-h-0 border-0 rounded-none shadow-none bg-transparent overflow-y-auto'
+        : 'w-60 flex flex-col h-full border-border/40 rounded-none sm:rounded-l-xl overflow-hidden'
+      }>
         {/* Lot Info */}
-        {lotInfo && (
+        {showLotInfo && lotInfo && (
           <div className="p-3 border-b border-border/40 bg-card">
             <p className="text-xs font-semibold text-foreground">Lote #{lotInfo.lotNumber}</p>
             <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
@@ -265,7 +279,8 @@ export const ParcelaToolbar = ({
         </div>
 
         {/* Catalog by category */}
-        <ScrollArea className="flex-1">
+        {showCatalog && (
+        <ScrollArea className="flex-1 min-h-[180px]">
           <div className="py-1">
             {categoryOrder.map((cat) => {
               const items = groupedItems[cat] || [];
@@ -305,6 +320,7 @@ export const ParcelaToolbar = ({
             })}
           </div>
         </ScrollArea>
+        )}
 
         <Separator />
 
@@ -360,6 +376,7 @@ export const ParcelaToolbar = ({
         <Separator />
 
         {/* Actions */}
+        {showActions && (
         <div className="p-2 space-y-1">
           <Button variant="outline" size="sm" onClick={onCapture} className="w-full h-7 text-[10px]">
             <Camera className="h-3 w-3 mr-1" /> Captura PNG
@@ -381,6 +398,7 @@ export const ParcelaToolbar = ({
             <RefreshCw className="h-3 w-3 mr-1" /> Reset
           </Button>
         </div>
+        )}
       </Card>
     </TooltipProvider>
   );
