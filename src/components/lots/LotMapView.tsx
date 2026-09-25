@@ -203,26 +203,31 @@ const applyAvailabilityView = (
   lots: Lot[],
 ) => {
   if (!m.getLayer('lots-fill')) return;
+  const setHotspotFilter = (filter: any) => {
+    if (m.getLayer('lots-hotspot')) m.setFilter('lots-hotspot', filter);
+  };
   if (only) {
     m.setFilter('lots-fill', ['==', ['get', 'status'], 'available']);
     m.setFilter('lots-labels', ['==', ['get', 'status'], 'available']);
+    setHotspotFilter(['==', ['get', 'status'], 'available']);
     m.setPaintProperty('lots-fill', 'fill-color', '#3fae49');
     // Velo mínimo: el satélite (vegetación, caminos, relieve) debe verse.
     m.setPaintProperty('lots-fill', 'fill-opacity', 0.1);
     m.setPaintProperty('lots-outline', 'line-width', 1.8);
     m.setPaintProperty('lots-outline', 'line-opacity', 0.95);
-    m.setLayoutProperty('lots-labels', 'text-field', ['get', 'lot_number']);
   } else {
     m.setFilter('lots-fill', null);
     m.setFilter('lots-labels', null);
+    setHotspotFilter(null);
     m.setPaintProperty('lots-fill', 'fill-color', getColorExpression(mode, lots));
     m.setPaintProperty('lots-fill', 'fill-opacity', mode === 'status' ? 0.12 : 0.35);
     m.setPaintProperty('lots-outline', 'line-width', 1.8);
     m.setPaintProperty('lots-outline', 'line-opacity', 0.95);
-    m.setLayoutProperty('lots-labels', 'text-field', ['concat', 'Lote ', ['get', 'lot_number']]);
   }
-
+  // El número siempre va dentro del hotspot de estado.
+  m.setLayoutProperty('lots-labels', 'text-field', ['get', 'lot_number']);
 };
+
 
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
