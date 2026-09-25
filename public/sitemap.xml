@@ -161,6 +161,21 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://ofertaterrenos.com/parcelas-caone-hualane</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://ofertaterrenos.com/parcelas-caone-hualane/tour</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://ofertaterrenos.com/valle-de-hualane/masterplan</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://ofertaterrenos.com/ficha/isla-de-maipo-galvez-1458</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
