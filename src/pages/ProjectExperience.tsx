@@ -488,7 +488,7 @@ const ProjectExperience = () => {
                         lat: focusCenter?.lat ?? project.latitude ?? -34.9767,
                         lng: focusCenter?.lng ?? project.longitude ?? -71.7856,
                       }}
-                      onLotClick={(lot) => selectLot(lot, { source: 'masterplan' })}
+                      onLotClick={(lot) => selectLot(lot, { source: 'masterplan', openInspector: true })}
                       selectedLotId={selectedLot?.id ?? null}
                       projectId={project.id}
                       kmzFileUrl={(project as any).kmz_file_url}
