@@ -1745,15 +1745,16 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             </div>
           </>
         )}
-      </div>}
+      </div>
 
       {tourMode && (
-        <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-xl border border-white/10 bg-black/55 px-3 py-2 text-xs text-white/80 backdrop-blur-md">
+        <div className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-xl border border-white/10 bg-black/55 px-3 py-2 text-center text-xs text-white/80 backdrop-blur-md">
           <span className="font-semibold text-emerald-300">Terrain Tour</span>
           <span className="mx-2 text-white/25">•</span>
           Arrastra para orbitar · selecciona una parcela para acercarte
         </div>
       )}
+
     </div>
   );
 };
