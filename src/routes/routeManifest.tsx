@@ -158,6 +158,7 @@ const Contacts = lazy(() => import("@/pages/dashboard/Contacts"));
 const OpportunityDetail = lazy(() => import("@/pages/dashboard/OpportunityDetail"));
 const LoteoControlCenter = lazy(() => import("@/pages/dashboard/LoteoControlCenter"));
 const SubdivisionStudio = lazy(() => import("@/pages/dashboard/SubdivisionStudio"));
+const SpatialStudio = lazy(() => import("@/pages/dashboard/SpatialStudio"));
 const Commissions = lazy(() => import("@/pages/dashboard/Commissions"));
 const TeamManagement = lazy(() => import("@/pages/dashboard/TeamManagement"));
 const MyCaptaciones = lazy(() => import("@/pages/dashboard/MyCaptaciones"));
@@ -443,6 +444,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-projects", "/asesor/projects", <ProjectsManagement />, { label: "Proyectos", group: "proyectos", icon: "folder" }),
   agent("asesor-lots", "/asesor/lots", <LotManagement />, { label: "Lotes", group: "proyectos", icon: "grid" }),
   agent("asesor-loteos", "/asesor/loteos", <LoteoControlCenter />, { label: "Control de loteo", group: "proyectos", icon: "gauge" }),
+  agent("asesor-spatial", "/asesor/spatial", <SpatialStudio />, { label: "Spatial Studio", group: "proyectos", icon: "map" }),
   agent("asesor-subdivision", "/asesor/subdivision", <SubdivisionStudio />, { label: "Estudio de subdivisión", group: "proyectos", icon: "grid" }),
 
   // CRM
