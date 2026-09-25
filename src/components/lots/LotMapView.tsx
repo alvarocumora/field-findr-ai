@@ -122,6 +122,39 @@ const generateLotGeoJSON = (lots: Lot[], center: { lat: number; lng: number }) =
   };
 };
 
+/**
+ * Un punto por lote (centro del polígono) para el hotspot de estado.
+ * Un layer circle sobre polígonos dibujaría un círculo en cada vértice,
+ * así que el marcador necesita su propia fuente de puntos.
+ */
+const generateLotCentersGeoJSON = (
+  polygonsGeojson: { features: GeoJSON.Feature[] },
+): GeoJSON.FeatureCollection<GeoJSON.Point> => ({
+  type: 'FeatureCollection',
+  features: polygonsGeojson.features
+    .map((feature) => {
+      const geometry = feature.geometry as GeoJSON.Polygon;
+      if (!geometry || geometry.type !== 'Polygon') return null;
+      const ring = geometry.coordinates[0] || [];
+      const points = ring.slice(0, Math.max(ring.length - 1, 1));
+      if (points.length === 0) return null;
+      const sum = points.reduce(
+        (acc, [lng, lat]) => [acc[0] + lng, acc[1] + lat],
+        [0, 0] as [number, number],
+      );
+      return {
+        type: 'Feature' as const,
+        properties: feature.properties,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [sum[0] / points.length, sum[1] / points.length],
+        },
+      };
+    })
+    .filter(Boolean) as GeoJSON.Feature<GeoJSON.Point>[],
+});
+
+
 // Align elongated master plans with the viewport while preserving geographic geometry.
 // Mapbox bearing rotates only the camera; stored [lng, lat] coordinates remain untouched.
 const calculatePlanBearing = (lots: Lot[]): number => {
