@@ -515,7 +515,7 @@ export const adminRouteEntries: RouteEntry[] = [
 
   // Empresas y usuarios
   admin("admin-organizations", "/admin/inmobiliarias", <OrganizationsAdmin />, { label: "Inmobiliarias", group: "gestión", icon: "building" }),
-  admin("admin-subscriptions", "/admin/suscripciones", <SubscriptionsAdmin />, { label: "Suscripciones y permisos", group: "gestión", icon: "credit-card", seo: { title: "Suscripciones y permisos · Admin", description: "Planes, estados y roles de todas las cuentas." } }),
+  admin("admin-subscriptions", "/admin/suscripciones", <SubscriptionsAdmin />, { label: "Suscripciones y permisos", group: "gestión", icon: "credit-card" }),
   {
     id: "admin-organization-detail",
     path: "/admin/inmobiliarias/:id",
