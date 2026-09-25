@@ -1703,12 +1703,12 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         ))}
       </div>}
 
-      {/* Dynamic Legend */}
-      {!tourMode && <div className="absolute bottom-16 left-3 md:bottom-4 md:left-4 bg-background/90 backdrop-blur-md rounded-xl p-2.5 md:p-3 shadow-lg border border-border/50 space-y-1.5 md:space-y-2">
+      {/* Dynamic Legend — misma simbología que los hotspots del mapa, en todos los proyectos */}
+      <div className="absolute bottom-16 left-3 md:bottom-4 md:left-4 bg-background/90 backdrop-blur-md rounded-xl p-2.5 md:p-3 shadow-lg border border-border/50 space-y-1.5 md:space-y-2">
 
         {onlyAvailable ? (
           <div className="flex items-center gap-2">
-            <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#3fae49' }} />
+            <div className="w-3.5 h-3.5 rounded-full border border-background" style={{ backgroundColor: '#059669' }} />
             <span className="text-xs font-medium">
               Disponible · {lots.filter((l) => (l.status ?? 'available') === 'available').length} parcelas
             </span>
@@ -1717,11 +1717,12 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         {!onlyAvailable && colorMode === 'status' && (
           <>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Estado</p>
-            <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-sm bg-emerald-600" /><span className="text-xs font-medium">Disponible</span></div>
-            <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-sm bg-amber-600" /><span className="text-xs font-medium">Reservado</span></div>
-            <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-sm bg-slate-500" /><span className="text-xs font-medium">Vendido</span></div>
+            <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-full border border-background bg-emerald-600" /><span className="text-xs font-medium">Disponible</span></div>
+            <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-full border border-background bg-amber-600" /><span className="text-xs font-medium">Reservado</span></div>
+            <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-full border border-background bg-slate-500" /><span className="text-xs font-medium">Vendido</span></div>
           </>
         )}
+
         {!onlyAvailable && colorMode === 'price' && (
           <>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Precio</p>
