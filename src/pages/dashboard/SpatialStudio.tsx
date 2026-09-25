@@ -74,6 +74,7 @@ const SpatialStudio = () => {
         longitude: project.longitude,
         images: project.images,
         conditions: (project as any).commercial_conditions ?? null,
+        spatial,
       } as any)
     : null;
 
