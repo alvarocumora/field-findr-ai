@@ -50,6 +50,12 @@ export const ProjectDownloadsBySlug = ({ slug, className, title, description, fa
 
   if (!project) return null;
   const cfg = parseLandingConfig(project.landing_config);
+  const rawConfig = project.landing_config && typeof project.landing_config === 'object' && !Array.isArray(project.landing_config)
+    ? project.landing_config as Record<string, unknown>
+    : {};
+  const spatial = rawConfig.spatial && typeof rawConfig.spatial === 'object'
+    ? rawConfig.spatial as KitProject['spatial']
+    : null;
   const images = [cfg.hero.image, ...cfg.gallery, ...(project.images ?? [])].filter((src): src is string => Boolean(src));
 
   return (
@@ -70,6 +76,7 @@ export const ProjectDownloadsBySlug = ({ slug, className, title, description, fa
         media: images.length ? undefined : fallbackMedia,
         highlights: cfg.highlights,
         conditions: project.commercial_conditions,
+        spatial,
         contact: {
           phone: cfg.contact.phone || fallbackContact?.phone,
           whatsapp: cfg.contact.whatsapp || fallbackContact?.whatsapp,
