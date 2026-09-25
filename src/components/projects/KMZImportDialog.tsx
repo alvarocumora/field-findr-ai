@@ -12,6 +12,7 @@ import {
   Loader2, Layers, Image as ImageIcon, X, RefreshCw, PlusCircle
 } from 'lucide-react';
 import { parseKMZFile, parseKMLFile } from '@/lib/kmz';
+import { importProjectSpatialSource } from '@/lib/kmz/projectSpatialImport';
 import type { ParsedKMZ, KMLPlacemark } from '@/lib/kmz/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -50,6 +51,7 @@ export const KMZImportDialog = ({
   const { user } = useAuth();
   const [step, setStep] = useState<ImportStep>('upload');
   const [parsedData, setParsedData] = useState<ParsedKMZ | null>(null);
+  const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [existingLots, setExistingLots] = useState<ExistingLot[]>([]);
   const [matchResults, setMatchResults] = useState<LotMatchResult[]>([]);
   const [masterPlanFile, setMasterPlanFile] = useState<File | null>(null);
@@ -112,6 +114,7 @@ export const KMZImportDialog = ({
     if (!file) return;
 
     setError(null);
+    setSourceFile(file);
     
     try {
       let result: ParsedKMZ;
@@ -132,6 +135,7 @@ export const KMZImportDialog = ({
       setStep('preview');
     } catch (err: any) {
       setError(err.message || 'Error al procesar el archivo');
+      setSourceFile(null);
     }
   }, []);
 
@@ -153,117 +157,31 @@ export const KMZImportDialog = ({
   }, []);
 
   const handleImport = async () => {
-    if (!parsedData || !user?.id) return;
+    if (!parsedData || !sourceFile || !user?.id) return;
 
     setStep('importing');
-    setImportProgress(0);
-    let updatedCount = 0;
-    let createdCount = 0;
+    setImportProgress(15);
 
     try {
-      const totalSteps = matchResults.length + 2;
-      let completed = 0;
+      const result = await importProjectSpatialSource({
+        projectId,
+        userId: user.id,
+        file: sourceFile,
+        pricing: { basePrice, pricePerSqm },
+        updateExisting,
+      });
 
-      // Update project with center coordinates (don't override lot counts - trigger handles it)
-      const { error: projectError } = await supabase
-        .from('projects')
-        .update({
-          latitude: parsedData.center.lat,
-          longitude: parsedData.center.lng,
-        })
-        .eq('id', projectId);
-
-      if (projectError) throw projectError;
-      completed++;
-      setImportProgress((completed / totalSteps) * 100);
-
-      // Upload master plan if provided
-      if (masterPlanFile) {
-        const fileName = `${projectId}/masterplan.${masterPlanFile.name.split('.').pop()}`;
-        const { error: uploadError } = await supabase.storage
-          .from('property-images')
-          .upload(fileName, masterPlanFile, { upsert: true });
-
-        if (uploadError) {
-          console.warn('Error uploading master plan:', uploadError);
-        }
-      }
-      completed++;
-      setImportProgress((completed / totalSteps) * 100);
-
-      // Process each lot - update existing or create new
-      for (const match of matchResults) {
-        const { placemark, existingLot } = match;
-        const area = placemark.area || 5000;
-        const calculatedPrice = basePrice + (area * pricePerSqm / 1000);
-        
-        // Calculate centroid for lat/lng
-        const centroid = placemark.coordinates.reduce(
-          (acc, [lng, lat]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }),
-          { lat: 0, lng: 0 }
-        );
-        const numCoords = placemark.coordinates.length;
-        const polygonData = {
-          type: 'Polygon',
-          coordinates: [placemark.coordinates],
-        };
-
-        if (existingLot && updateExisting) {
-          // Update existing lot with polygon data
-          const { error: updateError } = await supabase
-            .from('lots')
-            .update({
-              latitude: centroid.lat / numCoords,
-              longitude: centroid.lng / numCoords,
-              polygon: polygonData,
-              area: area, // Update area from KMZ
-            })
-            .eq('id', existingLot.id);
-
-          if (updateError) {
-            console.error('Error updating lot:', updateError);
-          } else {
-            updatedCount++;
-          }
-        } else if (!existingLot) {
-          // Create new lot
-          const lotNumber = match.lotNumber || String(completed);
-          
-          const { error: lotError } = await supabase
-            .from('lots')
-            .insert({
-              project_id: projectId,
-              user_id: user.id,
-              lot_number: lotNumber,
-              name: placemark.name,
-              description: placemark.description,
-              area: area,
-              price: Math.round(calculatedPrice),
-              price_per_sqm: pricePerSqm,
-              status: 'available',
-              latitude: centroid.lat / numCoords,
-              longitude: centroid.lng / numCoords,
-              polygon: polygonData,
-            });
-
-          if (lotError) {
-            console.error('Error creating lot:', lotError);
-          } else {
-            createdCount++;
-          }
-        }
-
-        completed++;
-        setImportProgress((completed / totalSteps) * 100);
-      }
-
-      setImportStats({ updated: updatedCount, created: createdCount });
+      setImportProgress(100);
+      setImportStats({ updated: result.updated, created: result.inserted });
       setStep('complete');
-      
-      const message = updateExisting && updatedCount > 0
-        ? `${updatedCount} lotes actualizados, ${createdCount} lotes creados`
-        : `${createdCount} lotes importados correctamente`;
-      toast.success(message);
+
+      const parts = [
+        result.updated ? `${result.updated} actualizados` : '',
+        result.inserted ? `${result.inserted} creados` : '',
+        result.roads ? `${result.roads} caminos/servidumbres` : '',
+      ].filter(Boolean);
+
+      toast.success(`Spatial Engine: ${parts.join(' · ') || 'fuente sincronizada'}`);
     } catch (err: any) {
       setError(err.message || 'Error durante la importación');
       setStep('configure');
