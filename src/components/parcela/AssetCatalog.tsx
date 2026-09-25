@@ -44,6 +44,9 @@ const BUILT_IN_ASSETS: BuiltInAsset[] = [
   { name: 'Cerco Industrial', icon: '🚧', type: 'cerco_industrial', category: 'industrial' },
   // Casas
   { name: 'Casa Moderna', icon: '🏠', type: 'casa_moderna', category: 'casas' },
+  { name: 'Casa 160m²', icon: '🏠', type: 'casa_160', category: 'casas' },
+  { name: 'Mediterránea', icon: '🏡', type: 'casa_mediterranea', category: 'casas' },
+  { name: 'Casa Container', icon: '📦', type: 'container_house', category: 'casas' },
   { name: 'Cabaña', icon: '🛖', type: 'cabana', category: 'casas' },
   { name: 'Tiny House', icon: '🏡', type: 'tiny_house', category: 'casas' },
   { name: 'Casa 50m²', icon: '🏘️', type: 'casa_50', category: 'casas' },
