@@ -1196,12 +1196,13 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         popup.current?.remove();
       });
 
-      // Click handler — stored as ref so renumberMode can be read dynamically
-      map.current.on('click', 'lots-fill', (e) => {
+      // Click handler — stored as ref so renumberMode can be read dynamically.
+      // Escucha el relleno y el hotspot: tocar el número también selecciona.
+      const handleLotClick = (e: mapboxgl.MapLayerMouseEvent) => {
         if (e.features && e.features[0]) {
           const props = e.features[0].properties;
           if (!props) return;
-          
+
           const lot = lots.find(l => l.id === props.id);
           if (!lot) return;
 
@@ -1211,11 +1212,19 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
             return;
           }
 
-          if (lot.status !== 'sold') {
-            onLotClick(lot);
-          }
+          // Los vendidos también se pueden consultar (ficha informativa).
+          onLotClick(lot);
         }
+      };
+      map.current.on('click', 'lots-fill', handleLotClick);
+      map.current.on('click', 'lots-hotspot', handleLotClick);
+      map.current.on('mouseenter', 'lots-hotspot', () => {
+        if (map.current) map.current.getCanvas().style.cursor = 'pointer';
       });
+      map.current.on('mouseleave', 'lots-hotspot', () => {
+        if (map.current) map.current.getCanvas().style.cursor = '';
+      });
+
     });
 
     return () => {
