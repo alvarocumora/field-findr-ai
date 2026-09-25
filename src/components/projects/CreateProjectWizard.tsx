@@ -20,7 +20,7 @@ import { UseMutationResult } from '@tanstack/react-query';
 import { Project, ProjectInsert, ProjectUpdate } from '@/hooks/useProjects';
 import { parseKMZFile, parseKMLFile } from '@/lib/kmz';
 import type { ParsedKMZ } from '@/lib/kmz/types';
-import { planKmzImport } from '@/lib/kmz/kmzToLots';
+import { importProjectSpatialSource } from '@/lib/kmz/projectSpatialImport';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -102,6 +102,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
   const [parsedKMZ, setParsedKMZ] = useState<ParsedKMZ | null>(null);
   const [kmzError, setKmzError] = useState<string | null>(null);
   const [kmzFileName, setKmzFileName] = useState<string | null>(null);
+  const [kmzFile, setKmzFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
 
   const update = (partial: Partial<WizardData>) => setData(prev => ({ ...prev, ...partial }));
@@ -116,6 +117,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
     if (!file) return;
     setKmzError(null);
     setKmzFileName(file.name);
+    setKmzFile(file);
 
     try {
       let result: ParsedKMZ;
@@ -137,6 +139,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
     } catch (err: any) {
       setKmzError(err.message || 'Error al procesar el archivo');
       setParsedKMZ(null);
+      setKmzFile(null);
     }
   }, [data.total_lots]);
 
@@ -177,52 +180,29 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         projectId = result.id;
       }
 
-      // Import KMZ lots (create or edit). Upserts by lot number so importing on
-      // an existing project updates matching lots instead of duplicating, and
-      // writes a RAW [lng,lat] polygon so lots render on the map (not simulated).
-      if (parsedKMZ && user?.id) {
+      // Unified Spatial Engine: one importer for create, edit and Spatial Studio.
+      // It persists the original KMZ/KML, reconstructs lots, extracts roads /
+      // servitudes and updates project spatial metadata in the same transaction flow.
+      if (parsedKMZ && kmzFile && user?.id) {
         const basePrice = data.price_base || 15000000;
         const pricePerSqm = data.total_area && data.price_base && data.total_lots
           ? Math.round((data.price_base * data.total_lots) / data.total_area)
           : 3000;
 
-        let existing: Array<{ id: string; lot_number: string | null }> = [];
-        if (isEditing) {
-          const { data: ex } = await supabase.from('lots').select('id, lot_number').eq('project_id', projectId);
-          existing = ex ?? [];
-        }
+        const result = await importProjectSpatialSource({
+          projectId,
+          userId: user.id,
+          file: kmzFile,
+          pricing: { basePrice, pricePerSqm },
+          updateExisting: true,
+        });
 
-        const { toInsert, toUpdate } = planKmzImport(parsedKMZ.placemarks, existing, { basePrice, pricePerSqm });
-
-        if (toInsert.length > 0) {
-          const rows = toInsert.map((r) => ({
-            ...r,
-            project_id: projectId,
-            user_id: user.id,
-            polygon: r.polygon as unknown as never,
-          }));
-          const { error: insErr } = await supabase.from('lots').insert(rows);
-          if (insErr) throw insErr;
-        }
-        for (const u of toUpdate) {
-          await supabase.from('lots').update({
-            polygon: u.row.polygon as unknown as never,
-            area: u.row.area,
-            latitude: u.row.latitude,
-            longitude: u.row.longitude,
-          }).eq('id', u.id);
-        }
-
-        // Update project center from KMZ
-        await supabase.from('projects').update({
-          latitude: parsedKMZ.center.lat,
-          longitude: parsedKMZ.center.lng,
-        }).eq('id', projectId);
-
-        const parts: string[] = [];
-        if (toInsert.length) parts.push(`${toInsert.length} importados`);
-        if (toUpdate.length) parts.push(`${toUpdate.length} actualizados`);
-        toast.success(`Lotes desde KMZ: ${parts.join(' · ') || 'sin cambios'}`);
+        const parts = [
+          result.inserted ? `${result.inserted} importados` : '',
+          result.updated ? `${result.updated} actualizados` : '',
+          result.roads ? `${result.roads} caminos/servidumbres` : '',
+        ].filter(Boolean);
+        toast.success(`Spatial Engine: ${parts.join(' · ') || 'geometría sincronizada'}`);
       }
 
       onComplete();
@@ -295,7 +275,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
             kmzError={kmzError}
             kmzFileName={kmzFileName}
             onUpload={handleKMZUpload}
-            onClear={() => { setParsedKMZ(null); setKmzFileName(null); setKmzError(null); }}
+            onClear={() => { setParsedKMZ(null); setKmzFileName(null); setKmzFile(null); setKmzError(null); }}
           />
         )}
         {step === 5 && (
