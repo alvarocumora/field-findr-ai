@@ -23,8 +23,8 @@ const CaoneLanding = () => {
   const eligible = useMemo(() => lots.filter(([, area]) => area >= 1), []);
 
   useSEO({
-    title: 'Parcelas Caone Hualañé · 1 ha desde $12.990.000',
-    description: 'Master plan ROL 168-921 en Sector Caone, Hualañé. 38 parcelas desde 1 hectárea con valor de lanzamiento de $12.990.000 CLP por hectárea y tour virtual satelital.',
+    title: 'Valle de Hualañé · Parcelas desde 1 ha · ROL 168-921',
+    description: 'Valle de Hualañé, ROL 168-921 en Sector Caone. Masterplan generado desde KMZ, parcelas desde 1 hectárea a $12.990.000 CLP por hectárea y tour satelital 3D.',
     type: 'website',
     url: 'https://ofertaterrenos.com/parcelas-caone-hualane',
     canonicalUrl: 'https://ofertaterrenos.com/parcelas-caone-hualane',
@@ -43,9 +43,11 @@ const CaoneLanding = () => {
           <Badge className="mb-4 bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]">Precio lanzamiento</Badge>
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-100/80">Caone · Hualañé · Región del Maule</p>
-              <h1 className="mt-3 max-w-4xl text-4xl font-black tracking-tight md:text-6xl">Parcelas rurales desde 1 hectárea</h1>
-              <p className="mt-4 max-w-2xl text-lg text-white/80">Master plan del ROL 168-921, Sector Caone. Lotes seleccionados desde 1,00 ha con valor de lanzamiento.</p>
+              <img src="/brands/valle-de-hualane-logo.svg" alt="Valle de Hualañé" className="mb-5 h-24 w-auto max-w-full md:h-32" />
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-100/80">Sector Caone · Hualañé · Región del Maule</p>
+              <h1 className="mt-3 max-w-4xl text-4xl font-black tracking-tight md:text-6xl">Valle de Hualañé</h1>
+              <p className="mt-3 text-xl font-semibold text-[#f6c64e]">Parcelas rurales desde 1 hectárea</p>
+              <p className="mt-4 max-w-2xl text-lg text-white/80">Proyecto ROL 168-921. Masterplan comercial generado desde la geometría KMZ del proyecto, con lotes seleccionados desde 1,00 ha.</p>
             </div>
             <div className="rounded-3xl bg-[#f6c64e] px-7 py-6 text-center text-[#17352d] shadow-xl">
               <p className="text-xs font-bold uppercase tracking-wider">Desde</p>
@@ -55,7 +57,7 @@ const CaoneLanding = () => {
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" className="bg-white text-[#17352d] hover:bg-white/90">
-              <a href="#masterplan">Ver master plan</a>
+              <Link to="/valle-de-hualane/masterplan"><FileText className="mr-2 h-4 w-4" />Masterplan KMZ + PDF</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
               <Link to="/parcelas-caone-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Tour virtual</Link>
@@ -143,14 +145,21 @@ const CaoneLanding = () => {
             </div>
             <Badge variant="outline" className="border-[#1b5c49]/30 text-[#1b5c49]">38 lotes ≥ 1 ha</Badge>
           </div>
-          <div className="overflow-hidden rounded-3xl border border-[#1b5c49]/15 bg-white shadow-sm">
+          <Link to="/valle-de-hualane/masterplan" className="group block overflow-hidden rounded-3xl border border-[#1b5c49]/15 bg-white shadow-sm">
             <img
               src="/projects/caone-hualane-168-921-masterplan.svg"
-              alt="Master plan Parcelas Caone Hualañé ROL 168-921"
-              className="block h-auto w-full"
+              alt="Vista previa masterplan Valle de Hualañé ROL 168-921"
+              className="block h-auto w-full transition duration-300 group-hover:scale-[1.01]"
             />
-          </div>
-          <p className="mt-3 text-xs text-slate-500">Master plan preparado desde la planimetría y KMZ del ROL 168-921. La disponibilidad, deslindes y antecedentes legales deben confirmarse antes de reservar o comprar.</p>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#1b5c49]/10 p-4 md:p-5">
+              <div>
+                <p className="font-bold text-[#17352d]">Abrir masterplan interactivo desde KMZ</p>
+                <p className="mt-1 text-xs text-slate-500">Vista satelital · lotes reales · servidumbres · descarga PDF A3</p>
+              </div>
+              <Button className="bg-[#17352d] text-white hover:bg-[#17352d]/90">Abrir masterplan</Button>
+            </div>
+          </Link>
+          <p className="mt-3 text-xs text-slate-500">El masterplan interactivo usa la geometría de lotes y servidumbres derivada del KMZ del ROL 168-921. La disponibilidad, deslindes y antecedentes legales deben confirmarse antes de reservar o comprar.</p>
         </section>
 
         <section className="pb-12">
