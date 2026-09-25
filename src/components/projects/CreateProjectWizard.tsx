@@ -21,7 +21,6 @@ import { Project, ProjectInsert, ProjectUpdate } from '@/hooks/useProjects';
 import { parseKMZFile, parseKMLFile } from '@/lib/kmz';
 import type { ParsedKMZ } from '@/lib/kmz/types';
 import { importProjectSpatialSource } from '@/lib/kmz/projectSpatialImport';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { CommercialConditionsForm, type CommercialConditions, DEFAULT_CONDITIONS } from './CommercialConditionsForm';
