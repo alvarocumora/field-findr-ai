@@ -18,7 +18,7 @@ interface ShareButtonsProps {
 
 export const ShareButtons = ({ title, description, url, variant = 'default', className }: ShareButtonsProps) => {
   const shareUrl = url || window.location.href;
-  const shareText = description || title;
+  const shareText = title;
 
   const handleNativeShare = async () => {
     if (navigator.share) {
@@ -44,11 +44,13 @@ export const ShareButtons = ({ title, description, url, variant = 'default', cla
   };
 
   const openShare = (platform: string) => {
-    const attributedUrl = new URL(shareUrl, window.location.origin);
-    attributedUrl.searchParams.set('utm_source', platform);
-    attributedUrl.searchParams.set('utm_medium', 'share');
-    const encoded = encodeURIComponent(attributedUrl.href);
-    const encodedText = encodeURIComponent(description ? `${title}\n${description}` : title);
+    // Keep public share URLs clean and short. Attribution query params make
+    // WhatsApp links unreadable and are unnecessary for the share card.
+    const cleanUrl = new URL(shareUrl, window.location.origin);
+    cleanUrl.search = '';
+    cleanUrl.hash = '';
+    const encoded = encodeURIComponent(cleanUrl.href);
+    const encodedText = encodeURIComponent(platform === 'email' && description ? `${title}\n${description}` : title);
     const urls: Record<string, string> = {
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encoded}`,
       twitter: `https://twitter.com/intent/tweet?url=${encoded}&text=${encodedText}`,
