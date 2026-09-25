@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import {
-  useSubscription,
+  useSubscription, orgBillingIdFor,
   useCreateCheckout,
   PLAN_DETAILS,
   LATAM_PRICES,
@@ -33,7 +33,7 @@ const Subscription = () => {
   const { user } = useAuth();
   const { data: subscription, isLoading: subLoading } = useSubscription();
   const { data: team, isLoading: organizationLoading } = useMyOrganization();
-  const organizationId = team?.organization?.id ?? null;
+  const organizationId = orgBillingIdFor(team as any);
   const { mutate: createCheckout, isPending: checkoutLoading } = useCreateCheckout();
 
   // Historial del workspace activo, con fallback para pagos personales legacy.

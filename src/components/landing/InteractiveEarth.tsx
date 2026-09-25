@@ -96,6 +96,12 @@ const InteractiveEarth = ({ reducedMotion, onReady }: InteractiveEarthProps) => 
 
         mapRef.current = map;
         map.scrollZoom.disable();
+        // On touch devices let one-finger swipes scroll the page; two fingers pan the map.
+        if (window.matchMedia('(pointer: coarse)').matches) {
+          map.dragPan.disable();
+          map.touchZoomRotate.disableRotation();
+          map.getCanvas().style.touchAction = 'pan-y';
+        }
         map.addControl(new mapboxgl.NavigationControl({
           showCompass: true,
           showZoom: true,
@@ -189,7 +195,7 @@ const InteractiveEarth = ({ reducedMotion, onReady }: InteractiveEarthProps) => 
     <div className="atlas-live-globe absolute inset-0">
       <div
         ref={containerRef}
-        className="h-full w-full"
+        className="h-full w-full touch-pan-y"
         role="application"
         aria-label="Globo satelital interactivo de Chile. Arrastra para explorar y selecciona un proyecto."
       />

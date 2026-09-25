@@ -348,9 +348,16 @@ const preparePlan = async (
   token?: string | null,
 ): Promise<PreparedPlan | null> => {
   const planLots = planLotsOf(lots);
-  if (!planLots.length) return null;
   const { wPx, hPx } = imageSizeForBox(box);
-  const view = fitView(planLots.map((l) => l.ring), wPx, hPx);
+  let frame = planLots.map((l) => l.ring);
+  if (!frame.length) {
+    // No drawn boundaries: still deliver the satellite view around the project centre.
+    const c = centerOf(project, lots);
+    if (!c) return null;
+    const dLat = 0.004, dLng = 0.004 / Math.max(0.2, Math.cos((c.lat * Math.PI) / 180));
+    frame = [[[c.lng - dLng, c.lat - dLat], [c.lng + dLng, c.lat - dLat], [c.lng + dLng, c.lat + dLat], [c.lng - dLng, c.lat + dLat], [c.lng - dLng, c.lat - dLat]]];
+  }
+  const view = fitView(frame, wPx, hPx);
   if (!view) return null;
   const image = token ? await fetchImageAsBase64(staticImageUrl(view, token)) : null;
   return { lots: planLots, roads: planRoadsOf(project), view, image };
