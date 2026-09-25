@@ -14,7 +14,6 @@ import {
 import { parseKMZFile, parseKMLFile } from '@/lib/kmz';
 import { importProjectSpatialSource } from '@/lib/kmz/projectSpatialImport';
 import type { ParsedKMZ, KMLPlacemark } from '@/lib/kmz/types';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
