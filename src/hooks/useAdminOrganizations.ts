@@ -66,7 +66,7 @@ export const useAdminOrganizations = () =>
           supabase.from('organizations').select('id, name, slug, logo_url, owner_id, created_at'),
           supabase.from('organization_members').select('organization_id, user_id, role'),
           supabase.from('profiles').select('user_id, first_name, last_name, email'),
-          supabase.from('subscriptions').select('user_id, organization_id, plan_type, status, updated_at'),
+          (supabase as any).from('subscriptions').select('user_id, organization_id, plan_type, status, updated_at'),
           supabase
             .from('projects')
             .select('id, name, status, total_lots, sold_lots, slug, organization_id, user_id, updated_at'),
@@ -174,7 +174,7 @@ export const useAdminSetOrgPlan = () => {
       ownerId: string;
       plan: PlanType;
     }) => {
-      const organizationUpdate = await supabase
+      const organizationUpdate = await (supabase as any)
         .from('subscriptions')
         .update({ plan_type: plan })
         .eq('organization_id', organizationId)
@@ -182,14 +182,14 @@ export const useAdminSetOrgPlan = () => {
       if (organizationUpdate.error) throw organizationUpdate.error;
 
       if ((organizationUpdate.data ?? []).length === 0) {
-        const legacyUpdate = await supabase
+        const legacyUpdate = await (supabase as any)
           .from('subscriptions')
           .update({ plan_type: plan, organization_id: organizationId })
           .eq('user_id', ownerId)
           .select('id');
         if (legacyUpdate.error) throw legacyUpdate.error;
         if ((legacyUpdate.data ?? []).length === 0) {
-          const { error } = await supabase.from('subscriptions').insert({
+          const { error } = await (supabase as any).from('subscriptions').insert({
             user_id: ownerId,
             organization_id: organizationId,
             plan_type: plan,

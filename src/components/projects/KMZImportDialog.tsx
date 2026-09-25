@@ -16,6 +16,7 @@ import { importProjectSpatialSource } from '@/lib/kmz/projectSpatialImport';
 import type { ParsedKMZ, KMLPlacemark } from '@/lib/kmz/types';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface KMZImportDialogProps {
   projectId: string;
