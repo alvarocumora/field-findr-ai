@@ -894,7 +894,7 @@ export const parseKMZFromUrl = async (url: string): Promise<ParsedKMZ> => {
 // ============= ROAD GEOMETRY EXTRACTION =============
 
 const LOT_NAME_REGEX = /Lote[:\s\-]*\d+/i;
-const ROAD_KEYWORDS = /camino|calle|acceso|road|street|vialidad|pasaje|avenida|sendero|path/i;
+const ROAD_KEYWORDS = /camino|calle|acceso|road|street|vialidad|pasaje|avenida|sendero|path|servidumbre|transito|tránsito|huella/i;
 
 /**
  * Extract road geometries from a KMZ/KML file.
