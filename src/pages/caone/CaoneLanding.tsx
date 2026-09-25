@@ -17,7 +17,7 @@ const lots = [
 
 const clp = (value: number) => `$${value.toLocaleString('es-CL')}`;
 const pricePerHa = 12_990_000;
-const projectUrl = 'https://ofertaterrenos.com/parcelas-caone-hualane';
+const projectUrl = 'https://ofertaterrenos.com/valle-hualane';
 
 const CaoneLanding = () => {
   const eligible = useMemo(() => lots.filter(([, area]) => area >= 1), []);
@@ -26,8 +26,9 @@ const CaoneLanding = () => {
     title: 'Valle de Hualañé · Parcelas desde 1 ha · ROL 168-921',
     description: 'Valle de Hualañé, ROL 168-921 en Sector Caone. Masterplan generado desde KMZ, parcelas desde 1 hectárea a $12.990.000 CLP por hectárea y tour satelital 3D.',
     type: 'website',
-    url: 'https://ofertaterrenos.com/parcelas-caone-hualane',
-    canonicalUrl: 'https://ofertaterrenos.com/parcelas-caone-hualane',
+    url: 'https://ofertaterrenos.com/valle-hualane',
+    canonicalUrl: 'https://ofertaterrenos.com/valle-hualane',
+    image: 'https://ofertaterrenos.com/social/valle-hualane-og.png',
   });
 
   const copyProjectLink = async () => {
@@ -57,10 +58,10 @@ const CaoneLanding = () => {
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" className="bg-white text-[#17352d] hover:bg-white/90">
-              <Link to="/valle-de-hualane/masterplan"><FileText className="mr-2 h-4 w-4" />Masterplan KMZ + PDF</Link>
+              <Link to="/valle-hualane/plano"><FileText className="mr-2 h-4 w-4" />Masterplan KMZ + PDF</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
-              <Link to="/parcelas-caone-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Tour virtual</Link>
+              <Link to="/valle-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Tour virtual</Link>
             </Button>
             <Button size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white" onClick={copyProjectLink}>
               <Copy className="mr-2 h-4 w-4" />Copiar link
@@ -114,14 +115,14 @@ const CaoneLanding = () => {
               </div>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Button asChild size="lg" className="bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]/90">
-                  <Link to="/parcelas-caone-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Iniciar tour virtual</Link>
+                  <Link to="/valle-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Iniciar tour virtual</Link>
                 </Button>
                 <Button size="lg" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={copyProjectLink}>
                   <Copy className="mr-2 h-4 w-4" />Compartir proyecto
                 </Button>
               </div>
             </div>
-            <Link to="/parcelas-caone-hualane/tour" className="group relative block min-h-[360px] overflow-hidden bg-black md:min-h-[430px]">
+            <Link to="/valle-hualane/tour" className="group relative block min-h-[360px] overflow-hidden bg-black md:min-h-[430px]">
               <ProjectScene3D latitude={-35.001545359260206} longitude={-71.65328947973632} />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/10" />
               <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between gap-3">
@@ -145,7 +146,7 @@ const CaoneLanding = () => {
             </div>
             <Badge variant="outline" className="border-[#1b5c49]/30 text-[#1b5c49]">38 lotes ≥ 1 ha</Badge>
           </div>
-          <Link to="/valle-de-hualane/masterplan" className="group block overflow-hidden rounded-3xl border border-[#1b5c49]/15 bg-white shadow-sm">
+          <Link to="/valle-hualane/plano" className="group block overflow-hidden rounded-3xl border border-[#1b5c49]/15 bg-white shadow-sm">
             <img
               src="/projects/caone-hualane-168-921-masterplan.svg"
               alt="Vista previa masterplan Valle de Hualañé ROL 168-921"
@@ -193,7 +194,7 @@ const CaoneLanding = () => {
             </div>
             <div className="flex flex-wrap gap-2">
               <Button asChild size="lg" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                <Link to="/parcelas-caone-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Abrir tour virtual</Link>
+                <Link to="/valle-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Abrir tour virtual</Link>
               </Button>
               <Button asChild size="lg" className="bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]/90">
                 <Link to="/contacto-loteos">Hablar con OfertaTerrenos</Link>
