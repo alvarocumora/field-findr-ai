@@ -25,6 +25,7 @@ import { LotDesigner3DDialog } from '@/components/lots/LotDesigner3DDialog';
 import { ProjectDownloads } from '@/components/projects/ProjectDownloads';
 import { useProjects } from '@/hooks/useProjects';
 import { useLots, type Lot } from '@/hooks/useLots';
+import { SpatialValidationPanel } from '@/components/spatial/SpatialValidationPanel';
 
 type SpatialMeta = {
   source_file_name?: string;
@@ -157,6 +158,10 @@ const SpatialStudio = () => {
               </Card>
             ))}
           </div>
+
+          {!lotsLoading && (
+            <SpatialValidationPanel project={project as any} lots={lots} roads={spatial.roads ?? 0} sourceReady={sourceReady} />
+          )}
 
           <Tabs defaultValue="source" className="space-y-4">
             <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-4">
