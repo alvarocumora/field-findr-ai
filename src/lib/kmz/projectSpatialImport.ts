@@ -93,9 +93,11 @@ export async function importProjectSpatialSource({
   }
 
   const roads = await extractRoadGeometries(file);
+  // Always match against existing lots so turning off "update existing" means
+  // "leave matched lots untouched", never "insert duplicates".
   const plan = planKmzImport(
     polygons,
-    updateExisting ? existing.map(({ id, lot_number }) => ({ id, lot_number })) : [],
+    existing.map(({ id, lot_number }) => ({ id, lot_number })),
     pricing,
   );
 
