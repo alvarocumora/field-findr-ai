@@ -39,7 +39,10 @@ describe('static social preview build', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0][0]).toContain('status=eq.active');
     const report = JSON.parse(await readFile(join(temp!, 'dist/project-previews.json'), 'utf8'));
-    expect(report.routes).toEqual([`/proyecto/${id}`, '/p/test-project']);
+    expect(report.routes).toEqual(expect.arrayContaining([`/proyecto/${id}`, '/p/test-project']));
+    expect(report.routes).toContain('/valle-hualane');
+    expect(report.routes).toContain('/valle-hualane/tour');
+    expect(report.routes).toContain('/valle-hualane/plano');
   });
   it('fails the build on API errors instead of publishing misleading generic cards', async () => {
     const run = await setup();
