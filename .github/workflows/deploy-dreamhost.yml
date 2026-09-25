@@ -127,7 +127,7 @@ jobs:
         run: |
           set -uo pipefail
           failed=0
-          for path in / /explorar /planes-loteos /contacto-loteos /parcelas-caone-hualane /parcelas-caone-hualane/tour /valle-de-hualane/masterplan /version.json; do
+          for path in / /explorar /planes-loteos /contacto-loteos /valle-hualane /valle-hualane/tour /valle-hualane/plano /parcelas-caone-hualane /version.json; do
             code=$(curl --silent --location --retry 4 --retry-delay 5 --max-time 30 \
               -o /dev/null -w '%{http_code}' "${PROD_URL}${path}" || echo 000)
             if [ "$code" = "200" ]; then
