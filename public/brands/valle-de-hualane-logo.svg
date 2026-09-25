@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+  <title id="title">Valle de Hualañé</title>
+  <desc id="desc">Logo del proyecto rural Valle de Hualañé</desc>
+  <defs>
+    <linearGradient id="gold" x1="0" x2="1"><stop offset="0" stop-color="#c99b42"/><stop offset=".5" stop-color="#f0d28a"/><stop offset="1" stop-color="#b9832e"/></linearGradient>
+    <linearGradient id="hill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f6a50"/><stop offset="1" stop-color="#123c31"/></linearGradient>
+    <clipPath id="markClip"><circle cx="160" cy="160" r="132"/></clipPath>
+  </defs>
+  <g>
+    <circle cx="160" cy="160" r="138" fill="#0a3129" stroke="url(#gold)" stroke-width="7"/>
+    <g clip-path="url(#markClip)">
+      <rect x="22" y="22" width="276" height="276" fill="#f4e8bd"/>
+      <circle cx="227" cy="91" r="34" fill="#e8bd63"/>
+      <path d="M15 165 C70 113,126 121,175 150 C211 171,242 164,307 117 L307 305 L15 305 Z" fill="#78936b"/>
+      <path d="M0 198 C64 145,111 156,164 179 C216 201,255 188,316 153 L316 316 L0 316 Z" fill="url(#hill)"/>
+      <path d="M1 237 C67 192,122 198,177 220 C231 242,276 227,322 195 L322 323 L1 323 Z" fill="#0b2f28"/>
+      <g fill="none" stroke="#f2d78f" stroke-width="4" opacity=".95">
+        <path d="M77 220 C112 199,148 192,196 195"/>
+        <path d="M116 260 C160 228,208 219,270 223"/>
+        <path d="M171 198 L151 245"/>
+        <path d="M218 194 L205 230"/>
+        <path d="M253 181 L243 222"/>
+      </g>
+      <g fill="#143c31">
+        <path d="M70 174 l15-39 15 39z"/><rect x="83" y="172" width="4" height="28"/>
+        <path d="M100 166 l13-34 13 34z"/><rect x="111" y="164" width="4" height="30"/>
+        <path d="M49 186 l12-31 12 31z"/><rect x="59" y="184" width="4" height="24"/>
+      </g>
+    </g>
+    <path d="M56 269 C112 248,205 246,269 214" fill="none" stroke="url(#gold)" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(335 72)">
+    <text x="0" y="40" fill="#b98a35" font-family="Georgia, 'Times New Roman', serif" font-size="29" font-weight="700" letter-spacing="8">VALLE DE</text>
+    <line x1="0" y1="56" x2="380" y2="56" stroke="#c69c4c" stroke-width="2"/>
+    <text x="0" y="139" fill="#123c31" font-family="Georgia, 'Times New Roman', serif" font-size="91" font-weight="700" letter-spacing="2">HUALAÑÉ</text>
+    <text x="3" y="184" fill="#557264" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="600" letter-spacing="4">NATURALEZA · INVERSIÓN · TERRITORIO</text>
+  </g>
+</svg>
