@@ -1012,6 +1012,12 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         data: geojson,
       });
 
+      map.current.addSource('lot-centers', {
+        type: 'geojson',
+        data: generateLotCentersGeoJSON(geojson),
+      });
+
+
       // Relleno casi transparente: solo tiñe el lote, deja ver el satélite.
       map.current.addLayer({
         id: 'lots-fill',
