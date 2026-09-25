@@ -1126,7 +1126,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       map.current.addLayer({
         id: 'lots-labels',
         type: 'symbol',
-        source: 'lots',
+        source: 'lot-centers',
+
         layout: {
           'text-field': ['get', 'lot_number'],
           'text-size': [
