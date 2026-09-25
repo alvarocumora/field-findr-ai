@@ -9,7 +9,7 @@ import { ensureFichaFonts } from '@/lib/pdf/fichaFonts';
 import { fittedImage, safePdfLink } from '@/lib/pdf/media';
 import {
   drawMasterplan, fitView, imageSizeForBox, normalizeLotState, staticImageUrl,
-  type Box, type LotState, type MapView, type MasterplanStyle, type PlanLot,
+  type Box, type LotState, type MapView, type MasterplanStyle, type PlanLot, type PlanRoad,
 } from '@/lib/pdf/masterplan';
 import { projectCanonicalUrl, SITE_URL } from '@/lib/landing/paths';
 import { referenceProjectMedia } from './projectMedia';
@@ -59,6 +59,13 @@ export interface KitProject {
     reservation_deposit?: number | null;
   } | null;
   contact?: { phone?: string | null; whatsapp?: string | null; email?: string | null } | null;
+  spatial?: {
+    source_file_name?: string;
+    source_file_url?: string | null;
+    parser_version?: string;
+    roads?: number;
+    roads_geojson?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
+  } | null;
 }
 
 export interface KitOptions {
@@ -321,17 +328,32 @@ const planStyle = (onSatellite: boolean): MasterplanStyle => ({
   fontBold: themeFont('heading') === 'montserrat' ? 'montserrat' : themeFont('heading'),
 });
 
-interface PreparedPlan { lots: PlanLot[]; view: MapView; image: string | null }
+interface PreparedPlan { lots: PlanLot[]; roads: PlanRoad[]; view: MapView; image: string | null }
+
+const planRoadsOf = (project: KitProject): PlanRoad[] =>
+  (project.spatial?.roads_geojson?.features ?? [])
+    .map((feature) => ({
+      line: (feature.geometry?.coordinates ?? [])
+        .map((p) => [Number(p[0]), Number(p[1])] as [number, number])
+        .filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1])),
+      label: typeof feature.properties?.name === 'string' ? feature.properties.name : undefined,
+    }))
+    .filter((road) => road.line.length >= 2);
 
 /** Encuadre + imagen satelital (sin overlays) para una caja dada. */
-const preparePlan = async (lots: KitLot[], box: Box, token?: string | null): Promise<PreparedPlan | null> => {
+const preparePlan = async (
+  project: KitProject,
+  lots: KitLot[],
+  box: Box,
+  token?: string | null,
+): Promise<PreparedPlan | null> => {
   const planLots = planLotsOf(lots);
   if (!planLots.length) return null;
   const { wPx, hPx } = imageSizeForBox(box);
   const view = fitView(planLots.map((l) => l.ring), wPx, hPx);
   if (!view) return null;
   const image = token ? await fetchImageAsBase64(staticImageUrl(view, token)) : null;
-  return { lots: planLots, view, image };
+  return { lots: planLots, roads: planRoadsOf(project), view, image };
 };
 
 const STATE_LABEL: Record<Exclude<LotState, 'other'>, string> = {
@@ -344,7 +366,7 @@ const STATE_LABEL: Record<Exclude<LotState, 'other'>, string> = {
 const drawPlanBlock = (f: FichaDoc, plan: PreparedPlan, box: Box): number => {
   const { doc } = f;
   const style = planStyle(Boolean(plan.image));
-  const counts = drawMasterplan(doc, plan.lots, plan.view, box, style, plan.image);
+  const counts = drawMasterplan(doc, plan.lots, plan.view, box, style, plan.image, plan.roads);
   doc.setDrawColor(...BRAND.line);
   doc.setLineWidth(0.4);
   doc.roundedRect(box.x, box.y, box.w, box.h, 2, 2, 'S');
@@ -372,7 +394,9 @@ const drawPlanBlock = (f: FichaDoc, plan: PreparedPlan, box: Box): number => {
   doc.setFontSize(6.5);
   doc.setTextColor(...BRAND.gray);
   doc.text(
-    plan.image ? 'Deslindes referenciales sobre imagen satelital · © Mapbox · © Maxar' : 'Deslindes referenciales',
+    plan.image
+      ? `Deslindes referenciales sobre imagen satelital${plan.roads.length ? ' · caminos/servidumbres KMZ' : ''} · © Mapbox · © Maxar`
+      : `Deslindes referenciales${plan.roads.length ? ' · caminos/servidumbres KMZ' : ''}`,
     box.x + box.w, ly + 4.6, { align: 'right' },
   );
   return box.h + 14;
@@ -643,7 +667,7 @@ export const generateProjectDossierPdf = async (
   const planBox: Box = { x: f.margin, y: f.margin + 11 + 16, w: f.contentW, h: f.H - (f.margin + 11 + 16) - 42 };
   const [loaded, plan] = await Promise.all([
     Promise.all(uniqueMedia.map(async item => ({ ...item, data: await fetchImageAsBase64(item.src) }))),
-    preparePlan(lots, planBox, options.mapboxToken),
+    preparePlan(project, lots, planBox, options.mapboxToken),
   ]);
   const media = loaded.filter((item): item is typeof item & { data: string } => Boolean(item.data));
 
@@ -817,7 +841,7 @@ export const generateProjectMasterplanPdf = async (
     body: async (f) => {
       // Plano a toda la altura útil: los botones van al final del documento.
       const box: Box = { x: f.margin, y: f.y, w: f.contentW, h: f.H - f.y - 40 };
-      const plan = await preparePlan(lots, box, options.mapboxToken);
+      const plan = await preparePlan(project, lots, box, options.mapboxToken);
       if (plan) f.y += drawPlanBlock(f, plan, box);
       else f.note('No hay deslindes cargados para dibujar el plano. Consulta el plano interactivo en la ficha online.');
 
