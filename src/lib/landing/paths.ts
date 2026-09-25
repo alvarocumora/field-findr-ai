@@ -6,7 +6,7 @@ export const landingCanonicalPath: Record<string, string> = {
   huellelhue: '/huellelhue',
   'playa-alvaro': '/playa-alvaro',
   'forestal-valle-escondido': '/forestal-valle-escondido',
-  'parcelas-caone-hualane': '/parcelas-caone-hualane',
+  'parcelas-caone-hualane': '/valle-hualane',
 };
 
 export const isPublicSlug = (slug: unknown): slug is string =>
