@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Trash2, RotateCcw, Crosshair, Copy, Lock, Unlock, ArrowDown } from 'lucide-react';
+import { Trash2, RotateCcw, Crosshair, Copy, Lock, Unlock, ArrowDown, Eye, EyeOff } from 'lucide-react';
 import type { PlacedObject } from './useParcelaState';
 import { OBJECT_CATALOG } from './useParcelaState';
 
@@ -39,6 +39,51 @@ export const ObjectPropertiesPanel = ({ obj, onUpdate, onRemove, onCenterInLot, 
         </Button>
       </div>
 
+      {/* V2 scene state */}
+      <div className="grid grid-cols-2 gap-1">
+        <Button
+          variant={obj.visible === false ? 'outline' : 'secondary'}
+          size="sm"
+          className="h-7 text-[9px]"
+          onClick={() => onUpdate(obj.id, { visible: obj.visible === false })}
+        >
+          {obj.visible === false ? <EyeOff className="mr-1 h-3 w-3" /> : <Eye className="mr-1 h-3 w-3" />}
+          {obj.visible === false ? 'Oculto' : 'Visible'}
+        </Button>
+        <Button
+          variant={obj.locked ? 'secondary' : 'outline'}
+          size="sm"
+          className="h-7 text-[9px]"
+          onClick={() => onUpdate(obj.id, { locked: !obj.locked })}
+        >
+          {obj.locked ? <Lock className="mr-1 h-3 w-3" /> : <Unlock className="mr-1 h-3 w-3" />}
+          {obj.locked ? 'Bloqueado' : 'Libre'}
+        </Button>
+      </div>
+
+      {obj.points?.length ? (
+        <div className="space-y-2 rounded-lg border border-border/40 bg-muted/20 p-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-[9px] uppercase tracking-wider text-muted-foreground">Trazado</Label>
+            <span className="text-[9px] text-muted-foreground">{obj.points.length} puntos</span>
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <Label className="text-[9px] text-muted-foreground">Ancho</Label>
+              <span className="text-[9px] text-muted-foreground">{(obj.width ?? 1).toFixed(1)} m</span>
+            </div>
+            <Slider
+              value={[obj.width ?? 1]}
+              min={obj.type === 'cerco_trazado' ? 0.08 : 0.5}
+              max={obj.type === 'camino_trazado' ? 10 : obj.type === 'sendero_trazado' ? 4 : 0.4}
+              step={obj.type === 'cerco_trazado' ? 0.02 : 0.25}
+              disabled={obj.locked}
+              onValueChange={([v]) => onUpdate(obj.id, { width: v })}
+            />
+          </div>
+        </div>
+      ) : (
+      <>
       {/* Position */}
       <div className="space-y-1">
         <Label className="text-[9px] uppercase tracking-wider text-muted-foreground">Posición (m)</Label>
@@ -93,12 +138,15 @@ export const ObjectPropertiesPanel = ({ obj, onUpdate, onRemove, onCenterInLot, 
         />
       </div>
 
+      </>
+      )}
+
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-1">
-        <Button variant="outline" size="sm" className="h-6 text-[9px]" onClick={() => onUpdate(obj.id, { rotation: 0 })}>
+        <Button variant="outline" size="sm" className="h-6 text-[9px]" disabled={obj.locked || Boolean(obj.points?.length)} onClick={() => onUpdate(obj.id, { rotation: 0 })}>
           <RotateCcw className="h-2.5 w-2.5 mr-0.5" /> Reset
         </Button>
-        <Button variant="outline" size="sm" className="h-6 text-[9px]" onClick={() => onCenterInLot(obj.id)}>
+        <Button variant="outline" size="sm" className="h-6 text-[9px]" disabled={obj.locked || Boolean(obj.points?.length)} onClick={() => onCenterInLot(obj.id)}>
           <Crosshair className="h-2.5 w-2.5 mr-0.5" /> Centrar
         </Button>
         {onDuplicate && (
@@ -107,7 +155,7 @@ export const ObjectPropertiesPanel = ({ obj, onUpdate, onRemove, onCenterInLot, 
           </Button>
         )}
         {onSnapToGround && (
-          <Button variant="outline" size="sm" className="h-6 text-[9px]" onClick={() => onSnapToGround(obj.id)}>
+          <Button variant="outline" size="sm" className="h-6 text-[9px]" disabled={obj.locked || Boolean(obj.points?.length)} onClick={() => onSnapToGround(obj.id)}>
             <ArrowDown className="h-2.5 w-2.5 mr-0.5" /> Al suelo
           </Button>
         )}
