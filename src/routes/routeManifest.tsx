@@ -189,6 +189,7 @@ const CommissionsAdmin = lazy(() => import("@/pages/admin/CommissionsAdmin"));
 const SalesAdmin = lazy(() => import("@/pages/admin/SalesAdmin"));
 const SupportAdmin = lazy(() => import("@/pages/admin/SupportAdmin"));
 const OrganizationsAdmin = lazy(() => import("@/pages/admin/OrganizationsAdmin"));
+const SubscriptionsAdmin = lazy(() => import("@/pages/admin/SubscriptionsAdmin"));
 const OrganizationDetail = lazy(() => import("@/pages/admin/OrganizationDetail"));
 
 /* ------------------------------------------------------------------ */
@@ -514,6 +515,7 @@ export const adminRouteEntries: RouteEntry[] = [
 
   // Empresas y usuarios
   admin("admin-organizations", "/admin/inmobiliarias", <OrganizationsAdmin />, { label: "Inmobiliarias", group: "gestión", icon: "building" }),
+  admin("admin-subscriptions", "/admin/suscripciones", <SubscriptionsAdmin />, { label: "Suscripciones y permisos", group: "gestión", icon: "credit-card", seo: { title: "Suscripciones y permisos · Admin", description: "Planes, estados y roles de todas las cuentas." } }),
   {
     id: "admin-organization-detail",
     path: "/admin/inmobiliarias/:id",
