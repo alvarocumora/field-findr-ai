@@ -359,6 +359,65 @@ const TinyHouse = () => (
   </group>
 );
 
+
+const MediterraneanHouse = () => (
+  <group>
+    <mesh position={[0, 0.12, 0]} receiveShadow castShadow>
+      <boxGeometry args={[7.2, 0.24, 5.6]} />
+      <meshStandardMaterial {...MAT.concrete} />
+    </mesh>
+    <mesh position={[-1.2, 1.6, 0]} castShadow receiveShadow>
+      <boxGeometry args={[4.8, 3, 5]} />
+      <meshStandardMaterial {...MAT.plasterLight} map={stuccoTexture()} />
+    </mesh>
+    <mesh position={[2.4, 1.25, 0.7]} castShadow receiveShadow>
+      <boxGeometry args={[2.4, 2.3, 3.8]} />
+      <meshStandardMaterial color="#e7dccb" roughness={0.92} />
+    </mesh>
+    <mesh position={[-1.2, 3.15, 0]} castShadow>
+      <boxGeometry args={[5.1, 0.16, 5.25]} />
+      <meshStandardMaterial color="#d6c2a7" roughness={0.85} />
+    </mesh>
+    <group position={[-1.1, 1.55, 2.53]}>
+      <Window w={2.5} h={1.8} frame={MAT.woodDark} />
+    </group>
+    <group position={[2.45, 1.2, 2.62]}>
+      <Door w={0.95} h={2.1} mat={MAT.woodDark} />
+    </group>
+    <mesh position={[0.8, 0.14, 3.2]} receiveShadow>
+      <boxGeometry args={[4.6, 0.12, 1.4]} />
+      <meshStandardMaterial {...MAT.stone} />
+    </mesh>
+  </group>
+);
+
+const ContainerHouse = () => (
+  <group>
+    <mesh position={[-1.55, 1.35, 0]} castShadow receiveShadow>
+      <boxGeometry args={[3, 2.7, 6.2]} />
+      <meshStandardMaterial color="#37474f" roughness={0.55} metalness={0.5} />
+    </mesh>
+    <mesh position={[1.55, 1.35, 0.6]} castShadow receiveShadow>
+      <boxGeometry args={[3, 2.7, 5]} />
+      <meshStandardMaterial color="#eceff1" roughness={0.8} metalness={0.08} />
+    </mesh>
+    <group position={[1.55, 1.35, 3.12]}>
+      <Window w={2.2} h={1.8} frame={MAT.darkMetal} />
+    </group>
+    <group position={[-1.55, 1.2, 3.12]}>
+      <Door w={0.95} h={2.1} mat={MAT.darkMetal} />
+    </group>
+    <mesh position={[0, 0.08, 3.9]} receiveShadow>
+      <boxGeometry args={[6.5, 0.14, 1.5]} />
+      <meshStandardMaterial {...MAT.woodLight} />
+    </mesh>
+    <mesh position={[0, 2.78, 0.2]} castShadow>
+      <boxGeometry args={[6.3, 0.12, 6.4]} />
+      <meshStandardMaterial {...MAT.roofDark} />
+    </mesh>
+  </group>
+);
+
 // ─── AGUA ───────────────────────────────────────────────
 
 const Pool = () => (
@@ -1310,11 +1369,14 @@ const FallbackGLBPlaceholder = () => (
   </mesh>
 );
 
-const OBJECT_COMPONENTS: Record<ParcelaObjectType, React.FC> = {
+const OBJECT_COMPONENTS: Partial<Record<ParcelaObjectType, React.FC>> = {
   casa_50: () => <House size={2.2} color="#FFCC80" />,
   casa_80: () => <House size={3} color="#FFAB91" />,
   casa_120: () => <House size={3.8} color="#EF9A9A" />,
+  casa_160: () => <House size={4.4} color="#E8D2B3" />,
   casa_moderna: ModernHouse,
+  casa_mediterranea: MediterraneanHouse,
+  container_house: ContainerHouse,
   cabana: Cabin,
   tiny_house: TinyHouse,
   piscina: Pool,
@@ -1358,7 +1420,7 @@ const OBJECT_COMPONENTS: Record<ParcelaObjectType, React.FC> = {
 
 export const ParcelaObject3D = ({ obj, isSelected, onClick }: ObjectProps) => {
   const ref = useRef<THREE.Group>(null);
-  const Component = OBJECT_COMPONENTS[obj.type];
+  const Component = OBJECT_COMPONENTS[obj.type] ?? FallbackGLBPlaceholder;
 
   return (
     <group
