@@ -21,6 +21,7 @@ interface AssetCatalogProps {
   uploadedAssets: GLBAsset[];
   onAssetsChange: (assets: GLBAsset[]) => void;
   onAddPrimitive?: (type: ParcelaObjectType) => void;
+  fillHeight?: boolean;
 }
 
 interface BuiltInAsset {
@@ -76,7 +77,7 @@ const CATEGORIES = [
   { id: 'custom', label: 'Subidos', icon: '📎' },
 ];
 
-export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, onAddPrimitive }: AssetCatalogProps) => {
+export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, onAddPrimitive, fillHeight = false }: AssetCatalogProps) => {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [cc0Group, setCc0Group] = useState('all');
@@ -198,7 +199,7 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, on
         </div>
       )}
 
-      <ScrollArea className="h-[140px]">
+      <ScrollArea className={fillHeight ? 'h-[calc(100vh-330px)] min-h-[260px] max-h-[620px]' : 'h-[140px]'}>
         {activeCategory === 'cc0' && cc0Loading && (
           <div className="flex items-center justify-center py-4 text-[10px] text-muted-foreground">
             Cargando modelos CC0…
