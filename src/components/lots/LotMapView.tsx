@@ -974,28 +974,40 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         data: geojson,
       });
 
-      // Add fill layer with dynamic color mode
+      // Relleno casi transparente: solo tiñe el lote, deja ver el satélite.
       map.current.addLayer({
         id: 'lots-fill',
         type: 'fill',
         source: 'lots',
         paint: {
           'fill-color': getColorExpression(colorMode, lots),
-          'fill-opacity': 0.75,
+          'fill-opacity': colorMode === 'status' ? 0.12 : 0.35,
         },
       });
 
-      // Add outline layer - crisp white borders
+      // Deslinde nítido tipo plano (halo oscuro + línea blanca fina)
+      map.current.addLayer({
+        id: 'lots-outline-halo',
+        type: 'line',
+        source: 'lots',
+        paint: {
+          'line-color': '#04120c',
+          'line-width': 3.4,
+          'line-opacity': 0.45,
+          'line-blur': 0.6,
+        },
+      });
       map.current.addLayer({
         id: 'lots-outline',
         type: 'line',
         source: 'lots',
         paint: {
           'line-color': '#ffffff',
-          'line-width': 1.5,
-          'line-opacity': 0.9,
+          'line-width': 1.8,
+          'line-opacity': 0.95,
         },
       });
+
 
       // Curvas de nivel (Mapbox Terrain v2): cotas reales del relieve bajo el
       // loteo, con etiquetas de elevación. Ocultas por defecto; el toggle
