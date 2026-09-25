@@ -13,6 +13,7 @@ export type ParcelaObjectType =
   | 'columpio' | 'trampolin' | 'cancha'
   | 'galpon_packing' | 'anden_carga' | 'camara_frio' | 'oficinas_industrial'
   | 'estacionamiento_camiones' | 'area_maniobras' | 'bascula' | 'porteria' | 'cerco_industrial'
+  | 'camino_trazado' | 'sendero_trazado' | 'cerco_trazado'
   | 'glb_custom';
 
 export interface PlacedObject {
@@ -23,6 +24,13 @@ export interface PlacedObject {
   scale: number;
   modelUrl?: string;
   modelName?: string;
+  /** V2 scene controls */
+  visible?: boolean;
+  locked?: boolean;
+  name?: string;
+  /** Polyline geometry for drawn roads, paths and fences. */
+  points?: [number, number, number][];
+  width?: number;
 }
 
 export interface ParcelaState {
@@ -96,6 +104,9 @@ export const OBJECT_CATALOG: Record<ParcelaObjectType, CatalogItem> = {
   bascula: { label: 'Báscula', icon: '⚖️', description: 'Balanza camionera 18m', defaultScale: 1, category: 'industrial', boundingRadius: 10 },
   porteria: { label: 'Portería', icon: '🛂', description: 'Control de acceso con barrera', defaultScale: 1, category: 'industrial', boundingRadius: 3 },
   cerco_industrial: { label: 'Cerco Industrial', icon: '🚧', description: 'Malla acmafor 2.5m', defaultScale: 1, category: 'industrial', boundingRadius: 5 },
+  camino_trazado: { label: 'Camino trazado', icon: '🛣️', description: 'Camino dibujado punto a punto', defaultScale: 1, category: 'infraestructura', boundingRadius: 0.1 },
+  sendero_trazado: { label: 'Sendero trazado', icon: '🥾', description: 'Sendero dibujado punto a punto', defaultScale: 1, category: 'infraestructura', boundingRadius: 0.1 },
+  cerco_trazado: { label: 'Cerco trazado', icon: '📏', description: 'Cerco dibujado punto a punto', defaultScale: 1, category: 'cercos', boundingRadius: 0.1 },
   glb_custom: { label: 'Modelo GLB', icon: '📦', description: 'Modelo 3D importado', defaultScale: 1, category: 'vivienda', boundingRadius: 2 },
 };
 
@@ -112,7 +123,7 @@ export function checkCollision(
   excludeId?: string
 ): boolean {
   for (const obj of objects) {
-    if (obj.id === excludeId) continue;
+    if (obj.id === excludeId || obj.visible === false || obj.points?.length) continue;
     const r1 = (OBJECT_CATALOG[newObj.type].boundingRadius || 1.5) * newObj.scale;
     const r2 = (OBJECT_CATALOG[obj.type].boundingRadius || 1.5) * obj.scale;
     const dx = newObj.position[0] - obj.position[0];
@@ -183,6 +194,8 @@ export const useParcelaState = () => {
       position: pos,
       rotation: 0,
       scale: OBJECT_CATALOG[type].defaultScale,
+      visible: true,
+      locked: false,
       ...extras,
     };
 
@@ -193,6 +206,36 @@ export const useParcelaState = () => {
     return newObj.id;
   }, [snapEnabled, pushUndo]);
 
+  const addPolyline = useCallback((
+    type: 'camino_trazado' | 'sendero_trazado' | 'cerco_trazado',
+    points: [number, number, number][],
+    options?: { width?: number; name?: string },
+  ): string => {
+    const clean = points.map(([x, y, z]) => [
+      snapEnabled ? snapToGrid(x, GRID_SIZE) : x,
+      y,
+      snapEnabled ? snapToGrid(z, GRID_SIZE) : z,
+    ] as [number, number, number]);
+    const id = `${type}_${Date.now()}`;
+    const obj: PlacedObject = {
+      id,
+      type,
+      position: clean[0] ?? [0, 0, 0],
+      rotation: 0,
+      scale: 1,
+      visible: true,
+      locked: false,
+      points: clean,
+      width: options?.width ?? (type === 'camino_trazado' ? 4 : type === 'sendero_trazado' ? 1.2 : 0.12),
+      name: options?.name,
+    };
+    setState(prev => {
+      pushUndo(prev.objects);
+      return { ...prev, objects: [...prev.objects, obj], selectedId: id };
+    });
+    return id;
+  }, [snapEnabled, pushUndo]);
+
   const selectObject = useCallback((id: string | null) => {
     setState(prev => ({ ...prev, selectedId: id }));
   }, []);
@@ -201,6 +244,8 @@ export const useParcelaState = () => {
     setState(prev => {
       const obj = prev.objects.find(o => o.id === id);
       if (!obj) return prev;
+      const metadataOnly = Object.keys(updates).every((key) => ['locked', 'visible', 'name'].includes(key));
+      if (obj.locked && !metadataOnly) return prev;
       pushUndo(prev.objects);
       let merged = { ...obj, ...updates };
       // Collision-aware: a position change that overlaps another object is
@@ -295,7 +340,11 @@ export const useParcelaState = () => {
 
   const loadFromJSON = useCallback((json: string) => {
     try {
-      const objects = JSON.parse(json) as PlacedObject[];
+      const objects = (JSON.parse(json) as PlacedObject[]).map((obj) => ({
+        ...obj,
+        visible: obj.visible !== false,
+        locked: obj.locked === true,
+      }));
       setState({ objects, selectedId: null });
     } catch {
       // ignore
@@ -313,9 +362,35 @@ export const useParcelaState = () => {
     setMeasurePoints([]);
   }, []);
 
+  const toggleObjectVisibility = useCallback((id: string) => {
+    setState(prev => {
+      const obj = prev.objects.find(o => o.id === id);
+      if (!obj) return prev;
+      pushUndo(prev.objects);
+      const visible = obj.visible === false;
+      return {
+        objects: prev.objects.map(o => o.id === id ? { ...o, visible } : o),
+        selectedId: !visible && prev.selectedId === id ? null : prev.selectedId,
+      };
+    });
+  }, [pushUndo]);
+
+  const toggleObjectLock = useCallback((id: string) => {
+    setState(prev => {
+      const obj = prev.objects.find(o => o.id === id);
+      if (!obj) return prev;
+      pushUndo(prev.objects);
+      return {
+        ...prev,
+        objects: prev.objects.map(o => o.id === id ? { ...o, locked: !o.locked } : o),
+      };
+    });
+  }, [pushUndo]);
+
   return {
     ...state,
     addObject,
+    addPolyline,
     selectObject,
     updateObject,
     moveObject,
@@ -349,5 +424,7 @@ export const useParcelaState = () => {
     measurePoints,
     addMeasurePoint,
     clearMeasure,
+    toggleObjectVisibility,
+    toggleObjectLock,
   };
 };
