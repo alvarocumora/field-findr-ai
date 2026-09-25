@@ -9,6 +9,7 @@ import { AssetCatalog, type GLBAsset } from './AssetCatalog';
 import { ObjectPropertiesPanel } from './ObjectPropertiesPanel';
 import { SolarLight, computeSunPosition } from './SolarLight';
 import { MeasurementLine } from './MeasurementLine';
+import { LinearFeature3D, DraftLinearFeature3D } from './LinearFeature3D';
 import { PedestrianCamera } from './PedestrianCamera';
 import { RealisticTerrain, type TerrainHandle, type TerrainDebugInfo } from './RealisticTerrain';
 import { useParcelaState, OBJECT_CATALOG, type ParcelaObjectType } from './useParcelaState';
@@ -19,7 +20,7 @@ import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, FileDown, Layers3, ListTree, PanelLeftClose, PanelLeftOpen, Redo2, Save, Share2, Trash2, Undo2, Wrench } from 'lucide-react';
+import { Camera, Check, Copy, Eye, EyeOff, FileDown, Footprints, Layers3, ListTree, Lock, Minus, PanelLeftClose, PanelLeftOpen, Redo2, Route, Save, Share2, Trash2, Undo2, Unlock, Wrench, X } from 'lucide-react';
 
 interface ParcelaDesigner3DProps {
   polygon: number[][] | null;
@@ -235,11 +236,18 @@ export const ParcelaDesigner3D = ({
   // Human-readable label of the object waiting to be placed (null = none).
   // Drives the placement banner, the crosshair cursor and Esc-to-cancel.
   const [pendingLabel, setPendingLabel] = useState<string | null>(null);
+  const [linearDrawMode, setLinearDrawMode] = useState<'camino_trazado' | 'sendero_trazado' | 'cerco_trazado' | null>(null);
+  const [draftPoints, setDraftPoints] = useState<[number, number, number][]>([]);
 
   const cancelPendingPlacement = useCallback(() => {
     pendingPlaceRef.current = null;
     pendingGLBRef.current = null;
     setPendingLabel(null);
+  }, []);
+
+  const cancelLinearDrawing = useCallback(() => {
+    setLinearDrawMode(null);
+    setDraftPoints([]);
   }, []);
 
   // Keyboard shortcuts
@@ -254,8 +262,15 @@ export const ParcelaDesigner3D = ({
       if (e.ctrlKey && e.key === 'y') { e.preventDefault(); ps.redo(); }
       if (e.key === 'Delete' && ps.selectedId) ps.removeObject(ps.selectedId);
       if (e.key === 'Escape') {
-        if (pendingPlaceRef.current || pendingGLBRef.current) cancelPendingPlacement();
+        if (linearDrawMode) cancelLinearDrawing();
+        else if (pendingPlaceRef.current || pendingGLBRef.current) cancelPendingPlacement();
         else ps.selectObject(null);
+      }
+      if (e.key === 'Enter' && linearDrawMode && draftPoints.length >= 2) {
+        e.preventDefault();
+        ps.addPolyline(linearDrawMode, draftPoints);
+        toast.success(linearDrawMode === 'camino_trazado' ? 'Camino trazado' : linearDrawMode === 'sendero_trazado' ? 'Sendero trazado' : 'Cerco trazado');
+        cancelLinearDrawing();
       }
       if (e.key === 'q' || e.key === 'Q') ps.setTransformMode('translate');
       if (e.key === 'w' || e.key === 'W') { if (!e.ctrlKey) ps.setTransformMode('rotate'); }
@@ -263,7 +278,7 @@ export const ParcelaDesigner3D = ({
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [ps, cancelPendingPlacement]);
+  }, [ps, cancelPendingPlacement, cancelLinearDrawing, linearDrawMode, draftPoints]);
 
   const snapToTerrain = useCallback((x: number, z: number): number => {
     if (useRealisticTerrain && terrainRef.current) {
@@ -272,19 +287,44 @@ export const ParcelaDesigner3D = ({
     return 0.01;
   }, [useRealisticTerrain]);
 
+  const startLinearDrawing = useCallback((mode: 'camino_trazado' | 'sendero_trazado' | 'cerco_trazado') => {
+    cancelPendingPlacement();
+    ps.setMeasureMode(false);
+    ps.clearMeasure();
+    setDraftPoints([]);
+    setLinearDrawMode(mode);
+  }, [cancelPendingPlacement, ps]);
+
+  const finishLinearDrawing = useCallback(() => {
+    if (!linearDrawMode || draftPoints.length < 2) {
+      toast.error('Marca al menos 2 puntos');
+      return;
+    }
+    ps.addPolyline(linearDrawMode, draftPoints);
+    toast.success(linearDrawMode === 'camino_trazado' ? 'Camino trazado' : linearDrawMode === 'sendero_trazado' ? 'Sendero trazado' : 'Cerco trazado');
+    cancelLinearDrawing();
+  }, [linearDrawMode, draftPoints, ps, cancelLinearDrawing]);
+
   const handleAddObject = useCallback((type: ParcelaObjectType) => {
+    cancelLinearDrawing();
     pendingPlaceRef.current = type;
     pendingGLBRef.current = null;
     setPendingLabel(OBJECT_CATALOG[type]?.label ?? type);
-  }, []);
+  }, [cancelLinearDrawing]);
 
   const handleAddGLBAsset = useCallback((asset: GLBAsset) => {
+    cancelLinearDrawing();
     pendingGLBRef.current = asset;
     pendingPlaceRef.current = null;
     setPendingLabel(asset.name);
-  }, []);
+  }, [cancelLinearDrawing]);
 
   const handleGroundClick = useCallback((point: THREE.Vector3) => {
+    if (linearDrawMode) {
+      const y = snapToTerrain(point.x, point.z) + 0.03;
+      setDraftPoints((prev) => [...prev, [point.x, y, point.z]]);
+      return;
+    }
     if (ps.measureMode) {
       ps.addMeasurePoint([point.x, point.y, point.z]);
       return;
@@ -305,7 +345,7 @@ export const ParcelaDesigner3D = ({
     } else {
       ps.selectObject(null);
     }
-  }, [ps, snapToTerrain]);
+  }, [ps, snapToTerrain, linearDrawMode]);
 
   const handleSave = useCallback(() => {
     const json = ps.toJSON();
@@ -349,10 +389,18 @@ export const ParcelaDesigner3D = ({
     const obj = ps.objects.find(o => o.id === id);
     if (!obj) return;
     const offset = 2;
-    ps.addObject(obj.type, [obj.position[0] + offset, obj.position[1], obj.position[2] + offset], {
-      modelUrl: obj.modelUrl,
-      modelName: obj.modelName,
-    });
+    if (obj.points?.length && ['camino_trazado', 'sendero_trazado', 'cerco_trazado'].includes(obj.type)) {
+      ps.addPolyline(
+        obj.type as 'camino_trazado' | 'sendero_trazado' | 'cerco_trazado',
+        obj.points.map(([x, y, z]) => [x + offset, y, z + offset]),
+        { width: obj.width, name: obj.name },
+      );
+    } else {
+      ps.addObject(obj.type, [obj.position[0] + offset, obj.position[1], obj.position[2] + offset], {
+        modelUrl: obj.modelUrl,
+        modelName: obj.modelName,
+      });
+    }
     toast.success('Objeto duplicado');
   }, [ps]);
 
@@ -441,6 +489,53 @@ export const ParcelaDesigner3D = ({
             </TabsContent>
 
             <TabsContent value="tools" className="m-0 min-h-0 flex-1 overflow-y-auto">
+              <div className="border-b border-border/40 p-2">
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Dibujar sobre terreno</p>
+                <div className="grid grid-cols-3 gap-1">
+                  <Button
+                    size="sm"
+                    variant={linearDrawMode === 'camino_trazado' ? 'default' : 'outline'}
+                    className="h-9 flex-col gap-0 text-[9px]"
+                    onClick={() => startLinearDrawing('camino_trazado')}
+                  >
+                    <Route className="h-3.5 w-3.5" /> Camino
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={linearDrawMode === 'sendero_trazado' ? 'default' : 'outline'}
+                    className="h-9 flex-col gap-0 text-[9px]"
+                    onClick={() => startLinearDrawing('sendero_trazado')}
+                  >
+                    <Footprints className="h-3.5 w-3.5" /> Sendero
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={linearDrawMode === 'cerco_trazado' ? 'default' : 'outline'}
+                    className="h-9 flex-col gap-0 text-[9px]"
+                    onClick={() => startLinearDrawing('cerco_trazado')}
+                  >
+                    <Minus className="h-3.5 w-3.5" /> Cerco
+                  </Button>
+                </div>
+                {linearDrawMode && (
+                  <div className="mt-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-2">
+                    <p className="text-[10px] font-medium text-foreground">
+                      Haz clic punto a punto · {draftPoints.length} {draftPoints.length === 1 ? 'punto' : 'puntos'}
+                    </p>
+                    <div className="mt-2 grid grid-cols-3 gap-1">
+                      <Button size="sm" variant="outline" className="h-7 text-[9px]" disabled={!draftPoints.length} onClick={() => setDraftPoints((prev) => prev.slice(0, -1))}>
+                        <Undo2 className="mr-1 h-3 w-3" /> Punto
+                      </Button>
+                      <Button size="sm" className="h-7 text-[9px]" disabled={draftPoints.length < 2} onClick={finishLinearDrawing}>
+                        <Check className="mr-1 h-3 w-3" /> Terminar
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-7 text-[9px]" onClick={cancelLinearDrawing}>
+                        <X className="mr-1 h-3 w-3" /> Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
               <ParcelaToolbar
                 onAddObject={handleAddObject}
                 onRotate={ps.rotateSelected}
@@ -509,15 +604,43 @@ export const ParcelaDesigner3D = ({
                           <span className="block truncate text-[11px] font-medium text-foreground">{label}</span>
                           <span className="block text-[9px] text-muted-foreground">Objeto {index + 1}</span>
                         </span>
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          onClick={(e) => { e.stopPropagation(); ps.removeObject(obj.id); }}
-                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); ps.removeObject(obj.id); } }}
-                          className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                          title="Eliminar objeto"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
+                        <span className="flex shrink-0 items-center gap-0.5">
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => { e.stopPropagation(); ps.toggleObjectVisibility(obj.id); }}
+                            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                            title={obj.visible === false ? 'Mostrar' : 'Ocultar'}
+                          >
+                            {obj.visible === false ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                          </span>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => { e.stopPropagation(); ps.toggleObjectLock(obj.id); }}
+                            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                            title={obj.locked ? 'Desbloquear' : 'Bloquear'}
+                          >
+                            {obj.locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+                          </span>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => { e.stopPropagation(); handleDuplicate(obj.id); }}
+                            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                            title="Duplicar"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </span>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => { e.stopPropagation(); ps.removeObject(obj.id); }}
+                            className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            title="Eliminar objeto"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </span>
                         </span>
                       </button>
                     );
@@ -599,8 +722,15 @@ export const ParcelaDesigner3D = ({
             <ClickPlane onClick={handleGroundClick} size={terrainSize} />
 
             {/* Render objects */}
-            {ps.objects.map(obj => (
-              obj.type === 'glb_custom' && obj.modelUrl ? (
+            {ps.objects.filter((obj) => obj.visible !== false).map(obj => (
+              obj.points?.length ? (
+                <LinearFeature3D
+                  key={obj.id}
+                  obj={obj}
+                  isSelected={obj.id === ps.selectedId}
+                  onClick={() => ps.selectObject(obj.id)}
+                />
+              ) : obj.type === 'glb_custom' && obj.modelUrl ? (
                 <GLTFAssetObject
                   key={obj.id}
                   obj={obj}
@@ -617,6 +747,10 @@ export const ParcelaDesigner3D = ({
               )
             ))}
 
+            {linearDrawMode && draftPoints.length > 0 && (
+              <DraftLinearFeature3D points={draftPoints} mode={linearDrawMode} />
+            )}
+
             {ps.measureMode && ps.measurePoints.length > 0 && (
               <MeasurementLine points={ps.measurePoints} />
             )}
@@ -624,7 +758,7 @@ export const ParcelaDesigner3D = ({
             {/* Transform gizmo on the selected object (orbit view only) */}
             {ps.viewMode !== 'pedestrian' && !ps.measureMode && (
               <SelectedObjectGizmo
-                selectedId={ps.selectedId}
+                selectedId={selectedObj?.locked || selectedObj?.points?.length ? null : ps.selectedId}
                 objectsVersion={ps.objects.length}
                 mode={ps.transformMode}
                 snapEnabled={ps.snapEnabled}
@@ -741,6 +875,13 @@ export const ParcelaDesigner3D = ({
           </div>
         )}
 
+        {/* V2 linear drawing banner */}
+        {linearDrawMode && (
+          <div className="absolute bottom-20 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/90 px-4 py-2 text-xs font-semibold text-black shadow-lg backdrop-blur-sm">
+            <span>{linearDrawMode === 'camino_trazado' ? '🛣️ Camino' : linearDrawMode === 'sendero_trazado' ? '🥾 Sendero' : '📏 Cerco'} · clic punto a punto · Enter termina · Esc cancela</span>
+          </div>
+        )}
+
         {/* Pending placement banner */}
         {pendingLabel && (
           <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-primary/90 backdrop-blur-sm rounded-full pl-4 pr-2 py-1.5 text-xs font-medium text-primary-foreground border border-primary/40 shadow-lg">
@@ -757,7 +898,9 @@ export const ParcelaDesigner3D = ({
 
         {/* Info overlays */}
         <div className="absolute bottom-16 left-3 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs text-muted-foreground border border-border/40">
-          {ps.viewMode === 'pedestrian'
+          {linearDrawMode
+            ? 'Dibujo activo · agrega puntos sobre el terreno · Enter termina · Esc cancela'
+            : ps.viewMode === 'pedestrian'
             ? 'Click para activar · WASD moverse · Mouse mirar · ESC salir'
             : ps.measureMode
               ? 'Click en 2 puntos para medir distancia'
@@ -782,7 +925,7 @@ export const ParcelaDesigner3D = ({
         </div>
 
         {/* First-use hint — non-blocking, guides the initial placement */}
-        {ps.objects.length === 0 && !pendingLabel && !ps.measureMode && ps.viewMode !== 'pedestrian' && (
+        {ps.objects.length === 0 && !pendingLabel && !linearDrawMode && !ps.measureMode && ps.viewMode !== 'pedestrian' && (
           <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 pointer-events-none max-w-xs text-center bg-background/85 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-primary/30 shadow-lg">
             <p className="text-xs font-medium text-foreground">Diseña tu parcela 🏡</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">
