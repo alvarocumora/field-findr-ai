@@ -403,9 +403,14 @@ export const projectLandingEntries: RouteEntry[] = [
   pub("huellelhue", "/huellelhue", <ProjectLanding slug="huellelhue" />),
   pub("playa-alvaro", "/playa-alvaro", <ProjectLanding slug="playa-alvaro" />),
   pub("explora-park", "/explora-park", <ProjectLanding slug="explora-park" />),
-  pub("parcelas-caone-hualane", "/parcelas-caone-hualane", <ProjectLanding slug="parcelas-caone-hualane" />),
-  pub("parcelas-caone-hualane-tour", "/parcelas-caone-hualane/tour", <CaoneTour />),
-  pub("valle-de-hualane-masterplan", "/valle-de-hualane/masterplan", <ValleHualaneMasterplan />),
+  pub("valle-hualane", "/valle-hualane", <ProjectLanding slug="parcelas-caone-hualane" />),
+  pub("valle-hualane-tour", "/valle-hualane/tour", <CaoneTour />),
+  pub("valle-hualane-lot", "/valle-hualane/l/:lotNumber", <CaoneTour />, { indexable: false }),
+  pub("valle-hualane-masterplan", "/valle-hualane/plano", <ValleHualaneMasterplan />),
+  // URLs históricas: siguen resolviendo pero ya no son canónicas ni entran al sitemap.
+  pub("parcelas-caone-hualane", "/parcelas-caone-hualane", <ProjectLanding slug="parcelas-caone-hualane" />, { indexable: false }),
+  pub("parcelas-caone-hualane-tour", "/parcelas-caone-hualane/tour", <CaoneTour />, { indexable: false }),
+  pub("valle-de-hualane-masterplan", "/valle-de-hualane/masterplan", <ValleHualaneMasterplan />, { indexable: false }),
   pub("dossier-isla-maipo", "/ficha/isla-de-maipo-galvez-1458", <IslaDeMaipoDossier />, {
     indexable: false,
   }),
