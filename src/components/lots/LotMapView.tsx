@@ -1099,7 +1099,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       map.current.addLayer({
         id: 'lots-hotspot',
         type: 'circle',
-        source: 'lots',
+        source: 'lot-centers',
+
         paint: {
           'circle-color': [
             'case',
