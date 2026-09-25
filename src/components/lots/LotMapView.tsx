@@ -8,6 +8,7 @@ import { AlertCircle, Layers, Mountain, Upload, Image, PenTool, ArrowLeftRight, 
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced, buildPolygonsFromMixedGeometry, extractRoadGeometries } from '@/lib/kmz';
+import { importProjectSpatialSource } from '@/lib/kmz/projectSpatialImport';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MasterPlanOverlay } from './MasterPlanOverlay';
@@ -457,80 +458,47 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     loadKmzFromUrl();
   }, [kmzFileUrl, projectId, lots, kmzLoaded, onLotsUpdated, readOnly]);
 
-  // Handle KMZ/KML file import
+  // Handle KMZ/KML file import through the unified Spatial Engine.
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !projectId) return;
-    
+
     setImporting(true);
     try {
-      const parsed = file.name.endsWith('.kml') 
-        ? await parseKMLFile(file)
-        : await parseKMZFile(file);
-      
-      if (parsed.placemarks.length === 0) {
-        toast.error('No se encontraron polígonos en el archivo');
-        return;
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth.user?.id;
+      if (!userId) throw new Error('Debes iniciar sesión para importar geometría');
+
+      const priced = lots.filter((lot) => Number(lot.price || 0) > 0 && Number(lot.area || 0) > 0);
+      const basePrice = priced.length ? Math.min(...priced.map((lot) => Number(lot.price))) : 15000000;
+      const pricePerSqm = priced.length
+        ? Math.max(1, Math.round(priced.reduce((sum, lot) => sum + Number(lot.price) / Number(lot.area), 0) / priced.length))
+        : 3000;
+
+      const result = await importProjectSpatialSource({
+        projectId,
+        userId,
+        file,
+        pricing: { basePrice, pricePerSqm },
+        updateExisting: true,
+      });
+
+      if (result.roads > 0) {
+        const roads = await extractRoadGeometries(file);
+        setRoadGeojson(roads);
       }
-      
-      // Match placemarks to existing lots and update them
-      let updatedCount = 0;
-      let newCount = 0;
-      
-      for (const placemark of parsed.placemarks) {
-        // Extract lot number from placemark name
-        const lotNumberMatch = placemark.name.match(/(\d+)/);
-        const lotNumber = lotNumberMatch ? lotNumberMatch[1] : placemark.name;
-        
-        // Find matching lot
-        const matchingLot = lots.find(lot => 
-          lot.lot_number === lotNumber || 
-          lot.lot_number === placemark.name
-        );
-        
-        if (matchingLot) {
-          // Update existing lot with polygon data
-          const centroid = placemark.coordinates.reduce(
-            (acc, [lng, lat]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }),
-            { lat: 0, lng: 0 }
-          );
-          centroid.lat /= placemark.coordinates.length;
-          centroid.lng /= placemark.coordinates.length;
-          
-          const { error } = await supabase
-            .from('lots')
-            .update({
-              polygon: placemark.coordinates,
-              latitude: centroid.lat,
-              longitude: centroid.lng,
-              area: placemark.area || matchingLot.area,
-            })
-            .eq('id', matchingLot.id);
-          
-          if (!error) updatedCount++;
-        }
-      }
-      
-      // Update project center
-      await supabase
-        .from('projects')
-        .update({
-          latitude: parsed.center.lat,
-          longitude: parsed.center.lng,
-        })
-        .eq('id', projectId);
-      
-      toast.success(`${updatedCount} lotes actualizados con polígonos reales`);
+
+      toast.success(
+        `Spatial Engine: ${result.updated} actualizados · ${result.inserted} nuevos · ${result.roads} caminos/servidumbres`,
+      );
+      setKmzLoaded(true);
       onLotsUpdated?.();
-      
     } catch (error) {
-      console.error('Error importing KMZ:', error);
-      toast.error('Error al importar el archivo');
+      console.error('Error importing KMZ through Spatial Engine:', error);
+      toast.error(error instanceof Error ? error.message : 'Error al importar el archivo');
     } finally {
       setImporting(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -624,106 +592,42 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     }
   };
 
-  // Re-import KMZ matching placemarks by name instead of sequential order
+  // Re-import by name now uses the same Spatial Engine upsert path.
   const handleReimportByName = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !projectId) return;
 
     setImporting(true);
     try {
-      const parsed = file.name.endsWith('.kml')
-        ? await parseKMLFile(file)
-        : await parseKMZFile(file);
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth.user?.id;
+      if (!userId) throw new Error('Debes iniciar sesión para reimportar geometría');
 
-      console.log('=== REIMPORT BY NAME ===');
-      console.log('Parsed placemarks:', parsed.placemarks.length);
+      const priced = lots.filter((lot) => Number(lot.price || 0) > 0 && Number(lot.area || 0) > 0);
+      const basePrice = priced.length ? Math.min(...priced.map((lot) => Number(lot.price))) : 15000000;
+      const pricePerSqm = priced.length
+        ? Math.max(1, Math.round(priced.reduce((sum, lot) => sum + Number(lot.price) / Number(lot.area), 0) / priced.length))
+        : 3000;
 
-      if (parsed.placemarks.length === 0) {
-        toast.error('No se encontraron polígonos en el archivo');
-        return;
-      }
+      const result = await importProjectSpatialSource({
+        projectId,
+        userId,
+        file,
+        pricing: { basePrice, pricePerSqm },
+        updateExisting: true,
+      });
 
-      // Also try the smart builder to get real polygons from LineStrings
-      let allPolygons = parsed.placemarks.filter(p => p.isPolygon && p.coordinates.length >= 3);
-
-      // If not enough direct polygons, use the smart builder
-      if (allPolygons.length < lots.length * 0.5) {
-        const built = buildPolygonsFromMixedGeometry(
-          parsed.placemarks,
-          lots.map(l => ({ lot_number: l.lot_number, area: l.area }))
-        );
-        if (built.length > allPolygons.length) {
-          allPolygons = built;
-        }
-      }
-
-      console.log('Polygons available for matching:', allPolygons.length);
-
-      let updatedCount = 0;
-      let unmatchedNames: string[] = [];
-
-      for (const placemark of allPolygons) {
-        // Extract lot number from placemark name using flexible regex
-        const match = placemark.name.match(/Lote[:\s-]*(\d+)/i) || placemark.name.match(/^(\d+)$/);
-        if (!match) {
-          unmatchedNames.push(placemark.name);
-          continue;
-        }
-
-        const lotNum = match[1];
-        const matchingLot = lots.find(l => l.lot_number === lotNum);
-        if (!matchingLot) {
-          unmatchedNames.push(`${placemark.name} (no lot #${lotNum})`);
-          continue;
-        }
-
-        // Calculate centroid
-        const centroid = placemark.coordinates.reduce(
-          (acc, [lng, lat]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }),
-          { lat: 0, lng: 0 }
-        );
-        centroid.lat /= placemark.coordinates.length;
-        centroid.lng /= placemark.coordinates.length;
-
-        const { error } = await supabase
-          .from('lots')
-          .update({
-            polygon: placemark.coordinates,
-            latitude: centroid.lat,
-            longitude: centroid.lng,
-            name: `Lote ${lotNum}`,
-          })
-          .eq('id', matchingLot.id);
-
-        if (!error) {
-          updatedCount++;
-          console.log(`✓ Lote ${lotNum} → polígono asignado (${placemark.coordinates.length} pts)`);
-        }
-      }
-
-      if (unmatchedNames.length > 0) {
-        console.warn('Unmatched placemarks:', unmatchedNames);
-      }
-
-      // Update project center
-      await supabase
-        .from('projects')
-        .update({ latitude: parsed.center.lat, longitude: parsed.center.lng })
-        .eq('id', projectId);
-
-      toast.success(`${updatedCount} lotes re-asignados por nombre del KMZ`);
-      if (unmatchedNames.length > 0) {
-        toast.info(`${unmatchedNames.length} placemarks sin coincidencia`);
-      }
+      const roads = await extractRoadGeometries(file);
+      setRoadGeojson(roads);
+      toast.success(`${result.updated} lotes sincronizados por número/nombre · ${result.roads} caminos`);
+      setKmzLoaded(true);
       onLotsUpdated?.();
     } catch (error) {
-      console.error('Error reimporting KMZ by name:', error);
-      toast.error('Error al reimportar el archivo');
+      console.error('Error reimporting KMZ through Spatial Engine:', error);
+      toast.error(error instanceof Error ? error.message : 'Error al reimportar el archivo');
     } finally {
       setImporting(false);
-      if (reimportFileInputRef.current) {
-        reimportFileInputRef.current.value = '';
-      }
+      if (reimportFileInputRef.current) reimportFileInputRef.current.value = '';
     }
   };
 
