@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Copy, ExternalLink, MapPin, MousePointer2, PlayCircle, Ruler, Share2, Trees } from 'lucide-react';
 import { toast } from 'sonner';
@@ -30,14 +30,16 @@ type CaoneProjectData = {
   road_source?: string;
 };
 
-const projectUrl = 'https://ofertaterrenos.com/parcelas-caone-hualane';
-const tourUrl = 'https://ofertaterrenos.com/parcelas-caone-hualane/tour';
+const projectUrl = 'https://ofertaterrenos.com/valle-hualane';
+const tourUrl = 'https://ofertaterrenos.com/valle-hualane/tour';
 
 const clp = (value: number | null) =>
   value ? `$${value.toLocaleString('es-CL')}` : 'Consultar';
 
 export default function CaoneTour() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { lotNumber } = useParams<{ lotNumber?: string }>();
   const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
@@ -66,19 +68,17 @@ export default function CaoneTour() {
 
   useEffect(() => {
     if (!data || selectedLotId) return;
-    const requestedLot = searchParams.get('lote');
+    const requestedLot = lotNumber ?? searchParams.get('lote');
     if (!requestedLot) return;
     const match = data.lots.find((lot) => lot.lot_number === requestedLot);
     if (match) setSelectedLotId(match.id);
-  }, [data, searchParams, selectedLotId]);
+  }, [data, lotNumber, searchParams, selectedLotId]);
 
   const selectLot = (lotId: string) => {
     setSelectedLotId(lotId);
     const lot = data?.lots.find((candidate) => candidate.id === lotId);
     if (!lot) return;
-    const next = new URLSearchParams(searchParams);
-    next.set('lote', lot.lot_number);
-    setSearchParams(next, { replace: true });
+    navigate(`/valle-hualane/l/${lot.lot_number}`, { replace: true });
   };
 
   const selected = data?.lots.find((lot) => lot.id === selectedLotId) ?? null;
@@ -87,11 +87,12 @@ export default function CaoneTour() {
     : { lng: -71.65328948, lat: -35.00154536 };
 
   useSEO({
-    title: 'Tour virtual · Parcelas Caone Hualañé',
-    description: 'Explora el proyecto Caone ROL 168-921 sobre imagen satelital, selecciona parcelas y revisa superficie y precio.',
+    title: 'Valle de Hualañé · Tour 3D',
+    description: 'Explora Valle de Hualañé ROL 168-921 sobre imagen satelital 3D, selecciona parcelas y revisa superficie, precio y disponibilidad.',
     type: 'website',
     url: tourUrl,
     canonicalUrl: tourUrl,
+    image: 'https://ofertaterrenos.com/social/valle-hualane-og.png',
   });
 
   const copyProjectLink = async () => {
@@ -100,7 +101,7 @@ export default function CaoneTour() {
   };
 
   const copyTourLink = async () => {
-    const url = selected ? `${tourUrl}?lote=${selected.lot_number}` : tourUrl;
+    const url = selected ? `https://ofertaterrenos.com/valle-hualane/l/${selected.lot_number}` : tourUrl;
     await navigator.clipboard.writeText(url);
     toast.success(selected ? `Link del lote ${selected.lot_number} copiado` : 'Link del tour copiado');
   };
@@ -115,7 +116,7 @@ export default function CaoneTour() {
         <Card className="max-w-md border-white/10 bg-white/5 text-white">
           <CardContent className="p-6 text-center">
             <p className="font-semibold">No pudimos cargar el tour.</p>
-            <Button asChild className="mt-4"><Link to="/parcelas-caone-hualane">Volver al proyecto</Link></Button>
+            <Button asChild className="mt-4"><Link to="/valle-hualane">Volver al proyecto</Link></Button>
           </CardContent>
         </Card>
       </div>
@@ -128,11 +129,11 @@ export default function CaoneTour() {
         <div className="mx-auto flex max-w-[1680px] flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <Button asChild variant="ghost" size="icon" className="text-white/80 hover:bg-white/10 hover:text-white">
-              <Link to="/parcelas-caone-hualane" aria-label="Volver al proyecto"><ArrowLeft className="h-5 w-5" /></Link>
+              <Link to="/valle-hualane" aria-label="Volver al proyecto"><ArrowLeft className="h-5 w-5" /></Link>
             </Button>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300">Terrain Tour · satélite + relieve 3D</p>
-              <h1 className="truncate text-lg font-bold md:text-xl">Caone · ROL 168-921</h1>
+              <h1 className="truncate text-lg font-bold md:text-xl">Valle de Hualañé · ROL 168-921</h1>
             </div>
           </div>
           <div className="flex gap-2">
