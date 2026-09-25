@@ -207,19 +207,21 @@ const applyAvailabilityView = (
     m.setFilter('lots-fill', ['==', ['get', 'status'], 'available']);
     m.setFilter('lots-labels', ['==', ['get', 'status'], 'available']);
     m.setPaintProperty('lots-fill', 'fill-color', '#3fae49');
-    m.setPaintProperty('lots-fill', 'fill-opacity', 0.88);
-    m.setPaintProperty('lots-outline', 'line-width', 0.8);
-    m.setPaintProperty('lots-outline', 'line-opacity', 0.55);
+    // Velo mínimo: el satélite (vegetación, caminos, relieve) debe verse.
+    m.setPaintProperty('lots-fill', 'fill-opacity', 0.1);
+    m.setPaintProperty('lots-outline', 'line-width', 1.8);
+    m.setPaintProperty('lots-outline', 'line-opacity', 0.95);
     m.setLayoutProperty('lots-labels', 'text-field', ['get', 'lot_number']);
   } else {
     m.setFilter('lots-fill', null);
     m.setFilter('lots-labels', null);
     m.setPaintProperty('lots-fill', 'fill-color', getColorExpression(mode, lots));
-    m.setPaintProperty('lots-fill', 'fill-opacity', 0.75);
-    m.setPaintProperty('lots-outline', 'line-width', 1.5);
-    m.setPaintProperty('lots-outline', 'line-opacity', 0.9);
+    m.setPaintProperty('lots-fill', 'fill-opacity', mode === 'status' ? 0.12 : 0.35);
+    m.setPaintProperty('lots-outline', 'line-width', 1.8);
+    m.setPaintProperty('lots-outline', 'line-opacity', 0.95);
     m.setLayoutProperty('lots-labels', 'text-field', ['concat', 'Lote ', ['get', 'lot_number']]);
   }
+
 };
 
 const formatPrice = (price: number | null) => {
@@ -972,28 +974,40 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         data: geojson,
       });
 
-      // Add fill layer with dynamic color mode
+      // Relleno casi transparente: solo tiñe el lote, deja ver el satélite.
       map.current.addLayer({
         id: 'lots-fill',
         type: 'fill',
         source: 'lots',
         paint: {
           'fill-color': getColorExpression(colorMode, lots),
-          'fill-opacity': 0.75,
+          'fill-opacity': colorMode === 'status' ? 0.12 : 0.35,
         },
       });
 
-      // Add outline layer - crisp white borders
+      // Deslinde nítido tipo plano (halo oscuro + línea blanca fina)
+      map.current.addLayer({
+        id: 'lots-outline-halo',
+        type: 'line',
+        source: 'lots',
+        paint: {
+          'line-color': '#04120c',
+          'line-width': 3.4,
+          'line-opacity': 0.45,
+          'line-blur': 0.6,
+        },
+      });
       map.current.addLayer({
         id: 'lots-outline',
         type: 'line',
         source: 'lots',
         paint: {
           'line-color': '#ffffff',
-          'line-width': 1.5,
-          'line-opacity': 0.9,
+          'line-width': 1.8,
+          'line-opacity': 0.95,
         },
       });
+
 
       // Curvas de nivel (Mapbox Terrain v2): cotas reales del relieve bajo el
       // loteo, con etiquetas de elevación. Ocultas por defecto; el toggle
@@ -1207,7 +1221,8 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         filter: ['==', ['get', 'id'], selectedLotId],
         paint: {
           'fill-color': '#f6c64e',
-          'fill-opacity': 0.48,
+          // Suficiente para destacar, sin tapar los árboles ni el relieve.
+          'fill-opacity': 0.16,
         },
       });
       map.current.addLayer({
@@ -1217,9 +1232,11 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         filter: ['==', ['get', 'id'], selectedLotId],
         paint: {
           'line-color': '#f6c64e',
-          'line-width': 4,
+          'line-width': 3,
+          'line-opacity': 1,
         },
       });
+
 
       if (tourMode) {
         const selectedLot = lots.find((lot) => lot.id === selectedLotId);
