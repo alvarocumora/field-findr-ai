@@ -517,7 +517,7 @@ const ProjectExperience = () => {
                         totalAvailable={availableLots.length}
                         isSelected={selectedLot?.id === lot.id}
                         projectName={project.name}
-                        onView={(item) => selectLot(item, { source: 'inventory' })}
+                        onView={(item) => selectLot(item, { source: 'inventory', openInspector: true })}
                         onView3D={(item) => {
                           selectLot(item, { source: 'inventory' });
                           setDesignerLot(item);
