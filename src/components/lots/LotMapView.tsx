@@ -1049,29 +1049,58 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         },
       });
 
+      // Hotspot circular por lote: el color comunica el estado comercial
+      // (verde = disponible, ámbar = reservado, gris = vendido) y el número
+      // va dentro del círculo para leerse sobre cualquier satélite.
+      map.current.addLayer({
+        id: 'lots-hotspot',
+        type: 'circle',
+        source: 'lots',
+        paint: {
+          'circle-color': [
+            'case',
+            ['==', ['get', 'status'], 'sold'], '#475569',
+            ['==', ['get', 'status'], 'reserved'], '#d97706',
+            '#059669',
+          ],
+          'circle-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            13, 7,
+            15, 10,
+            17, 13,
+            19, 16,
+          ],
+          'circle-opacity': 0.94,
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 1.6,
+          'circle-stroke-opacity': 0.95,
+        },
+      });
+
       // Add lot numbers with better typography
       map.current.addLayer({
         id: 'lots-labels',
         type: 'symbol',
         source: 'lots',
         layout: {
-          'text-field': ['concat', 'Lote ', ['get', 'lot_number']],
+          'text-field': ['get', 'lot_number'],
           'text-size': [
             'interpolate', ['linear'], ['zoom'],
             14, 10,
-            16, 13,
-            18, 16
+            16, 12,
+            18, 14
           ],
           'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
-          'text-allow-overlap': false,
-          'text-ignore-placement': false,
+          'text-allow-overlap': true,
+          'text-ignore-placement': true,
         },
         paint: {
           'text-color': '#ffffff',
-          'text-halo-color': 'rgba(0,0,0,0.7)',
-          'text-halo-width': 1.5,
+          'text-halo-color': 'rgba(0,0,0,0.45)',
+          'text-halo-width': 0.8,
         },
       });
+
 
       // Aplica la vista inicial solo cuando la capa de etiquetas ya existe.
       // Esto asegura el filtro y el texto abreviado también en carga inicial
