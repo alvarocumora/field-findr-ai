@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { usePanelContext } from '@/hooks/usePanelContext';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
-import { useCurrentPlan } from '@/hooks/useSubscription';
 import {
   hasOrganizationCapability,
   type OrganizationCapability,
@@ -41,8 +40,6 @@ const BROKER_FEATURES: readonly PlanFeature[] = [
 export const useAccess = () => {
   const identity = useSmartRedirect();
   const panel = usePanelContext();
-  const subscription = useCurrentPlan();
-
   const can = useCallback((capability: OrganizationCapability) => {
     if (panel.context === 'plataforma') return identity.isAdmin;
     if (panel.context === 'buyer' || !panel.context) return false;
@@ -64,8 +61,8 @@ export const useAccess = () => {
     if (panel.context === 'plataforma') return identity.isAdmin;
     if (panel.context === 'broker' && BROKER_FEATURES.includes(feature)) return true;
     if (panel.context === 'buyer') return feature === 'marketplace';
-    return hasPlanFeature(subscription.plan, feature);
-  }, [identity.isAdmin, panel.context, subscription.plan]);
+    return hasPlanFeature(panel.plan, feature);
+  }, [identity.isAdmin, panel.context, panel.plan]);
 
   const canEnterArea = useCallback((area: 'buyer' | 'agent' | 'admin') => {
     if (area === 'buyer') return identity.isBuyer;
@@ -79,8 +76,8 @@ export const useAccess = () => {
     organization: panel.organization,
     organizationRole: panel.organizationRole,
     brokerProfile: panel.brokerProfile,
-    plan: subscription.plan,
-    limits: subscription.planDetails,
+    plan: panel.plan,
+    limits: panel.planDetails,
     isAdmin: identity.isAdmin,
     isAgent: identity.isAgent,
     isBuyer: identity.isBuyer,
@@ -88,6 +85,8 @@ export const useAccess = () => {
     can,
     hasFeature,
     canEnterArea,
-    isLoading: panel.isLoading || subscription.isLoading || identity.isLoading,
+    setContext: panel.setContext,
+    planIsAgency: panel.planIsAgency,
+    isLoading: panel.isLoading || identity.isLoading,
   };
 };
