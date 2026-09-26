@@ -57,9 +57,6 @@ export default defineConfig(({ mode }) => ({
             urlPattern: ({ url }) => url.pathname.startsWith('/~oauth'),
             handler: 'NetworkOnly',
           },
-
-
-        runtimeCaching: [
           // Cache Mapbox tiles for offline map access
           {
             urlPattern: /^https:\/\/api\.mapbox\.com\/.*/i,
