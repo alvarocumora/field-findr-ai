@@ -35,6 +35,7 @@ type _SubscriptionOrganization = Assert<HasKey<SubscriptionRow, 'organization_id
 type _PaymentOrganization = Assert<HasKey<PaymentRow, 'organization_id'>>;
 
 type _CanAccessProject = Assert<HasFunction<'can_access_project'>>;
+type _ClaimUserReferral = Assert<HasFunction<'claim_user_referral'>>;
 type _OrganizationCapability = Assert<HasFunction<'organization_has_capability'>>;
 type _OrganizationRole = Assert<HasFunction<'organization_role'>>;
 type _PublicSalesQuote = Assert<HasFunction<'get_public_sales_quote'>>;
