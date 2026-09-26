@@ -55,7 +55,7 @@ import {
 } from 'lucide-react';
 import { useBulkPublishLots } from '@/hooks/useBulkPublishLots';
 import { publishableLots } from '@/lib/marketplace/lotToListing';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
 import { useReviewStats } from '@/hooks/useReviews';
@@ -172,6 +172,10 @@ const ProjectDetail = () => {
   const [reservationLot, setReservationLot] = useState<any | null>(null);
   const [financingLot, setFinancingLot] = useState<any | null>(null);
   const [detailLot, setDetailLot] = useState<any | null>(null);
+  const closeQuoter = useCallback(() => {
+    setSelectedLot(null);
+    setDetailLot(null);
+  }, []);
   const [designerLot, setDesignerLot] = useState<any | null>(null);
   const [showCompare, setShowCompare] = useState(false);
   const [editingSceneIdx, setEditingSceneIdx] = useState<number | null>(null);
@@ -441,6 +445,7 @@ const ProjectDetail = () => {
             projectName={project.name}
             onReserve={(lot) => setReservationLot(lot)}
             onFinance={(lot) => setFinancingLot(lot)}
+            onClose={closeQuoter}
           />
         )}
 
