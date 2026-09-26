@@ -97,10 +97,12 @@ serve(async (req) => {
       });
     }
 
+    let matchedLeadId: string | null = null;
+
     if (source_quote_id) {
       const { data: quote } = await supabase
         .from("sales_quotes")
-        .select("id, lot_id, agent_id")
+        .select("id, lot_id, agent_id, lead_id")
         .eq("id", source_quote_id)
         .eq("lot_id", lot_id)
         .eq("agent_id", user.id)
@@ -110,6 +112,34 @@ serve(async (req) => {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+      matchedLeadId = quote.lead_id || null;
+    }
+
+    // Preserve the commercial journey when a buyer reserves after first
+    // contacting a project through a broker/public landing.
+    if (!matchedLeadId) {
+      const projectId = (lot as any).project_id as string;
+      const emailCandidates = [...new Set([
+        buyer_email.trim(),
+        buyer_email.trim().toLowerCase(),
+      ])];
+
+      for (const candidate of emailCandidates) {
+        const { data: lead } = await supabase
+          .from("leads")
+          .select("id")
+          .eq("project_id", projectId)
+          .eq("email", candidate)
+          .or(`lot_id.eq.${lot_id},lot_id.is.null`)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (lead?.id) {
+          matchedLeadId = lead.id;
+          break;
+        }
       }
     }
 
@@ -129,6 +159,7 @@ serve(async (req) => {
         status: "pending_payment",
         expires_at: expiresAt.toISOString(),
         notes,
+        lead_id: matchedLeadId,
         source_quote_id: source_quote_id || null,
       })
       .select()
