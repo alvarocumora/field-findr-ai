@@ -21,7 +21,11 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { projectOwnerId, firstName, lastName, email, phone, projectId, lotId, source, notes, budgetMin, budgetMax, preferredAreaMin, preferredAreaMax } = body;
+    const {
+      projectOwnerId, firstName, lastName, email, phone, projectId, lotId,
+      source, notes, budgetMin, budgetMax, preferredAreaMin, preferredAreaMax,
+      referralCode,
+    } = body;
 
     if (!projectOwnerId || !firstName || !email || !projectId) {
       return new Response(
@@ -82,6 +86,39 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Broker sales attribution is resolved server-side from a public BK-* code.
+    // The browser never supplies a user id. A broker is attributed only when
+    // they are active AND explicitly approved to sell this project.
+    let referringAgentId: string | null = null;
+    let referralNotes: string | null = null;
+    const normalizedReferralCode =
+      typeof referralCode === "string" ? referralCode.trim().toUpperCase() : "";
+
+    if (/^BK-[A-Z0-9_-]{3,76}$/.test(normalizedReferralCode)) {
+      const { data: broker } = await supabase
+        .from("broker_profiles")
+        .select("user_id")
+        .eq("invite_code", normalizedReferralCode)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (broker?.user_id) {
+        const { data: assignment } = await supabase
+          .from("project_broker_assignments")
+          .select("id, commission_rate")
+          .eq("project_id", projectId)
+          .eq("broker_id", broker.user_id)
+          .eq("status", "approved")
+          .maybeSingle();
+
+        if (assignment) {
+          referringAgentId = broker.user_id;
+          referralNotes =
+            `[Broker attribution] code=${normalizedReferralCode} assignment=${assignment.id}`;
+        }
+      }
+    }
+
     const { data, error } = await supabase.from("leads").insert({
       user_id: projectOwnerId,
       first_name: String(firstName).slice(0, 100),
@@ -93,6 +130,8 @@ Deno.serve(async (req) => {
       source: source ? String(source).slice(0, 60) : "cotizador_publico",
       status: "new",
       notes: notes ? String(notes).slice(0, 2000) : null,
+      referring_agent_id: referringAgentId,
+      referral_notes: referralNotes,
       budget_min: budgetMin || null,
       budget_max: budgetMax || null,
       preferred_area_min: preferredAreaMin || null,
