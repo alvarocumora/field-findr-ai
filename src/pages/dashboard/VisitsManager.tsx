@@ -32,6 +32,7 @@ import { useLeads } from '@/hooks/useLeads';
 import { useProjects } from '@/hooks/useProjects';
 import { useLots } from '@/hooks/useLots';
 import { useAuth } from '@/hooks/useAuth';
+import { useWorkspaceScope } from '@/hooks/useWorkspaceScope';
 import { cn } from '@/lib/utils';
 
 const emptyForm = {
@@ -51,30 +52,52 @@ const toLocalDateTimeInput = (iso: string) => {
 
 const VisitsManager = () => {
   const { user } = useAuth();
-  const { visits, isLoading, createVisit, updateVisit } = useVisits();
-  const { leads } = useLeads();
+  const { projectId } = useWorkspaceScope();
+  const { visits, isLoading, createVisit, updateVisit } = useVisits(projectId);
+  const { leads } = useLeads(projectId);
   const { projects } = useProjects();
-  const { lots } = useLots();
+  const { lots } = useLots(projectId);
   const [searchParams, setSearchParams] = useSearchParams();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [resultVisit, setResultVisit] = useState<Visit | null>(null);
   const [result, setResult] = useState(emptyResult);
   const [weekOffset, setWeekOffset] = useState(0);
-  const [projectFilter, setProjectFilter] = useState('all');
+  const [projectFilter, setProjectFilter] = useState(projectId ?? 'all');
   const [advisorFilter, setAdvisorFilter] = useState('all');
 
   useEffect(() => {
-    const projectId = searchParams.get('project') || '';
+    setProjectFilter(projectId ?? 'all');
+    setForm((current) => ({
+      ...current,
+      project_id: projectId ?? current.project_id,
+    }));
+  }, [projectId]);
+
+  useEffect(() => {
     const lotId = searchParams.get('lot') || '';
-    if (!projectId && !lotId) return;
+    const createAction = searchParams.get('action') === 'new';
+    if (!lotId && !createAction) return;
+
     const lot = lotId ? lots.find((item) => item.id === lotId) : undefined;
-    setForm((current) => ({ ...current, project_id: projectId || lot?.project_id || current.project_id, lot_id: lotId || current.lot_id }));
+    setForm((current) => ({
+      ...current,
+      project_id: projectId || lot?.project_id || current.project_id,
+      lot_id: lotId || current.lot_id,
+    }));
     setOpen(true);
-    setSearchParams({}, { replace: true });
-  }, [lots, searchParams, setSearchParams]);
+
+    const next = new URLSearchParams(searchParams);
+    next.delete('lot');
+    next.delete('action');
+    setSearchParams(next, { replace: true });
+  }, [lots, projectId, searchParams, setSearchParams]);
 
   const set = (k: keyof typeof emptyForm, v: string | number) => setForm((f) => ({ ...f, [k]: v }));
+  const scopedProjects = useMemo(
+    () => projectId ? projects.filter((project) => project.id === projectId) : projects,
+    [projectId, projects],
+  );
   const projectLots = useMemo(() => lots.filter((lot) => !form.project_id || lot.project_id === form.project_id), [lots, form.project_id]);
 
   const { upcoming, past } = useMemo(() => {
@@ -178,7 +201,7 @@ const VisitsManager = () => {
               <div><Label htmlFor="v-dur">Duración (min)</Label><Input id="v-dur" type="number" min={15} step={15} value={form.duration_minutes} onChange={(e) => set('duration_minutes', Number(e.target.value))} /></div>
               <div><Label>Modalidad</Label><Select value={form.mode} onValueChange={(v) => set('mode', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{VISIT_MODES.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent></Select></div>
               <div><Label>Lead</Label><Select value={form.lead_id} onValueChange={(v) => set('lead_id', v)}><SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger><SelectContent>{leads.map((l) => <SelectItem key={l.id} value={l.id}>{l.first_name} {l.last_name ?? ''}</SelectItem>)}</SelectContent></Select></div>
-              <div><Label>Proyecto</Label><Select value={form.project_id} onValueChange={(v) => { set('project_id', v); set('lot_id', ''); }}><SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger><SelectContent>{projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label>Proyecto</Label><Select value={form.project_id} onValueChange={(v) => { set('project_id', v); set('lot_id', ''); }} disabled={Boolean(projectId)}><SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger><SelectContent>{scopedProjects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></div>
               <div className="sm:col-span-2"><Label>Parcela</Label><Select value={form.lot_id} onValueChange={(value) => { const selectedLot = lots.find((lot) => lot.id === value); setForm((current) => ({ ...current, lot_id: value, project_id: selectedLot?.project_id || current.project_id })); }}><SelectTrigger><SelectValue placeholder="Seleccionar parcela" /></SelectTrigger><SelectContent>{projectLots.map((lot) => <SelectItem key={lot.id} value={lot.id}>{lot.name || `Lote ${lot.lot_number}`}</SelectItem>)}</SelectContent></Select></div>
               <div className="sm:col-span-2"><Label htmlFor="v-notes">Notas previas</Label><Textarea id="v-notes" value={form.notes} onChange={(e) => set('notes', e.target.value)} /></div>
             </div>
@@ -202,10 +225,12 @@ const VisitsManager = () => {
                 </div>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row">
-                <Select value={projectFilter} onValueChange={setProjectFilter}>
-                  <SelectTrigger className="sm:w-64"><SelectValue placeholder="Proyecto" /></SelectTrigger>
-                  <SelectContent><SelectItem value="all">Todos los proyectos</SelectItem>{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>)}</SelectContent>
-                </Select>
+                {!projectId && (
+                  <Select value={projectFilter} onValueChange={setProjectFilter}>
+                    <SelectTrigger className="sm:w-64"><SelectValue placeholder="Proyecto" /></SelectTrigger>
+                    <SelectContent><SelectItem value="all">Todos los proyectos</SelectItem>{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                )}
                 <Select value={advisorFilter} onValueChange={setAdvisorFilter}>
                   <SelectTrigger className="sm:w-56"><SelectValue placeholder="Asesor" /></SelectTrigger>
                   <SelectContent><SelectItem value="all">Todos los asesores</SelectItem>{advisors.map((id) => <SelectItem key={id} value={id}>{id === user?.id ? 'Yo' : `Asesor · ${id.slice(0, 6)}`}</SelectItem>)}</SelectContent>

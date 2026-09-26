@@ -25,17 +25,19 @@ export interface ReferralCommission {
 }
 
 /** Commissions where the current user is the *referring* broker. */
-export const useReferralCommissionsEarned = () => {
+export const useReferralCommissionsEarned = (projectId?: string) => {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ['referral-commissions', 'earned', user?.id],
+    queryKey: ['referral-commissions', 'earned', user?.id, projectId ?? 'all'],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
+      let request = supabase
         .from('agent_commissions')
         .select('*')
         .eq('referring_agent_id', user.id)
         .order('created_at', { ascending: false });
+      if (projectId) request = request.eq('project_id', projectId);
+      const { data, error } = await request;
       if (error) throw error;
       return (data ?? []) as ReferralCommission[];
     },
@@ -44,18 +46,20 @@ export const useReferralCommissionsEarned = () => {
 };
 
 /** Commissions the listing owner (current user) owes to referring brokers. */
-export const useReferralCommissionsOwed = () => {
+export const useReferralCommissionsOwed = (projectId?: string) => {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ['referral-commissions', 'owed', user?.id],
+    queryKey: ['referral-commissions', 'owed', user?.id, projectId ?? 'all'],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
+      let request = supabase
         .from('agent_commissions')
         .select('*')
         .eq('agent_id', user.id)
         .not('referring_agent_id', 'is', null)
         .order('created_at', { ascending: false });
+      if (projectId) request = request.eq('project_id', projectId);
+      const { data, error } = await request;
       if (error) throw error;
       return (data ?? []) as ReferralCommission[];
     },

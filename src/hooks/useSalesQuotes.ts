@@ -27,27 +27,30 @@ export type CreateSalesQuoteInput = {
 type SalesQuoteInsert = TablesInsert<'sales_quotes'>;
 type SalesQuoteUpdate = TablesUpdate<'sales_quotes'>;
 
-export const useSalesQuotes = (limit = 100) => useQuery({
-  queryKey: ['sales-quotes', limit],
+export const useSalesQuotes = (limit = 100, projectId?: string) => useQuery({
+  queryKey: ['sales-quotes', projectId ?? 'all', limit],
   queryFn: async () => {
-    const { data, error } = await supabase.from('sales_quotes')
+    let request = supabase.from('sales_quotes')
       .select('*')
-      .order('created_at', { ascending: false })
-      .limit(limit);
+      .order('created_at', { ascending: false });
+    if (projectId) request = request.eq('project_id', projectId);
+    const { data, error } = await request.limit(limit);
 
     if (error) throw error;
     return (data ?? []) as SalesQuote[];
   },
 });
 
-export const useExpiringSalesQuotes = (hours = 72) => useQuery({
-  queryKey: ['sales-quotes', 'expiring', hours],
+export const useExpiringSalesQuotes = (hours = 72, projectId?: string) => useQuery({
+  queryKey: ['sales-quotes', 'expiring', projectId ?? 'all', hours],
   queryFn: async () => {
     const now = new Date();
     const end = new Date(now.getTime() + hours * 60 * 60 * 1000);
-    const { data, error } = await supabase.from('sales_quotes')
+    let request = supabase.from('sales_quotes')
       .select('*')
-      .in('status', ['draft', 'sent', 'viewed'])
+      .in('status', ['draft', 'sent', 'viewed']);
+    if (projectId) request = request.eq('project_id', projectId);
+    const { data, error } = await request
       .gte('valid_until', now.toISOString())
       .lte('valid_until', end.toISOString())
       .order('valid_until', { ascending: true });
@@ -57,12 +60,14 @@ export const useExpiringSalesQuotes = (hours = 72) => useQuery({
   refetchInterval: 60_000,
 });
 
-export const useActiveSalesQuotesCount = () => useQuery({
-  queryKey: ['sales-quotes', 'active-count'],
+export const useActiveSalesQuotesCount = (projectId?: string) => useQuery({
+  queryKey: ['sales-quotes', 'active-count', projectId ?? 'all'],
   queryFn: async () => {
-    const { count, error } = await supabase.from('sales_quotes')
+    let request = supabase.from('sales_quotes')
       .select('id', { count: 'exact', head: true })
       .in('status', ['draft', 'sent', 'viewed']);
+    if (projectId) request = request.eq('project_id', projectId);
+    const { count, error } = await request;
 
     if (error) throw error;
     return count ?? 0;

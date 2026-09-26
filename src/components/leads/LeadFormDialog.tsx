@@ -56,9 +56,10 @@ type LeadFormData = z.infer<typeof leadSchema>;
 interface LeadFormDialogProps {
   trigger?: React.ReactNode;
   onSuccess?: () => void;
+  projectId?: string;
 }
 
-export function LeadFormDialog({ trigger, onSuccess }: LeadFormDialogProps) {
+export function LeadFormDialog({ trigger, onSuccess, projectId }: LeadFormDialogProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
@@ -94,6 +95,7 @@ export function LeadFormDialog({ trigger, onSuccess }: LeadFormDialogProps) {
     try {
       const { error } = await supabase.from('leads').insert({
         user_id: user.id,
+        project_id: projectId ?? null,
         first_name: data.first_name,
         last_name: data.last_name || null,
         email: data.email || null,
@@ -115,7 +117,7 @@ export function LeadFormDialog({ trigger, onSuccess }: LeadFormDialogProps) {
       toast.success('Lead creado exitosamente');
       form.reset();
       setOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['agent-leads'] });
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
       queryClient.invalidateQueries({ queryKey: ['agent-stats'] });
       onSuccess?.();
     } catch (error) {

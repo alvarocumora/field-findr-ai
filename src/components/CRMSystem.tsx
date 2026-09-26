@@ -19,6 +19,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useLeads, LeadStatus, LEAD_STATUS_CONFIG } from '@/hooks/useLeads';
+import { useWorkspaceScope } from '@/hooks/useWorkspaceScope';
 import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -33,7 +34,8 @@ const PIPELINE_COLUMNS: { status: LeadStatus; label: string; accent: string }[] 
 ];
 
 const CRMSystem = () => {
-  const { leads, isLoading, stats, updateLead } = useLeads();
+  const { projectId } = useWorkspaceScope();
+  const { leads, isLoading, stats, updateLead } = useLeads(projectId);
   const [searchTerm, setSearchTerm] = useState('');
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
@@ -108,6 +110,7 @@ const CRMSystem = () => {
             />
           </div>
           <LeadFormDialog
+            projectId={projectId}
             trigger={
               <Button className="rounded-xl gap-2">
                 <UserPlus className="h-4 w-4" />

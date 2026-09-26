@@ -15,6 +15,7 @@ import {
 } from '@/hooks/useReferrals.commissions';
 import ReferralCodeCard from '@/components/commissions/ReferralCodeCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useWorkspaceScope } from '@/hooks/useWorkspaceScope';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n || 0);
@@ -34,9 +35,10 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 const CommissionsPage = () => {
-  const { data: mine = [] } = useAgentCommissions();
-  const { data: earned = [] } = useReferralCommissionsEarned();
-  const { data: owed = [] } = useReferralCommissionsOwed();
+  const { projectId } = useWorkspaceScope();
+  const { data: mine = [] } = useAgentCommissions(projectId);
+  const { data: earned = [] } = useReferralCommissionsEarned(projectId);
+  const { data: owed = [] } = useReferralCommissionsOwed(projectId);
   const [historyId, setHistoryId] = useState<string>();
   const { data: history = [] } = useCommissionEvents(historyId);
   const markReferralPaid = useMarkReferralPaid();

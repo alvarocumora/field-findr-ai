@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useWorkspaceScope } from '@/hooks/useWorkspaceScope';
 import { useExpireStaleReservations, useExtendReservation } from '@/hooks/useReservations';
 import ConvertToSaleDialog from './ConvertToSaleDialog';
 import BuyerJourneySheet from './BuyerJourneySheet';
@@ -36,6 +37,7 @@ const STATUS_CONFIG: Record<ReservationStatus, { label: string; icon: typeof Clo
 
 const ReservationsManager = () => {
   const { user } = useAuth();
+  const { projectId } = useWorkspaceScope();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -58,10 +60,10 @@ const ReservationsManager = () => {
   }, [user]);
 
   const { data: reservations = [], isLoading } = useQuery({
-    queryKey: ['admin-reservations', user?.id],
+    queryKey: ['admin-reservations', user?.id, projectId ?? 'all'],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
+      let request = supabase
         .from('reservations')
         .select(`
           *,
@@ -75,6 +77,8 @@ const ReservationsManager = () => {
           )
         `)
         .order('created_at', { ascending: false });
+      if (projectId) request = request.eq('lots.project_id', projectId);
+      const { data, error } = await request;
       if (error) throw error;
       return data || [];
     },
@@ -111,7 +115,7 @@ const ReservationsManager = () => {
   });
 
   const stampShared = async (reservationId: string) => {
-    const { error } = await (supabase.from('reservations') as any)
+    const { error } = await supabase.from('reservations')
       .update({ payment_link_shared_at: new Date().toISOString() })
       .eq('id', reservationId);
     if (!error) queryClient.invalidateQueries({ queryKey: ['admin-reservations'] });

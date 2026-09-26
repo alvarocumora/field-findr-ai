@@ -18,17 +18,19 @@ export const CLOSING_STATUS: Record<ClosingStatus, { label: string; className: s
   void: { label: 'Anulado', className: 'bg-destructive/15 text-destructive border-destructive/30' },
 };
 
-export const useSalesClosings = () => {
+export const useSalesClosings = (projectId?: string) => {
   const { user } = useAuth();
   const qc = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['sales-closings', user?.id],
+    queryKey: ['sales-closings', user?.id, projectId ?? 'all'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let request = supabase
         .from('sales_closings')
         .select('*')
         .order('created_at', { ascending: false });
+      if (projectId) request = request.eq('project_id', projectId);
+      const { data, error } = await request;
       if (error) throw error;
       return (data ?? []) as SalesClosing[];
     },

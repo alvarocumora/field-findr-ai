@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FileSignature, Plus, FileText, DollarSign } from 'lucide-react';
@@ -23,6 +23,7 @@ import { useLeads } from '@/hooks/useLeads';
 import { useProjects } from '@/hooks/useProjects';
 import { cn } from '@/lib/utils';
 import CloseSaleWizard, { CloseSaleResult } from '@/components/sales/CloseSaleWizard';
+import { useWorkspaceScope } from '@/hooks/useWorkspaceScope';
 
 const emptyForm = {
   buyer_name: '',
@@ -43,13 +44,22 @@ const money = (n: number, currency: string) =>
     .format(n || 0);
 
 const ClosingsManager = () => {
-  const { closings, isLoading, createClosing, updateClosing } = useSalesClosings();
-  const { leads } = useLeads();
+  const { projectId } = useWorkspaceScope();
+  const { closings, isLoading, createClosing, updateClosing } = useSalesClosings(projectId);
+  const { leads } = useLeads(projectId);
   const { projects } = useProjects();
+  const scopedProjects = useMemo(
+    () => projectId ? projects.filter((project) => project.id === projectId) : projects,
+    [projectId, projects],
+  );
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState({ ...emptyForm, project_id: projectId ?? '' });
   const [closingTarget, setClosingTarget] = useState<string | null>(null);
   const target = closings.find((c) => c.id === closingTarget) ?? null;
+
+  useEffect(() => {
+    setForm((current) => ({ ...current, project_id: projectId ?? current.project_id }));
+  }, [projectId]);
 
   const set = (k: keyof typeof emptyForm, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -155,10 +165,10 @@ const ClosingsManager = () => {
               </div>
               <div>
                 <Label>Proyecto</Label>
-                <Select value={form.project_id} onValueChange={(v) => set('project_id', v)}>
+                <Select value={form.project_id} onValueChange={(v) => set('project_id', v)} disabled={Boolean(projectId)}>
                   <SelectTrigger aria-label="Proyecto"><SelectValue placeholder="Opcional" /></SelectTrigger>
                   <SelectContent>
-                    {projects.map((p) => (
+                    {scopedProjects.map((p) => (
                       <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
                   </SelectContent>

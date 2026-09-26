@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,16 +17,27 @@ import BulkPriceAdjustDialog from './lots/BulkPriceAdjustDialog';
 import { LotCard } from './lots/LotCard';
 import { LotTable } from './lots/LotTable';
 import { LotStats } from './lots/LotStats';
+import { useWorkspaceScope } from '@/hooks/useWorkspaceScope';
 
 const LotManagement = () => {
-  const { lots, isLoading, stats, createLot, updateLot, deleteLot } = useLots();
+  const { projectId } = useWorkspaceScope();
+  const { lots, isLoading, stats, createLot, updateLot, deleteLot } = useLots(projectId);
   const { projects, isLoading: projectsLoading } = useProjects();
   const { token: mapboxToken } = useMapboxToken();
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [projectFilter, setProjectFilter] = useState<string>(projectId ?? 'all');
+
+  useEffect(() => {
+    setProjectFilter(projectId ?? 'all');
+  }, [projectId]);
+
+  const scopedProjects = useMemo(
+    () => projectId ? projects.filter((project) => project.id === projectId) : projects,
+    [projectId, projects],
+  );
   
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showBulkPrice, setShowBulkPrice] = useState(false);
@@ -143,7 +154,7 @@ const LotManagement = () => {
               <DialogTitle>Agregar Nuevo Lote</DialogTitle>
             </DialogHeader>
             <LotForm
-              projects={projects}
+              projects={scopedProjects}
               onSubmit={handleCreateLot}
               onCancel={() => setShowAddDialog(false)}
               isLoading={createLot.isPending}
@@ -156,7 +167,7 @@ const LotManagement = () => {
       <BulkPriceAdjustDialog
         open={showBulkPrice}
         onOpenChange={setShowBulkPrice}
-        projects={projects}
+        projects={scopedProjects}
         lots={lots}
         defaultProjectId={projectFilter !== 'all' ? projectFilter : undefined}
       />
@@ -198,19 +209,21 @@ const LotManagement = () => {
               />
             </div>
             
-            <Select value={projectFilter} onValueChange={setProjectFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Proyecto" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los proyectos</SelectItem>
-                {projects.map(project => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {!projectId && (
+              <Select value={projectFilter} onValueChange={setProjectFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Proyecto" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los proyectos</SelectItem>
+                  {projects.map(project => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-36">
