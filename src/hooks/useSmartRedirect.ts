@@ -9,12 +9,10 @@ export const useSmartRedirect = () => {
     if (!user) return '/auth';
     if (fallback) return fallback;
 
-    const roleNames = roles.map(r => r.role);
-
-    if (roleNames.includes('admin')) return '/admin/dashboard';
-    if (roleNames.includes('agent')) return '/asesor/dashboard';
-    if (roleNames.includes('buyer')) return '/buyer/home';
-    return '/explorar';
+    // Context resolution belongs to /panel. Keeping the helper as a
+    // compatibility facade avoids reintroducing a fixed admin > agent > buyer
+    // priority in callers that still use getRedirectPath().
+    return roles.length > 0 ? '/panel' : '/explorar';
   };
 
   const isAdmin = roles.some(r => r.role === 'admin');
