@@ -22,6 +22,7 @@ interface ConvertToSaleDialogProps {
     id: string;
     buyer_name: string;
     reservation_amount: number | null;
+    lead_id?: string | null;
     lots?: {
       lot_number?: string | null;
       name?: string | null;
@@ -73,6 +74,7 @@ const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleD
         saleAmount: amount,
         commissionRate: withCommission && rate > 0 ? rate : null,
         notes: notes.trim() || null,
+        leadId: reservation.lead_id ?? null,
       },
       { onSuccess: () => onOpenChange(false) },
     );
