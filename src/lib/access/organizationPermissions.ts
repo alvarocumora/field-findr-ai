@@ -15,7 +15,7 @@ export type OrganizationCapability =
   | 'inventory.read' | 'inventory.write'
   | 'crm.read' | 'crm.write'
   | 'reservations.read' | 'reservations.write'
-  | 'sales.read'
+  | 'sales.read' | 'sales.write'
   | 'payments.read' | 'payments.write'
   | 'commissions.read' | 'commissions.write'
   | 'reports.read'
@@ -24,7 +24,7 @@ export type OrganizationCapability =
 
 const ALL_CAPABILITIES: OrganizationCapability[] = [
   'projects.read','projects.write','inventory.read','inventory.write',
-  'crm.read','crm.write','reservations.read','reservations.write','sales.read',
+  'crm.read','crm.write','reservations.read','reservations.write','sales.read','sales.write',
   'payments.read','payments.write','commissions.read','commissions.write',
   'reports.read','documents.read','documents.write','team.read','team.write',
 ];
@@ -33,9 +33,9 @@ export const ROLE_CAPABILITIES: Record<OrganizationRole, readonly OrganizationCa
   owner: ALL_CAPABILITIES,
   admin: ALL_CAPABILITIES,
   org_admin: ALL_CAPABILITIES,
-  commercial_manager: ['projects.read','projects.write','inventory.read','inventory.write','crm.read','crm.write','reservations.read','reservations.write','sales.read','reports.read','team.read'],
-  sales_agent: ['projects.read','inventory.read','crm.read','crm.write','reservations.read','reservations.write','sales.read','commissions.read'],
-  member: ['projects.read','inventory.read','crm.read','crm.write','reservations.read','reservations.write','sales.read','commissions.read'],
+  commercial_manager: ['projects.read','projects.write','inventory.read','inventory.write','crm.read','crm.write','reservations.read','reservations.write','sales.read','sales.write','reports.read','team.read'],
+  sales_agent: ['projects.read','inventory.read','crm.read','crm.write','reservations.read','reservations.write','sales.read','sales.write','commissions.read'],
+  member: ['projects.read','inventory.read','crm.read','crm.write','reservations.read','reservations.write','sales.read','sales.write','commissions.read'],
   operations: ['projects.read','projects.write','inventory.read','inventory.write','reservations.read','reservations.write','documents.read','documents.write'],
   finance: ['sales.read','payments.read','payments.write','commissions.read','commissions.write','reports.read'],
   external_broker: ['projects.read','inventory.read','crm.read','crm.write','reservations.read','reservations.write'],

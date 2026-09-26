@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { navGroupsFor, type RouteArea } from '@/routes/routeManifest';
+import { navGroupsFor, type AgentNavContext, type RouteArea } from '@/routes/routeManifest';
 import { navIcon } from '@/routes/navIcons';
 
 interface ModulesHubProps {
@@ -9,6 +9,7 @@ interface ModulesHubProps {
   plan?: string;
   title?: string;
   className?: string;
+  context?: AgentNavContext;
 }
 
 /**
@@ -16,8 +17,8 @@ interface ModulesHubProps {
  * ninguna sección del panel quede huérfana y que el orden sea el mismo que
  * en la barra lateral.
  */
-const ModulesHub = ({ area, plan, title = 'Todos los módulos', className }: ModulesHubProps) => {
-  const groups = navGroupsFor(area, plan).filter((g) => g.items.length > 0);
+const ModulesHub = ({ area, plan, title = 'Todos los módulos', className, context }: ModulesHubProps) => {
+  const groups = navGroupsFor(area, plan, context).filter((g) => g.items.length > 0);
 
   return (
     <section className={cn('space-y-6', className)} aria-label={title}>

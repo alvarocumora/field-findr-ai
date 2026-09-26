@@ -16,9 +16,13 @@ export type RouteArea = "public" | "buyer" | "agent" | "admin";
 export type RouteAccess = "public" | "auth" | "agent" | "admin";
 export type RouteLayout = "none" | "public" | "buyer" | "dashboard";
 
+export type AgentNavContext = 'broker' | 'empresa';
+
 export interface NavMeta {
   label: string;
   group: string;
+  /** Contextos agent donde se muestra. Ausente = solo workspace Empresa. */
+  contexts?: AgentNavContext[];
   /** Planes que ven el link; ausente = todos los del área. */
   plans?: string[];
   /** Nombre del icono (ver `src/routes/navIcons.ts`). */
@@ -443,7 +447,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-opportunities", "/asesor/opportunities", <LandOpportunities />, { label: "Oportunidades", group: "proyectos", icon: "target" }),
   agent("asesor-opportunity", "/asesor/opportunity/:id", <OpportunityDetail />),
   agent("asesor-captaciones", "/asesor/captaciones", <MyCaptaciones />, { label: "Mis captaciones", group: "proyectos", icon: "handshake" }),
-  agent("asesor-broker-marketplace", "/asesor/proyectos-en-venta", <BrokerMarketplace />, { label: "Proyectos en venta", group: "red comercial", icon: "store" }),
+  agent("asesor-broker-marketplace", "/asesor/proyectos-en-venta", <BrokerMarketplace />, { label: "Proyectos en venta", group: "red comercial", icon: "store", contexts: ["broker", "empresa"] }),
 
   // Inventario
   agent("panel-inventario", "/panel/inventario", <InventoryMap />, { label: "Mapa de inventario", group: "proyectos", icon: "map" }),
@@ -457,29 +461,29 @@ export const agentRouteEntries: RouteEntry[] = [
 
   // CRM
   agent("clientes", "/clientes", <ClientsBook />, { label: "Clientes", group: "ventas", icon: "users" }),
-  agent("asesor-leads", "/asesor/leads", <LeadManagement />, { label: "Leads", group: "ventas", icon: "users" }),
+  agent("asesor-leads", "/asesor/leads", <LeadManagement />, { label: "Leads", group: "ventas", icon: "users", contexts: ["broker", "empresa"] }),
   agent("asesor-contacts", "/asesor/contacts", <Contacts />, { label: "Contactos", group: "ventas", icon: "users" }),
   agent("asesor-buyer-requirements", "/asesor/demanda-compradores", <BuyerRequirements />, { label: "Tengo comprador", group: "ventas", icon: "target" }),
-  agent("asesor-crm", "/asesor/crm", <CRMSystem />, { label: "CRM", group: "ventas", icon: "workflow" }),
-  agent("asesor-messages", "/asesor/messages", <Messages />, { label: "Mensajes", group: "ventas", icon: "message" }),
+  agent("asesor-crm", "/asesor/crm", <CRMSystem />, { label: "CRM", group: "ventas", icon: "workflow", contexts: ["broker", "empresa"] }),
+  agent("asesor-messages", "/asesor/messages", <Messages />, { label: "Mensajes", group: "ventas", icon: "message", contexts: ["broker", "empresa"] }),
   agent("asesor-eventos", "/asesor/eventos", <EventsManager />, { label: "Eventos", group: "ventas", icon: "calendar" }),
   agent("asesor-notificaciones", "/asesor/notificaciones/plantillas", <NotificationTemplates />, { label: "Plantillas de aviso", group: "ventas", icon: "bell" }),
 
   // Ventas
-  agent("asesor-pipeline", "/asesor/pipeline", <SalesPipeline />, { label: "Pipeline", group: "ventas", icon: "workflow" }),
-  agent("asesor-reservations", "/asesor/reservations", <ReservationsManager />, { label: "Reservas", group: "ventas", icon: "calendar" }),
-  agent("asesor-visitas", "/asesor/visitas", <VisitsManager />, { label: "Visitas", group: "ventas", icon: "calendar" }),
+  agent("asesor-pipeline", "/asesor/pipeline", <SalesPipeline />, { label: "Pipeline", group: "ventas", icon: "workflow", contexts: ["broker", "empresa"] }),
+  agent("asesor-reservations", "/asesor/reservations", <ReservationsManager />, { label: "Reservas", group: "ventas", icon: "calendar", contexts: ["broker", "empresa"] }),
+  agent("asesor-visitas", "/asesor/visitas", <VisitsManager />, { label: "Visitas", group: "ventas", icon: "calendar", contexts: ["broker", "empresa"] }),
   agent("asesor-reuniones", "/asesor/reuniones", <MeetingsManager />, { label: "Reuniones", group: "ventas", icon: "calendar" }),
   agent("asesor-cierres", "/asesor/cierres", <ClosingsManager />, { label: "Cierres de venta", group: "ventas", icon: "handshake" }),
-  agent("asesor-sales", "/asesor/sales", <SalesManagement />, { label: "Ventas", group: "ventas", icon: "handshake" }),
+  agent("asesor-sales", "/asesor/sales", <SalesManagement />, { label: "Ventas", group: "ventas", icon: "handshake", contexts: ["broker", "empresa"] }),
   agent("asesor-closing", "/asesor/closing", <ClosingManager />, { label: "Cierre", group: "ventas", icon: "scale" }),
   agent("asesor-credits", "/asesor/credits", <CreditManager />, { label: "Créditos", group: "ventas", icon: "credit-card" }),
   agent("asesor-payments", "/asesor/payments", <PaymentManagement />, { label: "Pagos", group: "ventas", icon: "dollar" }),
-  agent("asesor-comisiones", "/asesor/comisiones", <Commissions />, { label: "Comisiones", group: "ventas", icon: "dollar" }),
+  agent("asesor-comisiones", "/asesor/comisiones", <Commissions />, { label: "Comisiones", group: "ventas", icon: "dollar", contexts: ["broker", "empresa"] }),
 
   // Análisis
-  agent("asesor-mi-negocio", "/asesor/mi-negocio", <MyBrokerBusiness />, { label: "Mi negocio", group: "red comercial", icon: "trending" }),
-  agent("asesor-red", "/asesor/red", <BrokerNetwork />, { label: "Red y atribución", group: "red comercial", icon: "share" }),
+  agent("asesor-mi-negocio", "/asesor/mi-negocio", <MyBrokerBusiness />, { label: "Mi negocio", group: "red comercial", icon: "trending", contexts: ["broker", "empresa"], primary: true }),
+  agent("asesor-red", "/asesor/red", <BrokerNetwork />, { label: "Red y atribución", group: "red comercial", icon: "share", contexts: ["broker", "empresa"] }),
   agent("asesor-analytics", "/asesor/analytics", <BusinessIntelligence />, { label: "Analytics", group: "administración", icon: "chart" }),
   agent("asesor-financial", "/asesor/financial", <FinancialDashboard />, { label: "Financiero", group: "administración", icon: "trending" }),
   agent("asesor-performance", "/asesor/performance", <AgentPerformance />, { label: "Performance", group: "administración", icon: "gauge" }),
@@ -495,7 +499,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-notifications", "/asesor/notifications", <NotificationCenter />, { label: "Notificaciones", group: "configuración", icon: "bell" }),
   agent("asesor-tools", "/asesor/tools", <Tools />, { label: "Herramientas", group: "configuración", icon: "sparkles" }),
   agent("asesor-soporte", "/asesor/soporte", <SupportTickets />, { label: "Soporte", group: "configuración", icon: "lifebuoy" }),
-  agent("asesor-profile", "/asesor/profile", <Profile />, { label: "Mi perfil", group: "configuración", icon: "user" }),
+  agent("asesor-profile", "/asesor/profile", <Profile />, { label: "Mi perfil", group: "configuración", icon: "user", contexts: ["broker", "empresa"] }),
 
   // Publicación: hub y formulario. Sin sidebar de dashboard (flujo enfocado).
   {
@@ -656,18 +660,28 @@ export interface NavLink extends NavMeta {
 }
 
 /** Links de navegación de un área, filtrados por plan cuando aplica. */
-export const navFor = (area: RouteArea, plan?: string): NavLink[] =>
+export const navFor = (
+  area: RouteArea,
+  plan?: string,
+  context?: AgentNavContext,
+): NavLink[] =>
   routeManifest
     .filter((r) => r.area === area && r.nav)
     .filter((r) => !r.nav!.plans || (plan ? r.nav!.plans.includes(plan) : false))
+    .filter((r) => {
+      if (area !== 'agent' || !context) return true;
+      const contexts = r.nav!.contexts ?? ['empresa'];
+      return contexts.includes(context);
+    })
     .map((r) => ({ path: r.path, ...r.nav! }));
 
 /** Links de un área agrupados y ordenados según `navGroupOrder`. */
 export const navGroupsFor = (
   area: RouteArea,
   plan?: string,
+  context?: AgentNavContext,
 ): { group: string; items: NavLink[] }[] => {
-  const links = navFor(area, plan);
+  const links = navFor(area, plan, context);
   const order = navGroupOrder[area] ?? [];
   const groups = Array.from(new Set(links.map((l) => l.group))).sort(
     (a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99),

@@ -29,7 +29,7 @@ const AgentDashboard = () => {
         </>
       )}
       <div className="container pb-10">
-        <ModulesHub area="agent" plan={plan ?? undefined} />
+        <ModulesHub area="agent" plan={plan ?? undefined} context="empresa" />
       </div>
     </>
   );

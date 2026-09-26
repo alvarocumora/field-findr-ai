@@ -25,7 +25,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, signIn, signUp, loading } = useAuth();
-  const { getRedirectPath, isLoading: rolesLoading, roles, refetchRoles } = useSmartRedirect();
+  const { isLoading: rolesLoading, roles, refetchRoles } = useSmartRedirect();
   const [roleWaitTries, setRoleWaitTries] = useState(0);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -57,9 +57,9 @@ const Auth = () => {
       }, 700);
       return () => clearTimeout(t);
     }
-    const target = redirectParam || getRedirectPath();
+    const target = redirectParam || '/panel';
     navigate(target, { replace: true });
-  }, [user, rolesLoading, roles, roleWaitTries, redirectParam, navigate, getRedirectPath, refetchRoles]);
+  }, [user, rolesLoading, roles, roleWaitTries, redirectParam, navigate, refetchRoles]);
 
   const handleGoogleSignIn = async () => {
     setIsSubmitting(true);
