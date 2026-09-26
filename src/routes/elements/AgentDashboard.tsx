@@ -2,7 +2,8 @@ import { TeamActivityFeed } from "@/components/dashboard/TeamActivityFeed";
 import ModulesHub from "@/components/dashboard/ModulesHub";
 import { DashboardAsesor } from "@/pages/dashboard";
 import DashboardInmobiliaria from "@/pages/dashboard/DashboardInmobiliaria";
-import { useCurrentPlan } from "@/hooks/useSubscription";
+import { useAccess } from "@/hooks/useAccess";
+import { resolveCompanyDashboardVariant } from "@/lib/access/dashboardComposition";
 import { PageLoader } from "../routeUtils";
 
 /**
@@ -12,13 +13,18 @@ import { PageLoader } from "../routeUtils";
  * En ambos casos cierra con el índice de módulos del manifiesto.
  */
 const AgentDashboard = () => {
-  const { plan, isLoading } = useCurrentPlan();
-  if (isLoading) return <PageLoader />;
-  const isAgency = plan === "inmobiliaria" || plan === "grupo" || plan === "enterprise";
+  const access = useAccess();
+  if (access.isLoading) return <PageLoader />;
+
+  const variant = resolveCompanyDashboardVariant({
+    plan: access.plan,
+    organizationRole: access.organizationRole,
+    hasOrganization: Boolean(access.organization),
+  });
 
   return (
     <>
-      {isAgency ? (
+      {variant === "organization" ? (
         <DashboardInmobiliaria />
       ) : (
         <>
@@ -29,7 +35,7 @@ const AgentDashboard = () => {
         </>
       )}
       <div className="container pb-10">
-        <ModulesHub area="agent" plan={plan ?? undefined} context="empresa" />
+        <ModulesHub area="agent" plan={access.plan ?? undefined} context="empresa" />
       </div>
     </>
   );
