@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { Loader2, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getReferralCode } from '@/lib/referrals/attribution';
 import { VEL_PROJECT } from '../data/project';
 
 // Owner of Valle Escondido Licantén project (public — used only to attribute leads server-side)
@@ -89,6 +90,7 @@ export default function VelLeadForm({
     try {
       const { data, error } = await supabase.functions.invoke('submit-interest', {
         body: {
+          referralCode: getReferralCode() ?? undefined,
           projectOwnerId: VEL_OWNER_ID,
           projectId: VEL_PROJECT.id,
           lotId: lotId || undefined,
