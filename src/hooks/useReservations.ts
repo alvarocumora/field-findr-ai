@@ -1,29 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
-export interface Reservation {
-  id: string;
-  lot_id: string;
-  lead_id: string | null;
-  user_id: string;
-  buyer_name: string;
-  buyer_email: string;
-  buyer_phone: string | null;
-  buyer_rut: string | null;
-  reservation_amount: number;
-  currency: string;
-  status: 'pending_payment' | 'paid' | 'expired' | 'cancelled' | 'converted';
-  mercadopago_preference_id: string | null;
-  mercadopago_payment_id: string | null;
-  paid_at: string | null;
-  expires_at: string;
-  contract_id: string | null;
-  converted_at: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
+export type Reservation = Tables<'reservations'>;
 
 export interface CreateReservationData {
   lot_id: string;
@@ -33,6 +13,7 @@ export interface CreateReservationData {
   buyer_rut?: string;
   reservation_amount?: number;
   notes?: string;
+  source_quote_id?: string;
 }
 
 export interface CreateReservationResponse {
@@ -231,8 +212,7 @@ export const useExpireStaleReservations = () => {
 
   return useMutation({
     mutationFn: async () => {
-      // RPC added by migration 20260705210000 — not yet in generated types.
-      const { data, error } = await (supabase.rpc as CallableFunction)('expire_stale_reservations');
+      const { data, error } = await supabase.rpc('expire_stale_reservations');
       if (error) throw error;
       return data as number;
     },
@@ -252,7 +232,7 @@ export const useExtendReservation = () => {
 
   return useMutation({
     mutationFn: async ({ reservationId, hours = 48 }: { reservationId: string; hours?: number }) => {
-      const { data, error } = await (supabase.rpc as CallableFunction)('extend_reservation', {
+      const { data, error } = await supabase.rpc('extend_reservation', {
         p_reservation_id: reservationId,
         p_hours: hours,
       });
@@ -298,7 +278,7 @@ export const useRegisterSale = () => {
       reservationId, saleAmount, commissionRate, notes,
       leadId, referringAgentId, referralRate,
     }: RegisterSaleData) => {
-      const { data, error } = await (supabase.rpc as CallableFunction)('register_sale', {
+      const { data, error } = await supabase.rpc('register_sale', {
         p_reservation_id: reservationId,
         p_sale_amount: saleAmount,
         p_commission_rate: commissionRate ?? null,
