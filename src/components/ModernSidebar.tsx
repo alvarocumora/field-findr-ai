@@ -6,12 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import Logo from '@/components/brand/Logo';
 import LogoIcon from '@/components/brand/LogoIcon';
 import OrganizationSwitcher from '@/components/organization/OrganizationSwitcher';
-import { useSmartRedirect } from '@/hooks/useSmartRedirect';
 import { useSidebarCounts } from '@/hooks/useSidebarCounts';
-import { useCurrentPlan } from '@/hooks/useSubscription';
-import { usePanelContext } from '@/hooks/usePanelContext';
+import { useAccess } from '@/hooks/useAccess';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronLeft, ChevronRight, MapPin, Sparkles, UserCircle } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, LockKeyhole, MapPin, Sparkles, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { navGroupsFor, type NavLink } from '@/routes/routeManifest';
 import { navIcon } from '@/routes/navIcons';
@@ -33,16 +31,28 @@ const commonIcons = { '/explorar': MapPin, '/tools': Sparkles, '/perfil': UserCi
 const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAdmin, isAgent } = useSmartRedirect();
-  const { plan } = useCurrentPlan();
   const counts = useSidebarCounts();
-  const { context, options, setContext, planIsAgency } = usePanelContext();
+  const access = useAccess();
+  const {
+    isAdmin,
+    isAgent,
+    plan,
+    context,
+    contexts: options,
+    setContext,
+    planIsAgency,
+  } = access;
 
   // Toda la navegación sale del manifiesto único de rutas.
   const agentContext = context === 'broker' ? 'broker' : 'empresa';
   const agentGroups = useMemo(
-    () => navGroupsFor('agent', plan ?? undefined, agentContext),
-    [agentContext, plan],
+    () => navGroupsFor('agent', plan ?? undefined, agentContext)
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => !item.capability || access.can(item.capability)),
+      }))
+      .filter((group) => group.items.length > 0),
+    [access, agentContext, plan],
   );
   const adminGroups = useMemo(() => navGroupsFor('admin'), []);
 
@@ -81,6 +91,7 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
   const NavItemRow = ({ item }: { item: NavLink }) => {
     const Icon = commonIcons[item.path as keyof typeof commonIcons] ?? navIcon(item.icon);
     const badgeCount = badgeMap[item.path] || 0;
+    const locked = Boolean(item.feature && !access.hasFeature(item.feature));
     return (
       <Link
         to={item.path}
@@ -95,6 +106,9 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
       >
         <Icon className={cn('h-4.5 w-4.5 flex-shrink-0', !collapsed && 'mr-3')} />
         {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+        {!collapsed && locked && (
+          <LockKeyhole className="ml-auto h-3.5 w-3.5 text-muted-foreground/70" aria-label="Requiere mejorar plan" />
+        )}
         {!collapsed && badgeCount > 0 && (
           <Badge
             variant="destructive"
@@ -102,6 +116,9 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
           >
             {badgeCount}
           </Badge>
+        )}
+        {collapsed && locked && (
+          <LockKeyhole className="absolute right-0 top-0 h-3 w-3 text-muted-foreground" />
         )}
         {collapsed && badgeCount > 0 && (
           <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive" />

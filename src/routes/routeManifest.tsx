@@ -1,4 +1,7 @@
 import { lazy, type ReactNode } from "react";
+import type { OrganizationCapability } from "@/lib/access/organizationPermissions";
+import type { PlanFeature } from "@/lib/access/planEntitlements";
+import type { RoutePolicy } from "@/lib/access/routePolicy";
 
 /**
  * MANIFIESTO ÚNICO DE RUTAS
@@ -23,8 +26,12 @@ export interface NavMeta {
   group: string;
   /** Contextos agent donde se muestra. Ausente = solo workspace Empresa. */
   contexts?: AgentNavContext[];
-  /** Planes que ven el link; ausente = todos los del área. */
+  /** Planes legacy que ven el link; preferir feature para reglas nuevas. */
   plans?: string[];
+  /** Permiso organizacional requerido para entrar al módulo. */
+  capability?: OrganizationCapability;
+  /** Entitlement de producto requerido; si falta se muestra upgrade. */
+  feature?: PlanFeature;
   /** Nombre del icono (ver `src/routes/navIcons.ts`). */
   icon?: string;
   /** Link primario del área: se muestra siempre, fuera de los grupos. */
@@ -46,6 +53,8 @@ export interface RouteEntry {
   layout: RouteLayout;
   element: ReactNode;
   nav?: NavMeta;
+  /** Política de acceso fina para rutas privadas. */
+  policy?: RoutePolicy;
   /** Indexable por buscadores (solo aplica a `public`). */
   indexable?: boolean;
   /** Título/descripción por defecto para páginas sin SEO propio. */
@@ -238,6 +247,9 @@ const agent = (id: string, path: string, element: ReactNode, nav?: NavMeta): Rou
   layout: "dashboard",
   element,
   nav,
+  policy: nav?.capability || nav?.feature
+    ? { capability: nav.capability, feature: nav.feature }
+    : undefined,
 });
 
 const admin = (id: string, path: string, element: ReactNode, nav?: NavMeta): RouteEntry => ({
@@ -451,51 +463,51 @@ export const agentRouteEntries: RouteEntry[] = [
 
   // Inventario
   agent("panel-inventario", "/panel/inventario", <InventoryMap />, { label: "Mapa de inventario", group: "proyectos", icon: "map" }),
-  agent("asesor-listings", "/asesor/listings", <PropertyInventory />, { label: "Inventario", group: "proyectos", icon: "building" }),
-  agent("asesor-projects", "/asesor/projects", <ProjectsManagement />, { label: "Proyectos", group: "proyectos", icon: "folder" }),
+  agent("asesor-listings", "/asesor/listings", <PropertyInventory />, { label: "Inventario", group: "proyectos", icon: "building", capability: "inventory.read" }),
+  agent("asesor-projects", "/asesor/projects", <ProjectsManagement />, { label: "Proyectos", group: "proyectos", icon: "folder", capability: "projects.read" }),
   agent("asesor-project-workspace", "/asesor/project/:projectId", <ProjectWorkspace />),
-  agent("asesor-lots", "/asesor/lots", <LotManagement />, { label: "Lotes", group: "proyectos", icon: "grid" }),
-  agent("asesor-loteos", "/asesor/loteos", <LoteoControlCenter />, { label: "Control de loteo", group: "proyectos", icon: "gauge" }),
-  agent("asesor-spatial", "/asesor/spatial", <SpatialStudio />, { label: "Spatial Studio", group: "proyectos", icon: "map" }),
-  agent("asesor-subdivision", "/asesor/subdivision", <SubdivisionStudio />, { label: "Estudio de subdivisión", group: "proyectos", icon: "grid" }),
+  agent("asesor-lots", "/asesor/lots", <LotManagement />, { label: "Lotes", group: "proyectos", icon: "grid", capability: "inventory.read" }),
+  agent("asesor-loteos", "/asesor/loteos", <LoteoControlCenter />, { label: "Control de loteo", group: "proyectos", icon: "gauge", capability: "inventory.read" }),
+  agent("asesor-spatial", "/asesor/spatial", <SpatialStudio />, { label: "Spatial Studio", group: "proyectos", icon: "map", capability: "inventory.read", feature: "spatial3d" }),
+  agent("asesor-subdivision", "/asesor/subdivision", <SubdivisionStudio />, { label: "Estudio de subdivisión", group: "proyectos", icon: "grid", capability: "inventory.write", feature: "kmz" }),
 
   // CRM
   agent("clientes", "/clientes", <ClientsBook />, { label: "Clientes", group: "ventas", icon: "users" }),
-  agent("asesor-leads", "/asesor/leads", <LeadManagement />, { label: "Leads", group: "ventas", icon: "users", contexts: ["broker", "empresa"] }),
+  agent("asesor-leads", "/asesor/leads", <LeadManagement />, { label: "Leads", group: "ventas", icon: "users", contexts: ["broker", "empresa"], capability: "crm.read", feature: "crm" }),
   agent("asesor-contacts", "/asesor/contacts", <Contacts />, { label: "Contactos", group: "ventas", icon: "users" }),
   agent("asesor-buyer-requirements", "/asesor/demanda-compradores", <BuyerRequirements />, { label: "Tengo comprador", group: "ventas", icon: "target" }),
-  agent("asesor-crm", "/asesor/crm", <CRMSystem />, { label: "CRM", group: "ventas", icon: "workflow", contexts: ["broker", "empresa"] }),
+  agent("asesor-crm", "/asesor/crm", <CRMSystem />, { label: "CRM", group: "ventas", icon: "workflow", contexts: ["broker", "empresa"], capability: "crm.read", feature: "crm" }),
   agent("asesor-messages", "/asesor/messages", <Messages />, { label: "Mensajes", group: "ventas", icon: "message", contexts: ["broker", "empresa"] }),
   agent("asesor-eventos", "/asesor/eventos", <EventsManager />, { label: "Eventos", group: "ventas", icon: "calendar" }),
   agent("asesor-notificaciones", "/asesor/notificaciones/plantillas", <NotificationTemplates />, { label: "Plantillas de aviso", group: "ventas", icon: "bell" }),
 
   // Ventas
-  agent("asesor-pipeline", "/asesor/pipeline", <SalesPipeline />, { label: "Pipeline", group: "ventas", icon: "workflow", contexts: ["broker", "empresa"] }),
-  agent("asesor-reservations", "/asesor/reservations", <ReservationsManager />, { label: "Reservas", group: "ventas", icon: "calendar", contexts: ["broker", "empresa"] }),
-  agent("asesor-visitas", "/asesor/visitas", <VisitsManager />, { label: "Visitas", group: "ventas", icon: "calendar", contexts: ["broker", "empresa"] }),
+  agent("asesor-pipeline", "/asesor/pipeline", <SalesPipeline />, { label: "Pipeline", group: "ventas", icon: "workflow", contexts: ["broker", "empresa"], capability: "sales.read", feature: "crm" }),
+  agent("asesor-reservations", "/asesor/reservations", <ReservationsManager />, { label: "Reservas", group: "ventas", icon: "calendar", contexts: ["broker", "empresa"], capability: "reservations.read", feature: "reservations" }),
+  agent("asesor-visitas", "/asesor/visitas", <VisitsManager />, { label: "Visitas", group: "ventas", icon: "calendar", contexts: ["broker", "empresa"], capability: "crm.read", feature: "crm" }),
   agent("asesor-reuniones", "/asesor/reuniones", <MeetingsManager />, { label: "Reuniones", group: "ventas", icon: "calendar" }),
-  agent("asesor-cierres", "/asesor/cierres", <ClosingsManager />, { label: "Cierres de venta", group: "ventas", icon: "handshake" }),
-  agent("asesor-sales", "/asesor/sales", <SalesManagement />, { label: "Ventas", group: "ventas", icon: "handshake", contexts: ["broker", "empresa"] }),
+  agent("asesor-cierres", "/asesor/cierres", <ClosingsManager />, { label: "Cierres de venta", group: "ventas", icon: "handshake", capability: "sales.read" }),
+  agent("asesor-sales", "/asesor/sales", <SalesManagement />, { label: "Ventas", group: "ventas", icon: "handshake", contexts: ["broker", "empresa"], capability: "sales.read" }),
   agent("asesor-closing", "/asesor/closing", <ClosingManager />, { label: "Cierre", group: "ventas", icon: "scale" }),
-  agent("asesor-credits", "/asesor/credits", <CreditManager />, { label: "Créditos", group: "ventas", icon: "credit-card" }),
-  agent("asesor-payments", "/asesor/payments", <PaymentManagement />, { label: "Pagos", group: "ventas", icon: "dollar" }),
-  agent("asesor-comisiones", "/asesor/comisiones", <Commissions />, { label: "Comisiones", group: "ventas", icon: "dollar", contexts: ["broker", "empresa"] }),
+  agent("asesor-credits", "/asesor/credits", <CreditManager />, { label: "Créditos", group: "ventas", icon: "credit-card", capability: "sales.read", feature: "financing" }),
+  agent("asesor-payments", "/asesor/payments", <PaymentManagement />, { label: "Pagos", group: "ventas", icon: "dollar", capability: "payments.read", feature: "payments" }),
+  agent("asesor-comisiones", "/asesor/comisiones", <Commissions />, { label: "Comisiones", group: "ventas", icon: "dollar", contexts: ["broker", "empresa"], capability: "commissions.read", feature: "commissions" }),
 
   // Análisis
   agent("asesor-mi-negocio", "/asesor/mi-negocio", <MyBrokerBusiness />, { label: "Mi negocio", group: "red comercial", icon: "trending", contexts: ["broker", "empresa"], primary: true }),
   agent("asesor-red", "/asesor/red", <BrokerNetwork />, { label: "Red y atribución", group: "red comercial", icon: "share", contexts: ["broker", "empresa"] }),
-  agent("asesor-analytics", "/asesor/analytics", <BusinessIntelligence />, { label: "Analytics", group: "administración", icon: "chart" }),
-  agent("asesor-financial", "/asesor/financial", <FinancialDashboard />, { label: "Financiero", group: "administración", icon: "trending" }),
-  agent("asesor-performance", "/asesor/performance", <AgentPerformance />, { label: "Performance", group: "administración", icon: "gauge" }),
-  agent("asesor-demand", "/asesor/demand", <DemandHeatmapDashboard />, { label: "Demanda", group: "administración", icon: "flame" }),
-  agent("asesor-reports", "/asesor/reports", <Reports />, { label: "Reportes", group: "administración", icon: "report" }),
-  agent("asesor-executive", "/asesor/executive", <ExecutiveDashboard />, { label: "Ejecutivo", group: "administración", icon: "pie", plans: ["inmobiliaria", "grupo", "enterprise"] }),
-  agent("asesor-multi-project", "/asesor/multi-project", <MultiProjectDashboard />, { label: "Multi proyecto", group: "administración", icon: "chart", plans: ["inmobiliaria", "grupo", "enterprise"] }),
+  agent("asesor-analytics", "/asesor/analytics", <BusinessIntelligence />, { label: "Analytics", group: "administración", icon: "chart", capability: "reports.read", feature: "analytics" }),
+  agent("asesor-financial", "/asesor/financial", <FinancialDashboard />, { label: "Financiero", group: "administración", icon: "trending", capability: "payments.read", feature: "analytics" }),
+  agent("asesor-performance", "/asesor/performance", <AgentPerformance />, { label: "Performance", group: "administración", icon: "gauge", capability: "reports.read", feature: "analytics" }),
+  agent("asesor-demand", "/asesor/demand", <DemandHeatmapDashboard />, { label: "Demanda", group: "administración", icon: "flame", capability: "reports.read", feature: "analytics" }),
+  agent("asesor-reports", "/asesor/reports", <Reports />, { label: "Reportes", group: "administración", icon: "report", capability: "reports.read" }),
+  agent("asesor-executive", "/asesor/executive", <ExecutiveDashboard />, { label: "Ejecutivo", group: "administración", icon: "pie", capability: "reports.read", feature: "analytics" }),
+  agent("asesor-multi-project", "/asesor/multi-project", <MultiProjectDashboard />, { label: "Multi proyecto", group: "administración", icon: "chart", capability: "reports.read", feature: "analytics" }),
 
   // Cuenta
-  agent("asesor-team", "/asesor/team", <TeamManagement />, { label: "Equipo", group: "administración", icon: "users", plans: ["inmobiliaria", "grupo", "enterprise"] }),
-  agent("asesor-enterprise", "/asesor/enterprise", <EnterpriseSettings />, { label: "Empresa", group: "administración", icon: "building", plans: ["inmobiliaria", "grupo", "enterprise"] }),
-  agent("asesor-api", "/asesor/api", <APIPortal />, { label: "API", group: "configuración", icon: "code", plans: ["enterprise"] }),
+  agent("asesor-team", "/asesor/team", <TeamManagement />, { label: "Equipo", group: "administración", icon: "users", capability: "team.read", feature: "team" }),
+  agent("asesor-enterprise", "/asesor/enterprise", <EnterpriseSettings />, { label: "Empresa", group: "administración", icon: "building", capability: "projects.write", feature: "team" }),
+  agent("asesor-api", "/asesor/api", <APIPortal />, { label: "API", group: "configuración", icon: "code", feature: "api" }),
   agent("asesor-notifications", "/asesor/notifications", <NotificationCenter />, { label: "Notificaciones", group: "configuración", icon: "bell" }),
   agent("asesor-tools", "/asesor/tools", <Tools />, { label: "Herramientas", group: "configuración", icon: "sparkles" }),
   agent("asesor-soporte", "/asesor/soporte", <SupportTickets />, { label: "Soporte", group: "configuración", icon: "lifebuoy" }),

@@ -5,6 +5,7 @@ import NotFound from "@/pages/NotFound";
 import RootErrorBoundary from "@/components/RootErrorBoundary";
 import RouteGuard from "./RouteGuard";
 import RouteSeo from "./RouteSeo";
+import RoutePolicyGate from "./RoutePolicyGate";
 import { PageLoader } from "./routeUtils";
 import {
   routeAliases,
@@ -40,7 +41,17 @@ const AppRouter = () => (
                 element={<RouteGuard access={access} layout={layout} />}
               >
                 {entries.map((entry) => (
-                  <Route key={entry.id} path={entry.path} element={entry.element} />
+                  <Route
+                    key={entry.id}
+                    path={entry.path}
+                    element={
+                      entry.policy ? (
+                        <RoutePolicyGate policy={entry.policy}>
+                          {entry.element}
+                        </RoutePolicyGate>
+                      ) : entry.element
+                    }
+                  />
                 ))}
               </Route>
             );
