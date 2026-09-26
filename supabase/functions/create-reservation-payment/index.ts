@@ -19,6 +19,8 @@ interface ReservationRequest {
   reservation_amount?: number;
   notes?: string;
   source_quote_id?: string;
+  referral_code?: string;
+  referral_landing_path?: string;
 }
 
 serve(async (req) => {
@@ -45,7 +47,17 @@ serve(async (req) => {
     }
 
     const body: ReservationRequest = await req.json();
-    const { lot_id, buyer_name, buyer_email, buyer_phone, buyer_rut, notes, source_quote_id } = body;
+    const {
+      lot_id,
+      buyer_name,
+      buyer_email,
+      buyer_phone,
+      buyer_rut,
+      notes,
+      source_quote_id,
+      referral_code,
+      referral_landing_path,
+    } = body;
     if (!lot_id || !buyer_name || !buyer_email) {
       return new Response(JSON.stringify({ error: "Missing required fields: lot_id, buyer_name, buyer_email" }), {
         status: 400,
@@ -113,6 +125,40 @@ serve(async (req) => {
       }
     }
 
+    let referringAgentId: string | null = null;
+    let cleanReferralCode: string | null = null;
+
+    if (referral_code) {
+      cleanReferralCode = String(referral_code).trim().slice(0, 80) || null;
+
+      if (cleanReferralCode) {
+        const { data: broker } = await supabase
+          .from("broker_profiles")
+          .select("user_id")
+          .eq("invite_code", cleanReferralCode)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (broker && broker.user_id !== user.id) {
+          const projectOwnerId = (lot as any).projects?.user_id as string | undefined;
+          const isOwnerBroker = broker.user_id === projectOwnerId;
+          const { data: assignment } = isOwnerBroker
+            ? { data: { id: "owner" } }
+            : await supabase
+                .from("project_broker_assignments")
+                .select("id")
+                .eq("project_id", lot.project_id)
+                .eq("broker_id", broker.user_id)
+                .eq("status", "approved")
+                .maybeSingle();
+
+          if (assignment) {
+            referringAgentId = broker.user_id;
+          }
+        }
+      }
+    }
+
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 48);
 
@@ -130,6 +176,11 @@ serve(async (req) => {
         expires_at: expiresAt.toISOString(),
         notes,
         source_quote_id: source_quote_id || null,
+        referring_agent_id: referringAgentId,
+        referral_code: referringAgentId ? cleanReferralCode : null,
+        referral_landing_path: referringAgentId && referral_landing_path
+          ? String(referral_landing_path).slice(0, 500)
+          : null,
       })
       .select()
       .single();
