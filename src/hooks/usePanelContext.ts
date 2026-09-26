@@ -44,7 +44,8 @@ export const usePanelContext = () => {
   const { data: brokerProfile, isLoading: brokerLoading } = useMyBrokerProfile();
   const { pathname } = useLocation();
 
-  const planIsAgency = plan === 'inmobiliaria' || plan === 'grupo' || plan === 'enterprise';
+  const planIsAgency =
+    plan === 'corredora' || plan === 'inmobiliaria' || plan === 'grupo' || plan === 'enterprise';
 
   const options = useMemo(
     () => resolveAvailableContexts({
