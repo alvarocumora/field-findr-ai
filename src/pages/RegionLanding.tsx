@@ -11,6 +11,7 @@ import { MapPin, ArrowRight, TrendingUp, Ruler, DollarSign, Search } from 'lucid
 import { motion } from 'framer-motion';
 import { Listing, formatPrice, formatArea } from '@/hooks/useListings';
 import { LATAM_COUNTRIES } from '@/lib/latam';
+import { resolveRegionTerritory } from '@/lib/territories';
 
 // Build region map from all countries
 const REGION_MAP: Record<string, string> = {};
@@ -29,13 +30,7 @@ const slugToRegion = (slug: string): string => {
   return REGION_MAP[slug] || slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 };
 
-const regionToSlug = (region: string): string => {
-  return region
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-};
+const regionToSlug = (region: string): string => resolveRegionTerritory(region, 'Chile').slug;
 
 const REGION_IMAGES: Record<string, string> = {
   'Valparaíso': 'https://images.unsplash.com/photo-1583225173760-36e0e1dd2f12?w=1200&h=400&fit=crop',
@@ -55,16 +50,19 @@ const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, tra
 const RegionLanding = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const regionName = slugToRegion(slug || '');
+  const rawRegionName = slugToRegion(slug || '');
+  const territory = resolveRegionTerritory(rawRegionName, 'Chile');
+  const regionName = territory.name;
+  const regionDisplayName = territory.displayName;
 
   const { data: listings = [], isLoading } = useQuery({
-    queryKey: ['region-listings', regionName],
+    queryKey: ['region-listings', territory.key],
     queryFn: async () => {
       const { data } = await supabase
         .from('listings')
         .select('*')
         .eq('status', 'active')
-        .eq('region', regionName)
+        .in('region', territory.variants)
         .order('created_at', { ascending: false })
         .limit(24);
       return (data || []) as Listing[];
@@ -79,9 +77,13 @@ const RegionLanding = () => {
         .from('listings')
         .select('region')
         .eq('status', 'active');
-      const regionSet = new Set<string>();
-      (data || []).forEach(l => { if (l.region) regionSet.add(l.region); });
-      return Array.from(regionSet).sort();
+      const regionMap = new Map<string, string>();
+      (data || []).forEach((listing) => {
+        if (!listing.region) return;
+        const candidate = resolveRegionTerritory(listing.region, 'Chile');
+        regionMap.set(candidate.key, candidate.displayName);
+      });
+      return Array.from(regionMap.values()).sort();
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -98,8 +100,8 @@ const RegionLanding = () => {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: `Terrenos en ${regionName} - Ofertaterrenos.com`,
-    description: `${totalListings} terrenos disponibles en ${regionName}, Chile. Precios desde ${formatPrice(minPrice)}.`,
+    name: `Terrenos en ${regionDisplayName} - Ofertaterrenos.com`,
+    description: `${totalListings} terrenos disponibles en ${regionDisplayName}, Chile. Precios desde ${formatPrice(minPrice)}.`,
     url: `https://ofertaterrenos.com/region/${slug}`,
     mainEntity: {
       '@type': 'ItemList',
@@ -114,8 +116,8 @@ const RegionLanding = () => {
   };
 
   useSEO({
-    title: `Terrenos en ${regionName}`,
-    description: `Encuentra ${totalListings} terrenos en venta en ${regionName}, Chile. Parcelas, sitios industriales y campos agrícolas desde ${formatPrice(minPrice)}.`,
+    title: `Terrenos en ${regionDisplayName}`,
+    description: `Encuentra ${totalListings} terrenos en venta en ${regionDisplayName}, Chile. Parcelas, sitios industriales y campos agrícolas desde ${formatPrice(minPrice)}.`,
     url: `https://ofertaterrenos.com/region/${slug}`,
     canonicalUrl: `https://ofertaterrenos.com/region/${slug}`,
     jsonLd,
@@ -125,7 +127,7 @@ const RegionLanding = () => {
     <PublicLayout>
       {/* Hero Banner */}
       <section className="relative h-[280px] md:h-[360px] overflow-hidden">
-        <img src={heroImg} alt={`Terrenos en ${regionName}`} className="absolute inset-0 w-full h-full object-cover" />
+        <img src={heroImg} alt={`Terrenos en ${regionDisplayName}`} className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="relative z-10 container px-4 h-full flex flex-col justify-end pb-8">
           <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
@@ -133,13 +135,13 @@ const RegionLanding = () => {
             <span>/</span>
             <Link to="/explorar" className="hover:text-foreground transition-colors">Explorar</Link>
             <span>/</span>
-            <span className="text-foreground">{regionName}</span>
+            <span className="text-foreground">{regionDisplayName}</span>
           </nav>
           <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2">
             Terrenos en <span className="gradient-text">{regionName}</span>
           </h1>
           <p className="text-muted-foreground text-base md:text-lg max-w-2xl">
-            {totalListings} propiedades disponibles en la región de {regionName}, Chile
+            {totalListings} propiedades disponibles en la {regionDisplayName}, Chile
           </p>
         </div>
       </section>
@@ -195,7 +197,7 @@ const RegionLanding = () => {
             <div className="text-center py-16">
               <MapPin className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">Sin terrenos en esta región</h3>
-              <p className="text-muted-foreground mb-6">Aún no hay propiedades publicadas en {regionName}.</p>
+              <p className="text-muted-foreground mb-6">Aún no hay propiedades publicadas en {regionDisplayName}.</p>
               <Button asChild>
                 <Link to="/explorar">Explorar todas las regiones</Link>
               </Button>
@@ -218,7 +220,7 @@ const RegionLanding = () => {
           {listings.length >= 24 && (
             <div className="text-center mt-8">
               <Button onClick={() => navigate(`/explorar?region=${encodeURIComponent(regionName)}`)}>
-                Ver más terrenos en {regionName}
+                Ver más terrenos en {regionDisplayName}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
@@ -235,7 +237,7 @@ const RegionLanding = () => {
             </h2>
             <div className="flex flex-wrap gap-2">
               {allRegions
-                .filter(r => r !== regionName)
+                .filter((r) => resolveRegionTerritory(r, 'Chile').key !== territory.key)
                 .map(r => (
                   <Badge
                     key={r}

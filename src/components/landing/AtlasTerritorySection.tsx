@@ -6,6 +6,7 @@ import { ArrowRight, Compass, MapPinned, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
+import { groupByCanonicalRegion, resolveRegionTerritory } from '@/lib/territories';
 
 interface AtlasProject {
   id: string;
@@ -52,26 +53,27 @@ const AtlasTerritorySection = () => {
   }, []);
 
   const regions = useMemo(() => {
-    const grouped = new Map<string, { projects: number; lots: number; available: number }>();
-    projects.forEach((project) => {
-      const region = project.region?.trim();
-      if (!region) return;
-      const current = grouped.get(region) ?? { projects: 0, lots: 0, available: 0 };
-      current.projects += 1;
-      current.lots += Number(project.total_lots ?? 0);
-      current.available += Number(project.available_lots ?? 0);
-      grouped.set(region, current);
-    });
-
-    return Array.from(grouped.entries())
-      .map(([name, stats]) => ({ name, ...stats }))
+    return groupByCanonicalRegion(projects)
+      .map(({ territory, items }) => ({
+        key: territory.key,
+        slug: territory.slug,
+        name: territory.displayName,
+        canonicalName: territory.name,
+        projects: items.length,
+        lots: items.reduce((sum, project) => sum + Number(project.total_lots ?? 0), 0),
+        available: items.reduce((sum, project) => sum + Number(project.available_lots ?? 0), 0),
+      }))
       .sort((a, b) => b.projects - a.projects || b.available - a.available)
       .slice(0, 6);
   }, [projects]);
 
-  const selectedRegion = activeRegion ?? regions[0]?.name ?? null;
+  const selectedRegion = activeRegion ?? regions[0]?.key ?? null;
+  const selectedRegionMeta = regions.find((region) => region.key === selectedRegion) ?? null;
   const visibleProjects = useMemo(
-    () => projects.filter((project) => project.region === selectedRegion).slice(0, 4),
+    () => projects.filter((project) => {
+      if (!project.region || !selectedRegion) return false;
+      return resolveRegionTerritory(project.region, project.country || 'Chile').key === selectedRegion;
+    }).slice(0, 4),
     [projects, selectedRegion],
   );
 
@@ -145,12 +147,12 @@ const AtlasTerritorySection = () => {
               <>
                 <div className="flex gap-2 overflow-x-auto py-5 scrollbar-hide">
                   {regions.map((region) => {
-                    const active = region.name === selectedRegion;
+                    const active = region.key === selectedRegion;
                     return (
                       <button
-                        key={region.name}
+                        key={region.key}
                         type="button"
-                        onClick={() => setActiveRegion(region.name)}
+                        onClick={() => setActiveRegion(region.key)}
                         className={`min-w-[10rem] rounded-2xl border px-4 py-3 text-left transition-colors ${active ? 'border-background/45 bg-background text-foreground' : 'border-background/10 bg-background/5 text-background hover:bg-background/10'}`}
                         aria-pressed={active}
                       >
@@ -173,7 +175,7 @@ const AtlasTerritorySection = () => {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-[10px] uppercase tracking-[0.14em] text-background/45">{project.city || selectedRegion}</p>
+                          <p className="text-[10px] uppercase tracking-[0.14em] text-background/45">{project.city || selectedRegionMeta?.name || project.region}</p>
                           <h3 className="mt-1 font-heading text-xl font-bold">{project.name}</h3>
                         </div>
                         <Sparkles className="h-4 w-4 text-background/35 transition-colors group-hover:text-background" />

@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { 
   FolderOpen, Plus, Search, MapPin, 
   TrendingUp, Building2, Eye, Edit,
-  FileArchive, Trash2, Rocket, Clock, BarChart3
+  FileArchive, Trash2, Rocket, Clock, BarChart3, Gauge
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -320,12 +320,17 @@ const ProjectsManagement = () => {
                     </div>
                   )}
                   <Button variant="outline" className="flex-1 gap-1" asChild>
-                    <Link to={`/asesor/spatial?project=${project.id}`}>
-                      <FileArchive className="h-4 w-4" />
-                      Spatial
+                    <Link to={`/asesor/project/${project.id}`}>
+                      <Gauge className="h-4 w-4" />
+                      Workspace
                     </Link>
                   </Button>
-                  <Button variant="outline" size="icon" asChild>
+                  <Button variant="outline" size="icon" asChild title="Spatial Studio">
+                    <Link to={`/asesor/spatial?project=${project.id}`}>
+                      <FileArchive className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="icon" asChild title="Vista pública">
                     <Link to={`/proyecto/${project.id}`}>
                       <Eye className="h-4 w-4" />
                     </Link>
