@@ -15,10 +15,11 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { DollarSign, Download, Pencil, Ban, Percent } from 'lucide-react';
+import { DollarSign, Download, Pencil, Ban, Percent, Network, CheckCircle2 } from 'lucide-react';
 import {
   useAllCommissions, useAdminUpdateCommission, useAdminVoidSale,
-  useCommissionRules, useUpsertCommissionRule, type AdminCommissionRow,
+  useCommissionRules, useUpsertCommissionRule, useAllNetworkOverrides,
+  useAdminUpdateNetworkOverride, type AdminCommissionRow,
 } from '@/hooks/useAdminCommissions';
 
 const fmt = (n: number) =>
@@ -43,11 +44,14 @@ const StatusBadge = ({ status }: { status: string }) => {
 const CommissionsAdmin = () => {
   const { data: rows = [] } = useAllCommissions();
   const { data: rules = [] } = useCommissionRules();
+  const { data: overrides = [] } = useAllNetworkOverrides();
   const update = useAdminUpdateCommission();
+  const updateOverride = useAdminUpdateNetworkOverride();
   const voidSale = useAdminVoidSale();
   const upsertRule = useUpsertCommissionRule();
 
   const [filter, setFilter] = useState('all');
+  const [overrideFilter, setOverrideFilter] = useState('pending');
   const [editing, setEditing] = useState<AdminCommissionRow | null>(null);
   const [voiding, setVoiding] = useState<AdminCommissionRow | null>(null);
   const [form, setForm] = useState({ rate: '', amount: '', status: 'pending', notes: '' });
@@ -57,6 +61,22 @@ const CommissionsAdmin = () => {
     () => (filter === 'all' ? rows : rows.filter((r) => r.status === filter)),
     [rows, filter],
   );
+
+  const filteredOverrides = useMemo(
+    () => (overrideFilter === 'all'
+      ? overrides
+      : overrides.filter((o) => o.status === overrideFilter)),
+    [overrides, overrideFilter],
+  );
+
+  const overrideTotals = useMemo(() => ({
+    pending: overrides
+      .filter((o) => o.status === 'pending')
+      .reduce((sum, o) => sum + (o.override_amount || 0), 0),
+    paid: overrides
+      .filter((o) => o.status === 'paid')
+      .reduce((sum, o) => sum + (o.override_amount || 0), 0),
+  }), [overrides]);
 
   const totals = useMemo(() => {
     const active = rows.filter((r) => r.status !== 'cancelled');
@@ -140,6 +160,7 @@ const CommissionsAdmin = () => {
       <Tabs defaultValue="list">
         <TabsList>
           <TabsTrigger value="list">Comisiones</TabsTrigger>
+          <TabsTrigger value="overrides">Overrides de red</TabsTrigger>
           <TabsTrigger value="rules">Reglas comerciales</TabsTrigger>
         </TabsList>
 
@@ -215,6 +236,114 @@ const CommissionsAdmin = () => {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+
+        <TabsContent value="overrides">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground mb-1">Overrides pendientes</p>
+                  <p className="text-lg font-bold">{fmt(overrideTotals.pending)}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground mb-1">Overrides pagados</p>
+                  <p className="text-lg font-bold">{fmt(overrideTotals.paid)}</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader className="flex-row items-center justify-between gap-4">
+                <CardTitle className="flex items-center gap-2">
+                  <Network className="h-4 w-4" /> Ledger de overrides
+                </CardTitle>
+                <Select value={overrideFilter} onValueChange={setOverrideFilter}>
+                  <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="pending">Pendientes</SelectItem>
+                    <SelectItem value="paid">Pagados</SelectItem>
+                    <SelectItem value="cancelled">Anulados</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Broker origen</TableHead>
+                      <TableHead>Beneficiario</TableHead>
+                      <TableHead>Nivel</TableHead>
+                      <TableHead>Tasa</TableHead>
+                      <TableHead>Monto</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredOverrides.map((o) => (
+                      <TableRow key={o.id}>
+                        <TableCell className="text-sm">
+                          {new Date(o.created_at).toLocaleDateString('es-CL')}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs" title={o.source_broker_id}>
+                          {o.source_broker_id.slice(0, 8)}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs" title={o.beneficiary_broker_id}>
+                          {o.beneficiary_broker_id.slice(0, 8)}
+                        </TableCell>
+                        <TableCell>{o.depth}</TableCell>
+                        <TableCell>{o.override_rate}%</TableCell>
+                        <TableCell className="font-medium">{fmt(o.override_amount)}</TableCell>
+                        <TableCell><StatusBadge status={o.status} /></TableCell>
+                        <TableCell className="text-right space-x-2 whitespace-nowrap">
+                          {o.status === 'pending' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={updateOverride.isPending}
+                                onClick={() => updateOverride.mutate({ id: o.id, status: 'paid' })}
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                                Pagar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={updateOverride.isPending}
+                                onClick={() => updateOverride.mutate({ id: o.id, status: 'cancelled' })}
+                              >
+                                <Ban className="h-3.5 w-3.5 mr-1" />
+                                Anular
+                              </Button>
+                            </>
+                          )}
+                          {o.status !== 'pending' && (
+                            <span className="text-xs text-muted-foreground">
+                              {o.paid_at ? new Date(o.paid_at).toLocaleDateString('es-CL') : '—'}
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredOverrides.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
+                          No hay overrides con este filtro.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="rules">
