@@ -395,6 +395,76 @@ export type Database = {
         }
         Relationships: []
       }
+      broker_network_overrides: {
+        Row: {
+          beneficiary_broker_id: string
+          commission_id: string
+          created_at: string
+          depth: number
+          id: string
+          override_amount: number
+          override_rate: number
+          paid_at: string | null
+          project_id: string | null
+          reservation_id: string | null
+          source_broker_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          beneficiary_broker_id: string
+          commission_id: string
+          created_at?: string
+          depth?: number
+          id?: string
+          override_amount: number
+          override_rate: number
+          paid_at?: string | null
+          project_id?: string | null
+          reservation_id?: string | null
+          source_broker_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          beneficiary_broker_id?: string
+          commission_id?: string
+          created_at?: string
+          depth?: number
+          id?: string
+          override_amount?: number
+          override_rate?: number
+          paid_at?: string | null
+          project_id?: string | null
+          reservation_id?: string | null
+          source_broker_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broker_network_overrides_commission_id_fkey"
+            columns: ["commission_id"]
+            isOneToOne: false
+            referencedRelation: "agent_commissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broker_network_overrides_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broker_network_overrides_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cached_listings: {
         Row: {
           cache_key: string
