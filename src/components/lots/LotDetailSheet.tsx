@@ -199,16 +199,24 @@ export const LotDetailSheet = ({
               </div>
               <Box className="h-4 w-4 text-emerald-400" />
             </div>
-            <div className="h-[260px] bg-zinc-900/50">
+            <div className="h-[300px] bg-zinc-900/50 sm:h-[340px]">
               <Suspense fallback={<Skeleton className="h-full w-full bg-white/5" />}>
                 <div className="h-full [&>div]:!h-full [&>div]:!rounded-none [&>div]:!border-0">
-                  <ParcelaDesigner3D polygon={polygon} lotNumber={lot.lot_number} lotArea={Number(lot.area)} lotPrice={lot.price ?? undefined} latitude={lot.latitude ?? undefined} longitude={lot.longitude ?? undefined} />
+                  <ParcelaDesigner3D
+                    polygon={polygon}
+                    lotNumber={lot.lot_number}
+                    lotArea={Number(lot.area)}
+                    lotPrice={lot.price ?? undefined}
+                    latitude={lot.latitude ?? undefined}
+                    longitude={lot.longitude ?? undefined}
+                    mode="preview"
+                  />
                 </div>
               </Suspense>
             </div>
             {lot.status === 'available' && onDesign && (
               <button type="button" onClick={() => onDesign(lot)} className="flex w-full items-center justify-between border-t border-white/10 px-4 py-3 text-sm text-white/65 transition-colors hover:bg-white/5 hover:text-white">
-                <span className="flex items-center gap-2"><Palette className="h-4 w-4 text-emerald-400" />Diseñar esta parcela</span>
+                <span className="flex items-center gap-2"><Palette className="h-4 w-4 text-emerald-400" />Abrir diseñador 3D</span>
                 <ExternalLink className="h-3.5 w-3.5" />
               </button>
             )}
