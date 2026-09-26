@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLeads } from '@/hooks/useLeads';
+import { useWorkspaceScope } from '@/hooks/useWorkspaceScope';
 import LeadScoreBadge from '@/components/leads/LeadScoreBadge';
 import { Search, Phone, Mail, FolderKanban, Users, TrendingUp, Target, GripVertical, Calendar, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -22,7 +23,8 @@ const PIPELINE_COLUMNS = [
 ];
 
 const SalesPipeline = () => {
-  const { leads, isLoading, updateLead } = useLeads();
+  const { projectId } = useWorkspaceScope();
+  const { leads, isLoading, updateLead } = useLeads(projectId);
   const [searchQuery, setSearchQuery] = useState('');
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);

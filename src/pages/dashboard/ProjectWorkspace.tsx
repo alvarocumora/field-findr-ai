@@ -27,6 +27,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { useLots } from '@/hooks/useLots';
 import { useReservations } from '@/hooks/useReservations';
 import { resolveChileCommune, resolveRegionTerritory } from '@/lib/territories';
+import { withProjectScope } from '@/hooks/useWorkspaceScope';
 
 const money = (amount: number) =>
   new Intl.NumberFormat('es-CL', {
@@ -379,10 +380,10 @@ const ProjectWorkspace = () => {
         <TabsContent value="comercial">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {[
-              { label: 'CRM', text: 'Clientes y seguimiento', to: '/asesor/crm', icon: Users },
-              { label: 'Pipeline', text: 'Etapas comerciales', to: '/asesor/pipeline', icon: BarChart3 },
-              { label: 'Visitas', text: 'Agenda en terreno', to: '/asesor/visitas', icon: MapPinned },
-              { label: 'Reservas', text: `${stats.pendingReservations + stats.paidReservations} activas`, to: '/asesor/reservations', icon: CalendarCheck },
+              { label: 'CRM', text: 'Clientes y seguimiento', to: withProjectScope('/asesor/crm', project.id), icon: Users },
+              { label: 'Pipeline', text: 'Etapas comerciales', to: withProjectScope('/asesor/pipeline', project.id), icon: BarChart3 },
+              { label: 'Visitas', text: 'Agenda en terreno', to: withProjectScope('/asesor/visitas', project.id), icon: MapPinned },
+              { label: 'Reservas', text: `${stats.pendingReservations + stats.paidReservations} activas`, to: withProjectScope('/asesor/reservations', project.id), icon: CalendarCheck },
             ].map((action) => (
               <Card key={action.label} className="transition hover:border-primary/30">
                 <CardContent className="p-4">
@@ -400,7 +401,7 @@ const ProjectWorkspace = () => {
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <div><CardTitle>Reservas</CardTitle><p className="mt-1 text-sm text-muted-foreground">Operación comercial de este proyecto.</p></div>
-              <Button asChild variant="outline"><Link to="/asesor/reservations">Gestor completo</Link></Button>
+              <Button asChild variant="outline"><Link to={withProjectScope("/asesor/reservations", project.id)}>Gestor completo</Link></Button>
             </CardHeader>
             <CardContent>
               {reservationsLoading ? <Skeleton className="h-36 w-full" /> : activeReservations.length === 0 ? (
@@ -433,8 +434,8 @@ const ProjectWorkspace = () => {
                 <div><p className="text-xs text-muted-foreground">Valor vendido</p><p className="text-3xl font-bold">{money(stats.soldValue)}</p></div>
                 <div><p className="text-xs text-muted-foreground">Señas cobradas</p><p className="text-xl font-semibold">{money(stats.deposited)}</p></div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button asChild variant="outline"><Link to="/asesor/sales">Ventas</Link></Button>
-                  <Button asChild variant="outline"><Link to="/asesor/comisiones">Comisiones</Link></Button>
+                  <Button asChild variant="outline"><Link to={withProjectScope("/asesor/sales", project.id)}>Ventas</Link></Button>
+                  <Button asChild variant="outline"><Link to={withProjectScope("/asesor/comisiones", project.id)}>Comisiones</Link></Button>
                 </div>
               </CardContent>
             </Card>
@@ -486,7 +487,7 @@ const ProjectWorkspace = () => {
               <Card key={label}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-bold">{value}</p></CardContent></Card>
             ))}
           </div>
-          <Button asChild variant="outline" className="mt-4"><Link to="/asesor/reports">Abrir centro de reportes</Link></Button>
+          <Button asChild variant="outline" className="mt-4"><Link to={withProjectScope("/asesor/reports", project.id)}>Abrir centro de reportes</Link></Button>
         </TabsContent>
 
         <TabsContent value="configuracion">

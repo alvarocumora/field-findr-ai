@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLeads, LEAD_STATUS_CONFIG, LeadStatus } from '@/hooks/useLeads';
 import { useVisits, VISIT_STATUS, VisitStatus } from '@/hooks/useVisits';
 import { useSalesClosings, CLOSING_STATUS, ClosingStatus } from '@/hooks/useSalesClosings';
+import { useWorkspaceScope, withProjectScope } from '@/hooks/useWorkspaceScope';
 import { cn } from '@/lib/utils';
 
 const money = (n: number, currency = 'CLP') =>
@@ -28,9 +29,10 @@ const PIPELINE: { key: string; label: string; hint: string }[] = [
 ];
 
 const SalesManagement = () => {
-  const { leads, isLoading: leadsLoading } = useLeads();
-  const { visits, isLoading: visitsLoading } = useVisits();
-  const { closings, isLoading: closingsLoading } = useSalesClosings();
+  const { projectId } = useWorkspaceScope();
+  const { leads, isLoading: leadsLoading } = useLeads(projectId);
+  const { visits, isLoading: visitsLoading } = useVisits(projectId);
+  const { closings, isLoading: closingsLoading } = useSalesClosings(projectId);
   const isLoading = leadsLoading || visitsLoading || closingsLoading;
 
   const upcomingVisits = useMemo(
@@ -95,28 +97,28 @@ const SalesManagement = () => {
       label: 'Leads activos',
       value: leads.filter((l) => !['converted', 'lost'].includes(l.status ?? '')).length,
       icon: Users,
-      to: '/asesor/leads',
+      to: withProjectScope('/asesor/leads', projectId),
       cta: 'Ver leads',
     },
     {
       label: 'Visitas próximas',
       value: upcomingVisits.length,
       icon: CalendarClock,
-      to: '/asesor/visitas',
+      to: withProjectScope('/asesor/visitas', projectId),
       cta: 'Agenda',
     },
     {
       label: 'Cierres en curso',
       value: openClosings.length,
       icon: Handshake,
-      to: '/asesor/cierres',
+      to: withProjectScope('/asesor/cierres', projectId),
       cta: 'Cerrar venta',
     },
     {
       label: 'Comisión generada',
       value: money(closed.reduce((s, c) => s + Number(c.commission_amount || 0), 0)),
       icon: DollarSign,
-      to: '/asesor/comisiones',
+      to: withProjectScope('/asesor/comisiones', projectId),
       cta: 'Comisiones',
     },
   ];
@@ -132,10 +134,10 @@ const SalesManagement = () => {
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline" className="gap-2">
-            <Link to="/asesor/visitas"><CalendarClock className="h-4 w-4" aria-hidden="true" /> Agendar visita</Link>
+            <Link to={withProjectScope("/asesor/visitas", projectId)}><CalendarClock className="h-4 w-4" aria-hidden="true" /> Agendar visita</Link>
           </Button>
           <Button asChild className="gap-2">
-            <Link to="/asesor/cierres"><Plus className="h-4 w-4" aria-hidden="true" /> Nuevo cierre</Link>
+            <Link to={withProjectScope("/asesor/cierres", projectId)}><Plus className="h-4 w-4" aria-hidden="true" /> Nuevo cierre</Link>
           </Button>
         </div>
       </header>
@@ -215,7 +217,7 @@ const SalesManagement = () => {
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle className="text-base">Próximas visitas</CardTitle>
-            <Button asChild size="sm" variant="ghost"><Link to="/asesor/visitas">Ver todas</Link></Button>
+            <Button asChild size="sm" variant="ghost"><Link to={withProjectScope("/asesor/visitas", projectId)}>Ver todas</Link></Button>
           </CardHeader>
           <CardContent className="space-y-2">
             {isLoading && <Skeleton className="h-16 w-full" />}

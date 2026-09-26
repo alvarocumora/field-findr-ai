@@ -28,10 +28,11 @@ export const useLeads = (projectId?: string) => {
     queryFn: async () => {
       if (!user?.id) return [];
       
+      // RLS defines the accessible organization/project set. Filtering by the
+      // creator here hid team leads from managers and shared workspaces.
       let query = supabase
         .from('leads')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (projectId) {

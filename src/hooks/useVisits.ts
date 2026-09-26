@@ -55,17 +55,19 @@ export const VISIT_NEXT_ACTIONS: Array<{ value: VisitNextAction; label: string }
   { value: 'none', label: 'Sin acción' },
 ];
 
-export const useVisits = () => {
+export const useVisits = (projectId?: string) => {
   const { user } = useAuth();
   const qc = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['visits', user?.id],
+    queryKey: ['visits', user?.id, projectId ?? 'all'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let request = supabase
         .from('visits')
         .select('*')
         .order('scheduled_at', { ascending: true });
+      if (projectId) request = request.eq('project_id', projectId);
+      const { data, error } = await request;
       if (error) throw error;
       return (data ?? []) as Visit[];
     },
