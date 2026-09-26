@@ -1,24 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 
-export interface AgentCommission {
-  id: string;
-  agent_id: string;
-  reservation_id: string | null;
-  lot_id: string | null;
-  project_id: string | null;
-  sale_amount: number;
-  commission_rate: number;
-  commission_amount: number;
+export type AgentCommission = Omit<Tables<'agent_commissions'>, 'status'> & {
   status: 'potential' | 'reserved' | 'earned' | 'approved' | 'paid' | 'cancelled';
-  originator_agent_id: string | null;
-  closing_agent_id: string | null;
-  paid_at: string | null;
-  notes: string | null;
-  created_at: string;
-}
+};
 
 /** Commissions of the current agent, optionally scoped to a project. */
 export const useAgentCommissions = (projectId?: string) => {
@@ -34,7 +22,7 @@ export const useAgentCommissions = (projectId?: string) => {
       if (projectId) query = query.eq('project_id', projectId);
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as unknown as AgentCommission[];
+      return (data ?? []) as AgentCommission[];
     },
     enabled: !!user,
   });
@@ -46,8 +34,7 @@ export const useMarkCommissionPaid = () => {
 
   return useMutation({
     mutationFn: async (commissionId: string) => {
-      // RPC added by migration 20260705220000 — not yet in generated types.
-      const { data, error } = await (supabase.rpc as CallableFunction)('mark_commission_paid', {
+      const { data, error } = await supabase.rpc('mark_commission_paid', {
         p_commission_id: commissionId,
       });
       if (error) throw error;
@@ -64,29 +51,20 @@ export const useMarkCommissionPaid = () => {
 };
 
 
-export interface CommissionEvent {
-  id: string;
-  commission_id: string;
-  actor_id: string | null;
-  event_type: string;
-  from_status: string | null;
-  to_status: string | null;
+export type CommissionEvent = Omit<Tables<'commission_events'>, 'details'> & {
   details: Record<string, unknown>;
-  created_at: string;
-}
+};
 
 export const useCommissionEvents = (commissionId?: string) =>
   useQuery({
     queryKey: ['commission-events', commissionId],
     queryFn: async () => {
-      const { data, error } = await (supabase as unknown as {
-        from: (table: string) => ReturnType<typeof supabase.from>;
-      }).from('commission_events')
+      const { data, error } = await supabase.from('commission_events')
         .select('*')
         .eq('commission_id', commissionId)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data ?? []) as unknown as CommissionEvent[];
+      return (data ?? []) as CommissionEvent[];
     },
     enabled: !!commissionId,
   });

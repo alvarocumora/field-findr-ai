@@ -33,7 +33,7 @@ const Subscription = () => {
   const { user } = useAuth();
   const { data: subscription, isLoading: subLoading } = useSubscription();
   const { data: team, isLoading: organizationLoading } = useMyOrganization();
-  const organizationId = orgBillingIdFor(team as any);
+  const organizationId = orgBillingIdFor(team);
   const { mutate: createCheckout, isPending: checkoutLoading } = useCreateCheckout();
 
   // Historial del workspace activo, con fallback para pagos personales legacy.
@@ -43,7 +43,7 @@ const Subscription = () => {
       if (!user) return [];
 
       if (organizationId) {
-        const organizationPayments = await (supabase as any)
+        const organizationPayments = await supabase
           .from('payments')
           .select('*')
           .eq('organization_id', organizationId)
@@ -53,7 +53,7 @@ const Subscription = () => {
         if ((organizationPayments.data ?? []).length > 0) return organizationPayments.data;
       }
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('payments')
         .select('*')
         .eq('user_id', user.id)
@@ -79,7 +79,7 @@ const Subscription = () => {
   const cancelMutation = useMutation({
     mutationFn: async () => {
       if (!subscription) throw new Error('No hay suscripción activa');
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('subscriptions')
         .update({ cancel_at_period_end: true })
         .eq('id', subscription.id);
@@ -96,7 +96,7 @@ const Subscription = () => {
   const reactivateMutation = useMutation({
     mutationFn: async () => {
       if (!subscription) throw new Error('No hay suscripción');
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('subscriptions')
         .update({ cancel_at_period_end: false })
         .eq('id', subscription.id);

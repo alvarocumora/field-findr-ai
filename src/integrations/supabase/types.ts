@@ -19,12 +19,14 @@ export type Database = {
           agent_id: string
           commission_amount: number
           commission_rate: number
+          closing_agent_id: string | null
           created_at: string
           id: string
           lead_id: string | null
           listing_id: string | null
           lot_id: string | null
           notes: string | null
+          originator_agent_id: string | null
           paid_at: string | null
           project_id: string | null
           referral_amount: number | null
@@ -40,12 +42,14 @@ export type Database = {
           agent_id: string
           commission_amount?: number
           commission_rate?: number
+          closing_agent_id?: string | null
           created_at?: string
           id?: string
           lead_id?: string | null
           listing_id?: string | null
           lot_id?: string | null
           notes?: string | null
+          originator_agent_id?: string | null
           paid_at?: string | null
           project_id?: string | null
           referral_amount?: number | null
@@ -61,12 +65,14 @@ export type Database = {
           agent_id?: string
           commission_amount?: number
           commission_rate?: number
+          closing_agent_id?: string | null
           created_at?: string
           id?: string
           lead_id?: string | null
           listing_id?: string | null
           lot_id?: string | null
           notes?: string | null
+          originator_agent_id?: string | null
           paid_at?: string | null
           project_id?: string | null
           referral_amount?: number | null
@@ -1435,6 +1441,7 @@ export type Database = {
           id: string
           mercadopago_payment_id: string | null
           mercadopago_preference_id: string | null
+          organization_id: string | null
           status: string
           subscription_id: string | null
           user_id: string
@@ -1447,6 +1454,7 @@ export type Database = {
           id?: string
           mercadopago_payment_id?: string | null
           mercadopago_preference_id?: string | null
+          organization_id?: string | null
           status?: string
           subscription_id?: string | null
           user_id: string
@@ -1459,11 +1467,19 @@ export type Database = {
           id?: string
           mercadopago_payment_id?: string | null
           mercadopago_preference_id?: string | null
+          organization_id?: string | null
           status?: string
           subscription_id?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_subscription_id_fkey"
             columns: ["subscription_id"]
@@ -1891,8 +1907,11 @@ export type Database = {
           mercadopago_preference_id: string | null
           notes: string | null
           paid_at: string | null
+          payment_link_shared_at: string | null
+          payment_url: string | null
           parcel_design: Json | null
           reservation_amount: number
+          source_quote_id: string | null
           status: Database["public"]["Enums"]["reservation_status"]
           updated_at: string
           user_id: string
@@ -1914,8 +1933,11 @@ export type Database = {
           mercadopago_preference_id?: string | null
           notes?: string | null
           paid_at?: string | null
+          payment_link_shared_at?: string | null
+          payment_url?: string | null
           parcel_design?: Json | null
           reservation_amount?: number
+          source_quote_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           updated_at?: string
           user_id: string
@@ -1937,13 +1959,23 @@ export type Database = {
           mercadopago_preference_id?: string | null
           notes?: string | null
           paid_at?: string | null
+          payment_link_shared_at?: string | null
+          payment_url?: string | null
           parcel_design?: Json | null
           reservation_amount?: number
+          source_quote_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reservations_source_quote_id_fkey"
+            columns: ["source_quote_id"]
+            isOneToOne: false
+            referencedRelation: "sales_quotes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reservations_lead_id_fkey"
             columns: ["lead_id"]
@@ -2209,6 +2241,7 @@ export type Database = {
           id: string
           mercadopago_payer_id: string | null
           mercadopago_subscription_id: string | null
+          organization_id: string | null
           plan_type: string
           status: string
           updated_at: string
@@ -2222,6 +2255,7 @@ export type Database = {
           id?: string
           mercadopago_payer_id?: string | null
           mercadopago_subscription_id?: string | null
+          organization_id?: string | null
           plan_type?: string
           status?: string
           updated_at?: string
@@ -2235,12 +2269,21 @@ export type Database = {
           id?: string
           mercadopago_payer_id?: string | null
           mercadopago_subscription_id?: string | null
+          organization_id?: string | null
           plan_type?: string
           status?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_ticket_messages: {
         Row: {
@@ -2641,15 +2684,19 @@ export type Database = {
       }
       visits: {
         Row: {
+          completed_at: string | null
           created_at: string
           duration_minutes: number
+          follow_up_at: string | null
           id: string
           lead_id: string | null
           listing_id: string | null
           lot_id: string | null
           mode: string
+          next_action: string | null
           notes: string | null
           outcome: string | null
+          result_notes: string | null
           project_id: string | null
           scheduled_at: string
           status: string
@@ -2660,15 +2707,19 @@ export type Database = {
           visitor_phone: string | null
         }
         Insert: {
+          completed_at?: string | null
           created_at?: string
           duration_minutes?: number
+          follow_up_at?: string | null
           id?: string
           lead_id?: string | null
           listing_id?: string | null
           lot_id?: string | null
           mode?: string
+          next_action?: string | null
           notes?: string | null
           outcome?: string | null
+          result_notes?: string | null
           project_id?: string | null
           scheduled_at: string
           status?: string
@@ -2679,15 +2730,19 @@ export type Database = {
           visitor_phone?: string | null
         }
         Update: {
+          completed_at?: string | null
           created_at?: string
           duration_minutes?: number
+          follow_up_at?: string | null
           id?: string
           lead_id?: string | null
           listing_id?: string | null
           lot_id?: string | null
           mode?: string
+          next_action?: string | null
           notes?: string | null
           outcome?: string | null
+          result_notes?: string | null
           project_id?: string | null
           scheduled_at?: string
           status?: string
@@ -2808,11 +2863,277 @@ export type Database = {
         }
         Relationships: []
       }
+      commission_events: {
+        Row: {
+          actor_id: string | null
+          commission_id: string
+          created_at: string
+          details: Json
+          event_type: string
+          from_status: string | null
+          id: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          commission_id: string
+          created_at?: string
+          details?: Json
+          event_type: string
+          from_status?: string | null
+          id?: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          commission_id?: string
+          created_at?: string
+          details?: Json
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_events_commission_id_fkey"
+            columns: ["commission_id"]
+            isOneToOne: false
+            referencedRelation: "agent_commissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_members: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_quote_events: {
+        Row: {
+          channel: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          quote_id: string
+        }
+        Insert: {
+          channel?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          quote_id: string
+        }
+        Update: {
+          channel?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          quote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_quote_events_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "sales_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_quotes: {
+        Row: {
+          accepted_at: string | null
+          agent_id: string
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          discount_amount: number
+          id: string
+          lead_id: string | null
+          list_price: number
+          lot_area_snapshot: number | null
+          lot_id: string
+          lot_label_snapshot: string | null
+          notes: string | null
+          project_id: string
+          project_name_snapshot: string | null
+          public_token: string
+          quote_number: number
+          quoted_price: number
+          sent_at: string | null
+          sent_channel: string | null
+          status: string
+          updated_at: string
+          valid_until: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          agent_id?: string
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          discount_amount?: number
+          id?: string
+          lead_id?: string | null
+          list_price: number
+          lot_area_snapshot?: number | null
+          lot_id: string
+          lot_label_snapshot?: string | null
+          notes?: string | null
+          project_id: string
+          project_name_snapshot?: string | null
+          public_token?: string
+          quote_number?: number
+          quoted_price: number
+          sent_at?: string | null
+          sent_channel?: string | null
+          status?: string
+          updated_at?: string
+          valid_until: string
+        }
+        Update: {
+          accepted_at?: string | null
+          agent_id?: string
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          discount_amount?: number
+          id?: string
+          lead_id?: string | null
+          list_price?: number
+          lot_area_snapshot?: number | null
+          lot_id?: string
+          lot_label_snapshot?: string | null
+          notes?: string | null
+          project_id?: string
+          project_name_snapshot?: string | null
+          public_token?: string
+          quote_number?: number
+          quoted_price?: number
+          sent_at?: string | null
+          sent_channel?: string | null
+          status?: string
+          updated_at?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_quotes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_quotes_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_quotes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      can_access_project: {
+        Args: {
+          _capability?: string
+          _project_id: string
+          _user_id?: string
+        }
+        Returns: boolean
+      }
+      get_public_sales_quote: {
+        Args: { p_token: string }
+        Returns: {
+          currency: string
+          customer_name: string
+          discount_amount: number
+          list_price: number
+          lot_area: number
+          lot_label: string
+          notes: string
+          project_name: string
+          quote_number: number
+          quoted_price: number
+          status: string
+          valid_until: string
+        }[]
+      }
+      organization_has_capability: {
+        Args: {
+          _capability: string
+          _organization_id: string
+          _user_id?: string
+        }
+        Returns: boolean
+      }
+      organization_role: {
+        Args: {
+          _organization_id: string
+          _user_id?: string
+        }
+        Returns: string
+      }
+      project_member_has_capability: {
+        Args: {
+          _capability: string
+          _project_id: string
+          _user_id?: string
+        }
+        Returns: boolean
+      }
+      track_sales_quote_view: {
+        Args: { p_token: string }
+        Returns: boolean
+      }
       adjust_lot_prices: {
         Args: {
           p_mode: string

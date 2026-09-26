@@ -1,35 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 export type SalesQuoteStatus = 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected' | 'expired' | 'cancelled';
 
-export type SalesQuote = {
-  id: string;
-  agent_id: string;
-  quote_number: number;
-  public_token: string;
-  project_name_snapshot: string | null;
-  lot_label_snapshot: string | null;
-  lot_area_snapshot: number | null;
-  sent_channel: string | null;
-  project_id: string;
-  lot_id: string;
-  lead_id: string | null;
-  customer_name: string;
-  customer_email: string | null;
-  customer_phone: string | null;
-  currency: string;
-  list_price: number;
-  discount_amount: number;
-  quoted_price: number;
-  valid_until: string;
+export type SalesQuote = Omit<Tables<'sales_quotes'>, 'status'> & {
   status: SalesQuoteStatus;
-  sent_at: string | null;
-  accepted_at: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
 };
 
 export type CreateSalesQuoteInput = {
@@ -47,50 +24,19 @@ export type CreateSalesQuoteInput = {
   notes?: string | null;
 };
 
-type SalesQuoteInsert = CreateSalesQuoteInput & { agent_id: string };
-type SalesQuoteUpdate = Partial<Pick<SalesQuote, 'status' | 'sent_at' | 'accepted_at' | 'notes'>>;
-
-// Temporary typed wrapper until Supabase generated types include sales_quotes.
-const quotesTable = () => (supabase as unknown as {
-  from: (table: 'sales_quotes') => {
-    insert: (row: SalesQuoteInsert) => {
-      select: (columns: string) => {
-        single: () => Promise<{ data: SalesQuote | null; error: Error | null }>;
-      };
-    };
-    select: (columns: string) => {
-      order: (column: string, options?: { ascending?: boolean }) => {
-        limit: (count: number) => Promise<{ data: SalesQuote[] | null; error: Error | null }>;
-      };
-    };
-    update: (row: SalesQuoteUpdate) => {
-      eq: (column: string, value: string) => {
-        select: (columns: string) => {
-          single: () => Promise<{ data: SalesQuote | null; error: Error | null }>;
-        };
-      };
-    };
-  };
-}).from('sales_quotes');
-
-const quotesCountTable = () => (supabase as unknown as {
-  from: (table: 'sales_quotes') => {
-    select: (columns: string, options: { count: 'exact'; head: true }) => {
-      in: (column: string, values: SalesQuoteStatus[]) => Promise<{ count: number | null; error: Error | null }>;
-    };
-  };
-}).from('sales_quotes');
+type SalesQuoteInsert = TablesInsert<'sales_quotes'>;
+type SalesQuoteUpdate = TablesUpdate<'sales_quotes'>;
 
 export const useSalesQuotes = (limit = 100) => useQuery({
   queryKey: ['sales-quotes', limit],
   queryFn: async () => {
-    const { data, error } = await quotesTable()
+    const { data, error } = await supabase.from('sales_quotes')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(limit);
 
     if (error) throw error;
-    return data ?? [];
+    return (data ?? []) as SalesQuote[];
   },
 });
 
@@ -99,7 +45,7 @@ export const useExpiringSalesQuotes = (hours = 72) => useQuery({
   queryFn: async () => {
     const now = new Date();
     const end = new Date(now.getTime() + hours * 60 * 60 * 1000);
-    const { data, error } = await (supabase as any).from('sales_quotes')
+    const { data, error } = await supabase.from('sales_quotes')
       .select('*')
       .in('status', ['draft', 'sent', 'viewed'])
       .gte('valid_until', now.toISOString())
@@ -114,7 +60,7 @@ export const useExpiringSalesQuotes = (hours = 72) => useQuery({
 export const useActiveSalesQuotesCount = () => useQuery({
   queryKey: ['sales-quotes', 'active-count'],
   queryFn: async () => {
-    const { count, error } = await quotesCountTable()
+    const { count, error } = await supabase.from('sales_quotes')
       .select('id', { count: 'exact', head: true })
       .in('status', ['draft', 'sent', 'viewed']);
 
@@ -138,7 +84,7 @@ export const useCreateSalesQuote = () => {
       }
       if (input.quoted_price < 0) throw new Error('El precio cotizado no puede ser negativo.');
 
-      const { data, error } = await quotesTable()
+      const { data, error } = await supabase.from('sales_quotes')
         .insert({
           ...input,
           customer_name: input.customer_name.trim(),
@@ -166,7 +112,7 @@ export const useMarkSalesQuoteSent = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await quotesTable()
+      const { data, error } = await supabase.from('sales_quotes')
         .update({ status: 'sent', sent_at: new Date().toISOString() })
         .eq('id', id)
         .select('*')

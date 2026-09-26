@@ -7,18 +7,18 @@ import { useAuth } from './useAuth';
 export type VisitOutcome = 'interested' | 'needs_follow_up' | 'not_interested' | 'reserved' | 'other';
 export type VisitNextAction = 'quote' | 'reserve' | 'follow_up' | 'reschedule' | 'close' | 'none';
 
-type VisitSalesFields = {
-  lot_id: string | null;
+export type Visit = Omit<Tables<'visits'>, 'outcome' | 'next_action'> & {
   outcome: VisitOutcome | null;
-  result_notes: string | null;
   next_action: VisitNextAction | null;
-  follow_up_at: string | null;
-  completed_at: string | null;
 };
-
-export type Visit = Tables<'visits'> & VisitSalesFields;
-export type VisitInsert = TablesInsert<'visits'> & Partial<VisitSalesFields>;
-export type VisitUpdate = TablesUpdate<'visits'> & Partial<VisitSalesFields>;
+export type VisitInsert = Omit<TablesInsert<'visits'>, 'outcome' | 'next_action'> & {
+  outcome?: VisitOutcome | null;
+  next_action?: VisitNextAction | null;
+};
+export type VisitUpdate = Omit<TablesUpdate<'visits'>, 'outcome' | 'next_action'> & {
+  outcome?: VisitOutcome | null;
+  next_action?: VisitNextAction | null;
+};
 
 export type VisitStatus =
   | 'scheduled' | 'confirmed' | 'done' | 'no_show' | 'cancelled' | 'rescheduled';
@@ -55,19 +55,6 @@ export const VISIT_NEXT_ACTIONS: Array<{ value: VisitNextAction; label: string }
   { value: 'none', label: 'Sin acción' },
 ];
 
-const visitsTable = () => (supabase as unknown as {
-  from: (table: 'visits') => {
-    insert: (row: VisitInsert & { user_id: string }) => {
-      select: () => { single: () => Promise<{ data: Visit | null; error: Error | null }> };
-    };
-    update: (row: VisitUpdate) => {
-      eq: (column: string, value: string) => {
-        select: () => { single: () => Promise<{ data: Visit | null; error: Error | null }> };
-      };
-    };
-  };
-}).from('visits');
-
 export const useVisits = () => {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -90,7 +77,7 @@ export const useVisits = () => {
   const createVisit = useMutation({
     mutationFn: async (input: Omit<VisitInsert, 'user_id'>) => {
       if (!user?.id) throw new Error('Sesión requerida');
-      const { data, error } = await visitsTable()
+      const { data, error } = await supabase.from('visits')
         .insert({ ...input, user_id: user.id })
         .select()
         .single();
@@ -104,7 +91,7 @@ export const useVisits = () => {
 
   const updateVisit = useMutation({
     mutationFn: async ({ id, ...updates }: VisitUpdate & { id: string }) => {
-      const { data, error } = await visitsTable()
+      const { data, error } = await supabase.from('visits')
         .update(updates)
         .eq('id', id)
         .select()

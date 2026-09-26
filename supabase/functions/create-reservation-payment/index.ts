@@ -136,8 +136,15 @@ serve(async (req) => {
 
     if (reservationError) {
       console.error("Error creating reservation:", reservationError);
-      return new Response(JSON.stringify({ error: "Failed to create reservation" }), {
-        status: 500,
+      const conflict =
+        reservationError.code === "23505"
+        || /active reservation|already has a pending reservation/i.test(reservationError.message ?? "");
+      return new Response(JSON.stringify({
+        error: conflict
+          ? "Lot already has an active reservation"
+          : "Failed to create reservation",
+      }), {
+        status: conflict ? 409 : 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

@@ -380,7 +380,7 @@ export const orgBillingIdFor = (team: { organization?: { id: string } | null; or
 export const useSubscription = () => {
   const { user } = useAuth();
   const { data: team, isLoading: organizationLoading } = useMyOrganization();
-  const organizationId = orgBillingIdFor(team as any);
+  const organizationId = orgBillingIdFor(team);
 
   return useQuery({
     queryKey: ['subscription', user?.id, organizationId],
@@ -388,7 +388,7 @@ export const useSubscription = () => {
       if (!user) return null;
 
       if (organizationId) {
-        const { data: organizationSubscription, error: organizationError } = await (supabase as any)
+        const { data: organizationSubscription, error: organizationError } = await supabase
           .from('subscriptions')
           .select('*')
           .eq('organization_id', organizationId)
@@ -401,7 +401,7 @@ export const useSubscription = () => {
       }
 
       // Compatibilidad durante la migración de suscripciones personales.
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
         .eq('user_id', user.id)
@@ -428,7 +428,7 @@ export const useCreateCheckout = () => {
   const { user } = useAuth();
   const { data: team } = useMyOrganization();
   // Non-admin members buy/manage their own personal plan.
-  const billingOrganizationId = orgBillingIdFor(team as any);
+  const billingOrganizationId = orgBillingIdFor(team);
 
   return useMutation({
     mutationFn: async (params: PlanType | CheckoutParams) => {
