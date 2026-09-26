@@ -51,7 +51,13 @@ export default defineConfig(({ mode }) => ({
         // app shell — the popup must reach the real /~oauth/* endpoint or it
         // renders our 404 page and the Google sign-in never completes.
         navigateFallbackDenylist: [/^\/~oauth/, /^\/auth\/v1\//],
-        navigationPreload: true,
+        runtimeCaching: [
+          // Always hit the network for the OAuth handshake.
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/~oauth'),
+            handler: 'NetworkOnly',
+          },
+
 
         runtimeCaching: [
           // Cache Mapbox tiles for offline map access
