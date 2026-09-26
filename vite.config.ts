@@ -47,6 +47,12 @@ export default defineConfig(({ mode }) => ({
         // its exact chunks a consistent, atomically-updated set.
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         cleanupOutdatedCaches: true,
+        // Never let the service worker answer OAuth callbacks with the cached
+        // app shell — the popup must reach the real /~oauth/* endpoint or it
+        // renders our 404 page and the Google sign-in never completes.
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/auth\/v1\//],
+        navigationPreload: true,
+
         runtimeCaching: [
           // Cache Mapbox tiles for offline map access
           {
