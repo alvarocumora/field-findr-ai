@@ -26,7 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProjects } from '@/hooks/useProjects';
 import { useLots } from '@/hooks/useLots';
 import { useReservations } from '@/hooks/useReservations';
-import { resolveRegionTerritory } from '@/lib/territories';
+import { resolveChileCommune, resolveRegionTerritory } from '@/lib/territories';
 
 const money = (amount: number) =>
   new Intl.NumberFormat('es-CL', {
@@ -90,6 +90,10 @@ const ProjectWorkspace = () => {
   const territory = useMemo(
     () => resolveRegionTerritory(project?.region || 'Sin región', project?.country || 'Chile'),
     [project?.region, project?.country],
+  );
+  const communeTerritory = useMemo(
+    () => resolveChileCommune(project?.city, project?.region),
+    [project?.city, project?.region],
   );
 
   const spatial = useMemo(() => {
@@ -501,7 +505,10 @@ const ProjectWorkspace = () => {
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between gap-4"><span className="text-muted-foreground">País</span><span className="font-medium">{project.country || 'Chile'}</span></div>
                 <div className="flex justify-between gap-4"><span className="text-muted-foreground">Región canónica</span><span className="font-medium">{project.region ? territory.displayName : 'Pendiente'}</span></div>
-                <div className="flex justify-between gap-4"><span className="text-muted-foreground">Comuna / ciudad</span><span className="font-medium">{project.city || 'Pendiente'}</span></div>
+                <div className="flex justify-between gap-4"><span className="text-muted-foreground">ISO región</span><span className="font-medium">{territory.regionIso || '—'}</span></div>
+                <div className="flex justify-between gap-4"><span className="text-muted-foreground">Provincia</span><span className="font-medium">{communeTerritory?.province || 'Pendiente'}</span></div>
+                <div className="flex justify-between gap-4"><span className="text-muted-foreground">Comuna</span><span className="font-medium">{communeTerritory?.commune || project.city || 'Pendiente'}</span></div>
+                <div className="flex justify-between gap-4"><span className="text-muted-foreground">CUT comuna</span><span className="font-medium">{communeTerritory?.communeCode || '—'}</span></div>
                 <div className="flex justify-between gap-4"><span className="text-muted-foreground">Ubicación</span><span className="font-medium text-right">{project.location || 'Pendiente'}</span></div>
               </CardContent>
             </Card>
