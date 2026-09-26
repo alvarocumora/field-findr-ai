@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Download, FileText, Map as MapIcon, Table2, Loader2, Eye } from 'lucide-react';
+import { Download, FileText, Map as MapIcon, Table2, Loader2, Eye, FileSpreadsheet, Files } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useStaticMapToken } from '@/hooks/useStaticMapToken';
@@ -101,13 +100,15 @@ export const ProjectDownloads = ({
     void run(id);
   };
 
-  const items: { id: KitId; label: string; hint: string; icon: typeof FileText }[] = [
-    { id: 'dossier', label: 'Dossier del proyecto', hint: 'PDF visual · galería, plano y enlaces', icon: FileText },
-    { id: 'precios', label: 'Lista de precios', hint: 'PDF · todas las parcelas', icon: Table2 },
-    { id: 'plano', label: 'Plano del loteo', hint: 'PDF · cuadro de superficies', icon: MapIcon },
-    { id: 'csv', label: 'Lista de precios (Excel)', hint: 'CSV · para trabajarlo aparte', icon: Download },
+  const available = lots.filter((l) => l.status === 'available').length;
+  const disabled = busy !== null || lots.length === 0;
+
+  const others: { id: KitId; label: string; hint: string; format: string; icon: typeof FileText }[] = [
+    { id: 'precios', label: 'Lista de precios', hint: `Las ${lots.length} parcelas y su estado`, format: 'PDF', icon: Table2 },
+    { id: 'plano', label: 'Plano del loteo', hint: 'Plano y cuadro de superficies', format: 'PDF', icon: MapIcon },
+    { id: 'csv', label: 'Precios para Excel', hint: 'Para filtrar o trabajar aparte', format: 'CSV', icon: FileSpreadsheet },
     ...(showLotSheets
-      ? [{ id: 'fichas' as KitId, label: 'Fichas de parcelas', hint: 'PDF · una ficha por parcela', icon: FileText }]
+      ? [{ id: 'fichas' as KitId, label: 'Fichas de parcelas', hint: 'Una ficha por parcela', format: 'PDF', icon: Files }]
       : []),
   ];
 
@@ -115,41 +116,66 @@ export const ProjectDownloads = ({
     <section className={className}>
       <h2 className="text-2xl font-bold text-foreground">{title}</h2>
       <p className="text-muted-foreground text-sm mt-1 mb-4">{description}</p>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {items.map((it) => (
-          <Card key={it.id} className="border-border/60 bg-card/95">
-            <CardContent className="p-4 flex flex-col gap-3 h-full">
-              <it.icon className="h-5 w-5 text-primary" aria-hidden />
-              <div className="flex-1">
-                <p className="font-semibold text-sm text-foreground">{it.label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{it.hint}</p>
+      <div className="space-y-3">
+        {/* Dossier: la pieza principal para enviar a un cliente */}
+        <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card p-5 flex flex-col md:flex-row md:items-center gap-5">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <FileText className="h-5 w-5" aria-hidden />
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full min-h-10"
-                disabled={busy !== null || lots.length === 0}
-                onClick={() => request(it.id)}
-              >
-                {busy === it.id ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />Generando…
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4 mr-2" />Descargar
-                  </>
-                )}
-              </Button>
-              {it.id === 'dossier' && (
-                <Button variant="ghost" size="sm" disabled={busy !== null || lots.length === 0} onClick={() => request('preview')}>
-                  {busy === 'preview' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Eye className="h-4 w-4 mr-2" />}
-                  Vista previa
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Recomendado para enviar</p>
+                <h3 className="text-lg font-bold leading-tight text-foreground">Dossier del proyecto</h3>
+              </div>
+            </div>
+            <ul className="mt-3 grid gap-x-5 gap-y-1 text-sm text-muted-foreground sm:grid-cols-2">
+              <li>• Portada con precio desde</li>
+              <li>• Plano por estado de parcela</li>
+              <li>• {available > 0 ? `Las ${available} parcelas disponibles` : 'Parcelas y precios'}</li>
+              <li>• Cómo comprar y agendar reunión</li>
+            </ul>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row md:flex-col md:w-48 shrink-0">
+            <Button className="min-h-11 flex-1 md:flex-none" disabled={disabled} onClick={() => request('dossier')}>
+              {busy === 'dossier'
+                ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generando…</>
+                : <><Download className="h-4 w-4 mr-2" />Descargar dossier</>}
+            </Button>
+            <Button variant="outline" className="min-h-11 flex-1 md:flex-none" disabled={disabled} onClick={() => request('preview')}>
+              {busy === 'preview' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Eye className="h-4 w-4 mr-2" />}
+              Vista previa
+            </Button>
+          </div>
+        </div>
+
+        {/* Resto del kit: tarjetas compactas iguales; toda la tarjeta descarga */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          {others.map((it) => (
+            <button
+              key={it.id}
+              type="button"
+              disabled={disabled}
+              onClick={() => request(it.id)}
+              aria-label={`Descargar ${it.label} (${it.format})`}
+              className="group flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card/95 p-3.5 text-left transition-colors hover:border-primary/40 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-primary">
+                <it.icon className="h-5 w-5" aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-2">
+                  <span className="font-semibold text-sm text-foreground">{it.label}</span>
+                  <span className="rounded border border-border/70 px-1 text-[10px] font-semibold tracking-wide text-muted-foreground">{it.format}</span>
+                </span>
+                <span className="block text-xs text-muted-foreground">{it.hint}</span>
+              </span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/70 text-muted-foreground transition-colors group-hover:border-primary/50 group-hover:text-primary">
+                {busy === it.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <Dialog open={Boolean(previewUrl)} onOpenChange={open => { if (!open) setPreviewUrl(null); }}>
