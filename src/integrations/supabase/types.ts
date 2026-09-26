@@ -1910,6 +1910,9 @@ export type Database = {
           payment_link_shared_at: string | null
           payment_url: string | null
           parcel_design: Json | null
+          referral_code: string | null
+          referral_landing_path: string | null
+          referring_agent_id: string | null
           reservation_amount: number
           source_quote_id: string | null
           status: Database["public"]["Enums"]["reservation_status"]
@@ -1936,6 +1939,9 @@ export type Database = {
           payment_link_shared_at?: string | null
           payment_url?: string | null
           parcel_design?: Json | null
+          referral_code?: string | null
+          referral_landing_path?: string | null
+          referring_agent_id?: string | null
           reservation_amount?: number
           source_quote_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
@@ -1962,6 +1968,9 @@ export type Database = {
           payment_link_shared_at?: string | null
           payment_url?: string | null
           parcel_design?: Json | null
+          referral_code?: string | null
+          referral_landing_path?: string | null
+          referring_agent_id?: string | null
           reservation_amount?: number
           source_quote_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
