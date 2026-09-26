@@ -24,6 +24,19 @@ vi.mock('@/hooks/useSidebarCounts', () => ({
 vi.mock('@/hooks/usePanelContext', () => ({
   usePanelContext: () => mockPanel,
 }));
+vi.mock('@/hooks/useAccess', () => ({
+  useAccess: () => ({
+    isAdmin: mockRedirect.isAdmin,
+    isAgent: mockRedirect.isAgent,
+    plan: mockPlan.plan,
+    context: mockPanel.context,
+    contexts: mockPanel.options,
+    setContext: mockPanel.setContext,
+    planIsAgency: mockPanel.planIsAgency,
+    can: () => true,
+    hasFeature: () => true,
+  }),
+}));
 // Brand logos pull in assets/theme; stub them out.
 vi.mock('@/components/brand/Logo', () => ({ default: () => <div>logo</div> }));
 vi.mock('@/components/brand/LogoIcon', () => ({ default: () => <div>logo</div> }));
