@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { shareAttribution } from '@/lib/landing/shareAttribution';
+import { referralCodeForConversion } from '@/lib/referrals/referralAttribution';
 
 interface Props {
   projectId: string;
@@ -51,6 +52,7 @@ export const LandingLeadForm = ({ projectId, projectOwnerId, projectSlug, lot, o
           phone: phone.trim() || undefined,
           source: lot ? `landing-${projectSlug}-lote-${lot.lot_number ?? ''}` : `landing-${projectSlug}`,
           notes: notes || undefined,
+          referralCode: referralCodeForConversion() || undefined,
         },
       });
       if (error || (data as { error?: string } | null)?.error) {

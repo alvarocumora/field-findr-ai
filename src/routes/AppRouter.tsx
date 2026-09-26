@@ -6,6 +6,7 @@ import RootErrorBoundary from "@/components/RootErrorBoundary";
 import RouteGuard from "./RouteGuard";
 import RouteSeo from "./RouteSeo";
 import RoutePolicyGate from "./RoutePolicyGate";
+import ReferralAttributionCapture from "@/components/referrals/ReferralAttributionCapture";
 import { PageLoader } from "./routeUtils";
 import {
   routeAliases,
@@ -31,6 +32,7 @@ const AppRouter = () => (
   <BrowserRouter>
     <RootErrorBoundary>
       <RouteSeo />
+      <ReferralAttributionCapture />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {Object.entries(groups).map(([key, entries]) => {

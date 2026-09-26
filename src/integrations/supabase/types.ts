@@ -3082,6 +3082,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_user_referral: { Args: { p_code: string }; Returns: boolean }
       can_access_project: {
         Args: {
           _capability?: string
