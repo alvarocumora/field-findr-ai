@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import NotFound from "@/pages/NotFound";
 import RootErrorBoundary from "@/components/RootErrorBoundary";
+import ReferralAttributionTracker from "@/components/referrals/ReferralAttributionTracker";
 import RouteGuard from "./RouteGuard";
 import RouteSeo from "./RouteSeo";
 import RoutePolicyGate from "./RoutePolicyGate";
@@ -29,6 +30,7 @@ const groups = routeManifest.reduce<Record<GroupKey, RouteEntry[]>>((acc, entry)
 
 const AppRouter = () => (
   <BrowserRouter>
+    <ReferralAttributionTracker />
     <RootErrorBoundary>
       <RouteSeo />
       <Suspense fallback={<PageLoader />}>
