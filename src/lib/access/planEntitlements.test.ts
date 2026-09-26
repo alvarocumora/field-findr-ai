@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasPlanFeature, planFeaturesFor } from './planEntitlements';
+import { hasPlanFeature, minimumPlanForFeature, planFeaturesFor } from './planEntitlements';
 
 describe('plan entitlements', () => {
   it('keeps roles separate from product features', () => {
@@ -10,6 +10,13 @@ describe('plan entitlements', () => {
   it('normalizes legacy plans before resolving features', () => {
     expect(planFeaturesFor('growth')).toContain('spatial3d');
     expect(planFeaturesFor('starter')).toContain('reservations');
+  });
+
+  it('maps paid modules to the minimum upgrade plan', () => {
+    expect(minimumPlanForFeature('reservations')).toBe('corredora');
+    expect(minimumPlanForFeature('spatial3d')).toBe('inmobiliaria');
+    expect(minimumPlanForFeature('api')).toBe('grupo');
+    expect(minimumPlanForFeature('sso')).toBe('enterprise');
   });
 
   it('reserves enterprise capabilities for enterprise', () => {
