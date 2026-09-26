@@ -22,6 +22,7 @@ interface AssetCatalogProps {
   onAssetsChange: (assets: GLBAsset[]) => void;
   onAddPrimitive?: (type: ParcelaObjectType) => void;
   fillHeight?: boolean;
+  defaultCategory?: string;
 }
 
 interface BuiltInAsset {
@@ -80,9 +81,9 @@ const CATEGORIES = [
   { id: 'custom', label: 'Subidos', icon: '📎' },
 ];
 
-export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, onAddPrimitive, fillHeight = false }: AssetCatalogProps) => {
+export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, onAddPrimitive, fillHeight = false, defaultCategory = 'all' }: AssetCatalogProps) => {
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [activeCategory, setActiveCategory] = useState(defaultCategory);
   const [cc0Group, setCc0Group] = useState('all');
   const [uploading, setUploading] = useState(false);
 
@@ -153,7 +154,7 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, on
   });
 
   return (
-    <div className="space-y-2">
+    <div className={fillHeight ? 'flex h-full min-h-0 flex-col gap-2' : 'space-y-2'}>
       <div className="flex items-center gap-1.5 px-1">
         <Package className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-[11px] font-semibold text-foreground">Catálogo 3D</span>
@@ -202,7 +203,7 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, on
         </div>
       )}
 
-      <ScrollArea className={fillHeight ? 'h-[calc(100vh-330px)] min-h-[260px] max-h-[620px]' : 'h-[140px]'}>
+      <ScrollArea className={fillHeight ? 'min-h-0 flex-1' : 'h-[140px]'}>
         {activeCategory === 'cc0' && cc0Loading && (
           <div className="flex items-center justify-center py-4 text-[10px] text-muted-foreground">
             Cargando modelos CC0…

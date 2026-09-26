@@ -35,6 +35,8 @@ interface ParcelaDesigner3DProps {
   onSave?: (designJson: string) => void;
   /** Program the auto-design generator lays out. Defaults to residential. */
   program?: 'residencial' | 'industrial';
+  /** Preview renders terrain only; editor renders the full design workspace. */
+  mode?: 'editor' | 'preview';
 }
 
 function createTerrainShape(coords: [number, number][]): THREE.Shape {
@@ -200,7 +202,9 @@ const CameraController = ({
 export const ParcelaDesigner3D = ({
   polygon, neighbors, lotNumber, lotArea, lotPrice, latitude, longitude, savedDesign, onSave,
   program = 'residencial',
+  mode = 'editor',
 }: ParcelaDesigner3DProps) => {
+  const isPreview = mode === 'preview';
   const ps = useParcelaState();
   const { token: mapboxToken } = useMapboxToken();
   const captureRef = useRef<(() => void) | null>(null);
@@ -223,7 +227,11 @@ export const ParcelaDesigner3D = ({
   const [satelliteError, setSatelliteError] = useState(false);
   const [debugInfo, setDebugInfo] = useState<TerrainDebugInfo | null>(null);
   const [showDebug, setShowDebug] = useState(false);
-  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+  const [leftPanelOpen, setLeftPanelOpen] = useState(() => {
+    if (isPreview) return false;
+    if (typeof window === 'undefined') return true;
+    return window.innerWidth >= 1180;
+  });
 
   const norm = useMemo(() => normalizePolygon(polygon, latitude, longitude), [polygon, latitude, longitude]);
   const terrainSize = norm.terrainSize;
@@ -455,12 +463,15 @@ export const ParcelaDesigner3D = ({
   }, [ps, snapToTerrain]);
 
   return (
-    <div className="flex h-full w-full rounded-xl overflow-hidden border border-border/40 bg-card" style={{ minHeight: 400 }}>
+    <div
+      className="relative flex h-full w-full overflow-hidden rounded-xl border border-border/40 bg-card"
+      style={{ minHeight: isPreview ? 240 : 400 }}
+    >
       {/* Unified designer dock: one place for models, tools and scene objects.
           The previous UI stacked ParcelaToolbar + AssetCatalog in the same fixed
           column, which caused the bottom controls to disappear on shorter screens. */}
-      {leftPanelOpen && (
-        <aside className="absolute inset-y-0 left-0 z-30 flex w-[300px] shrink-0 flex-col border-r border-border/50 bg-card/95 shadow-2xl backdrop-blur-xl lg:relative lg:z-10 lg:shadow-none">
+      {!isPreview && leftPanelOpen && (
+        <aside className="absolute inset-y-0 left-0 z-30 flex w-[min(82vw,280px)] shrink-0 flex-col border-r border-border/50 bg-card/95 shadow-2xl backdrop-blur-xl xl:relative xl:z-10 xl:w-[300px] xl:shadow-none">
           <div className="flex items-center justify-between gap-2 border-b border-border/40 px-3 py-2.5">
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Diseñador de parcela</p>
@@ -485,6 +496,7 @@ export const ParcelaDesigner3D = ({
                 onAssetsChange={setGlbAssets}
                 onAddPrimitive={handleAddObject}
                 fillHeight
+                defaultCategory={program === 'industrial' ? 'industrial' : 'casas'}
               />
             </TabsContent>
 
@@ -517,7 +529,7 @@ export const ParcelaDesigner3D = ({
                     <Minus className="h-3.5 w-3.5" /> Cerco
                   </Button>
                 </div>
-                {linearDrawMode && (
+                {!isPreview && linearDrawMode && (
                   <div className="mt-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-2">
                     <p className="text-[10px] font-medium text-foreground">
                       Haz clic punto a punto · {draftPoints.length} {draftPoints.length === 1 ? 'punto' : 'puntos'}
@@ -656,7 +668,7 @@ export const ParcelaDesigner3D = ({
         className="flex-1 relative min-w-0"
         style={{ minHeight: '100%', cursor: pendingLabel ? 'crosshair' : undefined }}
       >
-        {!leftPanelOpen && (
+        {!isPreview && !leftPanelOpen && (
           <Button
             variant="secondary"
             size="sm"
@@ -719,7 +731,7 @@ export const ParcelaDesigner3D = ({
               <gridHelper args={[terrainSize, Math.floor(terrainSize / (ps.snapEnabled ? 0.5 : 1)), '#A5D6A7', '#66BB6A']} position={[0, -0.01, 0]} />
             )}
 
-            <ClickPlane onClick={handleGroundClick} size={terrainSize} />
+            {!isPreview && <ClickPlane onClick={handleGroundClick} size={terrainSize} />}
 
             {/* Render objects */}
             {ps.objects.filter((obj) => obj.visible !== false).map(obj => (
@@ -747,16 +759,16 @@ export const ParcelaDesigner3D = ({
               )
             ))}
 
-            {linearDrawMode && draftPoints.length > 0 && (
+            {!isPreview && linearDrawMode && draftPoints.length > 0 && (
               <DraftLinearFeature3D points={draftPoints} mode={linearDrawMode} />
             )}
 
-            {ps.measureMode && ps.measurePoints.length > 0 && (
+            {!isPreview && ps.measureMode && ps.measurePoints.length > 0 && (
               <MeasurementLine points={ps.measurePoints} />
             )}
 
             {/* Transform gizmo on the selected object (orbit view only) */}
-            {ps.viewMode !== 'pedestrian' && !ps.measureMode && (
+            {!isPreview && ps.viewMode !== 'pedestrian' && !ps.measureMode && (
               <SelectedObjectGizmo
                 selectedId={selectedObj?.locked || selectedObj?.points?.length ? null : ps.selectedId}
                 objectsVersion={ps.objects.length}
@@ -883,7 +895,7 @@ export const ParcelaDesigner3D = ({
         )}
 
         {/* Pending placement banner */}
-        {pendingLabel && (
+        {!isPreview && pendingLabel && (
           <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-primary/90 backdrop-blur-sm rounded-full pl-4 pr-2 py-1.5 text-xs font-medium text-primary-foreground border border-primary/40 shadow-lg">
             <span>Colocando: <strong>{pendingLabel}</strong> — haz clic en el terreno</span>
             <button
@@ -897,7 +909,7 @@ export const ParcelaDesigner3D = ({
         )}
 
         {/* Info overlays */}
-        <div className="absolute bottom-16 left-3 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs text-muted-foreground border border-border/40">
+        {!isPreview && <div className="absolute bottom-16 left-3 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs text-muted-foreground border border-border/40">
           {linearDrawMode
             ? 'Dibujo activo · agrega puntos sobre el terreno · Enter termina · Esc cancela'
             : ps.viewMode === 'pedestrian'
@@ -907,11 +919,13 @@ export const ParcelaDesigner3D = ({
               : ps.selectedId
                 ? 'Arrastra el gizmo para transformar · Q=Mover W=Rotar E=Escalar · Supr elimina'
                 : 'Selecciona un objeto para transformarlo · Click terreno para colocar'}
-        </div>
+        </div>}
         <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
-          <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-medium text-foreground border border-border/40">
-            {ps.objects.length} {ps.objects.length === 1 ? 'objeto' : 'objetos'}
-          </div>
+          {!isPreview && (
+            <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-medium text-foreground border border-border/40">
+              {ps.objects.length} {ps.objects.length === 1 ? 'objeto' : 'objetos'}
+            </div>
+          )}
           {ps.viewMode !== 'pedestrian' && (
             <button
               type="button"
@@ -925,7 +939,7 @@ export const ParcelaDesigner3D = ({
         </div>
 
         {/* First-use hint — non-blocking, guides the initial placement */}
-        {ps.objects.length === 0 && !pendingLabel && !linearDrawMode && !ps.measureMode && ps.viewMode !== 'pedestrian' && (
+        {!isPreview && ps.objects.length === 0 && !pendingLabel && !linearDrawMode && !ps.measureMode && ps.viewMode !== 'pedestrian' && (
           <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 pointer-events-none max-w-xs text-center bg-background/85 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-primary/30 shadow-lg">
             <p className="text-xs font-medium text-foreground">Diseña tu parcela 🏡</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -933,7 +947,7 @@ export const ParcelaDesigner3D = ({
             </p>
           </div>
         )}
-        {ps.measureMode && ps.measurePoints.length === 2 && (
+        {!isPreview && ps.measureMode && ps.measurePoints.length === 2 && (
           <div className="absolute top-3 left-3 bg-primary/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-bold text-primary-foreground border border-primary/40 z-20">
             📏 {Math.sqrt(
               Math.pow(ps.measurePoints[1][0] - ps.measurePoints[0][0], 2) +
@@ -941,13 +955,13 @@ export const ParcelaDesigner3D = ({
             ).toFixed(1)}m
           </div>
         )}
-        {ps.snapEnabled && !useRealisticTerrain && (
+        {!isPreview && ps.snapEnabled && !useRealisticTerrain && (
           <div className="absolute bottom-3 right-3 bg-background/60 backdrop-blur-sm rounded px-2 py-0.5 text-[9px] text-muted-foreground border border-border/30">
             ⊞ Snap 50cm
           </div>
         )}
-        {/* Persistent action bar: never disappears below a scroll container. */}
-        <div className="absolute bottom-3 left-3 right-3 z-30 flex items-center justify-between gap-2 rounded-2xl border border-border/50 bg-background/92 p-2 shadow-2xl backdrop-blur-xl">
+        {/* Persistent action bar: editor only; preview stays visually clean. */}
+        {!isPreview && <div className="absolute bottom-3 left-2 right-2 z-30 flex flex-wrap items-center justify-between gap-1.5 rounded-xl border border-border/50 bg-background/92 p-1.5 shadow-2xl backdrop-blur-xl sm:left-3 sm:right-3 sm:gap-2 sm:rounded-2xl sm:p-2">
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="sm" className="h-8 px-2" onClick={ps.undo} disabled={!ps.canUndo} title="Deshacer">
               <Undo2 className="h-4 w-4" /><span className="ml-1 hidden md:inline text-[10px]">Deshacer</span>
@@ -971,11 +985,11 @@ export const ParcelaDesigner3D = ({
               <Save className="h-4 w-4" /><span className="text-[10px] font-semibold">Guardar</span>
             </Button>
           </div>
-        </div>
+        </div>}
 
       </div>
 
-      {selectedObj && (
+      {!isPreview && selectedObj && (
         <aside className="hidden w-72 shrink-0 overflow-y-auto border-l border-border/50 bg-card/75 xl:block">
           <div className="border-b border-border/40 px-4 py-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Inspector</p>
