@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
+import { readReferralAttribution } from '@/lib/referrals/referralAttribution';
 
 export type Reservation = Tables<'reservations'>;
 
@@ -14,6 +15,8 @@ export interface CreateReservationData {
   reservation_amount?: number;
   notes?: string;
   source_quote_id?: string;
+  referral_code?: string;
+  referral_landing_path?: string;
 }
 
 export interface CreateReservationResponse {
@@ -134,8 +137,14 @@ export const useCreateReservation = () => {
         throw new Error('Debes iniciar sesión para realizar una reserva');
       }
 
+      const attribution = readReferralAttribution();
+
       const response = await supabase.functions.invoke('create-reservation-payment', {
-        body: data,
+        body: {
+          ...data,
+          referral_code: data.referral_code ?? attribution?.code ?? undefined,
+          referral_landing_path: data.referral_landing_path ?? attribution?.landingPath ?? undefined,
+        },
       });
 
       if (response.error) {
