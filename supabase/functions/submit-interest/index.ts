@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { projectOwnerId, firstName, lastName, email, phone, projectId, lotId, source, notes, budgetMin, budgetMax, preferredAreaMin, preferredAreaMax } = body;
+    const { projectOwnerId, firstName, lastName, email, phone, projectId, lotId, source, notes, budgetMin, budgetMax, preferredAreaMin, preferredAreaMax, referralCode } = body;
 
     if (!projectOwnerId || !firstName || !email || !projectId) {
       return new Response(
@@ -82,6 +82,37 @@ Deno.serve(async (req) => {
       }
     }
 
+    let referringAgentId: string | null = null;
+    let referralNote: string | null = null;
+
+    if (referralCode) {
+      const cleanReferralCode = String(referralCode).trim().slice(0, 80);
+      const { data: broker } = await supabase
+        .from("broker_profiles")
+        .select("user_id, invite_code")
+        .eq("invite_code", cleanReferralCode)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (broker) {
+        const isOwnerBroker = broker.user_id === projectOwnerId;
+        const { data: assignment } = isOwnerBroker
+          ? { data: { id: "owner" } }
+          : await supabase
+              .from("project_broker_assignments")
+              .select("id")
+              .eq("project_id", projectId)
+              .eq("broker_id", broker.user_id)
+              .eq("status", "approved")
+              .maybeSingle();
+
+        if (assignment) {
+          referringAgentId = broker.user_id;
+          referralNote = `[broker_ref] ${cleanReferralCode}`;
+        }
+      }
+    }
+
     const { data, error } = await supabase.from("leads").insert({
       user_id: projectOwnerId,
       first_name: String(firstName).slice(0, 100),
@@ -93,6 +124,8 @@ Deno.serve(async (req) => {
       source: source ? String(source).slice(0, 60) : "cotizador_publico",
       status: "new",
       notes: notes ? String(notes).slice(0, 2000) : null,
+      referring_agent_id: referringAgentId,
+      referral_notes: referralNote,
       budget_min: budgetMin || null,
       budget_max: budgetMax || null,
       preferred_area_min: preferredAreaMin || null,
