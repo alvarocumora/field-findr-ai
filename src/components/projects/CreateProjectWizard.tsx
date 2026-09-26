@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import ImageUploader from '@/components/publish/ImageUploader';
 import { cn } from '@/lib/utils';
-import { LATAM_COUNTRIES } from '@/lib/latam';
+import { getChileCommuneOptions, getChileRegionOptions, resolveChileCommune, resolveRegionTerritory } from '@/lib/territories';
 import LocationPicker from '@/components/publish/LocationPicker';
 import { UseMutationResult } from '@tanstack/react-query';
 import { Project, ProjectInsert, ProjectUpdate } from '@/hooks/useProjects';
@@ -55,7 +55,7 @@ const STEPS = [
   { id: 7, label: 'Resumen', icon: CheckCircle2 },
 ];
 
-const CHILE_REGIONS = LATAM_COUNTRIES.find(c => c.code === 'CL')?.regions || [];
+const CHILE_REGIONS = getChileRegionOptions();
 
 const projectToWizardData = (project: Project): WizardData => ({
   name: project.name,
@@ -152,6 +152,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         rol_number: data.rol_number || null,
         latitude: data.latitude,
         longitude: data.longitude,
+        country: 'Chile',
         region: data.region || null,
         city: data.city || null,
         address: data.address || null,
@@ -368,46 +369,85 @@ const StepBasicData = ({ data, update }: { data: WizardData; update: (p: Partial
   </div>
 );
 
-const StepLocation = ({ data, update }: { data: WizardData; update: (p: Partial<WizardData>) => void }) => (
-  <div className="grid gap-4">
-    <LocationPicker
-      lat={data.latitude}
-      lng={data.longitude}
-      onLocationSelect={(lat, lng, addr) => {
-        update({
-          latitude: lat, longitude: lng,
-          address: addr?.address || data.address,
-          city: addr?.city || data.city,
-          region: addr?.region || data.region,
-        });
-      }}
-    />
-    <div className="grid grid-cols-2 gap-4">
-      <div className="space-y-2">
-        <Label>Región</Label>
-        <Select value={data.region} onValueChange={v => update({ region: v })}>
-          <SelectTrigger><SelectValue placeholder="Seleccionar región" /></SelectTrigger>
-          <SelectContent>
-            {CHILE_REGIONS.map(r => (
-              <SelectItem key={r} value={r}>{r}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+const StepLocation = ({ data, update }: { data: WizardData; update: (p: Partial<WizardData>) => void }) => {
+  const communeOptions = data.region ? getChileCommuneOptions(data.region) : [];
+  const communeMeta = resolveChileCommune(data.city, data.region);
+
+  return (
+    <div className="grid gap-4">
+      <LocationPicker
+        lat={data.latitude}
+        lng={data.longitude}
+        onLocationSelect={(lat, lng, addr) => {
+          const canonicalRegion = addr?.region
+            ? resolveRegionTerritory(addr.region, 'Chile').name
+            : data.region;
+          const canonicalCommune = addr?.city
+            ? resolveChileCommune(addr.city, canonicalRegion)
+            : null;
+
+          update({
+            latitude: lat,
+            longitude: lng,
+            address: addr?.address || data.address,
+            city: canonicalCommune?.commune || addr?.city || data.city,
+            region: canonicalRegion,
+          });
+        }}
+      />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Región</Label>
+          <Select
+            value={data.region}
+            onValueChange={(value) => {
+              const currentCommune = resolveChileCommune(data.city, value);
+              update({ region: value, city: currentCommune?.commune || '' });
+            }}
+          >
+            <SelectTrigger><SelectValue placeholder="Seleccionar región" /></SelectTrigger>
+            <SelectContent>
+              {CHILE_REGIONS.map((region) => (
+                <SelectItem key={region.value} value={region.value}>
+                  {region.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Comuna</Label>
+          <Select
+            value={data.city}
+            onValueChange={(value) => update({ city: value })}
+            disabled={!data.region}
+          >
+            <SelectTrigger><SelectValue placeholder={data.region ? 'Seleccionar comuna' : 'Selecciona región primero'} /></SelectTrigger>
+            <SelectContent>
+              {communeOptions.map((commune) => (
+                <SelectItem key={commune.code} value={commune.value}>
+                  {commune.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {communeMeta && (
+            <p className="text-[11px] text-muted-foreground">
+              Provincia de {communeMeta.province} · CUT {communeMeta.communeCode} · {communeMeta.region.regionIso}
+            </p>
+          )}
+        </div>
       </div>
       <div className="space-y-2">
-        <Label>Ciudad / Comuna</Label>
-        <Input placeholder="ej: La Serena" value={data.city} onChange={e => update({ city: e.target.value })} />
+        <Label>Dirección / sector</Label>
+        <Input placeholder="Ej: Los Junquillos, sector rural" value={data.address} onChange={e => update({ address: e.target.value })} />
       </div>
+      {data.latitude && data.longitude && (
+        <p className="text-xs text-muted-foreground">📍 {data.latitude.toFixed(6)}, {data.longitude.toFixed(6)}</p>
+      )}
     </div>
-    <div className="space-y-2">
-      <Label>Dirección</Label>
-      <Input placeholder="Se autocompleta al seleccionar en el mapa" value={data.address} onChange={e => update({ address: e.target.value })} />
-    </div>
-    {data.latitude && data.longitude && (
-      <p className="text-xs text-muted-foreground">📍 {data.latitude.toFixed(6)}, {data.longitude.toFixed(6)}</p>
-    )}
-  </div>
-);
+  );
+};
 
 const StepLots = ({ data, update, formatNumber, pricePerM2 }: {
   data: WizardData; update: (p: Partial<WizardData>) => void;
