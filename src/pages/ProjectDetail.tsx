@@ -55,7 +55,7 @@ import {
 } from 'lucide-react';
 import { useBulkPublishLots } from '@/hooks/useBulkPublishLots';
 import { publishableLots } from '@/lib/marketplace/lotToListing';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
 import { useReviewStats } from '@/hooks/useReviews';
@@ -172,6 +172,14 @@ const ProjectDetail = () => {
   const [reservationLot, setReservationLot] = useState<any | null>(null);
   const [financingLot, setFinancingLot] = useState<any | null>(null);
   const [detailLot, setDetailLot] = useState<any | null>(null);
+  // The financing overlay is a custom modal: Escape closes it (and only it).
+  useEffect(() => {
+    if (!financingLot) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFinancingLot(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [financingLot]);
+
   const closeQuoter = useCallback(() => {
     setSelectedLot(null);
     setDetailLot(null);
@@ -748,7 +756,13 @@ const ProjectDetail = () => {
 
         {/* Financing Calculator Modal */}
         {financingLot && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setFinancingLot(null)}>
+          <div
+            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Simulador de crédito · Lote ${financingLot.lot_number}`}
+            onClick={() => setFinancingLot(null)}
+          >
             <div className="max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
               <FinancingCalculator
                 lotPrice={financingLot.price || 0}

@@ -31,8 +31,9 @@ export const FloatingQuoter = ({ selectedLot, projectName, onReserve, onFinance,
     if (!visible) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      // Escape belongs to an open dialog/sheet first (lot sheet, 3D designer…).
-      if (document.querySelector('[role="dialog"][data-state="open"]')) return;
+      // Escape belongs to an open dialog/sheet/modal first (lot sheet, 3D
+      // designer, financing calculator…), never to the panel underneath.
+      if (document.querySelector('[role="dialog"][data-state="open"], [aria-modal="true"]')) return;
       onClose();
     };
     // Capture on window runs before Radix's document-level Escape handler, so
