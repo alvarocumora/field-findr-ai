@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Share2, Facebook, Twitter, Link2, Mail } from 'lucide-react';
+import { getCanonicalUrl } from '@/lib/publicUrls';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +18,7 @@ interface ShareButtonsProps {
 }
 
 export const ShareButtons = ({ title, description, url, variant = 'default', className }: ShareButtonsProps) => {
-  const shareUrl = url || window.location.href;
+  const shareUrl = getCanonicalUrl(url || window.location.href);
   const shareText = title;
 
   const handleNativeShare = async () => {
@@ -46,7 +47,7 @@ export const ShareButtons = ({ title, description, url, variant = 'default', cla
   const openShare = (platform: string) => {
     // Keep public share URLs clean and short. Attribution query params make
     // WhatsApp links unreadable and are unnecessary for the share card.
-    const cleanUrl = new URL(shareUrl, window.location.origin);
+    const cleanUrl = new URL(shareUrl);
     cleanUrl.search = '';
     cleanUrl.hash = '';
     const encoded = encodeURIComponent(cleanUrl.href);
