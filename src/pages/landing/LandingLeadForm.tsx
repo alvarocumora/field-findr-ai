@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { getReferralCode } from '@/lib/referrals/attribution';
 import { shareAttribution } from '@/lib/landing/shareAttribution';
 
 interface Props {
@@ -43,6 +44,7 @@ export const LandingLeadForm = ({ projectId, projectOwnerId, projectSlug, lot, o
       ].filter(Boolean).join(' · ');
       const { data, error } = await supabase.functions.invoke('submit-interest', {
         body: {
+          referralCode: getReferralCode() ?? undefined,
           projectOwnerId,
           projectId,
           lotId: lot?.id || undefined,
