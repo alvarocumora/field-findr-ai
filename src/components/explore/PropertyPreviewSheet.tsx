@@ -30,6 +30,7 @@ import { Listing, formatPrice, formatArea, getListingTypeLabel, getPricePerM2, f
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
 import { whatsapp } from '@/lib/whatsappUtils';
 import { cn } from '@/lib/utils';
+import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 
 interface PropertyPreviewSheetProps {
   listing: Listing | null;
@@ -78,7 +79,7 @@ const PropertyPreviewSheet = ({
   };
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/propiedad/${listing.id}`;
+    const url = getCanonicalUrl(`/propiedad/${listing.id}`);
     if (navigator.share) {
       await navigator.share({
         title: listing.title,

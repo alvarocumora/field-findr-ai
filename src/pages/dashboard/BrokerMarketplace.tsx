@@ -19,6 +19,7 @@ import {
   useMyBrokerProfile,
 } from '@/hooks/useBrokers';
 import { useCommissionRules } from '@/hooks/useAdminCommissions';
+import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 
 interface MarketProject {
   id: string;
@@ -68,7 +69,7 @@ const BrokerMarketplace = () => {
   const incoming = assignments.filter((a) => a.owner_id === user?.id && a.status === 'pending');
   const shareLink = (p: { id: string; name: string; slug: string | null }) => {
     const ref = brokerProfile?.invite_code ? `?ref=${brokerProfile.invite_code}` : '';
-    const url = `${window.location.origin}${p.slug ? `/p/${p.slug}` : `/proyecto/${p.id}`}${ref}`;
+    const url = getCanonicalUrl(`${p.slug ? `/p/${p.slug}` : `/proyecto/${p.id}`}${ref}`);
     const share = (navigator as Navigator & { share?: (d: ShareData) => Promise<void> }).share;
     if (share) {
       share({ title: p.name, text: `Parcelas en venta: ${p.name}`, url }).catch(() => undefined);
@@ -105,13 +106,13 @@ const BrokerMarketplace = () => {
             <div>
               <p className="text-sm font-medium">Tu link de invitación de brokers</p>
               <p className="text-xs text-muted-foreground font-mono">
-                {`${window.location.origin}/brokers/inscripcion?ref=${brokerProfile.invite_code}`}
+                {getShareUrl('/brokers/inscripcion', { ref: brokerProfile.invite_code })}
               </p>
             </div>
             <Button
               size="sm" variant="outline"
               onClick={() => navigator.clipboard.writeText(
-                `${window.location.origin}/brokers/inscripcion?ref=${brokerProfile.invite_code}`,
+                getShareUrl('/brokers/inscripcion', { ref: brokerProfile.invite_code }),
               )}
             >
               Copiar link

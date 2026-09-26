@@ -17,6 +17,7 @@ import { useReferralCommissionsEarned } from '@/hooks/useReferrals.commissions';
 import {
   useMyBrokerProfile, useUpdateMyBrokerProfile, useProjectAssignments, useBrokerRanking,
 } from '@/hooks/useBrokers';
+import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })
@@ -67,9 +68,9 @@ const MyBrokerBusiness = () => {
   const approvedProjects = assignments.filter((a) => a.status === 'approved').length;
 
   const inviteUrl = profile
-    ? `${window.location.origin}/brokers/inscripcion?ref=${profile.invite_code}`
+    ? getShareUrl('/brokers/inscripcion', { ref: profile.invite_code })
     : '';
-  const showcaseUrl = profile ? `${window.location.origin}/b/${profile.slug}` : '';
+  const showcaseUrl = profile ? getCanonicalUrl(`/b/${profile.slug}`) : '';
 
   const steps = [
     { label: 'Completa tu perfil público', done: !!profile?.bio },

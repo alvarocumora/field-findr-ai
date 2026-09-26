@@ -31,6 +31,7 @@ import { differenceInDays } from 'date-fns';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 import { normalizePolygon } from '@/lib/polygonUtils';
+import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 
 interface EnhancedLotCardProps {
   lot: Lot;
@@ -133,7 +134,7 @@ const PolygonMiniature = ({ polygon, className }: { polygon: number[][]; classNa
 };
 
 const handleShare = (lot: Lot) => {
-  const url = `${window.location.origin}/proyecto/${lot.project_id}?lote=${lot.lot_number}`;
+  const url = `${getCanonicalUrl('/')}proyecto/${lot.project_id}?lote=${lot.lot_number}`;
   navigator.clipboard.writeText(url).then(() => {
     toast.success('Enlace copiado al portapapeles');
   });
@@ -141,7 +142,7 @@ const handleShare = (lot: Lot) => {
 
 const handleWhatsApp = (lot: Lot, projectName?: string) => {
   const price = lot.price ? formatPrice(lot.price) : 'Consultar';
-  const msg = `Hola, me interesa el Lote ${lot.lot_number}${projectName ? ` del proyecto ${projectName}` : ''}.\n\nSuperficie: ${Number(lot.area).toLocaleString('es-CL')} m²\nPrecio: ${price}\n\n${window.location.origin}/proyecto/${lot.project_id}?lote=${lot.lot_number}`;
+  const msg = `Hola, me interesa el Lote ${lot.lot_number}${projectName ? ` del proyecto ${projectName}` : ''}.\n\nSuperficie: ${Number(lot.area).toLocaleString('es-CL')} m²\nPrecio: ${price}\n\n${getCanonicalUrl('/')}proyecto/${lot.project_id}?lote=${lot.lot_number}`;
   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 };
 

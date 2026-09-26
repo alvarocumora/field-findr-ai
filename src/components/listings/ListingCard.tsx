@@ -26,6 +26,7 @@ import { MatchResult } from '@/hooks/useMatchScore';
 import { cn } from '@/lib/utils';
 import { listingCoverUrl } from '@/lib/staticMapImage';
 import { useStaticMapToken } from '@/hooks/useStaticMapToken';
+import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 
 interface ListingCardProps {
   listing: Listing;
@@ -57,9 +58,9 @@ const ListingCard = ({ listing, onHover, matchResult, className }: ListingCardPr
     e.stopPropagation();
     navigator.share?.({
       title: listing.title,
-      url: `${window.location.origin}/propiedad/${listing.id}`,
+      url: getCanonicalUrl(`/propiedad/${listing.id}`),
     }).catch(() => {
-      navigator.clipboard.writeText(`${window.location.origin}/propiedad/${listing.id}`);
+      navigator.clipboard.writeText(getCanonicalUrl(`/propiedad/${listing.id}`));
     });
   };
 

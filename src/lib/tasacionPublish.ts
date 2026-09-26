@@ -1,3 +1,4 @@
+import { getCanonicalUrl } from '@/lib/publicUrls';
 import QRCode from 'qrcode';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -19,13 +20,7 @@ export interface PublishResult {
   version: number;
 }
 
-const buildValidatorUrl = (id: string) => {
-  const origin =
-    typeof window !== 'undefined' && window.location.origin
-      ? window.location.origin
-      : 'https://ofertaterrenos.com';
-  return `${origin}/tasacion/v/${id}`;
-};
+const buildValidatorUrl = (id: string) => getCanonicalUrl(`/tasacion/v/${id}`);
 
 export const publishTasacion = async (
   data: TasacionData,

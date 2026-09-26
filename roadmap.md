@@ -16,3 +16,7 @@
 ## Identidad tipográfica
 
 - [x] Unificar el logo visible como OfertaTerrenos.com sin isotipo
+
+## Enlaces públicos
+
+- [x] Normalizar todo enlace compartible a https://ofertaterrenos.com (helper publicUrls), sin tocar URLs de auth
