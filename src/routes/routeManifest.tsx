@@ -501,8 +501,8 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-performance", "/asesor/performance", <AgentPerformance />, { label: "Performance", group: "administración", icon: "gauge", capability: "reports.read", feature: "analytics" }),
   agent("asesor-demand", "/asesor/demand", <DemandHeatmapDashboard />, { label: "Demanda", group: "administración", icon: "flame", capability: "reports.read", feature: "analytics" }),
   agent("asesor-reports", "/asesor/reports", <Reports />, { label: "Reportes", group: "administración", icon: "report", capability: "reports.read" }),
-  agent("asesor-executive", "/asesor/executive", <ExecutiveDashboard />, { label: "Ejecutivo", group: "administración", icon: "pie", plans: ["inmobiliaria", "grupo", "enterprise"] }),
-  agent("asesor-multi-project", "/asesor/multi-project", <MultiProjectDashboard />, { label: "Multi proyecto", group: "administración", icon: "chart", plans: ["inmobiliaria", "grupo", "enterprise"] }),
+  agent("asesor-executive", "/asesor/executive", <ExecutiveDashboard />, { label: "Ejecutivo", group: "administración", icon: "pie", capability: "reports.read", feature: "analytics" }),
+  agent("asesor-multi-project", "/asesor/multi-project", <MultiProjectDashboard />, { label: "Multi proyecto", group: "administración", icon: "chart", capability: "reports.read", feature: "analytics" }),
 
   // Cuenta
   agent("asesor-team", "/asesor/team", <TeamManagement />, { label: "Equipo", group: "administración", icon: "users", capability: "team.read", feature: "team" }),
