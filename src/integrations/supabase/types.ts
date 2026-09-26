@@ -3193,6 +3193,10 @@ export type Database = {
         }
         Returns: string
       }
+      claim_user_referral: {
+        Args: { p_code: string }
+        Returns: boolean
+      }
       create_listing_lead: {
         Args: {
           p_email?: string
