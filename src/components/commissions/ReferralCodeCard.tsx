@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Copy, Check, Share2, Gift } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMyBrokerProfile } from '@/hooks/useBrokers';
+import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 
 interface Props {
   pendingBalance: number;
@@ -22,7 +23,7 @@ export const ReferralCodeCard = ({ pendingBalance, paidBalance, referredSales }:
 
   const code = profile?.invite_code ?? null;
   const link = useMemo(
-    () => (code ? `${window.location.origin}/comunidad?ref=${code}` : ''),
+    () => (code ? getShareUrl('/comunidad', { ref: code }) : ''),
     [code],
   );
 

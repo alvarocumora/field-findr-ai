@@ -26,6 +26,7 @@ import {
   findPublicAppraisalByHash,
 } from '@/lib/tasacionPublicRegistry';
 import { toast } from 'sonner';
+import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 
 type Found = {
   kind: 'found';
@@ -381,9 +382,7 @@ const ResultBlock = ({
       {(() => {
         const publicPath = `/tasacion/v/${state.id}`;
         const publicUrl =
-          typeof window !== 'undefined'
-            ? `${window.location.origin}${publicPath}`
-            : publicPath;
+          getCanonicalUrl(publicPath);
         return (
           <>
             <div className="rounded-md border bg-background/60 px-2.5 py-1.5 flex items-center gap-2">

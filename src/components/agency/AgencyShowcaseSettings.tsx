@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Store, ExternalLink } from 'lucide-react';
 import { useAgencyProfile, type AgencyProfileForm } from '@/hooks/useAgencyShowcase';
 import { slugifyAgency, isValidSlug } from '@/lib/agency/slug';
+import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 
 const EMPTY: AgencyProfileForm = {
   company_name: '',
@@ -29,7 +30,7 @@ export const AgencyShowcaseSettings = () => {
 
   const slug = form.public_slug ?? '';
   const slugError = slug.length > 0 && !isValidSlug(slug);
-  const publicUrl = slug ? `${window.location.origin}/inmobiliaria/${slug}` : null;
+  const publicUrl = slug ? getCanonicalUrl(`/inmobiliaria/${slug}`) : null;
   const canSave = !slugError && (!form.is_public || (!!form.company_name && !!slug));
 
   const set = <K extends keyof AgencyProfileForm>(k: K, v: AgencyProfileForm[K]) =>

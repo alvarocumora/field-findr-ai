@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 
 const Referrals = () => {
   const { user } = useAuth();
@@ -16,13 +17,13 @@ const Referrals = () => {
   const createReferral = useCreateReferral();
 
   const copyCode = (code: string) => {
-    const url = `${window.location.origin}/auth?ref=${code}`;
+    const url = getShareUrl('/auth', { ref: code });
     navigator.clipboard.writeText(url);
     toast({ title: 'Enlace copiado', description: 'Comparte este enlace con tus amigos.' });
   };
 
   const shareCode = (code: string) => {
-    const url = `${window.location.origin}/auth?ref=${code}`;
+    const url = getShareUrl('/auth', { ref: code });
     const text = `¡Únete a Ofertaterrenos! Usa mi código de referido: ${code}`;
     if (navigator.share) {
       navigator.share({ title: 'Ofertaterrenos - Referido', text, url });

@@ -39,6 +39,7 @@ import { toast } from 'sonner';
 import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { PublishLotButton } from './PublishLotButton';
+import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 
 const ParcelaDesigner3D = lazy(() =>
   import('@/components/parcela/ParcelaDesigner3D').then((m) => ({ default: m.ParcelaDesigner3D }))
@@ -83,13 +84,13 @@ const getSlopeLabel = (slope: string | null) => {
 };
 
 const handleShare = (lot: Lot) => {
-  const url = `${window.location.origin}/proyecto/${lot.project_id}?lote=${lot.lot_number}`;
+  const url = `${getCanonicalUrl('/')}proyecto/${lot.project_id}?lote=${lot.lot_number}`;
   navigator.clipboard.writeText(url).then(() => toast.success('Enlace copiado al portapapeles'));
 };
 
 const handleWhatsApp = (lot: Lot, projectName: string) => {
   const price = lot.price ? formatPrice(lot.price) : 'Consultar';
-  const msg = `Hola, me interesa el Lote ${lot.lot_number} del proyecto ${projectName}.\n\nSuperficie: ${Number(lot.area).toLocaleString('es-CL')} m²\nPrecio: ${price}\n\n${window.location.origin}/proyecto/${lot.project_id}?lote=${lot.lot_number}`;
+  const msg = `Hola, me interesa el Lote ${lot.lot_number} del proyecto ${projectName}.\n\nSuperficie: ${Number(lot.area).toLocaleString('es-CL')} m²\nPrecio: ${price}\n\n${getCanonicalUrl('/')}proyecto/${lot.project_id}?lote=${lot.lot_number}`;
   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 };
 

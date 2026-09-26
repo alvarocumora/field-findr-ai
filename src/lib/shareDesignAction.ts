@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 
 /**
  * Plain (non-hook) action to publish a shared parcela design, so it can be
@@ -16,7 +17,7 @@ export interface ShareDesignInput {
 }
 
 export const shareLink = (token: string): string =>
-  `${window.location.origin}/diseno/${token}`;
+  getCanonicalUrl(`/diseno/${token}`);
 
 export async function createSharedDesign(input: ShareDesignInput): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
