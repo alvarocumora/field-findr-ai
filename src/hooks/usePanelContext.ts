@@ -2,87 +2,108 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
 import { useCurrentPlan } from '@/hooks/useSubscription';
+import { useMyOrganization } from '@/hooks/useMyOrganization';
+import { useMyBrokerProfile } from '@/hooks/useBrokers';
+import {
+  normalizeStoredContext,
+  resolveAvailableContexts,
+  resolveContextFromPath,
+  resolvePreferredContext,
+  type AppContext,
+  type AppContextOption,
+} from '@/lib/access/appContext';
+
+const STORAGE_KEY = 'ot:app-context:v2';
+const LEGACY_STORAGE_KEY = 'ot:panel-context';
+
+export type PanelContext = AppContext;
+export type PanelContextOption = AppContextOption;
+
+const readStoredContext = (): AppContext | null => {
+  if (typeof window === 'undefined') return null;
+  return normalizeStoredContext(
+    window.localStorage.getItem(STORAGE_KEY)
+      ?? window.localStorage.getItem(LEGACY_STORAGE_KEY),
+  );
+};
 
 /**
- * Contexto activo del panel privado.
+ * Contexto activo del usuario.
  *
- * Un usuario puede tener varios roles (p.ej. admin de plataforma que además
- * opera como corredor). En vez de apilar todos los menús en la barra lateral,
- * el panel muestra UN contexto a la vez y ofrece un selector para cambiarlo.
+ * Context != role:
+ * - role answers who the user is (buyer/agent/admin),
+ * - organization role answers what the user may do inside a company,
+ * - plan answers which product features are enabled,
+ * - context answers what workspace the user is using right now.
  */
-export type PanelContext = 'comercial' | 'plataforma';
-
-const STORAGE_KEY = 'ot:panel-context';
-
-export interface PanelContextOption {
-  id: PanelContext;
-  label: string;
-  /** Área del manifiesto de rutas de la que sale la navegación. */
-  area: 'agent' | 'admin';
-  home: string;
-}
-
 export const usePanelContext = () => {
-  const { isAdmin, isAgent } = useSmartRedirect();
-  const { plan } = useCurrentPlan();
+  const { isAdmin, isAgent, isBuyer, isLoading: rolesLoading } = useSmartRedirect();
+  const { plan, isLoading: planLoading } = useCurrentPlan();
+  const { data: team, isLoading: organizationLoading } = useMyOrganization();
+  const { data: brokerProfile, isLoading: brokerLoading } = useMyBrokerProfile();
   const { pathname } = useLocation();
 
   const planIsAgency = plan === 'inmobiliaria' || plan === 'grupo' || plan === 'enterprise';
 
-  const options = useMemo<PanelContextOption[]>(() => {
-    const list: PanelContextOption[] = [];
-    if (isAgent || isAdmin) {
-      list.push({
-        id: 'comercial',
-        label: planIsAgency ? 'Inmobiliaria' : 'Corredor',
-        area: 'agent',
-        home: '/asesor/dashboard',
-      });
-    }
-    if (isAdmin) {
-      list.push({
-        id: 'plataforma',
-        label: 'Administración de plataforma',
-        area: 'admin',
-        home: '/admin/dashboard',
-      });
-    }
-    return list;
-  }, [isAdmin, isAgent, planIsAgency]);
+  const options = useMemo(
+    () => resolveAvailableContexts({
+      isBuyer,
+      isAgent,
+      isAdmin,
+      hasOrganization: Boolean(team?.organization),
+      isBroker: Boolean(brokerProfile?.is_active),
+      plan,
+    }),
+    [brokerProfile?.is_active, isAdmin, isAgent, isBuyer, plan, team?.organization],
+  );
 
-  const [context, setContextState] = useState<PanelContext>(() => {
-    if (typeof window === 'undefined') return 'comercial';
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored === 'plataforma' ? 'plataforma' : 'comercial';
-  });
+  const [context, setContextState] = useState<AppContext | null>(() => readStoredContext());
+  const [hasStoredContext, setHasStoredContext] = useState(() => Boolean(readStoredContext()));
 
-  // Si el contexto guardado ya no está disponible para este usuario, cae al primero.
   useEffect(() => {
     if (options.length === 0) return;
-    if (!options.some((o) => o.id === context)) {
-      setContextState(options[0].id);
-    }
-  }, [options, context]);
 
-  // La URL manda: entrar a /admin/... cambia el menú al contexto de plataforma
-  // y volver a /asesor/... lo devuelve al comercial.
-  useEffect(() => {
-    const byPath: PanelContext | null = pathname.startsWith('/admin')
-      ? 'plataforma'
-      : pathname.startsWith('/asesor') || pathname.startsWith('/panel')
-        ? 'comercial'
-        : null;
-    if (byPath && byPath !== context && options.some((o) => o.id === byPath)) {
-      setContextState(byPath);
+    const routeContext = resolveContextFromPath(pathname, options, context);
+    if (routeContext && routeContext !== context) {
+      setContextState(routeContext);
+      window.localStorage.setItem(STORAGE_KEY, routeContext);
+      setHasStoredContext(true);
+      return;
     }
-  }, [pathname, context, options]);
 
-  const setContext = useCallback((next: PanelContext) => {
+    if (context && !options.some((option) => option.id === context)) {
+      setContextState(null);
+      setHasStoredContext(false);
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [context, options, pathname]);
+
+  const setContext = useCallback((next: AppContext) => {
+    if (!options.some((option) => option.id === next)) return;
     setContextState(next);
-    if (typeof window !== 'undefined') window.localStorage.setItem(STORAGE_KEY, next);
-  }, []);
+    setHasStoredContext(true);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(STORAGE_KEY, next);
+      window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+    }
+  }, [options]);
 
-  const active = options.find((o) => o.id === context) ?? options[0] ?? null;
+  const active =
+    options.find((option) => option.id === context)
+    ?? resolvePreferredContext(options, hasStoredContext ? readStoredContext() : null);
 
-  return { context: active?.id ?? 'comercial', active, options, setContext, planIsAgency, plan };
+  return {
+    context: active?.id ?? null,
+    active,
+    options,
+    setContext,
+    hasStoredContext,
+    needsChoice: !hasStoredContext && options.length > 1,
+    planIsAgency,
+    plan,
+    organizationRole: team?.organizationRole ?? null,
+    organization: team?.organization ?? null,
+    brokerProfile: brokerProfile ?? null,
+    isLoading: rolesLoading || planLoading || organizationLoading || brokerLoading,
+  };
 };

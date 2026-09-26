@@ -39,7 +39,11 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
   const { context, options, setContext, planIsAgency } = usePanelContext();
 
   // Toda la navegación sale del manifiesto único de rutas.
-  const agentGroups = useMemo(() => navGroupsFor('agent', plan ?? undefined), [plan]);
+  const agentContext = context === 'broker' ? 'broker' : 'empresa';
+  const agentGroups = useMemo(
+    () => navGroupsFor('agent', plan ?? undefined, agentContext),
+    [agentContext, plan],
+  );
   const adminGroups = useMemo(() => navGroupsFor('admin'), []);
 
   // Un solo contexto visible a la vez: se acabó el menú con dos
@@ -200,9 +204,17 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
         {/* Contexto activo: un solo menú por rol, con selector si hay varios */}
         {!collapsed && (isAdmin || isAgent) && (
           <div className="px-3 mb-2 space-y-2">
-            {activeArea === 'agent' && <OrganizationSwitcher />}
+            {context === 'empresa' && <OrganizationSwitcher />}
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-              {context === 'plataforma' ? 'ADMIN' : planIsAgency ? 'INMOBILIARIA' : 'CORREDOR'}
+              {context === 'plataforma'
+                ? 'PLATAFORMA'
+                : context === 'broker'
+                  ? 'BROKER'
+                  : context === 'buyer'
+                    ? 'COMPRADOR'
+                    : planIsAgency
+                      ? 'INMOBILIARIA'
+                      : 'EMPRESA'}
             </Badge>
             {options.length > 1 && (
               <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted/40 p-1">
@@ -234,7 +246,13 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
           {(isAgent || isAdmin) && (
             <GroupedNav
               area={activeArea}
-              title={activeArea === 'admin' ? 'Administración' : planIsAgency ? 'Inmobiliaria' : 'Corredor'}
+              title={activeArea === 'admin'
+                ? 'Administración'
+                : context === 'broker'
+                  ? 'Broker'
+                  : planIsAgency
+                    ? 'Inmobiliaria'
+                    : 'Empresa'}
               groups={activeGroups}
             />
           )}

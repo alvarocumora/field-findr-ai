@@ -1,0 +1,93 @@
+import { useCallback } from 'react';
+import { usePanelContext } from '@/hooks/usePanelContext';
+import { useSmartRedirect } from '@/hooks/useSmartRedirect';
+import { useCurrentPlan } from '@/hooks/useSubscription';
+import {
+  hasOrganizationCapability,
+  type OrganizationCapability,
+} from '@/lib/access/organizationPermissions';
+import {
+  hasPlanFeature,
+  type PlanFeature,
+} from '@/lib/access/planEntitlements';
+
+const BROKER_CAPABILITIES: readonly OrganizationCapability[] = [
+  'projects.read',
+  'inventory.read',
+  'crm.read',
+  'crm.write',
+  'reservations.read',
+  'reservations.write',
+  'sales.read',
+  'sales.write',
+  'commissions.read',
+];
+
+const BROKER_FEATURES: readonly PlanFeature[] = [
+  'marketplace',
+  'crm',
+  'quotes',
+  'reservations',
+  'commissions',
+];
+
+/**
+ * Frontend access facade.
+ *
+ * It intentionally keeps four concerns separate:
+ * identity role, active context, organization capability and SaaS entitlement.
+ * Database RLS/RPC remains the security boundary; this hook controls product UX.
+ */
+export const useAccess = () => {
+  const identity = useSmartRedirect();
+  const panel = usePanelContext();
+  const subscription = useCurrentPlan();
+
+  const can = useCallback((capability: OrganizationCapability) => {
+    if (panel.context === 'plataforma') return identity.isAdmin;
+    if (panel.context === 'buyer' || !panel.context) return false;
+
+    if (panel.context === 'broker') {
+      return BROKER_CAPABILITIES.includes(capability);
+    }
+
+    if (panel.organizationRole) {
+      return hasOrganizationCapability(panel.organizationRole, capability);
+    }
+
+    // A solo SaaS agent owns their own workspace/projects even before creating
+    // an organization record. Backend RLS still validates row ownership.
+    return identity.isAgent && hasOrganizationCapability('owner', capability);
+  }, [identity.isAdmin, identity.isAgent, panel.context, panel.organizationRole]);
+
+  const hasFeature = useCallback((feature: PlanFeature) => {
+    if (panel.context === 'plataforma') return identity.isAdmin;
+    if (panel.context === 'broker' && BROKER_FEATURES.includes(feature)) return true;
+    if (panel.context === 'buyer') return feature === 'marketplace';
+    return hasPlanFeature(subscription.plan, feature);
+  }, [identity.isAdmin, panel.context, subscription.plan]);
+
+  const canEnterArea = useCallback((area: 'buyer' | 'agent' | 'admin') => {
+    if (area === 'buyer') return identity.isBuyer;
+    if (area === 'admin') return identity.isAdmin;
+    return identity.isAgent || identity.isAdmin;
+  }, [identity.isAdmin, identity.isAgent, identity.isBuyer]);
+
+  return {
+    context: panel.context,
+    contexts: panel.options,
+    organization: panel.organization,
+    organizationRole: panel.organizationRole,
+    brokerProfile: panel.brokerProfile,
+    plan: subscription.plan,
+    limits: subscription.planDetails,
+    isAdmin: identity.isAdmin,
+    isAgent: identity.isAgent,
+    isBuyer: identity.isBuyer,
+    isBroker: Boolean(panel.brokerProfile?.is_active),
+    can,
+    hasFeature,
+    canEnterArea,
+    isLoading: panel.isLoading || subscription.isLoading || identity.isLoading,
+  };
+};
