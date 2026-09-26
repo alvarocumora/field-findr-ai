@@ -45,9 +45,11 @@ const AppRouter = () => (
                     key={entry.id}
                     path={entry.path}
                     element={
-                      <RoutePolicyGate policy={entry.policy}>
-                        {entry.element}
-                      </RoutePolicyGate>
+                      entry.policy ? (
+                        <RoutePolicyGate policy={entry.policy}>
+                          {entry.element}
+                        </RoutePolicyGate>
+                      ) : entry.element
                     }
                   />
                 ))}
