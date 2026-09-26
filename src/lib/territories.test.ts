@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getChileCommuneOptions,
   groupByCanonicalRegion,
+  resolveChileCommune,
   resolveRegionTerritory,
   sameRegion,
   territorySlug,
@@ -14,6 +16,7 @@ describe('territories', () => {
     expect(a.key).toBe('maule');
     expect(b.key).toBe('maule');
     expect(a.displayName).toBe('Región del Maule');
+    expect(a.regionIso).toBe('CL-ML');
     expect(sameRegion('Maule', 'Región del Maule')).toBe(true);
   });
 
@@ -32,5 +35,27 @@ describe('territories', () => {
     expect(groups).toHaveLength(2);
     const maule = groups.find((group) => group.territory.key === 'maule');
     expect(maule?.items).toHaveLength(2);
+  });
+
+  it('resuelve Hualañé con provincia y CUT', () => {
+    const result = resolveChileCommune('Hualañe', 'Maule');
+    expect(result?.commune).toBe('Hualañé');
+    expect(result?.communeCode).toBe('07302');
+    expect(result?.province).toBe('Curicó');
+    expect(result?.region.regionIso).toBe('CL-ML');
+  });
+
+  it('resuelve Licantén dentro de Curicó y Maule', () => {
+    const result = resolveChileCommune('Licanten', 'Región del Maule');
+    expect(result?.commune).toBe('Licantén');
+    expect(result?.communeCode).toBe('07303');
+    expect(result?.province).toBe('Curicó');
+    expect(result?.region.displayName).toBe('Región del Maule');
+  });
+
+  it('entrega comunas canónicas de Maule para formularios', () => {
+    const options = getChileCommuneOptions('Maule');
+    expect(options.find((option) => option.value === 'Hualañé')?.code).toBe('07302');
+    expect(options.find((option) => option.value === 'Licantén')?.code).toBe('07303');
   });
 });
