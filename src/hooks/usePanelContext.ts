@@ -38,7 +38,8 @@ const readStoredContext = (): AppContext | null => {
  */
 export const usePanelContext = () => {
   const { isAdmin, isAgent, isBuyer, isLoading: rolesLoading } = useSmartRedirect();
-  const { plan, isLoading: planLoading } = useCurrentPlan();
+  const planState = useCurrentPlan();
+  const { plan, planDetails, isLoading: planLoading } = planState;
   const { data: team, isLoading: organizationLoading } = useMyOrganization();
   const { data: brokerProfile, isLoading: brokerLoading } = useMyBrokerProfile();
   const { pathname } = useLocation();
@@ -101,6 +102,7 @@ export const usePanelContext = () => {
     needsChoice: !hasStoredContext && options.length > 1,
     planIsAgency,
     plan,
+    planDetails,
     organizationRole: team?.organizationRole ?? null,
     organization: team?.organization ?? null,
     brokerProfile: brokerProfile ?? null,
