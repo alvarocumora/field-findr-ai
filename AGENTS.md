@@ -1,0 +1,1 @@
+- Enlaces compartibles: siempre vía `src/lib/publicUrls.ts` (getCanonicalUrl/getShareUrl); URLs de auth y pagos usan window.location.origin. Why: previews no deben filtrar dominios lovable.app.
