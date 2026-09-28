@@ -204,6 +204,7 @@ DECLARE
   v_organization_id uuid;
   v_sale_amount numeric;
   v_sale_id uuid;
+  v_existing_reservation_id uuid;
   v_closing_agent uuid;
   v_originator uuid;
 BEGIN
@@ -254,8 +255,8 @@ BEGIN
   v_closing_agent := COALESCE(v_closing_agent, auth.uid(), NEW.user_id);
   v_originator := COALESCE(v_res.referring_agent_id, v_closing_agent);
 
-  SELECT sale.id
-    INTO v_sale_id
+  SELECT sale.id, sale.reservation_id
+    INTO v_sale_id, v_existing_reservation_id
   FROM public.sales AS sale
   WHERE sale.reservation_id = v_res.id
      OR (sale.lot_id = NEW.id AND sale.status = 'closed')
@@ -264,6 +265,12 @@ BEGIN
     sale.closed_at DESC
   LIMIT 1
   FOR UPDATE;
+
+  IF v_sale_id IS NOT NULL
+     AND v_existing_reservation_id IS NOT NULL
+     AND v_existing_reservation_id <> v_res.id THEN
+    RAISE EXCEPTION 'Lot already has a canonical sale from another reservation';
+  END IF;
 
   IF v_sale_id IS NULL THEN
     INSERT INTO public.sales (
@@ -502,10 +509,7 @@ BEGIN
       buyer_email = COALESCE(NEW.buyer_email, buyer_email),
       buyer_phone = COALESCE(NEW.buyer_phone, buyer_phone),
       buyer_national_id = COALESCE(NEW.buyer_national_id, buyer_national_id),
-      sale_amount = NEW.sale_amount,
-      currency = COALESCE(NEW.currency, currency),
       notes = COALESCE(NEW.notes, notes),
-      closed_at = COALESCE(closed_at, NEW.closed_at, now()),
       updated_at = now()
     WHERE id = v_sale_id;
   END IF;
