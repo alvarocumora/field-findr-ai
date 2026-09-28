@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -23,11 +22,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useProjects } from '@/hooks/useProjects';
-import { useLots } from '@/hooks/useLots';
-import { useReservations } from '@/hooks/useReservations';
-import { resolveChileCommune, resolveRegionTerritory } from '@/lib/territories';
+import { useProjectWorkspace } from '@/hooks/useProjectWorkspace';
 import { withProjectScope } from '@/hooks/useWorkspaceScope';
+import {
+  PROJECT_WORKSPACE_TABS,
+  resolveProjectWorkspaceTab,
+  type ProjectWorkspaceTab,
+} from '@/lib/projects/projectWorkspace';
 
 const money = (amount: number) =>
   new Intl.NumberFormat('es-CL', {
@@ -62,100 +63,28 @@ const reservationStatus: Record<string, string> = {
   cancelled: 'Cancelada',
 };
 
-const workspaceTabs = [
-  'resumen',
-  'inventario',
-  'masterplan',
-  'publicacion',
-  'comercial',
-  'reservas',
-  'ventas',
-  'documentos',
-  'reportes',
-  'configuracion',
-] as const;
-
-type WorkspaceTab = (typeof workspaceTabs)[number];
-
 const ProjectWorkspace = () => {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const requestedTab = searchParams.get('tab') as WorkspaceTab | null;
-  const activeTab: WorkspaceTab = requestedTab && workspaceTabs.includes(requestedTab) ? requestedTab : 'resumen';
+  const activeTab = resolveProjectWorkspaceTab(searchParams.get('tab'));
 
-  const { projects, isLoading: projectsLoading } = useProjects();
-  const project = projects.find((item) => item.id === projectId);
-  const { lots, isLoading: lotsLoading } = useLots(projectId || undefined);
-  const { data: reservations = [], isLoading: reservationsLoading } = useReservations(projectId || undefined);
+  const {
+    project,
+    lots,
+    reservations,
+    activeReservations,
+    territory,
+    communeTerritory,
+    spatial,
+    docs,
+    stats,
+    readiness,
+    publicPath,
+    isLoading,
+    reservationsLoading,
+  } = useProjectWorkspace(projectId);
 
-  const territory = useMemo(
-    () => resolveRegionTerritory(project?.region || 'Sin región', project?.country || 'Chile'),
-    [project?.region, project?.country],
-  );
-  const communeTerritory = useMemo(
-    () => resolveChileCommune(project?.city, project?.region),
-    [project?.city, project?.region],
-  );
-
-  const spatial = useMemo(() => {
-    const config = project?.landing_config;
-    if (!config || typeof config !== 'object' || Array.isArray(config)) return null;
-    const value = (config as Record<string, unknown>).spatial;
-    return value && typeof value === 'object' && !Array.isArray(value)
-      ? value as Record<string, unknown>
-      : null;
-  }, [project?.landing_config]);
-
-  const docs = useMemo(() => {
-    const projectAny = project as any;
-    const config = projectAny?.landing_config;
-    const configured = config && typeof config === 'object' ? config.documents : null;
-    const candidates = [
-      ...(Array.isArray(projectAny?.legal_documents) ? projectAny.legal_documents : []),
-      ...(Array.isArray(configured) ? configured : []),
-    ];
-    return candidates.filter(Boolean);
-  }, [project]);
-
-  const stats = useMemo(() => {
-    const available = lots.filter((lot) => lot.status === 'available');
-    const reserved = lots.filter((lot) => lot.status === 'reserved');
-    const sold = lots.filter((lot) => lot.status === 'sold');
-    const pendingReservations = (reservations as any[]).filter((reservation) => reservation.status === 'pending_payment');
-    const paidReservations = (reservations as any[]).filter((reservation) => reservation.status === 'paid');
-    return {
-      total: lots.length,
-      available: available.length,
-      reserved: reserved.length,
-      sold: sold.length,
-      soldPct: lots.length ? Math.round((sold.length / lots.length) * 100) : 0,
-      inventoryValue: available.reduce((sum, lot) => sum + Number(lot.price || 0), 0),
-      soldValue: sold.reduce((sum, lot) => sum + Number(lot.price || 0), 0),
-      pendingReservations: pendingReservations.length,
-      paidReservations: paidReservations.length,
-      deposited: (reservations as any[])
-        .filter((reservation) => ['paid', 'converted'].includes(reservation.status))
-        .reduce((sum, reservation) => sum + Number(reservation.reservation_amount || 0), 0),
-    };
-  }, [lots, reservations]);
-
-  const readiness = useMemo(() => {
-    if (!project) return { checks: [], score: 0 };
-    const checks = [
-      { label: 'Territorio definido', ready: Boolean(project.region && project.country) },
-      { label: 'Fuente KMZ / espacial', ready: Boolean(project.kmz_file_url || spatial) },
-      { label: 'Inventario cargado', ready: lots.length > 0 },
-      { label: 'Precios completos', ready: lots.length > 0 && lots.every((lot) => Number(lot.price || 0) > 0 || lot.status === 'sold') },
-      { label: 'Imágenes del proyecto', ready: Boolean(project.images?.length) },
-      { label: 'Proyecto publicado', ready: project.status === 'active' },
-    ];
-    return {
-      checks,
-      score: Math.round((checks.filter((check) => check.ready).length / checks.length) * 100),
-    };
-  }, [project, lots, spatial]);
-
-  if (projectsLoading || lotsLoading) {
+  if (isLoading) {
     return (
       <div className="space-y-5 p-4 md:p-6">
         <Skeleton className="h-10 w-64" />
@@ -178,16 +107,11 @@ const ProjectWorkspace = () => {
     );
   }
 
-  const projectAny = project as any;
-  const publicPath = projectAny.slug ? `/p/${projectAny.slug}` : `/proyecto/${project.id}/experiencia`;
-  const activeReservations = (reservations as any[]).filter((reservation) =>
-    ['pending_payment', 'paid'].includes(reservation.status),
-  );
-
   const setTab = (tab: string) => {
     const next = new URLSearchParams(searchParams);
-    if (tab === 'resumen') next.delete('tab');
-    else next.set('tab', tab);
+    const normalized = resolveProjectWorkspaceTab(tab);
+    if (normalized === 'resumen') next.delete('tab');
+    else next.set('tab', normalized);
     setSearchParams(next, { replace: true });
   };
 
@@ -221,16 +145,22 @@ const ProjectWorkspace = () => {
       <Tabs value={activeTab} onValueChange={setTab} className="space-y-4">
         <div className="overflow-x-auto pb-1">
           <TabsList className="h-auto min-w-max justify-start gap-1 bg-muted/60 p-1">
-            <TabsTrigger value="resumen">Resumen</TabsTrigger>
-            <TabsTrigger value="inventario">Inventario</TabsTrigger>
-            <TabsTrigger value="masterplan">Masterplan</TabsTrigger>
-            <TabsTrigger value="publicacion">Publicación</TabsTrigger>
-            <TabsTrigger value="comercial">Comercial</TabsTrigger>
-            <TabsTrigger value="reservas">Reservas</TabsTrigger>
-            <TabsTrigger value="ventas">Ventas</TabsTrigger>
-            <TabsTrigger value="documentos">Documentos</TabsTrigger>
-            <TabsTrigger value="reportes">Reportes</TabsTrigger>
-            <TabsTrigger value="configuracion">Configuración</TabsTrigger>
+            {PROJECT_WORKSPACE_TABS.map((tab) => (
+              <TabsTrigger key={tab} value={tab}>
+                {{
+                  resumen: 'Resumen',
+                  inventario: 'Inventario',
+                  masterplan: 'Masterplan',
+                  publicacion: 'Publicación',
+                  comercial: 'Comercial',
+                  reservas: 'Reservas',
+                  ventas: 'Ventas',
+                  documentos: 'Documentos',
+                  reportes: 'Reportes',
+                  configuracion: 'Configuración',
+                } satisfies Record<ProjectWorkspaceTab, string>}[tab]}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </div>
 
