@@ -4,6 +4,7 @@ import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/type
 import { useAuth } from './useAuth';
 import { useMyOrganization } from './useMyOrganization';
 import { toast } from 'sonner';
+import { mergeProjectScopes, resolveProjectDataScope } from '@/lib/projects/projectScope';
 
 export type Project = Tables<'projects'>;
 export type ProjectInsert = TablesInsert<'projects'>;
@@ -13,25 +14,61 @@ export const useProjects = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: team } = useMyOrganization();
-  // Proyectos del equipo completo (RLS ya permite verlos); mientras se
-  // resuelve la organización caemos a los propios para no quedar en blanco.
-  const teamIds = team?.teamUserIds?.length ? team.teamUserIds : user?.id ? [user.id] : [];
+  const projectScope = resolveProjectDataScope(
+    team?.organization?.id,
+    user?.id,
+    team?.teamUserIds,
+  );
 
   const { data: projects = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['projects', user?.id, teamIds],
+    queryKey: [
+      'projects',
+      user?.id,
+      projectScope.organizationId ?? 'solo',
+      projectScope.legacyOwnerIds,
+    ],
     queryFn: async () => {
       if (!user?.id) return [];
+
+      // organization_id is the canonical tenant boundary. During migration we
+      // also include old rows that still have no organization_id and belong to
+      // a member of the active workspace. RLS remains the security boundary.
+      if (projectScope.organizationId) {
+        const [organizationProjects, legacyProjects] = await Promise.all([
+          supabase
+            .from('projects')
+            .select('*')
+            .eq('organization_id', projectScope.organizationId)
+            .order('created_at', { ascending: false }),
+          projectScope.legacyOwnerIds.length
+            ? supabase
+                .from('projects')
+                .select('*')
+                .is('organization_id', null)
+                .in('user_id', projectScope.legacyOwnerIds)
+                .order('created_at', { ascending: false })
+            : Promise.resolve({ data: [] as Project[], error: null }),
+        ]);
+
+        if (organizationProjects.error) throw organizationProjects.error;
+        if (legacyProjects.error) throw legacyProjects.error;
+
+        return mergeProjectScopes(
+          (organizationProjects.data ?? []) as Project[],
+          (legacyProjects.data ?? []) as Project[],
+        );
+      }
 
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .in('user_id', teamIds)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data as Project[];
     },
-    enabled: !!user?.id && teamIds.length > 0,
+    enabled: !!user?.id,
   });
 
   const createProject = useMutation({
@@ -40,7 +77,11 @@ export const useProjects = () => {
       
       const { data, error } = await supabase
         .from('projects')
-        .insert({ ...project, user_id: user.id })
+        .insert({
+          ...project,
+          user_id: user.id,
+          organization_id: projectScope.organizationId,
+        })
         .select()
         .single();
 
