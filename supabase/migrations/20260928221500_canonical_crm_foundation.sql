@@ -136,7 +136,23 @@ AS $fn$
 DECLARE
   v_project_id uuid;
   v_organization_id uuid;
+  v_contact_organization_id uuid;
 BEGIN
+  SELECT contact.organization_id
+    INTO v_contact_organization_id
+  FROM public.contacts AS contact
+  WHERE contact.id = NEW.contact_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'CRM opportunity contact not found';
+  END IF;
+
+  IF NEW.organization_id IS NULL THEN
+    NEW.organization_id := v_contact_organization_id;
+  ELSIF NEW.organization_id IS DISTINCT FROM v_contact_organization_id THEN
+    RAISE EXCEPTION 'CRM opportunity organization does not match contact';
+  END IF;
+
   IF NEW.lot_id IS NOT NULL THEN
     SELECT lot.project_id
       INTO v_project_id
@@ -171,6 +187,10 @@ BEGIN
     END IF;
   END IF;
 
+  IF NEW.organization_id IS DISTINCT FROM v_contact_organization_id THEN
+    RAISE EXCEPTION 'CRM opportunity contact and project must share organization scope';
+  END IF;
+
   IF TG_OP = 'UPDATE' AND OLD.status IS DISTINCT FROM NEW.status THEN
     NEW.stage_changed_at := now();
   END IF;
@@ -200,6 +220,7 @@ DECLARE
   v_contact_id uuid;
   v_project_id uuid;
   v_organization_id uuid;
+  v_contact_organization_id uuid;
 BEGIN
   IF NEW.opportunity_id IS NOT NULL THEN
     SELECT opportunity.contact_id,
@@ -230,7 +251,26 @@ BEGIN
     ELSIF NEW.organization_id IS DISTINCT FROM v_organization_id THEN
       RAISE EXCEPTION 'CRM activity organization does not match opportunity';
     END IF;
-  ELSIF NEW.project_id IS NOT NULL THEN
+  END IF;
+
+  IF NEW.contact_id IS NOT NULL AND NEW.opportunity_id IS NULL THEN
+    SELECT contact.organization_id
+      INTO v_contact_organization_id
+    FROM public.contacts AS contact
+    WHERE contact.id = NEW.contact_id;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'CRM activity contact not found';
+    END IF;
+
+    IF NEW.organization_id IS NULL THEN
+      NEW.organization_id := v_contact_organization_id;
+    ELSIF NEW.organization_id IS DISTINCT FROM v_contact_organization_id THEN
+      RAISE EXCEPTION 'CRM activity organization does not match contact';
+    END IF;
+  END IF;
+
+  IF NEW.project_id IS NOT NULL THEN
     SELECT project.organization_id
       INTO v_organization_id
     FROM public.projects AS project
@@ -274,8 +314,10 @@ DROP POLICY IF EXISTS "CRM contacts read" ON public.contacts;
 CREATE POLICY "CRM contacts read"
 ON public.contacts FOR SELECT TO authenticated
 USING (
-  created_by = auth.uid()
-  OR assigned_to = auth.uid()
+  (
+    organization_id IS NULL
+    AND (created_by = auth.uid() OR assigned_to = auth.uid())
+  )
   OR (
     organization_id IS NOT NULL
     AND public.organization_has_capability(organization_id, 'crm.read')
@@ -297,16 +339,20 @@ DROP POLICY IF EXISTS "CRM contacts update" ON public.contacts;
 CREATE POLICY "CRM contacts update"
 ON public.contacts FOR UPDATE TO authenticated
 USING (
-  created_by = auth.uid()
-  OR assigned_to = auth.uid()
+  (
+    organization_id IS NULL
+    AND (created_by = auth.uid() OR assigned_to = auth.uid())
+  )
   OR (
     organization_id IS NOT NULL
     AND public.organization_has_capability(organization_id, 'crm.write')
   )
 )
 WITH CHECK (
-  created_by = auth.uid()
-  OR assigned_to = auth.uid()
+  (
+    organization_id IS NULL
+    AND (created_by = auth.uid() OR assigned_to = auth.uid())
+  )
   OR (
     organization_id IS NOT NULL
     AND public.organization_has_capability(organization_id, 'crm.write')
@@ -317,7 +363,10 @@ DROP POLICY IF EXISTS "CRM contacts delete" ON public.contacts;
 CREATE POLICY "CRM contacts delete"
 ON public.contacts FOR DELETE TO authenticated
 USING (
-  created_by = auth.uid()
+  (
+    organization_id IS NULL
+    AND created_by = auth.uid()
+  )
   OR (
     organization_id IS NOT NULL
     AND public.organization_has_capability(organization_id, 'crm.write')
@@ -328,8 +377,11 @@ DROP POLICY IF EXISTS "CRM opportunities read" ON public.opportunities;
 CREATE POLICY "CRM opportunities read"
 ON public.opportunities FOR SELECT TO authenticated
 USING (
-  created_by = auth.uid()
-  OR assigned_to = auth.uid()
+  (
+    organization_id IS NULL
+    AND project_id IS NULL
+    AND (created_by = auth.uid() OR assigned_to = auth.uid())
+  )
   OR (
     organization_id IS NOT NULL
     AND public.organization_has_capability(organization_id, 'crm.read')
@@ -362,8 +414,11 @@ DROP POLICY IF EXISTS "CRM opportunities update" ON public.opportunities;
 CREATE POLICY "CRM opportunities update"
 ON public.opportunities FOR UPDATE TO authenticated
 USING (
-  created_by = auth.uid()
-  OR assigned_to = auth.uid()
+  (
+    organization_id IS NULL
+    AND project_id IS NULL
+    AND (created_by = auth.uid() OR assigned_to = auth.uid())
+  )
   OR (
     organization_id IS NOT NULL
     AND public.organization_has_capability(organization_id, 'crm.write')
@@ -374,8 +429,11 @@ USING (
   )
 )
 WITH CHECK (
-  created_by = auth.uid()
-  OR assigned_to = auth.uid()
+  (
+    organization_id IS NULL
+    AND project_id IS NULL
+    AND (created_by = auth.uid() OR assigned_to = auth.uid())
+  )
   OR (
     organization_id IS NOT NULL
     AND public.organization_has_capability(organization_id, 'crm.write')
@@ -390,7 +448,11 @@ DROP POLICY IF EXISTS "CRM opportunities delete" ON public.opportunities;
 CREATE POLICY "CRM opportunities delete"
 ON public.opportunities FOR DELETE TO authenticated
 USING (
-  created_by = auth.uid()
+  (
+    organization_id IS NULL
+    AND project_id IS NULL
+    AND created_by = auth.uid()
+  )
   OR (
     organization_id IS NOT NULL
     AND public.organization_has_capability(organization_id, 'crm.write')
@@ -405,7 +467,11 @@ DROP POLICY IF EXISTS "CRM activities read" ON public.activities;
 CREATE POLICY "CRM activities read"
 ON public.activities FOR SELECT TO authenticated
 USING (
-  actor_id = auth.uid()
+  (
+    organization_id IS NULL
+    AND project_id IS NULL
+    AND actor_id = auth.uid()
+  )
   OR (
     organization_id IS NOT NULL
     AND public.organization_has_capability(organization_id, 'crm.read')
@@ -438,7 +504,11 @@ DROP POLICY IF EXISTS "CRM activities update" ON public.activities;
 CREATE POLICY "CRM activities update"
 ON public.activities FOR UPDATE TO authenticated
 USING (
-  actor_id = auth.uid()
+  (
+    organization_id IS NULL
+    AND project_id IS NULL
+    AND actor_id = auth.uid()
+  )
   OR (
     organization_id IS NOT NULL
     AND public.organization_has_capability(organization_id, 'crm.write')
@@ -449,7 +519,11 @@ USING (
   )
 )
 WITH CHECK (
-  actor_id = auth.uid()
+  (
+    organization_id IS NULL
+    AND project_id IS NULL
+    AND actor_id = auth.uid()
+  )
   OR (
     organization_id IS NOT NULL
     AND public.organization_has_capability(organization_id, 'crm.write')
@@ -464,7 +538,11 @@ DROP POLICY IF EXISTS "CRM activities delete" ON public.activities;
 CREATE POLICY "CRM activities delete"
 ON public.activities FOR DELETE TO authenticated
 USING (
-  actor_id = auth.uid()
+  (
+    organization_id IS NULL
+    AND project_id IS NULL
+    AND actor_id = auth.uid()
+  )
   OR (
     organization_id IS NOT NULL
     AND public.organization_has_capability(organization_id, 'crm.write')
