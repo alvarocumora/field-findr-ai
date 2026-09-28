@@ -223,6 +223,13 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  -- Only capture the reservation conversion happening in this transaction.
+  -- This prevents later edits to a historically sold lot from creating or
+  -- rewriting a financial transaction.
+  IF v_res.converted_at IS NULL OR v_res.converted_at IS DISTINCT FROM now() THEN
+    RETURN NEW;
+  END IF;
+
   v_sale_amount := NULLIF(NEW.price, 0);
   IF v_sale_amount IS NULL THEN
     RETURN NEW;
@@ -321,10 +328,7 @@ BEGIN
       buyer_email = COALESCE(v_res.buyer_email, buyer_email),
       buyer_phone = COALESCE(v_res.buyer_phone, buyer_phone),
       buyer_national_id = COALESCE(v_res.buyer_rut, buyer_national_id),
-      sale_amount = v_sale_amount,
-      currency = COALESCE(v_res.currency, currency),
       notes = COALESCE(v_res.notes, notes),
-      closed_at = COALESCE(closed_at, v_res.converted_at, NEW.sale_date, now()),
       updated_at = now()
     WHERE id = v_sale_id;
   END IF;
@@ -338,7 +342,7 @@ FROM PUBLIC, anon, authenticated;
 
 DROP TRIGGER IF EXISTS trg_capture_sale_from_sold_lot ON public.lots;
 CREATE TRIGGER trg_capture_sale_from_sold_lot
-AFTER UPDATE OF status, price, sale_date ON public.lots
+AFTER UPDATE OF price ON public.lots
 FOR EACH ROW EXECUTE FUNCTION public.capture_sale_from_sold_lot();
 
 -- sales_closings remains the contract/closing workflow. When it reaches closed,
@@ -359,6 +363,12 @@ DECLARE
   v_originator uuid;
 BEGIN
   IF NEW.status <> 'closed' THEN
+    RETURN NEW;
+  END IF;
+
+  -- The workflow may still edit notes/documents after closing. The canonical
+  -- transaction is written only on the transition to closed (or insert closed).
+  IF TG_OP = 'UPDATE' AND OLD.status = 'closed' THEN
     RETURN NEW;
   END IF;
 
