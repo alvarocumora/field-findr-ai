@@ -203,6 +203,7 @@ DECLARE
   v_res record;
   v_organization_id uuid;
   v_sale_amount numeric;
+  v_sale_id uuid;
   v_closing_agent uuid;
   v_originator uuid;
 BEGIN
@@ -232,6 +233,10 @@ BEGIN
   FROM public.projects AS project
   WHERE project.id = NEW.project_id;
 
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Canonical sale project not found';
+  END IF;
+
   SELECT COALESCE(commission.closing_agent_id, commission.agent_id)
     INTO v_closing_agent
   FROM public.agent_commissions AS commission
@@ -242,70 +247,87 @@ BEGIN
   v_closing_agent := COALESCE(v_closing_agent, auth.uid(), NEW.user_id);
   v_originator := COALESCE(v_res.referring_agent_id, v_closing_agent);
 
-  INSERT INTO public.sales (
-    organization_id,
-    project_id,
-    lot_id,
-    listing_id,
-    lead_id,
-    reservation_id,
-    source_quote_id,
-    closing_agent_id,
-    originator_agent_id,
-    referring_agent_id,
-    buyer_name,
-    buyer_email,
-    buyer_phone,
-    buyer_national_id,
-    sale_amount,
-    currency,
-    source,
-    status,
-    notes,
-    closed_at
-  )
-  VALUES (
-    v_organization_id,
-    NEW.project_id,
-    NEW.id,
-    NEW.listing_id,
-    v_res.lead_id,
-    v_res.id,
-    v_res.source_quote_id,
-    v_closing_agent,
-    v_originator,
-    v_res.referring_agent_id,
-    v_res.buyer_name,
-    v_res.buyer_email,
-    v_res.buyer_phone,
-    v_res.buyer_rut,
-    v_sale_amount,
-    COALESCE(v_res.currency, 'CLP'),
-    'reservation',
-    'closed',
-    v_res.notes,
-    COALESCE(v_res.converted_at, NEW.sale_date, now())
-  )
-  ON CONFLICT (reservation_id)
-  DO UPDATE SET
-    organization_id = EXCLUDED.organization_id,
-    project_id = EXCLUDED.project_id,
-    lot_id = EXCLUDED.lot_id,
-    listing_id = EXCLUDED.listing_id,
-    lead_id = COALESCE(EXCLUDED.lead_id, public.sales.lead_id),
-    source_quote_id = COALESCE(EXCLUDED.source_quote_id, public.sales.source_quote_id),
-    closing_agent_id = COALESCE(public.sales.closing_agent_id, EXCLUDED.closing_agent_id),
-    originator_agent_id = COALESCE(public.sales.originator_agent_id, EXCLUDED.originator_agent_id),
-    referring_agent_id = COALESCE(public.sales.referring_agent_id, EXCLUDED.referring_agent_id),
-    buyer_name = COALESCE(EXCLUDED.buyer_name, public.sales.buyer_name),
-    buyer_email = COALESCE(EXCLUDED.buyer_email, public.sales.buyer_email),
-    buyer_phone = COALESCE(EXCLUDED.buyer_phone, public.sales.buyer_phone),
-    buyer_national_id = COALESCE(EXCLUDED.buyer_national_id, public.sales.buyer_national_id),
-    sale_amount = EXCLUDED.sale_amount,
-    currency = EXCLUDED.currency,
-    notes = COALESCE(EXCLUDED.notes, public.sales.notes),
-    closed_at = COALESCE(public.sales.closed_at, EXCLUDED.closed_at),
-    updated_at = now();
+  SELECT sale.id
+    INTO v_sale_id
+  FROM public.sales AS sale
+  WHERE sale.reservation_id = v_res.id
+     OR (sale.lot_id = NEW.id AND sale.status = 'closed')
+  ORDER BY
+    CASE WHEN sale.reservation_id = v_res.id THEN 0 ELSE 1 END,
+    sale.closed_at DESC
+  LIMIT 1
+  FOR UPDATE;
+
+  IF v_sale_id IS NULL THEN
+    INSERT INTO public.sales (
+      organization_id,
+      project_id,
+      lot_id,
+      listing_id,
+      lead_id,
+      reservation_id,
+      source_quote_id,
+      closing_agent_id,
+      originator_agent_id,
+      referring_agent_id,
+      buyer_name,
+      buyer_email,
+      buyer_phone,
+      buyer_national_id,
+      sale_amount,
+      currency,
+      source,
+      status,
+      notes,
+      closed_at
+    )
+    VALUES (
+      v_organization_id,
+      NEW.project_id,
+      NEW.id,
+      NEW.listing_id,
+      v_res.lead_id,
+      v_res.id,
+      v_res.source_quote_id,
+      v_closing_agent,
+      v_originator,
+      v_res.referring_agent_id,
+      v_res.buyer_name,
+      v_res.buyer_email,
+      v_res.buyer_phone,
+      v_res.buyer_rut,
+      v_sale_amount,
+      COALESCE(v_res.currency, 'CLP'),
+      'reservation',
+      'closed',
+      v_res.notes,
+      COALESCE(v_res.converted_at, NEW.sale_date, now())
+    )
+    RETURNING id INTO v_sale_id;
+  ELSE
+    UPDATE public.sales
+    SET
+      organization_id = v_organization_id,
+      project_id = NEW.project_id,
+      lot_id = NEW.id,
+      listing_id = COALESCE(NEW.listing_id, listing_id),
+      lead_id = COALESCE(v_res.lead_id, lead_id),
+      reservation_id = COALESCE(reservation_id, v_res.id),
+      source_quote_id = COALESCE(v_res.source_quote_id, source_quote_id),
+      closing_agent_id = COALESCE(closing_agent_id, v_closing_agent),
+      originator_agent_id = COALESCE(originator_agent_id, v_originator),
+      referring_agent_id = COALESCE(referring_agent_id, v_res.referring_agent_id),
+      buyer_name = COALESCE(v_res.buyer_name, buyer_name),
+      buyer_email = COALESCE(v_res.buyer_email, buyer_email),
+      buyer_phone = COALESCE(v_res.buyer_phone, buyer_phone),
+      buyer_national_id = COALESCE(v_res.buyer_rut, buyer_national_id),
+      sale_amount = v_sale_amount,
+      currency = COALESCE(v_res.currency, currency),
+      notes = COALESCE(v_res.notes, notes),
+      closed_at = COALESCE(closed_at, v_res.converted_at, NEW.sale_date, now()),
+      updated_at = now()
+    WHERE id = v_sale_id;
+  END IF;
 
   RETURN NEW;
 END;
@@ -329,7 +351,11 @@ SET search_path = public
 AS $fn$
 DECLARE
   v_sale_id uuid;
+  v_existing_reservation_id uuid;
   v_organization_id uuid;
+  v_lot_project_id uuid;
+  v_reservation_lot_id uuid;
+  v_closing_agent uuid;
   v_originator uuid;
 BEGIN
   IF NEW.status <> 'closed' THEN
@@ -341,6 +367,32 @@ BEGIN
     RAISE EXCEPTION 'Closed sales workflow requires project, lot and positive sale amount';
   END IF;
 
+  IF auth.uid() IS NOT NULL
+     AND NOT public.can_access_project(NEW.project_id, 'sales.write') THEN
+    RAISE EXCEPTION 'Sales write access denied for project';
+  END IF;
+
+  SELECT lot.project_id
+    INTO v_lot_project_id
+  FROM public.lots AS lot
+  WHERE lot.id = NEW.lot_id;
+
+  IF NOT FOUND OR v_lot_project_id <> NEW.project_id THEN
+    RAISE EXCEPTION 'Sales closing lot does not belong to project';
+  END IF;
+
+  IF NEW.reservation_id IS NOT NULL THEN
+    SELECT reservation.lot_id
+      INTO v_reservation_lot_id
+    FROM public.reservations AS reservation
+    WHERE reservation.id = NEW.reservation_id
+      AND reservation.status IN ('paid', 'converted');
+
+    IF NOT FOUND OR v_reservation_lot_id <> NEW.lot_id THEN
+      RAISE EXCEPTION 'Sales closing reservation does not match lot or is not payable';
+    END IF;
+  END IF;
+
   SELECT project.organization_id
     INTO v_organization_id
   FROM public.projects AS project
@@ -350,25 +402,35 @@ BEGIN
     RAISE EXCEPTION 'Sales closing project not found';
   END IF;
 
+  v_closing_agent := COALESCE(auth.uid(), NEW.user_id);
+  v_originator := COALESCE(NEW.referring_agent_id, v_closing_agent);
+
   IF NEW.reservation_id IS NOT NULL THEN
-    SELECT sale.id
-      INTO v_sale_id
+    SELECT sale.id, sale.reservation_id
+      INTO v_sale_id, v_existing_reservation_id
     FROM public.sales AS sale
     WHERE sale.reservation_id = NEW.reservation_id
-    LIMIT 1;
+    LIMIT 1
+    FOR UPDATE;
   END IF;
 
   IF v_sale_id IS NULL THEN
-    SELECT sale.id
-      INTO v_sale_id
+    SELECT sale.id, sale.reservation_id
+      INTO v_sale_id, v_existing_reservation_id
     FROM public.sales AS sale
     WHERE sale.lot_id = NEW.lot_id
       AND sale.status = 'closed'
     ORDER BY sale.closed_at DESC
-    LIMIT 1;
+    LIMIT 1
+    FOR UPDATE;
   END IF;
 
-  v_originator := COALESCE(NEW.referring_agent_id, NEW.user_id);
+  IF v_sale_id IS NOT NULL
+     AND NEW.reservation_id IS NOT NULL
+     AND v_existing_reservation_id IS NOT NULL
+     AND v_existing_reservation_id <> NEW.reservation_id THEN
+    RAISE EXCEPTION 'Lot already has a canonical sale from another reservation';
+  END IF;
 
   IF v_sale_id IS NULL THEN
     INSERT INTO public.sales (
@@ -399,7 +461,7 @@ BEGIN
       NEW.listing_id,
       NEW.lead_id,
       NEW.reservation_id,
-      NEW.user_id,
+      v_closing_agent,
       v_originator,
       NEW.referring_agent_id,
       NEW.buyer_name,
@@ -422,8 +484,8 @@ BEGIN
       lot_id = NEW.lot_id,
       listing_id = COALESCE(NEW.listing_id, listing_id),
       lead_id = COALESCE(NEW.lead_id, lead_id),
-      reservation_id = COALESCE(NEW.reservation_id, reservation_id),
-      closing_agent_id = COALESCE(NEW.user_id, closing_agent_id),
+      reservation_id = COALESCE(reservation_id, NEW.reservation_id),
+      closing_agent_id = COALESCE(closing_agent_id, v_closing_agent),
       originator_agent_id = COALESCE(originator_agent_id, v_originator),
       referring_agent_id = COALESCE(referring_agent_id, NEW.referring_agent_id),
       buyer_name = COALESCE(NEW.buyer_name, buyer_name),
@@ -433,7 +495,7 @@ BEGIN
       sale_amount = NEW.sale_amount,
       currency = COALESCE(NEW.currency, currency),
       notes = COALESCE(NEW.notes, notes),
-      closed_at = COALESCE(NEW.closed_at, closed_at),
+      closed_at = COALESCE(closed_at, NEW.closed_at, now()),
       updated_at = now()
     WHERE id = v_sale_id;
   END IF;
@@ -460,6 +522,8 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $fn$
+DECLARE
+  v_sale_id uuid;
 BEGIN
   IF NEW.sale_id IS NOT NULL THEN
     RETURN NEW;
@@ -467,15 +531,15 @@ BEGIN
 
   IF NEW.reservation_id IS NOT NULL THEN
     SELECT sale.id
-      INTO NEW.sale_id
+      INTO v_sale_id
     FROM public.sales AS sale
     WHERE sale.reservation_id = NEW.reservation_id
     LIMIT 1;
   END IF;
 
-  IF NEW.sale_id IS NULL AND NEW.lot_id IS NOT NULL THEN
+  IF v_sale_id IS NULL AND NEW.lot_id IS NOT NULL THEN
     SELECT sale.id
-      INTO NEW.sale_id
+      INTO v_sale_id
     FROM public.sales AS sale
     WHERE sale.lot_id = NEW.lot_id
       AND sale.status = 'closed'
@@ -483,6 +547,7 @@ BEGIN
     LIMIT 1;
   END IF;
 
+  NEW.sale_id := v_sale_id;
   RETURN NEW;
 END;
 $fn$;
