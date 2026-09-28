@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useProjects, Project } from '@/hooks/useProjects';
 import CreateProjectWizard from './projects/CreateProjectWizard';
+import { projectWorkspacePath } from '@/lib/projects/projectWorkspace';
 
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -320,7 +321,7 @@ const ProjectsManagement = () => {
                     </div>
                   )}
                   <Button variant="outline" className="flex-1 gap-1" asChild>
-                    <Link to={`/asesor/project/${project.id}`}>
+                    <Link to={projectWorkspacePath(project.id)}>
                       <Gauge className="h-4 w-4" />
                       Workspace
                     </Link>
