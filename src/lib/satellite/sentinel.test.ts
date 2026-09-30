@@ -20,6 +20,24 @@ describe("satelliteBoundsFromLots", () => {
     expect(bbox![3]).toBeGreaterThan(-34.99);
   });
 
+  it("ignores nullable centroids instead of expanding bounds toward zero", () => {
+    const bbox = satelliteBoundsFromLots([
+      {
+        polygon: [
+          [-71.80, -35.00],
+          [-71.79, -35.00],
+          [-71.79, -34.99],
+          [-71.80, -34.99],
+        ],
+        latitude: null,
+        longitude: null,
+      },
+    ]);
+    expect(bbox).not.toBeNull();
+    expect(bbox![0]).toBeGreaterThan(-72);
+    expect(bbox![2]).toBeLessThan(-71);
+  });
+
   it("falls back to a project center", () => {
     expect(satelliteBoundsFromLots([], { lat: -35, lng: -71.8 })).toEqual([
       -71.815,
