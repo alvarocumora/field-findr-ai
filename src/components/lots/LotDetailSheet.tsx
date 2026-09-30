@@ -139,6 +139,7 @@ export const LotDetailSheet = ({
 }: LotDetailSheetProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [satellitePreview, setSatellitePreview] = useState<string | null>(null);
+  const [satellitePreviewState, setSatellitePreviewState] = useState<'idle' | 'loading' | 'ready' | 'failed'>('idle');
   const { token: mapboxToken } = useMapboxToken();
   const sentinelCenter = lot && Number.isFinite(Number(lot.latitude)) && Number.isFinite(Number(lot.longitude))
     ? { lat: Number(lot.latitude), lng: Number(lot.longitude) }
@@ -155,16 +156,20 @@ export const LotDetailSheet = ({
     let cancelled = false;
     if (!open || !lot || !sentinelQuery.data?.available) {
       setSatellitePreview(null);
+      setSatellitePreviewState('idle');
       return () => { cancelled = true; };
     }
 
     setSatellitePreview(null);
+    setSatellitePreviewState('loading');
     void renderLotSatelliteSnapshot(lot, sentinelQuery.data, {
       mapboxToken,
       width: 1000,
       height: 600,
     }).then((image) => {
-      if (!cancelled) setSatellitePreview(image);
+      if (cancelled) return;
+      setSatellitePreview(image);
+      setSatellitePreviewState(image ? 'ready' : 'failed');
     });
 
     return () => { cancelled = true; };
@@ -243,12 +248,16 @@ export const LotDetailSheet = ({
                 </Badge>
               </div>
               <div className="aspect-[5/3] bg-zinc-900/60">
-                {satellitePreview ? (
+                {satellitePreviewState === 'ready' && satellitePreview ? (
                   <img
                     src={satellitePreview}
                     alt={`Sentinel-2 reciente con deslinde del Lote ${lot.lot_number}`}
                     className="h-full w-full object-cover"
                   />
+                ) : satellitePreviewState === 'failed' ? (
+                  <div className="flex h-full items-center justify-center px-6 text-center text-xs text-white/45">
+                    La escena Sentinel está disponible, pero esta vista no pudo renderizarse. El masterplan mantiene Mapbox Satellite como respaldo.
+                  </div>
                 ) : (
                   <Skeleton className="h-full w-full bg-white/5" />
                 )}
