@@ -39,7 +39,7 @@ export const syncSentinelRasterLayers = (
       type: "raster",
       url: scene.tilejson_url,
       tileSize: 256,
-      attribution: "Copernicus Sentinel-2 · Microsoft Planetary Computer",
+      attribution: "Contains modified Copernicus Sentinel-2 data · Microsoft Planetary Computer",
     });
 
     map.addLayer({
