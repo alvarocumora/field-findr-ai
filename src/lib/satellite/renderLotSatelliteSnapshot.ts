@@ -13,25 +13,59 @@ interface SnapshotOptions {
   height?: number;
 }
 
-const waitForEvent = (
+const waitForLoad = (map: mapboxgl.Map, timeoutMs: number) =>
+  new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const timer = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new Error("Satellite map load timed out"));
+    }, timeoutMs);
+
+    map.once("load", () => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      resolve();
+    });
+  });
+
+const waitForSentinelIdle = (
   map: mapboxgl.Map,
-  event: "load" | "idle",
+  sourceIds: string[],
   timeoutMs: number,
 ) => new Promise<void>((resolve, reject) => {
   let settled = false;
-  const timer = window.setTimeout(() => {
-    if (settled) return;
-    settled = true;
-    if (event === "idle") resolve();
-    else reject(new Error("Satellite map timed out"));
-  }, timeoutMs);
 
-  map.once(event, () => {
+  const cleanup = () => {
+    map.off("error", onError);
+    map.off("idle", onIdle);
+  };
+
+  const finish = (error?: Error) => {
     if (settled) return;
     settled = true;
     window.clearTimeout(timer);
-    resolve();
-  });
+    cleanup();
+    if (error) reject(error);
+    else resolve();
+  };
+
+  const onError = (event: any) => {
+    const sourceId = event?.sourceId ?? event?.source?.id ?? null;
+    if (!sourceId || sourceIds.includes(sourceId)) {
+      finish(new Error("Sentinel raster failed to load"));
+    }
+  };
+
+  const onIdle = () => finish();
+
+  const timer = window.setTimeout(() => {
+    finish(new Error("Sentinel raster timed out"));
+  }, timeoutMs);
+
+  map.on("error", onError);
+  map.on("idle", onIdle);
 });
 
 export const renderLotSatelliteSnapshot = async (
@@ -78,8 +112,9 @@ export const renderLotSatelliteSnapshot = async (
       fadeDuration: 0,
     });
 
-    await waitForEvent(map, "load", 6000);
-    syncSentinelRasterLayers(map, imagery);
+    await waitForLoad(map, 6000);
+    const sentinelSourceIds = syncSentinelRasterLayers(map, imagery);
+    if (sentinelSourceIds.length === 0) return null;
 
     const ring = [...normalized.coords, normalized.coords[0]];
     map.addSource("snapshot-lot", {
@@ -130,7 +165,7 @@ export const renderLotSatelliteSnapshot = async (
     });
     map.resize();
 
-    await waitForEvent(map, "idle", 12000);
+    await waitForSentinelIdle(map, sentinelSourceIds, 12000);
     return map.getCanvas().toDataURL("image/png");
   } catch (error) {
     console.warn("Sentinel snapshot render failed; using fallback imagery", error);
