@@ -32,6 +32,15 @@ describe("selectLatestSentinelPass", () => {
     expect(scenes.map((scene) => scene.item_id).sort()).toEqual(["tile-a", "tile-b"]);
   });
 
+  it("keeps cloudy adjacent granules after a clear granule selects the pass", () => {
+    const scenes = selectLatestSentinelPass([
+      feature("tile-clear", "2026-09-28T15:00:00Z", 8),
+      feature("tile-cloudy", "2026-09-28T15:04:00Z", 78),
+      feature("older", "2026-09-26T15:00:00Z", 1),
+    ], 35);
+    expect(scenes.map((scene) => scene.item_id).sort()).toEqual(["tile-clear", "tile-cloudy"]);
+  });
+
   it("falls back to the latest usable scene when every scene is cloudy", () => {
     const scenes = selectLatestSentinelPass([
       feature("latest", "2026-09-28T15:00:00Z", 70),
