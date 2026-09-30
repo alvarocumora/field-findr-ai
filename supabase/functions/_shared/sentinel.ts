@@ -50,9 +50,9 @@ const toScene = (feature: SentinelStacFeature): SelectedSentinelScene | null => 
 };
 
 /**
- * Select the newest usable Sentinel-2 pass. Adjacent granules captured within
- * the same 90-minute pass are returned together so projects near tile edges
- * still render as a continuous mosaic.
+ * Select the newest usable Sentinel-2 pass. Cloud cover chooses the anchor
+ * acquisition, but once that pass is selected every adjacent renderable
+ * granule from the same pass is kept so project edges do not disappear.
  */
 export const selectLatestSentinelPass = (
   features: SentinelStacFeature[],
@@ -66,15 +66,15 @@ export const selectLatestSentinelPass = (
 
   if (scenes.length === 0) return [];
 
-  const lowCloud = scenes.filter(
+  const lowCloudAnchor = scenes.find(
     (scene) => scene.cloud_cover !== null && scene.cloud_cover <= maxCloudCover,
   );
-  const pool = lowCloud.length > 0 ? lowCloud : scenes;
-  const newestAt = Date.parse(pool[0].datetime);
+  const anchor = lowCloudAnchor ?? scenes[0];
+  const anchorAt = Date.parse(anchor.datetime);
   const samePassMs = 90 * 60 * 1000;
 
-  return pool
-    .filter((scene) => Math.abs(Date.parse(scene.datetime) - newestAt) <= samePassMs)
+  return scenes
+    .filter((scene) => Math.abs(Date.parse(scene.datetime) - anchorAt) <= samePassMs)
     .slice(0, maxScenes);
 };
 
