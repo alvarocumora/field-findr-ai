@@ -63,7 +63,11 @@ export const satelliteBoundsFromLots = (
   lots.forEach((lot) => {
     coordinates.push(...coordinatePairs(lot.polygon));
     if (
-      Number.isFinite(Number(lot.longitude))
+      lot.longitude !== null
+      && lot.longitude !== undefined
+      && lot.latitude !== null
+      && lot.latitude !== undefined
+      && Number.isFinite(Number(lot.longitude))
       && Number.isFinite(Number(lot.latitude))
     ) {
       coordinates.push([Number(lot.longitude), Number(lot.latitude)]);
