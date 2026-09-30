@@ -468,7 +468,7 @@ const drawPlanBlock = (
   doc.setFontSize(6.5);
   doc.setTextColor(...BRAND.gray);
   const satelliteAttribution = plan.satelliteSource === 'sentinel'
-    ? ` · Sentinel-2 ${formatSentinelDate(plan.sentinelDate)} · ${sentinelCloudLabel(plan.sentinelCloudCover)} · Microsoft Planetary Computer`
+    ? ` · Copernicus Sentinel-2 ${formatSentinelDate(plan.sentinelDate)} · ${sentinelCloudLabel(plan.sentinelCloudCover)} · Microsoft Planetary Computer`
     : plan.satelliteSource === 'mapbox'
       ? ' · © Mapbox · © Maxar'
       : '';
