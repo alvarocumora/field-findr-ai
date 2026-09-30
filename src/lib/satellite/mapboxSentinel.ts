@@ -27,9 +27,11 @@ export const syncSentinelRasterLayers = (
   imagery: SentinelImageryResult | null | undefined,
   beforeId?: string,
   opacity = 1,
-) => {
+): string[] => {
   clearSentinelRasterLayers(map);
-  if (!imagery?.available || imagery.scenes.length === 0) return;
+  if (!imagery?.available || imagery.scenes.length === 0) return [];
+
+  const sourceIds: string[] = [];
 
   imagery.scenes.forEach((scene, index) => {
     const sourceId = SOURCE_PREFIX + index;
@@ -52,5 +54,9 @@ export const syncSentinelRasterLayers = (
         "raster-resampling": "linear",
       },
     }, beforeId);
+
+    sourceIds.push(sourceId);
   });
+
+  return sourceIds;
 };
