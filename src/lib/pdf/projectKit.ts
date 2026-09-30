@@ -8,11 +8,14 @@ import type { FichaDoc } from '@/lib/pdf/fichaShell';
 import { ensureFichaFonts } from '@/lib/pdf/fichaFonts';
 import { fittedImage, safePdfLink } from '@/lib/pdf/media';
 import {
-  drawMasterplan, fitView, imageSizeForBox, normalizeLotState, staticImageUrl,
+  drawMasterplan, fitView, imageSizeForBox, normalizeLotState, projectToBox, staticImageUrl,
   type Box, type LotState, type MapView, type MasterplanStyle, type PlanLot, type PlanRoad,
 } from '@/lib/pdf/masterplan';
 import { projectCanonicalUrl, SITE_URL } from '@/lib/landing/paths';
 import { referenceProjectMedia } from './projectMedia';
+import type { SentinelImageryResult } from '@/lib/satellite/sentinel';
+import { formatSentinelDate, sentinelCloudLabel } from '@/lib/satellite/sentinel';
+import { renderSentinelMapViewSnapshot } from '@/lib/satellite/renderSentinelMapViewSnapshot';
 
 /**
  * Kit único de material descargable por proyecto (OFERTA TERRENOS).
@@ -70,6 +73,7 @@ export interface KitProject {
 
 export interface KitOptions {
   mapboxToken?: string | null;
+  sentinelImagery?: SentinelImageryResult | null;
   /** Ruta pública del proyecto; por defecto /p/:slug. */
   path?: string;
   output?: 'download' | 'blob';
@@ -328,7 +332,15 @@ const planStyle = (onSatellite: boolean): MasterplanStyle => ({
   fontBold: themeFont('heading') === 'montserrat' ? 'montserrat' : themeFont('heading'),
 });
 
-interface PreparedPlan { lots: PlanLot[]; roads: PlanRoad[]; view: MapView; image: string | null }
+interface PreparedPlan {
+  lots: PlanLot[];
+  roads: PlanRoad[];
+  view: MapView;
+  image: string | null;
+  satelliteSource: 'sentinel' | 'mapbox' | null;
+  sentinelDate: string | null;
+  sentinelCloudCover: number | null;
+}
 
 const planRoadsOf = (project: KitProject): PlanRoad[] =>
   (project.spatial?.roads_geojson?.features ?? [])
@@ -346,6 +358,7 @@ const preparePlan = async (
   lots: KitLot[],
   box: Box,
   token?: string | null,
+  sentinelImagery?: SentinelImageryResult | null,
 ): Promise<PreparedPlan | null> => {
   const planLots = planLotsOf(lots);
   const { wPx, hPx } = imageSizeForBox(box);
@@ -359,8 +372,28 @@ const preparePlan = async (
   }
   const view = fitView(frame, wPx, hPx);
   if (!view) return null;
-  const image = token ? await fetchImageAsBase64(staticImageUrl(view, token)) : null;
-  return { lots: planLots, roads: planRoadsOf(project), view, image };
+
+  let image: string | null = null;
+  let satelliteSource: PreparedPlan['satelliteSource'] = null;
+
+  if (sentinelImagery?.available) {
+    image = await renderSentinelMapViewSnapshot(view, sentinelImagery, { mapboxToken: token });
+    if (image) satelliteSource = 'sentinel';
+  }
+  if (!image && token) {
+    image = await fetchImageAsBase64(staticImageUrl(view, token));
+    if (image) satelliteSource = 'mapbox';
+  }
+
+  return {
+    lots: planLots,
+    roads: planRoadsOf(project),
+    view,
+    image,
+    satelliteSource,
+    sentinelDate: sentinelImagery?.acquisition_datetime ?? null,
+    sentinelCloudCover: sentinelImagery?.cloud_cover ?? null,
+  };
 };
 
 const STATE_LABEL: Record<Exclude<LotState, 'other'>, string> = {
@@ -369,11 +402,45 @@ const STATE_LABEL: Record<Exclude<LotState, 'other'>, string> = {
   sold: 'Vendida',
 };
 
+const drawSelectedLotOutline = (
+  f: FichaDoc,
+  plan: PreparedPlan,
+  box: Box,
+  lotLabel?: string | null,
+) => {
+  if (!lotLabel) return;
+  const selected = plan.lots.find((lot) => lot.label === lotLabel);
+  if (!selected || selected.ring.length < 3) return;
+
+  const pts = selected.ring.map(([lng, lat]) => projectToBox(lng, lat, plan.view, box));
+  const first = pts[0];
+  const deltas = pts.slice(1).map((point, index) => [
+    point[0] - pts[index][0],
+    point[1] - pts[index][1],
+  ] as [number, number]);
+
+  const { doc } = f;
+  doc.saveGraphicsState();
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(1.8);
+  doc.lines(deltas, first[0], first[1], [1, 1], 'S', true);
+  doc.setDrawColor(246, 198, 78);
+  doc.setLineWidth(0.9);
+  doc.lines(deltas, first[0], first[1], [1, 1], 'S', true);
+  doc.restoreGraphicsState();
+};
+
 /** Dibuja plano + marco + leyenda con conteos. Devuelve el alto usado. */
-const drawPlanBlock = (f: FichaDoc, plan: PreparedPlan, box: Box): number => {
+const drawPlanBlock = (
+  f: FichaDoc,
+  plan: PreparedPlan,
+  box: Box,
+  selectedLotLabel?: string | null,
+): number => {
   const { doc } = f;
   const style = planStyle(Boolean(plan.image));
   const counts = drawMasterplan(doc, plan.lots, plan.view, box, style, plan.image, plan.roads);
+  drawSelectedLotOutline(f, plan, box, selectedLotLabel);
   doc.setDrawColor(...BRAND.line);
   doc.setLineWidth(0.4);
   doc.roundedRect(box.x, box.y, box.w, box.h, 2, 2, 'S');
@@ -400,9 +467,14 @@ const drawPlanBlock = (f: FichaDoc, plan: PreparedPlan, box: Box): number => {
   doc.setFont(themeFont('body'), 'normal');
   doc.setFontSize(6.5);
   doc.setTextColor(...BRAND.gray);
+  const satelliteAttribution = plan.satelliteSource === 'sentinel'
+    ? ` · Sentinel-2 ${formatSentinelDate(plan.sentinelDate)} · ${sentinelCloudLabel(plan.sentinelCloudCover)} · Microsoft Planetary Computer`
+    : plan.satelliteSource === 'mapbox'
+      ? ' · © Mapbox · © Maxar'
+      : '';
   doc.text(
     plan.image
-      ? `Deslindes referenciales sobre imagen satelital${plan.roads.length ? ' · caminos/servidumbres KMZ' : ''} · © Mapbox · © Maxar`
+      ? `Deslindes referenciales sobre imagen satelital${plan.roads.length ? ' · caminos/servidumbres KMZ' : ''}${satelliteAttribution}`
       : `Deslindes referenciales${plan.roads.length ? ' · caminos/servidumbres KMZ' : ''}`,
     box.x + box.w, ly + 4.6, { align: 'right' },
   );
@@ -674,7 +746,7 @@ export const generateProjectDossierPdf = async (
   const planBox: Box = { x: f.margin, y: f.margin + 11 + 16, w: f.contentW, h: f.H - (f.margin + 11 + 16) - 42 };
   const [loaded, plan] = await Promise.all([
     Promise.all(uniqueMedia.map(async item => ({ ...item, data: await fetchImageAsBase64(item.src) }))),
-    preparePlan(project, lots, planBox, options.mapboxToken),
+    preparePlan(project, lots, planBox, options.mapboxToken, options.sentinelImagery),
   ]);
   const media = loaded.filter((item): item is typeof item & { data: string } => Boolean(item.data));
 
@@ -848,7 +920,7 @@ export const generateProjectMasterplanPdf = async (
     body: async (f) => {
       // Plano a toda la altura útil: los botones van al final del documento.
       const box: Box = { x: f.margin, y: f.y, w: f.contentW, h: f.H - f.y - 40 };
-      const plan = await preparePlan(project, lots, box, options.mapboxToken);
+      const plan = await preparePlan(project, lots, box, options.mapboxToken, options.sentinelImagery);
       if (plan) f.y += drawPlanBlock(f, plan, box);
       else f.note('No hay deslindes cargados para dibujar el plano. Consulta el plano interactivo en la ficha online.');
 
@@ -902,7 +974,18 @@ export const generateProjectLotSheetsPdf = async (
     qrUrl: path,
     filename: `Fichas-Parcelas-${safeName(project.name)}.pdf`,
     output: options.output,
-    body: (f) => {
+    body: async (f) => {
+      // One shared current satellite background per project keeps large
+      // 100–200-lot compendia efficient; each page highlights its own parcel.
+      const templateBox: Box = { x: 0, y: 0, w: 170, h: 80 };
+      const plan = await preparePlan(
+        project,
+        lots,
+        templateBox,
+        options.mapboxToken,
+        options.sentinelImagery,
+      );
+
       ordered.forEach((l, i) => {
         if (i > 0) f.newPage();
         f.section(`Parcela ${l.lot_number ?? i + 1}`);
@@ -915,6 +998,14 @@ export const generateProjectLotSheetsPdf = async (
           ] as [string, string, string?][],
           2
         );
+
+        if (plan) {
+          const mapH = f.contentW * (templateBox.h / templateBox.w);
+          f.ensure(mapH + 18);
+          const mapBox: Box = { x: f.margin, y: f.y, w: f.contentW, h: mapH };
+          f.y += drawPlanBlock(f, plan, mapBox, String(l.lot_number ?? ''));
+        }
+
         if (l.latitude != null && l.longitude != null) {
           f.kv('Coordenadas', `${Number(l.latitude).toFixed(5)}, ${Number(l.longitude).toFixed(5)}`);
         }
