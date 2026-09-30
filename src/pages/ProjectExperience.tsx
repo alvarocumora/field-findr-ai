@@ -494,6 +494,7 @@ const ProjectExperience = () => {
                       kmzFileUrl={(project as any).kmz_file_url}
                       planImages={(project as any).plan_images || []}
                       readOnly
+                      tourMode
                     />
                   </div>
                 )}
