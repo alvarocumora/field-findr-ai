@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -33,6 +33,7 @@ import {
   Sparkles,
   Box,
   ExternalLink,
+  Satellite,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -40,6 +41,9 @@ import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { PublishLotButton } from './PublishLotButton';
 import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
+import { useSentinelImagery } from '@/hooks/useSentinelImagery';
+import { formatSentinelDate, sentinelCloudLabel } from '@/lib/satellite/sentinel';
+import { renderLotSatelliteSnapshot } from '@/lib/satellite/renderLotSatelliteSnapshot';
 
 const ParcelaDesigner3D = lazy(() =>
   import('@/components/parcela/ParcelaDesigner3D').then((m) => ({ default: m.ParcelaDesigner3D }))
@@ -134,7 +138,48 @@ export const LotDetailSheet = ({
   canManage = false,
 }: LotDetailSheetProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [satellitePreview, setSatellitePreview] = useState<string | null>(null);
+  const [satellitePreviewState, setSatellitePreviewState] = useState<'idle' | 'loading' | 'ready' | 'failed'>('idle');
   const { token: mapboxToken } = useMapboxToken();
+  const sentinelCenter = lot
+    && lot.latitude !== null
+    && lot.latitude !== undefined
+    && lot.longitude !== null
+    && lot.longitude !== undefined
+    && Number.isFinite(Number(lot.latitude))
+    && Number.isFinite(Number(lot.longitude))
+    ? { lat: Number(lot.latitude), lng: Number(lot.longitude) }
+    : null;
+  const sentinelQuery = useSentinelImagery({
+    lots: lot ? [lot] : [],
+    center: sentinelCenter,
+    enabled: open && Boolean(lot),
+    maxCloudCover: 35,
+    lookbackDays: 90,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!open || !lot || !sentinelQuery.data?.available) {
+      setSatellitePreview(null);
+      setSatellitePreviewState('idle');
+      return () => { cancelled = true; };
+    }
+
+    setSatellitePreview(null);
+    setSatellitePreviewState('loading');
+    void renderLotSatelliteSnapshot(lot, sentinelQuery.data, {
+      mapboxToken,
+      width: 1000,
+      height: 600,
+    }).then((image) => {
+      if (cancelled) return;
+      setSatellitePreview(image);
+      setSatellitePreviewState(image ? 'ready' : 'failed');
+    });
+
+    return () => { cancelled = true; };
+  }, [open, lot?.id, lot?.updated_at, mapboxToken, sentinelQuery.data]);
 
   if (!lot) return null;
 
@@ -148,7 +193,7 @@ export const LotDetailSheet = ({
   const handleDownloadFicha = async () => {
     setIsDownloading(true);
     try {
-      await generateLotDataCardPdf(lot, projectName, features, { mapboxToken });
+      await generateLotDataCardPdf(lot, projectName, features, { mapboxToken, sentinelImagery: sentinelQuery.data });
       toast.success('Ficha del lote descargada');
     } catch {
       toast.error('Error al generar ficha PDF');
@@ -191,6 +236,43 @@ export const LotDetailSheet = ({
 
         <div className="space-y-6 px-6 pb-32 pt-5">
           {images.length > 0 && <ImageGallery images={images} />}
+
+          {sentinelQuery.data?.available && (
+            <section className="overflow-hidden rounded-2xl border border-emerald-500/20 bg-white/[0.035]">
+              <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+                <div>
+                  <p className="flex items-center gap-2 text-xs font-semibold">
+                    <Satellite className="h-4 w-4 text-emerald-400" />
+                    Imagen satelital actual
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-white/40">
+                    Sentinel-2 · {formatSentinelDate(sentinelQuery.data.acquisition_datetime)} · {sentinelCloudLabel(sentinelQuery.data.cloud_cover)}
+                  </p>
+                </div>
+                <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-300">
+                  Microsoft Planetary Computer
+                </Badge>
+              </div>
+              <div className="aspect-[5/3] bg-zinc-900/60">
+                {satellitePreviewState === 'ready' && satellitePreview ? (
+                  <img
+                    src={satellitePreview}
+                    alt={`Sentinel-2 reciente con deslinde del Lote ${lot.lot_number}`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : satellitePreviewState === 'failed' ? (
+                  <div className="flex h-full items-center justify-center px-6 text-center text-xs text-white/45">
+                    La escena Sentinel está disponible, pero esta vista no pudo renderizarse. El masterplan mantiene Mapbox Satellite como respaldo.
+                  </div>
+                ) : (
+                  <Skeleton className="h-full w-full bg-white/5" />
+                )}
+              </div>
+              <p className="border-t border-white/10 px-4 py-2.5 text-[10px] leading-relaxed text-white/40">
+                El satélite actualiza el contexto visual. El deslinde blanco/verde proviene de la geometría KMZ/topográfica del proyecto y no se modifica desde Sentinel.
+              </p>
+            </section>
+          )}
 
           <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035]">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">

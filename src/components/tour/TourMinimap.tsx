@@ -1,6 +1,10 @@
 import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { Satellite } from 'lucide-react';
+import { useSentinelImagery } from '@/hooks/useSentinelImagery';
+import { syncSentinelRasterLayers } from '@/lib/satellite/mapboxSentinel';
+import { formatSentinelDate } from '@/lib/satellite/sentinel';
 
 interface TourMinimapProps {
   center: { lat: number; lng: number };
@@ -14,6 +18,13 @@ export function TourMinimap({ center, lots, yaw = 0, onLotClick }: TourMinimapPr
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
   const { token } = useMapboxToken();
+  const { data: sentinelImagery } = useSentinelImagery({
+    lots,
+    center,
+    enabled: true,
+    maxCloudCover: 35,
+    lookbackDays: 90,
+  });
 
   useEffect(() => {
     if (!mapContainer.current || !token) return;
@@ -46,6 +57,10 @@ export function TourMinimap({ center, lots, yaw = 0, onLotClick }: TourMinimapPr
       .addTo(map);
 
     map.on('load', () => {
+      if (sentinelImagery?.available) {
+        syncSentinelRasterLayers(map, sentinelImagery, undefined, 1);
+      }
+
       // Add lot polygons
       const features = lots.flatMap((l) => {
         const geometry = l.polygon?.coordinates
@@ -129,7 +144,7 @@ export function TourMinimap({ center, lots, yaw = 0, onLotClick }: TourMinimapPr
       map.remove();
       mapRef.current = null;
     };
-  }, [token, center, lots, onLotClick]);
+  }, [token, center, lots, onLotClick, sentinelImagery]);
 
   useEffect(() => {
     const el = markerRef.current?.getElement();
@@ -141,6 +156,12 @@ export function TourMinimap({ center, lots, yaw = 0, onLotClick }: TourMinimapPr
   return (
     <div className="absolute bottom-20 left-4 z-10 w-48 h-36 rounded-xl overflow-hidden shadow-xl border-2 border-white/30">
       <div ref={mapContainer} className="w-full h-full" />
+      {sentinelImagery?.available && (
+        <div className="pointer-events-none absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full bg-black/65 px-1.5 py-1 text-[8px] font-medium text-white backdrop-blur">
+          <Satellite className="h-2.5 w-2.5 text-emerald-300" />
+          {formatSentinelDate(sentinelImagery.acquisition_datetime)}
+        </div>
+      )}
     </div>
   );
 }

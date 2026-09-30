@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useStaticMapToken } from '@/hooks/useStaticMapToken';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
 import { useAuth } from '@/hooks/useAuth';
+import { useSentinelImagery } from '@/hooks/useSentinelImagery';
 import { LandingLeadForm } from '@/pages/landing/LandingLeadForm';
 import {
   generateProjectDossierPdf,
@@ -51,6 +52,15 @@ export const ProjectDownloads = ({
   description = 'Descarga el dossier, la lista de precios y el plano para revisarlos o compartirlos.',
 }: Props) => {
   const token = useStaticMapToken();
+  const sentinelQuery = useSentinelImagery({
+    lots,
+    center: project.latitude != null && project.longitude != null
+      ? { lat: Number(project.latitude), lng: Number(project.longitude) }
+      : null,
+    enabled: lots.length > 0,
+    maxCloudCover: 35,
+    lookbackDays: 90,
+  });
   const { track } = useTrackEvent();
   const { user } = useAuth();
   const [busy, setBusy] = useState<KitId | null>(null);
@@ -72,7 +82,11 @@ export const ProjectDownloads = ({
     if (busy) return;
     setBusy(id);
     try {
-      const opts = { mapboxToken: token };
+      const needsSatellite = id === 'preview' || id === 'dossier' || id === 'plano' || id === 'fichas';
+      const currentSentinel = needsSatellite
+        ? sentinelQuery.data ?? (await sentinelQuery.refetch()).data ?? null
+        : sentinelQuery.data ?? null;
+      const opts = { mapboxToken: token, sentinelImagery: currentSentinel };
       if (id === 'preview') {
         const blob = await generateProjectDossierPdf(project, lots, { ...opts, output: 'blob' });
         if (blob) setPreviewUrl(URL.createObjectURL(blob));

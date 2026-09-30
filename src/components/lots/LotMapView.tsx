@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { usePolygonDrawing } from '@/hooks/usePolygonDrawing';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Layers, Mountain, Upload, Image, PenTool, ArrowLeftRight, Hash, RefreshCw, Minimize2, RotateCcw, Route, Settings2, ChevronDown, Play, Map as MapIcon, Compass } from 'lucide-react';
+import { AlertCircle, Layers, Mountain, Upload, Image, PenTool, ArrowLeftRight, Hash, RefreshCw, Minimize2, RotateCcw, Route, Settings2, ChevronDown, Play, Map as MapIcon, Compass, Satellite } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { parseKMZFile, parseKMLFile, generatePolygonsFromPoints, buildPolygonsAdvanced, buildPolygonsFromMixedGeometry, extractRoadGeometries } from '@/lib/kmz';
@@ -15,6 +15,9 @@ import { MasterPlanOverlay } from './MasterPlanOverlay';
 import { LotDrawingTool } from './LotDrawingTool';
 import { LotRenumberTool } from './LotRenumberTool';
 import { normalizePolygon } from '@/lib/polygonUtils';
+import { useSentinelImagery } from '@/hooks/useSentinelImagery';
+import { clearSentinelRasterLayers, syncSentinelRasterLayers } from '@/lib/satellite/mapboxSentinel';
+import { formatSentinelDate, sentinelCloudLabel } from '@/lib/satellite/sentinel';
 
 interface Lot {
   id: string;
@@ -306,9 +309,43 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const [showRoads, setShowRoads] = useState(true);
   const [colorMode, setColorMode] = useState<'status' | 'price' | 'area'>('status');
 
+  const sentinelEnabled = mapStyle === 'satellite' && (readOnly || tourMode);
+  const { data: sentinelImagery } = useSentinelImagery({
+    lots,
+    center: projectCenter,
+    enabled: sentinelEnabled,
+    maxCloudCover: 35,
+    lookbackDays: 90,
+  });
+
   useEffect(() => {
     if (externalRoads) setRoadGeojson(externalRoads);
   }, [externalRoads]);
+
+  // Overlay the newest low-cloud Sentinel-2 pass below the authoritative lot
+  // polygons. Mapbox satellite stays underneath as an automatic fallback.
+  useEffect(() => {
+    const currentMap = map.current;
+    if (!currentMap || !mapLoaded || !currentMap.isStyleLoaded()) return;
+
+    if (!sentinelEnabled || !sentinelImagery?.available) {
+      clearSentinelRasterLayers(currentMap);
+      return;
+    }
+
+    const apply = () => {
+      if (!map.current || !map.current.isStyleLoaded()) return;
+      const beforeId = map.current.getLayer('lots-fill') ? 'lots-fill' : undefined;
+      syncSentinelRasterLayers(map.current, sentinelImagery, beforeId, 1);
+    };
+
+    if (currentMap.getLayer('lots-fill')) apply();
+    else currentMap.once('idle', apply);
+
+    return () => {
+      if (map.current?.isStyleLoaded()) clearSentinelRasterLayers(map.current);
+    };
+  }, [mapLoaded, sentinelEnabled, sentinelImagery]);
 
   // Keep ref in sync with state for use inside map event handlers
   useEffect(() => {
@@ -1668,6 +1705,13 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         projectCenter={projectCenter}
       />
       
+      {sentinelEnabled && sentinelImagery?.available && (
+        <div className="absolute bottom-4 left-3 z-10 flex items-center gap-1.5 rounded-full border border-white/20 bg-black/65 px-2.5 py-1.5 text-[10px] font-medium text-white shadow-lg backdrop-blur-md">
+          <Satellite className="h-3.5 w-3.5 text-emerald-300" />
+          <span>Sentinel-2 · {formatSentinelDate(sentinelImagery.acquisition_datetime)} · {sentinelCloudLabel(sentinelImagery.cloud_cover)}</span>
+        </div>
+      )}
+
       {/* Status indicator */}
       {!hasRealPolygons && (
         <div className="absolute top-3 right-14 px-3 py-1.5 bg-background/80 backdrop-blur-md rounded-full text-xs text-muted-foreground border border-border/50 shadow-sm">

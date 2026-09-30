@@ -1,6 +1,9 @@
 import { Lot, LotFeatures } from '@/hooks/useLots';
 import { BRAND, fetchImageAsBase64, publicUrl } from '@/lib/pdf/fichaShell';
 import { renderFicha } from '@/lib/pdf/fichaTemplates';
+import type { SentinelImageryResult } from '@/lib/satellite/sentinel';
+import { formatSentinelDate, sentinelCloudLabel } from '@/lib/satellite/sentinel';
+import { renderLotSatelliteSnapshot } from '@/lib/satellite/renderLotSatelliteSnapshot';
 
 const TERRACOTTA = [184, 80, 66] as [number, number, number];
 const SAND = [232, 220, 200] as [number, number, number];
@@ -44,7 +47,7 @@ export const generateLotDataCardPdf = async (
   lot: Lot,
   projectName: string,
   features: LotFeatures,
-  options: { mapboxToken?: string | null } = {}
+  options: { mapboxToken?: string | null; sentinelImagery?: SentinelImageryResult | null } = {}
 ) => {
   const lotPath = `/proyecto/${lot.project_id}?lote=${encodeURIComponent(lot.lot_number)}`;
 
@@ -131,8 +134,35 @@ export const generateLotDataCardPdf = async (
     f.paragraph(lot.description);
   }
 
-  // ── Mapa ──
-  if (options.mapboxToken) {
+  // ── Imagen satelital actual ──
+  let renderedSatellite = false;
+  if (options.sentinelImagery?.available) {
+    const sentinelBase64 = await renderLotSatelliteSnapshot(lot, options.sentinelImagery, {
+      mapboxToken: options.mapboxToken,
+      width: 1000,
+      height: 600,
+    });
+    if (sentinelBase64) {
+      f.section('Imagen satelital actual');
+      f.image(
+        sentinelBase64,
+        contentW * (600 / 1000),
+        'Sentinel-2 con el deslinde del lote superpuesto',
+        'PNG',
+      );
+      f.paragraph(
+        'Sentinel-2 / Microsoft Planetary Computer · adquisición ' +
+          formatSentinelDate(options.sentinelImagery.acquisition_datetime) +
+          ' · ' +
+          sentinelCloudLabel(options.sentinelImagery.cloud_cover) +
+          '. El deslinde corresponde a la geometría del proyecto y no se recalcula desde la imagen satelital.',
+      );
+      renderedSatellite = true;
+    }
+  }
+
+  // Fallback: mapa satelital Mapbox si Sentinel no está disponible o no pudo renderizarse.
+  if (!renderedSatellite && options.mapboxToken) {
     const mapUrl = buildMapboxStaticUrl(lot, options.mapboxToken);
     if (mapUrl) {
       const mapBase64 = await fetchImageAsBase64(mapUrl);
