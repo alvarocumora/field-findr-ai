@@ -35,19 +35,13 @@ const searchStac = async (
   bbox: [number, number, number, number],
   fromIso: string,
   toIso: string,
-  maxCloudCover: number,
-  withCloudQuery: boolean,
 ): Promise<SentinelStacFeature[]> => {
   const payload: Record<string, unknown> = {
     collections: [COLLECTION],
     bbox,
     datetime: fromIso + "/" + toIso,
-    limit: 100,
+    limit: 200,
   };
-
-  if (withCloudQuery) {
-    payload.query = { "eo:cloud_cover": { lte: maxCloudCover } };
-  }
 
   const response = await fetch(STAC_SEARCH_URL, {
     method: "POST",
@@ -93,30 +87,15 @@ serve(async (req) => {
     const searchedTo = new Date();
     const searchedFrom = new Date(searchedTo.getTime() - lookbackDays * 86_400_000);
 
-    let features: SentinelStacFeature[] = [];
-    try {
-      features = await searchStac(
-        body.bbox,
-        searchedFrom.toISOString(),
-        searchedTo.toISOString(),
-        maxCloudCover,
-        true,
-      );
-    } catch (error) {
-      console.warn("Cloud-filtered STAC query failed; retrying without query extension", error);
-    }
-
-    let scenes = selectLatestSentinelPass(features, maxCloudCover);
-    if (scenes.length === 0) {
-      features = await searchStac(
-        body.bbox,
-        searchedFrom.toISOString(),
-        searchedTo.toISOString(),
-        maxCloudCover,
-        false,
-      );
-      scenes = selectLatestSentinelPass(features, maxCloudCover);
-    }
+    // Query the complete set of intersecting granules first. Cloud cover is
+    // used only to choose the anchor pass; adjacent granules are retained even
+    // when one tile is cloudier so projects at Sentinel tile edges stay whole.
+    const features = await searchStac(
+      body.bbox,
+      searchedFrom.toISOString(),
+      searchedTo.toISOString(),
+    );
+    const scenes = selectLatestSentinelPass(features, maxCloudCover);
 
     const responseBody = {
       provider: "Microsoft Planetary Computer",
