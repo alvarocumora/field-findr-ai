@@ -141,7 +141,13 @@ export const LotDetailSheet = ({
   const [satellitePreview, setSatellitePreview] = useState<string | null>(null);
   const [satellitePreviewState, setSatellitePreviewState] = useState<'idle' | 'loading' | 'ready' | 'failed'>('idle');
   const { token: mapboxToken } = useMapboxToken();
-  const sentinelCenter = lot && Number.isFinite(Number(lot.latitude)) && Number.isFinite(Number(lot.longitude))
+  const sentinelCenter = lot
+    && lot.latitude !== null
+    && lot.latitude !== undefined
+    && lot.longitude !== null
+    && lot.longitude !== undefined
+    && Number.isFinite(Number(lot.latitude))
+    && Number.isFinite(Number(lot.longitude))
     ? { lat: Number(lot.latitude), lng: Number(lot.longitude) }
     : null;
   const sentinelQuery = useSentinelImagery({
