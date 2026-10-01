@@ -58,4 +58,26 @@ describe('projectWorkspace model', () => {
     expect(readiness.score).toBe(100);
     expect(readiness.checks.every((check) => check.ready)).toBe(true);
   });
+
+  it('adds Sentinel-2 to readiness only after satellite status is resolved', () => {
+    const project = {
+      region: 'Maule',
+      country: 'Chile',
+      kmz_file_url: 'project.kmz',
+      images: ['cover.jpg'],
+      status: 'active',
+    };
+    const lots = [{ status: 'available', price: 100 }];
+
+    const pending = buildProjectWorkspaceReadiness(project, lots, true, null);
+    const available = buildProjectWorkspaceReadiness(project, lots, true, true);
+    const unavailable = buildProjectWorkspaceReadiness(project, lots, true, false);
+
+    expect(pending.checks.some((check) => check.label.includes('Sentinel'))).toBe(false);
+    expect(pending.score).toBe(100);
+    expect(available.checks.find((check) => check.label.includes('Sentinel'))?.ready).toBe(true);
+    expect(available.score).toBe(100);
+    expect(unavailable.checks.find((check) => check.label.includes('Sentinel'))?.ready).toBe(false);
+    expect(unavailable.score).toBe(86);
+  });
 });
