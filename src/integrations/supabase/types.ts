@@ -337,10 +337,13 @@ export type Database = {
           network_override_rate: number
           onboarding_step: number
           phone: string | null
+          public_contact_opt_in: boolean
           referred_by: string | null
           slug: string
+          specialties: string[]
           updated_at: string
           user_id: string
+          verified_at: string | null
           zones: string[]
         }
         Insert: {
@@ -359,10 +362,13 @@ export type Database = {
           network_override_rate?: number
           onboarding_step?: number
           phone?: string | null
+          public_contact_opt_in?: boolean
           referred_by?: string | null
           slug: string
+          specialties?: string[]
           updated_at?: string
           user_id: string
+          verified_at?: string | null
           zones?: string[]
         }
         Update: {
@@ -381,10 +387,13 @@ export type Database = {
           network_override_rate?: number
           onboarding_step?: number
           phone?: string | null
+          public_contact_opt_in?: boolean
           referred_by?: string | null
           slug?: string
+          specialties?: string[]
           updated_at?: string
           user_id?: string
+          verified_at?: string | null
           zones?: string[]
         }
         Relationships: []
@@ -2131,6 +2140,94 @@ export type Database = {
           },
         ]
       }
+      sales_quotes: {
+        Row: {
+          accepted_at: string | null
+          agent_id: string
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          discount_amount: number
+          id: string
+          lead_id: string | null
+          list_price: number
+          lot_id: string
+          notes: string | null
+          project_id: string
+          quoted_price: number
+          sent_at: string | null
+          status: string
+          updated_at: string
+          valid_until: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          agent_id?: string
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          discount_amount?: number
+          id?: string
+          lead_id?: string | null
+          list_price: number
+          lot_id: string
+          notes?: string | null
+          project_id: string
+          quoted_price: number
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          valid_until: string
+        }
+        Update: {
+          accepted_at?: string | null
+          agent_id?: string
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          discount_amount?: number
+          id?: string
+          lead_id?: string | null
+          list_price?: number
+          lot_id?: string
+          notes?: string | null
+          project_id?: string
+          quoted_price?: number
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_quotes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_quotes_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_quotes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_searches: {
         Row: {
           created_at: string | null
@@ -2641,16 +2738,20 @@ export type Database = {
       }
       visits: {
         Row: {
+          completed_at: string | null
           created_at: string
           duration_minutes: number
+          follow_up_at: string | null
           id: string
           lead_id: string | null
           listing_id: string | null
           lot_id: string | null
           mode: string
+          next_action: string | null
           notes: string | null
           outcome: string | null
           project_id: string | null
+          result_notes: string | null
           scheduled_at: string
           status: string
           updated_at: string
@@ -2660,16 +2761,20 @@ export type Database = {
           visitor_phone: string | null
         }
         Insert: {
+          completed_at?: string | null
           created_at?: string
           duration_minutes?: number
+          follow_up_at?: string | null
           id?: string
           lead_id?: string | null
           listing_id?: string | null
           lot_id?: string | null
           mode?: string
+          next_action?: string | null
           notes?: string | null
           outcome?: string | null
           project_id?: string | null
+          result_notes?: string | null
           scheduled_at: string
           status?: string
           updated_at?: string
@@ -2679,16 +2784,20 @@ export type Database = {
           visitor_phone?: string | null
         }
         Update: {
+          completed_at?: string | null
           created_at?: string
           duration_minutes?: number
+          follow_up_at?: string | null
           id?: string
           lead_id?: string | null
           listing_id?: string | null
           lot_id?: string | null
           mode?: string
+          next_action?: string | null
           notes?: string | null
           outcome?: string | null
           project_id?: string | null
+          result_notes?: string | null
           scheduled_at?: string
           status?: string
           updated_at?: string
@@ -3039,6 +3148,22 @@ export type Database = {
           buyer_email: string
           buyer_name: string
           buyer_phone: string
+        }[]
+      }
+      get_public_broker_profile: {
+        Args: { p_slug: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          company_name: string
+          display_name: string
+          email: string
+          is_verified: boolean
+          level: string
+          phone: string
+          slug: string
+          specialties: string[]
+          zones: string[]
         }[]
       }
       get_public_lots: {
