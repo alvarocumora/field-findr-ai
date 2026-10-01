@@ -2,7 +2,9 @@ import { useMemo } from 'react';
 import { useProjects } from '@/hooks/useProjects';
 import { useLots } from '@/hooks/useLots';
 import { useReservations } from '@/hooks/useReservations';
+import { useSentinelImagery } from '@/hooks/useSentinelImagery';
 import { resolveChileCommune, resolveRegionTerritory } from '@/lib/territories';
+import { formatSentinelDate, sentinelCloudLabel } from '@/lib/satellite/sentinel';
 import {
   buildProjectWorkspaceReadiness,
   buildProjectWorkspaceStats,
@@ -14,6 +16,13 @@ export const useProjectWorkspace = (projectId: string) => {
   const { lots, isLoading: lotsLoading } = useLots(projectId || undefined);
   const reservationsQuery = useReservations(projectId || undefined);
   const reservations = (reservationsQuery.data ?? []) as any[];
+
+  const sentinelQuery = useSentinelImagery({
+    lots,
+    enabled: Boolean(project && lots.length > 0),
+    maxCloudCover: 35,
+    lookbackDays: 90,
+  });
 
   const territory = useMemo(
     () => resolveRegionTerritory(project?.region || 'Sin región', project?.country || 'Chile'),
@@ -50,10 +59,37 @@ export const useProjectWorkspace = (projectId: string) => {
     [lots, reservations],
   );
 
-  const readiness = useMemo(
-    () => buildProjectWorkspaceReadiness(project, lots, Boolean(spatial)),
-    [project, lots, spatial],
-  );
+  const satelliteReady = sentinelQuery.isFetched
+    ? Boolean(sentinelQuery.data?.available)
+    : null;
+
+  const readiness = useMemo(() => {
+    const base = buildProjectWorkspaceReadiness(
+      project,
+      lots,
+      Boolean(spatial),
+      satelliteReady,
+    );
+
+    if (!satelliteReady || !sentinelQuery.data?.acquisition_datetime) return base;
+
+    const detail = `${formatSentinelDate(sentinelQuery.data.acquisition_datetime)} · ${sentinelCloudLabel(sentinelQuery.data.cloud_cover)}`;
+    return {
+      ...base,
+      checks: base.checks.map((check) =>
+        check.label === 'Imagen Sentinel-2 reciente'
+          ? { ...check, label: `Sentinel-2 ${detail}` }
+          : check,
+      ),
+    };
+  }, [
+    project,
+    lots,
+    spatial,
+    satelliteReady,
+    sentinelQuery.data?.acquisition_datetime,
+    sentinelQuery.data?.cloud_cover,
+  ]);
 
   const activeReservations = useMemo(
     () => reservations.filter((reservation) =>
@@ -77,6 +113,9 @@ export const useProjectWorkspace = (projectId: string) => {
     docs,
     stats,
     readiness,
+    sentinelImagery: sentinelQuery.data ?? null,
+    sentinelLoading: sentinelQuery.isFetching,
+    sentinelError: sentinelQuery.error,
     publicPath,
     isLoading: projectsLoading || lotsLoading,
     reservationsLoading: reservationsQuery.isLoading,
