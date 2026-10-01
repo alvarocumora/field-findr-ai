@@ -147,7 +147,7 @@ const ProjectWorkspace = () => {
           <TabsList className="h-auto min-w-max justify-start gap-1 bg-muted/60 p-1">
             {PROJECT_WORKSPACE_TABS.map((tab) => (
               <TabsTrigger key={tab} value={tab}>
-                {{
+                {({
                   resumen: 'Resumen',
                   inventario: 'Inventario',
                   masterplan: 'Masterplan',
@@ -158,7 +158,7 @@ const ProjectWorkspace = () => {
                   documentos: 'Documentos',
                   reportes: 'Reportes',
                   configuracion: 'Configuración',
-                } satisfies Record<ProjectWorkspaceTab, string>}[tab]}
+                } satisfies Record<ProjectWorkspaceTab, string>)[tab]}
               </TabsTrigger>
             ))}
           </TabsList>
