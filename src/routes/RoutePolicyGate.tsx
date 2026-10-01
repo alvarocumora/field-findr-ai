@@ -9,7 +9,7 @@ import {
   FEATURE_LABELS,
   minimumPlanForFeature,
 } from '@/lib/access/planEntitlements';
-import { evaluateRoutePolicy, type RoutePolicy } from '@/lib/access/routePolicy';
+import { evaluateRoutePolicy, type RoutePolicy, type RoutePolicyDecision } from '@/lib/access/routePolicy';
 import { PageLoader } from '@/routes/routeUtils';
 
 interface RoutePolicyGateProps {
@@ -22,8 +22,9 @@ const RoutePolicyGate = ({ policy, children }: RoutePolicyGateProps) => {
 
   if (access.isLoading) return <PageLoader />;
 
-  const decision = evaluateRoutePolicy(policy, access);
-  if (decision.allowed) return <>{children}</>;
+  const result = evaluateRoutePolicy(policy, access);
+  if (result.allowed) return <>{children}</>;
+  const decision = result as Extract<RoutePolicyDecision, { allowed: false }>;
 
   if (decision.reason === 'feature') {
     const minimumPlan = minimumPlanForFeature(decision.feature);

@@ -13,6 +13,19 @@ export const PROJECT_WORKSPACE_TABS = [
 
 export type ProjectWorkspaceTab = (typeof PROJECT_WORKSPACE_TABS)[number];
 
+export const PROJECT_WORKSPACE_TAB_LABELS: Record<ProjectWorkspaceTab, string> = {
+  resumen: 'Resumen',
+  inventario: 'Inventario',
+  masterplan: 'Masterplan',
+  publicacion: 'Publicación',
+  comercial: 'Comercial',
+  reservas: 'Reservas',
+  ventas: 'Ventas',
+  documentos: 'Documentos',
+  reportes: 'Reportes',
+  configuracion: 'Configuración',
+};
+
 export const resolveProjectWorkspaceTab = (
   value: string | null | undefined,
 ): ProjectWorkspaceTab =>

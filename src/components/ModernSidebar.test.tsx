@@ -7,7 +7,9 @@ const mockRedirect = { isAdmin: false, isAgent: true };
 const mockPlan = { plan: 'corredor' as string, isLoading: false };
 const mockPanel = {
   context: 'empresa' as 'empresa' | 'broker' | 'plataforma' | 'buyer',
-  options: [{ id: 'empresa', label: 'Empresa', shortLabel: 'Empresa', home: '/asesor/dashboard', area: 'agent' as const }],
+  options: [{ id: 'empresa', label: 'Empresa', shortLabel: 'Empresa', home: '/asesor/dashboard', area: 'agent' }] as {
+    id: string; label: string; shortLabel: string; home: string; area: 'agent' | 'admin' | 'buyer';
+  }[],
   setContext: vi.fn(),
   planIsAgency: false,
 };

@@ -24,13 +24,14 @@ const ReferralAttributionCapture = () => {
     if (window.localStorage.getItem(marker)) return;
 
     inFlight.current = true;
-    supabase.rpc('claim_user_referral', { p_code: attribution.code })
-      .then(({ error }) => {
+    void (async () => {
+      try {
+        const { error } = await supabase.rpc('claim_user_referral', { p_code: attribution.code });
         if (!error) window.localStorage.setItem(marker, '1');
-      })
-      .finally(() => {
+      } finally {
         inFlight.current = false;
-      });
+      }
+    })();
   }, [user]);
 
   return null;

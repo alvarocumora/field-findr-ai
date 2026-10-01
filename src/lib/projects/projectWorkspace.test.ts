@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   buildProjectWorkspaceReadiness,
   buildProjectWorkspaceStats,
+  PROJECT_WORKSPACE_TABS,
+  PROJECT_WORKSPACE_TAB_LABELS,
   projectWorkspacePath,
   resolveProjectWorkspaceTab,
 } from './projectWorkspace';
@@ -79,5 +81,13 @@ describe('projectWorkspace model', () => {
     expect(available.score).toBe(100);
     expect(unavailable.checks.find((check) => check.label.includes('Sentinel'))?.ready).toBe(false);
     expect(unavailable.score).toBe(86);
+  });
+});
+
+describe('project workspace tab labels', () => {
+  it('every workspace tab has a non-empty label', () => {
+    for (const tab of PROJECT_WORKSPACE_TABS) {
+      expect(PROJECT_WORKSPACE_TAB_LABELS[tab]?.trim()).toBeTruthy();
+    }
   });
 });
