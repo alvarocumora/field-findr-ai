@@ -18,6 +18,7 @@ import { LotDesigner3DDialog } from '@/components/lots/LotDesigner3DDialog';
 import { LotMapView } from '@/components/lots/LotMapView';
 import { PlanCompareView } from '@/components/lots/PlanCompareView';
 import { LegalTab } from '@/components/projects/LegalTab';
+import { applyLegalOverrides } from '@/lib/projects/legalOverrides';
 import { FinancingCalculator } from '@/components/projects/FinancingCalculator';
 import { PublicLotQuoter } from '@/components/projects/PublicLotQuoter';
 import { EnhancedLotCard } from '@/components/lots/EnhancedLotCard';
@@ -270,10 +271,13 @@ const ProjectDetail = () => {
     };
   }, [lots]);
 
-  const legalDocuments = (project as any)?.legal_documents || [];
-  const legalStatus = (project as any)?.legal_status || 'pending';
+  const { legalDocuments, permits, legalStatus } = applyLegalOverrides(
+    project,
+    (project as any)?.legal_documents || [],
+    (project as any)?.permits || [],
+    (project as any)?.legal_status || 'pending',
+  );
   const rolNumber = (project as any)?.rol_number;
-  const permits = (project as any)?.permits || [];
 
   const projectJsonLd = project ? buildProjectJsonLd({
     id: project.id,
