@@ -17,6 +17,7 @@ export type Database = {
       agent_commissions: {
         Row: {
           agent_id: string
+          closing_agent_id: string | null
           commission_amount: number
           commission_rate: number
           created_at: string
@@ -25,6 +26,7 @@ export type Database = {
           listing_id: string | null
           lot_id: string | null
           notes: string | null
+          originator_agent_id: string | null
           paid_at: string | null
           project_id: string | null
           referral_amount: number | null
@@ -38,6 +40,7 @@ export type Database = {
         }
         Insert: {
           agent_id: string
+          closing_agent_id?: string | null
           commission_amount?: number
           commission_rate?: number
           created_at?: string
@@ -46,6 +49,7 @@ export type Database = {
           listing_id?: string | null
           lot_id?: string | null
           notes?: string | null
+          originator_agent_id?: string | null
           paid_at?: string | null
           project_id?: string | null
           referral_amount?: number | null
@@ -59,6 +63,7 @@ export type Database = {
         }
         Update: {
           agent_id?: string
+          closing_agent_id?: string | null
           commission_amount?: number
           commission_rate?: number
           created_at?: string
@@ -67,6 +72,7 @@ export type Database = {
           listing_id?: string | null
           lot_id?: string | null
           notes?: string | null
+          originator_agent_id?: string | null
           paid_at?: string | null
           project_id?: string | null
           referral_amount?: number | null
@@ -337,10 +343,13 @@ export type Database = {
           network_override_rate: number
           onboarding_step: number
           phone: string | null
+          public_contact_opt_in: boolean
           referred_by: string | null
           slug: string
+          specialties: string[]
           updated_at: string
           user_id: string
+          verified_at: string | null
           zones: string[]
         }
         Insert: {
@@ -359,10 +368,13 @@ export type Database = {
           network_override_rate?: number
           onboarding_step?: number
           phone?: string | null
+          public_contact_opt_in?: boolean
           referred_by?: string | null
           slug: string
+          specialties?: string[]
           updated_at?: string
           user_id: string
+          verified_at?: string | null
           zones?: string[]
         }
         Update: {
@@ -381,13 +393,93 @@ export type Database = {
           network_override_rate?: number
           onboarding_step?: number
           phone?: string | null
+          public_contact_opt_in?: boolean
           referred_by?: string | null
           slug?: string
+          specialties?: string[]
           updated_at?: string
           user_id?: string
+          verified_at?: string | null
           zones?: string[]
         }
         Relationships: []
+      }
+      buyer_requirements: {
+        Row: {
+          area_max: number | null
+          area_min: number | null
+          broker_id: string
+          budget_max: number | null
+          budget_min: number | null
+          commune: string | null
+          created_at: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          financing: string | null
+          id: string
+          lead_id: string | null
+          notes: string | null
+          property_type: string | null
+          purpose: string | null
+          region: string | null
+          status: string
+          updated_at: string
+          urgency: string
+        }
+        Insert: {
+          area_max?: number | null
+          area_min?: number | null
+          broker_id?: string
+          budget_max?: number | null
+          budget_min?: number | null
+          commune?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          financing?: string | null
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          property_type?: string | null
+          purpose?: string | null
+          region?: string | null
+          status?: string
+          updated_at?: string
+          urgency?: string
+        }
+        Update: {
+          area_max?: number | null
+          area_min?: number | null
+          broker_id?: string
+          budget_max?: number | null
+          budget_min?: number | null
+          commune?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          financing?: string | null
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          property_type?: string | null
+          purpose?: string | null
+          region?: string | null
+          status?: string
+          updated_at?: string
+          urgency?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyer_requirements_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cached_listings: {
         Row: {
@@ -517,6 +609,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      commission_events: {
+        Row: {
+          actor_id: string | null
+          commission_id: string
+          created_at: string
+          details: Json
+          event_type: string
+          from_status: string | null
+          id: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          commission_id: string
+          created_at?: string
+          details?: Json
+          event_type: string
+          from_status?: string | null
+          id?: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          commission_id?: string
+          created_at?: string
+          details?: Json
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_events_commission_id_fkey"
+            columns: ["commission_id"]
+            isOneToOne: false
+            referencedRelation: "agent_commissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       commission_rules: {
         Row: {
@@ -739,6 +872,171 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_checkins: {
+        Row: {
+          checked_in_at: string
+          checked_in_by: string
+          id: string
+          registration_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          checked_in_by?: string
+          id?: string
+          registration_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          checked_in_by?: string
+          id?: string
+          registration_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_checkins_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: true
+            referencedRelation: "event_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_registrations: {
+        Row: {
+          attendee_email: string
+          attendee_name: string
+          attendee_phone: string | null
+          checked_in_at: string | null
+          checkin_code: string
+          event_id: string
+          id: string
+          lead_id: string | null
+          registered_at: string
+          reservation_id: string | null
+          status: string
+        }
+        Insert: {
+          attendee_email: string
+          attendee_name: string
+          attendee_phone?: string | null
+          checked_in_at?: string | null
+          checkin_code?: string
+          event_id: string
+          id?: string
+          lead_id?: string | null
+          registered_at?: string
+          reservation_id?: string | null
+          status?: string
+        }
+        Update: {
+          attendee_email?: string
+          attendee_name?: string
+          attendee_phone?: string | null
+          checked_in_at?: string | null
+          checkin_code?: string
+          event_id?: string
+          id?: string
+          lead_id?: string | null
+          registered_at?: string
+          reservation_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registrations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registrations_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          address: string | null
+          capacity: number | null
+          created_at: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          listing_id: string | null
+          organizer_id: string
+          project_id: string | null
+          reminder_message: string | null
+          slug: string
+          starts_at: string
+          status: string
+          title: string
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          address?: string | null
+          capacity?: number | null
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          listing_id?: string | null
+          organizer_id?: string
+          project_id?: string | null
+          reminder_message?: string | null
+          slug: string
+          starts_at: string
+          status?: string
+          title: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          address?: string | null
+          capacity?: number | null
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          listing_id?: string | null
+          organizer_id?: string
+          project_id?: string | null
+          reminder_message?: string | null
+          slug?: string
+          starts_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -1435,6 +1733,7 @@ export type Database = {
           id: string
           mercadopago_payment_id: string | null
           mercadopago_preference_id: string | null
+          organization_id: string | null
           status: string
           subscription_id: string | null
           user_id: string
@@ -1447,6 +1746,7 @@ export type Database = {
           id?: string
           mercadopago_payment_id?: string | null
           mercadopago_preference_id?: string | null
+          organization_id?: string | null
           status?: string
           subscription_id?: string | null
           user_id: string
@@ -1459,11 +1759,19 @@ export type Database = {
           id?: string
           mercadopago_payment_id?: string | null
           mercadopago_preference_id?: string | null
+          organization_id?: string | null
           status?: string
           subscription_id?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_subscription_id_fkey"
             columns: ["subscription_id"]
@@ -1664,6 +1972,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "project_broker_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_members: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -1892,7 +2232,10 @@ export type Database = {
           notes: string | null
           paid_at: string | null
           parcel_design: Json | null
+          payment_link_shared_at: string | null
+          payment_url: string | null
           reservation_amount: number
+          source_quote_id: string | null
           status: Database["public"]["Enums"]["reservation_status"]
           updated_at: string
           user_id: string
@@ -1915,7 +2258,10 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           parcel_design?: Json | null
+          payment_link_shared_at?: string | null
+          payment_url?: string | null
           reservation_amount?: number
+          source_quote_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           updated_at?: string
           user_id: string
@@ -1938,7 +2284,10 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           parcel_design?: Json | null
+          payment_link_shared_at?: string | null
+          payment_url?: string | null
           reservation_amount?: number
+          source_quote_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           updated_at?: string
           user_id?: string
@@ -1956,6 +2305,13 @@ export type Database = {
             columns: ["lot_id"]
             isOneToOne: false
             referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_source_quote_id_fkey"
+            columns: ["source_quote_id"]
+            isOneToOne: false
+            referencedRelation: "sales_quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -2131,6 +2487,147 @@ export type Database = {
           },
         ]
       }
+      sales_quote_events: {
+        Row: {
+          channel: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          quote_id: string
+        }
+        Insert: {
+          channel?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          quote_id: string
+        }
+        Update: {
+          channel?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          quote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_quote_events_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "sales_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_quotes: {
+        Row: {
+          accepted_at: string | null
+          agent_id: string
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          discount_amount: number
+          id: string
+          lead_id: string | null
+          list_price: number
+          lot_area_snapshot: number | null
+          lot_id: string
+          lot_label_snapshot: string | null
+          notes: string | null
+          project_id: string
+          project_name_snapshot: string | null
+          public_token: string
+          quote_number: number
+          quoted_price: number
+          sent_at: string | null
+          sent_channel: string | null
+          status: string
+          updated_at: string
+          valid_until: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          agent_id?: string
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          discount_amount?: number
+          id?: string
+          lead_id?: string | null
+          list_price: number
+          lot_area_snapshot?: number | null
+          lot_id: string
+          lot_label_snapshot?: string | null
+          notes?: string | null
+          project_id: string
+          project_name_snapshot?: string | null
+          public_token?: string
+          quote_number?: number
+          quoted_price: number
+          sent_at?: string | null
+          sent_channel?: string | null
+          status?: string
+          updated_at?: string
+          valid_until: string
+        }
+        Update: {
+          accepted_at?: string | null
+          agent_id?: string
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          discount_amount?: number
+          id?: string
+          lead_id?: string | null
+          list_price?: number
+          lot_area_snapshot?: number | null
+          lot_id?: string
+          lot_label_snapshot?: string | null
+          notes?: string | null
+          project_id?: string
+          project_name_snapshot?: string | null
+          public_token?: string
+          quote_number?: number
+          quoted_price?: number
+          sent_at?: string | null
+          sent_channel?: string | null
+          status?: string
+          updated_at?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_quotes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_quotes_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_quotes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_searches: {
         Row: {
           created_at: string | null
@@ -2209,6 +2706,7 @@ export type Database = {
           id: string
           mercadopago_payer_id: string | null
           mercadopago_subscription_id: string | null
+          organization_id: string | null
           plan_type: string
           status: string
           updated_at: string
@@ -2222,6 +2720,7 @@ export type Database = {
           id?: string
           mercadopago_payer_id?: string | null
           mercadopago_subscription_id?: string | null
+          organization_id?: string | null
           plan_type?: string
           status?: string
           updated_at?: string
@@ -2235,12 +2734,21 @@ export type Database = {
           id?: string
           mercadopago_payer_id?: string | null
           mercadopago_subscription_id?: string | null
+          organization_id?: string | null
           plan_type?: string
           status?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_ticket_messages: {
         Row: {
@@ -2641,16 +3149,20 @@ export type Database = {
       }
       visits: {
         Row: {
+          completed_at: string | null
           created_at: string
           duration_minutes: number
+          follow_up_at: string | null
           id: string
           lead_id: string | null
           listing_id: string | null
           lot_id: string | null
           mode: string
+          next_action: string | null
           notes: string | null
           outcome: string | null
           project_id: string | null
+          result_notes: string | null
           scheduled_at: string
           status: string
           updated_at: string
@@ -2660,16 +3172,20 @@ export type Database = {
           visitor_phone: string | null
         }
         Insert: {
+          completed_at?: string | null
           created_at?: string
           duration_minutes?: number
+          follow_up_at?: string | null
           id?: string
           lead_id?: string | null
           listing_id?: string | null
           lot_id?: string | null
           mode?: string
+          next_action?: string | null
           notes?: string | null
           outcome?: string | null
           project_id?: string | null
+          result_notes?: string | null
           scheduled_at: string
           status?: string
           updated_at?: string
@@ -2679,16 +3195,20 @@ export type Database = {
           visitor_phone?: string | null
         }
         Update: {
+          completed_at?: string | null
           created_at?: string
           duration_minutes?: number
+          follow_up_at?: string | null
           id?: string
           lead_id?: string | null
           listing_id?: string | null
           lot_id?: string | null
           mode?: string
+          next_action?: string | null
           notes?: string | null
           outcome?: string | null
           project_id?: string | null
+          result_notes?: string | null
           scheduled_at?: string
           status?: string
           updated_at?: string
@@ -2872,6 +3392,16 @@ export type Database = {
         }
         Returns: string
       }
+      can_access_project: {
+        Args: { _capability?: string; _project_id: string; _user_id?: string }
+        Returns: boolean
+      }
+      checkin_event_attendee: { Args: { p_code: string }; Returns: string }
+      claim_user_referral: { Args: { p_code: string }; Returns: boolean }
+      convert_event_registration_to_lead: {
+        Args: { p_registration_id: string }
+        Returns: string
+      }
       create_listing_lead: {
         Args: {
           p_email?: string
@@ -3032,6 +3562,15 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_event_funnel: {
+        Args: { p_event_id: string }
+        Returns: {
+          attended: number
+          leads: number
+          registered: number
+          reservations: number
+        }[]
+      }
       get_my_buyer_progress: { Args: never; Returns: Json }
       get_owner_lot_buyer: {
         Args: { p_lot_id: string }
@@ -3039,6 +3578,22 @@ export type Database = {
           buyer_email: string
           buyer_name: string
           buyer_phone: string
+        }[]
+      }
+      get_public_broker_profile: {
+        Args: { p_slug: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          company_name: string
+          display_name: string
+          email: string
+          is_verified: boolean
+          level: string
+          phone: string
+          slug: string
+          specialties: string[]
+          zones: string[]
         }[]
       }
       get_public_lots: {
@@ -3066,6 +3621,23 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+        }[]
+      }
+      get_public_sales_quote: {
+        Args: { p_token: string }
+        Returns: {
+          currency: string
+          customer_name: string
+          discount_amount: number
+          list_price: number
+          lot_area: number
+          lot_label: string
+          notes: string
+          project_name: string
+          quote_number: number
+          quoted_price: number
+          status: string
+          valid_until: string
         }[]
       }
       get_shared_design: {
@@ -3152,7 +3724,47 @@ export type Database = {
       }
       mark_overdue_payments: { Args: never; Returns: undefined }
       mark_referral_paid: { Args: { p_commission_id: string }; Returns: string }
+      match_buyer_requirement: {
+        Args: { p_limit?: number; p_requirement_id: string }
+        Returns: {
+          area: number
+          commune: string
+          criteria: Json
+          lot_id: string
+          lot_name: string
+          lot_number: string
+          price: number
+          project_id: string
+          project_name: string
+          region: string
+          score: number
+        }[]
+      }
+      organization_has_capability: {
+        Args: {
+          _capability: string
+          _organization_id: string
+          _user_id?: string
+        }
+        Returns: boolean
+      }
+      organization_role: {
+        Args: { _organization_id: string; _user_id?: string }
+        Returns: string
+      }
       project_slugify: { Args: { _txt: string }; Returns: string }
+      register_for_event: {
+        Args: {
+          p_email: string
+          p_event_id: string
+          p_name: string
+          p_phone?: string
+        }
+        Returns: {
+          checkin_code: string
+          registration_id: string
+        }[]
+      }
       register_sale:
         | {
             Args: {
@@ -3203,6 +3815,7 @@ export type Database = {
         Args: { p_days: number; p_payment_ref?: string; p_project_id: string }
         Returns: string
       }
+      track_sales_quote_view: { Args: { p_token: string }; Returns: boolean }
     }
     Enums: {
       app_role: "buyer" | "agent" | "admin"

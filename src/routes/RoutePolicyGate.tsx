@@ -9,7 +9,7 @@ import {
   FEATURE_LABELS,
   minimumPlanForFeature,
 } from '@/lib/access/planEntitlements';
-import { evaluateRoutePolicy, type RoutePolicy } from '@/lib/access/routePolicy';
+import { evaluateRoutePolicy, type RoutePolicy, type RoutePolicyDecision } from '@/lib/access/routePolicy';
 import { PageLoader } from '@/routes/routeUtils';
 
 interface RoutePolicyGateProps {
@@ -22,11 +22,14 @@ const RoutePolicyGate = ({ policy, children }: RoutePolicyGateProps) => {
 
   if (access.isLoading) return <PageLoader />;
 
-  const decision = evaluateRoutePolicy(policy, access);
-  if (decision.allowed) return <>{children}</>;
+  const result = evaluateRoutePolicy(policy, access);
+  if (result.allowed === true) return <>{children}</>;
+  const decision = result as Exclude<RoutePolicyDecision, { allowed: true }>;
+  const feature = decision.reason === 'feature' ? (decision as { feature: Parameters<typeof minimumPlanForFeature>[0] }).feature : undefined;
+  const capability = decision.reason === 'capability' ? (decision as { capability: string }).capability : undefined;
 
   if (decision.reason === 'feature') {
-    const minimumPlan = minimumPlanForFeature(decision.feature);
+    const minimumPlan = minimumPlanForFeature(feature);
     const plan = PLAN_DETAILS[minimumPlan];
 
     return (
@@ -37,7 +40,7 @@ const RoutePolicyGate = ({ policy, children }: RoutePolicyGateProps) => {
               <LockKeyhole className="h-5 w-5" />
             </div>
             <h1 className="mt-4 text-2xl font-semibold">
-              {FEATURE_LABELS[decision.feature]} no está incluido en tu plan
+              {FEATURE_LABELS[feature]} no está incluido en tu plan
             </h1>
             <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
               Tu rol tiene acceso a esta operación, pero esta herramienta requiere el plan{' '}
@@ -66,7 +69,7 @@ const RoutePolicyGate = ({ policy, children }: RoutePolicyGateProps) => {
           </div>
           <h1 className="mt-4 text-2xl font-semibold">Tu rol no permite esta operación</h1>
           <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-            Esta sección requiere el permiso {decision.capability}. Si trabajas dentro de una
+            Esta sección requiere el permiso {capability}. Si trabajas dentro de una
             inmobiliaria, un administrador puede ajustar tu rol o asignación al proyecto.
           </p>
           <Button className="mt-6" variant="outline" asChild>

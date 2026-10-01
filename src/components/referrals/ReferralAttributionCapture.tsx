@@ -27,8 +27,8 @@ const ReferralAttributionCapture = () => {
     supabase.rpc('claim_user_referral', { p_code: attribution.code })
       .then(({ error }) => {
         if (!error) window.localStorage.setItem(marker, '1');
-      })
-      .finally(() => {
+        inFlight.current = false;
+      }, () => {
         inFlight.current = false;
       });
   }, [user]);

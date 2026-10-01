@@ -15,6 +15,41 @@
       "when": 1789935288573,
       "tag": "0001_platform_admin_full_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790891921856,
+      "tag": "0002_sync_sales_quotes_visits_broker_privacy",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790891977983,
+      "tag": "0003_sync_buyer_requirements_commission_ledger",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790892021615,
+      "tag": "0004_sync_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790892069584,
+      "tag": "0005_sync_quotes_sharing_reservation_followup_org_permissions",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790892117578,
+      "tag": "0006_sync_referral_engine_v2",
+      "breakpoints": true
     }
   ]
 }
