@@ -182,7 +182,9 @@ export const KMZImportDialog = ({
           toast.error(`No se pudo guardar el masterplan: ${upErr.message}`);
         } else {
           const url = supabase.storage.from('property-images').getPublicUrl(path).data.publicUrl;
-          const { error: pErr } = await supabase.from('projects').update({ master_plan_url: url } as never).eq('id', projectId);
+          const { data: proj } = await supabase.from('projects').select('plan_images').eq('id', projectId).single();
+          const current = Array.isArray(proj?.plan_images) ? (proj!.plan_images as string[]) : [];
+          const { error: pErr } = await supabase.from('projects').update({ plan_images: [url, ...current] } as never).eq('id', projectId);
           if (pErr) toast.error(`Masterplan subido pero no vinculado: ${pErr.message}`);
         }
       }
