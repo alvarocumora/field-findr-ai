@@ -29,6 +29,13 @@
       "when": 1790891977983,
       "tag": "0003_sync_buyer_requirements_commission_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790892021615,
+      "tag": "0004_sync_events",
+      "breakpoints": true
     }
   ]
 }

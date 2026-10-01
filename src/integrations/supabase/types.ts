@@ -876,6 +876,171 @@ export type Database = {
           },
         ]
       }
+      event_checkins: {
+        Row: {
+          checked_in_at: string
+          checked_in_by: string
+          id: string
+          registration_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          checked_in_by?: string
+          id?: string
+          registration_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          checked_in_by?: string
+          id?: string
+          registration_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_checkins_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: true
+            referencedRelation: "event_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_registrations: {
+        Row: {
+          attendee_email: string
+          attendee_name: string
+          attendee_phone: string | null
+          checked_in_at: string | null
+          checkin_code: string
+          event_id: string
+          id: string
+          lead_id: string | null
+          registered_at: string
+          reservation_id: string | null
+          status: string
+        }
+        Insert: {
+          attendee_email: string
+          attendee_name: string
+          attendee_phone?: string | null
+          checked_in_at?: string | null
+          checkin_code?: string
+          event_id: string
+          id?: string
+          lead_id?: string | null
+          registered_at?: string
+          reservation_id?: string | null
+          status?: string
+        }
+        Update: {
+          attendee_email?: string
+          attendee_name?: string
+          attendee_phone?: string | null
+          checked_in_at?: string | null
+          checkin_code?: string
+          event_id?: string
+          id?: string
+          lead_id?: string | null
+          registered_at?: string
+          reservation_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registrations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registrations_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          address: string | null
+          capacity: number | null
+          created_at: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          listing_id: string | null
+          organizer_id: string
+          project_id: string | null
+          reminder_message: string | null
+          slug: string
+          starts_at: string
+          status: string
+          title: string
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          address?: string | null
+          capacity?: number | null
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          listing_id?: string | null
+          organizer_id?: string
+          project_id?: string | null
+          reminder_message?: string | null
+          slug: string
+          starts_at: string
+          status?: string
+          title: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          address?: string | null
+          capacity?: number | null
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          listing_id?: string | null
+          organizer_id?: string
+          project_id?: string | null
+          reminder_message?: string | null
+          slug?: string
+          starts_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string | null
@@ -3105,6 +3270,11 @@ export type Database = {
         }
         Returns: string
       }
+      checkin_event_attendee: { Args: { p_code: string }; Returns: string }
+      convert_event_registration_to_lead: {
+        Args: { p_registration_id: string }
+        Returns: string
+      }
       create_listing_lead: {
         Args: {
           p_email?: string
@@ -3265,6 +3435,15 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_event_funnel: {
+        Args: { p_event_id: string }
+        Returns: {
+          attended: number
+          leads: number
+          registered: number
+          reservations: number
+        }[]
+      }
       get_my_buyer_progress: { Args: never; Returns: Json }
       get_owner_lot_buyer: {
         Args: { p_lot_id: string }
@@ -3418,6 +3597,18 @@ export type Database = {
         }[]
       }
       project_slugify: { Args: { _txt: string }; Returns: string }
+      register_for_event: {
+        Args: {
+          p_email: string
+          p_event_id: string
+          p_name: string
+          p_phone?: string
+        }
+        Returns: {
+          checkin_code: string
+          registration_id: string
+        }[]
+      }
       register_sale:
         | {
             Args: {
