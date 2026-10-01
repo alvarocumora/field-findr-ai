@@ -557,6 +557,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         userId,
         file,
         pricing: { basePrice, pricePerSqm },
+        insertNew: false,
         updateExisting: true,
       });
 
@@ -691,6 +692,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         userId,
         file,
         pricing: { basePrice, pricePerSqm },
+        insertNew: false,
         updateExisting: true,
       });
 

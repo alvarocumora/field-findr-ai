@@ -30,6 +30,10 @@ const BROKER_FEATURES: readonly PlanFeature[] = [
   'commissions',
 ];
 
+const AGENT_CORE_FEATURES: readonly PlanFeature[] = [
+  'marketplace', 'crm', 'quotes', 'reservations', 'commissions', 'analytics',
+];
+
 /**
  * Frontend access facade.
  *
@@ -61,8 +65,10 @@ export const useAccess = () => {
     if (panel.context === 'plataforma') return identity.isAdmin;
     if (panel.context === 'broker' && BROKER_FEATURES.includes(feature)) return true;
     if (panel.context === 'buyer') return feature === 'marketplace';
+    // Core selling tools were never plan-gated; keep them for every agent.
+    if ((identity.isAgent || identity.isAdmin) && AGENT_CORE_FEATURES.includes(feature)) return true;
     return hasPlanFeature(panel.plan, feature);
-  }, [identity.isAdmin, panel.context, panel.plan]);
+  }, [identity.isAdmin, identity.isAgent, panel.context, panel.plan]);
 
   const canEnterArea = useCallback((area: 'buyer' | 'agent' | 'admin') => {
     if (area === 'buyer') return identity.isBuyer;

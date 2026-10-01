@@ -24,6 +24,8 @@ export interface SpatialImportOptions {
   file: File;
   pricing: KmzPricing;
   updateExisting?: boolean;
+  /** When false, unmatched shapes are skipped (geometry refresh only). */
+  insertNew?: boolean;
 }
 
 /**
@@ -46,6 +48,7 @@ export async function importProjectSpatialSource({
   file,
   pricing,
   updateExisting = true,
+  insertNew = true,
 }: SpatialImportOptions): Promise<SpatialImportResult> {
   const parsed = file.name.toLowerCase().endsWith('.kml')
     ? await parseKMLFile(file)
@@ -101,7 +104,7 @@ export async function importProjectSpatialSource({
     pricing,
   );
 
-  if (plan.toInsert.length) {
+  if (insertNew && plan.toInsert.length) {
     const rows = plan.toInsert.map((row) => ({
       ...row,
       project_id: projectId,
@@ -192,7 +195,7 @@ export async function importProjectSpatialSource({
   if (projectError) throw projectError;
 
   return {
-    inserted: plan.toInsert.length,
+    inserted: insertNew ? plan.toInsert.length : 0,
     updated: updateExisting ? plan.toUpdate.length : 0,
     roads: roads.features.length,
     polygons: polygons.length,
