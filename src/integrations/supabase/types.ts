@@ -3397,6 +3397,7 @@ export type Database = {
         Returns: boolean
       }
       checkin_event_attendee: { Args: { p_code: string }; Returns: string }
+      claim_user_referral: { Args: { p_code: string }; Returns: boolean }
       convert_event_registration_to_lead: {
         Args: { p_registration_id: string }
         Returns: string
