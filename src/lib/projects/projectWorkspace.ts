@@ -99,10 +99,11 @@ export const buildProjectWorkspaceReadiness = (
   project: WorkspaceProjectLike | null | undefined,
   lots: readonly WorkspaceLotLike[],
   hasSpatialSource: boolean,
+  hasRecentSatellite?: boolean | null,
 ): WorkspaceReadiness => {
   if (!project) return { checks: [], score: 0 };
 
-  const checks = [
+  const checks: Array<{ label: string; ready: boolean }> = [
     { label: 'Territorio definido', ready: Boolean(project.region && project.country) },
     { label: 'Fuente KMZ / espacial', ready: Boolean(project.kmz_file_url || hasSpatialSource) },
     { label: 'Inventario cargado', ready: lots.length > 0 },
@@ -114,6 +115,15 @@ export const buildProjectWorkspaceReadiness = (
     { label: 'Imágenes del proyecto', ready: Boolean(project.images?.length) },
     { label: 'Proyecto publicado', ready: project.status === 'active' },
   ];
+
+  // Satellite availability is resolved asynchronously. Do not change the
+  // readiness denominator while the lookup is still pending/disabled.
+  if (hasRecentSatellite !== null && hasRecentSatellite !== undefined) {
+    checks.splice(2, 0, {
+      label: 'Imagen Sentinel-2 reciente',
+      ready: hasRecentSatellite,
+    });
+  }
 
   return {
     checks,
