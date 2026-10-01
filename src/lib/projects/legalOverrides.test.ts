@@ -22,6 +22,14 @@ describe('applyLegalOverrides', () => {
     expect(r.legalStatus).toBe('verified');
   });
 
+  it('detecta Licantén por id aunque nombre y slug sean otros', () => {
+    const r = applyLegalOverrides(
+      { id: 'b4363fda-e99f-400d-ae95-2cbc8244b770', slug: 'valle-escondido', name: 'Valle Escondido' },
+      [], [], 'pending',
+    );
+    expect(r.legalStatus).toBe('verified');
+  });
+
   it('no toca otros proyectos', () => {
     const docs = [{ type: 'titulo_dominio', name: 'Título de Dominio', status: 'pending' }];
     const r = applyLegalOverrides({ slug: 'brisas-de-caone', name: 'Brisas de Caone' }, docs, [], 'pending');
