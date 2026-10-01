@@ -1733,6 +1733,7 @@ export type Database = {
           id: string
           mercadopago_payment_id: string | null
           mercadopago_preference_id: string | null
+          organization_id: string | null
           status: string
           subscription_id: string | null
           user_id: string
@@ -1745,6 +1746,7 @@ export type Database = {
           id?: string
           mercadopago_payment_id?: string | null
           mercadopago_preference_id?: string | null
+          organization_id?: string | null
           status?: string
           subscription_id?: string | null
           user_id: string
@@ -1757,11 +1759,19 @@ export type Database = {
           id?: string
           mercadopago_payment_id?: string | null
           mercadopago_preference_id?: string | null
+          organization_id?: string | null
           status?: string
           subscription_id?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_subscription_id_fkey"
             columns: ["subscription_id"]
@@ -1962,6 +1972,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "project_broker_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_members: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -2190,7 +2232,10 @@ export type Database = {
           notes: string | null
           paid_at: string | null
           parcel_design: Json | null
+          payment_link_shared_at: string | null
+          payment_url: string | null
           reservation_amount: number
+          source_quote_id: string | null
           status: Database["public"]["Enums"]["reservation_status"]
           updated_at: string
           user_id: string
@@ -2213,7 +2258,10 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           parcel_design?: Json | null
+          payment_link_shared_at?: string | null
+          payment_url?: string | null
           reservation_amount?: number
+          source_quote_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           updated_at?: string
           user_id: string
@@ -2236,7 +2284,10 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           parcel_design?: Json | null
+          payment_link_shared_at?: string | null
+          payment_url?: string | null
           reservation_amount?: number
+          source_quote_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           updated_at?: string
           user_id?: string
@@ -2254,6 +2305,13 @@ export type Database = {
             columns: ["lot_id"]
             isOneToOne: false
             referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_source_quote_id_fkey"
+            columns: ["source_quote_id"]
+            isOneToOne: false
+            referencedRelation: "sales_quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -2429,6 +2487,41 @@ export type Database = {
           },
         ]
       }
+      sales_quote_events: {
+        Row: {
+          channel: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          quote_id: string
+        }
+        Insert: {
+          channel?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          quote_id: string
+        }
+        Update: {
+          channel?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          quote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_quote_events_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "sales_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_quotes: {
         Row: {
           accepted_at: string | null
@@ -2442,11 +2535,17 @@ export type Database = {
           id: string
           lead_id: string | null
           list_price: number
+          lot_area_snapshot: number | null
           lot_id: string
+          lot_label_snapshot: string | null
           notes: string | null
           project_id: string
+          project_name_snapshot: string | null
+          public_token: string
+          quote_number: number
           quoted_price: number
           sent_at: string | null
+          sent_channel: string | null
           status: string
           updated_at: string
           valid_until: string
@@ -2463,11 +2562,17 @@ export type Database = {
           id?: string
           lead_id?: string | null
           list_price: number
+          lot_area_snapshot?: number | null
           lot_id: string
+          lot_label_snapshot?: string | null
           notes?: string | null
           project_id: string
+          project_name_snapshot?: string | null
+          public_token?: string
+          quote_number?: number
           quoted_price: number
           sent_at?: string | null
+          sent_channel?: string | null
           status?: string
           updated_at?: string
           valid_until: string
@@ -2484,11 +2589,17 @@ export type Database = {
           id?: string
           lead_id?: string | null
           list_price?: number
+          lot_area_snapshot?: number | null
           lot_id?: string
+          lot_label_snapshot?: string | null
           notes?: string | null
           project_id?: string
+          project_name_snapshot?: string | null
+          public_token?: string
+          quote_number?: number
           quoted_price?: number
           sent_at?: string | null
+          sent_channel?: string | null
           status?: string
           updated_at?: string
           valid_until?: string
@@ -2595,6 +2706,7 @@ export type Database = {
           id: string
           mercadopago_payer_id: string | null
           mercadopago_subscription_id: string | null
+          organization_id: string | null
           plan_type: string
           status: string
           updated_at: string
@@ -2608,6 +2720,7 @@ export type Database = {
           id?: string
           mercadopago_payer_id?: string | null
           mercadopago_subscription_id?: string | null
+          organization_id?: string | null
           plan_type?: string
           status?: string
           updated_at?: string
@@ -2621,12 +2734,21 @@ export type Database = {
           id?: string
           mercadopago_payer_id?: string | null
           mercadopago_subscription_id?: string | null
+          organization_id?: string | null
           plan_type?: string
           status?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_ticket_messages: {
         Row: {
@@ -3270,6 +3392,10 @@ export type Database = {
         }
         Returns: string
       }
+      can_access_project: {
+        Args: { _capability?: string; _project_id: string; _user_id?: string }
+        Returns: boolean
+      }
       checkin_event_attendee: { Args: { p_code: string }; Returns: string }
       convert_event_registration_to_lead: {
         Args: { p_registration_id: string }
@@ -3496,6 +3622,23 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_public_sales_quote: {
+        Args: { p_token: string }
+        Returns: {
+          currency: string
+          customer_name: string
+          discount_amount: number
+          list_price: number
+          lot_area: number
+          lot_label: string
+          notes: string
+          project_name: string
+          quote_number: number
+          quoted_price: number
+          status: string
+          valid_until: string
+        }[]
+      }
       get_shared_design: {
         Args: { p_token: string }
         Returns: {
@@ -3596,6 +3739,18 @@ export type Database = {
           score: number
         }[]
       }
+      organization_has_capability: {
+        Args: {
+          _capability: string
+          _organization_id: string
+          _user_id?: string
+        }
+        Returns: boolean
+      }
+      organization_role: {
+        Args: { _organization_id: string; _user_id?: string }
+        Returns: string
+      }
       project_slugify: { Args: { _txt: string }; Returns: string }
       register_for_event: {
         Args: {
@@ -3659,6 +3814,7 @@ export type Database = {
         Args: { p_days: number; p_payment_ref?: string; p_project_id: string }
         Returns: string
       }
+      track_sales_quote_view: { Args: { p_token: string }; Returns: boolean }
     }
     Enums: {
       app_role: "buyer" | "agent" | "admin"
