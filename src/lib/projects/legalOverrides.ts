@@ -29,10 +29,18 @@ const normalize = (s?: string | null) =>
   (s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 /** Proyectos con toda la documentación verificada y permisos aprobados. */
-const isFullyApproved = (project: { slug?: string | null; name?: string | null }) =>
-  normalize(project.slug).includes('licanten') || normalize(project.name).includes('licanten');
+const FULLY_APPROVED_IDS = new Set([
+  'b4363fda-e99f-400d-ae95-2cbc8244b770', // Valle Escondido Licantén
+]);
 
-export function applyLegalOverrides<P extends { slug?: string | null; name?: string | null }>(
+type ProjectRef = { id?: string | null; slug?: string | null; name?: string | null };
+
+const isFullyApproved = (project: ProjectRef) =>
+  FULLY_APPROVED_IDS.has(project.id ?? '') ||
+  normalize(project.slug).includes('licanten') ||
+  normalize(project.name).includes('licanten');
+
+export function applyLegalOverrides<P extends ProjectRef>(
   project: P | null | undefined,
   legalDocuments: LegalItem[],
   permits: LegalItem[],
