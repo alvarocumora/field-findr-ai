@@ -17,6 +17,7 @@ export type Database = {
       agent_commissions: {
         Row: {
           agent_id: string
+          closing_agent_id: string | null
           commission_amount: number
           commission_rate: number
           created_at: string
@@ -25,6 +26,7 @@ export type Database = {
           listing_id: string | null
           lot_id: string | null
           notes: string | null
+          originator_agent_id: string | null
           paid_at: string | null
           project_id: string | null
           referral_amount: number | null
@@ -38,6 +40,7 @@ export type Database = {
         }
         Insert: {
           agent_id: string
+          closing_agent_id?: string | null
           commission_amount?: number
           commission_rate?: number
           created_at?: string
@@ -46,6 +49,7 @@ export type Database = {
           listing_id?: string | null
           lot_id?: string | null
           notes?: string | null
+          originator_agent_id?: string | null
           paid_at?: string | null
           project_id?: string | null
           referral_amount?: number | null
@@ -59,6 +63,7 @@ export type Database = {
         }
         Update: {
           agent_id?: string
+          closing_agent_id?: string | null
           commission_amount?: number
           commission_rate?: number
           created_at?: string
@@ -67,6 +72,7 @@ export type Database = {
           listing_id?: string | null
           lot_id?: string | null
           notes?: string | null
+          originator_agent_id?: string | null
           paid_at?: string | null
           project_id?: string | null
           referral_amount?: number | null
@@ -398,6 +404,83 @@ export type Database = {
         }
         Relationships: []
       }
+      buyer_requirements: {
+        Row: {
+          area_max: number | null
+          area_min: number | null
+          broker_id: string
+          budget_max: number | null
+          budget_min: number | null
+          commune: string | null
+          created_at: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          financing: string | null
+          id: string
+          lead_id: string | null
+          notes: string | null
+          property_type: string | null
+          purpose: string | null
+          region: string | null
+          status: string
+          updated_at: string
+          urgency: string
+        }
+        Insert: {
+          area_max?: number | null
+          area_min?: number | null
+          broker_id?: string
+          budget_max?: number | null
+          budget_min?: number | null
+          commune?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          financing?: string | null
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          property_type?: string | null
+          purpose?: string | null
+          region?: string | null
+          status?: string
+          updated_at?: string
+          urgency?: string
+        }
+        Update: {
+          area_max?: number | null
+          area_min?: number | null
+          broker_id?: string
+          budget_max?: number | null
+          budget_min?: number | null
+          commune?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          financing?: string | null
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          property_type?: string | null
+          purpose?: string | null
+          region?: string | null
+          status?: string
+          updated_at?: string
+          urgency?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyer_requirements_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cached_listings: {
         Row: {
           cache_key: string
@@ -526,6 +609,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      commission_events: {
+        Row: {
+          actor_id: string | null
+          commission_id: string
+          created_at: string
+          details: Json
+          event_type: string
+          from_status: string | null
+          id: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          commission_id: string
+          created_at?: string
+          details?: Json
+          event_type: string
+          from_status?: string | null
+          id?: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          commission_id?: string
+          created_at?: string
+          details?: Json
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_events_commission_id_fkey"
+            columns: ["commission_id"]
+            isOneToOne: false
+            referencedRelation: "agent_commissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       commission_rules: {
         Row: {
@@ -3277,6 +3401,22 @@ export type Database = {
       }
       mark_overdue_payments: { Args: never; Returns: undefined }
       mark_referral_paid: { Args: { p_commission_id: string }; Returns: string }
+      match_buyer_requirement: {
+        Args: { p_limit?: number; p_requirement_id: string }
+        Returns: {
+          area: number
+          commune: string
+          criteria: Json
+          lot_id: string
+          lot_name: string
+          lot_number: string
+          price: number
+          project_id: string
+          project_name: string
+          region: string
+          score: number
+        }[]
+      }
       project_slugify: { Args: { _txt: string }; Returns: string }
       register_sale:
         | {
