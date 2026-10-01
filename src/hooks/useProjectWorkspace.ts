@@ -59,7 +59,9 @@ export const useProjectWorkspace = (projectId: string) => {
     [lots, reservations],
   );
 
-  const satelliteReady = sentinelQuery.isFetched
+  // Only a successful Sentinel lookup may influence readiness. A network or
+  // provider error is operationally unknown, not evidence that imagery is missing.
+  const satelliteReady = sentinelQuery.isSuccess
     ? Boolean(sentinelQuery.data?.available)
     : null;
 
