@@ -57,6 +57,13 @@
       "when": 1790971760542,
       "tag": "0007_account_type_choice_and_public_whatsapp",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790973564916,
+      "tag": "0008_one_active_reservation_per_lot",
+      "breakpoints": true
     }
   ]
 }

@@ -46,6 +46,8 @@ interface LotMapViewProps {
   tourMode?: boolean;
   /** Optional road/servitude geometry already extracted from the source KMZ. */
   externalRoads?: GeoJSON.FeatureCollection<GeoJSON.LineString> | null;
+  /** Increment to re-run the cinematic flight to the selected lot. */
+  focusSignal?: number;
 }
 
 // Generate GeoJSON from lots - uses real polygons if available, otherwise generates grid
@@ -274,7 +276,7 @@ const formatPrice = (price: number | null) => {
   }).format(price);
 };
 
-export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, planImages, onLotsUpdated, readOnly = false, showAdminControls = false, onOpenCompare, tourMode = false, externalRoads = null }: LotMapViewProps) => {
+export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, planImages, onLotsUpdated, readOnly = false, showAdminControls = false, onOpenCompare, tourMode = false, externalRoads = null, focusSignal = 0 }: LotMapViewProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const popup = useRef<mapboxgl.Popup | null>(null);
@@ -1367,17 +1369,28 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         if (normalized?.valid) {
           const selectedBounds = new mapboxgl.LngLatBounds();
           normalized.coords.forEach(([lng, lat]) => selectedBounds.extend([lng, lat]));
-          map.current.fitBounds(selectedBounds, {
-            padding: { top: 120, right: 120, bottom: 150, left: 120 },
-            pitch: 67,
-            bearing: planBearing - 18,
-            maxZoom: 17,
-            duration: 1400,
+          const camera = map.current.cameraForBounds(selectedBounds, {
+            padding: { top: 120, right: 120, bottom: 200, left: 120 },
+            maxZoom: 17.2,
           });
+          if (camera?.center) {
+            // Vuelo orbital: arco suave, inclinación 62° y giro leve sobre el lote.
+            map.current.flyTo({
+              center: camera.center,
+              zoom: camera.zoom,
+              pitch: 62,
+              bearing: planBearing - 24,
+              curve: 1.6,
+              speed: 0.9,
+              duration: 2200,
+              easing: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
+              essential: true,
+            });
+          }
         }
       }
     }
-  }, [selectedLotId, mapLoaded, tourMode, lots, planBearing]);
+  }, [selectedLotId, mapLoaded, tourMode, lots, planBearing, focusSignal]);
 
   const stopCinematic = () => {
     if (cinematicTimerRef.current) {
