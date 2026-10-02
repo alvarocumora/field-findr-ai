@@ -482,11 +482,11 @@ const ProjectExperience = () => {
                 ) : (
                   <div className={`transition-all duration-700 ${focusTransition === 'departing' ? 'scale-[0.985] opacity-45' : focusTransition === 'arriving' ? 'scale-[1.015] opacity-90' : 'scale-100 opacity-100'}`}>
                     <LotMapView
-                      key={`terrain-map-${cinematicFocus ? selectedLot?.id : 'all'}-${focusVersion}`}
-                      lots={(cinematicFocus ? focusLots : lots) as any}
+                      lots={lots as any}
+                      focusSignal={focusVersion}
                       projectCenter={{
-                        lat: focusCenter?.lat ?? project.latitude ?? -34.9767,
-                        lng: focusCenter?.lng ?? project.longitude ?? -71.7856,
+                        lat: project.latitude ?? -34.9767,
+                        lng: project.longitude ?? -71.7856,
                       }}
                       onLotClick={(lot) => selectLot(lot, { source: 'masterplan', openInspector: true })}
                       selectedLotId={selectedLot?.id ?? null}
