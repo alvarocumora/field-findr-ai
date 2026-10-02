@@ -1815,6 +1815,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type_chosen_at: string | null
           avatar_url: string | null
           bio: string | null
           company_name: string | null
@@ -1840,6 +1841,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_type_chosen_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           company_name?: string | null
@@ -1865,6 +1867,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_type_chosen_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           company_name?: string | null
@@ -3397,6 +3400,7 @@ export type Database = {
         Returns: boolean
       }
       checkin_event_attendee: { Args: { p_code: string }; Returns: string }
+      choose_account_type: { Args: { _type: string }; Returns: string }
       claim_user_referral: { Args: { p_code: string }; Returns: boolean }
       convert_event_registration_to_lead: {
         Args: { p_registration_id: string }

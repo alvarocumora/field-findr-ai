@@ -50,6 +50,13 @@
       "when": 1790892117578,
       "tag": "0006_sync_referral_engine_v2",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790971760542,
+      "tag": "0007_account_type_choice_and_public_whatsapp",
+      "breakpoints": true
     }
   ]
 }

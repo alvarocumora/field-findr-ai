@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import NotFound from "@/pages/NotFound";
+import AccountTypeOnboarding from "@/components/auth/AccountTypeOnboarding";
 import RootErrorBoundary from "@/components/RootErrorBoundary";
 import RouteGuard from "./RouteGuard";
 import RouteSeo from "./RouteSeo";
@@ -33,6 +34,7 @@ const AppRouter = () => (
     <RootErrorBoundary>
       <RouteSeo />
       <ReferralAttributionCapture />
+      <AccountTypeOnboarding />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {Object.entries(groups).map(([key, entries]) => {

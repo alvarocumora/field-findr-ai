@@ -78,6 +78,7 @@ const StickyHeader = () => {
     if (isAgent || isAdmin) {
       items.push({ label: 'Mi Panel', href: '/panel', icon: LayoutDashboard });
       items.push({ label: 'Mis Propiedades', href: '/asesor/listings', icon: Building2 });
+      items.push({ label: 'Vista comprador', href: '/comprador', icon: Home });
     }
 
     if (!isAgent && !isAdmin) {
