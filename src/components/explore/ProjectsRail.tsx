@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { MapPin, Layers } from 'lucide-react';
+import { MapPin, Layers, Map as MapIcon, ArrowRight } from 'lucide-react';
+import { formatPriceShort } from '@/hooks/useListings';
 import { Switch } from '@/components/ui/switch';
 import { useIncludeLoteoLots } from '@/hooks/useIncludeLoteoLots';
 
@@ -14,7 +15,13 @@ interface ProjectRow {
   images: string[] | null;
   total_lots: number | null;
   available_lots: number | null;
+  total_area: number | null;
 }
+
+interface LotStat { minPrice: number | null; minArea: number | null; maxArea: number | null; }
+
+const fmtSurface = (m2: number) =>
+  m2 >= 10000 ? `${(m2 / 10000).toLocaleString('es-CL', { maximumFractionDigits: 2 })} ha` : `${Math.round(m2).toLocaleString('es-CL')} m²`;
 
 /**
  * Horizontal rail of active projects (loteos) rendered above the explorer list.
@@ -30,13 +37,36 @@ export default function ProjectsRail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
-        .select('id,name,city,region,images,total_lots,available_lots')
+        .select('id,name,city,region,images,total_lots,available_lots,total_area')
         .eq('status', 'active')
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(12);
       if (error) throw error;
       return (data ?? []) as ProjectRow[];
+    },
+    staleTime: 60_000,
+  });
+
+  const ids = projects.map((p) => p.id);
+  const { data: stats = {} } = useQuery({
+    queryKey: ['explorer-projects-rail-stats', ids],
+    enabled: ids.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('lots')
+        .select('project_id,price,area_m2,status')
+        .in('project_id', ids);
+      const out: Record<string, LotStat> = {};
+      for (const l of (data ?? []) as any[]) {
+        const s = (out[l.project_id] ??= { minPrice: null, minArea: null, maxArea: null });
+        if (l.status === 'available' && l.price > 0) s.minPrice = s.minPrice == null ? l.price : Math.min(s.minPrice, l.price);
+        if (l.area_m2 > 0) {
+          s.minArea = s.minArea == null ? l.area_m2 : Math.min(s.minArea, l.area_m2);
+          s.maxArea = s.maxArea == null ? l.area_m2 : Math.max(s.maxArea, l.area_m2);
+        }
+      }
+      return out;
     },
     staleTime: 60_000,
   });
@@ -58,11 +88,19 @@ export default function ProjectsRail() {
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
         {projects.map((p) => {
           const cover = p.images?.[0];
+          const st = (stats as Record<string, LotStat>)[p.id];
+          const avail = p.available_lots ?? 0;
+          const total = p.total_lots ?? 0;
+          const pct = total > 0 ? Math.round((avail / total) * 100) : 0;
+          const low = avail > 0 && avail < 5;
           return (
-            <button
+            <div
               key={p.id}
+              role="button"
+              tabIndex={0}
               onClick={() => navigate(`/proyecto/${p.id}`)}
-              className="group flex-shrink-0 w-[220px] rounded-lg border border-border/40 bg-card hover:border-primary/60 hover:shadow-md transition-all text-left overflow-hidden"
+              onKeyDown={(e) => e.key === 'Enter' && navigate(`/proyecto/${p.id}`)}
+              className="group flex-shrink-0 w-[240px] cursor-pointer rounded-lg border border-border/40 bg-card hover:border-primary/60 hover:shadow-md transition-all text-left overflow-hidden"
             >
               <div className="relative h-[100px] bg-muted overflow-hidden">
                 {cover ? (
@@ -78,8 +116,8 @@ export default function ProjectsRail() {
                   </div>
                 )}
                 {typeof p.available_lots === 'number' && (
-                  <span className="absolute top-1.5 right-1.5 rounded-full bg-emerald-500/90 text-white text-[10px] font-medium px-2 py-0.5">
-                    {p.available_lots} disponibles
+                  <span className={`absolute top-1.5 right-1.5 rounded-full text-[10px] font-medium px-2 py-0.5 ${avail === 0 ? 'bg-muted text-muted-foreground' : low ? 'bg-amber-500/90 text-background' : 'bg-emerald-500/90 text-background'}`}>
+                    {avail === 0 ? 'Agotado' : low ? `Últimas ${avail}` : `${avail} disponibles`}
                   </span>
                 )}
               </div>
@@ -91,13 +129,38 @@ export default function ProjectsRail() {
                     {[p.city, p.region].filter(Boolean).join(', ') || 'Sin ubicación'}
                   </span>
                 </div>
-                {typeof p.total_lots === 'number' && (
-                  <div className="text-[10px] text-muted-foreground/80 mt-0.5">
-                    {p.total_lots} lotes en total
+                {st?.minPrice != null && (
+                  <div className="mt-1 text-sm font-bold text-primary">Desde {formatPriceShort(st.minPrice)}</div>
+                )}
+                {st?.minArea != null && st.maxArea != null && (
+                  <div className="text-[10px] text-muted-foreground">
+                    Parcelas de {fmtSurface(st.minArea)}{st.maxArea > st.minArea ? ` a ${fmtSurface(st.maxArea)}` : ''}
                   </div>
                 )}
+                {total > 0 && (
+                  <div className="mt-1.5">
+                    <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+                      <div className={`h-full ${low ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="mt-0.5 text-[10px] text-muted-foreground/80">{avail} de {total} disponibles</div>
+                  </div>
+                )}
+                <div className="mt-2 flex gap-1.5">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); navigate(`/proyecto/${p.id}/experiencia`); }}
+                    className="flex-1 inline-flex items-center justify-center gap-1 rounded-md border border-border/60 px-2 py-1 text-[11px] font-medium hover:border-primary/60"
+                  >
+                    <MapIcon className="h-3 w-3" /> Masterplan
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); navigate(`/proyecto/${p.id}`); }}
+                    className="flex-1 inline-flex items-center justify-center gap-1 rounded-md bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground"
+                  >
+                    Ver parcelas <ArrowRight className="h-3 w-3" />
+                  </button>
+                </div>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>

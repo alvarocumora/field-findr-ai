@@ -342,8 +342,9 @@ export const getCountryFlag = (country: string | null): string => {
 };
 
 export const formatArea = (areaM2: number | null, areaHa: number | null) => {
-  if (areaHa && areaHa >= 1) {
-    return `${areaHa.toLocaleString('es-CL')} há`;
+  const ha = areaHa && areaHa > 0 ? areaHa : areaM2 && areaM2 >= 10000 ? areaM2 / 10000 : null;
+  if (ha && ha >= 1) {
+    return `${ha.toLocaleString('es-CL', { maximumFractionDigits: 2 })} ha`;
   }
   if (areaM2) {
     return `${areaM2.toLocaleString('es-CL')} m²`;
