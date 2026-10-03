@@ -7,12 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Box, Map as MapIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ProjectCommercialCard, { CommercialProject } from './ProjectCommercialCard';
-import velValle from '@/assets/valle-escondido-licanten/vel-valle.jpg';
-
-// Fotos reales locales para proyectos cuyo campo images aún está vacío.
-const LOCAL_COVERS: Record<string, string> = {
-  'valle-escondido-licanten': velValle,
-};
+import { projectImages } from '@/lib/projectCovers';
 
 type Zone = 'all' | 'maule' | 'sur' | 'other';
 const ZONES: { id: Zone; label: string }[] = [
@@ -48,9 +43,7 @@ const FeaturedListings = () => {
         const list = (lots ?? []) as Array<{ price: number | null; status: string | null }>;
         const available = list.filter((l) => l.status === 'available');
         const prices = available.map((l) => Number(l.price)).filter((p) => Number.isFinite(p) && p > 0);
-        const images = Array.isArray(project.images) && project.images.length > 0
-          ? project.images
-          : (project.slug && LOCAL_COVERS[project.slug] ? [LOCAL_COVERS[project.slug]] : []);
+        const images = projectImages(project);
         return {
           ...project,
           images,

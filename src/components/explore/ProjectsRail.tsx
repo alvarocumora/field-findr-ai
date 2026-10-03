@@ -5,6 +5,7 @@ import { MapPin, Layers, Map as MapIcon, ArrowRight } from 'lucide-react';
 import { formatPriceShort } from '@/hooks/useListings';
 import { Switch } from '@/components/ui/switch';
 import { useIncludeLoteoLots } from '@/hooks/useIncludeLoteoLots';
+import { projectImages } from '@/lib/projectCovers';
 
 
 interface ProjectRow {
@@ -87,7 +88,7 @@ export default function ProjectsRail() {
 
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
         {projects.map((p) => {
-          const cover = p.images?.[0];
+          const cover = projectImages(p)[0];
           const st = (stats as Record<string, LotStat>)[p.id];
           const avail = p.available_lots ?? 0;
           const total = p.total_lots ?? 0;
