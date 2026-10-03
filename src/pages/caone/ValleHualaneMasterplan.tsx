@@ -311,9 +311,9 @@ export default function ValleHualaneMasterplan() {
       pdf.setFontSize(8.5);
       pdf.text('VALOR REFERENCIAL', 362, 14, { align: 'center' });
       pdf.setFontSize(16);
-      pdf.text(clp(data.price_per_ha ?? PRICE_PER_HA), 362, 23, { align: 'center' });
+      pdf.text(clp(PRICE_PER_HA), 362, 23, { align: 'center' });
       pdf.setFontSize(8);
-      pdf.text('CLP · por hectárea', 362, 29.5, { align: 'center' });
+      pdf.text('CLP · precio por parcela', 362, 29.5, { align: 'center' });
 
       const mapY = headerH + 7;
       const mapH = pageH - mapY - footerH - 8;
@@ -382,7 +382,7 @@ export default function ValleHualaneMasterplan() {
           </Link>
           <div className="flex flex-wrap items-center gap-2">
             <Badge className="bg-[#eac25b] text-[#17352d] hover:bg-[#eac25b]">
-              {clp(data.price_per_ha ?? PRICE_PER_HA)} / ha
+              {clp(PRICE_PER_HA)} por parcela
             </Badge>
             <Button variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={share}>
               <Share2 className="mr-2 h-4 w-4" />Compartir

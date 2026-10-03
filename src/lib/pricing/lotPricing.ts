@@ -36,4 +36,4 @@ export function readProjectPricing(landingConfig: unknown): ProjectPricing | nul
   return Number.isFinite(unit) && unit > 0 ? { pricing_mode: cfg.pricing_mode, unit_price: unit } : null;
 }
 
-export const VALLE_HUALANE_PRICING: ProjectPricing = { pricing_mode: 'per_ha', unit_price: 12_990_000 };
+export const VALLE_HUALANE_PRICING: ProjectPricing = { pricing_mode: 'per_lot', unit_price: 12_990_000 };
