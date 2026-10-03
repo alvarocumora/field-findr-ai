@@ -20,7 +20,7 @@ const pricePerHa = 12_990_000;
 const projectUrl = 'https://ofertaterrenos.com/valle-hualane';
 
 const CaoneLanding = () => {
-  const eligible = useMemo(() => lots.filter(([, area]) => area >= 1), []);
+  const eligible = useMemo(() => lots.filter(([, area]) => area > 0), []);
 
   useSEO({
     title: 'Valle de Hualañé · Parcelas desde 1 ha · ROL 168-921',
@@ -170,7 +170,7 @@ const CaoneLanding = () => {
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8">
             {lots.map(([number, area]) => {
-              const onPromo = area >= 1;
+              const onPromo = true;
               return (
                 <div key={number} className={`rounded-2xl border p-3 ${onPromo ? 'border-[#1b5c49]/20 bg-white' : 'border-slate-300 bg-slate-100'}`}>
                   <div className="flex items-center justify-between gap-2">
