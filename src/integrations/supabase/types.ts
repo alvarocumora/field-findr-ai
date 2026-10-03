@@ -1358,6 +1358,7 @@ export type Database = {
           lng: number | null
           location: string
           price: number
+          project_id: string | null
           region: string | null
           rol: string | null
           search_vector: unknown
@@ -1390,6 +1391,7 @@ export type Database = {
           lng?: number | null
           location: string
           price: number
+          project_id?: string | null
           region?: string | null
           rol?: string | null
           search_vector?: unknown
@@ -1422,6 +1424,7 @@ export type Database = {
           lng?: number | null
           location?: string
           price?: number
+          project_id?: string | null
           region?: string | null
           rol?: string | null
           search_vector?: unknown
@@ -1436,7 +1439,15 @@ export type Database = {
           views_count?: number | null
           zoning?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "listings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lots: {
         Row: {
