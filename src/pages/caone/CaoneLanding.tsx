@@ -20,11 +20,11 @@ const pricePerHa = 12_990_000;
 const projectUrl = 'https://ofertaterrenos.com/valle-hualane';
 
 const CaoneLanding = () => {
-  const eligible = useMemo(() => lots.filter(([, area]) => area >= 1), []);
+  const eligible = useMemo(() => lots.filter(([, area]) => area > 0), []);
 
   useSEO({
     title: 'Valle de Hualañé · Parcelas desde 1 ha · ROL 168-921',
-    description: 'Valle de Hualañé, ROL 168-921 en Sector Caone. Masterplan generado desde KMZ, parcelas desde 1 hectárea a $12.990.000 CLP por hectárea y tour satelital 3D.',
+    description: 'Valle de Hualañé, ROL 168-921 en Sector Caone. Masterplan generado desde KMZ, todas las parcelas a $12.990.000 CLP precio único y tour satelital 3D.',
     type: 'website',
     url: 'https://ofertaterrenos.com/valle-hualane',
     canonicalUrl: 'https://ofertaterrenos.com/valle-hualane',
@@ -53,7 +53,7 @@ const CaoneLanding = () => {
             <div className="rounded-3xl bg-[#f6c64e] px-7 py-6 text-center text-[#17352d] shadow-xl">
               <p className="text-xs font-bold uppercase tracking-wider">Desde</p>
               <p className="mt-1 text-4xl font-black">{clp(pricePerHa)}</p>
-              <p className="mt-1 text-xs font-semibold">CLP · por hectárea</p>
+              <p className="mt-1 text-xs font-semibold">CLP · precio único por parcela</p>
             </div>
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -170,7 +170,7 @@ const CaoneLanding = () => {
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8">
             {lots.map(([number, area]) => {
-              const onPromo = area >= 1;
+              const onPromo = true;
               return (
                 <div key={number} className={`rounded-2xl border p-3 ${onPromo ? 'border-[#1b5c49]/20 bg-white' : 'border-slate-300 bg-slate-100'}`}>
                   <div className="flex items-center justify-between gap-2">
@@ -178,7 +178,7 @@ const CaoneLanding = () => {
                     <span className={`h-2.5 w-2.5 rounded-full ${onPromo ? 'bg-emerald-600' : 'bg-slate-400'}`} />
                   </div>
                   <p className="mt-1 text-sm text-slate-600">{area.toFixed(2)} ha</p>
-                  <p className={`mt-2 text-xs font-bold ${onPromo ? 'text-[#1b5c49]' : 'text-slate-500'}`}>{onPromo ? clp(Math.round(pricePerHa * area)) : 'Consultar'}</p>
+                  <p className={`mt-2 text-xs font-bold ${onPromo ? 'text-[#1b5c49]' : 'text-slate-500'}`}>{onPromo ? clp(pricePerHa) : 'Consultar'}</p>
                 </div>
               );
             })}

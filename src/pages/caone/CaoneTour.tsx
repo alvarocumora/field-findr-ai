@@ -151,7 +151,7 @@ export default function CaoneTour() {
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Badge className="bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]"><PlayCircle className="mr-1 h-3.5 w-3.5" />Terrain Tour 3D</Badge>
           <Badge className="bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/15">38 parcelas ≥ 1 ha</Badge>
-          <Badge variant="outline" className="border-white/15 text-white/70">$12.990.000 CLP / ha</Badge>
+          <Badge variant="outline" className="border-white/15 text-white/70">$12.990.000 CLP por parcela</Badge>
           <Badge variant="outline" className="border-white/15 text-white/70"><MapPin className="mr-1 h-3 w-3" />Caone, Hualañé</Badge>
         </div>
 
@@ -187,7 +187,7 @@ export default function CaoneTour() {
                     </div>
                     <div className="mt-5 grid grid-cols-2 gap-3">
                       <div className="rounded-2xl bg-white/5 p-3"><Ruler className="h-4 w-4 text-emerald-300" /><p className="mt-2 text-xs text-white/50">Superficie</p><p className="font-bold">{selected.area_ha.toFixed(2)} ha</p></div>
-                      <div className="rounded-2xl bg-white/5 p-3"><Trees className="h-4 w-4 text-emerald-300" /><p className="mt-2 text-xs text-white/50">Valor lote</p><p className="font-bold">{clp(selected.price)}</p><p className="mt-1 text-[10px] text-white/40">$12.990.000 / ha</p></div>
+                      <div className="rounded-2xl bg-white/5 p-3"><Trees className="h-4 w-4 text-emerald-300" /><p className="mt-2 text-xs text-white/50">Valor lote</p><p className="font-bold">{clp(selected.price)}</p><p className="mt-1 text-[10px] text-white/40">Precio único</p></div>
                     </div>
                     <div className="mt-5 grid gap-2">
                       <Button asChild className="w-full bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]/90">
