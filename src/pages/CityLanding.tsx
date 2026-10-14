@@ -127,15 +127,12 @@ const CITY_CONFIGS: CityConfig[] = [
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
 
-const CityLanding = () => {
-  const { slug } = useParams<{ slug: string }>();
+const ConfiguredCityLanding = ({ config, slug }: { config: CityConfig; slug: string }) => {
   const navigate = useNavigate();
-  const config = CITY_CONFIGS.find(c => c.slug === slug);
 
   const { data: listings = [], isLoading } = useQuery({
-    queryKey: ['city-listings', config?.name, config?.country],
+    queryKey: ['city-listings', config.name, config.country],
     queryFn: async () => {
-      if (!config) return [];
       const { data } = await supabase
         .from('listings')
         .select('*')
@@ -146,19 +143,7 @@ const CityLanding = () => {
         .limit(24);
       return (data || []) as Listing[];
     },
-    enabled: !!config,
   });
-
-  if (!config) {
-    return (
-      <PublicLayout>
-        <div className="container px-4 py-20 text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Ciudad no encontrada</h1>
-          <Button asChild><Link to="/explorar">Explorar terrenos</Link></Button>
-        </div>
-      </PublicLayout>
-    );
-  }
 
   const totalListings = listings.length;
   const avgPrice = totalListings > 0 ? Math.round(listings.reduce((a, l) => a + l.price, 0) / totalListings) : 0;
@@ -311,6 +296,24 @@ const CityLanding = () => {
       </section>
     </PublicLayout>
   );
+};
+
+const CityLanding = () => {
+  const { slug = '' } = useParams<{ slug: string }>();
+  const config = CITY_CONFIGS.find(c => c.slug === slug);
+
+  if (!config) {
+    return (
+      <PublicLayout>
+        <div className="container px-4 py-20 text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-4">Ciudad no encontrada</h1>
+          <Button asChild><Link to="/explorar">Explorar terrenos</Link></Button>
+        </div>
+      </PublicLayout>
+    );
+  }
+
+  return <ConfiguredCityLanding config={config} slug={slug} />;
 };
 
 export default CityLanding;

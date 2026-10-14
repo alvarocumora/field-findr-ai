@@ -41,7 +41,7 @@ const CartographicHero = () => {
     navigate(query ? `/explorar?q=${encodeURIComponent(query)}` : '/explorar');
   };
 
-  const useExample = (query: string) => {
+  const selectExample = (query: string) => {
     setSearch(query);
     void track('atlas_search_example_selected', { query });
   };
@@ -116,7 +116,7 @@ const CartographicHero = () => {
               <button
                 key={example}
                 type="button"
-                onClick={() => useExample(example)}
+                onClick={() => selectExample(example)}
                 className="rounded-full border border-border/60 bg-background/45 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur-sm transition-colors hover:border-primary/40 hover:text-foreground"
               >
                 {example}
