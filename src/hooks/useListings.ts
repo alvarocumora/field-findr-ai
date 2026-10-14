@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { Json, Tables } from '@/integrations/supabase/types';
+import type { Json, Tables, TablesUpdate } from '@/integrations/supabase/types';
 
 export interface Listing {
   id: string;
@@ -246,10 +246,10 @@ export const useUpdateListing = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Record<string, unknown> }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: TablesUpdate<'listings'> }) => {
       const { data, error } = await supabase
         .from('listings')
-        .update(updates as Record<string, Json>)
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
