@@ -4,6 +4,9 @@ Esta carpeta organiza la estrategia, producto, arquitectura, sprints y criterios
 
 ## Documentos principales
 
+- [`PLATFORM_EXPERIENCE_AUDIT_2026-10-14.md`](./PLATFORM_EXPERIENCE_AUDIT_2026-10-14.md): auditoría de portada, proyectos, explorar, usuarios y perfiles; gaps urgentes y plan de PR con criterios de aceptación.
+- [Presentación interactiva de la auditoría](./audits/2026-10-14/presentacion.html): resumen navegable, prioridades y capturas (abrir con navegador desde una copia local).
+
 0. [`GUIA_CORREDORA_DISRUPTIVA.md`](./GUIA_CORREDORA_DISRUPTIVA.md)
    - **Guía maestra.** Tesis, actores, modelo de negocio, manual operativo, estándares de publicación, playbooks, métricas, reglas de ingeniería y plan por fases. Si otro documento la contradice, manda esta.
 
