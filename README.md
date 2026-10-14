@@ -29,7 +29,7 @@ La plataforma combina marketplace de terrenos, visualización cartográfica, bú
 ```sh
 git clone https://github.com/alvarocumora/field-findr-ai.git
 cd field-findr-ai
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 ```
