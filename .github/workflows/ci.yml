@@ -33,11 +33,8 @@ jobs:
         with:
           bun-version: latest
 
-      # main currently has a package.json/package-lock drift (jspdf pin).
-      # npm install is intentionally used until the lockfile is regenerated
-      # and committed; after that this should be tightened back to npm ci.
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Typecheck
         run: npm run typecheck

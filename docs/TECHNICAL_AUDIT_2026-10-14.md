@@ -41,3 +41,11 @@ Las cifras anteriores corresponden al entorno y resolución de dependencias de e
 PR #172: control real de TypeScript y payloads tipados. Typecheck pasó; 345 pruebas pasaron con Node 20; ESLint de los hooks modificados pasó; `npm run build` completo pasó con Node 24 y el proxy. Sitemap y mapa de rutas regenerados. Node 20 produjo los bundles localmente pero su consulta final a Supabase falló por el proxy; no se contabiliza como build completo aprobado en esa versión.
 
 GitHub Actions no arrancó el job de la corrida `38641274610`: la anotación informa pagos fallidos recientes o necesidad de aumentar el límite de gasto de la cuenta. No se ejecutaron pasos. La configuración de facturación de GitHub debe corregirse antes de repetir CI y fusionar. No se omiten checks ni se fuerza el merge.
+
+## Continuación autorizada
+
+Por instrucción explícita del usuario de fusionar y continuar, #172 y #173 se integraron en `main` mediante squash, sin forzar protecciones. Los commits resultantes son `e65a35a` y `82fc1bd`. La validación local del segundo PR pasó con 347 pruebas en 55 archivos y build completo. El problema de facturación de Actions seguía presente; no se declara CI remoto aprobado ni despliegue exitoso.
+
+El siguiente cambio repara el lockfile y usa `npm ci` tanto en CI como en deploy y documentación. Conserva las versiones de todas las entradas ya existentes y agrega las resoluciones que faltaban para las dependencias declaradas, incluidas Photo Sphere, divisiones territoriales y herramientas Drizzle. No cambia `package.json`, lógica de aplicación, esquemas ni secretos. El orden de las entradas previas se conserva para evitar un reordenamiento masivo del archivo.
+
+Validación de la instalación reproducible: 1.391 entradas previas conservadas (versiones, URLs e integridades), 89 entradas añadidas; `npm ci` limpio instaló 1.285 paquetes. Con Node 20.20.1 pasaron typecheck, 347 pruebas en 55 archivos y `npm run build` completo con Bun 1.3.11; para el acceso de este cloud a Supabase se usó un agente de proxy Undici externo al checkout. Mapa de rutas regenerado sin cambios y sitemap regenerado por prebuild. Persisten avisos de deprecación, Browserslist y tamaño de bundles. No se declara CI remoto ni deploy aprobados.
