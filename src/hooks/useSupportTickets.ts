@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 
@@ -152,7 +153,7 @@ export const useUpdateTicket = () => {
       id,
       patch,
     }: { id: string; patch: Partial<Pick<SupportTicket, 'status' | 'priority' | 'assigned_to' | 'category'>> }) => {
-      const payload: Record<string, unknown> = { ...patch };
+      const payload: TablesUpdate<'support_tickets'> = { ...patch };
       if (patch.status === 'resolved' || patch.status === 'closed') {
         payload.resolved_at = new Date().toISOString();
       }

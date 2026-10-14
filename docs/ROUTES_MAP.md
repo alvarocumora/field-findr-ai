@@ -3,7 +3,7 @@
 > Archivo generado automáticamente por `scripts/generate-routes-map.ts`.
 > Fuente de verdad: `src/routes/routeManifest.tsx`. No editar a mano.
 
-Total de rutas: **131** · alias/redirects: **39**
+Total de rutas: **144** · alias/redirects: **39**
 
 ## Público
 
@@ -31,6 +31,7 @@ Total de rutas: **131** · alias/redirects: **39**
 | `/contacto-loteos` | — | — | public | none | todos |
 | `/corredor/:slug` | — | — | public | none | todos |
 | `/corredores` | — | — | public | none | todos |
+| `/cotizacion/:token` | — | — | public | none | todos |
 | `/demo/visual-scenarios` | — | — | public | none | todos |
 | `/diseno/:token` | — | — | public | none | todos |
 | `/eventos/:slug` | — | — | public | none | todos |
@@ -47,6 +48,8 @@ Total de rutas: **131** · alias/redirects: **39**
 | `/pais/:code` | — | — | public | none | todos |
 | `/para-corredoras` | — | — | public | none | todos |
 | `/para-inmobiliarias` | — | — | public | none | todos |
+| `/parcelas-caone-hualane` | — | — | public | none | todos |
+| `/parcelas-caone-hualane/tour` | — | — | public | none | todos |
 | `/planes-loteos` | — | — | public | none | todos |
 | `/playa-alvaro` | — | — | public | none | todos |
 | `/propiedad/:id` | — | — | public | none | todos |
@@ -65,6 +68,11 @@ Total de rutas: **131** · alias/redirects: **39**
 | `/subscription/success` | — | — | public | none | todos |
 | `/tasacion/v/:id` | — | — | public | none | todos |
 | `/tasacion/validar` | — | — | public | none | todos |
+| `/valle-de-hualane/masterplan` | — | — | public | none | todos |
+| `/valle-hualane` | — | — | public | none | todos |
+| `/valle-hualane/l/:lotNumber` | — | — | public | none | todos |
+| `/valle-hualane/plano` | — | — | public | none | todos |
+| `/valle-hualane/tour` | — | — | public | none | todos |
 
 ## Comprador
 
@@ -90,6 +98,7 @@ Total de rutas: **131** · alias/redirects: **39**
 | `/asesor/lots` | Lotes | proyectos | agent | dashboard | todos |
 | `/asesor/opportunities` | Oportunidades | proyectos | agent | dashboard | todos |
 | `/asesor/projects` | Proyectos | proyectos | agent | dashboard | todos |
+| `/asesor/spatial` | Spatial Studio | proyectos | agent | dashboard | todos |
 | `/asesor/subdivision` | Estudio de subdivisión | proyectos | agent | dashboard | todos |
 | `/panel/inventario` | Mapa de inventario | proyectos | agent | dashboard | todos |
 | `/asesor/cierres` | Cierres de venta | ventas | agent | dashboard | todos |
@@ -115,19 +124,20 @@ Total de rutas: **131** · alias/redirects: **39**
 | `/asesor/red` | Red y atribución | red comercial | agent | dashboard | todos |
 | `/asesor/analytics` | Analytics | administración | agent | dashboard | todos |
 | `/asesor/demand` | Demanda | administración | agent | dashboard | todos |
-| `/asesor/enterprise` | Empresa | administración | agent | dashboard | inmobiliaria, grupo, enterprise |
-| `/asesor/executive` | Ejecutivo | administración | agent | dashboard | inmobiliaria, grupo, enterprise |
+| `/asesor/enterprise` | Empresa | administración | agent | dashboard | todos |
+| `/asesor/executive` | Ejecutivo | administración | agent | dashboard | todos |
 | `/asesor/financial` | Financiero | administración | agent | dashboard | todos |
-| `/asesor/multi-project` | Multi proyecto | administración | agent | dashboard | inmobiliaria, grupo, enterprise |
+| `/asesor/multi-project` | Multi proyecto | administración | agent | dashboard | todos |
 | `/asesor/performance` | Performance | administración | agent | dashboard | todos |
 | `/asesor/reports` | Reportes | administración | agent | dashboard | todos |
-| `/asesor/team` | Equipo | administración | agent | dashboard | inmobiliaria, grupo, enterprise |
-| `/asesor/api` | API | configuración | agent | dashboard | enterprise |
+| `/asesor/team` | Equipo | administración | agent | dashboard | todos |
+| `/asesor/api` | API | configuración | agent | dashboard | todos |
 | `/asesor/notifications` | Notificaciones | configuración | agent | dashboard | todos |
 | `/asesor/profile` | Mi perfil | configuración | agent | dashboard | todos |
 | `/asesor/soporte` | Soporte | configuración | agent | dashboard | todos |
 | `/asesor/tools` | Herramientas | configuración | agent | dashboard | todos |
 | `/asesor/opportunity/:id` | — | — | agent | dashboard | todos |
+| `/asesor/project/:projectId` | — | — | agent | dashboard | todos |
 | `/publish` | — | — | agent | none | todos |
 
 ## Administración
@@ -139,8 +149,10 @@ Total de rutas: **131** · alias/redirects: **39**
 | `/admin/brokers` | Brokers | gestión | admin | dashboard | todos |
 | `/admin/documents` | Documentos | gestión | admin | dashboard | todos |
 | `/admin/featured` | Destacados | gestión | admin | dashboard | todos |
+| `/admin/inmobiliarias` | Inmobiliarias | gestión | admin | dashboard | todos |
 | `/admin/projects` | Proyectos | gestión | admin | dashboard | todos |
 | `/admin/reservations` | Reservas | gestión | admin | dashboard | todos |
+| `/admin/suscripciones` | Suscripciones y permisos | gestión | admin | dashboard | todos |
 | `/admin/users` | Usuarios | gestión | admin | dashboard | todos |
 | `/admin/approvals` | Propiedades | aprobaciones | admin | dashboard | todos |
 | `/admin/captaciones` | Captaciones | aprobaciones | admin | dashboard | todos |
@@ -155,6 +167,7 @@ Total de rutas: **131** · alias/redirects: **39**
 | `/admin/branding-fichas` | Branding fichas | sistema | admin | dashboard | todos |
 | `/admin/soporte` | Soporte | sistema | admin | dashboard | todos |
 | `/admin/visual-scenarios` | Escenarios visuales | sistema | admin | dashboard | todos |
+| `/admin/inmobiliarias/:id` | — | — | admin | dashboard | todos |
 
 ## Alias y redirects
 
