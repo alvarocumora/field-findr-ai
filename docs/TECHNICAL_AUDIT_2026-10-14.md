@@ -35,3 +35,9 @@ Una rama y un objetivo por PR. Incluir problema, alcance, validación y limitaci
 Abrir cada PR contra `main`, revisar checks y conflictos, y fusionarlo solo con las validaciones pertinentes aprobadas. Respetar protecciones de rama, sin bypass ni force push. Un merge a `main` puede activar el workflow de despliegue existente; no desplegar por otro mecanismo. Actualizar la base antes del PR siguiente.
 
 Las cifras anteriores corresponden al entorno y resolución de dependencias de esta auditoría. Una corrida futura puede diferir hasta que se repare el lockfile. Los PR posteriores deben registrar sus propias comprobaciones; este documento no los declara ejecutados.
+
+## Ejecución inicial
+
+PR #172: control real de TypeScript y payloads tipados. Typecheck pasó; 345 pruebas pasaron con Node 20; ESLint de los hooks modificados pasó; `npm run build` completo pasó con Node 24 y el proxy. Sitemap y mapa de rutas regenerados. Node 20 produjo los bundles localmente pero su consulta final a Supabase falló por el proxy; no se contabiliza como build completo aprobado en esa versión.
+
+GitHub Actions no arrancó el job de la corrida `38641274610`: la anotación informa pagos fallidos recientes o necesidad de aumentar el límite de gasto de la cuenta. No se ejecutaron pasos. La configuración de facturación de GitHub debe corregirse antes de repetir CI y fusionar. No se omiten checks ni se fuerza el merge.
