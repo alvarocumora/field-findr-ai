@@ -1,0 +1,162 @@
+[
+  {
+    "id": "G01",
+    "priority": "P1",
+    "area": "Explorar",
+    "title": "35.000 UF se transforma en “desde $35K”",
+    "finding": "La tarjeta conserva UF, pero el resumen y el ranking omiten moneda.",
+    "acceptance": "Moneda y unidad explícitas; CLP y UF nunca se comparan como valores equivalentes.",
+    "evidence": "B + C",
+    "pr": "A1"
+  },
+  {
+    "id": "G02",
+    "priority": "P1",
+    "area": "Explorar",
+    "title": "Búsqueda vacía con 69 coincidencias reales",
+    "finding": "“Valle Escondido” no está en la primera página de 30 resultados; la API pública sí devuelve 69 coincidencias.",
+    "acceptance": "Buscar y contar sobre el catálogo completo; paginar los resultados filtrados.",
+    "evidence": "B + D + C",
+    "pr": "A5"
+  },
+  {
+    "id": "G03",
+    "priority": "P1",
+    "area": "Proyectos",
+    "title": "Sin WebGL se pierde toda la ficha",
+    "finding": "Brisas y Valle Escondido muestran “Algo salió mal”; con WebGL cargan la ficha.",
+    "acceptance": "Mantener precio, lotes y contacto; mapa/3D con recuperación independiente.",
+    "evidence": "B + C",
+    "pr": "A3"
+  },
+  {
+    "id": "G04",
+    "priority": "P1",
+    "area": "Proyectos",
+    "title": "El comprador termina en una demo B2B",
+    "finding": "Consultar disponibilidad de Hualañé abre una solicitud comercial de Growth Inmobiliaria.",
+    "acceptance": "Consulta vinculada al proyecto y lote, con atribución y respuesta recuperable.",
+    "evidence": "B + C",
+    "pr": "A4"
+  },
+  {
+    "id": "G05",
+    "priority": "P1",
+    "area": "Proyectos",
+    "title": "El carrusel de proyectos recibe HTTP 400",
+    "finding": "Consulta lots.area_m2, columna inexistente; la RPC pública usa area.",
+    "acceptance": "Contrato público único, precios y superficies coherentes, errores visibles.",
+    "evidence": "B + D + C",
+    "pr": "A2"
+  },
+  {
+    "id": "G06",
+    "priority": "P1",
+    "area": "Proyectos",
+    "title": "Inventario estático frente a reservas reales",
+    "finding": "La landing de Hualañé promociona sus 40 lotes; la API distingue 38 disponibles y dos reservados.",
+    "acceptance": "Disponibilidad leída de la fuente pública, sin vender como disponible un dato desconocido.",
+    "evidence": "B + D + C",
+    "pr": "B1"
+  },
+  {
+    "id": "G07",
+    "priority": "P1",
+    "area": "Proyectos",
+    "title": "Por parcela en la página; por ha en la imagen",
+    "finding": "El generador de la tarjeta social de Hualañé escribe “$12.990.000 / ha”.",
+    "acceptance": "Confirmar con negocio la unidad y compartirla entre página, tour y materiales.",
+    "evidence": "C",
+    "pr": "B2"
+  },
+  {
+    "id": "G08",
+    "priority": "P1",
+    "area": "Transversal",
+    "title": "Una caída del servicio parece falta de oferta",
+    "finding": "503 simulado: explorar dice “no encontramos terrenos”; la landing dice “proyecto no encontrado”.",
+    "acceptance": "Distinguir error, vacío real y no publicado; permitir reintentar.",
+    "evidence": "B + S + C",
+    "pr": "B3"
+  },
+  {
+    "id": "G09",
+    "priority": "P1",
+    "area": "Perfiles",
+    "title": "Guardar desaparece antes de confirmar éxito",
+    "finding": "La preferencia se marca como guardada inmediatamente después de iniciar la mutación.",
+    "acceptance": "Conservar valores y reintento si falla; limpiar cambios solo al confirmar éxito.",
+    "evidence": "S + C",
+    "pr": "B5"
+  },
+  {
+    "id": "G10",
+    "priority": "P1",
+    "area": "Proyectos",
+    "title": "La reserva refresca otras claves de caché",
+    "finding": "El diálogo invalida vel-public-lots, pero la landing genérica usa landing-lots. No se crearon reservas reales.",
+    "acceptance": "Refrescar los consumidores correctos y comprobar el flujo en staging.",
+    "evidence": "C",
+    "pr": "B4"
+  },
+  {
+    "id": "G11",
+    "priority": "P2",
+    "area": "Perfiles",
+    "title": "Contraseña actual solicitada, sin verificar",
+    "finding": "La sonda aislada confirma que se actualiza solo la contraseña nueva; los labels tampoco identifican los inputs.",
+    "acceptance": "Reautenticación soportada, camino OAuth válido y controles accesibles.",
+    "evidence": "S + C",
+    "pr": "C1"
+  },
+  {
+    "id": "G12",
+    "priority": "P2",
+    "area": "Perfiles",
+    "title": "Configuración puede cambiar el contexto visual",
+    "finding": "El menú global lleva a un layout que identifica al usuario como comprador, aunque exista perfil de asesor.",
+    "acceptance": "Mantener persona y organización al entrar y salir de configuración.",
+    "evidence": "C",
+    "pr": "C2"
+  },
+  {
+    "id": "G13",
+    "priority": "P2",
+    "area": "Usuarios",
+    "title": "“Activos” mide perfiles modificados",
+    "finding": "El KPI usa updated_at. La carga de usuarios no tiene paginación y no trata todos los errores parciales.",
+    "acceptance": "Definir la señal real, paginar y distinguir datos vacíos de errores.",
+    "evidence": "C",
+    "pr": "C3 / C4"
+  },
+  {
+    "id": "G14",
+    "priority": "P2",
+    "area": "Portada",
+    "title": "Ejemplos inteligentes, búsqueda literal",
+    "finding": "“Terreno hasta $30 millones” se envía como q literal y produce lista vacía.",
+    "acceptance": "Aplicar filtros de presupuesto o usar el camino IA con confirmación.",
+    "evidence": "B + C",
+    "pr": "C5"
+  },
+  {
+    "id": "G15",
+    "priority": "P2",
+    "area": "Portada",
+    "title": "SEO y continuidad de proyecto inconsistentes",
+    "finding": "En la corrida móvil el título de Hualañé quedó genérico; la cabecera no ofrece vuelta visible al catálogo.",
+    "acceptance": "Un dueño de SEO y navegación ligera que conserve identidad de proyecto.",
+    "evidence": "B + C",
+    "pr": "C6"
+  },
+  {
+    "id": "G16",
+    "priority": "P2",
+    "area": "Perfiles",
+    "title": "La moneda preferida no explica su alcance",
+    "finding": "La preferencia se guarda; no se encontró consumo en la presentación del catálogo.",
+    "acceptance": "Explicar y hacer efectivo el alcance, sin prometer conversión inexistente.",
+    "evidence": "C",
+    "pr": "C2"
+  }
+]

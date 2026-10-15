@@ -1,0 +1,7 @@
+Sondas aisladas de perfil — APIs simuladas, sin escrituras remotas.
+Resultado: 2 pruebas propuestas fallidas (gaps pendientes de corrección).
+1. Guardado de preferencias: botón Guardar desaparece sin respuesta exitosa de servidor.
+2. Contraseña: se llama updateUser con contraseña nueva sin verificar la contraseña actual introducida.
+No se ejecutó ningún cambio de contraseña contra Supabase. No se demuestra bypass de sus políticas de autenticación.
+La primera localización por label encontró además que el FormControl apunta al div contenedor, no al input.
+Estas sondas viven en product-audit.local/ (ignorado); no forman parte de la suite base de 347 pruebas.
