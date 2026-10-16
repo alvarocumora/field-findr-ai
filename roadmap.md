@@ -23,6 +23,10 @@
 
 ## Panoramas de Hualañé
 
+- [x] Verificar en /explorar las tarjetas de las 38 parcelas disponibles
+- [ ] Abrir las tarjetas de parcelas 36 y 37 sin sesión (bloqueo: sus publicaciones reservadas no son visibles públicamente)
+- [ ] Publicar el tour disponible
+
 - [x] Integrar las dos panorámicas Potensic al tour existente
 - [x] Habilitar marcado visual por lote con plano y capturas de referencia, sin inventar GPS
 - [x] Verificar cambio de escena, dibujo asociado a lote y guardado autorizado de orientación

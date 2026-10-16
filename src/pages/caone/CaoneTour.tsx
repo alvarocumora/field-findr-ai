@@ -12,6 +12,7 @@ import { CaonePanoramaTour } from './components/CaonePanoramaTour';
 import { useLots } from '@/hooks/useLots';
 import { CAONE_PROJECT } from './data/project';
 import { tourLotState } from '@/lib/tourLotMarkers';
+import { getExploreLotPath } from '@/lib/exploreLotUrl';
 
 type CaoneLotSource = {
   id: string;
@@ -62,6 +63,7 @@ export default function CaoneTour() {
         const live = liveLots.find(candidate => candidate.lot_number === lot.lot_number);
         return ({
         id: live?.id ?? lot.id,
+        listing_id: live?.listing_id ?? null,
         lot_number: lot.lot_number,
         area: lot.area_m2,
         price: live?.price ?? lot.price,
@@ -85,7 +87,9 @@ export default function CaoneTour() {
     setSelectedLotId(lotId);
     const lot = lots.find((candidate) => candidate.id === lotId);
     if (!lot) return;
-    navigate(`/valle-hualane/l/${lot.lot_number}`, { replace: true });
+    const path = getExploreLotPath(lot.listing_id);
+    if (path) navigate(path);
+    else toast.error('Esta parcela aún no tiene una tarjeta publicada.');
   };
 
   const selectedMapLot = lots.find(lot => lot.id === selectedLotId);
