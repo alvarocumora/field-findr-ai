@@ -1,4 +1,5 @@
-import velValle from '@/assets/valle-escondido-licanten/vel-valle.jpg';
+import velDron from '@/assets/valle-escondido-licanten/drone/vel-dron-1.jpg.asset.json';
+const velValle = velDron.url;
 import valleHualane from '@/assets/covers/valle-hualane.jpg';
 import brisasCaone from '@/assets/covers/brisas-de-caone.jpg';
 import exploraPark from '@/assets/covers/explora-park.jpg';
