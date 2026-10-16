@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, Compass, Copy, FileText, MapPin, Mountain, PlayCircle, Ruler, Trees } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,20 +6,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useSEO } from '@/hooks/useSEO';
 import { toast } from 'sonner';
 import ProjectScene3D from '@/components/landing/ProjectScene3D';
-
-const lots = [
-  ['1',1.08],['2',1.33],['3',2.00],['4',1.00],['5',1.00],['6',1.00],['7',1.00],['8',1.00],['9',1.00],['10',1.00],
-  ['11',1.50],['12',1.00],['13',1.00],['14',1.00],['15',1.00],['16',1.00],['17',1.00],['18',1.00],['19',1.00],['20',1.00],
-  ['21',1.00],['22',1.00],['23',1.00],['24',1.00],['25',1.14],['26',1.00],['27',1.00],['28',1.00],['29',1.00],['30',1.00],
-  ['31',1.00],['32',1.00],['33',1.00],['34',1.00],['35',1.00],['36',0.75],['37',0.75],['38',1.20],['39',1.00],['40',1.00],
-] as const;
+import { useCaoneLots } from './data/useCaoneLots';
+import { CAONE_PROJECT } from './data/project';
 
 const clp = (value: number) => `$${value.toLocaleString('es-CL')}`;
-const pricePerHa = 12_990_000;
+const pricePerHa = CAONE_PROJECT.pricePerLotClp;
 const projectUrl = 'https://ofertaterrenos.com/valle-hualane';
 
+const STATUS_LABEL: Record<string, string> = {
+  available: 'Disponible',
+  reserved: 'Reservado',
+  sold: 'Vendido',
+};
+
 const CaoneLanding = () => {
-  const eligible = useMemo(() => lots.filter(([, area]) => area > 0), []);
+  const { lots, available } = useCaoneLots();
 
   useSEO({
     title: 'Valle de Hualañé · Parcelas desde 1 ha · ROL 168-921',
@@ -76,9 +76,9 @@ const CaoneLanding = () => {
       <main className="container max-w-6xl px-4 py-10 md:py-14">
         <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[
-            { icon: Trees, label: 'Lotes', value: '40' },
-            { icon: CheckCircle2, label: 'En promoción', value: `${eligible.length}` },
-            { icon: Ruler, label: 'Superficie predial', value: '41,75 ha' },
+            { icon: Trees, label: 'Lotes', value: `${lots.length}` },
+            { icon: CheckCircle2, label: 'Disponibles', value: `${available}` },
+            { icon: Ruler, label: 'Superficie predial', value: `${CAONE_PROJECT.totalAreaHa.toLocaleString('es-CL')} ha` },
             { icon: MapPin, label: 'Ubicación', value: 'Caone, Hualañé' },
           ].map(({ icon: Icon, label, value }) => (
             <Card key={label} className="border-[#1b5c49]/15 bg-white/90 shadow-sm">
@@ -144,7 +144,7 @@ const CaoneLanding = () => {
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#1b5c49]">Master plan comercial</p>
               <h2 className="mt-1 text-3xl font-black">ROL 168-921</h2>
             </div>
-            <Badge variant="outline" className="border-[#1b5c49]/30 text-[#1b5c49]">38 lotes ≥ 1 ha</Badge>
+            <Badge variant="outline" className="border-[#1b5c49]/30 text-[#1b5c49]">{available} de {lots.length} lotes disponibles</Badge>
           </div>
           <Link to="/valle-hualane/plano" className="group block overflow-hidden rounded-3xl border border-[#1b5c49]/15 bg-white shadow-sm">
             <img
@@ -169,20 +169,24 @@ const CaoneLanding = () => {
             <h2 className="mt-1 text-3xl font-black">Parcelas y superficies</h2>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8">
-            {lots.map(([number, area]) => {
-              const onPromo = true;
+            {lots.map((lot) => {
+              const isAvailable = lot.status === 'available';
+              const dotClass = isAvailable ? 'bg-emerald-600' : lot.status === 'reserved' ? 'bg-amber-500' : 'bg-slate-400';
               return (
-                <div key={number} className={`rounded-2xl border p-3 ${onPromo ? 'border-[#1b5c49]/20 bg-white' : 'border-slate-300 bg-slate-100'}`}>
+                <div key={lot.lot_number} className={`rounded-2xl border p-3 ${isAvailable ? 'border-[#1b5c49]/20 bg-white' : 'border-slate-300 bg-slate-100'}`}>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-black">Lote {number}</span>
-                    <span className={`h-2.5 w-2.5 rounded-full ${onPromo ? 'bg-emerald-600' : 'bg-slate-400'}`} />
+                    <span className="font-black">Lote {lot.lot_number}</span>
+                    <span className={`h-2.5 w-2.5 rounded-full ${dotClass}`} title={STATUS_LABEL[lot.status]} />
                   </div>
-                  <p className="mt-1 text-sm text-slate-600">{area.toFixed(2)} ha</p>
-                  <p className={`mt-2 text-xs font-bold ${onPromo ? 'text-[#1b5c49]' : 'text-slate-500'}`}>{onPromo ? clp(pricePerHa) : 'Consultar'}</p>
+                  <p className="mt-1 text-sm text-slate-600">{lot.area_ha.toFixed(2)} ha</p>
+                  <p className={`mt-2 text-xs font-bold ${isAvailable ? 'text-[#1b5c49]' : 'text-slate-500'}`}>
+                    {isAvailable ? clp(lot.price_clp ?? pricePerHa) : STATUS_LABEL[lot.status]}
+                  </p>
                 </div>
               );
             })}
           </div>
+          <p className="mt-3 text-xs text-slate-500">La disponibilidad y el precio de cada lote se leen en vivo desde la plataforma; deslindes y antecedentes legales deben confirmarse antes de reservar o comprar.</p>
         </section>
 
         <section className="mb-8 rounded-3xl bg-[#17352d] p-7 text-white md:p-10">
