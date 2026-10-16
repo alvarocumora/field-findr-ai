@@ -23,6 +23,7 @@
 
 ## Panoramas de Hualañé
 
-- [ ] Integrar las dos panorámicas Potensic al tour existente
-- [ ] Habilitar marcado visual por lote con plano y capturas de referencia, sin inventar GPS
-- [ ] Verificar navegación, selección de lote y guardado de contornos
+- [x] Integrar las dos panorámicas Potensic al tour existente
+- [x] Habilitar marcado visual por lote con plano y capturas de referencia, sin inventar GPS
+- [x] Verificar cambio de escena, dibujo asociado a lote y guardado autorizado de orientación
+- [ ] Validar correspondencia de los límites reales sobre cada panorama antes de guardar contornos públicos (bloqueo: referencia visual de linderos aún no validada)
