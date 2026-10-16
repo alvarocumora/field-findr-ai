@@ -665,7 +665,7 @@ const SwipeExplorer = ({
                     {formatPrice(current.price, (current as any).currency ?? 'CLP')}
                   </span>
                   <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                    {pricePerM2 !== null && (
+                    {pricePerM2 !== null && pricePerM2 >= 100 && ((current as any).currency ?? 'CLP') === 'CLP' && (
                       <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">
                         {formatPriceShort(pricePerM2)}/m²
                       </span>
