@@ -665,7 +665,7 @@ const SwipeExplorer = ({
                     {formatPrice(current.price, (current as any).currency ?? 'CLP')}
                   </span>
                   <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                    {pricePerM2 !== null && (
+                    {pricePerM2 !== null && pricePerM2 >= 100 && ((current as any).currency ?? 'CLP') === 'CLP' && (
                       <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">
                         {formatPriceShort(pricePerM2)}/m²
                       </span>
@@ -679,7 +679,7 @@ const SwipeExplorer = ({
                   </span>
                 </div>
                 {current.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">{current.description}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{current.description.replace(/[*_#>`]+/g, '').replace(/[^\p{L}\p{N}\p{P}\p{Zs}$²]/gu, '').replace(/\s+/g, ' ').trim()}</p>
                 )}
                 {current.tags?.length > 0 && (
                   <div className="flex flex-wrap gap-1">

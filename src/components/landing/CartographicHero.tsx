@@ -1,7 +1,7 @@
 import { FormEvent, lazy, Suspense, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowDown, ArrowRight, Building2, Compass, Search, Sparkles } from 'lucide-react';
+import { ArrowRight, Building2, Compass, Search, ShieldCheck, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLandingStats } from '@/hooks/useLandingStats';
@@ -47,7 +47,7 @@ const CartographicHero = () => {
   };
 
   return (
-    <section className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-background" aria-labelledby="hero-title">
+    <section className="relative overflow-hidden md:min-h-[calc(100svh-4rem)] bg-background" aria-labelledby="hero-title">
       <img
         src={globeImage}
         alt="Globo cartográfico centrado en Sudamérica"
@@ -69,7 +69,7 @@ const CartographicHero = () => {
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/45" />
       <div className="pointer-events-none absolute inset-0 grid-topo opacity-20" aria-hidden="true" />
 
-      <div className="container pointer-events-none relative z-content flex min-h-[calc(100svh-4rem)] items-center px-4 py-14 md:py-20">
+      <div className="container pointer-events-none relative z-content flex items-center px-4 pb-10 pt-10 md:min-h-[calc(100svh-4rem)] md:py-20">
         <motion.div
           className="pointer-events-auto max-w-4xl"
           initial={prefersReducedMotion ? false : { opacity: 0, y: 24 }}
@@ -81,12 +81,12 @@ const CartographicHero = () => {
             OfertaTerrenos Atlas
           </div>
 
-          <h1 id="hero-title" className="max-w-4xl font-heading text-5xl font-bold leading-[0.92] text-foreground sm:text-6xl lg:text-7xl xl:text-8xl">
-            Descubre dónde será tu próximo lugar.
+          <h1 id="hero-title" className="max-w-4xl font-heading text-4xl font-bold leading-[0.95] sm:text-5xl text-foreground sm:text-6xl lg:text-7xl xl:text-8xl">
+            Parcelas y loteos reales, listos para visitar.
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-xl">
-            Explora Chile como territorio, no como una lista. Encuentra proyectos, baja hasta la parcela y decide con disponibilidad, contexto y contacto comercial en un solo recorrido.
+            Precios publicados, disponibilidad en vivo, masterplan y tour de cada proyecto. Elige tu parcela, agenda la visita y reserva en línea.
           </p>
 
           <form onSubmit={submitSearch} className="mt-8 max-w-3xl" role="search">
@@ -95,7 +95,7 @@ const CartographicHero = () => {
             </label>
             <div className="flex flex-col gap-2 sm:flex-row">
               <div className="relative flex-1">
-                <Sparkles className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" aria-hidden="true" />
+                <Sparkles className="pointer-events-none absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-primary" aria-hidden="true" />
                 <Input
                   id="atlas-search"
                   value={search}
@@ -124,9 +124,15 @@ const CartographicHero = () => {
             ))}
           </div>
 
-          <div className="mt-7 flex flex-wrap gap-2">
+          <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-foreground/80" aria-label="Garantías">
+            {['Rol propio y papeles al día', 'Reserva online segura', 'Visita guiada al terreno'].map((item) => (
+              <li key={item} className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />{item}</li>
+            ))}
+          </ul>
+
+          <div className="mt-6 flex flex-wrap gap-2">
             <Button asChild variant="outline" className="border-border/70 bg-background/55 backdrop-blur-md">
-              <a href="#atlas"><Compass className="mr-2 h-4 w-4" aria-hidden="true" />Viajar por el territorio <ArrowDown className="ml-2 h-4 w-4" /></a>
+              <Link to="/explorar"><Compass className="mr-2 h-4 w-4" aria-hidden="true" />Ver mapa de parcelas <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
             <Button asChild variant="ghost" className="bg-background/25 backdrop-blur-sm">
               <Link to="/planes-loteos"><Building2 className="mr-2 h-4 w-4" aria-hidden="true" />¿Vendes terrenos? Opera tu proyecto</Link>
