@@ -679,7 +679,7 @@ const SwipeExplorer = ({
                   </span>
                 </div>
                 {current.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">{current.description}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{current.description.replace(/[*_#>`]+/g, '').replace(/[^\p{L}\p{N}\p{P}\p{Zs}$²]/gu, '').replace(/\s+/g, ' ').trim()}</p>
                 )}
                 {current.tags?.length > 0 && (
                   <div className="flex flex-wrap gap-1">
