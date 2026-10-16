@@ -13,7 +13,7 @@ import CompareSheet from '@/components/compare/CompareSheet';
 import CinematicTransition from '@/components/map/CinematicTransition';
 import SwipeExplorer from '@/components/explore/SwipeExplorer';
 import { Button } from '@/components/ui/button';
-import { Listing, getPricePerM2 } from '@/hooks/useListings';
+import { Listing, getPricePerM2, useListing } from '@/hooks/useListings';
 import { useFlattenedListings } from '@/hooks/useInfiniteListings';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTabletOrBelow } from '@/hooks/use-tablet';
@@ -43,6 +43,9 @@ const Explorar = () => {
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') ?? '';
   const initialView = searchParams.get('view');
+  const requestedListingId = searchParams.get('listing') ?? '';
+  const { data: linkedListing } = useListing(requestedListingId);
+  const openedLinkRef = useRef<string | null>(null);
 
   // View mode for mobile
   const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>(
@@ -74,6 +77,18 @@ const Explorar = () => {
   const [hoveredListing, setHoveredListing] = useState<Listing | null>(null);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [previewListing, setPreviewListing] = useState<Listing | null>(null);
+
+  // Read the requested card directly: pagination and filters must not hide it.
+  useEffect(() => {
+    if (!requestedListingId) {
+      openedLinkRef.current = null;
+      return;
+    }
+    if (!linkedListing || openedLinkRef.current === requestedListingId) return;
+    openedLinkRef.current = requestedListingId;
+    setSelectedListing(linkedListing);
+    setPreviewListing(linkedListing);
+  }, [requestedListingId, linkedListing]);
 
   // Valuation & topography filters
   const [selectedSlopes, setSelectedSlopes] = useState<string[]>([]);
