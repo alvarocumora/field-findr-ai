@@ -4,6 +4,7 @@ import VelFicha from './sections/VelFicha';
 import VelEntorno from './sections/VelEntorno';
 import VelGallery from './sections/VelGallery';
 import VelMasterplan from './sections/VelMasterplan';
+import MapErrorBoundary from '@/components/map/MapErrorBoundary';
 import VelAiLotMatcher from './sections/VelAiLotMatcher';
 import VelLotsGrid from './sections/VelLotsGrid';
 import VelContacto from './sections/VelContacto';
@@ -91,7 +92,12 @@ export default function VelLanding() {
         <VelEntorno />
         <VelGallery />
         <VelAiLotMatcher />
-        <VelMasterplan />
+        {/* Sin WebGL, mapbox-gl lanza al inicializar — sin este boundary se
+            perdía toda la landing (ficha, galería, contacto), no solo el
+            masterplan (G03, docs/PLATFORM_EXPERIENCE_AUDIT_2026-10-14.md). */}
+        <MapErrorBoundary>
+          <VelMasterplan />
+        </MapErrorBoundary>
         <VelLotsGrid />
         <div className="bg-background py-14">
           <div className="container max-w-5xl">
