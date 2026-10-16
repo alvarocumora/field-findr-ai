@@ -13,6 +13,7 @@ const reservation = {
   lots: {
     lot_number: 'A-12',
     area: 5000,
+    project_id: '761e73ed-cc0d-5605-a06a-4a4348523b4b',
     projects: { name: 'Parcelas Valle Verde', location: 'Teno' },
   },
 };
@@ -43,6 +44,13 @@ describe('buildReceiptData', () => {
     expect(d.lotNumber).toBeUndefined();
     expect(d.projectName).toBeUndefined();
     expect(d.amount).toBe(750000);
+  });
+});
+
+describe('verifyUrl', () => {
+  it('points the QR to the canonical public lot page with the folio', () => {
+    const d = buildReceiptData(reservation);
+    expect(d.verifyUrl).toBe('https://ofertaterrenos.com/proyecto/761e73ed-cc0d-5605-a06a-4a4348523b4b?lote=A-12&folio=OT-RES-A1B2C3D4');
   });
 });
 
