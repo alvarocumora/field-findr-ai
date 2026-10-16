@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import type { TourScene, TourHotspot, PolygonOverlay } from '@/hooks/useTourScenes';
 import { TourMinimap } from './TourMinimap';
+import { tourLotLabel, tourLotState, tourPolygonCenter } from '@/lib/tourLotMarkers';
 
 interface TourViewer360Props {
   scenes: TourScene[];
@@ -19,6 +20,8 @@ interface TourViewer360Props {
   /** Yaw actual de la cámara (radianes) para sincronizar el mini-mapa. */
   onYawChange?: (yaw: number) => void;
   minimap?: { center: { lat: number; lng: number }; lots: any[] };
+  lots?: { id: string; status: string | null }[];
+  showCompass?: boolean;
 }
 
 export function TourViewer360({
@@ -27,6 +30,8 @@ export function TourViewer360({
   onLotClick,
   onYawChange,
   minimap,
+  lots = [],
+  showCompass = true,
 }: TourViewer360Props) {
   const [currentIndex, setCurrentIndex] = useState(initialSceneIndex);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -67,26 +72,34 @@ export function TourViewer360({
 
       scene.polygon_overlays.forEach((poly: PolygonOverlay) => {
         if (poly.points.length < 3) return;
+        const lot = lots.find(candidate => candidate.id === poly.lot_id);
+        const state = tourLotState(lot?.status);
         markersPlugin.addMarker({
           id: `poly-${poly.id}`,
           polygon: poly.points.map((p) => [p.yaw, p.pitch]) as [number, number][],
           svgStyle: {
-            fill: poly.color || 'rgba(5, 150, 105, 0.3)',
-            stroke: poly.color || 'rgba(5, 150, 105, 0.9)',
+            fill: 'none',
+            stroke: `hsl(var(--${state.token}))`,
             strokeWidth: '2px',
           },
           tooltip: poly.name,
           data: { type: 'polygon', lotId: poly.lot_id },
         });
+        const position = tourPolygonCenter(poly.points);
+        if (position) markersPlugin.addMarker({
+          id: `label-${poly.id}`, position, html: tourLotLabel(poly.name, lot?.status),
+          anchor: 'center center', data: { type: 'polygon', lotId: poly.lot_id },
+        });
       });
     },
-    [],
+    [lots],
   );
 
   const handleReady = useCallback(
     (instance: any) => {
       viewerRef.current = instance;
       try {
+        if (!currentScene) return;
         renderMarkers(instance, currentScene);
 
         const markersPlugin = instance.getPlugin(MarkersPlugin);
@@ -135,6 +148,10 @@ export function TourViewer360({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentScene?.id]);
 
+  useEffect(() => {
+    if (viewerRef.current && currentScene) renderMarkers(viewerRef.current, currentScene);
+  }, [currentScene, renderMarkers]);
+
   const toggleFullscreen = useCallback(() => {
     if (!containerRef.current) return;
     if (!document.fullscreenElement) {
@@ -154,7 +171,7 @@ export function TourViewer360({
 
   const plugins: any[] = [
     [MarkersPlugin, { markers: [] }],
-    [
+    ...(showCompass ? [[
       CompassPlugin,
       {
         size: '90px',
@@ -162,7 +179,7 @@ export function TourViewer360({
         backgroundSvg:
           '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="49" fill="rgba(0,0,0,.55)" stroke="rgba(255,255,255,.35)"/></svg>',
       },
-    ],
+    ]] : []),
     [AutorotatePlugin, { autostartDelay: 2500, autorotateSpeed: '0.25rpm' }],
   ];
 
@@ -173,7 +190,7 @@ export function TourViewer360({
   return (
     <div
       ref={containerRef}
-      className="relative w-full rounded-2xl overflow-hidden shadow-xl bg-black"
+      className="relative w-full rounded-lg overflow-hidden shadow-xl bg-background"
       style={{ height: isFullscreen ? '100vh' : '600px' }}
     >
       <ReactPhotoSphereViewer
@@ -243,7 +260,7 @@ export function TourViewer360({
       {scenes.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2 bg-black/60 backdrop-blur-md rounded-xl p-2 max-w-[86%] overflow-x-auto snap-x">
           {scenes.map((scene, idx) => (
-            <button
+            <Button variant="ghost"
               key={scene.id}
               onClick={() => setCurrentIndex(idx)}
               aria-label={scene.name}
@@ -265,7 +282,7 @@ export function TourViewer360({
                   {idx + 1}
                 </div>
               )}
-            </button>
+            </Button>
           ))}
         </div>
       )}

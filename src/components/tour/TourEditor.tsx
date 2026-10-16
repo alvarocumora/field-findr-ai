@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { ReactPhotoSphereViewer } from 'react-photo-sphere-viewer';
 import { MarkersPlugin } from '@photo-sphere-viewer/markers-plugin';
 import '@photo-sphere-viewer/markers-plugin/index.css';
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Crosshair, MapPin, Hexagon, Save, Trash2, Undo } from 'lucide-react';
 import { useTourScenes, type TourScene, type TourHotspot, type PolygonOverlay } from '@/hooks/useTourScenes';
 import { toast } from 'sonner';
+import { tourLotLabel, tourLotState, tourPolygonCenter } from '@/lib/tourLotMarkers';
 
 interface TourEditorProps {
   scene: TourScene;
@@ -34,6 +35,15 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
   const viewerRef = useRef<any>(null);
   const markersRef = useRef<any>(null);
   const [dirty, setDirty] = useState(false);
+  const clickHandlerRef = useRef<(data: any) => void>(() => {});
+
+  useEffect(() => {
+    setHotspots(scene.hotspots);
+    setPolygons(scene.polygon_overlays);
+    setCurrentPolygonPoints([]);
+    setDirty(false);
+    setMode('view');
+  }, [scene.id]);
 
   const otherScenes = allScenes.filter(s => s.id !== scene.id);
 
@@ -64,16 +74,20 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
 
     polygons.forEach((poly) => {
       if (poly.points.length >= 3) {
+        const lot = lots.find(l => l.id === poly.lot_id);
+        const state = tourLotState(lot?.status);
         mp.addMarker({
           id: `poly-${poly.id}`,
           polygon: poly.points.map(p => [p.yaw, p.pitch]) as [number, number][],
           svgStyle: {
-            fill: poly.color || 'rgba(5,150,105,0.3)',
-            stroke: poly.color || 'rgba(5,150,105,0.9)',
+            fill: 'none',
+            stroke: `hsl(var(--${state.token}))`,
             strokeWidth: '2px',
           },
           tooltip: poly.name,
         });
+        const position = tourPolygonCenter(poly.points);
+        if (position) mp.addMarker({ id: `label-${poly.id}`, position, html: tourLotLabel(poly.name, lot?.status), anchor: 'center center' });
       }
     });
 
@@ -104,8 +118,9 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
   const handleClick = useCallback((data: any) => {
     if (mode === 'view') return;
 
-    const yaw = data.yaw;
-    const pitch = data.pitch;
+    const yaw = data.data?.yaw ?? data.yaw;
+    const pitch = data.data?.pitch ?? data.pitch;
+    if (!Number.isFinite(yaw) || !Number.isFinite(pitch)) return;
 
     if (mode === 'hotspot') {
       if (!selectedTargetScene) {
@@ -140,15 +155,23 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
   }, [mode, selectedTargetScene, hotspotTooltip, hotspots, currentPolygonPoints]);
 
   // Attach click handler
+  clickHandlerRef.current = handleClick;
+  useEffect(() => {
+    if (markersRef.current) refreshMarkers(markersRef.current);
+  }, [hotspots, polygons, currentPolygonPoints, lots]);
+
   const handleViewerReady = useCallback((instance: any) => {
     handleReady(instance);
-    instance.addEventListener('click', handleClick);
-    return () => instance.removeEventListener('click', handleClick);
-  }, [handleReady, handleClick]);
+    instance.addEventListener('click', (event: any) => clickHandlerRef.current(event));
+  }, [handleReady]);
 
   const finishPolygon = () => {
     if (currentPolygonPoints.length < 3) {
       toast.error('Se necesitan al menos 3 puntos');
+      return;
+    }
+    if (!selectedLotId) {
+      toast.error('Selecciona la parcela del plano antes de cerrar el contorno');
       return;
     }
     const lot = lots.find(l => l.id === selectedLotId);
@@ -157,8 +180,8 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
       name: lot ? `Lote ${lot.lot_number}` : `Polígono ${polygons.length + 1}`,
       lot_id: selectedLotId || undefined,
       points: currentPolygonPoints,
-      color: 'rgba(5,150,105,0.5)',
-      opacity: 0.5,
+      color: 'hsl(var(--success))',
+      opacity: 0,
     };
     setPolygons(prev => [...prev, newPoly]);
     setCurrentPolygonPoints([]);
@@ -173,6 +196,8 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
         updates: {
           hotspots: hotspots as any,
           polygon_overlays: polygons as any,
+          yaw_default: viewerRef.current?.getPosition()?.yaw ?? scene.yaw_default,
+          pitch_default: viewerRef.current?.getPosition()?.pitch ?? scene.pitch_default,
         },
       });
       setDirty(false);
@@ -246,7 +271,6 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
                     <SelectValue placeholder="Asociar a lote" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Sin lote</SelectItem>
                     {lots.map(l => (
                       <SelectItem key={l.id} value={l.id}>Lote {l.lot_number}</SelectItem>
                     ))}
@@ -273,12 +297,11 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
               <Badge variant="outline" className="text-xs">
                 {hotspots.length} hotspots · {polygons.length} polígonos
               </Badge>
-              {dirty && (
-                <Button size="sm" className="gap-1.5 text-xs" onClick={handleSave}>
+                <Button size="sm" className="gap-1.5 text-xs" onClick={handleSave} disabled={updateScene.isPending}>
                   <Save className="h-3.5 w-3.5" />
                   Guardar
                 </Button>
-              )}
+              {dirty && <Badge variant="outline">Sin guardar</Badge>}
             </div>
           </div>
         </CardContent>

@@ -20,3 +20,10 @@
 ## Enlaces públicos
 
 - [x] Normalizar todo enlace compartible a https://ofertaterrenos.com (helper publicUrls), sin tocar URLs de auth
+
+## Panoramas de Hualañé
+
+- [x] Integrar las dos panorámicas Potensic al tour existente
+- [x] Habilitar marcado visual por lote con plano y capturas de referencia, sin inventar GPS
+- [x] Verificar cambio de escena, dibujo asociado a lote y guardado autorizado de orientación
+- [ ] Validar correspondencia de los límites reales sobre cada panorama antes de guardar contornos públicos (bloqueo: referencia visual de linderos aún no validada)

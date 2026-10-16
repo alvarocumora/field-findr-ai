@@ -8,6 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSEO } from '@/hooks/useSEO';
+import { CaonePanoramaTour } from './components/CaonePanoramaTour';
+import { useLots } from '@/hooks/useLots';
+import { CAONE_PROJECT } from './data/project';
+import { tourLotState } from '@/lib/tourLotMarkers';
 
 type CaoneLotSource = {
   id: string;
@@ -41,6 +45,7 @@ export default function CaoneTour() {
   const navigate = useNavigate();
   const { lotNumber } = useParams<{ lotNumber?: string }>();
   const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
+  const { lots: liveLots } = useLots(CAONE_PROJECT.id);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['caone-static-tour'],
@@ -53,35 +58,39 @@ export default function CaoneTour() {
 
   const lots = useMemo(
     () =>
-      (data?.lots ?? []).map((lot) => ({
-        id: lot.id,
+      (data?.lots ?? []).map((lot) => {
+        const live = liveLots.find(candidate => candidate.lot_number === lot.lot_number);
+        return ({
+        id: live?.id ?? lot.id,
         lot_number: lot.lot_number,
         area: lot.area_m2,
-        price: lot.price,
-        status: lot.status,
+        price: live?.price ?? lot.price,
+        status: live?.status ?? lot.status,
         latitude: lot.lat,
         longitude: lot.lng,
         polygon: lot.polygon,
-      })),
-    [data],
+      }); }),
+    [data, liveLots],
   );
 
   useEffect(() => {
     if (!data) return;
     const requestedLot = lotNumber ?? searchParams.get('lote');
     if (!requestedLot) return;
-    const match = data.lots.find((lot) => lot.lot_number === requestedLot);
+    const match = lots.find((lot) => lot.lot_number === requestedLot);
     if (match && match.id !== selectedLotId) setSelectedLotId(match.id);
-  }, [data, lotNumber, searchParams, selectedLotId]);
+  }, [data, lots, lotNumber, searchParams, selectedLotId]);
 
   const selectLot = (lotId: string) => {
     setSelectedLotId(lotId);
-    const lot = data?.lots.find((candidate) => candidate.id === lotId);
+    const lot = lots.find((candidate) => candidate.id === lotId);
     if (!lot) return;
     navigate(`/valle-hualane/l/${lot.lot_number}`, { replace: true });
   };
 
-  const selected = data?.lots.find((lot) => lot.id === selectedLotId) ?? null;
+  const selectedMapLot = lots.find(lot => lot.id === selectedLotId);
+  const selectedSource = data?.lots.find(lot => lot.lot_number === selectedMapLot?.lot_number);
+  const selected = selectedMapLot && selectedSource ? { ...selectedSource, ...selectedMapLot } : null;
   const center = data
     ? { lng: data.center[0], lat: data.center[1] }
     : { lng: -71.65328948, lat: -35.00154536 };
@@ -156,7 +165,8 @@ export default function CaoneTour() {
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
-          <section className="overflow-hidden rounded-3xl border border-white/10 bg-black shadow-2xl">
+          <section className="space-y-4 overflow-hidden">
+            <CaonePanoramaTour lots={lots} onLotClick={selectLot} />
             <div className="border-b border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/65">
               <MousePointer2 className="mr-2 inline h-4 w-4" /> Explora en vista cenital o 3D, inicia el recorrido aéreo y toca una parcela para acercarte. Geometría de parcelas y servidumbres tomada directamente del KMZ del proyecto.
             </div>
@@ -182,7 +192,7 @@ export default function CaoneTour() {
                     <div className="mt-2 flex items-end justify-between gap-3">
                       <h2 className="text-3xl font-black">Lote {selected.lot_number}</h2>
                       <Badge className={selected.status === 'available' ? 'bg-emerald-500/15 text-emerald-200' : 'bg-slate-500/20 text-slate-200'}>
-                        {selected.status === 'available' ? 'Disponible' : 'Consultar'}
+                        {tourLotState(selected.status).label}
                       </Badge>
                     </div>
                     <div className="mt-5 grid grid-cols-2 gap-3">
