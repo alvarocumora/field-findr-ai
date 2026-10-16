@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LotMapView } from '@/components/lots/LotMapView';
+import MapErrorBoundary from '@/components/map/MapErrorBoundary';
 import { LotSalesSheet, type SalesLot } from '@/components/sales/LotSalesSheet';
 import { LotReserveDialog } from '@/components/sales/LotReserveDialog';
 import { ProjectConversionBar } from '@/components/sales/ProjectConversionBar';
@@ -287,16 +288,21 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
               Toca un lote para ver su ficha comercial. Verde: disponible · Ámbar: reservado · Gris: vendido.
             </p>
             <div className="h-[420px] md:h-[520px] rounded-2xl overflow-hidden border border-border/60">
-              <LotMapView
-                lots={visibleLots as never}
-                projectCenter={{
-                  lat: (project.latitude as number | null) ?? -33.45,
-                  lng: (project.longitude as number | null) ?? -70.66,
-                }}
-                selectedLotId={selectedLotId}
-                onLotClick={(lot) => openLot(lot.id)}
-                readOnly
-              />
+              {/* Sin WebGL, mapbox-gl lanza al inicializar — sin este boundary
+                  se perdía toda la ficha (precio, documentos, contacto), no
+                  solo el mapa (G03, docs/PLATFORM_EXPERIENCE_AUDIT_2026-10-14.md). */}
+              <MapErrorBoundary>
+                <LotMapView
+                  lots={visibleLots as never}
+                  projectCenter={{
+                    lat: (project.latitude as number | null) ?? -33.45,
+                    lng: (project.longitude as number | null) ?? -70.66,
+                  }}
+                  selectedLotId={selectedLotId}
+                  onLotClick={(lot) => openLot(lot.id)}
+                  readOnly
+                />
+              </MapErrorBoundary>
             </div>
           </section>
         )}
