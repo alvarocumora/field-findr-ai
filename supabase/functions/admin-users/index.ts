@@ -1,8 +1,8 @@
 // Admin user management: invite, suspend/unsuspend, delete, reset password
 // Requires authenticated caller with 'admin' role. Uses service role for auth.admin operations.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.23.8";
+import { jsonResponse, handlePreflight, requireRole } from "../_shared/http.ts";
 
 const ActionSchema = z.discriminatedUnion("action", [
   z.object({
@@ -32,35 +32,24 @@ const ActionSchema = z.discriminatedUnion("action", [
 ]);
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return json({ error: "Unauthorized" }, 401);
-    }
-
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     // Verify caller & role using the caller's JWT
     const caller = createClient(SUPABASE_URL, ANON, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
     });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claims, error: claimsErr } = await caller.auth.getClaims(token);
-    if (claimsErr || !claims?.claims?.sub) return json({ error: "Unauthorized" }, 401);
-    const callerId = claims.claims.sub as string;
-
-    const { data: isAdmin } = await caller.rpc("has_role", {
-      _user_id: callerId,
-      _role: "admin",
-    });
-    if (!isAdmin) return json({ error: "Forbidden" }, 403);
+    const auth = await requireRole(req, caller, "admin");
+    if (auth instanceof Response) return auth;
+    const callerId = auth.userId;
 
     const parsed = ActionSchema.safeParse(await req.json());
-    if (!parsed.success) return json({ error: parsed.error.flatten() }, 400);
+    if (!parsed.success) return jsonResponse({ error: parsed.error.flatten() }, 400);
     const body = parsed.data;
 
     // Service-role client for privileged ops
@@ -85,7 +74,7 @@ Deno.serve(async (req) => {
           data: { first_name: body.first_name, last_name: body.last_name, account_type: body.role ?? "buyer" },
           redirectTo: origin ? `${origin}/auth` : undefined,
         });
-        if (error) return json({ error: error.message }, 400);
+        if (error) return jsonResponse({ error: error.message }, 400);
         // Ensure role is applied (handle_new_user reads account_type, but be defensive)
         if (body.role && data.user) {
           await admin
@@ -93,28 +82,26 @@ Deno.serve(async (req) => {
             .upsert({ user_id: data.user.id, role: body.role }, { onConflict: "user_id,role" });
         }
         await audit("user.invited", data.user?.id ?? null, { email: body.email, role: body.role });
-        return json({ ok: true, user_id: data.user?.id });
+        return jsonResponse({ ok: true, user_id: data.user?.id });
       }
 
       case "suspend": {
         const banUntil = `${body.hours}h`;
-        // @ts-expect-error ban_duration is supported by GoTrue admin API
         const { error } = await admin.auth.admin.updateUserById(body.user_id, { ban_duration: banUntil });
-        if (error) return json({ error: error.message }, 400);
+        if (error) return jsonResponse({ error: error.message }, 400);
         await audit("user.suspended", body.user_id, { hours: body.hours, reason: body.reason });
-        return json({ ok: true });
+        return jsonResponse({ ok: true });
       }
 
       case "unsuspend": {
-        // @ts-expect-error ban_duration:"none" lifts the ban
         const { error } = await admin.auth.admin.updateUserById(body.user_id, { ban_duration: "none" });
-        if (error) return json({ error: error.message }, 400);
+        if (error) return jsonResponse({ error: error.message }, 400);
         await audit("user.unsuspended", body.user_id, {});
-        return json({ ok: true });
+        return jsonResponse({ ok: true });
       }
 
       case "delete": {
-        if (body.user_id === callerId) return json({ error: "No puedes eliminarte a ti mismo" }, 400);
+        if (body.user_id === callerId) return jsonResponse({ error: "No puedes eliminarte a ti mismo" }, 400);
 
         // Keep reviewed documents while removing the restrictive reviewer reference.
         // All user-owned records already use ON DELETE CASCADE or SET NULL.
@@ -122,12 +109,12 @@ Deno.serve(async (req) => {
           .from("documents")
           .update({ reviewed_by: null })
           .eq("reviewed_by", body.user_id);
-        if (reviewerError) return json({ error: reviewerError.message }, 400);
+        if (reviewerError) return jsonResponse({ error: reviewerError.message }, 400);
 
         const { error } = await admin.auth.admin.deleteUser(body.user_id);
-        if (error) return json({ error: error.message }, 400);
+        if (error) return jsonResponse({ error: error.message }, 400);
         await audit("user.deleted", body.user_id, { reason: body.reason });
-        return json({ ok: true });
+        return jsonResponse({ ok: true });
       }
 
       case "reset_password": {
@@ -135,19 +122,12 @@ Deno.serve(async (req) => {
         const { error } = await admin.auth.resetPasswordForEmail(body.email, {
           redirectTo: origin ? `${origin}/reset-password` : undefined,
         });
-        if (error) return json({ error: error.message }, 400);
+        if (error) return jsonResponse({ error: error.message }, 400);
         await audit("user.password_reset_sent", body.user_id, { email: body.email });
-        return json({ ok: true });
+        return jsonResponse({ ok: true });
       }
     }
   } catch (e) {
-    return json({ error: (e as Error).message }, 500);
+    return jsonResponse({ error: (e as Error).message }, 500);
   }
 });
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
