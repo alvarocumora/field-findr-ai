@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+.tour-lot-label {
+  background: hsl(var(--background) / .88);
+  color: hsl(var(--foreground));
+  border: 2px solid var(--tour-lot-color, hsl(var(--success)));
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
 @layer base {
   /* ===== LIGHT MODE ===== */
   :root {
