@@ -1,7 +1,9 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import QRCode from 'qrcode';
 import { drawPdfHeaderLogo, drawPdfFooter } from './pdfBrandHeader';
+import { getShareUrl } from './publicUrls';
 
 /**
  * Comprobante de reserva (seña) para el comprador. Se genera client-side a
@@ -24,6 +26,10 @@ export interface ReceiptData {
   currency: string;
   paidAt?: string | null;
   mercadopagoPaymentId?: string | null;
+  projectId?: string | null;
+  /** URL pública canónica que codifica el QR de verificación. */
+  verifyUrl: string;
+  qrDataUrl?: string | null;
 }
 
 interface ReservationLike {
@@ -38,7 +44,8 @@ interface ReservationLike {
   lots?: {
     lot_number?: string | null;
     area?: number | null;
-    projects?: { name?: string | null; location?: string | null } | null;
+    project_id?: string | null;
+    projects?: { id?: string | null; name?: string | null; location?: string | null } | null;
   } | null;
 }
 
@@ -58,7 +65,19 @@ export const buildReceiptData = (reservation: ReservationLike): ReceiptData => (
   currency: 'CLP',
   paidAt: reservation.paid_at,
   mercadopagoPaymentId: reservation.mercadopago_payment_id,
+  projectId: reservation.lots?.project_id ?? reservation.lots?.projects?.id ?? null,
+  verifyUrl: buildVerifyUrl(reservation),
 });
+
+export function buildVerifyUrl(reservation: ReservationLike): string {
+  const projectId = reservation.lots?.project_id ?? reservation.lots?.projects?.id;
+  const folio = `OT-RES-${reservation.id.split('-')[0].toUpperCase()}`;
+  if (!projectId) return getShareUrl('/', { folio });
+  return getShareUrl(`/proyecto/${projectId}`, {
+    lote: reservation.lots?.lot_number ?? undefined,
+    folio,
+  });
+}
 
 const formatCLP = (value: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(value);
@@ -71,7 +90,7 @@ export const generateReservationReceipt = (d: ReceiptData): jsPDF => {
   drawPdfHeaderLogo(doc, {
     headerHeight: 34,
     subtitle: 'Comprobante de Reserva',
-    rightText: `Folio R-${d.folio}`,
+    rightText: `Folio OT-RES-${d.folio}`,
   });
 
   let y = 46;
@@ -123,7 +142,7 @@ export const generateReservationReceipt = (d: ReceiptData): jsPDF => {
     ['Proyecto', d.projectName || '—'],
     ...(d.projectLocation ? [['Ubicación', d.projectLocation] as [string, string]] : []),
     ['Lote', d.lotNumber || '—'],
-    ...(d.lotArea ? [['Superficie', `${Number(d.lotArea).toLocaleString('es-CL')} m²`] as [string, string]] : []),
+    ...(d.lotArea ? [['Superficie', `${Number(d.lotArea).toLocaleString('es-CL')} m² (${(Number(d.lotArea) / 10000).toLocaleString('es-CL', { maximumFractionDigits: 2 })} ha)`] as [string, string]] : []),
     ['N° de reserva', d.reservationId],
   ]);
 
@@ -147,6 +166,20 @@ export const generateReservationReceipt = (d: ReceiptData): jsPDF => {
   }
   y += 28;
 
+  // QR de verificación
+  if (d.qrDataUrl) {
+    const qs = 30;
+    doc.addImage(d.qrDataUrl, 'PNG', pw - margin - qs, y, qs, qs);
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(22, 101, 52);
+    doc.text('Verifica este comprobante', margin, y + 6);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text(doc.splitTextToSize(`Escanea el código o visita: ${d.verifyUrl}`, pw - margin * 2 - qs - 6), margin, y + 12);
+    y += qs + 6;
+  }
+
   // Legal note
   doc.setFontSize(8);
   doc.setTextColor(130, 130, 130);
@@ -162,8 +195,13 @@ export const generateReservationReceipt = (d: ReceiptData): jsPDF => {
   return doc;
 };
 
-export const downloadReservationReceipt = (reservation: ReservationLike) => {
+export const downloadReservationReceipt = async (reservation: ReservationLike) => {
   const data = buildReceiptData(reservation);
+  try {
+    data.qrDataUrl = await QRCode.toDataURL(data.verifyUrl, { margin: 1, width: 320 });
+  } catch {
+    data.qrDataUrl = null;
+  }
   const doc = generateReservationReceipt(data);
-  doc.save(`comprobante-reserva-${data.folio}.pdf`);
+  doc.save(`comprobante-reserva-OT-RES-${data.folio}.pdf`);
 };
