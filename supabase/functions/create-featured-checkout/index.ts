@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-api-key, x-supabase-api-version, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { jsonResponse, handlePreflight, requireAuth } from "../_shared/http.ts";
 
 const MERCADOPAGO_ACCESS_TOKEN = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -20,28 +16,23 @@ const PLANS: Record<string, { days: number; amount: number; label: string }> = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
 
   try {
     // ── Auth: verify caller is signed in and owns the project ─────────────
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return json({ error: "Unauthorized" }, 401);
-    }
     const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
     });
-    const { data: claims, error: claimsErr } = await userClient.auth.getClaims(
-      authHeader.replace("Bearer ", ""),
-    );
-    if (claimsErr || !claims?.claims?.sub) return json({ error: "Unauthorized" }, 401);
-    const userId = claims.claims.sub as string;
+    const auth = await requireAuth(req, userClient);
+    if (auth instanceof Response) return auth;
+    const userId = auth.userId;
 
     const body = await req.json().catch(() => ({}));
     const projectId = String(body?.project_id ?? "");
     const planKey = String(body?.plan ?? "");
     const plan = PLANS[planKey];
-    if (!projectId || !plan) return json({ error: "Invalid plan or project_id" }, 400);
+    if (!projectId || !plan) return jsonResponse({ error: "Invalid plan or project_id" }, 400);
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: project } = await admin
@@ -50,10 +41,10 @@ serve(async (req) => {
       .eq("id", projectId)
       .maybeSingle();
 
-    if (!project) return json({ error: "Project not found" }, 404);
-    if (project.user_id !== userId) return json({ error: "Not the project owner" }, 403);
+    if (!project) return jsonResponse({ error: "Project not found" }, 404);
+    if (project.user_id !== userId) return jsonResponse({ error: "Not the project owner" }, 403);
     if (project.status !== "active") {
-      return json({ error: "Project must be active to be featured" }, 400);
+      return jsonResponse({ error: "Project must be active to be featured" }, 400);
     }
 
     // ── Create MercadoPago preference ────────────────────────────────────
@@ -100,11 +91,11 @@ serve(async (req) => {
     if (!mpRes.ok) {
       const details = await mpRes.text();
       console.error("MP preference failed", mpRes.status, details);
-      return json({ error: "Payment provider error", status: mpRes.status, details }, 502);
+      return jsonResponse({ error: "Payment provider error", status: mpRes.status, details }, 502);
     }
     const pref = await mpRes.json();
 
-    return json({
+    return jsonResponse({
       preference_id: pref.id,
       init_point: pref.init_point,
       sandbox_init_point: pref.sandbox_init_point,
@@ -113,13 +104,6 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error("create-featured-checkout error", err);
-    return json({ error: (err as Error).message ?? "Unknown error" }, 500);
+    return jsonResponse({ error: (err as Error).message ?? "Unknown error" }, 500);
   }
 });
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
