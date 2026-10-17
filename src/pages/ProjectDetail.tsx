@@ -672,6 +672,7 @@ const ProjectDetail = () => {
                   <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
                     <TourViewer360
                       scenes={tourScenes}
+                      lots={lots}
                       onYawChange={setTourYaw}
                       onLotClick={(lotId) => {
                         const lot = lots.find(l => l.id === lotId);
