@@ -61,7 +61,7 @@ const CaoneLanding = () => {
               <Link to="/valle-hualane/plano"><FileText className="mr-2 h-4 w-4" />Masterplan KMZ + PDF</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
-              <Link to="/valle-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Tour virtual</Link>
+              <Link to="/proyecto/761e73ed-cc0d-5605-a06a-4a4348523b4b?tab=tour360"><PlayCircle className="mr-2 h-4 w-4" />Tour 360 · cotizar y reservar</Link>
             </Button>
             <Button size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white" onClick={copyProjectLink}>
               <Copy className="mr-2 h-4 w-4" />Copiar link
@@ -201,7 +201,7 @@ const CaoneLanding = () => {
                 <Link to="/valle-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Abrir tour virtual</Link>
               </Button>
               <Button asChild size="lg" className="bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]/90">
-                <Link to="/contacto-loteos">Hablar con OfertaTerrenos</Link>
+                <Link to="/proyecto/761e73ed-cc0d-5605-a06a-4a4348523b4b?tab=lots">Ver parcelas y reservar</Link>
               </Button>
             </div>
           </div>

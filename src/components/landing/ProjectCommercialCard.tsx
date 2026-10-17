@@ -29,7 +29,7 @@ const formatPrice = (value?: number) =>
 const ProjectCommercialCard = ({ project, compact = false, onOpen }: ProjectCommercialCardProps) => {
   const image = project.images?.[0];
   const location = [project.city, project.region].filter(Boolean).join(', ');
-  const href = project.slug ? `/p/${project.slug}` : `/proyecto/${project.id}`;
+  const href = `/proyecto/${project.id}`;
 
   return (
     <Link
