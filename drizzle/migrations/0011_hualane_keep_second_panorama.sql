@@ -1,0 +1,2 @@
+DELETE FROM public.tour_scenes WHERE id = 'e4e7db1a-b5dc-4cf8-99f3-14979f33c601';
+UPDATE public.tour_scenes SET position_index = 0, name = 'Dron · Vista aérea' WHERE id = 'e4e7db1a-b5dc-4cf8-99f3-14979f33c602';
