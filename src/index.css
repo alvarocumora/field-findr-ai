@@ -2,26 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Pines de parcela en el tour 360: anillo blanco legible sobre bosque/terreno */
 .tour-lot-label {
   display: grid;
   place-items: center;
-  min-width: 26px;
-  height: 26px;
+  min-width: 30px;
+  height: 30px;
   padding: 0 6px;
   border-radius: 999px;
-  background: var(--tour-lot-color, hsl(var(--success)));
-  color: hsl(var(--background));
-  border: 2px solid hsl(var(--background) / .9);
-  box-shadow: 0 2px 8px hsl(var(--background) / .5);
+  background: hsl(0 0% 0% / .35);
+  color: hsl(0 0% 100%);
+  border: 2px solid hsl(0 0% 100%);
+  box-shadow: 0 2px 10px hsl(0 0% 0% / .45);
+  backdrop-filter: blur(2px);
   font-size: 12px;
   font-weight: 800;
   line-height: 1;
   cursor: pointer;
-  transition: transform .15s ease;
+  text-shadow: 0 1px 2px hsl(0 0% 0% / .6);
+  transition: transform .15s ease, background .15s ease;
 }
-.tour-lot-label:hover { transform: scale(1.25); }
+.tour-lot-label--reserved { background: hsl(var(--warning)); border-color: hsl(0 0% 100%); }
+.tour-lot-label--sold { background: hsl(var(--destructive)); border-color: hsl(0 0% 100%); }
+.tour-lot-label:hover { transform: scale(1.2); background: hsl(0 0% 100%); color: hsl(222 47% 11%); text-shadow: none; }
 @media (max-width: 767px) {
-  .tour-lot-label { min-width: 22px; height: 22px; font-size: 11px; }
+  .tour-lot-label { min-width: 24px; height: 24px; font-size: 11px; border-width: 1.5px; }
 }
 
 @layer base {

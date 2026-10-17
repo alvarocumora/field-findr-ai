@@ -78,9 +78,10 @@ export function TourViewer360({
           id: `poly-${poly.id}`,
           polygon: poly.points.map((p) => [p.yaw, p.pitch]) as [number, number][],
           svgStyle: {
-            fill: `hsl(var(--${state.token}) / 0.12)`,
-            stroke: `hsl(var(--${state.token}))`,
-            strokeWidth: '1.5px',
+            fill: state.key === 'available' ? 'hsl(0 0% 100% / 0.06)' : `hsl(var(--${state.token}) / 0.18)`,
+            stroke: 'hsl(0 0% 100% / 0.95)',
+            strokeWidth: '2px',
+            strokeLinejoin: 'round',
             cursor: 'pointer',
           },
           tooltip: { content: `${poly.name} · ${state.label}`, position: 'top center' },
