@@ -19,6 +19,8 @@ export function tourLotLabel(name: string, status?: string | null) {
   const element = document.createElement('div');
   element.className = 'tour-lot-label';
   element.style.setProperty('--tour-lot-color', `hsl(var(--${state.token}))`);
-  element.textContent = `${name} · ${state.label}`;
+  element.title = `${name} · ${state.label}`;
+  element.setAttribute('aria-label', `${name} · ${state.label}`);
+  element.textContent = name.match(/\d+[A-Za-z]?$/)?.[0] ?? name;
   return element.outerHTML;
 }

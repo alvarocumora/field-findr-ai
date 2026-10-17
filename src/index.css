@@ -3,15 +3,25 @@
 @tailwind utilities;
 
 .tour-lot-label {
-  background: hsl(var(--background) / .88);
-  color: hsl(var(--foreground));
-  border: 2px solid var(--tour-lot-color, hsl(var(--success)));
-  border-radius: 6px;
-  padding: 5px 8px;
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--tour-lot-color, hsl(var(--success)));
+  color: hsl(var(--background));
+  border: 2px solid hsl(var(--background) / .9);
+  box-shadow: 0 2px 8px hsl(var(--background) / .5);
   font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
+  font-weight: 800;
+  line-height: 1;
   cursor: pointer;
+  transition: transform .15s ease;
+}
+.tour-lot-label:hover { transform: scale(1.25); }
+@media (max-width: 767px) {
+  .tour-lot-label { min-width: 22px; height: 22px; font-size: 11px; }
 }
 
 @layer base {
