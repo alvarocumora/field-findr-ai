@@ -78,11 +78,12 @@ export function TourViewer360({
           id: `poly-${poly.id}`,
           polygon: poly.points.map((p) => [p.yaw, p.pitch]) as [number, number][],
           svgStyle: {
-            fill: 'none',
+            fill: `hsl(var(--${state.token}) / 0.12)`,
             stroke: `hsl(var(--${state.token}))`,
-            strokeWidth: '2px',
+            strokeWidth: '1.5px',
+            cursor: 'pointer',
           },
-          tooltip: poly.name,
+          tooltip: { content: `${poly.name} · ${state.label}`, position: 'top center' },
           data: { type: 'polygon', lotId: poly.lot_id },
         });
         const position = tourPolygonCenter(poly.points);
@@ -190,8 +191,9 @@ export function TourViewer360({
   return (
     <div
       ref={containerRef}
-      className="relative w-full rounded-lg overflow-hidden shadow-xl bg-background"
-      style={{ height: isFullscreen ? '100vh' : '600px' }}
+      className={`relative w-full overflow-hidden shadow-xl bg-background ${
+        isFullscreen ? 'h-[100svh]' : 'h-[70svh] min-h-[420px] max-h-[640px] rounded-lg'
+      }`}
     >
       <ReactPhotoSphereViewer
         src={firstSceneUrl}
