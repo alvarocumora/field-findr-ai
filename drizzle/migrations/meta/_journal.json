@@ -78,6 +78,13 @@
       "when": 1792245681998,
       "tag": "0010_hualane_tour_overlays",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792247079158,
+      "tag": "0011_hualane_keep_second_panorama",
+      "breakpoints": true
     }
   ]
 }
