@@ -206,7 +206,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
               className="min-h-11 border-white/40 bg-white/10 text-white hover:bg-white/20"
               asChild
             >
-              <Link to={`/proyecto/${project.id}/experiencia`}>Recorrido virtual</Link>
+              <Link to={`/proyecto/${project.id}?tab=tour360`}>Tour 360, cotizador y reserva</Link>
             </Button>
 
             {cfg.contact.whatsapp && (

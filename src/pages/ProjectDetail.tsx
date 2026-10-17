@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import PublicLayout from '@/components/layouts/PublicLayout';
@@ -190,6 +190,8 @@ const ProjectDetail = () => {
   const [editingSceneIdx, setEditingSceneIdx] = useState<number | null>(null);
   const [tourYaw, setTourYaw] = useState(0);
   const { scenes: tourScenes } = useTourScenes(id);
+  const [searchParamsTab] = useSearchParams();
+  const tabParam = ['map','quoter','lots','info','compare','reviews','brochure','tour360'].includes(searchParamsTab.get('tab') ?? '') ? searchParamsTab.get('tab')! : 'map';
   const bulkPublish = useBulkPublishLots();
 
   const { data: project, isLoading: projectLoading } = useQuery({
@@ -498,7 +500,7 @@ const ProjectDetail = () => {
 
         {/* Main Content - Full Width */}
         <div className="container px-4 py-6">
-          <Tabs defaultValue="map" className="space-y-4">
+          <Tabs defaultValue={tabParam} className="space-y-4">
             <TabsList className="glass">
               <TabsTrigger value="map" className="gap-2">
                 <Map className="h-4 w-4" />
