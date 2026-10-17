@@ -385,6 +385,41 @@ const ProjectDetail = () => {
           </nav>
         </div>
 
+        {/* Tour 360 como pieza central cuando el proyecto tiene panorámicas */}
+        {tourScenes.length > 0 && (
+          <section className="container px-4 pb-4 space-y-3" aria-label="Tour 360 del proyecto">
+            <TourViewer360
+              scenes={tourScenes}
+              lots={lots}
+              onYawChange={setTourYaw}
+              onLotClick={(lotId) => {
+                const lot = lots.find(l => l.id === lotId);
+                if (lot) {
+                  setSelectedLot(lot.id);
+                  setDetailLot(lot);
+                }
+              }}
+            />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 rounded-2xl border bg-card p-4 text-center">
+              <div>
+                <p className="text-xl font-bold">{areaRange ? `${Math.round(areaRange.min).toLocaleString('es-CL')} m²` : '—'}</p>
+                <p className="text-xs text-muted-foreground">Superficie desde</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold">{availableLots.length} de {lots.length}</p>
+                <p className="text-xs text-muted-foreground">Parcelas disponibles</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold">{priceRange ? `$${priceRange.min.toLocaleString('es-CL')}` : 'Consultar'}</p>
+                <p className="text-xs text-muted-foreground">Precio desde</p>
+              </div>
+              <div className="flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">Toca una parcela en la imagen para ver su ficha</p>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Immersive Hero */}
         <ProjectHero
           project={project}
