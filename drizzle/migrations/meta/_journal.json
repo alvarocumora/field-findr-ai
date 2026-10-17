@@ -71,6 +71,13 @@
       "when": 1790988039024,
       "tag": "0009_listings_project_id",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792245681998,
+      "tag": "0010_hualane_tour_overlays",
+      "breakpoints": true
     }
   ]
 }
