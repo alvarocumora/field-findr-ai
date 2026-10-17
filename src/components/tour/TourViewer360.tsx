@@ -78,9 +78,10 @@ export function TourViewer360({
           id: `poly-${poly.id}`,
           polygon: poly.points.map((p) => [p.yaw, p.pitch]) as [number, number][],
           svgStyle: {
-            fill: `hsl(var(--${state.token}) / 0.12)`,
-            stroke: `hsl(var(--${state.token}))`,
-            strokeWidth: '1.5px',
+            fill: state.key === 'available' ? 'hsl(0 0% 100% / 0.06)' : `hsl(var(--${state.token}) / 0.18)`,
+            stroke: 'hsl(0 0% 100% / 0.95)',
+            strokeWidth: '2px',
+            strokeLinejoin: 'round',
             cursor: 'pointer',
           },
           tooltip: { content: `${poly.name} · ${state.label}`, position: 'top center' },
@@ -175,7 +176,8 @@ export function TourViewer360({
     ...(showCompass ? [[
       CompassPlugin,
       {
-        size: '90px',
+        size: '72px',
+        position: 'bottom left',
         navigation: true,
         backgroundSvg:
           '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="49" fill="rgba(0,0,0,.55)" stroke="rgba(255,255,255,.35)"/></svg>',
@@ -258,9 +260,16 @@ export function TourViewer360({
         </>
       )}
 
+      {/* Leyenda de estados */}
+      <div className="absolute top-16 right-4 z-10 flex flex-col gap-1.5 rounded-xl bg-black/60 px-3 py-2 text-xs text-white backdrop-blur-md">
+        <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full border-2 border-white bg-black/30" />Disponible</span>
+        <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full border-2 border-white bg-warning" />Reservado</span>
+        <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full border-2 border-white bg-destructive" />Vendido</span>
+      </div>
+
       {/* Miniaturas deslizables (pensadas para el celular) */}
       {scenes.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2 bg-black/60 backdrop-blur-md rounded-xl p-2 max-w-[86%] overflow-x-auto snap-x">
+        <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-10 flex gap-2 bg-black/60 backdrop-blur-md rounded-xl p-2 max-w-[70%] overflow-x-auto snap-x">
           {scenes.map((scene, idx) => (
             <Button variant="ghost"
               key={scene.id}
