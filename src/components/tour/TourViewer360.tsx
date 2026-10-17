@@ -48,6 +48,10 @@ export function TourViewer360({
     },
     [scenes],
   );
+  const lotClickRef = useRef(onLotClick);
+  const navigateRef = useRef(navigateToScene);
+  lotClickRef.current = onLotClick;
+  navigateRef.current = navigateToScene;
 
   /** Pinta hotspots y polígonos de la escena activa. */
   const renderMarkers = useCallback(
@@ -108,9 +112,10 @@ export function TourViewer360({
         markersPlugin?.addEventListener('select-marker', (e: any) => {
           const marker = e.marker;
           if (marker.data?.type === 'hotspot' && marker.data.targetId) {
-            navigateToScene(marker.data.targetId);
+            navigateRef.current(marker.data.targetId);
           } else if (marker.data?.type === 'polygon' && marker.data.lotId) {
-            onLotClick?.(marker.data.lotId);
+            // Ref: el visor registra el evento una sola vez, antes de que lleguen los lotes.
+            lotClickRef.current?.(marker.data.lotId);
           }
         });
 
