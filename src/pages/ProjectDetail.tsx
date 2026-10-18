@@ -192,6 +192,12 @@ const ProjectDetail = () => {
   const { scenes: tourScenes } = useTourScenes(id);
   const [searchParamsTab] = useSearchParams();
   const tabParam = ['map','quoter','lots','info','compare','reviews','brochure','tour360'].includes(searchParamsTab.get('tab') ?? '') ? searchParamsTab.get('tab')! : 'map';
+
+  // Las landings específicas pueden abrir directamente el formulario de consulta.
+  // El ID del lote se resuelve contra el inventario público antes de enviarlo al CRM.
+  useEffect(() => {
+    if (searchParamsTab.get('consulta') === '1') setLeadOpen(true);
+  }, [searchParamsTab]);
   const bulkPublish = useBulkPublishLots();
 
   const { data: project, isLoading: projectLoading } = useQuery({
@@ -447,6 +453,7 @@ const ProjectDetail = () => {
               projectId={project.id}
               projectOwnerId={project.user_id}
               projectSlug={project.slug || project.id}
+              lot={lots.find((lot) => lot.id === searchParamsTab.get('lote')) ?? null}
               onSuccess={() => setLeadOpen(false)}
             />
           </DialogContent>
