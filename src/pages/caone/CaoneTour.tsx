@@ -205,7 +205,7 @@ export default function CaoneTour() {
                     </div>
                     <div className="mt-5 grid gap-2">
                       <Button asChild className="w-full bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]/90">
-                        <Link to={`/proyecto/${CAONE_PROJECT.id}?consulta=1&lote=${encodeURIComponent(selected.id)}`}>Consultar lote {selected.lot_number}</Link>
+                        <Link to={`/proyecto/${CAONE_PROJECT.id}?consulta=1&lote=${encodeURIComponent(selected.id)}&loteNumero=${encodeURIComponent(selected.lot_number)}`}>Consultar lote {selected.lot_number}</Link>
                       </Button>
                       <Button variant="outline" className="w-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={copyTourLink}>
                         <Share2 className="mr-2 h-4 w-4" />Compartir este lote
