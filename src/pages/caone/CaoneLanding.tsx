@@ -20,8 +20,14 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const CaoneLanding = () => {
-  const { lots, available, isLoading, isLive, verifiedLotNumbers } = useCaoneLots();
+  const { lots, available, isLoading, isLive, verifiedCount, verifiedLotNumbers } = useCaoneLots();
   const availabilityLabel = isLive ? String(available) : isLoading ? 'Consultando…' : 'Por confirmar';
+  const unverifiedCount = lots.length - verifiedCount;
+  const inventoryBadge = !isLive
+    ? 'Disponibilidad por confirmar'
+    : unverifiedCount > 0
+      ? `${available} disponibles verificados · ${unverifiedCount} por confirmar`
+      : `${available} de ${lots.length} lotes disponibles`;
 
   useSEO({
     title: 'Valle de Hualañé · Parcelas desde 1 ha · ROL 168-921',
@@ -145,7 +151,7 @@ const CaoneLanding = () => {
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#1b5c49]">Master plan comercial</p>
               <h2 className="mt-1 text-3xl font-black">ROL 168-921</h2>
             </div>
-            <Badge variant="outline" className="border-[#1b5c49]/30 text-[#1b5c49]">{isLive ? `${available} de ${lots.length} lotes disponibles confirmados` : 'Disponibilidad por confirmar'}</Badge>
+            <Badge variant="outline" className="border-[#1b5c49]/30 text-[#1b5c49]">{inventoryBadge}</Badge>
           </div>
           <Link to="/valle-hualane/plano" className="group block overflow-hidden rounded-3xl border border-[#1b5c49]/15 bg-white shadow-sm">
             <img
