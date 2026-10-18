@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Copy, ExternalLink, MapPin, MousePointer2, PlayCircle, Ruler, Share2, Trees } from 'lucide-react';
@@ -45,6 +45,7 @@ export default function CaoneTour() {
   const [searchParams] = useSearchParams();
   const { lotNumber } = useParams<{ lotNumber?: string }>();
   const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
+  const lastUrlSelection = useRef<string | null>(null);
   const { lots: liveLots } = useLots(CAONE_PROJECT.id);
 
   const { data, isLoading, error } = useQuery({
@@ -77,10 +78,14 @@ export default function CaoneTour() {
   useEffect(() => {
     if (!data) return;
     const requestedLot = lotNumber ?? searchParams.get('lote');
-    if (!requestedLot) return;
+    if (!requestedLot || lastUrlSelection.current === requestedLot) return;
     const match = lots.find((lot) => lot.lot_number === requestedLot);
-    if (match && match.id !== selectedLotId) setSelectedLotId(match.id);
-  }, [data, lots, lotNumber, searchParams, selectedLotId]);
+    if (!match) return;
+    // Solo abrir la selección enlazada una vez por número: si la persona
+    // explora otra parcela, no restaurar automáticamente la primera.
+    lastUrlSelection.current = requestedLot;
+    setSelectedLotId(match.id);
+  }, [data, lots, lotNumber, searchParams]);
 
   // Seleccionar una parcela debe mantener al comprador en el tour. La ficha
   // externa sigue accesible como una acción explícita en el panel del lote.
