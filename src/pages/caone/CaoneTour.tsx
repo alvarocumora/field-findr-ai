@@ -83,7 +83,11 @@ export default function CaoneTour() {
   useEffect(() => {
     if (!data) return;
     const requestedLot = lotNumber ?? searchParams.get('lote');
-    if (!requestedLot || lastUrlSelection.current === requestedLot) return;
+    if (!requestedLot) {
+      lastUrlSelection.current = null;
+      return;
+    }
+    if (lastUrlSelection.current === requestedLot) return;
     const match = lots.find((lot) => lot.lot_number === requestedLot);
     if (!match) return;
     // Solo abrir la selección enlazada una vez por número: si la persona
