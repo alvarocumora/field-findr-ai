@@ -44,7 +44,7 @@ const clp = (value: number | null) =>
 export default function CaoneTour() {
   const [searchParams] = useSearchParams();
   const { lotNumber } = useParams<{ lotNumber?: string }>();
-  const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
+  const [selectedLotNumber, setSelectedLotNumber] = useState<string | null>(null);
   const lastUrlSelection = useRef<string | null>(null);
   const { lots: liveLots } = useLots(CAONE_PROJECT.id);
 
@@ -75,6 +75,11 @@ export default function CaoneTour() {
     [data, liveLots],
   );
 
+  // Derivar el ID actual de la selección por número permite mantenerla al
+  // hidratar el tour desde geometría estática hacia IDs reales de Supabase.
+  const selectedMapLot = lots.find((lot) => lot.lot_number === selectedLotNumber);
+  const selectedLotId = selectedMapLot?.id ?? null;
+
   useEffect(() => {
     if (!data) return;
     const requestedLot = lotNumber ?? searchParams.get('lote');
@@ -84,16 +89,15 @@ export default function CaoneTour() {
     // Solo abrir la selección enlazada una vez por número: si la persona
     // explora otra parcela, no restaurar automáticamente la primera.
     lastUrlSelection.current = requestedLot;
-    setSelectedLotId(match.id);
+    setSelectedLotNumber(match.lot_number);
   }, [data, lots, lotNumber, searchParams]);
 
   // Seleccionar una parcela debe mantener al comprador en el tour. La ficha
   // externa sigue accesible como una acción explícita en el panel del lote.
   const selectLot = (lotId: string) => {
-    setSelectedLotId(lotId);
+    const lot = lots.find((candidate) => candidate.id === lotId);
+    if (lot) setSelectedLotNumber(lot.lot_number);
   };
-
-  const selectedMapLot = lots.find(lot => lot.id === selectedLotId);
   const selectedSource = data?.lots.find(lot => lot.lot_number === selectedMapLot?.lot_number);
   const selected = selectedMapLot && selectedSource ? { ...selectedSource, ...selectedMapLot } : null;
   const selectedListingPath = getExploreLotPath(selected?.listing_id);
