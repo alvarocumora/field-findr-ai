@@ -453,7 +453,11 @@ const ProjectDetail = () => {
               projectId={project.id}
               projectOwnerId={project.user_id}
               projectSlug={project.slug || project.id}
-              lot={lots.find((lot) => lot.id === searchParamsTab.get('lote')) ?? null}
+              lot={lots.find((lot) =>
+                lot.id === searchParamsTab.get('lote') ||
+                (Boolean(searchParamsTab.get('loteNumero')) &&
+                  String(lot.lot_number) === searchParamsTab.get('loteNumero'))
+              ) ?? null}
               onSuccess={() => setLeadOpen(false)}
             />
           </DialogContent>
