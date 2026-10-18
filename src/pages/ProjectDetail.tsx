@@ -62,6 +62,7 @@ import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
 import { useReviewStats } from '@/hooks/useReviews';
 import { projectSocial } from '@/lib/landing/projectSocial';
 import { LandingLeadForm } from '@/pages/landing/LandingLeadForm';
+import { resolveProjectInquiryLot } from '@/lib/projects/projectInquiry';
 
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
@@ -453,11 +454,7 @@ const ProjectDetail = () => {
               projectId={project.id}
               projectOwnerId={project.user_id}
               projectSlug={project.slug || project.id}
-              lot={lots.find((lot) =>
-                lot.id === searchParamsTab.get('lote') ||
-                (Boolean(searchParamsTab.get('loteNumero')) &&
-                  String(lot.lot_number) === searchParamsTab.get('loteNumero'))
-              ) ?? null}
+              lot={resolveProjectInquiryLot(lots, searchParamsTab)}
               onSuccess={() => setLeadOpen(false)}
             />
           </DialogContent>
