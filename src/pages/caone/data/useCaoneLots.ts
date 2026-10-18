@@ -80,6 +80,14 @@ export const useCaoneLots = () => {
     };
   }, [queryClient]);
 
+  // Solo un estado reconocido desde la RPC puede presentarse al comprador
+  // como disponibilidad verificada; el KMZ estático aporta geometría, no stock.
+  const verifiedLotNumbers = useMemo(() => new Set(
+    (live ?? [])
+      .filter((lot) => lot.lot_number != null && toStatus(lot.status) !== null)
+      .map((lot) => String(lot.lot_number)),
+  ), [live]);
+
   const lots = useMemo<CaoneLot[]>(() => {
     if (!live?.length) return CAONE_LOTS;
     const byNumber = new Map<string, PublicLot>();
@@ -98,7 +106,15 @@ export const useCaoneLots = () => {
     });
   }, [live]);
 
-  const available = lots.filter((l) => l.status === 'available').length;
+  const available = lots.filter((lot) =>
+    verifiedLotNumbers.has(lot.lot_number) && lot.status === 'available',
+  ).length;
 
-  return { lots, available, isLoading, isLive: !!live?.length };
+  return {
+    lots,
+    available,
+    isLoading,
+    isLive: verifiedLotNumbers.size > 0,
+    verifiedLotNumbers,
+  };
 };
