@@ -23,6 +23,8 @@ interface SearchAutocompleteProps {
   onSearchChange?: (query: string) => void;
   placeholder?: string;
   className?: string;
+  /** Prefill (e.g. from `/explorar?q=`). */
+  initialQuery?: string;
 }
 
 const RECENT_SEARCHES_KEY = 'terreno-recent-searches';
@@ -76,9 +78,10 @@ const SearchAutocomplete = ({
   onSearchChange,
   placeholder = 'Buscar terrenos, ubicaciones…',
   className,
+  initialQuery = '',
 }: SearchAutocompleteProps) => {
   const navigate = useNavigate();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [properties, setProperties] = useState<SearchResult[]>([]);

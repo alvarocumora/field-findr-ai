@@ -1,3 +1,4 @@
+import ViewerErrorBoundary from '@/components/viewer/ViewerErrorBoundary';
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -65,7 +66,7 @@ interface LotDetailSheetProps {
 }
 
 const formatPrice = (price: number | null) => {
-  if (!price) return 'Consultar';
+  if (!price) return 'Precio no informado';
   return new Intl.NumberFormat('es-CL', {
     style: 'currency', currency: 'CLP', maximumFractionDigits: 0,
   }).format(price);
@@ -73,9 +74,9 @@ const formatPrice = (price: number | null) => {
 
 const getStatusConfig = (status: string | null) => {
   switch (status) {
-    case 'available': return { label: 'Disponible', className: 'bg-emerald-500 text-white border-emerald-400/30' };
-    case 'reserved': return { label: 'Reservado', className: 'bg-amber-500 text-white border-amber-400/30' };
-    case 'sold': return { label: 'Vendido', className: 'bg-zinc-700 text-zinc-200 border-zinc-600' };
+    case 'available': return { label: 'Disponible', className: 'bg-success text-primary-foreground border-transparent' };
+    case 'reserved': return { label: 'Reservado', className: 'bg-warning text-primary-foreground border-transparent' };
+    case 'sold': return { label: 'Vendido', className: 'bg-muted text-muted-foreground border-border' };
     default: return { label: status || 'Sin estado', className: 'bg-muted text-muted-foreground' };
   }
 };
@@ -105,20 +106,20 @@ const ImageGallery = ({ images }: { images: string[] }) => {
   if (images.length === 0) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-muted">
       <div className="aspect-[16/9]">
         <img src={images[currentIndex]} alt={`Foto ${currentIndex + 1}`} className="h-full w-full object-cover" />
       </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-foreground/25 via-transparent to-transparent" />
       {images.length > 1 && (
         <>
-          <Button size="icon" variant="secondary" className="absolute left-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full bg-black/55 text-white hover:bg-black/75" onClick={() => setCurrentIndex((i) => (i === 0 ? images.length - 1 : i - 1))}>
+          <Button size="icon" variant="secondary" className="absolute left-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full bg-card/90 text-foreground hover:bg-card" onClick={() => setCurrentIndex((i) => (i === 0 ? images.length - 1 : i - 1))}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button size="icon" variant="secondary" className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full bg-black/55 text-white hover:bg-black/75" onClick={() => setCurrentIndex((i) => (i === images.length - 1 ? 0 : i + 1))}>
+          <Button size="icon" variant="secondary" className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full bg-card/90 text-foreground hover:bg-card" onClick={() => setCurrentIndex((i) => (i === images.length - 1 ? 0 : i + 1))}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Badge className="absolute bottom-3 right-3 border-white/10 bg-black/55 text-[10px] text-white">
+          <Badge className="absolute bottom-3 right-3 border-border bg-card/90 text-[10px] text-foreground">
             <ImageIcon className="mr-1 h-3 w-3" />{currentIndex + 1}/{images.length}
           </Badge>
         </>
@@ -206,16 +207,16 @@ export const LotDetailSheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full overflow-y-auto border-l border-white/10 bg-zinc-950 p-0 text-white sm:max-w-xl">
-        <div className="sticky top-0 z-20 border-b border-white/10 bg-zinc-950/92 px-6 pb-5 pt-6 backdrop-blur-xl">
+      <SheetContent side="right" className="theme-rural w-full overflow-y-auto border-l border-border bg-background p-0 text-foreground sm:max-w-xl">
+        <div className="sticky top-0 z-20 border-b border-border bg-card px-6 pb-5 pt-6 backdrop-blur-xl">
           <SheetHeader className="mb-0 text-left">
-            <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/40">
-              <Sparkles className="h-3.5 w-3.5 text-emerald-400" /> Terrain View · Lot Inspector
+            <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              <Sparkles className="h-3.5 w-3.5 text-primary" /> Terrain View · Lot Inspector
             </div>
             <div className="flex items-start justify-between gap-4 pr-8">
               <div>
-                <SheetTitle className="text-3xl font-bold tracking-tight text-white">Lote {lot.lot_number}</SheetTitle>
-                <SheetDescription className="mt-1 text-sm text-white/50">
+                <SheetTitle className="text-3xl font-bold tracking-tight text-foreground">Lote {lot.lot_number}</SheetTitle>
+                <SheetDescription className="mt-1 text-sm text-muted-foreground">
                   {projectName}{lot.name && lot.name !== lot.lot_number && ` · ${lot.name}`}
                 </SheetDescription>
               </div>
@@ -225,12 +226,12 @@ export const LotDetailSheet = ({
 
           <div className="mt-5 grid grid-cols-[1fr_auto] items-end gap-5">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.16em] text-white/35">Precio</p>
-              <p className="mt-1 text-3xl font-bold tracking-tight text-white">{formatPrice(lot.price)}</p>
-              {pricePerSqm && <p className="mt-1 text-sm text-white/45">{formatPrice(pricePerSqm)}/m²</p>}
+              <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Precio</p>
+              <p className="mt-1 text-3xl font-bold tracking-tight text-foreground">{formatPrice(lot.price)}</p>
+              {pricePerSqm && <p className="mt-1 text-sm text-muted-foreground">{formatPrice(pricePerSqm)}/m²</p>}
             </div>
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-white/35">Superficie</p>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Superficie</p>
               <p className="mt-1 text-xl font-semibold">{Number(lot.area).toLocaleString('es-CL')} m²</p>
             </div>
           </div>
@@ -240,22 +241,22 @@ export const LotDetailSheet = ({
           {images.length > 0 && <ImageGallery images={images} />}
 
           {sentinelQuery.data?.available && (
-            <section className="overflow-hidden rounded-2xl border border-emerald-500/20 bg-white/[0.035]">
-              <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+            <section className="overflow-hidden rounded-2xl border border-primary/25 bg-muted/60">
+              <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
                 <div>
                   <p className="flex items-center gap-2 text-xs font-semibold">
-                    <Satellite className="h-4 w-4 text-emerald-400" />
+                    <Satellite className="h-4 w-4 text-primary" />
                     Imagen satelital actual
                   </p>
-                  <p className="mt-0.5 text-[10px] text-white/40">
+                  <p className="mt-0.5 text-[10px] text-muted-foreground">
                     Sentinel-2 · {formatSentinelDate(sentinelQuery.data.acquisition_datetime)} · {sentinelCloudLabel(sentinelQuery.data.cloud_cover)}
                   </p>
                 </div>
-                <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-300">
+                <Badge variant="outline" className="border-primary/25 bg-primary/10 text-[10px] text-primary">
                   Microsoft Planetary Computer
                 </Badge>
               </div>
-              <div className="aspect-[5/3] bg-zinc-900/60">
+              <div className="aspect-[5/3] bg-card">
                 {satellitePreviewState === 'ready' && satellitePreview ? (
                   <img
                     src={satellitePreview}
@@ -263,29 +264,30 @@ export const LotDetailSheet = ({
                     className="h-full w-full object-cover"
                   />
                 ) : satellitePreviewState === 'failed' ? (
-                  <div className="flex h-full items-center justify-center px-6 text-center text-xs text-white/45">
+                  <div className="flex h-full items-center justify-center px-6 text-center text-xs text-muted-foreground">
                     La escena Sentinel está disponible, pero esta vista no pudo renderizarse. El masterplan mantiene Mapbox Satellite como respaldo.
                   </div>
                 ) : (
-                  <Skeleton className="h-full w-full bg-white/5" />
+                  <Skeleton className="h-full w-full bg-muted/60" />
                 )}
               </div>
-              <p className="border-t border-white/10 px-4 py-2.5 text-[10px] leading-relaxed text-white/40">
+              <p className="border-t border-border px-4 py-2.5 text-[10px] leading-relaxed text-muted-foreground">
                 El satélite actualiza el contexto visual. El deslinde blanco/verde proviene de la geometría KMZ/topográfica del proyecto y no se modifica desde Sentinel.
               </p>
             </section>
           )}
 
-          <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035]">
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+          <section className="overflow-hidden rounded-2xl border border-border bg-muted/60">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <div>
                 <p className="text-xs font-semibold">Vista de parcela</p>
-                <p className="text-[11px] text-white/40">Forma, escala y contexto 3D</p>
+                <p className="text-[11px] text-muted-foreground">Forma, escala y contexto 3D</p>
               </div>
-              <Box className="h-4 w-4 text-emerald-400" />
+              <Box className="h-4 w-4 text-primary" />
             </div>
-            <div className="h-[300px] bg-zinc-900/50 sm:h-[340px]">
-              <Suspense fallback={<Skeleton className="h-full w-full bg-white/5" />}>
+            <div className="h-[300px] bg-card sm:h-[340px]">
+              <ViewerErrorBoundary label="la vista 3D" className="h-full rounded-none border-0">
+              <Suspense fallback={<Skeleton className="h-full w-full bg-muted/60" />}>
                 <div className="h-full [&>div]:!h-full [&>div]:!rounded-none [&>div]:!border-0">
                   <ParcelaDesigner3D
                     polygon={polygon}
@@ -298,44 +300,45 @@ export const LotDetailSheet = ({
                   />
                 </div>
               </Suspense>
+              </ViewerErrorBoundary>
             </div>
             {lot.status === 'available' && onDesign && (
-              <button type="button" onClick={() => onDesign(lot)} className="flex w-full items-center justify-between border-t border-white/10 px-4 py-3 text-sm text-white/65 transition-colors hover:bg-white/5 hover:text-white">
-                <span className="flex items-center gap-2"><Palette className="h-4 w-4 text-emerald-400" />Abrir diseñador 3D</span>
+              <button type="button" onClick={() => onDesign(lot)} className="flex w-full items-center justify-between border-t border-border px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
+                <span className="flex items-center gap-2"><Palette className="h-4 w-4 text-primary" />Abrir diseñador 3D</span>
                 <ExternalLink className="h-3.5 w-3.5" />
               </button>
             )}
           </section>
 
           <section className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-white/35"><Ruler className="h-3.5 w-3.5" />Superficie</div>
+            <div className="rounded-2xl border border-border bg-muted/60 p-4">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground"><Ruler className="h-3.5 w-3.5" />Superficie</div>
               <p className="mt-2 text-xl font-semibold">{Number(lot.area).toLocaleString('es-CL')} m²</p>
             </div>
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-white/35"><TrendingUp className="h-3.5 w-3.5" />Precio/m²</div>
-              <p className="mt-2 text-xl font-semibold text-emerald-400">{pricePerSqm ? `${formatPrice(pricePerSqm)}/m²` : '—'}</p>
+            <div className="rounded-2xl border border-primary/25 bg-primary/10 p-4">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground"><TrendingUp className="h-3.5 w-3.5" />Precio/m²</div>
+              <p className="mt-2 text-xl font-semibold text-primary">{pricePerSqm ? `${formatPrice(pricePerSqm)}/m²` : '—'}</p>
             </div>
           </section>
 
           {(lot.elevation_avg || slopeLabel || features.hasWater || features.hasElectricity || features.hasRoad) && (
             <section>
-              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Condiciones del lote</p>
+              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Condiciones del lote</p>
               <div className="flex flex-wrap gap-2">
-                {lot.elevation_avg && <Badge variant="outline" className="border-white/10 bg-white/[0.035] text-white/70"><Mountain className="mr-1.5 h-3.5 w-3.5" />{Math.round(Number(lot.elevation_avg))}m snm</Badge>}
-                {slopeLabel && <Badge variant="outline" className="border-white/10 bg-white/[0.035] text-white/70">📐 {slopeLabel}</Badge>}
-                {features.hasWater && <Badge variant="outline" className="border-white/10 bg-white/[0.035] text-white/70"><Droplets className="mr-1.5 h-3.5 w-3.5 text-sky-400" />Agua</Badge>}
-                {features.hasElectricity && <Badge variant="outline" className="border-white/10 bg-white/[0.035] text-white/70"><Zap className="mr-1.5 h-3.5 w-3.5 text-amber-400" />Electricidad</Badge>}
-                {features.hasRoad && <Badge variant="outline" className="border-white/10 bg-white/[0.035] text-white/70"><Route className="mr-1.5 h-3.5 w-3.5" />Acceso vial</Badge>}
+                {lot.elevation_avg && <Badge variant="outline" className="border-border bg-muted/60 text-muted-foreground"><Mountain className="mr-1.5 h-3.5 w-3.5" />{Math.round(Number(lot.elevation_avg))}m snm</Badge>}
+                {slopeLabel && <Badge variant="outline" className="border-border bg-muted/60 text-muted-foreground">📐 {slopeLabel}</Badge>}
+                {features.hasWater && <Badge variant="outline" className="border-border bg-muted/60 text-muted-foreground"><Droplets className="mr-1.5 h-3.5 w-3.5 text-sky-400" />Agua</Badge>}
+                {features.hasElectricity && <Badge variant="outline" className="border-border bg-muted/60 text-muted-foreground"><Zap className="mr-1.5 h-3.5 w-3.5 text-amber-400" />Electricidad</Badge>}
+                {features.hasRoad && <Badge variant="outline" className="border-border bg-muted/60 text-muted-foreground"><Route className="mr-1.5 h-3.5 w-3.5" />Acceso vial</Badge>}
               </div>
             </section>
           )}
 
           {lot.latitude && lot.longitude && (
-            <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
-              <div className="flex items-center gap-2 text-sm font-semibold"><MapPin className="h-4 w-4 text-emerald-400" />Ubicación</div>
-              <p className="mt-2 text-xs text-white/40">{Number(lot.latitude).toFixed(5)}, {Number(lot.longitude).toFixed(5)}</p>
-              <a href={`https://www.google.com/maps?q=${lot.latitude},${lot.longitude}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-sm text-emerald-400 hover:text-emerald-300">
+            <section className="rounded-2xl border border-border bg-muted/60 p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold"><MapPin className="h-4 w-4 text-primary" />Ubicación</div>
+              <p className="mt-2 text-xs text-muted-foreground">{Number(lot.latitude).toFixed(5)}, {Number(lot.longitude).toFixed(5)}</p>
+              <a href={`https://www.google.com/maps?q=${lot.latitude},${lot.longitude}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-sm text-primary hover:text-primary">
                 Ver en Google Maps <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </section>
@@ -343,10 +346,10 @@ export const LotDetailSheet = ({
 
           {legalDocuments.length > 0 && (
             <section>
-              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Documentos del proyecto</p>
-              <div className="divide-y divide-white/10 rounded-2xl border border-white/10 bg-white/[0.025]">
+              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Documentos del proyecto</p>
+              <div className="divide-y divide-white/10 rounded-2xl border border-border bg-muted/60">
                 {legalDocuments.slice(0, 4).map((doc: any, i: number) => (
-                  <a key={i} href={doc.url || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between px-4 py-3 text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white">
+                  <a key={i} href={doc.url || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
                     <span>📄 {doc.name || `Documento ${i + 1}`}</span><ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 ))}
@@ -354,12 +357,12 @@ export const LotDetailSheet = ({
             </section>
           )}
 
-          <Separator className="bg-white/10" />
+          <Separator className="bg-muted/60" />
 
           <div className="grid grid-cols-3 gap-2">
-            <Button variant="outline" size="sm" className="border-white/10 bg-white/[0.025] text-white hover:bg-white/5" onClick={() => handleShare(lot)}><Share2 className="mr-1.5 h-3.5 w-3.5" />Compartir</Button>
-            <Button variant="outline" size="sm" className="border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300" onClick={() => handleWhatsApp(lot, projectName)}><MessageCircle className="mr-1.5 h-3.5 w-3.5" />WhatsApp</Button>
-            <Button variant="outline" size="sm" className="border-white/10 bg-white/[0.025] text-white hover:bg-white/5" onClick={handleDownloadFicha} disabled={isDownloading}><Download className="mr-1.5 h-3.5 w-3.5" />{isDownloading ? '...' : 'Ficha'}</Button>
+            <Button variant="outline" size="sm" className="border-border bg-muted/60 text-foreground hover:bg-muted/60" onClick={() => handleShare(lot)}><Share2 className="mr-1.5 h-3.5 w-3.5" />Compartir</Button>
+            <Button variant="outline" size="sm" className="border-primary/25 bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary" onClick={() => handleWhatsApp(lot, projectName)}><MessageCircle className="mr-1.5 h-3.5 w-3.5" />WhatsApp</Button>
+            <Button variant="outline" size="sm" className="border-border bg-muted/60 text-foreground hover:bg-muted/60" onClick={handleDownloadFicha} disabled={isDownloading}><Download className="mr-1.5 h-3.5 w-3.5" />{isDownloading ? '...' : 'Ficha'}</Button>
           </div>
 
           {lot.status === 'reserved' && (
@@ -369,23 +372,23 @@ export const LotDetailSheet = ({
           )}
 
           {canManage && project && (
-            <div className="border-t border-white/10 pt-4">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Gestión</p>
+            <div className="border-t border-border pt-4">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Gestión</p>
               <PublishLotButton lot={lot as any} project={project} />
             </div>
           )}
         </div>
 
         {lot.status === 'available' && (
-          <div className="fixed bottom-0 right-0 z-30 w-full space-y-2 border-t border-white/10 bg-zinc-950/95 p-4 backdrop-blur-xl sm:max-w-xl">
+          <div className="fixed bottom-0 right-0 z-30 w-full space-y-2 border-t border-border bg-card p-4 backdrop-blur-xl sm:max-w-xl">
             <div className="grid grid-cols-[1fr_auto_auto] gap-2">
-              <Button size="lg" className="h-12 gap-2 rounded-xl bg-emerald-500 font-semibold text-black hover:bg-emerald-400" onClick={() => onReserve?.(lot)}>
+              <Button size="lg" className="h-12 gap-2 rounded-xl bg-primary font-semibold text-black hover:bg-emerald-400" onClick={() => onReserve?.(lot)}>
                 <Bookmark className="h-4 w-4" />Reservar lote
               </Button>
-              {onDesign && <Button variant="outline" size="lg" className="h-12 rounded-xl border-white/10 bg-white/[0.035] px-4 text-white hover:bg-white/[0.07]" onClick={() => onDesign(lot)} aria-label="Diseñar parcela"><Palette className="h-4 w-4" /></Button>}
-              {onFinance && <Button variant="outline" size="lg" className="h-12 rounded-xl border-white/10 bg-white/[0.035] px-4 text-white hover:bg-white/[0.07]" onClick={() => onFinance(lot)} aria-label="Simular financiamiento"><Calculator className="h-4 w-4" /></Button>}
+              {onDesign && <Button variant="outline" size="lg" className="h-12 rounded-xl border-border bg-muted/60 px-4 text-foreground hover:bg-muted/60" onClick={() => onDesign(lot)} aria-label="Diseñar parcela"><Palette className="h-4 w-4" /></Button>}
+              {onFinance && <Button variant="outline" size="lg" className="h-12 rounded-xl border-border bg-muted/60 px-4 text-foreground hover:bg-muted/60" onClick={() => onFinance(lot)} aria-label="Simular financiamiento"><Calculator className="h-4 w-4" /></Button>}
             </div>
-            <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-xl border-white/10 bg-white/[0.025] text-white/80 hover:bg-white/5 hover:text-white">
+            <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-xl border-border bg-muted/60 text-muted-foreground hover:bg-muted/60 hover:text-foreground">
               <Link
                 to={`/agendar?project_id=${lot.project_id}&lot_id=${lot.id}&lot_number=${encodeURIComponent(lot.lot_number)}&project_name=${encodeURIComponent(projectName)}&source=lot-detail`}
               >

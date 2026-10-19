@@ -66,7 +66,7 @@ export const ProjectHero = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
         </div>
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-950 via-background to-emerald-900/50" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-950 via-emerald-950 to-emerald-900" />
       )}
 
       <div className="relative z-10 container px-4">
@@ -90,7 +90,7 @@ export const ProjectHero = ({
         >
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             <div className="space-y-3">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight">
+              <h1 className="font-editorial text-3xl md:text-4xl lg:text-5xl font-medium text-white tracking-tight">
                 {project.name}
               </h1>
               <div className="flex items-center gap-2 text-white/80">

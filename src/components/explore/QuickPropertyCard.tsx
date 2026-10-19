@@ -1,6 +1,7 @@
 import { memo, useRef, useEffect, useState } from 'react';
 import { Heart, ChevronRight, MapPin, Sparkles, Eye, Scale } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { formatPricePerM2 } from '@/lib/priceCurrency';
 import { Listing, formatPrice, formatArea, getListingTypeLabel, getPricePerM2, formatPriceShort, getCountryFlag } from '@/hooks/useListings';
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
 import { useCompare } from '@/hooks/useCompare';
@@ -36,7 +37,7 @@ const QuickPropertyCard = memo(({
   const inCompare = isInCompare(listing.id);
   const [showSecondImage, setShowSecondImage] = useState(false);
 
-  const pricePerM2 = getPricePerM2(listing.price, listing.area_m2);
+  const pricePerM2 = formatPricePerM2(listing.price, listing.area_m2, listing.currency);
   const countryFlag = getCountryFlag(listing.country);
 
   useEffect(() => {
@@ -141,7 +142,7 @@ const QuickPropertyCard = memo(({
             </span>
             {pricePerM2 && (
               <span className="text-[10px] text-white/70 ml-1">
-                · {formatPriceShort(pricePerM2)}/m²
+                · {pricePerM2}
               </span>
             )}
           </div>
@@ -236,7 +237,7 @@ const QuickPropertyCard = memo(({
           </span>
           {pricePerM2 && (
             <span className="text-[11px] text-muted-foreground ml-1.5">
-              {formatPriceShort(pricePerM2)}/m²
+              {pricePerM2}
             </span>
           )}
         </div>

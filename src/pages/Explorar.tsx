@@ -40,7 +40,7 @@ const Explorar = () => {
 
 
   // Initial state from URL (?q=... & ?view=map|list|swipe)
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') ?? '';
   const initialView = searchParams.get('view');
   const requestedListingId = searchParams.get('listing') ?? '';
@@ -106,6 +106,39 @@ const Explorar = () => {
   // Data — infinite pagination with cursor. Text search runs server-side so
   // it covers the whole inventory, not only the pages already loaded.
   const deferredSearch = useDeferredValue(searchQuery);
+  // Currency scope: CLP and UF are never mixed in a price range.
+  const [currency, setCurrency] = useState<'all' | 'CLP' | 'UF'>(() => {
+    const c = searchParams.get('currency');
+    return c === 'CLP' || c === 'UF' ? c : 'all';
+  });
+  const priceRangeActive = priceRange[0] > 0 || priceRange[1] < 5000000000;
+  const effectiveCurrency = currency !== 'all' ? currency : priceRangeActive ? 'CLP' : undefined;
+  const applyPriceRange = effectiveCurrency !== 'UF';
+
+  // Keep q/type/currency in the URL without dropping ?listing or other params.
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    const set = (k: string, v?: string) => (v ? next.set(k, v) : next.delete(k));
+    set('q', deferredSearch.trim() || undefined);
+    set('type', selectedTypes.join(',') || undefined);
+    set('currency', currency !== 'all' ? currency : undefined);
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deferredSearch, selectedTypes, currency]);
+
+  const currencySwitch = (
+    <div className="flex items-center gap-2 px-3 pt-2 text-xs" role="group" aria-label="Moneda del precio">
+      <span className="text-muted-foreground">Moneda:</span>
+      {(['all', 'CLP', 'UF'] as const).map((c) => (
+        <button key={c} type="button" aria-pressed={currency === c} onClick={() => setCurrency(c)}
+          className={`rounded-full border px-2.5 py-1 font-medium focus-ring ${currency === c ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:border-primary'}`}>
+          {c === 'all' ? 'Todas' : c}
+        </button>
+      ))}
+      {currency === 'UF' && priceRangeActive && <span className="text-muted-foreground">El rango de precio (CLP) no aplica a UF.</span>}
+      {currency === 'all' && priceRangeActive && <span className="text-muted-foreground">Rango en CLP: solo publicaciones en CLP.</span>}
+    </div>
+  );
   const {
     listings,
     totalCount,
@@ -119,12 +152,13 @@ const Explorar = () => {
     type: selectedTypes.length > 0 ? selectedTypes : undefined,
     region: selectedRegions.length > 0 ? selectedRegions : undefined,
     country: selectedCountries.length > 0 ? selectedCountries : undefined,
-    priceMin: priceRange[0] > 0 ? priceRange[0] : undefined,
-    priceMax: priceRange[1] < 5000000000 ? priceRange[1] : undefined,
+    priceMin: applyPriceRange && priceRange[0] > 0 ? priceRange[0] : undefined,
+    priceMax: applyPriceRange && priceRange[1] < 5000000000 ? priceRange[1] : undefined,
     areaMin: areaRange[0] > 0 ? areaRange[0] : undefined,
     areaMax: areaRange[1] < 1000000 ? areaRange[1] : undefined,
     bounds: mapBounds ?? undefined,
     includeLoteoLots,
+    currency: effectiveCurrency,
     search: deferredSearch || undefined,
   });
 
@@ -280,7 +314,7 @@ const Explorar = () => {
     return (
       <div className="theme-rural min-h-screen bg-background flex flex-col pb-16">
         <StickyHeader />
-        {errorBanner && <div className="pt-header">{errorBanner}</div>}
+        <div className="pt-header">{errorBanner}{currencySwitch}</div>
 
         <MobileExploreView
           mode={mobileViewMode}
@@ -425,6 +459,7 @@ const Explorar = () => {
         {/* Left panel – scrollable list */}
         <div className="w-[420px] min-w-[380px] flex-shrink-0 border-r border-border/30 flex flex-col min-h-0">
           {errorBanner}
+          {currencySwitch}
           <ProjectsRail />
           <LifestyleChips
             selectedTags={selectedTags}
