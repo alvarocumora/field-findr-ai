@@ -74,7 +74,7 @@ const formatPrice = (price: number | null) => {
 const getStatusConfig = (status: string | null) => {
   switch (status) {
     case 'available': return { label: 'Disponible', className: 'bg-success text-primary-foreground border-transparent' };
-    case 'reserved': return { label: 'Reservado', className: 'bg-amber-500 text-foreground border-amber-400/30' };
+    case 'reserved': return { label: 'Reservado', className: 'bg-warning text-primary-foreground border-transparent' };
     case 'sold': return { label: 'Vendido', className: 'bg-muted text-muted-foreground border-border' };
     default: return { label: status || 'Sin estado', className: 'bg-muted text-muted-foreground' };
   }
