@@ -15,11 +15,9 @@ const ProfessionalNetworkSection = () => (
       <div className="overflow-hidden rounded-3xl border border-primary/15 bg-card/75">
         <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
           <div className="p-7 md:p-10 lg:p-12">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-primary">Para inmobiliarias, loteadores y corredores</p>
-            <h2 id="professional-network-title" className="mt-3 max-w-2xl font-heading text-3xl font-bold leading-tight md:text-5xl">
+            <Building2 className="h-5 w-5 text-primary" />
+            <p className="mt-6 font-swiss text-[11px] text-primary">Para inmobiliarias, loteadores y corredores</p>
+            <h2 id="professional-network-title" className="mt-3 max-w-2xl font-editorial text-3xl font-medium leading-[1.05] md:text-5xl">
               No sólo publiques terrenos. Opera tu proyecto desde la misma red.
             </h2>
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
@@ -41,7 +39,7 @@ const ProfessionalNetworkSection = () => (
               <div key={capability.label} className="flex min-h-36 flex-col justify-between border-b border-r border-border/50 p-5 last:border-b-0 even:border-r-0 lg:min-h-44">
                 <capability.icon className="h-5 w-5 text-primary" />
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Sales OS</p>
+                  <p className="font-swiss text-[10px] text-muted-foreground">Sales OS</p>
                   <p className="mt-1 font-heading text-base font-semibold">{capability.label}</p>
                 </div>
               </div>
