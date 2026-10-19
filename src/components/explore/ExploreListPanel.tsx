@@ -490,6 +490,7 @@ const ExploreListPanel = ({
           {/* Row 1 — Search input + Filtros + IA (rendered by FilterBar) */}
           <div className="p-2.5 flex flex-col gap-2 border-b border-border/40">
             <SearchAutocomplete
+              initialQuery={searchQuery}
               onSearchChange={onSearchChange}
               placeholder="Buscar por ciudad, comuna o coordenadas..."
             />
