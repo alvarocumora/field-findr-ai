@@ -150,11 +150,14 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'recent', label: 'Más recientes' },
 ];
 
+const currencyRank = (l: Listing) => ((l.currency || 'CLP').toUpperCase() === 'CLP' ? 0 : 1);
+
 const sortListings = (listings: Listing[], sort: SortOption): Listing[] => {
   const sorted = [...listings];
   switch (sort) {
-    case 'price_asc': return sorted.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
-    case 'price_desc': return sorted.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
+    // Same-currency comparison only: CLP block first, then UF; never interleave raw numbers.
+    case 'price_asc': return sorted.sort((a, b) => currencyRank(a) - currencyRank(b) || (a.price ?? 0) - (b.price ?? 0));
+    case 'price_desc': return sorted.sort((a, b) => currencyRank(a) - currencyRank(b) || (b.price ?? 0) - (a.price ?? 0));
     case 'area_asc': return sorted.sort((a, b) => (a.area_m2 ?? 0) - (b.area_m2 ?? 0));
     case 'area_desc': return sorted.sort((a, b) => (b.area_m2 ?? 0) - (a.area_m2 ?? 0));
     case 'recent': return sorted.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
