@@ -12,6 +12,8 @@ export type MeetingRequestInput = {
   preferredDate?: string;
   preferredBlock?: MeetingBlock;
   source?: string;
+  projectId?: string;
+  lotId?: string;
 };
 
 export type Meeting = {
@@ -41,6 +43,8 @@ type MeetingInsert = {
   requester_phone: string;
   requester_email: string | null;
   context: string | null;
+  project_id: string | null;
+  lot_id: string | null;
   preferred_date: string | null;
   preferred_block: MeetingBlock | null;
   source: string;
@@ -96,6 +100,8 @@ export const useCreateMeetingRequest = () => {
           preferred_date: clean(input.preferredDate),
           preferred_block: input.preferredBlock ?? null,
           source: input.source ?? 'web',
+          project_id: input.projectId ?? null,
+          lot_id: input.lotId ?? null,
         });
 
       if (error) throw error;

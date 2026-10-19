@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Sheet,
   SheetContent,
@@ -27,6 +28,7 @@ import {
   Share2,
   MessageCircle,
   Download,
+  CalendarCheck,
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
@@ -375,7 +377,7 @@ export const LotDetailSheet = ({
         </div>
 
         {lot.status === 'available' && (
-          <div className="fixed bottom-0 right-0 z-30 w-full border-t border-white/10 bg-zinc-950/95 p-4 backdrop-blur-xl sm:max-w-xl">
+          <div className="fixed bottom-0 right-0 z-30 w-full space-y-2 border-t border-white/10 bg-zinc-950/95 p-4 backdrop-blur-xl sm:max-w-xl">
             <div className="grid grid-cols-[1fr_auto_auto] gap-2">
               <Button size="lg" className="h-12 gap-2 rounded-xl bg-emerald-500 font-semibold text-black hover:bg-emerald-400" onClick={() => onReserve?.(lot)}>
                 <Bookmark className="h-4 w-4" />Reservar lote
@@ -383,6 +385,13 @@ export const LotDetailSheet = ({
               {onDesign && <Button variant="outline" size="lg" className="h-12 rounded-xl border-white/10 bg-white/[0.035] px-4 text-white hover:bg-white/[0.07]" onClick={() => onDesign(lot)} aria-label="Diseñar parcela"><Palette className="h-4 w-4" /></Button>}
               {onFinance && <Button variant="outline" size="lg" className="h-12 rounded-xl border-white/10 bg-white/[0.035] px-4 text-white hover:bg-white/[0.07]" onClick={() => onFinance(lot)} aria-label="Simular financiamiento"><Calculator className="h-4 w-4" /></Button>}
             </div>
+            <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-xl border-white/10 bg-white/[0.025] text-white/80 hover:bg-white/5 hover:text-white">
+              <Link
+                to={`/agendar?project_id=${lot.project_id}&lot_id=${lot.id}&lot_number=${encodeURIComponent(lot.lot_number)}&project_name=${encodeURIComponent(projectName)}&source=lot-detail`}
+              >
+                <CalendarCheck className="h-3.5 w-3.5" />Agendar visita a terreno
+              </Link>
+            </Button>
           </div>
         )}
       </SheetContent>

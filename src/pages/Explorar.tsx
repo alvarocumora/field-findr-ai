@@ -47,9 +47,11 @@ const Explorar = () => {
   const { data: linkedListing } = useListing(requestedListingId);
   const openedLinkRef = useRef<string | null>(null);
 
-  // View mode for mobile
+  // View mode for mobile. Lista+mapa por defecto: quien busca comparar
+  // ubicaciones rápido no quiere partir en modo tarjeta-por-tarjeta; swipe
+  // sigue disponible explícitamente vía ?view=swipe o el toggle.
   const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>(
-    initialView === 'map' || initialView === 'list' ? initialView : 'swipe',
+    initialView === 'map' || initialView === 'swipe' ? initialView : 'list',
   );
   // Desktop: overlay swipe mode
   const [desktopSwipe, setDesktopSwipe] = useState(false);

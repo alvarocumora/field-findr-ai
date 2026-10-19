@@ -193,9 +193,14 @@ const ProjectDetail = () => {
   const [tourYaw, setTourYaw] = useState(0);
   const tourSectionRef = useRef<HTMLDivElement>(null);
   const scrollToTour = () => tourSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  const { scenes: tourScenes } = useTourScenes(id);
+  const { scenes: tourScenes, isLoading: tourScenesLoading } = useTourScenes(id);
   const [searchParamsTab] = useSearchParams();
   const tabParam = ['map','quoter','lots','info','compare','reviews','brochure','tour360'].includes(searchParamsTab.get('tab') ?? '') ? searchParamsTab.get('tab')! : 'map';
+  // Tabs controlado (no defaultValue): un link a ?tab=tour360 hacia un
+  // proyecto sin panorámicas dejaba el área de tabs en blanco (ningún
+  // TabsTrigger calzaba con "tour360" si no es dueño) — se corrige más abajo
+  // una vez que tourScenes termina de cargar, cayendo a "map".
+  const [activeTab, setActiveTab] = useState(tabParam);
 
   // Las landings específicas pueden abrir directamente el formulario de consulta.
   // El ID del lote se resuelve contra el inventario público antes de enviarlo al CRM.
@@ -224,6 +229,17 @@ const ProjectDetail = () => {
     },
     enabled: validId,
   });
+
+  // Un link ?tab=tour360 hacia un proyecto sin panorámicas (y donde el
+  // visitante no es el dueño) dejaba el área de tabs en blanco: ningún
+  // TabsTrigger="tour360" llega a registrarse, así que el Tabs no tenía qué
+  // mostrar. Resuelto tourScenes, si queda vacío se cae a "map" en vez de
+  // dejar la pantalla sin contenido (gap #2 de la auditoría).
+  useEffect(() => {
+    if (tabParam !== 'tour360' || tourScenesLoading) return;
+    const ownsProject = !!user && project?.user_id === user.id;
+    if (tourScenes.length === 0 && !ownsProject) setActiveTab('map');
+  }, [tabParam, tourScenesLoading, tourScenes.length, project?.user_id, user]);
 
   const { data: lots = [], isLoading: lotsLoading, error: lotsError } = useQuery({
     queryKey: ['project-lots', id],
@@ -522,7 +538,7 @@ const ProjectDetail = () => {
 
         {/* Main Content - Full Width */}
         <div className="container px-4 py-6">
-          <Tabs defaultValue={tabParam} className="space-y-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="glass">
               <TabsTrigger value="map" className="gap-2">
                 <Map className="h-4 w-4" />

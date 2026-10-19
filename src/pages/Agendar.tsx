@@ -27,16 +27,25 @@ const minPreferredDate = () => {
 const Agendar = () => {
   const [searchParams] = useSearchParams();
   const source = searchParams.get('source') || 'web';
+  const projectId = searchParams.get('project_id') || undefined;
+  const lotId = searchParams.get('lot_id') || undefined;
+  const lotNumber = searchParams.get('lot_number');
+  const projectName = searchParams.get('project_name');
+  // Quien llega desde la ficha de un lote ya sabe qué quiere ver — no debe
+  // repetirlo a mano en "Cuéntanos de tu caso".
+  const lotContext = lotId
+    ? `Visita para el Lote ${lotNumber ?? ''}${projectName ? ` · ${projectName}` : ''}`.trim()
+    : '';
   const createMeeting = useCreateMeetingRequest();
   const [submitted, setSubmitted] = useState(false);
-  const [meetingType, setMeetingType] = useState<MeetingType>('reunion_campo');
+  const [meetingType, setMeetingType] = useState<MeetingType>(lotId ? 'visita_terreno' : 'reunion_campo');
   const [preferredBlock, setPreferredBlock] = useState<MeetingBlock>('manana');
   const [form, setForm] = useState({
     name: '',
     phone: '',
     email: '',
     preferredDate: '',
-    context: '',
+    context: lotContext,
   });
 
   const set = (key: keyof typeof form, value: string) => {
@@ -56,6 +65,8 @@ const Agendar = () => {
         preferredDate: form.preferredDate,
         preferredBlock,
         source,
+        projectId,
+        lotId,
       });
 
       setSubmitted(true);
@@ -118,6 +129,14 @@ const Agendar = () => {
               <CardTitle>{submitted ? 'Solicitud enviada' : 'Reserva tu horario'}</CardTitle>
             </CardHeader>
             <CardContent>
+              {lotId && !submitted && (
+                <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+                  <span className="font-medium text-foreground">Agendando para: </span>
+                  <span className="text-muted-foreground">
+                    Lote {lotNumber ?? '—'}{projectName ? ` · ${projectName}` : ''}
+                  </span>
+                </div>
+              )}
               {submitted ? (
                 <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 text-center">
                   <CheckCircle2 className="mx-auto mb-4 h-10 w-10 text-primary" />
