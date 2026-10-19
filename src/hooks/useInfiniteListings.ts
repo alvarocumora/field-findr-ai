@@ -4,6 +4,10 @@ import { Listing, ListingFilters } from './useListings';
 
 const PAGE_SIZE = 30;
 
+/** Strip PostgREST `or()` syntax characters so user text can't break the filter. */
+export const sanitizeSearchTerm = (raw?: string): string =>
+  (raw ?? '').replace(/[%,()*\\:."']/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+
 interface InfiniteListingsResult {
   listings: Listing[];
   nextCursor: number | null;
@@ -69,6 +73,13 @@ export const useInfiniteListings = (filters?: ListingFilters) => {
 
       if (filters?.featured !== undefined) {
         query = query.eq('featured', filters.featured);
+      }
+
+      // Search the whole inventory, not just the pages already loaded.
+      const term = sanitizeSearchTerm(filters?.search);
+      if (term) {
+        const p = `%${term}%`;
+        query = query.or(`title.ilike.${p},location.ilike.${p},city.ilike.${p},region.ilike.${p}`);
       }
 
       const { data, error, count } = await query;

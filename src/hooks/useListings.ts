@@ -47,6 +47,8 @@ export interface ListingFilters {
   featured?: boolean;
   /** Include individual lots of a loteo (tagged `loteo`) in the feed. */
   includeLoteoLots?: boolean;
+  /** Free-text search resolved server-side over the whole inventory. */
+  search?: string;
   status?: string;
   bounds?: {
     north: number;
