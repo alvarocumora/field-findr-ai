@@ -13,7 +13,7 @@ import { useState } from 'react';
 
 const PreferencesTab = () => {
   const { theme, setTheme } = useTheme();
-  const { profile, updateProfile, isUpdating } = useProfile();
+  const { profile, updateProfileAsync, isUpdating } = useProfile();
   
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [newListingAlerts, setNewListingAlerts] = useState(true);
@@ -36,7 +36,7 @@ const PreferencesTab = () => {
 
   const markChanged = () => setHasChanges(true);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const updates: ProfileUpdate = {
       email_notifications: emailNotifications,
       new_listing_alerts: newListingAlerts,
@@ -45,8 +45,16 @@ const PreferencesTab = () => {
       preferred_currency: currency,
       preferred_language: language,
     };
-    updateProfile(updates);
-    setHasChanges(false);
+    try {
+      await updateProfileAsync(updates);
+      // Solo se limpia el estado "sin guardar" si la escritura realmente
+      // terminó bien — antes se limpiaba de inmediato y un fallo de red
+      // dejaba al usuario sin el botón Guardar para reintentar (G09).
+      setHasChanges(false);
+    } catch {
+      // El toast de error ya lo muestra useProfile; hasChanges se mantiene
+      // para que el botón Guardar siga disponible.
+    }
   };
 
   return (
