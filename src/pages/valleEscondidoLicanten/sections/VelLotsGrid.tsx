@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, ArrowUpDown, MapPin, MessageSquare, Crosshair, FileDown, CalendarCheck, ShoppingCart, SlidersHorizontal, RotateCcw } from 'lucide-react';
+import { Search, ArrowUpDown, MapPin, MessageSquare, Crosshair, FileDown, CalendarCheck, ShoppingCart, SlidersHorizontal, RotateCcw, GitCompareArrows } from 'lucide-react';
 import { type VelLotStatus } from '../data/lots';
 import { useVelLots } from '../data/useVelLots';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -39,6 +39,8 @@ export default function VelLotsGrid() {
     hoveredLotId,
     setHoveredLotId,
     requestFocus,
+    shortlistIds,
+    toggleShortlist,
   } = useVelState();
 
   const { lots } = useVelLots();
@@ -305,6 +307,8 @@ export default function VelLotsGrid() {
                 const href = l.listing_id ? `/propiedad/${l.listing_id}` : `/proyecto/${VEL_PROJECT.id}`;
                 const isHovered = hoveredLotId === l.id;
                 const available = l.status === 'available';
+                const shortlisted = shortlistIds.includes(l.id);
+                const shortlistFull = shortlistIds.length >= 4 && !shortlisted;
                 return (
                   <div
                     id={`vel-lot-${l.id}`}
@@ -361,6 +365,20 @@ export default function VelLotsGrid() {
                     <div className="mt-3 flex items-center gap-1.5 border-t border-white/5 pt-2">
                       <Link to={href} className="flex-1 text-[10px] tracking-[0.18em] uppercase text-[var(--hue-amber)] hover:text-[var(--hue-bone)] transition">Ficha →</Link>
                       <button type="button" onClick={() => handleFocusOnMap(l.id)} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition" title="Ver en el mapa" aria-label="Ver en el mapa"><Crosshair className="h-3 w-3" /></button>
+                      <button
+                        type="button"
+                        onClick={() => toggleShortlist(l.id)}
+                        disabled={shortlistFull}
+                        className={`inline-flex items-center justify-center rounded-sm border p-1.5 transition disabled:cursor-not-allowed disabled:opacity-30 ${
+                          shortlisted
+                            ? 'border-[var(--hue-amber)]/60 bg-[var(--hue-amber)]/15 text-[var(--hue-amber)]'
+                            : 'border-white/15 bg-white/[0.03] text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)]'
+                        }`}
+                        title={shortlisted ? 'Quitar del comparador' : shortlistFull ? 'Máximo 4 lotes' : 'Agregar al comparador'}
+                        aria-label={shortlisted ? 'Quitar del comparador' : 'Agregar al comparador'}
+                      >
+                        <GitCompareArrows className="h-3 w-3" />
+                      </button>
                       <button type="button" onClick={() => setLeadLot({ id: l.id, number: l.lot_number, status: l.status })} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition" title="Consultar por este lote" aria-label="Consultar por este lote"><MessageSquare className="h-3 w-3" /></button>
                       <button type="button" onClick={() => downloadFicha(l)} disabled={pdfLot === l.id} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 transition hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] disabled:opacity-40" title="Descargar ficha PDF con QR" aria-label="Descargar ficha PDF con QR"><FileDown className="h-3 w-3" /></button>
                     </div>
