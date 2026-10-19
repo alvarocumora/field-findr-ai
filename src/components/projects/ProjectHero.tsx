@@ -66,7 +66,7 @@ export const ProjectHero = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
         </div>
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-950 via-background to-emerald-900/50" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-950 via-emerald-950 to-emerald-900" />
       )}
 
       <div className="relative z-10 container px-4">

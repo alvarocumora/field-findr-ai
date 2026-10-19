@@ -29,7 +29,7 @@ const ProfessionalNetworkSection = () => (
                 <Link to="/planes-loteos">Publicar y gestionar un proyecto <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link to="/contacto-loteos">Hablar con el equipo</Link>
+                <Link to="/contacto-loteos?source=professional-network">Hablar con el equipo</Link>
               </Button>
             </div>
           </div>

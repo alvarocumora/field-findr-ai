@@ -909,7 +909,7 @@ const ProjectDetail = () => {
           onOpenChange={(open) => !open && setDesignerLot(null)}
         />
       </div>
-    </PublicLayout>
+    </PublicLayout></div>
   );
 };
 
