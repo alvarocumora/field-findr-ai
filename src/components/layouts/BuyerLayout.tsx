@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { useIsAdmin, useIsAgent } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -28,6 +29,12 @@ const BuyerSidebar = ({ collapsed, onClose }: { collapsed?: boolean; onClose?: (
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
+  const isAdmin = useIsAdmin();
+  const isAgent = useIsAgent();
+  // Esta pantalla de perfil es compartida por todos los roles (el menú
+  // global siempre lleva a /perfil) — mostrar "Comprador" a un asesor o
+  // admin era confuso sobre qué cuenta estaba editando (G12).
+  const accountTypeLabel = isAdmin ? 'Administrador' : isAgent ? 'Corredor / Asesor' : 'Comprador';
 
   const initials = profile
     ? `${(profile.first_name || '')[0] || ''}${(profile.last_name || '')[0] || ''}`.toUpperCase()
@@ -58,7 +65,7 @@ const BuyerSidebar = ({ collapsed, onClose }: { collapsed?: boolean; onClose?: (
             <p className="text-sm font-medium truncate">
               {profile?.first_name || 'Usuario'}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate">Comprador</p>
+            <p className="text-[11px] text-muted-foreground truncate">{accountTypeLabel}</p>
           </div>
         </div>
       </div>
