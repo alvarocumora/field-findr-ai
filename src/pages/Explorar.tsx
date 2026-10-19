@@ -188,7 +188,7 @@ const Explorar = () => {
       Math.min((l.tags?.length ?? 0), 4) * 2;
     result.sort((a, b) => completeness(b) - completeness(a));
     return result;
-  }, [listings, searchQuery, selectedTags, selectedSlopes, selectedValuation, drawnPolygon]);
+  }, [listings, selectedTags, selectedSlopes, selectedValuation, drawnPolygon]);
 
   // Reset swipe-derived deck whenever upstream filters or listings change,
   // so it doesn't shadow the map with a stale subset.
@@ -280,6 +280,7 @@ const Explorar = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col pb-16">
         <StickyHeader />
+        {errorBanner && <div className="pt-header">{errorBanner}</div>}
 
         <MobileExploreView
           mode={mobileViewMode}
@@ -423,6 +424,7 @@ const Explorar = () => {
       <div className="flex-1 flex pt-header min-h-0">
         {/* Left panel – scrollable list */}
         <div className="w-[420px] min-w-[380px] flex-shrink-0 border-r border-border/30 flex flex-col min-h-0">
+          {errorBanner}
           <ProjectsRail />
           <LifestyleChips
             selectedTags={selectedTags}
