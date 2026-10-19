@@ -35,6 +35,7 @@ import { LotComparatorInProject } from '@/components/projects/LotComparatorInPro
 import {
   MapPin,
   ArrowLeft,
+  ArrowUp,
   DollarSign,
   Maximize2,
   Phone,
@@ -56,7 +57,7 @@ import {
 } from 'lucide-react';
 import { useBulkPublishLots } from '@/hooks/useBulkPublishLots';
 import { publishableLots } from '@/lib/marketplace/lotToListing';
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
 import { useReviewStats } from '@/hooks/useReviews';
@@ -189,10 +190,20 @@ const ProjectDetail = () => {
   const [showCompare, setShowCompare] = useState(false);
   const [editingSceneIdx, setEditingSceneIdx] = useState<number | null>(null);
   const [tourYaw, setTourYaw] = useState(0);
+  const tourSectionRef = useRef<HTMLDivElement>(null);
+  const scrollToTour = () => tourSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const { scenes: tourScenes } = useTourScenes(id);
   const [searchParamsTab] = useSearchParams();
   const tabParam = ['map','quoter','lots','info','compare','reviews','brochure','tour360'].includes(searchParamsTab.get('tab') ?? '') ? searchParamsTab.get('tab')! : 'map';
   const bulkPublish = useBulkPublishLots();
+
+  // Links con ?tab=tour360 (landings de proyecto) esperan ver el tour de
+  // inmediato: el visor real vive arriba como pieza central, la pestaña
+  // de abajo ya no monta una segunda instancia — así que saltamos ahí.
+  useEffect(() => {
+    if (tabParam === 'tour360' && tourScenes.length > 0) scrollToTour();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabParam, tourScenes.length]);
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
@@ -387,9 +398,12 @@ const ProjectDetail = () => {
           </nav>
         </div>
 
-        {/* Tour 360 como pieza central cuando el proyecto tiene panorámicas */}
+        {/* Tour 360 como pieza central cuando el proyecto tiene panorámicas.
+            Única instancia del visor: la pestaña "Tour 360" de abajo apunta
+            aquí en vez de montar un segundo TourViewer360 (antes se veía
+            duplicado al entrar con ?tab=tour360). */}
         {tourScenes.length > 0 && (
-          <section className="container px-4 pb-4 space-y-3" aria-label="Tour 360 del proyecto">
+          <section ref={tourSectionRef} className="container px-4 pb-4 space-y-3 scroll-mt-20" aria-label="Tour 360 del proyecto">
             <TourViewer360
               scenes={tourScenes}
               lots={lots}
@@ -705,21 +719,16 @@ const ProjectDetail = () => {
             {/* Tour 360 Tab */}
             <TabsContent value="tour360">
               <div className="space-y-6">
+                {/* El visor en sí vive arriba, como pieza central de la página
+                    (una sola instancia de TourViewer360). Aquí solo el
+                    minimapa, sincronizado con ese visor vía tourYaw. */}
                 {tourScenes.length > 0 && editingSceneIdx === null && (
-                  <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-                    <TourViewer360
-                      scenes={tourScenes}
-                      lots={lots}
-                      onYawChange={setTourYaw}
-                      onLotClick={(lotId) => {
-                        const lot = lots.find(l => l.id === lotId);
-                        if (lot) {
-                          setSelectedLot(lot.id);
-                          setDetailLot(lot);
-                        }
-                      }}
-                    />
-                    <div className="hidden lg:block rounded-2xl overflow-hidden border h-[600px]">
+                  <div className="space-y-3">
+                    <Button variant="outline" size="sm" onClick={scrollToTour} className="gap-2">
+                      <ArrowUp className="h-4 w-4" />
+                      Ver tour 360 arriba
+                    </Button>
+                    <div className="rounded-2xl overflow-hidden border h-[420px] lg:h-[600px]">
                       <TourMinimap
                         center={{
                           lat: project.latitude || -34.9767,
