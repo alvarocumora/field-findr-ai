@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { MapPin, Maximize2, Sparkles, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { formatPricePerM2 } from '@/lib/priceCurrency';
 import { Listing, formatPrice, formatArea, getListingTypeLabel, getPricePerM2, formatPriceShort, getCountryFlag } from '@/hooks/useListings';
 import { cn } from '@/lib/utils';
 import { listingCoverUrl } from '@/lib/staticMapImage';
@@ -22,7 +23,7 @@ const CompactListingCard = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const mapToken = useStaticMapToken();
   const imageUrl = listingCoverUrl(listing.images, listing.lat, listing.lng, mapToken) || '/placeholder.svg';
-  const pricePerM2 = getPricePerM2(listing.price, listing.area_m2);
+  const pricePerM2 = formatPricePerM2(listing.price, listing.area_m2, listing.currency);
 
   useEffect(() => {
     if (isSelected && cardRef.current) {
@@ -65,7 +66,7 @@ const CompactListingCard = ({
             {formatPrice(listing.price, listing.currency)}
           </p>
           {pricePerM2 && (
-            <p className="text-white/70 text-[10px]">{formatPriceShort(pricePerM2)}/m²</p>
+            <p className="text-white/70 text-[10px]">{pricePerM2}</p>
           )}
         </div>
 

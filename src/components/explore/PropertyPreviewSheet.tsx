@@ -26,6 +26,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { formatPricePerM2 } from '@/lib/priceCurrency';
 import { Listing, formatPrice, formatArea, getListingTypeLabel, getPricePerM2, formatPriceShort, getCountryFlag } from '@/hooks/useListings';
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
 import { whatsapp } from '@/lib/whatsappUtils';
@@ -64,7 +65,7 @@ const PropertyPreviewSheet = ({
 
   if (!listing) return null;
   const images = listing.images.length > 0 ? listing.images : ['/placeholder.svg'];
-  const pricePerM2 = getPricePerM2(listing.price, listing.area_m2);
+  const pricePerM2 = formatPricePerM2(listing.price, listing.area_m2, listing.currency);
 
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % images.length);
   const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
@@ -204,7 +205,7 @@ const PropertyPreviewSheet = ({
             </p>
             {pricePerM2 && (
               <p className="text-sm text-muted-foreground">
-                {formatPrice(pricePerM2)}/m²
+                {pricePerM2}
               </p>
             )}
           </div>
@@ -244,7 +245,7 @@ const PropertyPreviewSheet = ({
                   <TrendingUp className="h-3.5 w-3.5" />
                   <span className="text-xs">Precio/m²</span>
                 </div>
-                <p className="text-sm font-medium text-foreground">{formatPriceShort(pricePerM2)}</p>
+                <p className="text-sm font-medium text-foreground">{pricePerM2}</p>
               </div>
             )}
           </div>

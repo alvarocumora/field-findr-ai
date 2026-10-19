@@ -1,3 +1,4 @@
+import { formatPricePerM2 } from '@/lib/priceCurrency';
 import { useState, useCallback, useMemo, useEffect, useRef, type MutableRefObject } from 'react';
 import { motion, useMotionValue, useTransform, animate, PanInfo, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
@@ -667,7 +668,7 @@ const SwipeExplorer = ({
                   <span className="flex items-center gap-2 text-sm text-muted-foreground">
                     {pricePerM2 !== null && pricePerM2 >= 100 && ((current as any).currency ?? 'CLP') === 'CLP' && (
                       <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">
-                        {formatPriceShort(pricePerM2)}/m²
+                        {formatPricePerM2(current.price, current.area_m2, (current as any).currency)}
                       </span>
                     )}
                     {current.area_m2 && (

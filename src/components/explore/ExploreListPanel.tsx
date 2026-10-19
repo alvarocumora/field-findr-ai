@@ -18,17 +18,8 @@ import FilterBar from './FilterBar';
 import ValuationFilters from './ValuationFilters';
 import { EmptyResultsState, FewResultsHint } from './EmptyResultsState';
 import { Listing, formatPriceShort, getPricePerM2 } from '@/hooks/useListings';
-import { useUfRate } from '@/hooks/useUfRate';
+import { bestPricePerM2, formatPricePerM2, formatPriceWithCurrency, minPriceByCurrency } from '@/lib/priceCurrency';
 import { cn } from '@/lib/utils';
-
-/**
- * Convierte a CLP solo para comparar/ordenar entre listings con distinta
- * moneda (UF vs CLP) — nunca para mostrar: el precio se renderiza siempre
- * con formatPriceShort(valor, listing.currency) para conservar la unidad
- * real publicada.
- */
-const toClpEquivalent = (listing: Listing, ufRate: number) =>
-  listing.currency === 'UF' ? listing.price * ufRate : listing.price;
 
 type TerritorialFilterState = {
   aptitudes: string[];
@@ -438,29 +429,14 @@ const ExploreListPanel = ({
 
   // Smart summary
   const displayCount = totalCount ?? listings.length;
-  const { today: ufRate } = useUfRate();
+  // Never convert UF↔CLP without a trusted rate: one minimum per currency,
+  // best price/m² only within the dominant currency.
   const summary = useMemo(() => {
     if (listings.length === 0) return null;
-    // Comparar por equivalente CLP: un listing en UF y otro en CLP no son el
-    // mismo número — ordenarlos como si lo fueran mostraba un precio en UF
-    // (p.ej. 35.000) como si fuera "$35K" CLP (ver docs/PLATFORM_EXPERIENCE_AUDIT_2026-10-14.md, G01).
-    const cheapest = [...listings].sort(
-      (a, b) => toClpEquivalent(a, ufRate) - toClpEquivalent(b, ufRate),
-    )[0];
     const regions = new Set(listings.map(l => l.region).filter(Boolean));
-    return { minPrice: cheapest.price, minPriceCurrency: cheapest.currency, regionCount: regions.size };
-  }, [listings, ufRate]);
-
-  // Best opportunity: mismo cuidado de moneda al comparar precio/m².
-  const bestOpportunity = useMemo(() => {
-    let best: Listing | null = null;
-    let bestRatio = Infinity;
-    for (const l of listings) {
-      const ppm2Clp = getPricePerM2(toClpEquivalent(l, ufRate), l.area_m2);
-      if (ppm2Clp && ppm2Clp < bestRatio) { bestRatio = ppm2Clp; best = l; }
-    }
-    return best;
-  }, [listings, ufRate]);
+    return { byCurrency: minPriceByCurrency(listings), regionCount: regions.size };
+  }, [listings]);
+  const bestOpportunity = useMemo(() => bestPricePerM2(listings), [listings]);
 
   const territorialActiveCount =
     territorialFilter.aptitudes.length +
@@ -572,7 +548,7 @@ const ExploreListPanel = ({
           <p className="min-w-0 truncate text-sm text-muted-foreground">
             <span className="text-base font-bold text-foreground tabular-nums">{displayCount}</span>{' '}
             terreno{displayCount === 1 ? '' : 's'}
-            {summary ? ` desde ${formatPriceShort(summary.minPrice, summary.minPriceCurrency)}` : ''}
+            {summary?.byCurrency.length ? ` desde ${summary.byCurrency.map(c => formatPriceWithCurrency(c.min, c.currency)).join(' · ')}` : ''}
             {summary && summary.regionCount > 1 ? ` en ${summary.regionCount} regiones` : ''}
           </p>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -638,7 +614,7 @@ const ExploreListPanel = ({
           </div>
           <p className="text-xs text-foreground font-medium truncate">{bestOpportunity.title}</p>
           <p className="text-[11px] text-muted-foreground">
-            {formatPriceShort(getPricePerM2(bestOpportunity.price, bestOpportunity.area_m2) || 0, bestOpportunity.currency)}/m² · {formatPriceShort(bestOpportunity.price, bestOpportunity.currency)}
+            {formatPricePerM2(bestOpportunity.price, bestOpportunity.area_m2, bestOpportunity.currency)} · {formatPriceWithCurrency(bestOpportunity.price, bestOpportunity.currency)}
           </p>
         </div>
       )}
