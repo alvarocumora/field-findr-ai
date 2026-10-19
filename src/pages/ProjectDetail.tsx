@@ -409,8 +409,8 @@ const ProjectDetail = () => {
   };
 
   return (
-    <PublicLayout>
-      <div className={`theme-rural min-h-screen bg-background ${isMobile ? 'pb-20' : ''}`}>
+    <div className="theme-rural"><PublicLayout>
+      <div className={`min-h-screen bg-background ${isMobile ? 'pb-20' : ''}`}>
         {/* Breadcrumbs */}
         <div className="container px-4 pt-4 pb-2">
           <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
