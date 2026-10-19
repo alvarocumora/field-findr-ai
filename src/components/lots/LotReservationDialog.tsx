@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,6 +22,10 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useCreateReservation } from '@/hooks/useReservations';
+import { useAuth } from '@/hooks/useAuth';
+import { lovable } from '@/integrations/lovable/index';
+import { saveReservationDraft, readReservationDraft, clearReservationDraft } from '@/lib/reservationDraft';
+import { toast } from 'sonner';
 import { Maximize2, DollarSign, Clock, Send, Loader2, CreditCard, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -70,7 +74,10 @@ export const LotReservationDialog = ({
   reservationAmount = 500000,
 }: LotReservationDialogProps) => {
   const [step, setStep] = useState<'form' | 'payment'>('form');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const createReservation = useCreateReservation();
+  const { user } = useAuth();
+  const prefilledFromDraft = useRef<string | null>(null);
 
   const form = useForm<ReservationFormData>({
     resolver: zodResolver(reservationSchema),
@@ -84,7 +91,28 @@ export const LotReservationDialog = ({
     },
   });
 
-  const onSubmit = async (data: ReservationFormData) => {
+  // Si el visitante ya había llenado este formulario y volvió (p.ej. tras
+  // iniciar sesión con Google en otra pestaña/redirección), recupera lo que
+  // escribió en vez de dejarlo en blanco y obligarlo a repetir todo. El
+  // diálogo puede reutilizarse para distintos lotes sin desmontarse, así que
+  // la comprobación se repite por cada lot.id nuevo, no solo una vez.
+  useEffect(() => {
+    if (!lot || prefilledFromDraft.current === lot.id) return;
+    prefilledFromDraft.current = lot.id;
+    const draft = readReservationDraft(lot.id);
+    if (draft) {
+      form.reset({
+        firstName: draft.firstName,
+        lastName: draft.lastName,
+        email: draft.email,
+        phone: draft.phone,
+        rut: draft.rut ?? '',
+        message: draft.message ?? '',
+      });
+    }
+  }, [lot, form]);
+
+  const submitReservation = async (data: ReservationFormData) => {
     if (!lot) return;
 
     let result;
@@ -104,6 +132,8 @@ export const LotReservationDialog = ({
       return;
     }
 
+    clearReservationDraft();
+
     // If we got a payment URL, redirect to MercadoPago
     if (result.payment_url) {
       window.location.href = result.payment_url;
@@ -115,8 +145,52 @@ export const LotReservationDialog = ({
     }
   };
 
+  const onSubmit = async (data: ReservationFormData) => {
+    if (!lot) return;
+
+    if (user) {
+      await submitReservation(data);
+      return;
+    }
+
+    // Visitante sin sesión: antes esto fallaba con "Debes iniciar sesión" y
+    // perdía el lote elegido. Ahora guarda lo que ya escribió y pide Google
+    // en el mismo diálogo; si el proveedor resuelve sin redirigir (caso
+    // normal), sigue directo a la reserva sin que el visitante tenga que
+    // volver a buscar la parcela.
+    saveReservationDraft({
+      lotId: lot.id,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      rut: data.rut,
+      message: data.message,
+    });
+    setIsAuthenticating(true);
+    try {
+      const authResult = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.href,
+      });
+      if (authResult.error) {
+        toast.error('No se pudo iniciar sesión con Google. Intenta de nuevo.');
+        return;
+      }
+      if (authResult.redirected) {
+        // La página está navegando a Google; el draft queda guardado para
+        // cuando el visitante vuelva a este mismo lote.
+        return;
+      }
+      await submitReservation(data);
+    } catch {
+      toast.error('No se pudo iniciar sesión con Google. Intenta de nuevo.');
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
   const handleClose = () => {
-    if (!createReservation.isPending) {
+    if (!createReservation.isPending && !isAuthenticating) {
       form.reset();
       setStep('form');
       onOpenChange(false);
@@ -271,13 +345,18 @@ export const LotReservationDialog = ({
             />
 
             <div className="flex flex-col gap-2 pt-2">
-              <Button 
-                type="submit" 
-                className="w-full gap-2" 
-                disabled={createReservation.isPending}
+              <Button
+                type="submit"
+                className="w-full gap-2"
+                disabled={createReservation.isPending || isAuthenticating}
                 size="lg"
               >
-                {createReservation.isPending ? (
+                {isAuthenticating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Conectando con Google...
+                  </>
+                ) : createReservation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Procesando...
@@ -289,6 +368,11 @@ export const LotReservationDialog = ({
                   </>
                 )}
               </Button>
+              {!user && (
+                <p className="text-xs text-center text-muted-foreground">
+                  Te pediremos confirmar con Google para proteger tu reserva — no perderás estos datos.
+                </p>
+              )}
               <p className="text-xs text-center text-muted-foreground">
                 Serás redirigido a MercadoPago para completar el pago de forma segura
               </p>
