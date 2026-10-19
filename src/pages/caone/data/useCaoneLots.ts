@@ -44,7 +44,7 @@ const toStatus = (s: string | null | undefined): CaoneLotStatus | null => {
 
 export const useCaoneLots = () => {
   const queryClient = useQueryClient();
-  const { data: live, isLoading } = useQuery({
+  const { data: live, isLoading, isError } = useQuery({
     queryKey: QUERY_KEY,
     staleTime: 15_000,
     refetchInterval: 20_000,
@@ -80,6 +80,19 @@ export const useCaoneLots = () => {
     };
   }, [queryClient]);
 
+  // Solo un estado reconocido desde la RPC puede presentarse al comprador
+  // como disponibilidad verificada; el KMZ estático aporta geometría, no stock.
+  const verifiedLotNumbers = useMemo(() => {
+    // React Query puede conservar la última respuesta exitosa durante un
+    // refetch fallido: eso NO confirma disponibilidad vigente.
+    if (isError) return new Set<string>();
+    return new Set(
+      (live ?? [])
+        .filter((lot) => lot.lot_number != null && toStatus(lot.status) !== null)
+        .map((lot) => String(lot.lot_number)),
+    );
+  }, [live, isError]);
+
   const lots = useMemo<CaoneLot[]>(() => {
     if (!live?.length) return CAONE_LOTS;
     const byNumber = new Map<string, PublicLot>();
@@ -98,7 +111,17 @@ export const useCaoneLots = () => {
     });
   }, [live]);
 
-  const available = lots.filter((l) => l.status === 'available').length;
+  const verifiedCount = lots.filter((lot) => verifiedLotNumbers.has(lot.lot_number)).length;
+  const available = lots.filter((lot) =>
+    verifiedLotNumbers.has(lot.lot_number) && lot.status === 'available',
+  ).length;
 
-  return { lots, available, isLoading, isLive: !!live?.length };
+  return {
+    lots,
+    available,
+    isLoading,
+    isLive: verifiedCount > 0,
+    verifiedCount,
+    verifiedLotNumbers,
+  };
 };
