@@ -7,7 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLeads } from '@/hooks/useLeads';
 import { useWorkspaceScope } from '@/hooks/useWorkspaceScope';
 import LeadScoreBadge from '@/components/leads/LeadScoreBadge';
-import { Search, Phone, Mail, FolderKanban, Users, TrendingUp, Target, GripVertical, Calendar, MessageSquare } from 'lucide-react';
+import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
+import { Search, Phone, Mail, FolderKanban, Users, TrendingUp, Target, GripVertical, Calendar, MessageSquare, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { differenceInHours } from 'date-fns';
 import { formatDistanceToNow } from 'date-fns';
@@ -107,9 +108,20 @@ const SalesPipeline = () => {
           </h1>
           <p className="text-muted-foreground">Arrastra los leads entre columnas para cambiar su estado</p>
         </div>
-        <div className="relative max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar leads..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 rounded-xl" />
+        <div className="flex items-center gap-3">
+          <div className="relative max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar leads..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 rounded-xl" />
+          </div>
+          <LeadFormDialog
+            projectId={projectId}
+            trigger={
+              <Button className="rounded-xl gap-2">
+                <UserPlus className="h-4 w-4" />
+                Nuevo Lead
+              </Button>
+            }
+          />
         </div>
       </div>
 

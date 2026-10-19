@@ -144,7 +144,6 @@ const PropertyInventory = lazy(() => import("@/components/PropertyInventory"));
 const LeadManagement = lazy(() => import("@/components/LeadManagement"));
 const ProjectsManagement = lazy(() => import("@/components/ProjectsManagement"));
 const LotManagement = lazy(() => import("@/components/LotManagement"));
-const CRMSystem = lazy(() => import("@/components/CRMSystem"));
 const SalesManagement = lazy(() => import("@/components/SalesManagement"));
 const BusinessIntelligence = lazy(() => import("@/components/BusinessIntelligence"));
 const ReservationsManager = lazy(() => import("@/components/reservations/ReservationsManager"));
@@ -167,7 +166,6 @@ const NotificationCenter = lazy(() => import("@/pages/NotificationCenter"));
 const DemandHeatmapDashboard = lazy(() => import("@/pages/dashboard/DemandHeatmapDashboard"));
 const APIPortal = lazy(() => import("@/pages/dashboard/APIPortal"));
 const LandOpportunities = lazy(() => import("@/pages/dashboard/LandOpportunities"));
-const Contacts = lazy(() => import("@/pages/dashboard/Contacts"));
 const OpportunityDetail = lazy(() => import("@/pages/dashboard/OpportunityDetail"));
 const LoteoControlCenter = lazy(() => import("@/pages/dashboard/LoteoControlCenter"));
 const SubdivisionStudio = lazy(() => import("@/pages/dashboard/SubdivisionStudio"));
@@ -474,15 +472,18 @@ export const agentRouteEntries: RouteEntry[] = [
   // CRM
   agent("clientes", "/clientes", <ClientsBook />, { label: "Clientes", group: "ventas", icon: "users" }),
   agent("asesor-leads", "/asesor/leads", <LeadManagement />, { label: "Leads", group: "ventas", icon: "users", contexts: ["broker", "empresa"], capability: "crm.read", feature: "crm" }),
-  agent("asesor-contacts", "/asesor/contacts", <Contacts />, { label: "Contactos", group: "ventas", icon: "users" }),
   agent("asesor-buyer-requirements", "/asesor/demanda-compradores", <BuyerRequirements />, { label: "Tengo comprador", group: "ventas", icon: "target" }),
-  agent("asesor-crm", "/asesor/crm", <CRMSystem />, { label: "CRM", group: "ventas", icon: "workflow", contexts: ["broker", "empresa"], capability: "crm.read", feature: "crm" }),
   agent("asesor-messages", "/asesor/messages", <Messages />, { label: "Mensajes", group: "ventas", icon: "message", contexts: ["broker", "empresa"] }),
   agent("asesor-eventos", "/asesor/eventos", <EventsManager />, { label: "Eventos", group: "ventas", icon: "calendar" }),
   agent("asesor-notificaciones", "/asesor/notificaciones/plantillas", <NotificationTemplates />, { label: "Plantillas de aviso", group: "ventas", icon: "bell" }),
 
   // Ventas
-  agent("asesor-pipeline", "/asesor/pipeline", <SalesPipeline />, { label: "Pipeline", group: "ventas", icon: "workflow", contexts: ["broker", "empresa"], capability: "sales.read", feature: "crm" }),
+  // Antes capability: "sales.read" (solo SalesPipeline). Se fusionó aquí el
+  // Kanban duplicado de CRMSystem.tsx (misma data, mismo D&D, nombre
+  // confuso), que vivía en /asesor/crm con capability "crm.read". Se deja
+  // "crm.read" para no dejar afuera a external_broker, que hoy tiene
+  // crm.read pero no sales.read (ver src/lib/access/organizationPermissions.ts).
+  agent("asesor-pipeline", "/asesor/pipeline", <SalesPipeline />, { label: "Pipeline", group: "ventas", icon: "workflow", contexts: ["broker", "empresa"], capability: "crm.read", feature: "crm" }),
   agent("asesor-reservations", "/asesor/reservations", <ReservationsManager />, { label: "Reservas", group: "ventas", icon: "calendar", contexts: ["broker", "empresa"], capability: "reservations.read", feature: "reservations" }),
   agent("asesor-visitas", "/asesor/visitas", <VisitsManager />, { label: "Visitas", group: "ventas", icon: "calendar", contexts: ["broker", "empresa"], capability: "crm.read", feature: "crm" }),
   agent("asesor-reuniones", "/asesor/reuniones", <MeetingsManager />, { label: "Reuniones", group: "ventas", icon: "calendar" }),
@@ -604,7 +605,7 @@ export const routeAliases: RouteAlias[] = [
   { from: "/projects", to: "/asesor/projects" },
   { from: "/lots", to: "/asesor/lots" },
   { from: "/analytics", to: "/asesor/analytics" },
-  { from: "/crm", to: "/asesor/crm" },
+  { from: "/crm", to: "/asesor/pipeline" },
   { from: "/sales", to: "/asesor/sales" },
   { from: "/urbanization", to: "/asesor/projects" },
   { from: "/agents", to: "/admin/agents" },
@@ -620,6 +621,13 @@ export const routeAliases: RouteAlias[] = [
   // Consolidación de paneles (Fase 1: un dashboard por rol)
   { from: "/inmobiliaria/dashboard", to: "/asesor/dashboard" },
   { from: "/asesor", to: "/asesor/dashboard" },
+  // Contacts.tsx era un subconjunto de ClientsBook (misma data, categorías
+  // de origen inventadas con string.includes()) — se retira a favor de la
+  // vista única de clientes.
+  { from: "/asesor/contacts", to: "/clientes" },
+  // CRMSystem.tsx (/asesor/crm) era el mismo Kanban de SalesPipeline.tsx
+  // construido dos veces por separado — se fusionó en /asesor/pipeline.
+  { from: "/asesor/crm", to: "/asesor/pipeline" },
   { from: "/admin", to: "/admin/dashboard" },
   { from: "/asesor/notificaciones", to: "/asesor/notificaciones/plantillas" },
   { from: "/asesor/mercado", to: "/asesor/proyectos-en-venta" },
