@@ -330,7 +330,7 @@ const FilterBar = ({
                 <AccordionItem value="precio">
                   <AccordionTrigger className="py-3">
                     <SectionTitle icon={DollarSign} count={hasPriceFilter ? 1 : 0}>
-                      Precio
+                      Precio (CLP)
                     </SectionTitle>
                   </AccordionTrigger>
                   <AccordionContent>

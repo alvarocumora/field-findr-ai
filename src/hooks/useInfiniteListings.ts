@@ -75,6 +75,10 @@ export const useInfiniteListings = (filters?: ListingFilters) => {
         query = query.eq('featured', filters.featured);
       }
 
+      if (filters?.currency) {
+        query = query.eq('currency', filters.currency);
+      }
+
       // Search the whole inventory, not just the pages already loaded.
       const term = sanitizeSearchTerm(filters?.search);
       if (term) {

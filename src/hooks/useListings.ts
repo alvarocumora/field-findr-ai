@@ -49,6 +49,8 @@ export interface ListingFilters {
   includeLoteoLots?: boolean;
   /** Free-text search resolved server-side over the whole inventory. */
   search?: string;
+  /** Exact currency (CLP/UF). Price ranges are only meaningful within one currency. */
+  currency?: string;
   status?: string;
   bounds?: {
     north: number;
