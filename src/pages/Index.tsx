@@ -14,12 +14,14 @@ const Index = () => {
   });
 
   return (
+    <div className="theme-rural">
     <PublicLayout showFooter={true} showAssistant={false}>
       <CinematicShowcaseHero />
       <InsigniaShowcase />
       <EcosystemStandard />
       <HybridCTA />
     </PublicLayout>
+    </div>
   );
 };
 
