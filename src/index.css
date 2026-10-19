@@ -148,6 +148,44 @@
     --glass-strong-bg: hsla(240, 6%, 7%, 0.92);
   }
 
+  /* ===== RURAL INSTITUTIONAL (Rural Finder) =====
+     Scoped theme: add `.theme-rural` to a page wrapper to adopt it.
+     paper #F7F5F0 · ink #1A2420 · forest #214C3C · moss #7A8D74 · sand #E2E1D8
+     See docs/RURAL_FINDER_DESIGN_SYSTEM.md */
+  .theme-rural {
+    --background: 43 33% 95%;
+    --foreground: 156 16% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 156 16% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 156 16% 12%;
+    --primary: 158 40% 21%;
+    --primary-foreground: 43 33% 97%;
+    --secondary: 54 13% 90%;
+    --secondary-foreground: 156 16% 12%;
+    --muted: 48 20% 91%;
+    --muted-foreground: 156 8% 33%;
+    --accent: 106 10% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 62% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 45% 30%;
+    --warning: 34 80% 38%;
+    --info: 205 55% 36%;
+    --border: 54 13% 85%;
+    --input: 54 13% 82%;
+    --ring: 158 40% 21%;
+    --radius: 0.75rem;
+    --gradient-brand: linear-gradient(135deg, hsl(158 40% 21%), hsl(106 10% 50%));
+    --shadow-rural: 0 1px 2px hsl(156 16% 12% / 0.04), 0 8px 24px -12px hsl(156 16% 12% / 0.18);
+    color-scheme: light;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  .theme-rural .rural-hairline { border-color: hsl(var(--border)); }
+  .theme-rural .rural-shadow { box-shadow: var(--shadow-rural); }
+  .theme-rural .rural-data { font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace; font-variant-numeric: tabular-nums; }
+
   /* ==========================================================
      Layering & safe-area tokens (global)
      Single source of truth for sticky / floating / overlays.
