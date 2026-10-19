@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Copy, ExternalLink, MapPin, MousePointer2, PlayCircle, Ruler, Share2, Trees } from 'lucide-react';
 import { toast } from 'sonner';
@@ -43,9 +43,9 @@ const clp = (value: number | null) =>
 
 export default function CaoneTour() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { lotNumber } = useParams<{ lotNumber?: string }>();
-  const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
+  const [selectedLotNumber, setSelectedLotNumber] = useState<string | null>(null);
+  const lastUrlSelection = useRef<string | null>(null);
   const { lots: liveLots } = useLots(CAONE_PROJECT.id);
 
   const { data, isLoading, error } = useQuery({
@@ -75,26 +75,36 @@ export default function CaoneTour() {
     [data, liveLots],
   );
 
+  // Derivar el ID actual de la selección por número permite mantenerla al
+  // hidratar el tour desde geometría estática hacia IDs reales de Supabase.
+  const selectedMapLot = lots.find((lot) => lot.lot_number === selectedLotNumber);
+  const selectedLotId = selectedMapLot?.id ?? null;
+
   useEffect(() => {
     if (!data) return;
     const requestedLot = lotNumber ?? searchParams.get('lote');
-    if (!requestedLot) return;
+    if (!requestedLot) {
+      lastUrlSelection.current = null;
+      return;
+    }
+    if (lastUrlSelection.current === requestedLot) return;
     const match = lots.find((lot) => lot.lot_number === requestedLot);
-    if (match && match.id !== selectedLotId) setSelectedLotId(match.id);
-  }, [data, lots, lotNumber, searchParams, selectedLotId]);
+    if (!match) return;
+    // Solo abrir la selección enlazada una vez por número: si la persona
+    // explora otra parcela, no restaurar automáticamente la primera.
+    lastUrlSelection.current = requestedLot;
+    setSelectedLotNumber(match.lot_number);
+  }, [data, lots, lotNumber, searchParams]);
 
+  // Seleccionar una parcela debe mantener al comprador en el tour. La ficha
+  // externa sigue accesible como una acción explícita en el panel del lote.
   const selectLot = (lotId: string) => {
-    setSelectedLotId(lotId);
     const lot = lots.find((candidate) => candidate.id === lotId);
-    if (!lot) return;
-    const path = getExploreLotPath(lot.listing_id);
-    if (path) navigate(path);
-    else toast.error('Esta parcela aún no tiene una tarjeta publicada.');
+    if (lot) setSelectedLotNumber(lot.lot_number);
   };
-
-  const selectedMapLot = lots.find(lot => lot.id === selectedLotId);
   const selectedSource = data?.lots.find(lot => lot.lot_number === selectedMapLot?.lot_number);
   const selected = selectedMapLot && selectedSource ? { ...selectedSource, ...selectedMapLot } : null;
+  const selectedListingPath = getExploreLotPath(selected?.listing_id);
   const center = data
     ? { lng: data.center[0], lat: data.center[1] }
     : { lng: -71.65328948, lat: -35.00154536 };
@@ -154,7 +164,7 @@ export default function CaoneTour() {
               <Share2 className="mr-2 h-4 w-4" /> Compartir tour
             </Button>
             <Button asChild className="bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]/90">
-              <Link to="/contacto-loteos">Consultar</Link>
+              <Link to={`/proyecto/${CAONE_PROJECT.id}?consulta=1`}>Consultar</Link>
             </Button>
           </div>
         </div>
@@ -205,8 +215,13 @@ export default function CaoneTour() {
                     </div>
                     <div className="mt-5 grid gap-2">
                       <Button asChild className="w-full bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]/90">
-                        <Link to="/contacto-loteos">Consultar lote {selected.lot_number}</Link>
+                        <Link to={`/proyecto/${CAONE_PROJECT.id}?consulta=1&lote=${encodeURIComponent(selected.id)}&loteNumero=${encodeURIComponent(selected.lot_number)}`}>Consultar lote {selected.lot_number}</Link>
                       </Button>
+                      {selectedListingPath && (
+                        <Button asChild variant="outline" className="w-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                          <Link to={selectedListingPath}>Ver publicación del lote <ExternalLink className="ml-2 h-4 w-4" /></Link>
+                        </Button>
+                      )}
                       <Button variant="outline" className="w-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={copyTourLink}>
                         <Share2 className="mr-2 h-4 w-4" />Compartir este lote
                       </Button>
