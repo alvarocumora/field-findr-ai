@@ -73,9 +73,9 @@ const formatPrice = (price: number | null) => {
 
 const getStatusConfig = (status: string | null) => {
   switch (status) {
-    case 'available': return { label: 'Disponible', className: 'bg-primary text-foreground border-emerald-400/30' };
+    case 'available': return { label: 'Disponible', className: 'bg-success text-primary-foreground border-transparent' };
     case 'reserved': return { label: 'Reservado', className: 'bg-amber-500 text-foreground border-amber-400/30' };
-    case 'sold': return { label: 'Vendido', className: 'bg-zinc-700 text-zinc-200 border-zinc-600' };
+    case 'sold': return { label: 'Vendido', className: 'bg-muted text-muted-foreground border-border' };
     default: return { label: status || 'Sin estado', className: 'bg-muted text-muted-foreground' };
   }
 };
@@ -105,20 +105,20 @@ const ImageGallery = ({ images }: { images: string[] }) => {
   if (images.length === 0) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border bg-black">
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-muted">
       <div className="aspect-[16/9]">
         <img src={images[currentIndex]} alt={`Foto ${currentIndex + 1}`} className="h-full w-full object-cover" />
       </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-foreground/25 via-transparent to-transparent" />
       {images.length > 1 && (
         <>
-          <Button size="icon" variant="secondary" className="absolute left-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full bg-black/55 text-foreground hover:bg-black/75" onClick={() => setCurrentIndex((i) => (i === 0 ? images.length - 1 : i - 1))}>
+          <Button size="icon" variant="secondary" className="absolute left-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full bg-card/90 text-foreground hover:bg-card" onClick={() => setCurrentIndex((i) => (i === 0 ? images.length - 1 : i - 1))}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button size="icon" variant="secondary" className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full bg-black/55 text-foreground hover:bg-black/75" onClick={() => setCurrentIndex((i) => (i === images.length - 1 ? 0 : i + 1))}>
+          <Button size="icon" variant="secondary" className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full bg-card/90 text-foreground hover:bg-card" onClick={() => setCurrentIndex((i) => (i === images.length - 1 ? 0 : i + 1))}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Badge className="absolute bottom-3 right-3 border-border bg-black/55 text-[10px] text-foreground">
+          <Badge className="absolute bottom-3 right-3 border-border bg-card/90 text-[10px] text-foreground">
             <ImageIcon className="mr-1 h-3 w-3" />{currentIndex + 1}/{images.length}
           </Badge>
         </>
@@ -240,7 +240,7 @@ export const LotDetailSheet = ({
           {images.length > 0 && <ImageGallery images={images} />}
 
           {sentinelQuery.data?.available && (
-            <section className="overflow-hidden rounded-2xl border border-emerald-500/20 bg-muted/60">
+            <section className="overflow-hidden rounded-2xl border border-primary/25 bg-muted/60">
               <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
                 <div>
                   <p className="flex items-center gap-2 text-xs font-semibold">
@@ -251,7 +251,7 @@ export const LotDetailSheet = ({
                     Sentinel-2 · {formatSentinelDate(sentinelQuery.data.acquisition_datetime)} · {sentinelCloudLabel(sentinelQuery.data.cloud_cover)}
                   </p>
                 </div>
-                <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-300">
+                <Badge variant="outline" className="border-primary/25 bg-primary/10 text-[10px] text-primary">
                   Microsoft Planetary Computer
                 </Badge>
               </div>
@@ -312,7 +312,7 @@ export const LotDetailSheet = ({
               <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground"><Ruler className="h-3.5 w-3.5" />Superficie</div>
               <p className="mt-2 text-xl font-semibold">{Number(lot.area).toLocaleString('es-CL')} m²</p>
             </div>
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
+            <div className="rounded-2xl border border-primary/25 bg-primary/10 p-4">
               <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground"><TrendingUp className="h-3.5 w-3.5" />Precio/m²</div>
               <p className="mt-2 text-xl font-semibold text-primary">{pricePerSqm ? `${formatPrice(pricePerSqm)}/m²` : '—'}</p>
             </div>
@@ -335,7 +335,7 @@ export const LotDetailSheet = ({
             <section className="rounded-2xl border border-border bg-muted/60 p-4">
               <div className="flex items-center gap-2 text-sm font-semibold"><MapPin className="h-4 w-4 text-primary" />Ubicación</div>
               <p className="mt-2 text-xs text-muted-foreground">{Number(lot.latitude).toFixed(5)}, {Number(lot.longitude).toFixed(5)}</p>
-              <a href={`https://www.google.com/maps?q=${lot.latitude},${lot.longitude}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-sm text-primary hover:text-emerald-300">
+              <a href={`https://www.google.com/maps?q=${lot.latitude},${lot.longitude}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-sm text-primary hover:text-primary">
                 Ver en Google Maps <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </section>
@@ -358,7 +358,7 @@ export const LotDetailSheet = ({
 
           <div className="grid grid-cols-3 gap-2">
             <Button variant="outline" size="sm" className="border-border bg-muted/60 text-foreground hover:bg-muted/60" onClick={() => handleShare(lot)}><Share2 className="mr-1.5 h-3.5 w-3.5" />Compartir</Button>
-            <Button variant="outline" size="sm" className="border-emerald-500/20 bg-emerald-500/[0.06] text-primary hover:bg-emerald-500/10 hover:text-emerald-300" onClick={() => handleWhatsApp(lot, projectName)}><MessageCircle className="mr-1.5 h-3.5 w-3.5" />WhatsApp</Button>
+            <Button variant="outline" size="sm" className="border-primary/25 bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary" onClick={() => handleWhatsApp(lot, projectName)}><MessageCircle className="mr-1.5 h-3.5 w-3.5" />WhatsApp</Button>
             <Button variant="outline" size="sm" className="border-border bg-muted/60 text-foreground hover:bg-muted/60" onClick={handleDownloadFicha} disabled={isDownloading}><Download className="mr-1.5 h-3.5 w-3.5" />{isDownloading ? '...' : 'Ficha'}</Button>
           </div>
 
