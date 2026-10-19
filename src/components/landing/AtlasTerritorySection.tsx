@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, Compass, MapPinned, Sparkles } from 'lucide-react';
+import { ArrowRight, Compass, MapPinned } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
@@ -123,6 +123,20 @@ const AtlasTerritorySection = () => {
     return scoped.slice(0, 6);
   }, [regionProjects, activeCommune]);
 
+  // Si las tarjetas visibles ya comparten una sola comuna (filtrada a mano o
+  // porque la región solo tiene proyectos en una comuna), repetirla en cada
+  // tarjeta es ruido, no información — se muestra una sola vez arriba.
+  const visibleCommuneCount = useMemo(() => {
+    const keys = new Set(
+      visibleProjects.map((project) => {
+        const resolved = resolveChileCommune(project.city, project.region);
+        return resolved?.communeCode || project.city?.trim().toLowerCase() || project.region;
+      }),
+    );
+    return keys.size;
+  }, [visibleProjects]);
+  const showCardCommuneLabel = visibleCommuneCount > 1;
+
   const travelToProject = (project: AtlasProject) => {
     void track('atlas_travel_started', {
       project_id: project.id,
@@ -159,17 +173,18 @@ const AtlasTerritorySection = () => {
             transition={{ duration: 0.6 }}
             className="lg:sticky lg:top-24"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-background/20 bg-background/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-background/70">
-              <Compass className="h-3.5 w-3.5" /> OfertaTerrenos Atlas
+            <div className="inline-flex items-center gap-2 text-background/70">
+              <Compass className="h-3.5 w-3.5" />
+              <span className="font-swiss text-[11px]">OfertaTerrenos Atlas</span>
             </div>
-            <h2 id="atlas-title" className="mt-5 max-w-xl font-heading text-4xl font-bold leading-tight md:text-6xl">
+            <h2 id="atlas-title" className="mt-5 max-w-xl font-editorial text-4xl font-medium leading-[1.05] md:text-6xl">
               Chile no es una lista. Es un territorio para explorar.
             </h2>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-background/65 md:text-lg">
               Navega desde la región hasta el proyecto y la parcela. Atlas convierte inventario real en una experiencia territorial, sin perder disponibilidad ni contexto comercial.
             </p>
 
-            <div className="mt-8 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-background/50" aria-label="Flujo Atlas">
+            <div className="mt-8 flex items-center gap-2 font-swiss text-[11px] text-background/50" aria-label="Flujo Atlas">
               <span>Chile</span><span>→</span><span>Región</span><span>→</span><span>Comuna</span><span>→</span><span>Proyecto</span><span>→</span><span className="text-background">Parcela</span>
             </div>
           </motion.div>
@@ -177,7 +192,7 @@ const AtlasTerritorySection = () => {
           <div className="rounded-3xl border border-background/15 bg-background/[0.055] p-4 shadow-2xl backdrop-blur-sm md:p-6">
             <div className="flex flex-col gap-4 border-b border-background/10 pb-5 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.16em] text-background/45">Exploración territorial</p>
+                <p className="font-swiss text-[11px] text-background/45">Exploración territorial</p>
                 <p className="mt-1 text-sm text-background/70">Selecciona región y comuna para navegar el inventario territorial hasta cada proyecto.</p>
               </div>
               <Button asChild variant="secondary" size="sm">
@@ -205,8 +220,8 @@ const AtlasTerritorySection = () => {
                         className={`min-w-[10rem] rounded-2xl border px-4 py-3 text-left transition-colors ${active ? 'border-background/45 bg-background text-foreground' : 'border-background/10 bg-background/5 text-background hover:bg-background/10'}`}
                         aria-pressed={active}
                       >
-                        <span className={`block text-[10px] uppercase tracking-[0.14em] ${active ? 'text-foreground/55' : 'text-background/45'}`}>{region.projects} proyecto{region.projects === 1 ? '' : 's'}</span>
-                        <span className="mt-1 block font-heading text-lg font-bold">{region.name}</span>
+                        <span className={`block font-swiss text-[10px] ${active ? 'text-foreground/55' : 'text-background/45'}`}>{region.projects} proyecto{region.projects === 1 ? '' : 's'}</span>
+                        <span className="mt-1 block font-editorial text-lg font-medium">{region.name}</span>
                         <span className={`mt-1 block text-xs ${active ? 'text-foreground/60' : 'text-background/55'}`}>{region.available} lotes disponibles</span>
                       </button>
                     );
@@ -214,22 +229,9 @@ const AtlasTerritorySection = () => {
                 </div>
 
                 {communes.length > 0 && (
-                  <div className="mb-5 border-t border-background/10 pt-4">
-                    <div className="mb-2 flex items-center justify-between gap-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-background/45">
-                        Comunas con proyectos
-                      </p>
-                      {activeCommune && (
-                        <button
-                          type="button"
-                          className="text-[11px] text-background/55 hover:text-background"
-                          onClick={() => setActiveCommune(null)}
-                        >
-                          Ver toda la región
-                        </button>
-                      )}
-                    </div>
-                    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                  <div className="mb-5 flex items-center gap-2 border-t border-background/10 pt-4">
+                    <span className="font-swiss shrink-0 text-[10px] text-background/40">Comuna</span>
+                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
                       {communes.map((commune) => {
                         const active = commune.key === activeCommune;
                         return (
@@ -237,21 +239,23 @@ const AtlasTerritorySection = () => {
                             key={commune.key}
                             type="button"
                             onClick={() => setActiveCommune(active ? null : commune.key)}
-                            className={`min-w-[9.5rem] rounded-xl border px-3 py-2.5 text-left transition-colors ${active ? 'border-emerald-300/60 bg-emerald-300/15 text-background' : 'border-background/10 bg-background/[0.035] text-background hover:bg-background/[0.08]'}`}
+                            className={`shrink-0 rounded-full border px-3 py-1 text-xs transition-colors ${active ? 'border-emerald-300/60 bg-emerald-300/15 text-background' : 'border-background/15 text-background/70 hover:bg-background/[0.08]'}`}
                             aria-pressed={active}
                           >
-                            <span className="block text-sm font-semibold">{commune.name}</span>
-                            <span className="mt-0.5 block text-[10px] text-background/45">
-                              {commune.province ? `Prov. ${commune.province} · ` : ''}
-                              {commune.projects} proyecto{commune.projects === 1 ? '' : 's'}
-                            </span>
-                            <span className="mt-1 block text-[10px] text-background/55">
-                              {commune.available} lotes disponibles
-                            </span>
+                            {commune.name} <span className="text-background/45">· {commune.projects}</span>
                           </button>
                         );
                       })}
                     </div>
+                    {activeCommune && (
+                      <button
+                        type="button"
+                        className="shrink-0 text-[11px] text-background/55 hover:text-background"
+                        onClick={() => setActiveCommune(null)}
+                      >
+                        Ver todas
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -264,21 +268,18 @@ const AtlasTerritorySection = () => {
                       transition={{ delay: prefersReducedMotion ? 0 : index * 0.06 }}
                       className="group rounded-2xl border border-background/10 bg-background/[0.045] p-5 transition-colors hover:bg-background/[0.09]"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          {(() => {
-                            const commune = resolveChileCommune(project.city, project.region);
-                            return (
-                              <p className="text-[10px] uppercase tracking-[0.14em] text-background/45">
-                                {commune?.commune || project.city || selectedRegionMeta?.name || project.region}
-                                {commune?.province ? ` · Prov. ${commune.province}` : ''}
-                              </p>
-                            );
-                          })()}
-                          <h3 className="mt-1 font-heading text-xl font-bold">{project.name}</h3>
-                        </div>
-                        <Sparkles className="h-4 w-4 text-background/35 transition-colors group-hover:text-background" />
-                      </div>
+                      {/* La comuna ya está seleccionada arriba (filtro activo) —
+                          repetirla en cada tarjeta era ruido puro, no info nueva. */}
+                      {showCardCommuneLabel && (() => {
+                        const commune = resolveChileCommune(project.city, project.region);
+                        return (
+                          <p className="font-swiss text-[10px] text-background/45">
+                            {commune?.commune || project.city || selectedRegionMeta?.name || project.region}
+                            {commune?.province ? ` · Prov. ${commune.province}` : ''}
+                          </p>
+                        );
+                      })()}
+                      <h3 className={`font-editorial text-xl font-medium ${showCardCommuneLabel ? 'mt-1' : ''}`}>{project.name}</h3>
                       <div className="mt-5 flex items-end justify-between gap-4">
                         <div>
                           <p className="text-2xl font-bold">{Number(project.available_lots ?? 0)}</p>
