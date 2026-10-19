@@ -28,7 +28,14 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const CaoneLanding = () => {
-  const { lots, available } = useCaoneLots();
+  const { lots, available, isLoading, isLive, verifiedCount, verifiedLotNumbers } = useCaoneLots();
+  const availabilityLabel = isLive ? String(available) : isLoading ? 'Consultando…' : 'Por confirmar';
+  const unverifiedCount = lots.length - verifiedCount;
+  const inventoryBadge = !isLive
+    ? 'Disponibilidad por confirmar'
+    : unverifiedCount > 0
+      ? `${available} disponibles verificados · ${unverifiedCount} por confirmar`
+      : `${available} de ${lots.length} lotes disponibles`;
 
   useSEO({
     title: 'Valle de Hualañé · Parcelas desde 1 ha · ROL 168-921',
@@ -75,7 +82,7 @@ const CaoneLanding = () => {
               <Copy className="mr-2 h-4 w-4" />Copiar link
             </Button>
             <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
-              <Link to={projectTabUrl('lots')}>Consultar disponibilidad</Link>
+              <Link to={`/proyecto/${CAONE_PROJECT.id}?consulta=1`}>Consultar disponibilidad</Link>
             </Button>
           </div>
         </div>
@@ -85,7 +92,7 @@ const CaoneLanding = () => {
         <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[
             { icon: Trees, label: 'Lotes', value: `${lots.length}` },
-            { icon: CheckCircle2, label: 'Disponibles', value: `${available}` },
+            { icon: CheckCircle2, label: 'Disponibles', value: availabilityLabel },
             { icon: Ruler, label: 'Superficie predial', value: `${CAONE_PROJECT.totalAreaHa.toLocaleString('es-CL')} ha` },
             { icon: MapPin, label: 'Ubicación', value: 'Caone, Hualañé' },
           ].map(({ icon: Icon, label, value }) => (
@@ -152,7 +159,7 @@ const CaoneLanding = () => {
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#1b5c49]">Master plan comercial</p>
               <h2 className="mt-1 text-3xl font-black">ROL 168-921</h2>
             </div>
-            <Badge variant="outline" className="border-[#1b5c49]/30 text-[#1b5c49]">{available} de {lots.length} lotes disponibles</Badge>
+            <Badge variant="outline" className="border-[#1b5c49]/30 text-[#1b5c49]">{inventoryBadge}</Badge>
           </div>
           <Link to="/valle-hualane/plano" className="group block overflow-hidden rounded-3xl border border-[#1b5c49]/15 bg-white shadow-sm">
             <img
@@ -178,23 +185,25 @@ const CaoneLanding = () => {
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8">
             {lots.map((lot) => {
-              const isAvailable = lot.status === 'available';
-              const dotClass = isAvailable ? 'bg-emerald-600' : lot.status === 'reserved' ? 'bg-amber-500' : 'bg-slate-400';
+              const verified = verifiedLotNumbers.has(lot.lot_number);
+              const isAvailable = verified && lot.status === 'available';
+              const statusLabel = verified ? STATUS_LABEL[lot.status] : 'Por confirmar';
+              const dotClass = isAvailable ? 'bg-emerald-600' : verified && lot.status === 'reserved' ? 'bg-amber-500' : 'bg-slate-400';
               return (
                 <div key={lot.lot_number} className={`rounded-2xl border p-3 ${isAvailable ? 'border-[#1b5c49]/20 bg-white' : 'border-slate-300 bg-slate-100'}`}>
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-black">Lote {lot.lot_number}</span>
-                    <span className={`h-2.5 w-2.5 rounded-full ${dotClass}`} title={STATUS_LABEL[lot.status]} />
+                    <span className={`h-2.5 w-2.5 rounded-full ${dotClass}`} title={statusLabel} />
                   </div>
                   <p className="mt-1 text-sm text-slate-600">{lot.area_ha.toFixed(2)} ha</p>
                   <p className={`mt-2 text-xs font-bold ${isAvailable ? 'text-[#1b5c49]' : 'text-slate-500'}`}>
-                    {isAvailable ? clp(lot.price_clp ?? pricePerHa) : STATUS_LABEL[lot.status]}
+                    {isAvailable ? clp(lot.price_clp ?? pricePerHa) : statusLabel}
                   </p>
                 </div>
               );
             })}
           </div>
-          <p className="mt-3 text-xs text-slate-500">La disponibilidad y el precio de cada lote se leen en vivo desde la plataforma; deslindes y antecedentes legales deben confirmarse antes de reservar o comprar.</p>
+          <p className="mt-3 text-xs text-slate-500">Los estados confirmados provienen del inventario en vivo. Si la consulta falla o un lote carece de datos verificables, su disponibilidad se muestra como «Por confirmar». Confirma precios, deslindes y antecedentes legales antes de reservar o comprar.</p>
         </section>
 
         <section className="mb-8 rounded-3xl bg-[#17352d] p-7 text-white md:p-10">

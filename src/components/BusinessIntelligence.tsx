@@ -125,11 +125,15 @@ const BusinessIntelligence = () => {
     );
   }
 
+  // Nombrados para no repetir la etiqueta de FinancialDashboard ("Ingresos
+  // Totales" / "Tasa Conversión" ahí): esta página mide venta de lotes y
+  // embudo de leads; esa otra mide reservas/cobros y pago de reservas. Son
+  // números distintos — mismo texto en ambas rompía la confianza.
   const kpis = [
-    { title: 'Ingresos Totales', value: formatCurrency(biData.totalRevenue), icon: DollarSign, color: 'text-green-600' },
+    { title: 'Ingresos por Ventas', value: formatCurrency(biData.totalRevenue), icon: DollarSign, color: 'text-green-600' },
     { title: 'Unidades Vendidas', value: biData.soldCount.toString(), icon: Building2, color: 'text-blue-600' },
     { title: 'Leads Activos', value: biData.activeLeads.toString(), icon: Users, color: 'text-amber-600' },
-    { title: 'Tasa Conversión', value: `${biData.conversionRate.toFixed(1)}%`, icon: Target, color: 'text-purple-600' },
+    { title: 'Conversión de Leads', value: `${biData.conversionRate.toFixed(1)}%`, icon: Target, color: 'text-purple-600' },
   ];
 
   return (
