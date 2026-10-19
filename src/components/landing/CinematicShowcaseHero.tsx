@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { FormEvent, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Compass, MapPin, Orbit, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Building2, MapPin, Search, ShieldCheck } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { projectImages } from '@/lib/projectCovers';
@@ -18,7 +19,14 @@ interface ShowcaseProject {
   minPrice?: number;
 }
 
-const clp = (v?: number) => (v ? `$${v.toLocaleString('es-CL')}` : 'Consultar');
+const clp = (v?: number) => (v ? `$${v.toLocaleString('es-CL')} CLP` : 'Consultar');
+
+/** Quick filters map to real listing `type` values used by /explorar. */
+export const QUICK_FILTERS = [
+  { label: 'Parcelas', type: 'parcela_rural' },
+  { label: 'Campos', type: 'campo_agricola' },
+  { label: 'Industrial', type: 'sitio_industrial' },
+] as const;
 
 export const useShowcaseProjects = () =>
   useQuery({
@@ -51,7 +59,9 @@ export const useShowcaseProjects = () =>
 
 const CinematicShowcaseHero = () => {
   const reduced = useReducedMotion();
-  const { data: projects = [] } = useShowcaseProjects();
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const { data: projects = [], isError } = useShowcaseProjects();
   const withImage = projects.filter((p) => p.image);
   const [index, setIndex] = useState(0);
   const active = withImage[index % Math.max(withImage.length, 1)];
@@ -62,88 +72,101 @@ const CinematicShowcaseHero = () => {
     return () => window.clearInterval(t);
   }, [reduced, withImage.length]);
 
-  return (
-    <section className="relative isolate min-h-[88svh] overflow-hidden bg-background" aria-labelledby="hero-title">
-      <AnimatePresence mode="sync">
-        {active?.image && (
-          <motion.img
-            key={active.id}
-            src={active.image}
-            alt={`Vista aérea de ${active.name}`}
-            className="absolute inset-0 -z-10 h-full w-full object-cover"
-            initial={reduced ? false : { opacity: 0, scale: 1.08 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.6, ease: 'easeOut' }}
-          />
-        )}
-      </AnimatePresence>
-      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/55 to-background/20" />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-background/90 via-background/30 to-transparent" />
-      <div className="brand-aurora absolute inset-0 -z-10" aria-hidden="true" />
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const q = query.trim();
+    navigate(q ? `/explorar?q=${encodeURIComponent(q)}` : '/explorar');
+  };
 
-      <div className="container flex min-h-[88svh] flex-col justify-end px-4 pb-10 pt-24 md:pb-16">
+  return (
+    <section className="relative bg-background" aria-labelledby="hero-title">
+      <div className="container grid gap-10 px-4 pb-14 pt-10 md:pt-16 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14 lg:pb-20">
         <motion.div
-          initial={reduced ? false : { opacity: 0, y: 24 }}
+          initial={reduced ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="max-w-4xl"
+          transition={{ duration: 0.6 }}
+          className="min-w-0"
         >
-          <span className="brand-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em]">
-            <Orbit className="h-3.5 w-3.5" aria-hidden="true" /> Tour 360 · Masterplan · Reserva online
-          </span>
-          <h1 id="hero-title" className="mt-5 font-heading text-4xl font-bold leading-[0.95] text-foreground sm:text-6xl lg:text-7xl">
-            El territorio chileno, <span className="gradient-text-hero">loteado con precisión.</span>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">Rural Finder · Atlas de Chile</p>
+          <h1 id="hero-title" className="mt-4 font-editorial text-4xl font-medium leading-[1.02] text-foreground sm:text-5xl lg:text-6xl">
+            Encuentra tierra con <em className="text-primary">papeles claros</em> y precio publicado.
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-foreground/80 md:text-lg">
-            Vuela sobre cada proyecto, elige tu parcela sobre la imagen real y resérvala con folio oficial.
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+            Parcelas, campos y suelo industrial con masterplan, disponibilidad en vivo y visita agendada.
           </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Button asChild size="lg" className="brand-gradient-btn h-12 rounded-full border-0 px-7 text-base font-semibold">
-              <Link to={active ? `/proyecto/${active.id}?tab=tour360` : '/explorar'}>
-                Entrar al tour 360 <ArrowRight className="ml-2 h-4 w-4" />
+
+          <form onSubmit={submit} role="search" className="mt-7 max-w-xl">
+            <label htmlFor="hero-search" className="mb-2 block text-xs font-semibold text-foreground">Destino, comuna o proyecto</label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                <Input id="hero-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ej. Licantén, Hualañé, Región del Maule" className="h-12 rounded-xl bg-card pl-10 text-base rural-shadow" />
+              </div>
+              <Button type="submit" size="lg" className="h-12 rounded-xl px-6">
+                Explorar terrenos <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+              </Button>
+            </div>
+          </form>
+
+          <div className="mt-3 flex flex-wrap gap-2" aria-label="Filtros rápidos">
+            {QUICK_FILTERS.map((f) => (
+              <Link key={f.type} to={`/explorar?type=${f.type}`} className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary focus-ring">
+                {f.label}
               </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="h-12 rounded-full border-border/60 bg-background/40 px-7 backdrop-blur-md">
-              <Link to="/explorar"><Compass className="mr-2 h-4 w-4" />Ver mapa de parcelas</Link>
-            </Button>
+            ))}
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />Rol propio por parcela</span>
+            <Link to="/planes-loteos" className="inline-flex items-center gap-1.5 underline-offset-4 hover:text-foreground hover:underline">
+              <Building2 className="h-4 w-4" aria-hidden="true" />¿Vendes terrenos? Publica tu proyecto
+            </Link>
           </div>
         </motion.div>
 
-        {withImage.length > 0 && (
-          <div className="mt-10 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
-            <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Proyectos insignia">
-              {withImage.map((p, i) => {
-                const on = p.id === active?.id;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={on}
-                    onClick={() => setIndex(i)}
-                    className={`group relative shrink-0 overflow-hidden rounded-2xl border text-left backdrop-blur-md transition-all ${on ? 'brand-ring w-64 border-transparent bg-background/70' : 'w-44 border-border/50 bg-background/40 hover:bg-background/60'}`}
-                  >
-                    <div className="p-3">
-                      <p className="truncate font-heading text-sm font-semibold text-foreground">{p.name}</p>
-                      <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
-                        <MapPin className="h-3 w-3" />{[p.city, p.region].filter(Boolean).join(', ') || 'Chile'}
-                      </p>
-                    </div>
-                    {on && <span className="brand-bar absolute inset-x-0 bottom-0 h-0.5" />}
-                  </button>
-                );
-              })}
-            </div>
+        <div className="min-w-0">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-muted rural-shadow">
+            <AnimatePresence mode="sync">
+              {active?.image ? (
+                <motion.img
+                  key={active.id}
+                  src={active.image}
+                  alt={`Vista aérea de ${active.name}`}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  initial={reduced ? false : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1 }}
+                />
+              ) : (
+                <div className="absolute inset-0 grid-topo opacity-40" aria-hidden="true" />
+              )}
+            </AnimatePresence>
             {active && (
-              <dl className="flex gap-6 rounded-2xl border border-border/50 bg-background/55 px-5 py-3 backdrop-blur-md">
-                <div><dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Disponibles</dt><dd className="font-heading text-xl font-bold text-foreground">{active.available} de {active.total}</dd></div>
-                <div><dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Desde</dt><dd className="font-heading text-xl font-bold gradient-text">{clp(active.minPrice)}</dd></div>
-                <div className="hidden sm:block"><dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Respaldo</dt><dd className="flex items-center gap-1 pt-1 text-sm font-medium text-foreground"><ShieldCheck className="h-4 w-4 text-primary" />Rol propio</dd></div>
-              </dl>
+              <Link to={`/proyecto/${active.id}`} className="absolute inset-x-3 bottom-3 flex flex-wrap items-end justify-between gap-3 rounded-xl border border-border bg-card/95 p-4 backdrop-blur focus-ring">
+                <div className="min-w-0">
+                  <p className="truncate font-editorial text-lg font-medium text-foreground">{active.name}</p>
+                  <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground"><MapPin className="h-3 w-3" aria-hidden="true" />{[active.city, active.region].filter(Boolean).join(', ') || 'Chile'}</p>
+                </div>
+                <dl className="flex gap-5 text-right">
+                  <div><dt className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Disponibles</dt><dd className="rural-data text-sm font-semibold text-foreground">{active.available}/{active.total}</dd></div>
+                  <div><dt className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Desde</dt><dd className="rural-data text-sm font-semibold text-primary">{clp(active.minPrice)}</dd></div>
+                </dl>
+              </Link>
             )}
           </div>
-        )}
+          {isError && <p role="alert" className="mt-3 text-sm text-destructive">No pudimos cargar los proyectos destacados. Puedes explorar el mapa igualmente.</p>}
+          {withImage.length > 1 && (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Proyectos destacados">
+              {withImage.map((p, i) => (
+                <button key={p.id} type="button" role="tab" aria-selected={p.id === active?.id} onClick={() => setIndex(i)}
+                  className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-ring ${p.id === active?.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:border-primary'}`}>
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
