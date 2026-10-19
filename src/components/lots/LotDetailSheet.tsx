@@ -1,3 +1,4 @@
+import ViewerErrorBoundary from '@/components/viewer/ViewerErrorBoundary';
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -285,6 +286,7 @@ export const LotDetailSheet = ({
               <Box className="h-4 w-4 text-primary" />
             </div>
             <div className="h-[300px] bg-card sm:h-[340px]">
+              <ViewerErrorBoundary label="la vista 3D" className="h-full rounded-none border-0">
               <Suspense fallback={<Skeleton className="h-full w-full bg-muted/60" />}>
                 <div className="h-full [&>div]:!h-full [&>div]:!rounded-none [&>div]:!border-0">
                   <ParcelaDesigner3D
@@ -298,6 +300,7 @@ export const LotDetailSheet = ({
                   />
                 </div>
               </Suspense>
+              </ViewerErrorBoundary>
             </div>
             {lot.status === 'available' && onDesign && (
               <button type="button" onClick={() => onDesign(lot)} className="flex w-full items-center justify-between border-t border-border px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
