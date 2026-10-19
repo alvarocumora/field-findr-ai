@@ -63,7 +63,10 @@ const Explorar = () => {
   const [showAISearch, setShowAISearch] = useState(false);
 
   // Filters
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(() => {
+    const t = searchParams.get('type');
+    return t ? t.split(',').filter(Boolean) : [];
+  });
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -100,11 +103,15 @@ const Explorar = () => {
   const [cinematicLot, setCinematicLot] = useState<any>(null);
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
 
-  // Data — infinite pagination with cursor
+  // Data — infinite pagination with cursor. Text search runs server-side so
+  // it covers the whole inventory, not only the pages already loaded.
+  const deferredSearch = useDeferredValue(searchQuery);
   const {
     listings,
     totalCount,
     isLoading,
+    isError,
+    refetch,
     hasMore,
     loadMore,
     isLoadingMore,
@@ -118,20 +125,19 @@ const Explorar = () => {
     areaMax: areaRange[1] < 1000000 ? areaRange[1] : undefined,
     bounds: mapBounds ?? undefined,
     includeLoteoLots,
+    search: deferredSearch || undefined,
   });
 
-  // Client-side search + tag/slope/valuation filter
+  const errorBanner = isError ? (
+    <div role="alert" className="m-3 flex items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-foreground">
+      <span>No pudimos cargar el inventario. Esto es un error de conexión, no falta de terrenos.</span>
+      <Button size="sm" variant="outline" onClick={() => refetch()}>Reintentar</Button>
+    </div>
+  ) : null;
+
+  // Client-side tag/slope/valuation/polygon filter (text search is server-side)
   const filteredListings = useMemo(() => {
     let result = [...listings];
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        l => l.title.toLowerCase().includes(q) ||
-             l.location.toLowerCase().includes(q) ||
-             l.region?.toLowerCase().includes(q) ||
-             l.city?.toLowerCase().includes(q)
-      );
-    }
     if (selectedTags.length > 0) {
       result = result.filter(l => selectedTags.some(tag => l.tags.includes(tag)));
     }
