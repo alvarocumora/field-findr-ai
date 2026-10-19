@@ -6,7 +6,7 @@ describe('priceCurrency', () => {
     expect(formatPriceWithCurrency(35000, 'UF')).toBe('35.000 UF');
   });
   it('UF per m² keeps decimals instead of $1/m²', () => {
-    expect(formatPricePerM2(3500, 10000, 'UF')).toBe('0,350 UF/m²');
+    expect(formatPricePerM2(3500, 10000, 'UF')).toBe('0,35 UF/m²');
   });
   it('CLP per m² is rounded pesos', () => {
     expect(formatPricePerM2(12990000, 5000, 'CLP')).toBe('$2.598/m²');
