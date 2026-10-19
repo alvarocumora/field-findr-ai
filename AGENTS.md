@@ -5,3 +5,7 @@
 - Panorama lot overlays remain angular annotations in `tour_scenes`, linked to live lot IDs; never replace geographic lot geometry with image-space coordinates. Why: visual alignment must not alter surveyed inventory.
 
 - Explorer card deep links use `?listing=<listing_id>` and load the individual listing independently of feed filters/pagination. Why: tour links must open the exact parcel, including reserved inventory.
+
+- Rural Institutional design system is a scoped theme: pages adopt it by wrapping in `.theme-rural` (tokens in `src/index.css`), never by hardcoding paper/ink hex values. Why: incremental migration without breaking dark panels.
+
+- Explorer text search is server-side (`ListingFilters.search` in `useInfiniteListings`), never a client filter over loaded pages. Why: search must cover the full inventory.

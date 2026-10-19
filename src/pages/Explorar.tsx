@@ -278,7 +278,7 @@ const Explorar = () => {
   // ── MOBILE + TABLET UNIFIED VIEW ──
   if (isTabletOrBelow) {
     return (
-      <div className="min-h-screen bg-background flex flex-col pb-16">
+      <div className="theme-rural min-h-screen bg-background flex flex-col pb-16">
         <StickyHeader />
         {errorBanner && <div className="pt-header">{errorBanner}</div>}
 
@@ -400,7 +400,7 @@ const Explorar = () => {
 
   // ── DESKTOP SPLIT-VIEW ──
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="theme-rural h-screen flex flex-col bg-background">
       <StickyHeader />
 
       {/* AI Search — floating card, not a full-width bar */}
