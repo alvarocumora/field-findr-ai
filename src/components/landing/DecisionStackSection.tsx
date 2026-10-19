@@ -55,37 +55,36 @@ const EVIDENCE = [
 const DecisionStackSection = () => (
   <section className="border-y border-border/50 bg-muted/15 py-16 md:py-24" aria-labelledby="decision-stack-title">
     <div className="container px-4">
-      <div className="max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Así decides</p>
-        <h2 id="decision-stack-title" className="mt-3 font-heading text-3xl font-bold leading-tight md:text-5xl">
+      <div className="max-w-2xl">
+        <p className="font-swiss text-[11px] text-primary">Así decides</p>
+        <h2 id="decision-stack-title" className="mt-4 font-editorial text-4xl font-medium leading-[1.05] md:text-5xl">
           Del territorio a una decisión concreta.
         </h2>
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
+        <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
           OfertaTerrenos une exploración territorial, inventario y operación comercial para que no tengas que saltar entre mapas, portales y planillas.
         </p>
       </div>
 
-      <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-10 grid border-t border-border/60 md:grid-cols-2 xl:grid-cols-4">
         {JOURNEY.map((step) => (
-          <article key={step.number} className="rounded-2xl border border-border/60 bg-card/70 p-5">
+          <article
+            key={step.number}
+            className="border-b border-r-0 border-border/60 py-6 pr-6 xl:border-b-0 xl:border-r xl:last:border-r-0"
+          >
             <div className="flex items-center justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <step.icon className="h-5 w-5" />
-              </div>
-              <span className="font-mono text-[10px] text-muted-foreground">{step.number}</span>
+              <span className="font-swiss text-base text-primary">{step.number}</span>
+              <step.icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </div>
-            <h3 className="mt-5 font-heading text-lg font-bold">{step.title}</h3>
+            <h3 className="mt-4 font-editorial text-xl font-medium">{step.title}</h3>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
           </article>
         ))}
       </div>
 
-      <div className="mt-8 grid gap-4 lg:grid-cols-3">
+      <div className="mt-8 grid gap-6 border-t border-border/40 pt-8 lg:grid-cols-3">
         {EVIDENCE.map((item) => (
-          <div key={item.title} className="flex gap-4 rounded-2xl border border-border/40 bg-background/60 p-5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <item.icon className="h-5 w-5" />
-            </div>
+          <div key={item.title} className="flex gap-4">
+            <item.icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
             <div>
               <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{item.text}</p>

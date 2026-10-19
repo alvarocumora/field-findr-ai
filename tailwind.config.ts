@@ -21,6 +21,9 @@ export default {
 			fontFamily: {
 				sans: ['DM Sans', 'system-ui', 'sans-serif'],
 				heading: ['Space Grotesk', 'DM Sans', 'sans-serif'],
+				// Titulares grandes de marketing (portada): serif editorial, separado
+				// de font-heading para no cambiar la tipografia del resto de la app.
+				editorial: ['Fraunces', 'Georgia', 'serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
