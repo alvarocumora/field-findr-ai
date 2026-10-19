@@ -12,6 +12,14 @@ import { CAONE_PROJECT } from './data/project';
 const clp = (value: number) => `$${value.toLocaleString('es-CL')}`;
 const pricePerHa = CAONE_PROJECT.pricePerLotClp;
 const projectUrl = 'https://ofertaterrenos.com/valle-hualane';
+// Tour y disponibilidad ya viven en /proyecto/:id (misma fuente de datos:
+// tour_scenes y lots), así que todas esas CTA apuntan ahí — antes algunas
+// iban a /valle-hualane/tour y otras a /proyecto/:id para lo mismo.
+// El masterplan sigue en /valle-hualane/plano a propósito: ese proyecto no
+// tiene kmz_file_url/plan_images en la tabla projects, así que la pestaña
+// "map" genérica no puede mostrar el terreno 3D ni ofrecer la descarga PDF
+// A3 que sí tiene la página bespoke.
+const projectTabUrl = (tab: 'tour360' | 'lots') => `/proyecto/${CAONE_PROJECT.id}?tab=${tab}`;
 
 const STATUS_LABEL: Record<string, string> = {
   available: 'Disponible',
@@ -61,13 +69,13 @@ const CaoneLanding = () => {
               <Link to="/valle-hualane/plano"><FileText className="mr-2 h-4 w-4" />Masterplan KMZ + PDF</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
-              <Link to="/proyecto/761e73ed-cc0d-5605-a06a-4a4348523b4b?tab=tour360"><PlayCircle className="mr-2 h-4 w-4" />Tour 360 · cotizar y reservar</Link>
+              <Link to={projectTabUrl('tour360')}><PlayCircle className="mr-2 h-4 w-4" />Tour 360 · cotizar y reservar</Link>
             </Button>
             <Button size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white" onClick={copyProjectLink}>
               <Copy className="mr-2 h-4 w-4" />Copiar link
             </Button>
             <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
-              <Link to="/contacto-loteos">Consultar disponibilidad</Link>
+              <Link to={projectTabUrl('lots')}>Consultar disponibilidad</Link>
             </Button>
           </div>
         </div>
@@ -115,14 +123,14 @@ const CaoneLanding = () => {
               </div>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Button asChild size="lg" className="bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]/90">
-                  <Link to="/valle-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Iniciar tour virtual</Link>
+                  <Link to={projectTabUrl('tour360')}><PlayCircle className="mr-2 h-4 w-4" />Iniciar tour virtual</Link>
                 </Button>
                 <Button size="lg" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={copyProjectLink}>
                   <Copy className="mr-2 h-4 w-4" />Compartir proyecto
                 </Button>
               </div>
             </div>
-            <Link to="/valle-hualane/tour" className="group relative block min-h-[360px] overflow-hidden bg-black md:min-h-[430px]">
+            <Link to={projectTabUrl('tour360')} className="group relative block min-h-[360px] overflow-hidden bg-black md:min-h-[430px]">
               <ProjectScene3D latitude={-35.001545359260206} longitude={-71.65328947973632} />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/10" />
               <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between gap-3">
@@ -198,10 +206,10 @@ const CaoneLanding = () => {
             </div>
             <div className="flex flex-wrap gap-2">
               <Button asChild size="lg" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                <Link to="/valle-hualane/tour"><PlayCircle className="mr-2 h-4 w-4" />Abrir tour virtual</Link>
+                <Link to={projectTabUrl('tour360')}><PlayCircle className="mr-2 h-4 w-4" />Abrir tour virtual</Link>
               </Button>
               <Button asChild size="lg" className="bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]/90">
-                <Link to="/proyecto/761e73ed-cc0d-5605-a06a-4a4348523b4b?tab=lots">Ver parcelas y reservar</Link>
+                <Link to={projectTabUrl('lots')}>Ver parcelas y reservar</Link>
               </Button>
             </div>
           </div>
