@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LotReservationDialog } from '@/components/lots/LotReservationDialog';
 import { TourViewer360 } from '@/components/tour/TourViewer360';
+import ViewerErrorBoundary from '@/components/viewer/ViewerErrorBoundary';
 import { TourMinimap } from '@/components/tour/TourMinimap';
 import { TourSceneManager } from '@/components/tour/TourSceneManager';
 import { TourEditor } from '@/components/tour/TourEditor';
@@ -409,7 +410,7 @@ const ProjectDetail = () => {
 
   return (
     <PublicLayout>
-      <div className={`min-h-screen bg-background ${isMobile ? 'pb-20' : ''}`}>
+      <div className={`theme-rural min-h-screen bg-background ${isMobile ? 'pb-20' : ''}`}>
         {/* Breadcrumbs */}
         <div className="container px-4 pt-4 pb-2">
           <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -427,6 +428,7 @@ const ProjectDetail = () => {
             duplicado al entrar con ?tab=tour360). */}
         {tourScenes.length > 0 && (
           <section ref={tourSectionRef} className="container px-4 pb-4 space-y-3 scroll-mt-20" aria-label="Tour 360 del proyecto">
+            <ViewerErrorBoundary label="el tour 360" className="h-[420px]">
             <TourViewer360
               scenes={tourScenes}
               lots={lots}
@@ -439,6 +441,7 @@ const ProjectDetail = () => {
                 }
               }}
             />
+            </ViewerErrorBoundary>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 rounded-2xl border bg-card p-4 text-center">
               <div>
                 <p className="text-xl font-bold">{areaRange ? `${Math.round(areaRange.min).toLocaleString('es-CL')} m²` : '—'}</p>
@@ -449,7 +452,7 @@ const ProjectDetail = () => {
                 <p className="text-xs text-muted-foreground">Parcelas disponibles</p>
               </div>
               <div>
-                <p className="text-xl font-bold">{priceRange ? `$${priceRange.min.toLocaleString('es-CL')}` : 'Consultar'}</p>
+                <p className="text-xl font-bold">{priceRange ? `$${priceRange.min.toLocaleString('es-CL')} CLP` : 'No informado'}</p>
                 <p className="text-xs text-muted-foreground">Precio desde</p>
               </div>
               <div className="flex items-center justify-center">
@@ -578,7 +581,7 @@ const ProjectDetail = () => {
 
             {/* Map Tab */}
             <TabsContent value="map">
-              <LotMapView
+              <ViewerErrorBoundary label="el mapa de parcelas" className="h-[420px]"><LotMapView
                 lots={lots}
                 projectCenter={{
                   lat: project.latitude || -34.9767,
@@ -603,7 +606,7 @@ const ProjectDetail = () => {
                     ? () => setShowCompare(true)
                     : undefined
                 }
-              />
+              /></ViewerErrorBoundary>
 
 
               <Dialog open={showCompare} onOpenChange={setShowCompare}>
@@ -805,7 +808,7 @@ const ProjectDetail = () => {
                       </p>
                     </div>
                     <div className="rounded-2xl overflow-hidden border h-[520px]">
-                      <LotMapView
+                      <ViewerErrorBoundary label="el mapa de parcelas" className="h-[420px]"><LotMapView
                         lots={lots}
                         projectCenter={{
                           lat: project.latitude || -34.9767,
@@ -819,7 +822,7 @@ const ProjectDetail = () => {
                         projectId={project.id}
                         kmzFileUrl={(project as any).kmz_file_url}
                         readOnly
-                      />
+                      /></ViewerErrorBoundary>
                     </div>
                   </div>
                 )}
