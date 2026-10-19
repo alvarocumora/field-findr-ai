@@ -63,6 +63,7 @@ import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
 import { useReviewStats } from '@/hooks/useReviews';
 import { projectSocial } from '@/lib/landing/projectSocial';
 import { LandingLeadForm } from '@/pages/landing/LandingLeadForm';
+import { resolveProjectInquiryLot } from '@/lib/projects/projectInquiry';
 
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
@@ -195,6 +196,12 @@ const ProjectDetail = () => {
   const { scenes: tourScenes } = useTourScenes(id);
   const [searchParamsTab] = useSearchParams();
   const tabParam = ['map','quoter','lots','info','compare','reviews','brochure','tour360'].includes(searchParamsTab.get('tab') ?? '') ? searchParamsTab.get('tab')! : 'map';
+
+  // Las landings específicas pueden abrir directamente el formulario de consulta.
+  // El ID del lote se resuelve contra el inventario público antes de enviarlo al CRM.
+  useEffect(() => {
+    if (searchParamsTab.get('consulta') === '1') setLeadOpen(true);
+  }, [searchParamsTab]);
   const bulkPublish = useBulkPublishLots();
 
   // Links con ?tab=tour360 (landings de proyecto) esperan ver el tour de
@@ -461,6 +468,7 @@ const ProjectDetail = () => {
               projectId={project.id}
               projectOwnerId={project.user_id}
               projectSlug={project.slug || project.id}
+              lot={resolveProjectInquiryLot(lots, searchParamsTab)}
               onSuccess={() => setLeadOpen(false)}
             />
           </DialogContent>

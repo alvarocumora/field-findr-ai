@@ -82,7 +82,7 @@ const CaoneLanding = () => {
               <Copy className="mr-2 h-4 w-4" />Copiar link
             </Button>
             <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
-              <Link to={projectTabUrl('lots')}>Consultar disponibilidad</Link>
+              <Link to={`/proyecto/${CAONE_PROJECT.id}?consulta=1`}>Consultar disponibilidad</Link>
             </Button>
           </div>
         </div>
