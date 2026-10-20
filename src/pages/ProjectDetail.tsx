@@ -569,6 +569,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
           <DialogContent>
             <DialogTitle>{searchParamsTab.get('utm_campaign') === 'consulta_financiamiento' ? 'Consultar financiamiento' : `Consulta por ${project.name}`}</DialogTitle>
             <LandingLeadForm
+              defaultMessage={searchParamsTab.get('utm_campaign') === 'consulta_financiamiento' ? 'Quiero consultar alternativas de financiamiento para una parcela de Valle Escondido Licantén.' : ''}
               projectId={project.id}
               projectOwnerId={project.user_id}
               projectSlug={project.slug || project.id}

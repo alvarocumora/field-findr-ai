@@ -16,6 +16,7 @@ interface Props {
   /** Lote preseleccionado (al hacer clic en el masterplan). */
   lot?: { id: string; lot_number?: string | null } | null;
   onSuccess?: () => void;
+  defaultMessage?: string;
 }
 
 /**
@@ -23,11 +24,11 @@ interface Props {
  * function `submit-interest` (misma vía que el resto del sitio), así queda
  * en el CRM del dueño del proyecto — nunca más leads perdidos en un mailto.
  */
-export const LandingLeadForm = ({ projectId, projectOwnerId, projectSlug, lot, onSuccess }: Props) => {
+export const LandingLeadForm = ({ projectId, projectOwnerId, projectSlug, lot, onSuccess, defaultMessage = '' }: Props) => {
   const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(defaultMessage);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
