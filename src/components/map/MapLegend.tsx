@@ -13,6 +13,7 @@ interface MapLegendProps {
   listingsCount?: number;
   className?: string;
   compact?: boolean;
+  title?: string;
 }
 
 const defaultStatusConfig: Record<string, StatusConfig> = {
@@ -28,10 +29,13 @@ const MapLegend = ({
   listingsCount,
   className,
   compact = false,
+  title = 'Estado',
 }: MapLegendProps) => {
   if (compact) {
     return (
       <div
+        role="group"
+        aria-label={title}
         className={cn(
           'flex items-center gap-3 px-3 py-2 rounded-xl bg-background/90 backdrop-blur-xl border border-border/50 shadow-lg shadow-black/5',
           className
@@ -52,6 +56,8 @@ const MapLegend = ({
 
   return (
     <div
+      role="group"
+      aria-label={title}
       className={cn(
         'flex flex-col gap-3 p-4 rounded-xl bg-background/90 backdrop-blur-xl border border-border/50 shadow-lg shadow-black/5',
         className
@@ -60,7 +66,7 @@ const MapLegend = ({
       {/* Status Legend */}
       <div className="space-y-2">
         <h4 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Estado
+          {title}
         </h4>
         <div className="flex flex-wrap gap-3">
           {Object.entries(statusConfig).map(([key, { color, label }]) => (
@@ -97,7 +103,7 @@ const MapLegend = ({
         )}
         {listingsCount !== undefined && (
           <div className="text-xs font-medium text-foreground">
-            {listingsCount} propiedades
+            {listingsCount} publicaciones cargadas
           </div>
         )}
       </div>
