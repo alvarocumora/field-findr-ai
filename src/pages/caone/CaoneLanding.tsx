@@ -6,12 +6,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useSEO } from '@/hooks/useSEO';
 import { toast } from 'sonner';
 import ProjectScene3D from '@/components/landing/ProjectScene3D';
+import MapErrorBoundary from '@/components/map/MapErrorBoundary';
+import { getCanonicalUrl } from '@/lib/publicUrls';
 import { useCaoneLots } from './data/useCaoneLots';
 import { CAONE_PROJECT } from './data/project';
 
 const clp = (value: number) => `$${value.toLocaleString('es-CL')}`;
 const pricePerHa = CAONE_PROJECT.pricePerLotClp;
-const projectUrl = 'https://ofertaterrenos.com/valle-hualane';
+const projectUrl = getCanonicalUrl('/valle-hualane');
 // Tour y disponibilidad ya viven en /proyecto/:id (misma fuente de datos:
 // tour_scenes y lots), así que todas esas CTA apuntan ahí — antes algunas
 // iban a /valle-hualane/tour y otras a /proyecto/:id para lo mismo.
@@ -28,7 +30,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const CaoneLanding = () => {
-  const { lots, available, isLoading, isLive, verifiedCount, verifiedLotNumbers } = useCaoneLots();
+  const { lots, available, isLoading, isError, refetch, isLive, verifiedCount, verifiedLotNumbers } = useCaoneLots();
   const availabilityLabel = isLive ? String(available) : isLoading ? 'Consultando…' : 'Por confirmar';
   const unverifiedCount = lots.length - verifiedCount;
   const inventoryBadge = !isLive
@@ -47,8 +49,12 @@ const CaoneLanding = () => {
   });
 
   const copyProjectLink = async () => {
-    await navigator.clipboard.writeText(projectUrl);
-    toast.success('Link del proyecto copiado');
+    try {
+      await navigator.clipboard.writeText(projectUrl);
+      toast.success('Link del proyecto copiado');
+    } catch {
+      toast.error('No se pudo copiar el enlace. Usa la dirección del navegador para compartir.');
+    }
   };
 
   return (
@@ -68,7 +74,7 @@ const CaoneLanding = () => {
             <div className="rounded-3xl bg-[#f6c64e] px-7 py-6 text-center text-[#17352d] shadow-xl">
               <p className="text-xs font-bold uppercase tracking-wider">Desde</p>
               <p className="mt-1 text-4xl font-black">{clp(pricePerHa)}</p>
-              <p className="mt-1 text-xs font-semibold">CLP · precio único por parcela</p>
+              <p className="mt-1 text-xs font-semibold">CLP · valor de referencia, sujeto a confirmación por lote</p>
             </div>
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -88,7 +94,22 @@ const CaoneLanding = () => {
         </div>
       </header>
 
+      <nav aria-label="Secciones del proyecto" className="sticky top-16 z-20 border-b border-[#1b5c49]/15 bg-[#f7f4ec]/95 px-4 py-3 backdrop-blur">
+        <div className="container mx-auto flex max-w-6xl items-center gap-2 overflow-x-auto whitespace-nowrap">
+          <a href="#recorrido" className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-[#1b5c49]/20 px-4 text-sm font-semibold hover:bg-[#1b5c49]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">Recorrido</a>
+          <a href="#masterplan" className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-[#1b5c49]/20 px-4 text-sm font-semibold hover:bg-[#1b5c49]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">Masterplan</a>
+          <a href="#parcelas" className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-[#1b5c49]/20 px-4 text-sm font-semibold hover:bg-[#1b5c49]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">Parcelas</a>
+          <a href="#visitas" className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-[#17352d] px-4 text-sm font-semibold text-white hover:bg-[#0b342d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">Visitas y consultas</a>
+        </div>
+      </nav>
+
       <main className="container max-w-6xl px-4 py-10 md:py-14">
+        {isError && (
+          <div role="alert" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-400/70 bg-amber-50 px-4 py-3 text-sm">
+            <p>No pudimos verificar el inventario en este momento. Los lotes sin confirmación no se anuncian como disponibles.</p>
+            <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>Reintentar consulta</Button>
+          </div>
+        )}
         <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[
             { icon: Trees, label: 'Lotes', value: `${lots.length}` },
@@ -106,7 +127,7 @@ const CaoneLanding = () => {
           ))}
         </section>
 
-        <section className="py-12">
+        <section id="recorrido" className="scroll-mt-36 py-12">
           <div className="grid overflow-hidden rounded-3xl border border-[#1b5c49]/15 bg-[#0b342d] shadow-xl lg:grid-cols-[0.9fr_1.1fr]">
             <div className="flex flex-col justify-center p-7 text-white md:p-10">
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#f6c64e]">Terrain Tour · experiencia interactiva</p>
@@ -138,7 +159,9 @@ const CaoneLanding = () => {
               </div>
             </div>
             <Link to={projectTabUrl('tour360')} className="group relative block min-h-[360px] overflow-hidden bg-black md:min-h-[430px]">
-              <ProjectScene3D latitude={-35.001545359260206} longitude={-71.65328947973632} />
+              <MapErrorBoundary>
+                <ProjectScene3D latitude={-35.001545359260206} longitude={-71.65328947973632} />
+              </MapErrorBoundary>
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/10" />
               <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between gap-3">
                 <div>
@@ -153,7 +176,7 @@ const CaoneLanding = () => {
           </div>
         </section>
 
-        <section id="masterplan" className="scroll-mt-8 py-12">
+        <section id="masterplan" className="scroll-mt-36 py-12">
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#1b5c49]">Master plan comercial</p>
@@ -178,7 +201,7 @@ const CaoneLanding = () => {
           <p className="mt-3 text-xs text-slate-500">El masterplan interactivo usa la geometría de lotes y servidumbres derivada del KMZ del ROL 168-921. La disponibilidad, deslindes y antecedentes legales deben confirmarse antes de reservar o comprar.</p>
         </section>
 
-        <section className="pb-12">
+        <section id="parcelas" className="scroll-mt-36 pb-12">
           <div className="mb-5">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#1b5c49]">Inventario comercial</p>
             <h2 className="mt-1 text-3xl font-black">Parcelas y superficies</h2>
@@ -197,7 +220,7 @@ const CaoneLanding = () => {
                   </div>
                   <p className="mt-1 text-sm text-slate-600">{lot.area_ha.toFixed(2)} ha</p>
                   <p className={`mt-2 text-xs font-bold ${isAvailable ? 'text-[#1b5c49]' : 'text-slate-500'}`}>
-                    {isAvailable ? clp(lot.price_clp ?? pricePerHa) : statusLabel}
+                    {isAvailable && lot.price_clp && lot.price_clp > 0 ? `${clp(lot.price_clp)} CLP` : isAvailable ? 'Precio por confirmar' : statusLabel}
                   </p>
                 </div>
               );
@@ -206,7 +229,7 @@ const CaoneLanding = () => {
           <p className="mt-3 text-xs text-slate-500">Los estados confirmados provienen del inventario en vivo. Si la consulta falla o un lote carece de datos verificables, su disponibilidad se muestra como «Por confirmar». Confirma precios, deslindes y antecedentes legales antes de reservar o comprar.</p>
         </section>
 
-        <section className="mb-8 rounded-3xl bg-[#17352d] p-7 text-white md:p-10">
+        <section id="visitas" className="scroll-mt-36 mb-8 rounded-3xl bg-[#17352d] p-7 text-white md:p-10">
           <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
             <div>
               <div className="flex items-center gap-2 text-[#f6c64e]"><FileText className="h-5 w-5" /><span className="text-sm font-bold uppercase tracking-wider">Información comercial</span></div>
