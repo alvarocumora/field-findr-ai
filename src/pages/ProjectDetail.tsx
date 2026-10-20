@@ -652,6 +652,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
 
             {/* Map Tab */}
             <TabsContent value="map">
+              <div className={isOwner ? '' : 'h-[70vh] min-h-[520px] max-h-[760px]'}>
               <ViewerErrorBoundary label="el mapa de parcelas" className="h-[420px]"><LotMapView
                 lots={lots}
                 projectCenter={{
@@ -672,12 +673,14 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                 }}
                 readOnly={!isOwner}
                 showAdminControls={isOwner}
+                tourMode={!isOwner}
                 onOpenCompare={
                   ((project as any).plan_images?.length > 0)
                     ? () => setShowCompare(true)
                     : undefined
                 }
               /></ViewerErrorBoundary>
+              </div>
 
 
               <Dialog open={showCompare} onOpenChange={setShowCompare}>
@@ -893,6 +896,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                         projectId={project.id}
                         kmzFileUrl={(project as any).kmz_file_url}
                         readOnly
+                        tourMode
                       /></ViewerErrorBoundary>
                     </div>
                   </div>
