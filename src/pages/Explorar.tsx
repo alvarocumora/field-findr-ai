@@ -70,7 +70,10 @@ const Explorar = () => {
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000000]);
+  // Keep independent bounds by currency. Switching currencies never carries a CLP
+  // number into a UF query or silently discards the previous selection.
+  const [clpPriceRange, setClpPriceRange] = useState<[number, number]>([0, 5000000000]);
+  const [ufPriceRange, setUfPriceRange] = useState<[number, number]>([0, 500000]);
   const [areaRange, setAreaRange] = useState<[number, number]>([0, 1000000]);
 
   // Map bounds for spatial filtering
@@ -111,9 +114,14 @@ const Explorar = () => {
     const c = searchParams.get('currency');
     return c === 'CLP' || c === 'UF' ? c : 'all';
   });
-  const priceRangeActive = priceRange[0] > 0 || priceRange[1] < 5000000000;
+  const priceRangeMax = currency === 'UF' ? 500000 : 5000000000;
+  const priceRange = currency === 'UF' ? ufPriceRange : clpPriceRange;
+  const setPriceRange = (next: [number, number]) => {
+    if (currency === 'UF') setUfPriceRange(next);
+    else setClpPriceRange(next);
+  };
+  const priceRangeActive = priceRange[0] > 0 || priceRange[1] < priceRangeMax;
   const effectiveCurrency = currency !== 'all' ? currency : priceRangeActive ? 'CLP' : undefined;
-  const applyPriceRange = effectiveCurrency !== 'UF';
 
   // Keep q/type/currency in the URL without dropping ?listing or other params.
   useEffect(() => {
@@ -135,7 +143,7 @@ const Explorar = () => {
           {c === 'all' ? 'Todas' : c}
         </button>
       ))}
-      {currency === 'UF' && priceRangeActive && <span className="text-muted-foreground">El rango de precio (CLP) no aplica a UF.</span>}
+      {currency === 'UF' && <span className="text-muted-foreground">Rango de precio en UF.</span>}
       {currency === 'all' && priceRangeActive && <span className="text-muted-foreground">Rango en CLP: solo publicaciones en CLP.</span>}
     </div>
   );
@@ -152,8 +160,8 @@ const Explorar = () => {
     type: selectedTypes.length > 0 ? selectedTypes : undefined,
     region: selectedRegions.length > 0 ? selectedRegions : undefined,
     country: selectedCountries.length > 0 ? selectedCountries : undefined,
-    priceMin: applyPriceRange && priceRange[0] > 0 ? priceRange[0] : undefined,
-    priceMax: applyPriceRange && priceRange[1] < 5000000000 ? priceRange[1] : undefined,
+    priceMin: priceRange[0] > 0 ? priceRange[0] : undefined,
+    priceMax: priceRange[1] < priceRangeMax ? priceRange[1] : undefined,
     areaMin: areaRange[0] > 0 ? areaRange[0] : undefined,
     areaMax: areaRange[1] < 1000000 ? areaRange[1] : undefined,
     bounds: mapBounds ?? undefined,
@@ -249,13 +257,13 @@ const Explorar = () => {
 
   const activeFiltersCount = selectedTypes.length + selectedRegions.length + selectedCountries.length + selectedTags.length +
     selectedSlopes.length + selectedValuation.length +
-    (priceRange[0] > 0 || priceRange[1] < 5000000000 ? 1 : 0) +
+    (priceRangeActive ? 1 : 0) +
     (areaRange[0] > 0 || areaRange[1] < 1000000 ? 1 : 0);
 
   // Handlers
   const clearFilters = useCallback(() => {
     setSelectedTypes([]); setSelectedRegions([]); setSelectedCountries([]);
-    setSelectedTags([]); setPriceRange([0, 5000000000]); setAreaRange([0, 1000000]);
+    setSelectedTags([]); setClpPriceRange([0, 5000000000]); setUfPriceRange([0, 500000]); setAreaRange([0, 1000000]);
     setSearchQuery(''); setMapBounds(null); setDrawnPolygon(null);
     setSelectedSlopes([]); setSelectedValuation([]);
   }, []);
@@ -332,6 +340,8 @@ const Explorar = () => {
           selectedCountries={selectedCountries}
           selectedTags={selectedTags}
           priceRange={priceRange}
+          priceCurrency={currency === 'UF' ? 'UF' : 'CLP'}
+          priceRangeMax={priceRangeMax}
           areaRange={areaRange}
           onToggleType={toggleType}
           onToggleRegion={toggleRegion}
@@ -490,6 +500,8 @@ const Explorar = () => {
             selectedTags={selectedTags}
             onToggleTag={toggleTag}
             priceRange={priceRange}
+            priceCurrency={currency === 'UF' ? 'UF' : 'CLP'}
+            priceRangeMax={priceRangeMax}
             onPriceRangeChange={setPriceRange}
             areaRange={areaRange}
             onAreaRangeChange={setAreaRange}
@@ -528,7 +540,7 @@ const Explorar = () => {
             onPolygonSearch={setDrawnPolygon}
           />
           {drawnPolygon && !swipeDeckIds && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-map-overlay flex items-center gap-2 rounded-full bg-emerald-600/95 text-white shadow-lg backdrop-blur px-3 py-1.5 text-xs font-medium animate-in fade-in slide-in-from-top-2">
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-map-overlay flex items-center gap-2 rounded-full bg-primary/95 text-primary-foreground shadow-lg backdrop-blur px-3 py-1.5 text-xs font-medium animate-in fade-in slide-in-from-top-2">
               <span>Área dibujada · {filteredListings.length} terreno{filteredListings.length === 1 ? '' : 's'} dentro</span>
               <button
                 type="button"

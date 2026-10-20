@@ -195,13 +195,22 @@ const ProjectDetail = () => {
   const tourSectionRef = useRef<HTMLDivElement>(null);
   const scrollToTour = () => tourSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const { scenes: tourScenes, isLoading: tourScenesLoading } = useTourScenes(id);
-  const [searchParamsTab] = useSearchParams();
+  const [searchParamsTab, setSearchParamsTab] = useSearchParams();
   const tabParam = ['map','quoter','lots','info','compare','reviews','brochure','tour360'].includes(searchParamsTab.get('tab') ?? '') ? searchParamsTab.get('tab')! : 'map';
   // Tabs controlado (no defaultValue): un link a ?tab=tour360 hacia un
   // proyecto sin panorámicas dejaba el área de tabs en blanco (ningún
   // TabsTrigger calzaba con "tour360" si no es dueño) — se corrige más abajo
   // una vez que tourScenes termina de cargar, cayendo a "map".
   const [activeTab, setActiveTab] = useState(tabParam);
+  // One canonical tab URL keeps shared links, browser navigation and the visible
+  // mode in sync without creating a second project viewer.
+  useEffect(() => { setActiveTab(tabParam); }, [tabParam]);
+  const changeTab = (tab: string) => {
+    setActiveTab(tab);
+    const next = new URLSearchParams(searchParamsTab);
+    next.set('tab', tab);
+    setSearchParamsTab(next, { replace: true });
+  };
 
   // Las landings específicas pueden abrir directamente el formulario de consulta.
   // El ID del lote se resuelve contra el inventario público antes de enviarlo al CRM.
@@ -541,8 +550,8 @@ const ProjectDetail = () => {
 
         {/* Main Content - Full Width */}
         <div className="container px-4 py-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="glass">
+          <Tabs value={activeTab} onValueChange={changeTab} className="space-y-4">
+            <TabsList aria-label="Secciones del proyecto" className="flex h-auto w-full max-w-full justify-start gap-1 overflow-x-auto rounded-xl border border-border/60 bg-card/90 p-1.5 shadow-sm">
               <TabsTrigger value="map" className="gap-2">
                 <Map className="h-4 w-4" />
                 Mapa

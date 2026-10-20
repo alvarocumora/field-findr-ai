@@ -42,6 +42,8 @@ interface FilterBarProps {
   selectedTags: string[];
   onToggleTag: (tag: string) => void;
   priceRange: [number, number];
+  priceCurrency?: 'CLP' | 'UF';
+  priceRangeMax?: number;
   onPriceRangeChange: (range: [number, number]) => void;
   areaRange: [number, number];
   onAreaRangeChange: (range: [number, number]) => void;
@@ -79,6 +81,13 @@ const PRICE_PRESETS = [
 ];
 
 const PRICE_MAX = 5000000000;
+const UF_PRICE_MAX = 500000;
+const UF_PRICE_PRESETS = [
+  { label: '< 1.000 UF', range: [0, 1000] as [number, number] },
+  { label: '1.000–5.000 UF', range: [1000, 5000] as [number, number] },
+  { label: '5.000–20.000 UF', range: [5000, 20000] as [number, number] },
+  { label: '> 20.000 UF', range: [20000, UF_PRICE_MAX] as [number, number] },
+];
 const AREA_MAX = 1000000;
 
 const getAvailableRegions = (selectedCountries: string[]): string[] => {
@@ -150,6 +159,8 @@ const FilterBar = ({
   selectedTags,
   onToggleTag,
   priceRange,
+  priceCurrency = 'CLP',
+  priceRangeMax,
   onPriceRangeChange,
   areaRange,
   onAreaRangeChange,
@@ -166,13 +177,15 @@ const FilterBar = ({
     [selectedCountries],
   );
 
-  const hasPriceFilter = priceRange[0] > 0 || priceRange[1] < PRICE_MAX;
+  const maxPrice = priceRangeMax ?? (priceCurrency === 'UF' ? UF_PRICE_MAX : PRICE_MAX);
+  const pricePresets = priceCurrency === 'UF' ? UF_PRICE_PRESETS : PRICE_PRESETS;
+  const hasPriceFilter = priceRange[0] > 0 || priceRange[1] < maxPrice;
   const hasAreaFilter = areaRange[0] > 0 || areaRange[1] < AREA_MAX;
 
   const priceChipLabel = () => {
     if (!hasPriceFilter) return null;
-    const min = priceRange[0] > 0 ? formatPrice(priceRange[0]) : '$0';
-    const max = priceRange[1] < PRICE_MAX ? formatPrice(priceRange[1]) : '∞';
+    const min = formatPrice(priceRange[0], priceCurrency);
+    const max = priceRange[1] < maxPrice ? formatPrice(priceRange[1], priceCurrency) : '∞';
     return `${min} – ${max}`;
   };
   const areaChipLabel = () => {
@@ -330,13 +343,13 @@ const FilterBar = ({
                 <AccordionItem value="precio">
                   <AccordionTrigger className="py-3">
                     <SectionTitle icon={DollarSign} count={hasPriceFilter ? 1 : 0}>
-                      Precio (CLP)
+                      Precio ({priceCurrency})
                     </SectionTitle>
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-4 pt-1 pb-3">
                       <div className="flex flex-wrap gap-1.5">
-                        {PRICE_PRESETS.map((p) => {
+                        {pricePresets.map((p) => {
                           const active =
                             priceRange[0] === p.range[0] && priceRange[1] === p.range[1];
                           return (
@@ -344,7 +357,7 @@ const FilterBar = ({
                               key={p.label}
                               type="button"
                               onClick={() =>
-                                onPriceRangeChange(active ? [0, PRICE_MAX] : p.range)
+                                onPriceRangeChange(active ? [0, maxPrice] : p.range)
                               }
                               className={cn(
                                 'px-3 h-7 rounded-full text-xs font-medium border transition-colors',
@@ -361,19 +374,19 @@ const FilterBar = ({
                       <Slider
                         value={[Math.log10(priceRange[0] + 1), Math.log10(priceRange[1])]}
                         min={0}
-                        max={10}
+                        max={Math.log10(maxPrice)}
                         step={0.1}
                         onValueChange={([min, max]) =>
                           onPriceRangeChange([
-                            Math.round(Math.pow(10, min) - 1),
-                            Math.round(Math.pow(10, max)),
+                            Math.max(0, Math.round(Math.pow(10, min) - 1)),
+                            Math.min(maxPrice, Math.round(Math.pow(10, max))),
                           ])
                         }
                         className="py-2"
                       />
                       <div className="flex justify-between text-xs text-muted-foreground font-medium">
-                        <span>{formatPrice(priceRange[0])}</span>
-                        <span>{formatPrice(priceRange[1])}</span>
+                        <span>{formatPrice(priceRange[0], priceCurrency)}</span>
+                        <span>{formatPrice(priceRange[1], priceCurrency)}</span>
                       </div>
                     </div>
                   </AccordionContent>
@@ -534,7 +547,7 @@ const FilterBar = ({
           {hasPriceFilter && (
             <Chip
               icon={DollarSign}
-              onRemove={() => onPriceRangeChange([0, PRICE_MAX])}
+              onRemove={() => onPriceRangeChange([0, maxPrice])}
             >
               {priceChipLabel()}
             </Chip>

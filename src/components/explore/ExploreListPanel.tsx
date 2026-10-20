@@ -309,6 +309,8 @@ interface ExploreListPanelProps {
   selectedTags: string[];
   onToggleTag: (tag: string) => void;
   priceRange: [number, number];
+  priceCurrency?: 'CLP' | 'UF';
+  priceRangeMax?: number;
   onPriceRangeChange: (range: [number, number]) => void;
   areaRange: [number, number];
   onAreaRangeChange: (range: [number, number]) => void;
@@ -345,6 +347,8 @@ const ExploreListPanel = ({
   selectedTags,
   onToggleTag,
   priceRange,
+  priceCurrency = 'CLP',
+  priceRangeMax,
   onPriceRangeChange,
   areaRange,
   onAreaRangeChange,
@@ -483,6 +487,8 @@ const ExploreListPanel = ({
               selectedTags={selectedTags}
               onToggleTag={onToggleTag}
               priceRange={priceRange}
+              priceCurrency={priceCurrency}
+              priceRangeMax={priceRangeMax}
               onPriceRangeChange={onPriceRangeChange}
               areaRange={areaRange}
               onAreaRangeChange={onAreaRangeChange}
