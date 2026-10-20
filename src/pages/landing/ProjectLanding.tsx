@@ -166,6 +166,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
   const heroImage = cfg.hero.image ?? gallery[0];
   const title = cfg.hero.title ?? project.name;
   const location = [project.location, project.region].filter(Boolean).join(', ');
+  const visitUrl = `/agendar?meeting_type=visita_terreno&source=landing&project_id=${encodeURIComponent(project.id)}&project_name=${encodeURIComponent(project.name)}`;
   const subtitle = cfg.hero.subtitle ?? (project.description as string | null) ?? undefined;
   const openLead = (lot?: { id: string; lot_number?: string | null }) => {
     setLeadLot(lot ?? null);
@@ -208,8 +209,8 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
             <Button size="lg" className="min-h-11" onClick={cfg.sections.masterplan && lots.length > 0 ? goMasterplan : () => openLead()}>
               {cfg.sections.masterplan && lots.length > 0 ? 'Ver plano de lotes' : 'Consultar disponibilidad'}<ArrowRight className="h-4 w-4 ml-2" />
             </Button>
-            <Button size="lg" variant="secondary" className="min-h-11" onClick={() => openLead()}>
-              <CalendarDays className="h-4 w-4 mr-2" />{cfg.hero.cta ?? 'Agendar visita'}
+            <Button size="lg" variant="secondary" className="min-h-11" asChild>
+              <Link to={visitUrl}><CalendarDays className="h-4 w-4 mr-2" />Agendar visita</Link>
             </Button>
             <Button
               size="lg"
