@@ -1,133 +1,114 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowLeft, Scale, X } from 'lucide-react';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import { useCompare } from '@/hooks/useCompare';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from '@/components/ui/table';
 import { formatPrice, formatArea, getListingTypeLabel, getLegalStatusLabel } from '@/hooks/useListings';
-import { X, ArrowLeft, Download } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { formatPricePerM2, hasMixedCurrencies } from '@/lib/priceCurrency';
+import { Button } from '@/components/ui/button';
 
 const COMPARE_ROWS = [
-  { key: 'price', label: 'Precio' },
-  { key: 'type', label: 'Tipo' },
-  { key: 'area', label: 'Superficie' },
+  { key: 'price', label: 'Precio publicado' },
   { key: 'ppm2', label: 'Precio / m²' },
+  { key: 'area', label: 'Superficie' },
+  { key: 'type', label: 'Tipo' },
   { key: 'location', label: 'Ubicación' },
   { key: 'region', label: 'Región' },
   { key: 'zoning', label: 'Zonificación' },
-  { key: 'legal', label: 'Estado Legal' },
+  { key: 'legal', label: 'Estado legal' },
   { key: 'subdivision', label: 'Subdivisión' },
   { key: 'tags', label: 'Características' },
-];
+] as const;
 
 const Comparar = () => {
   const { compareList: items, removeFromCompare: removeItem, clearCompare: clearAll } = useCompare();
+  const mixedCurrencies = useMemo(() => hasMixedCurrencies(items), [items]);
+  const columns = items.length + 1;
 
-  const rows = useMemo(() => {
-    return COMPARE_ROWS.map(row => ({
-      ...row,
-      values: items.map(listing => {
-        switch (row.key) {
-          case 'price': return formatPrice(listing.price, listing.currency);
-          case 'type': return getListingTypeLabel(listing.type);
-          case 'area': return formatArea(listing.area_m2, listing.area_ha);
-          case 'ppm2': return listing.area_m2 ? formatPrice(Math.round(listing.price / listing.area_m2)) + '/m²' : 'N/A';
-          case 'location': return listing.location;
-          case 'region': return listing.region || 'N/A';
-          case 'zoning': return listing.zoning || 'N/A';
-          case 'legal': return getLegalStatusLabel(listing.legal_status).label;
-          case 'subdivision': return listing.subdivision_eligible ? 'Apto' : 'No apto';
-          case 'tags': return listing.tags.slice(0, 3).join(', ') || 'N/A';
-          default: return '';
-        }
-      }),
-    }));
-  }, [items]);
-
-  if (items.length === 0) {
-    return (
-      <PublicLayout>
-        <div className="container px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Comparador de Terrenos</h1>
-          <p className="text-muted-foreground mb-6">No has agregado propiedades para comparar.</p>
-          <Button asChild>
-            <Link to="/explorar">Explorar propiedades</Link>
-          </Button>
-        </div>
-      </PublicLayout>
-    );
-  }
+  const rows = useMemo(() => COMPARE_ROWS.map(row => ({
+    ...row,
+    values: items.map(listing => {
+      switch (row.key) {
+        case 'price': return formatPrice(listing.price, listing.currency);
+        case 'ppm2': return formatPricePerM2(listing.price, listing.area_m2, listing.currency) ?? 'No informado';
+        case 'type': return getListingTypeLabel(listing.type);
+        case 'area': return formatArea(listing.area_m2, listing.area_ha);
+        case 'location': return listing.location;
+        case 'region': return listing.region || 'No informado';
+        case 'zoning': return listing.zoning || 'No informado';
+        case 'legal': return getLegalStatusLabel(listing.legal_status).label;
+        case 'subdivision': return listing.subdivision_eligible ? 'Apto' : 'No apto';
+        case 'tags': return listing.tags.slice(0, 3).join(', ') || 'No informado';
+      }
+    }),
+  })), [items]);
 
   return (
     <PublicLayout>
-      <div className="container px-4 py-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/explorar"><ArrowLeft className="h-5 w-5" /></Link>
-            </Button>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Comparar Terrenos</h1>
-              <p className="text-sm text-muted-foreground">{items.length} propiedades seleccionadas</p>
-            </div>
+      <section className="container max-w-7xl px-4 py-8 md:py-12" aria-labelledby="compare-title">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0">
+            <Link to="/explorar" className="mb-4 inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground hover:text-primary focus-ring">
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Volver a explorar
+            </Link>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Decisión territorial</p>
+            <h1 id="compare-title" className="mt-2 font-editorial text-3xl font-medium text-foreground sm:text-5xl">Compara terrenos con contexto</h1>
+            <p className="mt-3 text-sm text-muted-foreground">{items.length} de 4 propiedades seleccionadas. Contrasta superficie, ubicación y antecedentes publicados.</p>
           </div>
-          <Button variant="outline" size="sm" onClick={clearAll}>
-            Limpiar todo
-          </Button>
+          {items.length > 0 && <Button variant="outline" onClick={clearAll} className="min-h-11">Limpiar comparación</Button>}
         </div>
 
-        {/* Property Images Row */}
-        <div className="grid gap-4 mb-6" style={{ gridTemplateColumns: `200px repeat(${items.length}, 1fr)` }}>
-          <div />
-          {items.map((listing) => (
-            <Card key={listing.id} className="glass border-border/50 overflow-hidden relative group">
-              <button
-                onClick={() => removeItem(listing.id)}
-                className="absolute top-2 right-2 z-10 p-1 rounded-full bg-background/80 hover:bg-destructive/80 transition-colors"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-              <div className="aspect-[4/3] overflow-hidden">
-                <img
-                  src={listing.images[0] || '/placeholder.svg'}
-                  alt={listing.title}
-                  className="w-full h-full object-cover"
-                />
+        {items.length === 0 ? (
+          <div className="rounded-2xl border border-border bg-card p-8 text-center">
+            <Scale className="mx-auto mb-4 h-10 w-10 text-primary" aria-hidden="true" />
+            <p className="mb-4 text-muted-foreground">Todavía no seleccionaste propiedades. Agrégalas desde el explorador.</p>
+            <Button asChild><Link to="/explorar">Explorar propiedades</Link></Button>
+          </div>
+        ) : (
+          <>
+            {mixedCurrencies && (
+              <div role="note" className="mb-5 rounded-xl border border-border bg-secondary/50 px-4 py-3 text-sm text-foreground">
+                <strong>Monedas distintas (CLP y UF).</strong> Mostramos los importes originales; no convertimos monedas ni declaramos una propiedad más barata sin una tasa verificada.
               </div>
-              <div className="p-3">
-                <Link to={`/propiedad/${listing.id}`} className="text-sm font-semibold text-foreground hover:text-primary line-clamp-2">
-                  {listing.title}
-                </Link>
-                <p className="text-lg font-bold text-primary mt-1">{formatPrice(listing.price, listing.currency)}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {/* Comparison Table */}
-        <Card className="glass border-border/50 overflow-hidden">
-          <Table>
-            <TableBody>
-              {rows.map((row, i) => (
-                <TableRow key={row.key} className={i % 2 === 0 ? 'bg-muted/20' : ''}>
-                  <TableCell className="font-medium text-muted-foreground w-[200px]">{row.label}</TableCell>
-                  {row.values.map((val, j) => (
-                    <TableCell key={j} className="text-foreground font-medium">
-                      {val}
-                    </TableCell>
+            )}
+            <p className="mb-2 text-xs text-muted-foreground md:hidden">Desliza horizontalmente para ver todas las propiedades y sus atributos.</p>
+            <div className="max-w-full overflow-x-auto rounded-2xl border border-border bg-card" role="region" aria-label="Comparación de propiedades, deslizable horizontalmente" tabIndex={0}>
+              <table className="w-full min-w-[700px] border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th scope="col" className="sticky left-0 z-20 w-36 min-w-36 bg-card p-3 text-left align-bottom font-medium text-muted-foreground sm:w-44 sm:min-w-44">Atributo</th>
+                    {items.map(listing => (
+                      <th key={listing.id} scope="col" className="min-w-44 w-52 border-l border-border/50 p-3 text-left align-top">
+                        <div className="relative overflow-hidden rounded-xl border border-border bg-background">
+                          <button type="button" onClick={() => removeItem(listing.id)} aria-label={`Quitar ${listing.title} de la comparación`} className="absolute right-2 top-2 z-10 grid h-9 w-9 place-items-center rounded-full bg-card text-foreground shadow-sm hover:text-destructive">
+                            <X className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                          <img src={listing.images[0] || '/placeholder.svg'} alt={`Imagen de ${listing.title}`} className="h-28 w-full object-cover" loading="lazy" />
+                          <div className="p-3">
+                            <Link className="line-clamp-2 font-medium text-foreground hover:text-primary focus-ring" to={`/propiedad/${listing.id}`}>{listing.title}</Link>
+                            <p className="mt-2 font-semibold text-primary">{formatPrice(listing.price, listing.currency)}</p>
+                          </div>
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, i) => (
+                    <tr key={row.key} className={i % 2 === 0 ? 'bg-muted/20' : ''}>
+                      <th scope="row" className="sticky left-0 z-10 w-36 min-w-36 border-t border-border/50 bg-background p-3 text-left font-medium text-muted-foreground sm:w-44 sm:min-w-44">{row.label}</th>
+                      {row.values.map((value, j) => (
+                        <td key={items[j].id} className="min-w-44 border-l border-t border-border/50 p-3 font-medium text-foreground">{value}</td>
+                      ))}
+                    </tr>
                   ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
-      </div>
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">Datos según cada publicación. Superficies, precios y antecedentes legales deben confirmarse con el propietario antes de reservar. El comparador no constituye tasación ni oferta contractual.</p>
+          </>
+        )}
+      </section>
     </PublicLayout>
   );
 };
