@@ -323,7 +323,7 @@ const Explorar = () => {
     return (
       <div className="theme-rural min-h-screen bg-background flex flex-col pb-16">
         <StickyHeader />
-        <div className="pt-header">{errorBanner}{currencySwitch}</div>
+        <div id="contenido-principal" className="pt-header">{errorBanner}{currencySwitch}</div>
 
         <MobileExploreView
           mode={mobileViewMode}
@@ -466,7 +466,7 @@ const Explorar = () => {
 
 
       {/* Split view: List (380px fixed) + Map (rest) */}
-      <div className="flex-1 flex pt-header min-h-0">
+      <div id="contenido-principal" className="flex-1 flex pt-header min-h-0">
         {/* Left panel – scrollable list */}
         <div className="w-[420px] min-w-[380px] flex-shrink-0 border-r border-border/30 flex flex-col min-h-0">
           {errorBanner}
