@@ -679,9 +679,9 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                   queryClient.invalidateQueries({ queryKey: ['project-lots', id] });
                   queryClient.invalidateQueries({ queryKey: ['project', id] });
                 }}
-                readOnly={!isOwner}
-                showAdminControls={isOwner}
-                tourMode={!isOwner}
+                readOnly={!(isOwner && mapEditMode)}
+                showAdminControls={isOwner && mapEditMode}
+                tourMode={!(isOwner && mapEditMode)}
                 onOpenCompare={
                   ((project as any).plan_images?.length > 0)
                     ? () => setShowCompare(true)
