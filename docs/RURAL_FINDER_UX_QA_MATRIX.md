@@ -104,6 +104,26 @@ ni las comprobaciones de servidor mediante credenciales de testing asignadas.
 No usar cuentas reales, copiar tokens ni modificar datos comerciales durante QA.
 
 
+## Panel comercial móvil y accesos rápidos
+
+Esta fase mejora **la interfaz de navegación** sin reemplazar los controles de
+Supabase. Unit tests cubren la selección de un módulo dentro del drawer y el
+filtrado de accesos rápidos basado en contexto, rol, capability y feature.
+
+| Escenario de QA manual | Resultado esperado |
+| --- | --- |
+| Broker en móvil: menú → Leads / Visitas | Se cierra el drawer y se abre la ruta seleccionada |
+| Inmobiliaria en móvil: menú → Proyectos / Inventario | La página activa está visible dentro de su categoría |
+| Mismo panel en escritorio | Se conserva colapso y expansión del sidebar, sin cerrar al hacer clic |
+| Cambio Empresa ↔ Broker ↔ Plataforma (si permitido) | Cambia el menú y desaparecen accesos no admitidos en el contexto activo |
+| Cuenta sin feature Analytics / capability CRM | No aparece un acceso rápido que lleve a un muro de permisos |
+| Navegación móvil 320, 390 px | Header y drawer no se superponen; enlaces y botones son pulsables |
+| CRM, visitas, reservas y ventas con cuenta de test | Datos y mutaciones solo sobre proyectos autorizados, estados vacíos y fallos claros |
+
+**Pendiente:** completar el recorrido E2E autenticado con cuentas de prueba
+legítimas por rol y auditar RLS en Supabase. Las pruebas del shell y el
+filtro de navegación son frontend; no prueban permisos de filas en producción.
+
 ## Integridad comercial y estados de datos
 
 Se diferencia el error real de lectura de un conjunto verdaderamente vacío,

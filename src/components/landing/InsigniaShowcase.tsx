@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, MapPin, Map as MapIcon } from 'lucide-react';
 import { useShowcaseProjects } from './CinematicShowcaseHero';
-import { projectLandingPath } from '@/lib/landing/paths';
 
 const clp = (v?: number) => (v ? `${v.toLocaleString('es-CL')} CLP` : 'Precio a consultar');
 
@@ -29,7 +28,7 @@ const InsigniaShowcase = () => {
               className={i === 0 ? 'lg:col-span-2' : ''}
             >
               <Link
-                to={projectLandingPath(p)}
+                to={`/proyecto/${encodeURIComponent(p.id)}`}
                 className={`brand-border group relative block overflow-hidden rounded-3xl bg-card ${i === 0 ? 'aspect-[16/9] md:aspect-[21/9]' : 'aspect-[16/10]'}`}
               >
                 {p.image ? (

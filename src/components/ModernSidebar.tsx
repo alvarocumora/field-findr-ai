@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -17,6 +17,8 @@ import { navIcon } from '@/routes/navIcons';
 interface ModernSidebarProps {
   collapsed?: boolean;
   onToggle?: () => void;
+  mobile?: boolean;
+  onNavigate?: () => void;
 }
 
 /** Accesos comunes a la parte pública, siempre al pie del menú. */
@@ -28,7 +30,7 @@ const commonLinks: NavLink[] = [
 
 const commonIcons = { '/explorar': MapPin, '/tools': Sparkles, '/perfil': UserCircle } as const;
 
-const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
+const ModernSidebar = ({ collapsed = false, onToggle, mobile = false, onNavigate }: ModernSidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const counts = useSidebarCounts();
@@ -73,6 +75,19 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     return open;
   });
 
+  // A route change must reveal its navigation group without closing other groups.
+  useEffect(() => {
+    setOpenGroups((previous) => {
+      const next = new Set(previous);
+      activeGroups.forEach((group) => {
+        if (group.items.some((item) => item.path === location.pathname)) {
+          next.add(`${activeArea}:${group.group}`);
+        }
+      });
+      return next.size === previous.size ? previous : next;
+    });
+  }, [location.pathname, activeArea, activeGroups]);
+
   const toggleGroup = (key: string) =>
     setOpenGroups((prev) => {
       const next = new Set(prev);
@@ -95,6 +110,8 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
     return (
       <Link
         to={item.path}
+        onClick={onNavigate}
+        aria-current={isActive(item.path) ? 'page' : undefined}
         className={cn(
           'relative flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150',
           isActive(item.path)
@@ -187,26 +204,27 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border transition-all duration-200 z-40',
-        collapsed ? 'w-16' : 'w-60',
+        'h-full bg-sidebar border-r border-sidebar-border transition-all duration-200',
+        mobile ? 'relative w-full' : 'fixed left-0 top-0 z-40',
+        !mobile && (collapsed ? 'w-16' : 'w-60'),
       )}
     >
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center justify-between p-3 mb-2">
           {!collapsed ? (
-            <Link to="/">
+            <Link to="/" onClick={onNavigate}>
               <Logo size="sm" />
             </Link>
           ) : (
-            <Link to="/" className="mx-auto">
+            <Link to="/" className="mx-auto" onClick={onNavigate}>
               <LogoIcon size="sm" />
             </Link>
           )}
         </div>
 
         {/* Toggle */}
-        <div className="px-3 mb-2">
+        {!mobile && <div className="px-3 mb-2">
           <Button
             variant="ghost"
             size="sm"
@@ -216,7 +234,7 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
-        </div>
+        </div>}
 
         {/* Contexto activo: un solo menú por rol, con selector si hay varios */}
         {!collapsed && (isAdmin || isAgent) && (
@@ -242,6 +260,7 @@ const ModernSidebar = ({ collapsed = false, onToggle }: ModernSidebarProps) => {
                     onClick={() => {
                       setContext(option.id);
                       navigate(option.home);
+                      onNavigate?.();
                     }}
                     className={cn(
                       'rounded-md px-2 py-1 text-[11px] font-medium transition-colors',

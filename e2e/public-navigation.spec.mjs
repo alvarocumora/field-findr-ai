@@ -140,3 +140,17 @@ test('rutas privadas sin sesión regresan a autenticación sin perder contexto',
       .toBe(destination);
   }
 });
+
+test('rutas comerciales requieren sesión y retienen filtros del módulo elegido', async ({ page }) => {
+  const targets = [
+    '/asesor/leads?status=nuevo#tabla',
+    '/asesor/projects?view=map#inventario',
+    '/asesor/visitas?tab=upcoming#agenda',
+    '/asesor/reservations?status=pending_payment#reservas',
+  ];
+  for (const target of targets) {
+    await page.goto(target);
+    await expect(page).toHaveURL(/\/auth\?redirect=/, { timeout: 20_000 });
+    expect(new URL(page.url()).searchParams.get('redirect')).toBe(target);
+  }
+});

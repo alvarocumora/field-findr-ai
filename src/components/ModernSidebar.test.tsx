@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 // --- Mockable hooks ---
@@ -92,6 +92,32 @@ describe('ModernSidebar — segmentación por tipo de cuenta', () => {
     mockPanel.planIsAgency = true;
     renderSidebar();
     expect(screen.getByText('INMOBILIARIA')).toBeInTheDocument();
+  });
+
+  it('drawer móvil: cierra el menú tras elegir un módulo y no ofrece colapsar barra de escritorio', () => {
+    const onNavigate = vi.fn();
+    const { container } = render(
+      <MemoryRouter initialEntries={['/asesor/leads']}>
+        <ModernSidebar mobile onNavigate={onNavigate} />
+      </MemoryRouter>,
+    );
+    expect(container.querySelector('aside')?.className).toContain('relative w-full');
+    expect(screen.queryByRole('button', { name: 'Colapsar menú' })).not.toBeInTheDocument();
+    const leadLink = screen.getByRole('link', { name: 'Leads' });
+    expect(leadLink).toHaveAttribute('aria-current', 'page');
+    fireEvent.click(leadLink);
+    expect(onNavigate).toHaveBeenCalledTimes(1);
+  });
+
+  it('barra de escritorio: sigue ofreciendo el botón de colapsar de forma independiente', () => {
+    const onToggle = vi.fn();
+    render(
+      <MemoryRouter initialEntries={['/asesor/leads']}>
+        <ModernSidebar onToggle={onToggle} />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Colapsar menú' }));
+    expect(onToggle).toHaveBeenCalledTimes(1);
   });
 
   it('admin: muestra la sección Administración con sus grupos actuales', () => {
