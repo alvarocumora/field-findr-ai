@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
+import { resolveSafeAuthDestination } from '@/lib/access/authReturn';
 import { lovable } from '@/integrations/lovable/index';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -37,7 +38,7 @@ const Auth = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
 
-  const redirectParam = searchParams.get('redirect');
+  const redirectParam = resolveSafeAuthDestination(searchParams.get('redirect'));
   const defaultRole = searchParams.get('role');
 
   useEffect(() => {
@@ -65,7 +66,11 @@ const Auth = () => {
     setIsSubmitting(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        // Keep the original internal destination through the external OAuth round-trip.
+        // Invalid redirects are discarded before the callback returns here.
+        redirect_uri: redirectParam
+          ? `${window.location.origin}/auth?redirect=${encodeURIComponent(redirectParam)}`
+          : `${window.location.origin}/auth`,
       });
       if (result.error) {
         toast.error('Error al iniciar con Google');
