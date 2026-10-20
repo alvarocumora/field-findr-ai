@@ -16,6 +16,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '@/components/Layout';
+import { projectLandingPath } from '@/lib/landing/paths';
 import ActivityTimeline from '@/components/buyer/ActivityTimeline';
 import PriceAlertCard from '@/components/buyer/PriceAlertCard';
 
@@ -49,7 +50,7 @@ const BuyerHome = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from('projects')
-        .select('id, name, location, region, country, images, available_lots, total_lots')
+        .select('id, name, slug, location, region, country, images')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(6);
@@ -207,7 +208,7 @@ const BuyerHome = () => {
             ) : (
               <div className="grid sm:grid-cols-2 gap-4">
                 {featuredProjects?.map((project: any) => (
-                  <Link key={project.id} to={`/proyecto/${project.id}`}>
+                  <Link key={project.id} to={projectLandingPath(project)}>
                     <Card className="border-border/40 hover:border-primary/30 transition-all hover:shadow-md cursor-pointer overflow-hidden group">
                       {project.images?.[0] && (
                         <div className="h-28 overflow-hidden">
@@ -226,7 +227,7 @@ const BuyerHome = () => {
                         </p>
                         <div className="flex items-center justify-between mt-2">
                           <Badge variant="secondary" className="text-[10px]">
-                            {project.available_lots || 0} disponibles
+                            Explorar proyecto
                           </Badge>
                         </div>
                       </CardContent>
