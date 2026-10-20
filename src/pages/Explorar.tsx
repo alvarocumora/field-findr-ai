@@ -151,6 +151,7 @@ const Explorar = () => {
     listings,
     totalCount,
     isLoading,
+    isFetching,
     isError,
     refetch,
     hasMore,
@@ -537,6 +538,7 @@ const Explorar = () => {
             onListingHover={setHoveredListing}
             onListingClick={handleListingClick}
             onBoundsSearch={handleBoundsSearch}
+            isSearching={isFetching}
             onPolygonSearch={setDrawnPolygon}
           />
           {drawnPolygon && !swipeDeckIds && (
