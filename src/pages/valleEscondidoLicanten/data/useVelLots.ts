@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { VEL_LOTS, type VelLot, type VelLotStatus } from './lots';
 import { VEL_PROJECT } from './project';
@@ -42,7 +42,6 @@ const toStatus = (s: string | null | undefined): VelLotStatus | null => {
 };
 
 export const useVelLots = () => {
-  const queryClient = useQueryClient();
   const { data: live, isLoading, isError, refetch } = useQuery({
     queryKey: QUERY_KEY,
     staleTime: 15_000,
@@ -57,27 +56,13 @@ export const useVelLots = () => {
     },
   });
 
-  useEffect(() => {
-    const channel = supabase
-      .channel(`vel-lots-${VEL_PROJECT.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'lots',
-          filter: `project_id=eq.${VEL_PROJECT.id}`,
-        },
-        () => {
-          void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
+  // Several sections on the same landing consume this hook. Attaching a
+  // Realtime channel with the same topic per consumer caused Supabase to throw
+  // "cannot add postgres_changes callbacks ... after subscribe" during mount,
+  // taking down the entire public project page. React Query shares the RPC
+  // result across all consumers and polls every 20 s, so no per-hook channel
+  // is needed. Any future Realtime support must be owned by ONE component
+  // or by a reference-counted singleton outside this shared hook.
 
   // The static KMZ supplies parcel geometry only. Never treat its commercial
   // statuses or prices as live inventory when the RPC is incomplete or fails.
