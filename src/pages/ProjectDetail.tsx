@@ -165,8 +165,14 @@ const ProjectGallery = ({ images, isOwner }: { images: string[]; isOwner: boolea
 const isValidUUID = (val?: string) =>
   !!val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
 
-const ProjectDetail = () => {
-  const { id } = useParams<{ id: string }>();
+/**
+ * Experiencia única de proyecto: /proyecto/:id y /p/:slug (vía ProjectLanding)
+ * montan esta misma ficha dentro del shell público, con tour 360, masterplan,
+ * cotizador y reserva. No existen landings paralelas por proyecto.
+ */
+const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
+  const params = useParams<{ id: string }>();
+  const id = projectId ?? params.id;
   const validId = isValidUUID(id);
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -287,6 +293,17 @@ const ProjectDetail = () => {
     },
     enabled: !!project?.user_id,
   });
+
+  // Deep link ?lote=<id|número> abre directamente la ficha del lote.
+  const sharedLot = searchParamsTab.get('lote');
+  const openedSharedLot = useRef<string | null>(null);
+  useEffect(() => {
+    if (!sharedLot || openedSharedLot.current === sharedLot || lots.length === 0) return;
+    const match = lots.find((l: any) => l.id === sharedLot || String(l.lot_number) === sharedLot);
+    if (!match) return;
+    openedSharedLot.current = sharedLot;
+    setDetailLot(match);
+  }, [sharedLot, lots]);
 
   const sortedLots = useMemo(() => {
     return [...lots].sort((a, b) => {

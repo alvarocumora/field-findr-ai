@@ -1,4 +1,4 @@
-import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
+import { type ComponentType, type LazyExoticComponent } from 'react';
 
 /**
  * Registro único de landings de proyecto.
@@ -13,14 +13,8 @@ import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
  * congeladas por SEO, pero ya no declaran páginas sueltas: entran por el
  * mismo motor con el slug fijado.
  */
-export const bespokeLandings: Record<string, LazyExoticComponent<ComponentType>> = {
-  'explora-park': lazy(() => import('@/pages/exploraPark/ExploraParkLanding')),
-  huellelhue: lazy(() => import('@/pages/huellelhue/HuellelhueLanding')),
-  'playa-alvaro': lazy(() => import('@/pages/playaAlvaro/PlayaAlvaroLanding')),
-  'forestal-valle-escondido': lazy(() => import('@/pages/forestal/ForestalLanding')),
-  'valle-escondido-licanten': lazy(() => import('@/pages/valleEscondidoLicanten/VelLanding')),
-  'parcelas-caone-hualane': lazy(() => import('@/pages/caone/CaoneLanding')),
-};
+/** Landings a medida retiradas: todo proyecto usa la experiencia única. */
+export const bespokeLandings: Record<string, LazyExoticComponent<ComponentType>> = {};
 
 /** URL canónica pública de cada landing (las históricas mandan por SEO). */
 export { landingCanonicalPath, canonicalPathForSlug } from './paths';
