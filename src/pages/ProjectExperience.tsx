@@ -333,6 +333,9 @@ const ProjectExperience = () => {
             <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
               {inventoryReady ? `${availableLots.length} disponibles` : 'Stock por confirmar'}
             </Badge>
+            <Button asChild variant="outline" size="sm" className="border-white/20 bg-white/5 text-white hover:bg-white/10">
+              <Link to={visitUrl}><CalendarDays className="mr-1.5 h-4 w-4" />Solicitar visita</Link>
+            </Button>
           </div>
         </div>
       </header>
@@ -414,6 +417,11 @@ const ProjectExperience = () => {
                     <Bookmark className="mr-1.5 h-4 w-4" /> Reservar
                   </Button>
                 )}
+                <Button asChild variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
+                  <Link to={`${visitUrl}&lot_id=${encodeURIComponent(selectedLot.id)}&lot_number=${encodeURIComponent(selectedLot.lot_number)}`}>
+                    <CalendarDays className="mr-1.5 h-4 w-4" /> Solicitar visita
+                  </Link>
+                </Button>
               </div>
             </div>
           </section>
@@ -506,6 +514,8 @@ const ProjectExperience = () => {
                   <div className="flex min-h-[340px] items-center justify-center px-5 text-center text-sm text-white/60">No hay inventario verificado para dibujar el masterplan. Puedes reintentar arriba.</div>
                 ) : lotsLoading ? (
                   <div className="flex h-[68vh] items-center justify-center text-sm text-white/40">Cargando masterplan...</div>
+                ) : verifiedLots.length === 0 ? (
+                  <div className="flex min-h-[340px] items-center justify-center px-5 text-center text-sm text-white/60">Este proyecto todavía no tiene parcelas publicadas. Consulta al equipo comercial para conocer próximas disponibilidades.</div>
                 ) : (
                   <div className={`transition-all duration-700 ${focusTransition === 'departing' ? 'scale-[0.985] opacity-45' : focusTransition === 'arriving' ? 'scale-[1.015] opacity-90' : 'scale-100 opacity-100'}`}>
                     <LotMapView
@@ -533,6 +543,8 @@ const ProjectExperience = () => {
                 <div className="flex min-h-[320px] items-center justify-center text-center text-sm text-white/60">Inventario no disponible. Usa «Reintentar inventario» para verificar las parcelas.</div>
               ) : lotsLoading ? (
                 <div className="flex min-h-[420px] items-center justify-center text-sm text-white/40">Cargando inventario...</div>
+              ) : verifiedLots.length === 0 ? (
+                <div className="flex min-h-[320px] items-center justify-center text-center text-sm text-white/60">No hay parcelas publicadas por el momento. Puedes solicitar una visita o consultar por próximas etapas.</div>
               ) : (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {sortedLots.map((lot: any, index: number) => (
