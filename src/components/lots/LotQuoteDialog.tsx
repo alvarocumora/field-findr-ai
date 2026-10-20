@@ -13,6 +13,7 @@ import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { FileText, FileDown, MessageCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getShareUrl } from '@/lib/publicUrls';
 import { generateQuotePDF, type QuotePDFData } from '@/lib/pdfGenerator';
 import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
 import { parseLotFeatures, type Lot } from '@/hooks/useLots';
@@ -89,7 +90,7 @@ const LotQuoteDialog = ({
     return { price, deposit, downPayment, financedAmount, monthly, totalPayments, totalInterest, totalCost, rate };
   }, [salePrice, downPaymentPct, termMonths, monthlyRate, reservationDeposit, lot]);
 
-  const handleQuotePDF = () => {
+  const handleQuotePDF = async () => {
     if (!lot || !calc) return;
     setGenerating(true);
     try {
@@ -119,7 +120,7 @@ const LotQuoteDialog = ({
         reservationAmount: calc.deposit > 0 ? calc.deposit : undefined,
         sellerContact: user?.email ?? undefined,
       };
-      generateQuotePDF(data);
+      await generateQuotePDF({ ...data, verifyUrl: lot.project_id ? getShareUrl(`/proyecto/${lot.project_id}`, { lote: lot.lot_number }) : undefined });
       toast.success('Cotización descargada');
     } catch {
       toast.error('Error al generar la cotización');
