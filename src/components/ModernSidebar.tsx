@@ -79,15 +79,14 @@ const ModernSidebar = ({ collapsed = false, onToggle, mobile = false, onNavigate
   useEffect(() => {
     setOpenGroups((previous) => {
       const next = new Set(previous);
-      const groups = activeArea === 'admin' ? adminGroups : agentGroups;
-      groups.forEach((group) => {
+      activeGroups.forEach((group) => {
         if (group.items.some((item) => item.path === location.pathname)) {
           next.add(`${activeArea}:${group.group}`);
         }
       });
       return next.size === previous.size ? previous : next;
     });
-  }, [location.pathname, activeArea]);
+  }, [location.pathname, activeArea, activeGroups]);
 
   const toggleGroup = (key: string) =>
     setOpenGroups((prev) => {
