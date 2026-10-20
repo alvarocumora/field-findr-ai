@@ -43,7 +43,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 };
 
 const ProjectsManagement = () => {
-  const { projects, isLoading, stats, createProject, updateProject, deleteProject, refetch } = useProjects();
+  const { projects, isLoading, error, stats, createProject, updateProject, deleteProject, refetch } = useProjects();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
