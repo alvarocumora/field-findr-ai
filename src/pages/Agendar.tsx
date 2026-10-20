@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CalendarCheck, CheckCircle2, Send, Video } from 'lucide-react';
+import { CalendarCheck, CheckCircle2, MapPin, Send, Video } from 'lucide-react';
 import { toast } from 'sonner';
 
 import PublicLayout from '@/components/layouts/PublicLayout';
@@ -38,7 +38,12 @@ const Agendar = () => {
     : '';
   const createMeeting = useCreateMeetingRequest();
   const [submitted, setSubmitted] = useState(false);
-  const [meetingType, setMeetingType] = useState<MeetingType>(lotId ? 'visita_terreno' : 'reunion_campo');
+  const requestedType = searchParams.get('meeting_type');
+  const initialType: MeetingType = lotId || requestedType === 'visita_terreno'
+    ? 'visita_terreno'
+    : requestedType === 'reunion_comercial' ? 'reunion_comercial' : 'reunion_campo';
+  const [meetingType, setMeetingType] = useState<MeetingType>(initialType);
+  const isSiteVisit = meetingType === 'visita_terreno';
   const [preferredBlock, setPreferredBlock] = useState<MeetingBlock>('manana');
   const [form, setForm] = useState({
     name: '',
@@ -79,14 +84,18 @@ const Agendar = () => {
 
   return (
     <PublicLayout>
+      <div className="theme-rural bg-background text-foreground">
       <section className="border-b border-border/50 bg-gradient-to-b from-primary/10 via-background to-background">
         <div className="container py-12 md:py-16">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge variant="secondary" className="mb-4">Agenda tu reunión</Badge>
-            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">Conversemos por videollamada</h1>
+            <Badge variant="secondary" className="mb-4">{isSiteVisit ? 'Coordinar visita' : 'Agenda tu reunión'}</Badge>
+            <h1 className="font-editorial text-4xl font-medium tracking-tight md:text-5xl">
+              {isSiteVisit ? 'Solicita una visita a terreno' : 'Conversemos por videollamada'}
+            </h1>
             <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-              Elige el día y bloque que te acomode. Te confirmamos por WhatsApp con el link
-              de la videollamada (Google Meet o Zoom).
+              {isSiteVisit
+                ? 'Indícanos qué terreno o proyecto quieres conocer y la fecha que te acomoda. Confirmaremos contigo el horario y el punto de encuentro.'
+                : 'Elige el día y bloque que te acomode. Te contactaremos para confirmar la disponibilidad y el enlace de la videollamada.'}
             </p>
           </div>
         </div>
@@ -97,15 +106,15 @@ const Agendar = () => {
           <Card className="h-fit">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Video className="h-5 w-5 text-primary" />
+                {isSiteVisit ? <MapPin className="h-5 w-5 text-primary" /> : <Video className="h-5 w-5 text-primary" />}
                 Cómo funciona
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground">
               <ol className="list-decimal space-y-2 pl-5">
                 <li>Nos cuentas quién eres y qué día te acomoda.</li>
-                <li>Te confirmamos el horario por WhatsApp con el link de la videollamada.</li>
-                <li>Nos juntamos 30–45 minutos y revisamos tu caso con números sobre la mesa.</li>
+                <li>{isSiteVisit ? 'Confirmamos por WhatsApp la fecha y el punto de encuentro.' : 'Te confirmamos el horario y el enlace de la videollamada.'}</li>
+                <li>{isSiteVisit ? 'Nos reunimos en terreno y revisamos las parcelas de tu interés.' : 'Conversamos sobre tu proyecto, necesidades y próximos pasos.'}</li>
               </ol>
               <div className="rounded-lg bg-muted/50 p-4">
                 <p className="font-medium text-foreground">Si tienes un campo</p>
@@ -126,7 +135,7 @@ const Agendar = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>{submitted ? 'Solicitud enviada' : 'Reserva tu horario'}</CardTitle>
+              <CardTitle>{submitted ? 'Solicitud enviada' : 'Solicita una fecha y bloque'}</CardTitle>
             </CardHeader>
             <CardContent>
               {lotId && !submitted && (
@@ -142,8 +151,9 @@ const Agendar = () => {
                   <CheckCircle2 className="mx-auto mb-4 h-10 w-10 text-primary" />
                   <p className="font-semibold text-foreground">Recibimos tu solicitud.</p>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Te escribiremos por WhatsApp para confirmar el horario y enviarte el link
-                    de la videollamada.
+                    {isSiteVisit
+                      ? 'Te contactaremos para confirmar la fecha, el horario y el punto de encuentro.'
+                      : 'Te contactaremos para confirmar el horario y enviarte el enlace de la videollamada.'}
                   </p>
                   <Button asChild className="mt-6">
                     <Link to="/">Volver al inicio</Link>
@@ -152,7 +162,7 @@ const Agendar = () => {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Motivo de la reunión</Label>
+                    <Label>Motivo de la solicitud</Label>
                     <div className="grid gap-2 sm:grid-cols-3">
                       {(Object.keys(MEETING_TYPE_LABELS) as MeetingType[]).map((type) => (
                         <Button
@@ -214,25 +224,27 @@ const Agendar = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="context">Cuéntanos de tu caso</Label>
+                    <Label htmlFor="context">{isSiteVisit && !projectId ? '¿Qué proyecto o zona quieres visitar? *' : 'Cuéntanos de tu caso'}</Label>
                     <Textarea
                       id="context"
                       value={form.context}
+                      required={isSiteVisit && !projectId}
                       onChange={(event) => set('context', event.target.value)}
                       placeholder={meetingType === 'reunion_campo'
                         ? 'Ej: tengo un campo de 20 hectáreas en la región del Maule...'
+                        : isSiteVisit ? 'Ej: quiero visitar Valle Escondido Licantén o conocer parcelas cerca de Hualañé...'
                         : 'Ej: busco una parcela de 5.000 m² cerca de...'}
                     />
                   </div>
 
                   <Button type="submit" className="w-full" disabled={createMeeting.isPending}>
-                    {createMeeting.isPending ? 'Enviando...' : 'Solicitar reunión'}
+                    {createMeeting.isPending ? 'Enviando...' : isSiteVisit ? 'Solicitar visita' : 'Solicitar reunión'}
                     <Send className="ml-2 h-4 w-4" />
                   </Button>
 
                   <p className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                     <CalendarCheck className="h-3.5 w-3.5" />
-                    Confirmamos dentro del mismo día hábil.
+                    Te contactaremos para coordinar la disponibilidad.
                   </p>
                 </form>
               )}
@@ -240,6 +252,7 @@ const Agendar = () => {
           </Card>
         </div>
       </section>
+      </div>
     </PublicLayout>
   );
 };
