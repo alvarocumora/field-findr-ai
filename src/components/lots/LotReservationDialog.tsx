@@ -26,6 +26,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { lovable } from '@/integrations/lovable/index';
 import { saveReservationDraft, readReservationDraft, clearReservationDraft } from '@/lib/reservationDraft';
 import { toast } from 'sonner';
+import { canReservePublicLot, formatPublicLotPrice } from '@/lib/lots/publicLotCommercial';
 import { Maximize2, DollarSign, Clock, Send, Loader2, CreditCard, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -57,14 +58,7 @@ interface LotReservationDialogProps {
   reservationAmount?: number;
 }
 
-const formatPrice = (price: number | null) => {
-  if (!price) return 'Consultar';
-  return new Intl.NumberFormat('es-CL', {
-    style: 'currency',
-    currency: 'CLP',
-    maximumFractionDigits: 0
-  }).format(price);
-};
+const formatPrice = formatPublicLotPrice;
 
 export const LotReservationDialog = ({
   lot,
@@ -113,7 +107,10 @@ export const LotReservationDialog = ({
   }, [lot, form]);
 
   const submitReservation = async (data: ReservationFormData) => {
-    if (!lot) return;
+    if (!canReservePublicLot(lot)) {
+      toast.error('No se puede reservar una parcela sin disponibilidad y precio confirmado.');
+      return;
+    }
 
     let result;
     try {
@@ -197,7 +194,7 @@ export const LotReservationDialog = ({
     }
   };
 
-  if (!lot) return null;
+  if (!lot || !canReservePublicLot(lot)) return null;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
