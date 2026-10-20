@@ -34,6 +34,7 @@ import { useLots } from '@/hooks/useLots';
 import { useAuth } from '@/hooks/useAuth';
 import { useWorkspaceScope } from '@/hooks/useWorkspaceScope';
 import { cn } from '@/lib/utils';
+import WorkspaceLoadError from '@/components/dashboard/WorkspaceLoadError';
 
 const emptyForm = {
   visitor_name: '', visitor_email: '', visitor_phone: '', date: '', time: '',
@@ -53,7 +54,7 @@ const toLocalDateTimeInput = (iso: string) => {
 const VisitsManager = () => {
   const { user } = useAuth();
   const { projectId } = useWorkspaceScope();
-  const { visits, isLoading, createVisit, updateVisit } = useVisits(projectId);
+  const { visits, isLoading, error, refetch, createVisit, updateVisit } = useVisits(projectId);
   const { leads } = useLeads(projectId);
   const { projects } = useProjects();
   const { lots } = useLots(projectId);
@@ -180,6 +181,8 @@ const VisitsManager = () => {
       </div>
     );
   };
+
+  if (error) return <WorkspaceLoadError title="No pudimos cargar las visitas" description="La agenda comercial no se pudo verificar. Un fallo de consulta no significa que no haya visitas programadas." onRetry={() => refetch()} />;
 
   return (
     <div className="container mx-auto space-y-6 p-4 md:p-6">

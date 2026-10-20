@@ -24,6 +24,7 @@ import {
 import { differenceInMinutes, format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
+import WorkspaceLoadError from '@/components/dashboard/WorkspaceLoadError';
 
 type ReservationStatus = 'pending_payment' | 'paid' | 'expired' | 'cancelled' | 'converted';
 
@@ -59,7 +60,7 @@ const ReservationsManager = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const { data: reservations = [], isLoading } = useQuery({
+  const { data: reservations = [], isLoading, error, refetch } = useQuery({
     queryKey: ['admin-reservations', user?.id, projectId ?? 'all'],
     queryFn: async () => {
       if (!user) return [];
@@ -162,6 +163,8 @@ const ReservationsManager = () => {
       .filter((r: any) => r.status === 'paid')
       .reduce((sum: number, r: any) => sum + (r.reservation_amount || 0), 0),
   };
+
+  if (error) return <WorkspaceLoadError title="No pudimos cargar las reservas" description="No se pudo verificar el estado de pagos, vencimientos ni reservas. Puedes reintentar sin cambiar ningún dato." onRetry={() => refetch()} />;
 
   return (
     <div className="space-y-6">
