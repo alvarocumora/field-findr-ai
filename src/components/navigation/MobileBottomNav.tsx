@@ -42,26 +42,31 @@ const MobileBottomNav = () => {
 
   return (
     <nav
+      aria-label="Navegación móvil principal"
       className="fixed bottom-0 left-0 right-0 md:hidden bg-background/95 backdrop-blur-lg border-t border-border/50 safe-area-bottom"
       style={{ zIndex: 'var(--z-header)' }}
     >
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
-          const active = isActive(item.path);
+          // Search opens a tool inside /explorar, it is not a separate page.
+          // Never highlight both "Explorar" and "Buscar" at the same time.
+          const active = !item.isCenter && isActive(item.path);
           const Icon = item.icon;
 
           if (item.isCenter) {
             return (
               <button
                 key={item.path}
+                type="button"
                 onClick={() => handleNav(item)}
-                className="relative -mt-6 flex flex-col items-center"
+                aria-label="Buscar terrenos"
+                className="relative -mt-6 flex min-h-11 min-w-11 flex-col items-center"
               >
                 <motion.div
                   whileTap={{ scale: 0.9 }}
                   className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30"
                 >
-                  <Icon className="h-6 w-6 text-primary-foreground" />
+                  <Icon className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
                 </motion.div>
                 <span className="text-[10px] mt-1 text-muted-foreground">{item.label}</span>
               </button>
@@ -71,11 +76,14 @@ const MobileBottomNav = () => {
           return (
             <button
               key={item.path}
+              type="button"
               onClick={() => handleNav(item)}
-              className="flex flex-col items-center gap-0.5 py-1 px-3 relative"
+              aria-label={item.label}
+              aria-current={active ? 'page' : undefined}
+              className="relative flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 px-2 py-1"
             >
               <motion.div whileTap={{ scale: 0.85 }}>
-                <Icon className={cn(
+                <Icon aria-hidden="true" className={cn(
                   "h-5 w-5 transition-colors",
                   active ? "text-primary" : "text-muted-foreground"
                 )} />
