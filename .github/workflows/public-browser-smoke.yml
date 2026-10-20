@@ -1,0 +1,70 @@
+name: Public browser smoke
+
+on:
+  pull_request:
+    paths:
+      - 'src/pages/**'
+      - 'src/components/landing/**'
+      - 'src/components/navigation/**'
+      - 'src/components/layouts/PublicLayout.tsx'
+      - 'src/components/FooterSection.tsx'
+      - 'src/routes/**'
+      - 'src/lib/landing/**'
+      - 'e2e/**'
+      - '.github/workflows/public-browser-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  chromium:
+    name: Chromium public navigation (320 / 390 / 1440)
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Bun for existing prebuild scripts
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install app dependencies
+        run: npm ci --no-audit --no-fund
+
+      # Browser QA is isolated from package-lock and the runtime application.
+      # The smoke suite is plain JS; app TypeScript and Vitest are handled by CI.
+      - name: Install pinned Playwright test runner
+        run: npm install --no-save --package-lock=false --ignore-scripts @playwright/test@1.56.1
+
+      - name: Install Chromium and Linux dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Test real browser navigation and graceful fallbacks
+        run: npx playwright test --config=e2e/playwright.config.mjs
+
+      - name: Upload browser failures for debugging
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-browser-smoke-${{ github.sha }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
