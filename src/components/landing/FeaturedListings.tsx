@@ -108,7 +108,7 @@ const FeaturedListings = () => {
               <ProjectCommercialCard project={project} />
               <div className="grid grid-cols-2 gap-2">
                 <Button asChild size="sm" variant="secondary">
-                  <Link to={`/proyecto/${project.id}/experiencia`}><Box className="mr-1.5 h-4 w-4" />Masterplan 3D</Link>
+                  <Link to={`/proyecto/${project.id}?tab=map`}><Box className="mr-1.5 h-4 w-4" />Masterplan 3D</Link>
                 </Button>
                 <Button asChild size="sm" variant="outline">
                   <Link to={`/proyecto/${project.id}`}><MapIcon className="mr-1.5 h-4 w-4" />Ver parcelas</Link>
