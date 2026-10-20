@@ -1,6 +1,5 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
-import { drawPdfFooter } from './pdfBrandHeader';
 
 interface QuotePDFData {
   projectName: string;
@@ -196,7 +195,6 @@ export const generateQuotePDF = async (data: QuotePDFData): Promise<jsPDF> => {
   doc.setFont('helvetica', 'italic'); doc.setFontSize(7.6); doc.setTextColor(...MOSS);
   doc.text(doc.splitTextToSize(QUOTE_DISCLAIMER, W - 2 * M), M, y);
 
-  try { drawPdfFooter(doc); } catch { /* footer is decorative */ }
 
   doc.save(`cotizacion-lote-${data.lotNumber.toLowerCase().replace(/\s+/g, '-')}-${quoteNumber}.pdf`);
   return doc;
