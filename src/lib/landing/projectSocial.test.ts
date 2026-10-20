@@ -22,7 +22,9 @@ describe('project sharing', () => {
     ]);
     expect(social.description).toContain('2 parcelas disponibles');
     expect(social.description).toContain('19.990.000');
-    expect(social.image).toBe('https://ofertaterrenos.com/projects/paisaje.jpg');
+    // Curated 1200x630 card wins so WhatsApp shows the project, not the favicon.
+    expect(social.image).toBe('https://ofertaterrenos.com/social/valle-escondido-licanten-og.jpg');
+    expect(projectSocial({ ...project, slug: 'otro-proyecto' }).image).toBe('https://ofertaterrenos.com/projects/paisaje.jpg');
     expect(projectSocial(project, []).description).not.toContain('Desde');
     expect(projectSocial(project).description).toContain('Consulta disponibilidad');
   });
