@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,13 +38,16 @@ const StickyHeader = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
-  const { isAdmin, isAgent, getRedirectPath } = useSmartRedirect();
+  const { isAdmin, isAgent } = useSmartRedirect();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Close the mobile sheet even when route changes via back/forward or external navigation.
+  useEffect(() => setIsMobileMenuOpen(false), [location.pathname]);
 
   // Tres puertas de entrada: Explorar (comprar), Vender, Comunidad.
   const publicNavigation = [
@@ -93,10 +96,10 @@ const StickyHeader = () => {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-header transition-all duration-300",
+        "theme-rural fixed top-0 left-0 right-0 z-header border-b border-border/60 transition-all duration-300",
         isScrolled
-          ? "glass border-b border-border/50 shadow-lg shadow-black/5"
-          : "bg-transparent"
+          ? "bg-background/95 shadow-sm backdrop-blur-xl"
+          : "bg-background/90 backdrop-blur-md"
       )}
     >
       <div className="container px-4">
@@ -107,11 +110,12 @@ const StickyHeader = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav aria-label="Navegación principal" className="hidden lg:flex items-center gap-1">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
+                aria-current={isActive(item.href) ? 'page' : undefined}
                 className={cn(
                   "px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus-ring relative",
                   isActive(item.href)
@@ -132,12 +136,12 @@ const StickyHeader = () => {
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-2">
             <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-foreground focus-ring">
-              <Link to="/explorar"><Search className="h-5 w-5" /></Link>
+              <Link to="/explorar" aria-label="Buscar terrenos"><Search className="h-5 w-5" aria-hidden="true" /></Link>
             </Button>
 
             {user && !isAgent && !isAdmin && (
               <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-foreground focus-ring">
-                <Link to="/favoritos"><Heart className="h-5 w-5" /></Link>
+                <Link to="/favoritos" aria-label="Ver favoritos"><Heart className="h-5 w-5" aria-hidden="true" /></Link>
               </Button>
             )}
 
@@ -205,31 +209,33 @@ const StickyHeader = () => {
 
             {(isAgent || isAdmin) && (
               <Button asChild size="sm" className="btn-glow">
-                <Link to="/publicar"><Plus className="h-4 w-4" /></Link>
+                <Link to="/publicar" aria-label="Publicar propiedad"><Plus className="h-4 w-4" aria-hidden="true" /></Link>
               </Button>
             )}
 
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="touch-target">
-                  <Menu className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="touch-target" aria-label="Abrir menú de navegación" aria-expanded={isMobileMenuOpen}>
+                  <Menu className="h-5 w-5" aria-hidden="true" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[85vw] max-w-[320px] bg-background border-border p-0">
+              <SheetContent side="right" className="theme-rural w-[85vw] max-w-[320px] overflow-y-auto border-border bg-background p-0">
+                <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
                 <div className="flex items-center justify-between p-4 border-b border-border">
                   <LogoIcon size="sm" />
-                  <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)} className="touch-target">
-                    <X className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)} className="touch-target" aria-label="Cerrar menú">
+                    <X className="h-5 w-5" aria-hidden="true" />
                   </Button>
                 </div>
 
                 <div className="flex flex-col p-4">
-                  <nav className="flex flex-col gap-1 mb-6">
+                  <nav aria-label="Navegación móvil" className="mb-6 flex flex-col gap-1">
                     {navigation.map((item) => (
                       <Link
                         key={item.name}
                         to={item.href}
                         onClick={() => setIsMobileMenuOpen(false)}
+                        aria-current={isActive(item.href) ? 'page' : undefined}
                         className={cn(
                           "px-4 py-3.5 text-base font-medium rounded-xl transition-colors touch-target relative",
                           isActive(item.href)

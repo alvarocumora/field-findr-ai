@@ -14,18 +14,18 @@
 - `ViewerErrorBoundary`: tour 360, mapas de parcelas y vista 3D aislados; un fallo muestra "Error técnico" + Reintentar sin tumbar la ficha.
 - `/contacto-loteos`: no quedan CTA de comprador apuntando ahí; los usos restantes son B2B (planes, inmobiliarias, red profesional).
 
-## Corte 2b — GitHub First (implementado en rama, pendiente de revisión/merge)
+## Corte 2b — GitHub First (integrado en main, PR #191)
 - `/explorar`: rangos de precio independientes para CLP y UF, presets y etiquetas correctas en FilterBar compartida por escritorio y móvil. Selección de "Todas" mantiene la regla existente: al activar un rango solo busca CLP. Nunca se aplica un límite CLP a UF.
 - `/p/:slug`: tema Rural Institutional y titulares editoriales en la landing genérica; distingue error del proyecto, fallo de inventario y carga inicial de una disponibilidad real de cero. CTA del hero navega al masterplan solo si existe; el acceso al proyecto principal abre un modo mapa existente, sin prometer un tour inexistente.
 - `/proyecto/:id`: pestañas desplazables en móvil con el tab activo sincronizado con la URL para compartir navegación.
 - `/explorar`: overlay de área dibujada adaptado a tokens de marca en lugar de colores hardcodeados.
 - Se mantienen contratos actuales de lots, listings y reservas: sin nuevas migraciones, auth ni despliegue automático.
-- Validación pendiente: CI del PR en GitHub y revisión manual del flujo 320/390/1440 y con WebGL deshabilitado.
+- TypeScript, tests y build aprobados en CI. QA visual real del flujo 320/390/1440 y sin WebGL aún pendiente.
 
-## Corte 2c — Navegación de modos por proyecto (PR en curso)
+## Corte 2c — Navegación de modos por proyecto (integrado en main, PR #192)
 - `/proyecto/:id`: banda contextual de Mapa de lotes / Lotes / Tour 360 integrada con las pestañas canónicas y el visor 360 existente. El tour solo aparece si existen escenas; no se ofrece un 3D general ficticio.
 - Compartición por `?tab=` y desplazamiento al visor o al panel correcto; sin duplicar TourViewer ni LotMapView, y conservando CTAs de consulta y reserva.
-- Pendiente de validación automática CI y visual 320/390/1440 antes de fusionar.
+- CI aprobado; QA visual 320/390/1440 aún pendiente.
 
 ## Pendientes de siguientes PR (no incluidos en este corte)
 - Eventual modo 3D global o masterplan independiente solo si existe un visor canónico verificable y geometría real; por ahora mapa/lotes/tour están cubiertos por la banda contextual sin duplicación.
@@ -34,6 +34,17 @@
 - Revisar contexto de ventas y roles autenticados (comprador, asesor, inmobiliaria, superadmin) mediante cuentas de prueba, con RLS vigente.
 - El fallo de deploy DreamHost es independiente: faltan secretos del entorno de producción en GitHub; no enviar secretos por chat.
 
-## Corte 3 (pendiente)
-- Header/nav pública y paneles por rol con patrón header → toolbar → contenido → inspector; piloto en una zona privada (`/panel`).
-- Migrar resto de secciones de portada (InsigniaShowcase, StandardAndPartner) a `font-editorial`.
+## Corte 3 — Homogeneización transversal (avance)
+- Portada editorial, tarjetas y credibilidad: integrado con PR #193.
+- Selector de contextos /panel: integrado con PR #194. Shell de asesor/admin y comprador: PR #196 y #198.
+- Inspector de anuncio: acciones reales y moneda de precio correcta en PR #197.
+- DreamHost manual, GitHub es desarrollo y Lovable hosting: PR #195.
+- Header/nav pública Rural Institutional + accesibilidad móvil: en este PR.
+- Mapas: controles, leyenda y feedback genuino de carga: siguiente PR.
+- Fichas y landings bespoke: migrar sección por sección conservando identidad, deep links y conversión.
+- QA visual pendiente: 320/390/1440, con WebGL deshabilitado; pruebas con cuentas autorizadas y RLS.
+
+## Política de PR antiguos
+- Revisados pero no fusionados: #180/#181 (Caone y CRM), #186 (consolidación de asesor), #190 (estado de lotes, migración comercial), #160 (pagos), #127 (comparador premium), #145 (assets), #168 (fix histórico de CI).
+- No alterar inventario/precios, RLS, roles, pagos ni reservas sin validación funcional y comercial separada.
+- Prioridad actual: roadmap UX sobre limpieza masiva de PR antiguos.
