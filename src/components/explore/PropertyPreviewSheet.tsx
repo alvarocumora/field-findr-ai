@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Heart, 
@@ -11,8 +11,6 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Phone,
-  Mail,
   MessageCircle,
   Eye,
   TrendingUp
@@ -20,7 +18,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -56,6 +53,8 @@ const PropertyPreviewSheet = ({
 }: PropertyPreviewSheetProps) => {
   const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  // A newly selected property must start from its own first image.
+  useEffect(() => setCurrentImageIndex(0), [listing?.id]);
   const { data: favoriteIds = [] } = useFavoriteIds();
   const { toggle: toggleFavorite } = useToggleFavorite();
   
@@ -84,7 +83,7 @@ const PropertyPreviewSheet = ({
     if (navigator.share) {
       await navigator.share({
         title: listing.title,
-        text: `${listing.title} - ${formatPrice(listing.price)}`,
+        text: `${listing.title} - ${formatPrice(listing.price, listing.currency)}`,
         url,
       });
     } else {
@@ -122,7 +121,7 @@ const PropertyPreviewSheet = ({
           onTouchEnd={handleTouchEnd}
         >
           <img
-            src={images[currentImageIndex]}
+            src={images[currentImageIndex] ?? images[0]}
             alt={listing.title}
             className="w-full h-full object-cover transition-opacity duration-300"
           />
@@ -134,16 +133,17 @@ const PropertyPreviewSheet = ({
             size="icon"
             className="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/30 text-white hover:bg-black/50"
             onClick={() => onOpenChange(false)}
+            aria-label="Cerrar vista previa"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </Button>
 
           {images.length > 1 && (
             <>
-              <Button variant="ghost" size="icon" className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/30 text-white hover:bg-black/50" onClick={prevImage}>
+              <Button variant="ghost" size="icon" className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/30 text-white hover:bg-black/50" onClick={prevImage} aria-label="Imagen anterior">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/30 text-white hover:bg-black/50" onClick={nextImage}>
+              <Button variant="ghost" size="icon" className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/30 text-white hover:bg-black/50" onClick={nextImage} aria-label="Imagen siguiente">
                 <ChevronRight className="h-4 w-4" />
               </Button>
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
@@ -155,6 +155,8 @@ const PropertyPreviewSheet = ({
                       idx === currentImageIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/50 hover:bg-white/70'
                     )}
                     onClick={() => setCurrentImageIndex(idx)}
+                    aria-label={`Mostrar imagen ${idx + 1} de ${images.length}`}
+                    aria-current={idx === currentImageIndex ? 'true' : undefined}
                   />
                 ))}
               </div>
@@ -189,7 +191,7 @@ const PropertyPreviewSheet = ({
               </div>
             </div>
 
-            <h2 className="text-lg font-semibold text-foreground mb-1">{listing.title}</h2>
+            <h2 className="font-editorial text-xl font-medium text-foreground mb-1">{listing.title}</h2>
             
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <MapPin className="h-3.5 w-3.5" />
@@ -200,7 +202,7 @@ const PropertyPreviewSheet = ({
 
           {/* Price */}
           <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
-            <p className="text-2xl font-bold text-primary">
+            <p className="rural-data text-2xl font-semibold text-primary">
               {formatPrice(listing.price, listing.currency)}
             </p>
             {pricePerM2 && (
@@ -278,20 +280,12 @@ const PropertyPreviewSheet = ({
               <ExternalLink className="h-4 w-4" />
               Ver Detalle Completo
             </Button>
-            <div className="grid grid-cols-3 gap-2">
-              <Button variant="outline" className="h-10 rounded-xl gap-1.5 text-xs">
-                <Phone className="h-3.5 w-3.5" />
-                Llamar
-              </Button>
-              <Button variant="outline" className="h-10 rounded-xl gap-1.5 text-xs" onClick={handleWhatsApp}>
-                <MessageCircle className="h-3.5 w-3.5" />
-                WhatsApp
-              </Button>
-              <Button variant="outline" className="h-10 rounded-xl gap-1.5 text-xs">
-                <Mail className="h-3.5 w-3.5" />
-                Email
-              </Button>
-            </div>
+            {/* Only show a contact action that has a real handler. Phone/email
+                contacts are exposed on the full detail when owner data exists. */}
+            <Button variant="outline" className="h-11 w-full rounded-xl gap-2" onClick={handleWhatsApp}>
+              <MessageCircle className="h-4 w-4" aria-hidden="true" />
+              Consultar por WhatsApp
+            </Button>
           </div>
 
           {/* Similar Properties */}
@@ -307,13 +301,14 @@ const PropertyPreviewSheet = ({
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
                       onClick={() => {
                         onOpenChange(false);
-                        setTimeout(() => onViewDetails?.(sim), 200);
+                        if (onViewDetails) onViewDetails(sim);
+                        else navigate(`/propiedad/${sim.id}`);
                       }}
                     >
                       <img src={sim.images[0] || '/placeholder.svg'} alt={sim.title} className="w-14 h-14 rounded-lg object-cover" />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{sim.title}</p>
-                        <p className="text-xs text-primary font-semibold">{formatPriceShort(sim.price)}</p>
+                        <p className="text-xs text-primary font-semibold">{formatPriceShort(sim.price, sim.currency)}</p>
                         <p className="text-[11px] text-muted-foreground">{formatArea(sim.area_m2, sim.area_ha)}</p>
                       </div>
                     </div>
@@ -341,6 +336,7 @@ const PropertyPreviewSheet = ({
         side="right"
         className="w-full sm:max-w-md p-0 border-l border-border/30 bg-background/95 backdrop-blur-xl"
       >
+        <SheetTitle className="sr-only">{listing.title}</SheetTitle>
         {body}
       </SheetContent>
     </Sheet>
