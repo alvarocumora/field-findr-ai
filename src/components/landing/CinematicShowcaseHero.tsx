@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { projectImages } from '@/lib/projectCovers';
-import { projectLandingPath } from '@/lib/landing/paths';
 
 interface ShowcaseProject {
   id: string;
@@ -149,7 +148,7 @@ const CinematicShowcaseHero = () => {
               )}
             </AnimatePresence>
             {active && (
-              <Link to={projectLandingPath(active)} className="absolute inset-x-3 bottom-3 flex flex-wrap items-end justify-between gap-3 rounded-xl border border-border bg-card/95 p-4 backdrop-blur focus-ring">
+              <Link to={`/proyecto/${encodeURIComponent(active.id)}`} className="absolute inset-x-3 bottom-3 flex flex-wrap items-end justify-between gap-3 rounded-xl border border-border bg-card/95 p-4 backdrop-blur focus-ring">
                 <div className="min-w-0">
                   <p className="truncate font-editorial text-lg font-medium text-foreground">{active.name}</p>
                   <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground"><MapPin className="h-3 w-3" aria-hidden="true" />{[active.city, active.region].filter(Boolean).join(', ') || 'Chile'}</p>

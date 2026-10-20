@@ -7,7 +7,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
 import { groupByCanonicalRegion, resolveChileCommune, resolveRegionTerritory } from '@/lib/territories';
-import { projectLandingPath } from '@/lib/landing/paths';
 
 interface AtlasProject {
   id: string;
@@ -139,8 +138,14 @@ const AtlasTerritorySection = () => {
       region: project.region,
     });
 
+    // Siempre el proyecto canónico por ID, nunca la landing bespoke por slug
+    // (si existe) — una misma tarjeta/transición no debe competir con
+    // ProjectCommercialCard por el destino de un mismo proyecto (gap
+    // encontrado al revisar el lote Rural Finder).
+    const projectHome = `/proyecto/${encodeURIComponent(project.id)}/experiencia`;
+
     if (prefersReducedMotion) {
-      navigate(projectLandingPath(project));
+      navigate(projectHome);
       return;
     }
 
@@ -149,7 +154,7 @@ const AtlasTerritorySection = () => {
     travelTimers.current = [
       window.setTimeout(() => setTravel({ project, stage: 'commune' }), 520),
       window.setTimeout(() => setTravel({ project, stage: 'project' }), 1040),
-      window.setTimeout(() => navigate(projectLandingPath(project)), 1600),
+      window.setTimeout(() => navigate(projectHome), 1600),
     ];
   };
 

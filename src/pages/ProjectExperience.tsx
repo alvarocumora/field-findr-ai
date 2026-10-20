@@ -11,7 +11,6 @@ import { LotDetailSheet } from '@/components/lots/LotDetailSheet';
 import { LotDesigner3DDialog } from '@/components/lots/LotDesigner3DDialog';
 import { LotReservationDialog } from '@/components/lots/LotReservationDialog';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
-import { projectLandingPath } from '@/lib/landing/paths';
 import { canReservePublicLot, formatPublicLotPrice } from '@/lib/lots/publicLotCommercial';
 import {
   ArrowLeft,
@@ -312,7 +311,8 @@ const ProjectExperience = () => {
   }
 
   const location = [project.city, project.region].filter(Boolean).join(', ') || project.location || 'Chile';
-  const projectHome = projectLandingPath({ id: project.id, slug: project.slug });
+  // Siempre el proyecto canónico por ID, nunca la landing bespoke por slug.
+  const projectHome = `/proyecto/${encodeURIComponent(project.id)}`;
   const visitUrl = `/agendar?meeting_type=visita_terreno&project_id=${encodeURIComponent(project.id)}&project_name=${encodeURIComponent(project.name)}&source=terrain-view`;
   const legalDocuments = (project as any)?.legal_documents || [];
   const isTraveling = focusTransition === 'departing' || focusTransition === 'arriving';
