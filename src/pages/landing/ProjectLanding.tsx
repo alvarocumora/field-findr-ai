@@ -132,7 +132,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
 
   if (projectLoading) {
     return (
-      <div className="min-h-screen bg-background p-6 space-y-4 max-w-5xl mx-auto">
+      <div className="theme-rural min-h-screen bg-background p-6 space-y-4 max-w-5xl mx-auto">
         <Skeleton className="h-[420px] w-full rounded-2xl" />
         <Skeleton className="h-24 w-full" />
       </div>
@@ -198,8 +198,8 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
             <p className="mt-2 flex items-center gap-1.5 text-white/90"><MapPin className="h-4 w-4" />{location}</p>
           )}
           <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm text-white/90">
-            <span>{lotsError ? 'Disponibilidad sin verificar' : <><strong className="font-semibold">{stats.available}</strong> lotes disponibles</>}</span>
-            {stats.priceFrom && <span>Desde <strong className="font-semibold">{clp(stats.priceFrom)}</strong></span>}
+            <span>{lotsLoading ? 'Verificando disponibilidad…' : lotsError ? 'Disponibilidad sin verificar' : <><strong className="font-semibold">{stats.available}</strong> lotes disponibles</>}</span>
+            {!lotsLoading && !lotsError && stats.priceFrom && <span>Desde <strong className="font-semibold">{clp(stats.priceFrom)} CLP</strong></span>}
             {stats.areaMin && <span>Parcelas desde <strong className="font-semibold">{Math.round(stats.areaMin).toLocaleString('es-CL')} m²</strong></span>}
           </div>
           {subtitle && <p className="mt-3 max-w-2xl text-white/80 line-clamp-3">{subtitle}</p>}
@@ -250,9 +250,9 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
         {/* Ficha comercial */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3 -mt-20 relative z-10">
           {[
-            { label: 'Lotes', value: lotsError ? 'Sin verificar' : `${stats.available} disponibles de ${stats.total}` },
+            { label: 'Lotes', value: lotsLoading ? 'Verificando' : lotsError ? 'Sin verificar' : `${stats.available} disponibles de ${stats.total}` },
             { label: 'Superficies', value: areaLabel },
-            { label: 'Desde', value: lotsError ? 'No disponible' : stats.priceFrom ? `${clp(stats.priceFrom)} CLP` : 'Consultar' },
+            { label: 'Desde', value: lotsLoading ? 'Verificando' : lotsError ? 'No disponible' : stats.priceFrom ? `${clp(stats.priceFrom)} CLP` : 'Consultar' },
             { label: 'Ubicación', value: location || '—' },
           ].map((s) => (
             <Card key={s.label} className="border-border/60 bg-card/95 backdrop-blur">
@@ -475,8 +475,8 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
       {/* Barra sticky de conversión (mobile) */}
       <ProjectConversionBar
         projectName={title}
-        priceFrom={lotsError ? null : stats.priceFrom}
-        availableLots={lotsError ? undefined : stats.available}
+        priceFrom={lotsLoading || lotsError ? null : stats.priceFrom}
+        availableLots={lotsLoading || lotsError ? undefined : stats.available}
         whatsapp={cfg.contact.whatsapp}
         onLead={() => openLead()}
         onSeeLots={goMasterplan}
