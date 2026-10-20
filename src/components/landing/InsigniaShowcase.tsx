@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowUpRight, MapPin, Orbit, Map as MapIcon } from 'lucide-react';
+import { ArrowUpRight, MapPin, Map as MapIcon } from 'lucide-react';
 import { useShowcaseProjects } from './CinematicShowcaseHero';
 
-const clp = (v?: number) => (v ? `$${v.toLocaleString('es-CL')}` : 'Consultar valor');
+const clp = (v?: number) => (v ? `${v.toLocaleString('es-CL')} CLP` : 'Precio a consultar');
 
 const InsigniaShowcase = () => {
   const reduced = useReducedMotion();
@@ -14,8 +14,8 @@ const InsigniaShowcase = () => {
   return (
     <section className="relative py-16 md:py-24" aria-labelledby="insignia-title">
       <div className="container px-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] gradient-text">Cartelera de loteos</p>
-        <h2 id="insignia-title" className="mt-3 max-w-3xl font-heading text-3xl font-bold md:text-5xl">Proyectos que puedes recorrer antes de visitarlos.</h2>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Cartelera territorial</p>
+        <h2 id="insignia-title" className="mt-3 max-w-3xl font-editorial text-3xl font-medium md:text-5xl">Conoce los proyectos y elige dónde explorar.</h2>
 
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
           {[lead, ...rest].map((p, i) => (
@@ -36,16 +36,15 @@ const InsigniaShowcase = () => {
                 ) : <div className="absolute inset-0 grid-topo" />}
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
                 <div className="absolute left-4 top-4 flex gap-2">
-                  <span className="brand-chip inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"><Orbit className="h-3 w-3" />Tour 360</span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-background/60 px-2.5 py-1 text-[11px] font-semibold text-foreground backdrop-blur"><MapIcon className="h-3 w-3" />Masterplan</span>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-background/85 px-2.5 py-1 text-[11px] font-semibold text-foreground backdrop-blur"><MapIcon className="h-3 w-3" aria-hidden="true" />Ficha y mapa</span>
                 </div>
                 <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 md:p-7">
                   <div>
                     <p className="flex items-center gap-1 text-xs text-foreground/75"><MapPin className="h-3 w-3" />{[p.city, p.region].filter(Boolean).join(', ') || 'Chile'}</p>
-                    <h3 className={`mt-1 font-heading font-bold text-foreground ${i === 0 ? 'text-3xl md:text-5xl' : 'text-2xl'}`}>{p.name}</h3>
+                    <h3 className={`mt-1 font-editorial font-medium text-foreground ${i === 0 ? 'text-3xl md:text-5xl' : 'text-2xl'}`}>{p.name}</h3>
                     <p className="mt-2 text-sm text-foreground/80">
-                      <span className="font-semibold gradient-text">Desde {clp(p.minPrice)}</span>
-                      <span className="mx-2 text-foreground/40">·</span>{p.available} de {p.total} disponibles
+                      <span className="font-semibold text-primary">{p.minPrice ? `Desde ${clp(p.minPrice)}` : clp()}</span>
+                      <span className="mx-2 text-foreground/40">·</span>{p.inventoryReady ? `${p.available} de ${p.total} disponibles` : 'Disponibilidad por consultar'}
                     </p>
                   </div>
                   <span className="brand-gradient-btn grid h-11 w-11 shrink-0 place-items-center rounded-full transition-transform group-hover:rotate-45">
