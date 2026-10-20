@@ -180,6 +180,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [selectedLot, setSelectedLot] = useState<string | null>(null);
+  const [mapEditMode, setMapEditMode] = useState(false);
   const [leadOpen, setLeadOpen] = useState(false);
   const [reservationLot, setReservationLot] = useState<any | null>(null);
   const [financingLot, setFinancingLot] = useState<any | null>(null);
@@ -652,8 +653,15 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
 
             {/* Map Tab */}
             <TabsContent value="map">
-              <div className={isOwner ? '' : 'h-[70vh] min-h-[520px] max-h-[760px]'}>
+              {isOwner && (
+                <div className="mb-3 flex justify-end gap-2">
+                  <Button size="sm" variant={mapEditMode ? 'outline' : 'default'} onClick={() => setMapEditMode(false)}>Tour 3D</Button>
+                  <Button size="sm" variant={mapEditMode ? 'default' : 'outline'} onClick={() => setMapEditMode(true)}>Editar lotes</Button>
+                </div>
+              )}
+              <div className={mapEditMode && isOwner ? '' : 'h-[70vh] min-h-[520px] max-h-[760px]'}>
               <ViewerErrorBoundary label="el mapa de parcelas" className="h-[420px]"><LotMapView
+                key={mapEditMode && isOwner ? 'edit' : 'tour'}
                 lots={lots}
                 projectCenter={{
                   lat: project.latitude || -34.9767,
@@ -671,9 +679,9 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                   queryClient.invalidateQueries({ queryKey: ['project-lots', id] });
                   queryClient.invalidateQueries({ queryKey: ['project', id] });
                 }}
-                readOnly={!isOwner}
-                showAdminControls={isOwner}
-                tourMode={!isOwner}
+                readOnly={!(isOwner && mapEditMode)}
+                showAdminControls={isOwner && mapEditMode}
+                tourMode={!(isOwner && mapEditMode)}
                 onOpenCompare={
                   ((project as any).plan_images?.length > 0)
                     ? () => setShowCompare(true)
