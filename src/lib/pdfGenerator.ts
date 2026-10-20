@@ -1,307 +1,205 @@
 import jsPDF from 'jspdf';
-import { drawPdfHeaderLogo } from './pdfBrandHeader';
+import QRCode from 'qrcode';
+import { drawPdfFooter } from './pdfBrandHeader';
 
 interface QuotePDFData {
-  // Project info
   projectName: string;
   projectLocation: string;
-  
-  // Lot info
   lotNumber: string;
   lotArea: number;
   lotPrice: number;
   pricePerSqm: number;
-  
-  // Financing details
   downPaymentPercent: number;
   downPayment: number;
   financedAmount: number;
   termMonths: number;
+  /** Monthly rate in percent (e.g. 1.0 = 1% mensual). */
   interestRate: number;
   monthlyPayment: number;
   totalInterest: number;
   totalCost: number;
-  cae: number;
-  
-  // Meta
+  /** Kept for caller compatibility; never printed (no CAE without fees/insurance). */
+  cae?: number;
   generatedAt: Date;
   validUntil: Date;
-
-  // Seller-side extras (all optional — used by the internal quote tool)
-  /** Prepared-for buyer name shown under the header. */
   buyerName?: string;
-  /** Original list price; when it differs from lotPrice a discount line is shown. */
   listPrice?: number;
-  /** Reservation deposit ("seña") that secures the lot. */
   reservationAmount?: number;
-  /** Contact line for the selling agent (name/email/phone). */
   sellerContact?: string;
+  /** Public URL encoded in the verification QR (lot sheet or quote link). */
+  verifyUrl?: string;
 }
 
-const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('es-CL', {
-    style: 'currency',
-    currency: 'CLP',
-    maximumFractionDigits: 0
-  }).format(value);
-};
+// Rural Institutional palette (docs/RURAL_FINDER_DESIGN_SYSTEM.md)
+const INK: [number, number, number] = [26, 36, 32];
+const FOREST: [number, number, number] = [33, 76, 60];
+const MOSS: [number, number, number] = [122, 141, 116];
+const SAND: [number, number, number] = [226, 225, 216];
+const PAPER: [number, number, number] = [247, 245, 240];
+const EMERALD: [number, number, number] = [34, 197, 94];
+const SKY: [number, number, number] = [14, 165, 233];
 
-const formatDate = (date: Date): string => {
-  return new Intl.DateTimeFormat('es-CL', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }).format(date);
-};
+export const QUOTE_DISCLAIMER =
+  'Simulación referencial, no constituye oferta de crédito ni aprobación; excluye seguros, comisiones, impuestos y otros gastos. Financiamiento sujeto a evaluación y disponibilidad de producto para terrenos rurales. Precio y disponibilidad sujetos a confirmación al momento de la reserva.';
 
-export const generateQuotePDF = (data: QuotePDFData): void => {
+const clp = (v: number) =>
+  new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(Number.isFinite(v) ? v : 0);
+const fmtDate = (d: Date) => new Intl.DateTimeFormat('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }).format(d);
+
+export const buildQuoteNumber = (d: Date) => `COT-${d.getTime().toString(36).toUpperCase()}`;
+
+export const generateQuotePDF = async (data: QuotePDFData): Promise<jsPDF> => {
   const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  
-  // Colors
-  const primaryColor: [number, number, number] = [34, 139, 34]; // Forest green
-  const darkColor: [number, number, number] = [30, 30, 30];
-  const grayColor: [number, number, number] = [100, 100, 100];
-  const lightGray: [number, number, number] = [240, 240, 240];
-  
-  let yPos = 20;
-  
-  // Header with brand
-  drawPdfHeaderLogo(doc, { headerHeight: 35, subtitle: 'Cotización de Financiamiento' });
-  
-  // Quote number and date
-  const quoteNumber = `COT-${Date.now().toString(36).toUpperCase()}`;
-  doc.setFontSize(9);
-  doc.text(`N° ${quoteNumber}`, pageWidth - 20, 22, { align: 'right' });
-  doc.text(formatDate(data.generatedAt), pageWidth - 20, 30, { align: 'right' });
-  
-  yPos = 46;
-  
-  // Project Section
-  doc.setTextColor(...darkColor);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Información del Proyecto', 20, yPos);
-  
-  yPos += 10;
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...grayColor);
-  doc.text('Proyecto:', 20, yPos);
-  doc.setTextColor(...darkColor);
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.projectName, 60, yPos);
-  
-  yPos += 7;
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...grayColor);
-  doc.text('Ubicación:', 20, yPos);
-  doc.setTextColor(...darkColor);
-  doc.text(data.projectLocation, 60, yPos);
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+  const M = 18;
+  const quoteNumber = buildQuoteNumber(data.generatedAt);
 
-  if (data.buyerName) {
-    yPos += 6;
-    doc.setTextColor(...grayColor);
-    doc.text('Preparada para:', 20, yPos);
-    doc.setTextColor(...darkColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text(data.buyerName, 60, yPos);
-    doc.setFont('helvetica', 'normal');
-  }
-
-  yPos += 15;
-  
-  // Lot Details Box
-  doc.setFillColor(...lightGray);
-  doc.roundedRect(20, yPos, pageWidth - 40, 38, 3, 3, 'F');
-  
-  yPos += 8;
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...primaryColor);
-  doc.text(`Lote ${data.lotNumber}`, 30, yPos);
-  
-  yPos += 9;
-  doc.setFontSize(10);
-  doc.setTextColor(...darkColor);
-  doc.setFont('helvetica', 'normal');
-  
-  // Grid of lot info
-  const col1 = 30;
-  const col2 = 100;
-  
-  doc.setTextColor(...grayColor);
-  doc.text('Superficie:', col1, yPos);
-  doc.setTextColor(...darkColor);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`${data.lotArea.toLocaleString('es-CL')} m²`, col1 + 30, yPos);
-  
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...grayColor);
-  doc.text('Precio/m²:', col2, yPos);
-  doc.setTextColor(...darkColor);
-  doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(data.pricePerSqm), col2 + 28, yPos);
-  
-  yPos += 7;
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...grayColor);
-  doc.text('Precio:', col1, yPos);
-  doc.setTextColor(...primaryColor);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(data.lotPrice), col1 + 30, yPos);
-
-  // Discount vs list price (seller tool)
-  if (data.listPrice && data.listPrice !== data.lotPrice) {
-    const discountPct = Math.round(((data.listPrice - data.lotPrice) / data.listPrice) * 100);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...grayColor);
-    doc.text(
-      `Precio lista: ${formatCurrency(data.listPrice)} (${discountPct > 0 ? `-${discountPct}%` : `+${Math.abs(discountPct)}%`})`,
-      col2,
-      yPos,
+  // Page background + header band
+  doc.setFillColor(...PAPER); doc.rect(0, 0, W, H, 'F');
+  doc.setFillColor(...FOREST); doc.rect(0, 0, W, 44, 'F');
+  // Brand gradient stripe (approximated in steps)
+  for (let i = 0; i < 40; i++) {
+    const t = i / 39;
+    doc.setFillColor(
+      Math.round(EMERALD[0] + (SKY[0] - EMERALD[0]) * t),
+      Math.round(EMERALD[1] + (SKY[1] - EMERALD[1]) * t),
+      Math.round(EMERALD[2] + (SKY[2] - EMERALD[2]) * t),
     );
+    doc.rect((W / 40) * i, 44, W / 40 + 0.3, 1.6, 'F');
+  }
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(...PAPER);
+  doc.text('OFERTA', M, 18);
+  doc.setTextColor(...EMERALD); doc.text('TERRENOS', M + doc.getTextWidth('OFERTA'), 18);
+  doc.setFont('times', 'normal'); doc.setFontSize(22); doc.setTextColor(...PAPER);
+  doc.text('Cotización de parcela', M, 33);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...SAND);
+  doc.text(`N° ${quoteNumber}`, W - M, 16, { align: 'right' });
+  doc.text(`Emitida: ${fmtDate(data.generatedAt)}`, W - M, 23, { align: 'right' });
+  doc.text(`Válida hasta: ${fmtDate(data.validUntil)}`, W - M, 30, { align: 'right' });
+
+  let y = 58;
+  // Project + buyer
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...MOSS);
+  doc.text('PROYECTO', M, y);
+  if (data.buyerName) doc.text('PREPARADA PARA', W / 2 + 6, y);
+  y += 6;
+  doc.setFont('times', 'bold'); doc.setFontSize(16); doc.setTextColor(...INK);
+  doc.text(doc.splitTextToSize(data.projectName, W / 2 - M - 4)[0], M, y);
+  if (data.buyerName) doc.text(doc.splitTextToSize(data.buyerName, W / 2 - M - 4)[0], W / 2 + 6, y);
+  y += 5.5;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...MOSS);
+  if (data.projectLocation) doc.text(data.projectLocation, M, y);
+
+  // Lot card
+  y += 9;
+  doc.setFillColor(255, 255, 255); doc.setDrawColor(...SAND); doc.setLineWidth(0.4);
+  doc.roundedRect(M, y, W - 2 * M, 40, 3, 3, 'FD');
+  doc.setFillColor(...FOREST); doc.roundedRect(M, y, 3, 40, 1.5, 1.5, 'F');
+  const cols = [
+    ['LOTE', data.lotNumber],
+    ['SUPERFICIE', `${Number(data.lotArea || 0).toLocaleString('es-CL')} m²`],
+    ['PRECIO / M²', data.pricePerSqm > 0 ? clp(data.pricePerSqm) : 'No informado'],
+  ];
+  const cw = (W - 2 * M - 12) / 3;
+  cols.forEach(([k, v], i) => {
+    const x = M + 10 + cw * i;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...MOSS); doc.text(k, x, y + 9);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...INK); doc.text(String(v), x, y + 16);
+  });
+  doc.setDrawColor(...SAND); doc.line(M + 10, y + 21, W - M - 8, y + 21);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...MOSS);
+  doc.text('PRECIO COTIZADO', M + 10, y + 28);
+  doc.setFont('times', 'bold'); doc.setFontSize(20); doc.setTextColor(...FOREST);
+  doc.text(`${clp(data.lotPrice)} CLP`, M + 10, y + 36);
+  if (data.listPrice && data.listPrice !== data.lotPrice) {
+    const pct = Math.round(((data.listPrice - data.lotPrice) / data.listPrice) * 100);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...MOSS);
+    doc.text(`Precio lista ${clp(data.listPrice)} · ${pct > 0 ? `descuento ${pct}%` : `+${Math.abs(pct)}%`}`, W - M - 8, y + 36, { align: 'right' });
   }
 
-  yPos += 16;
-  
-  // Financing Section Title
-  doc.setTextColor(...darkColor);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Simulación de Financiamiento', 20, yPos);
-  
-  yPos += 10;
-  
-  // Financing Parameters
-  doc.setFontSize(10);
-  const paramData = [
-    ...(data.reservationAmount
-      ? [['Reserva (seña):', `${formatCurrency(data.reservationAmount)} — se abona al pie`]]
-      : []),
-    ['Pie inicial:', `${data.downPaymentPercent}% (${formatCurrency(data.downPayment)})`],
-    ['Monto a financiar:', formatCurrency(data.financedAmount)],
-    ['Plazo:', `${data.termMonths} meses (${(data.termMonths / 12).toFixed(1)} años)`],
-    ['Tasa mensual:', `${data.interestRate.toFixed(2)}%`],
+  // Financing parameters (left) + result (right)
+  y += 52;
+  doc.setFont('times', 'bold'); doc.setFontSize(14); doc.setTextColor(...INK);
+  doc.text('Plan de pago referencial', M, y);
+  y += 7;
+  const annual = data.interestRate * 12;
+  const rows: [string, string][] = [
+    ...(data.reservationAmount ? [['Reserva (se abona al pie)', clp(data.reservationAmount)] as [string, string]] : []),
+    [`Pie inicial (${data.downPaymentPercent}%)`, clp(data.downPayment)],
+    ['Monto a financiar', clp(data.financedAmount)],
+    ['Plazo', `${data.termMonths} meses`],
+    ['Tasa referencial', `${data.interestRate.toLocaleString('es-CL', { maximumFractionDigits: 2 })}% mensual (${annual.toLocaleString('es-CL', { maximumFractionDigits: 1 })}% nominal anual)`],
   ];
-  
-  paramData.forEach(([label, value]) => {
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...grayColor);
-    doc.text(label, 20, yPos);
-    doc.setTextColor(...darkColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text(value, 70, yPos);
-    yPos += 7;
+  const leftW = (W - 2 * M) * 0.56;
+  rows.forEach(([k, v], i) => {
+    const ry = y + i * 9;
+    if (i % 2 === 0) { doc.setFillColor(255, 255, 255); doc.rect(M, ry - 5.5, leftW, 9, 'F'); }
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...MOSS); doc.text(k, M + 3, ry);
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(...INK);
+    doc.text(doc.splitTextToSize(v, leftW * 0.55)[0], M + leftW - 3, ry, { align: 'right' });
   });
-  
-  yPos += 6;
-  
-  // Results Box
-  doc.setFillColor(...primaryColor);
-  doc.roundedRect(20, yPos, pageWidth - 40, 42, 3, 3, 'F');
-  
-  yPos += 12;
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Cuota mensual estimada', pageWidth / 2, yPos, { align: 'center' });
-  
-  yPos += 10;
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(data.monthlyPayment), pageWidth / 2, yPos, { align: 'center' });
-  
-  yPos += 12;
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`CAE estimado: ${data.cae.toFixed(1)}%`, pageWidth / 2, yPos, { align: 'center' });
-  
-  yPos += 14;
-  
-  // Summary Table
-  doc.setTextColor(...darkColor);
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Resumen de Costos', 20, yPos);
-  
-  yPos += 8;
-  
-  // Table header
-  doc.setFillColor(...lightGray);
-  doc.rect(20, yPos, pageWidth - 40, 8, 'F');
-  yPos += 6;
-  doc.setFontSize(9);
-  doc.setTextColor(...grayColor);
-  doc.text('Concepto', 25, yPos);
-  doc.text('Monto', pageWidth - 25, yPos, { align: 'right' });
-  
-  yPos += 8;
-  doc.setTextColor(...darkColor);
-  doc.setFont('helvetica', 'normal');
-  
-  const summaryData = [
-    ['Pie inicial', formatCurrency(data.downPayment)],
-    ['Total cuotas', formatCurrency(data.monthlyPayment * data.termMonths)],
-    ['Total intereses', formatCurrency(data.totalInterest)],
-  ];
-  
-  summaryData.forEach(([label, value]) => {
-    doc.text(label, 25, yPos);
-    doc.text(value, pageWidth - 25, yPos, { align: 'right' });
-    yPos += 7;
-  });
-  
-  // Total row
-  doc.setFillColor(...lightGray);
-  doc.rect(20, yPos - 3, pageWidth - 40, 10, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.text('TOTAL A PAGAR', 25, yPos + 4);
-  doc.setTextColor(...primaryColor);
-  doc.text(formatCurrency(data.totalCost), pageWidth - 25, yPos + 4, { align: 'right' });
-  
-  yPos += 10;
-  
-  // Validity
-  doc.setTextColor(...grayColor);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'italic');
-  doc.text(`Esta cotización es válida hasta el ${formatDate(data.validUntil)}`, 20, yPos);
+  const bx = M + leftW + 6, bw = W - M - bx, bh = Math.max(rows.length * 9, 40);
+  doc.setFillColor(...FOREST); doc.roundedRect(bx, y - 5.5, bw, bh, 3, 3, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...SAND);
+  doc.text('CUOTA MENSUAL REFERENCIAL', bx + bw / 2, y + 4, { align: 'center' });
+  doc.setFont('times', 'bold'); doc.setFontSize(21); doc.setTextColor(...PAPER);
+  doc.text(clp(data.monthlyPayment), bx + bw / 2, y + 16, { align: 'center' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...SAND);
+  doc.text(`${data.termMonths} cuotas · CLP`, bx + bw / 2, y + 23, { align: 'center' });
 
-  if (data.sellerContact) {
-    yPos += 6;
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Contacto: ${data.sellerContact}`, 20, yPos);
+  // Cost summary
+  y += bh + 6;
+  doc.setFont('times', 'bold'); doc.setFontSize(14); doc.setTextColor(...INK);
+  doc.text('Resumen de costos', M, y);
+  y += 4;
+  const summary: [string, string][] = [
+    ['Pie inicial', clp(data.downPayment)],
+    ['Total cuotas', clp(data.monthlyPayment * data.termMonths)],
+    ['Intereses referenciales', clp(Math.max(0, data.totalInterest))],
+  ];
+  summary.forEach(([k, v]) => {
+    y += 8;
+    doc.setDrawColor(...SAND); doc.line(M, y + 2.5, W - M, y + 2.5);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...MOSS); doc.text(k, M + 3, y);
+    doc.setTextColor(...INK); doc.text(v, W - M - 3, y, { align: 'right' });
+  });
+  y += 6;
+  doc.setFillColor(...SAND); doc.roundedRect(M, y, W - 2 * M, 11, 2, 2, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...INK);
+  doc.text('COSTO TOTAL (pie + cuotas)', M + 3, y + 7.3);
+  doc.setTextColor(...FOREST); doc.text(`${clp(data.totalCost)} CLP`, W - M - 3, y + 7.3, { align: 'right' });
+
+  // Verification QR + next steps
+  y += 20;
+  const qrSize = 30;
+  let qr: string | null = null;
+  if (data.verifyUrl) {
+    try { qr = await QRCode.toDataURL(data.verifyUrl, { margin: 1, width: 320, color: { dark: '#1A2420', light: '#FFFFFF' } }); } catch { qr = null; }
   }
-  
-  // Footer
-  const footerY = doc.internal.pageSize.getHeight() - 20;
-  doc.setFillColor(...lightGray);
-  doc.rect(0, footerY - 5, pageWidth, 25, 'F');
-  
-  doc.setTextColor(...grayColor);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.text(
-    '* Los valores son referenciales y no constituyen una oferta vinculante. Las condiciones finales de financiamiento dependen del análisis crediticio.',
-    pageWidth / 2,
-    footerY,
-    { align: 'center', maxWidth: pageWidth - 40 }
-  );
-  
-  doc.text(
-    'OfertaTerrenos — Plataforma de Inversión en Terrenos | ofertaterrenos.com',
-    pageWidth / 2,
-    footerY + 10,
-    { align: 'center' }
-  );
-  
-  // Save
-  const fileName = `cotizacion-${data.lotNumber.toLowerCase().replace(/\s+/g, '-')}-${quoteNumber}.pdf`;
-  doc.save(fileName);
+  doc.setFillColor(255, 255, 255); doc.setDrawColor(...SAND);
+  doc.roundedRect(M, y, W - 2 * M, qrSize + 8, 3, 3, 'FD');
+  if (qr) doc.addImage(qr, 'PNG', M + 4, y + 4, qrSize, qrSize);
+  const tx = qr ? M + qrSize + 10 : M + 6;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...INK);
+  doc.text('Próximos pasos', tx, y + 10);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.8); doc.setTextColor(...MOSS);
+  const steps = [
+    qr ? 'Escanea el código para ver la ficha y disponibilidad en vivo.' : 'Revisa la ficha y disponibilidad en ofertaterrenos.com.',
+    'Agenda una visita o inicia tu reserva desde la ficha del lote.',
+    data.sellerContact ? `Contacto: ${data.sellerContact}` : 'Consultas: ofertaterrenos.com',
+  ];
+  steps.forEach((s, i) => doc.text(doc.splitTextToSize(s, W - M - tx - 4)[0], tx, y + 17 + i * 6));
+
+  // Disclaimer
+  y += qrSize + 16;
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(7.6); doc.setTextColor(...MOSS);
+  doc.text(doc.splitTextToSize(QUOTE_DISCLAIMER, W - 2 * M), M, y);
+
+  try { drawPdfFooter(doc); } catch { /* footer is decorative */ }
+
+  doc.save(`cotizacion-lote-${data.lotNumber.toLowerCase().replace(/\s+/g, '-')}-${quoteNumber}.pdf`);
+  return doc;
 };
 
 export type { QuotePDFData };
