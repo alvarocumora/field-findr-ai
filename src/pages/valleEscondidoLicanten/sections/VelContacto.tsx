@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Phone, Mail, MessageCircle } from 'lucide-react';
 import { VEL_PROJECT } from '../data/project';
@@ -9,11 +8,7 @@ import VelLeadForm from '../components/VelLeadForm';
 const WHATSAPP_TEXT = encodeURIComponent('Hola, me interesa Valle Escondido Licantén');
 
 export default function VelContacto() {
-  const { lots } = useVelLots();
-  const availableLots = useMemo(
-    () => lots.filter((lot) => lot.status === 'available').length,
-    [lots],
-  );
+  const { available, isLive } = useVelLots();
   const wa = whatsappDigits(VEL_CONTACT.whatsapp);
   const waHref = wa ? `https://wa.me/${wa}?text=${WHATSAPP_TEXT}` : '';
 
@@ -33,8 +28,9 @@ export default function VelContacto() {
             <span className="italic text-[var(--hue-bone)]/55">a Valle Escondido.</span>
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-[15px] leading-relaxed text-[var(--hue-bone)]/65">
-            Coordinamos visitas guiadas al loteo en Licantén y respondemos consultas sobre las{' '}
-            {availableLots} parcelas disponibles, formas de pago, reserva y documentación legal.
+            Coordinamos visitas guiadas al loteo en Licantén y respondemos consultas sobre{' '}
+            {isLive ? `${available} parcelas con disponibilidad verificada` : 'disponibilidad por confirmar'},
+            formas de pago, reserva y documentación legal.
           </p>
         </motion.div>
 
