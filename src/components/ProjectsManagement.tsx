@@ -29,6 +29,7 @@ import {
 import { useProjects, Project } from '@/hooks/useProjects';
 import CreateProjectWizard from './projects/CreateProjectWizard';
 import { projectWorkspacePath } from '@/lib/projects/projectWorkspace';
+import WorkspaceLoadError from '@/components/dashboard/WorkspaceLoadError';
 
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -54,12 +55,6 @@ const ProjectsManagement = () => {
     (project.location || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const formatCurrency = (amount: number) => {
-    if (amount >= 1000000000) return `$${(amount / 1000000000).toFixed(1)}B`;
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(0)}M`;
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
-  };
-
   const getSoldPercentage = (project: Project) => {
     const total = project.total_lots || 0;
     const sold = project.sold_lots || 0;
@@ -77,12 +72,8 @@ const ProjectsManagement = () => {
     return differenceInDays(new Date(), new Date(project.created_at)) <= 7;
   };
 
-  // Calculate real revenue from sold lot prices (estimate with avg price if not available per-lot)
-  const totalRevenue = projects.reduce((sum, p) => {
-    const soldCount = p.sold_lots || 0;
-    // If no sold, skip. Use total_area / total_lots as avg area, times a rough price/m2
-    return sum + soldCount * 25000000; // fallback estimate
-  }, 0);
+  // Projects are real records; no revenue estimate from an invented lot price.
+  const activeProjects = projects.filter((project) => project.status === 'active').length;
 
   if (isLoading) {
     return (
@@ -100,6 +91,8 @@ const ProjectsManagement = () => {
       </div>
     );
   }
+
+  if (error) return <WorkspaceLoadError title="No pudimos cargar los proyectos" description="No es posible verificar tu inventario de proyectos. No presentaremos un proyecto vacío cuando falle la conexión." onRetry={() => refetch()} />;
 
   return (
     <div className="p-6 space-y-6">
@@ -173,8 +166,8 @@ const ProjectsManagement = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Ingresos Est.</p>
-                <p className="text-xl font-bold text-green-600">{formatCurrency(totalRevenue)}</p>
+                <p className="text-sm text-muted-foreground">Proyectos activos</p>
+                <p className="text-xl font-bold text-primary">{activeProjects}</p>
               </div>
               <BarChart3 className="h-8 w-8 text-purple-500/60" />
             </div>
