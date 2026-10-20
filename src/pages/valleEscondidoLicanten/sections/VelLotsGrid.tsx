@@ -41,7 +41,7 @@ export default function VelLotsGrid() {
     requestFocus,
   } = useVelState();
 
-  const { lots } = useVelLots();
+  const { lots, isLoading, isError, refetch, verifiedLotNumbers, verifiedPricedLotNumbers } = useVelLots();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('num');
   const [priceMin, setPriceMin] = useState('');
@@ -49,7 +49,7 @@ export default function VelLotsGrid() {
   const [areaMin, setAreaMin] = useState('');
   const [areaMax, setAreaMax] = useState('');
   const [visible, setVisible] = useState(PAGE);
-  const [leadLot, setLeadLot] = useState<{ id: string; number: string; status: VelLotStatus } | null>(null);
+  const [leadLot, setLeadLot] = useState<{ id: string; number: string; status: VelLotStatus; verified: boolean } | null>(null);
   const [pdfLot, setPdfLot] = useState<string | null>(null);
   const [visitLot, setVisitLot] = useState<{ id: string; number: string } | null>(null);
   const [reserveLot, setReserveLot] = useState<SalesLot | null>(null);
@@ -93,14 +93,14 @@ export default function VelLotsGrid() {
 
   const counts = useMemo(() => {
     const c = { all: lots.length, available: 0, reserved: 0, sold: 0 };
-    for (const l of lots) c[l.status]++;
+    for (const l of lots) if (verifiedLotNumbers.has(l.lot_number)) c[l.status]++;
     return c;
-  }, [lots]);
+  }, [lots, verifiedLotNumbers]);
 
   const allActive = ALL_STATUSES.every((s) => activeStatus.has(s));
 
   const commercialBounds = useMemo(() => {
-    const priced = lots.filter((lot) => lot.price_clp > 0);
+    const priced = lots.filter((lot) => verifiedPricedLotNumbers.has(lot.lot_number));
     const prices = priced.map((lot) => lot.price_clp);
     const areas = lots.map((lot) => lot.area_m2);
     return {
@@ -109,7 +109,7 @@ export default function VelLotsGrid() {
       areaMin: areas.length ? Math.min(...areas) : 0,
       areaMax: areas.length ? Math.max(...areas) : 0,
     };
-  }, [lots]);
+  }, [lots, verifiedPricedLotNumbers]);
 
   const hasAdvancedFilters = Boolean(priceMin || priceMax || areaMin || areaMax);
 
@@ -121,7 +121,8 @@ export default function VelLotsGrid() {
     const maxArea = areaMax ? Number(areaMax) : null;
 
     const arr = lots.filter((l) => {
-      if (!activeStatus.has(l.status)) return false;
+      if (!allActive && !verifiedLotNumbers.has(l.lot_number)) return false;
+      if (!activeStatus.has(l.status) && !allActive) return false;
       if (q && !l.lot_number.includes(q)) return false;
       if (minPrice !== null && (l.price_clp <= 0 || l.price_clp < minPrice)) return false;
       if (maxPrice !== null && (l.price_clp <= 0 || l.price_clp > maxPrice)) return false;
@@ -137,7 +138,7 @@ export default function VelLotsGrid() {
       default: arr.sort((a, b) => parseInt(a.lot_number) - parseInt(b.lot_number));
     }
     return arr;
-  }, [activeStatus, query, sort, lots, priceMin, priceMax, areaMin, areaMax]);
+  }, [activeStatus, allActive, verifiedLotNumbers, query, sort, lots, priceMin, priceMax, areaMin, areaMax]);
 
   const shown = filtered.slice(0, visible);
 
@@ -182,6 +183,12 @@ export default function VelLotsGrid() {
           </p>
         </motion.div>
 
+        {(isError || isLoading || verifiedLotNumbers.size < lots.length) && (
+          <div role="status" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-[var(--hue-amber)]/35 bg-[var(--hue-amber)]/10 p-4 text-sm text-[var(--hue-bone)]">
+            <span>{isLoading ? 'Verificando disponibilidad de parcelas…' : isError ? 'No pudimos verificar el inventario. Los estados y precios no confirmados son solo referenciales.' : 'Algunas parcelas todavía no tienen disponibilidad verificada.'}</span>
+            {isError && <button type="button" onClick={() => void refetch()} className="hue-pill min-h-11">Reintentar</button>}
+          </div>
+        )}
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
             <button onClick={() => { setOnlyStatus('all'); setVisible(PAGE); }} className={chipClasses(allActive)}>
@@ -304,7 +311,9 @@ export default function VelLotsGrid() {
               {shown.map((l) => {
                 const href = l.listing_id ? `/propiedad/${l.listing_id}` : `/proyecto/${VEL_PROJECT.id}`;
                 const isHovered = hoveredLotId === l.id;
-                const available = l.status === 'available';
+                const verified = verifiedLotNumbers.has(l.lot_number);
+                const priced = verifiedPricedLotNumbers.has(l.lot_number);
+                const available = verified && priced && l.status === 'available';
                 return (
                   <div
                     id={`vel-lot-${l.id}`}
@@ -319,7 +328,7 @@ export default function VelLotsGrid() {
                   >
                     <div className="flex items-start justify-between">
                       <div className="serif text-xl font-light text-[var(--hue-bone)]">Lote {l.lot_number}</div>
-                      <span className={`text-[9px] tracking-[0.18em] uppercase rounded border px-1.5 py-0.5 ${STATUS_TONE[l.status]}`}>{STATUS_LABEL[l.status]}</span>
+                      <span className={`text-[9px] tracking-[0.18em] uppercase rounded border px-1.5 py-0.5 ${verified ? STATUS_TONE[l.status] : 'bg-slate-500/15 text-slate-300 border-slate-500/30'}`}>{verified ? STATUS_LABEL[l.status] : 'Por confirmar'}</span>
                     </div>
                     <div className="mt-3 text-[11px] text-[var(--hue-bone)]/55 flex items-center gap-1"><MapPin className="h-3 w-3" /> Licantén · Maule</div>
                     <div className="mt-3 space-y-1">
@@ -329,9 +338,9 @@ export default function VelLotsGrid() {
                       </div>
                       <div className="flex items-baseline justify-between text-[11px]">
                         <span className="text-[var(--hue-bone)]/50">Precio</span>
-                        <span className="tabular-nums font-medium text-[var(--hue-bone)]">{l.price_clp ? `$${l.price_clp.toLocaleString('es-CL')}` : 'Consultar'}</span>
+                        <span className="tabular-nums font-medium text-[var(--hue-bone)]">{priced ? `${l.price_clp.toLocaleString('es-CL')} CLP` : 'Consultar'}</span>
                       </div>
-                      {l.price_clp > 0 && (
+                      {priced && l.area_m2 > 0 && (
                         <div className="flex items-baseline justify-between text-[11px]">
                           <span className="text-[var(--hue-bone)]/50">Precio/m²</span>
                           <span className="tabular-nums text-[var(--hue-bone)]/70">${Math.round(l.price_clp / l.area_m2).toLocaleString('es-CL')}</span>
@@ -361,8 +370,8 @@ export default function VelLotsGrid() {
                     <div className="mt-3 flex items-center gap-1.5 border-t border-white/5 pt-2">
                       <Link to={href} className="flex-1 text-[10px] tracking-[0.18em] uppercase text-[var(--hue-amber)] hover:text-[var(--hue-bone)] transition">Ficha →</Link>
                       <button type="button" onClick={() => handleFocusOnMap(l.id)} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition" title="Ver en el mapa" aria-label="Ver en el mapa"><Crosshair className="h-3 w-3" /></button>
-                      <button type="button" onClick={() => setLeadLot({ id: l.id, number: l.lot_number, status: l.status })} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition" title="Consultar por este lote" aria-label="Consultar por este lote"><MessageSquare className="h-3 w-3" /></button>
-                      <button type="button" onClick={() => downloadFicha(l)} disabled={pdfLot === l.id} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 transition hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] disabled:opacity-40" title="Descargar ficha PDF con QR" aria-label="Descargar ficha PDF con QR"><FileDown className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => setLeadLot({ id: l.id, number: l.lot_number, status: l.status, verified })} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition" title="Consultar por este lote" aria-label="Consultar por este lote"><MessageSquare className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => downloadFicha(l)} disabled={pdfLot === l.id || !verified} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 transition hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] disabled:opacity-40" title="Descargar ficha PDF con QR" aria-label="Descargar ficha PDF con QR"><FileDown className="h-3 w-3" /></button>
                     </div>
                   </div>
                 );
@@ -386,7 +395,7 @@ export default function VelLotsGrid() {
               lotId={leadLot.id}
               lotNumber={leadLot.number}
               lotStatus={leadLot.status}
-              defaultReason={leadLot.status === 'available' ? 'reserva' : 'informacion'}
+              defaultReason={leadLot.verified && leadLot.status === 'available' ? 'reserva' : 'informacion'}
               compact
               onSuccess={() => setTimeout(() => setLeadLot(null), 1800)}
             />
