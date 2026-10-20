@@ -15,10 +15,10 @@ const PublicLayout = ({ children, showFooter = true, showAssistant = true }: Pub
   const shouldShowAssistant = showAssistant && !isProjectSurface;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="theme-rural flex min-h-screen flex-col bg-background text-foreground">
       <div className="noise-overlay" />
       <StickyHeader />
-      <main className="flex-1 pt-16">{children}</main>
+      <main id="contenido-principal" className="flex-1 pt-16">{children}</main>
       {showFooter && <FooterSection />}
       {shouldShowAssistant && <AIFloatingButton />}
     </div>

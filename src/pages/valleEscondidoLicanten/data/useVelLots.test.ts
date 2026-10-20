@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useVelLots } from './useVelLots';
 import { VEL_LOTS } from './lots';
+import { supabase } from '@/integrations/supabase/client';
 
 const fake = vi.hoisted(() => ({
   data: undefined as Array<{
@@ -25,7 +26,7 @@ vi.mock('@/integrations/supabase/client', () => {
   const channel = { on: vi.fn(), subscribe: vi.fn() };
   channel.on.mockReturnValue(channel);
   channel.subscribe.mockReturnValue(channel);
-  return { supabase: { channel: () => channel, removeChannel: vi.fn().mockResolvedValue(undefined) } };
+  return { supabase: { channel: vi.fn(() => channel), removeChannel: vi.fn().mockResolvedValue(undefined) } };
 });
 
 const record = (number: string, status: string, price: number | null = 19_990_000) => ({
@@ -42,6 +43,7 @@ describe('Valle Escondido verified public inventory', () => {
     fake.data = undefined;
     fake.isLoading = false;
     fake.isError = false;
+    vi.mocked(supabase.channel).mockClear();
   });
 
   it('preserves KMZ geometry but does not advertise static availability or prices', () => {
@@ -79,6 +81,16 @@ describe('Valle Escondido verified public inventory', () => {
     expect(result.current.verifiedCount).toBe(0);
     expect(result.current.verifiedPriceFrom).toBeNull();
     expect(result.current.isLive).toBe(false);
+  });
+
+  it('multiple sections can consume live lots without subscribing the same Realtime topic repeatedly', () => {
+    const first = renderHook(() => useVelLots());
+    const second = renderHook(() => useVelLots());
+    expect(first.result.current.lots).toHaveLength(VEL_LOTS.length);
+    expect(second.result.current.lots).toHaveLength(VEL_LOTS.length);
+    expect(supabase.channel).not.toHaveBeenCalled();
+    first.unmount();
+    second.unmount();
   });
 
   it('does not count unknown lot numbers or an empty response', () => {

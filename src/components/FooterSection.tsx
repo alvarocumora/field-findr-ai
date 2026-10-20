@@ -26,10 +26,10 @@ const FooterSection = () => {
       { name: 'Explorar por mapa', href: '/explorar?view=map' },
       { name: 'Proyectos destacados', href: '/explorar' },
       { name: 'Mercado de terrenos', href: '/mercado' },
-      { name: 'Agendar una visita', href: '/agendar' },
+      { name: 'Agendar una visita', href: '/agendar?meeting_type=visita_terreno&source=footer' },
     ],
     pro: [
-      { name: 'Para Corredores', href: '/pricing' },
+      { name: 'Para Corredores', href: '/para-corredoras' },
       { name: 'Registrarse', href: '/auth' },
       { name: 'Contacto', href: '/contacto' },
     ],
@@ -37,7 +37,7 @@ const FooterSection = () => {
   };
 
   return (
-    <footer className="relative overflow-x-hidden border-t border-border/50 bg-background">
+    <footer aria-label="Información del sitio" className="theme-rural relative overflow-x-hidden border-t border-border/50 bg-background text-foreground">
       <div className="container px-4 py-16">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-10">
           {/* Brand */}

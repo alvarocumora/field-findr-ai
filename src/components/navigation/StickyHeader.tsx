@@ -102,6 +102,7 @@ const StickyHeader = () => {
           : "bg-background/90 backdrop-blur-md"
       )}
     >
+      <a href="#contenido-principal" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-2 focus:z-modal focus:rounded-lg focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:shadow-lg">Saltar al contenido</a>
       <div className="container px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="group flex-shrink-0 focus-ring rounded-lg">
