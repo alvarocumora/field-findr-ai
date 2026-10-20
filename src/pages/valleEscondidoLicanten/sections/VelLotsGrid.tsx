@@ -124,6 +124,8 @@ export default function VelLotsGrid() {
       if (!allActive && !verifiedLotNumbers.has(l.lot_number)) return false;
       if (!activeStatus.has(l.status) && !allActive) return false;
       if (q && !l.lot_number.includes(q)) return false;
+      // Static reference prices must not satisfy live commercial price filters.
+      if ((minPrice !== null || maxPrice !== null) && !verifiedPricedLotNumbers.has(l.lot_number)) return false;
       if (minPrice !== null && (l.price_clp <= 0 || l.price_clp < minPrice)) return false;
       if (maxPrice !== null && (l.price_clp <= 0 || l.price_clp > maxPrice)) return false;
       if (minArea !== null && l.area_m2 < minArea) return false;
@@ -133,12 +135,20 @@ export default function VelLotsGrid() {
     switch (sort) {
       case 'area_asc': arr.sort((a, b) => a.area_m2 - b.area_m2); break;
       case 'area_desc': arr.sort((a, b) => b.area_m2 - a.area_m2); break;
-      case 'price_asc': arr.sort((a, b) => a.price_clp - b.price_clp); break;
-      case 'price_desc': arr.sort((a, b) => b.price_clp - a.price_clp); break;
+      case 'price_asc': arr.sort((a, b) => {
+        const pa = verifiedPricedLotNumbers.has(a.lot_number) ? a.price_clp : Infinity;
+        const pb = verifiedPricedLotNumbers.has(b.lot_number) ? b.price_clp : Infinity;
+        return pa - pb || Number(a.lot_number) - Number(b.lot_number);
+      }); break;
+      case 'price_desc': arr.sort((a, b) => {
+        const pa = verifiedPricedLotNumbers.has(a.lot_number) ? a.price_clp : -Infinity;
+        const pb = verifiedPricedLotNumbers.has(b.lot_number) ? b.price_clp : -Infinity;
+        return pb - pa || Number(a.lot_number) - Number(b.lot_number);
+      }); break;
       default: arr.sort((a, b) => parseInt(a.lot_number) - parseInt(b.lot_number));
     }
     return arr;
-  }, [activeStatus, allActive, verifiedLotNumbers, query, sort, lots, priceMin, priceMax, areaMin, areaMax]);
+  }, [activeStatus, allActive, verifiedLotNumbers, verifiedPricedLotNumbers, query, sort, lots, priceMin, priceMax, areaMin, areaMax]);
 
   const shown = filtered.slice(0, visible);
 
@@ -371,7 +381,7 @@ export default function VelLotsGrid() {
                       <Link to={href} className="flex-1 text-[10px] tracking-[0.18em] uppercase text-[var(--hue-amber)] hover:text-[var(--hue-bone)] transition">Ficha →</Link>
                       <button type="button" onClick={() => handleFocusOnMap(l.id)} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition" title="Ver en el mapa" aria-label="Ver en el mapa"><Crosshair className="h-3 w-3" /></button>
                       <button type="button" onClick={() => setLeadLot({ id: l.id, number: l.lot_number, status: l.status, verified })} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] transition" title="Consultar por este lote" aria-label="Consultar por este lote"><MessageSquare className="h-3 w-3" /></button>
-                      <button type="button" onClick={() => downloadFicha(l)} disabled={pdfLot === l.id || !verified} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 transition hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] disabled:opacity-40" title="Descargar ficha PDF con QR" aria-label="Descargar ficha PDF con QR"><FileDown className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => downloadFicha(l)} disabled={pdfLot === l.id || !verified || !priced} className="inline-flex items-center justify-center rounded-sm border border-white/15 bg-white/[0.03] p-1.5 text-[var(--hue-bone)]/80 transition hover:border-[var(--hue-amber)]/50 hover:text-[var(--hue-bone)] disabled:opacity-40" title="Descargar ficha PDF con QR" aria-label="Descargar ficha PDF con QR"><FileDown className="h-3 w-3" /></button>
                     </div>
                   </div>
                 );
