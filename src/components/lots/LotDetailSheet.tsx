@@ -44,6 +44,7 @@ import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { PublishLotButton } from './PublishLotButton';
 import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
+import { canReservePublicLot, formatPublicLotPrice, formatPublicLotUnitPrice } from '@/lib/lots/publicLotCommercial';
 import { useSentinelImagery } from '@/hooks/useSentinelImagery';
 import { formatSentinelDate, sentinelCloudLabel } from '@/lib/satellite/sentinel';
 import { renderLotSatelliteSnapshot } from '@/lib/satellite/renderLotSatelliteSnapshot';
@@ -65,12 +66,7 @@ interface LotDetailSheetProps {
   canManage?: boolean;
 }
 
-const formatPrice = (price: number | null) => {
-  if (!price) return 'Precio no informado';
-  return new Intl.NumberFormat('es-CL', {
-    style: 'currency', currency: 'CLP', maximumFractionDigits: 0,
-  }).format(price);
-};
+const formatPrice = formatPublicLotPrice;
 
 const getStatusConfig = (status: string | null) => {
   switch (status) {
@@ -189,7 +185,7 @@ export const LotDetailSheet = ({
   const features = parseLotFeatures(lot.features);
   const status = getStatusConfig(lot.status);
   const polygon = lot.polygon as number[][] | null;
-  const pricePerSqm = lot.price_per_sqm || (lot.price && lot.area ? lot.price / Number(lot.area) : null);
+  const pricePerSqm = formatPublicLotUnitPrice(lot.price, Number(lot.area));
   const slopeLabel = getSlopeLabel(lot.slope_category);
   const images = ((lot as any).images as string[] | null) || [];
 
@@ -228,7 +224,7 @@ export const LotDetailSheet = ({
             <div>
               <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Precio</p>
               <p className="mt-1 text-3xl font-bold tracking-tight text-foreground">{formatPrice(lot.price)}</p>
-              {pricePerSqm && <p className="mt-1 text-sm text-muted-foreground">{formatPrice(pricePerSqm)}/m²</p>}
+              {pricePerSqm && <p className="mt-1 text-sm text-muted-foreground">{pricePerSqm}</p>}
             </div>
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Superficie</p>
@@ -317,7 +313,7 @@ export const LotDetailSheet = ({
             </div>
             <div className="rounded-2xl border border-primary/25 bg-primary/10 p-4">
               <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground"><TrendingUp className="h-3.5 w-3.5" />Precio/m²</div>
-              <p className="mt-2 text-xl font-semibold text-primary">{pricePerSqm ? `${formatPrice(pricePerSqm)}/m²` : '—'}</p>
+              <p className="mt-2 text-xl font-semibold text-primary">{pricePerSqm ?? '—'}</p>
             </div>
           </section>
 
@@ -382,11 +378,17 @@ export const LotDetailSheet = ({
         {lot.status === 'available' && (
           <div className="fixed bottom-0 right-0 z-30 w-full space-y-2 border-t border-border bg-card p-4 backdrop-blur-xl sm:max-w-xl">
             <div className="grid grid-cols-[1fr_auto_auto] gap-2">
-              <Button size="lg" className="h-12 gap-2 rounded-xl bg-primary font-semibold text-black hover:bg-emerald-400" onClick={() => onReserve?.(lot)}>
-                <Bookmark className="h-4 w-4" />Reservar lote
-              </Button>
+              {canReservePublicLot(lot) && onReserve ? (
+                <Button size="lg" className="h-12 gap-2 rounded-xl bg-primary font-semibold text-black hover:bg-emerald-400" onClick={() => onReserve(lot)}>
+                  <Bookmark className="h-4 w-4" />Reservar lote
+                </Button>
+              ) : (
+                <Button size="lg" variant="secondary" className="h-12 gap-2 rounded-xl" onClick={() => handleWhatsApp(lot, projectName)}>
+                  <MessageCircle className="h-4 w-4" />Consultar lote
+                </Button>
+              )}
               {onDesign && <Button variant="outline" size="lg" className="h-12 rounded-xl border-border bg-muted/60 px-4 text-foreground hover:bg-muted/60" onClick={() => onDesign(lot)} aria-label="Diseñar parcela"><Palette className="h-4 w-4" /></Button>}
-              {onFinance && <Button variant="outline" size="lg" className="h-12 rounded-xl border-border bg-muted/60 px-4 text-foreground hover:bg-muted/60" onClick={() => onFinance(lot)} aria-label="Simular financiamiento"><Calculator className="h-4 w-4" /></Button>}
+              {canReservePublicLot(lot) && onFinance && <Button variant="outline" size="lg" className="h-12 rounded-xl border-border bg-muted/60 px-4 text-foreground hover:bg-muted/60" onClick={() => onFinance(lot)} aria-label="Simular financiamiento"><Calculator className="h-4 w-4" /></Button>}
             </div>
             <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-xl border-border bg-muted/60 text-muted-foreground hover:bg-muted/60 hover:text-foreground">
               <Link
