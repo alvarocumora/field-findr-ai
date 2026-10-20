@@ -125,7 +125,10 @@ const ProjectExperience = () => {
     [verifiedLots, selectedLotSnapshot?.id],
   );
   const inventoryReady = !lotsLoading && !lotsError;
-  const currentInspectorLot = useMemo(
+  // The public RPC deliberately omits buyer_* PII, whereas LotDetailSheet's
+  // legacy TypeScript prop still expects the full private "lots" row.
+  // This view only passes safe public fields at runtime.
+  const currentInspectorLot = useMemo<any | null>(
     () => verifiedLots.find((lot: any) => lot.id === inspectorLot?.id) ?? null,
     [verifiedLots, inspectorLot?.id],
   );
