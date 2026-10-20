@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { CalendarDays, MessageCircle, Map } from 'lucide-react';
+import { MessageCircle, Map } from 'lucide-react';
 
 interface ProjectConversionBarProps {
   priceFrom?: number | null;
@@ -44,7 +44,7 @@ export const ProjectConversionBar = ({
           </Button>
         )}
         <Button className="min-h-11" onClick={onLead}>
-          <CalendarDays className="h-4 w-4 mr-1.5" />Agendar
+          <MessageCircle className="h-4 w-4 mr-1.5" />Consultar
         </Button>
       </div>
     </div>
