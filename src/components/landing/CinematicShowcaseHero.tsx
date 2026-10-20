@@ -14,8 +14,9 @@ interface ShowcaseProject {
   city: string | null;
   region: string | null;
   image?: string;
-  total: number;
-  available: number;
+  total: number | null;
+  available: number | null;
+  inventoryReady: boolean;
   minPrice?: number;
 }
 
@@ -41,16 +42,18 @@ export const useShowcaseProjects = () =>
         .limit(6);
       if (error) throw error;
       return Promise.all((data ?? []).map(async (p) => {
-        const { data: lots } = await supabase.rpc('get_public_lots', { p_project_id: p.id });
+        const { data: lots, error: lotsError } = await supabase.rpc('get_public_lots', { p_project_id: p.id });
+        // Do not present stale project counters as live inventory after an RPC failure.
         const list = (lots ?? []) as Array<{ price: number | null; status: string | null }>;
         const avail = list.filter((l) => l.status === 'available');
         const prices = avail.map((l) => Number(l.price)).filter((n) => Number.isFinite(n) && n > 0);
         return {
           id: p.id, name: p.name, city: p.city, region: p.region,
           image: projectImages(p)[0],
-          total: list.length || Number(p.total_lots ?? 0),
-          available: list.length ? avail.length : Number(p.available_lots ?? 0),
-          minPrice: prices.length ? Math.min(...prices) : undefined,
+          inventoryReady: !lotsError,
+          total: lotsError ? null : list.length,
+          available: lotsError ? null : avail.length,
+          minPrice: !lotsError && prices.length ? Math.min(...prices) : undefined,
         };
       }));
     },
@@ -92,7 +95,7 @@ const CinematicShowcaseHero = () => {
             Encuentra tierra con <em className="text-primary">papeles claros</em> y precio publicado.
           </h1>
           <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
-            Parcelas, campos y suelo industrial con masterplan, disponibilidad en vivo y visita agendada.
+            Parcelas, campos y terrenos industriales con información territorial, fichas de proyecto y opciones para coordinar visitas.
           </p>
 
           <form onSubmit={submit} role="search" className="mt-7 max-w-xl">
@@ -117,7 +120,7 @@ const CinematicShowcaseHero = () => {
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />Rol propio por parcela</span>
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />Consulta documentación e inventario por proyecto</span>
             <Link to="/planes-loteos" className="inline-flex items-center gap-1.5 underline-offset-4 hover:text-foreground hover:underline">
               <Building2 className="h-4 w-4" aria-hidden="true" />¿Vendes terrenos? Publica tu proyecto
             </Link>
@@ -149,7 +152,7 @@ const CinematicShowcaseHero = () => {
                   <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground"><MapPin className="h-3 w-3" aria-hidden="true" />{[active.city, active.region].filter(Boolean).join(', ') || 'Chile'}</p>
                 </div>
                 <dl className="flex gap-5 text-right">
-                  <div><dt className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Disponibles</dt><dd className="rural-data text-sm font-semibold text-foreground">{active.available}/{active.total}</dd></div>
+                  <div><dt className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Disponibles</dt><dd className="rural-data text-sm font-semibold text-foreground">{active.inventoryReady ? `${active.available}/${active.total}` : 'Consultar'}</dd></div>
                   <div><dt className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Desde</dt><dd className="rural-data text-sm font-semibold text-primary">{clp(active.minPrice)}</dd></div>
                 </dl>
               </Link>
