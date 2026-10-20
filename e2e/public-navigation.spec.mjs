@@ -99,3 +99,29 @@ test('portada, contacto y agendamiento no desbordan horizontalmente', async ({ p
     expect(overflow, `desborde horizontal en ${route}`).toBeLessThanOrEqual(4);
   }
 });
+
+test('Terrain View distingue inventario no verificable de stock vacío y no ofrece reserva', async ({ page }) => {
+  const projectId = '11111111-2222-4333-8444-555555555555';
+  await page.route('**/rest/v1/projects?*', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      id: projectId, name: 'Proyecto QA Territorial', slug: 'proyecto-qa-territorial',
+      city: 'Licantén', region: 'Maule', location: 'Licantén, Maule',
+      latitude: -34.9, longitude: -71.8, legal_documents: [],
+      plan_images: [], images: [], reservation_deposit: 500000,
+    }),
+  }));
+  await page.route('**/rest/v1/rpc/get_public_lots*', route => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    body: JSON.stringify({ code: 'PGRST500', message: 'temporary outage' }),
+  }));
+  await page.goto(`/proyecto/${projectId}/experiencia`);
+  await expect(page.getByRole('heading', { name: /Explora el proyecto/i })).toBeVisible();
+  const alert = page.getByRole('alert');
+  await expect(alert).toContainText('No pudimos verificar el inventario', { timeout: 30_000 });
+  await expect(page.getByRole('button', { name: 'Reintentar inventario' })).toBeVisible();
+  await expect(page.getByText('No hay inventario verificado para dibujar el masterplan')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Reservar', exact: true })).toHaveCount(0);
+});
