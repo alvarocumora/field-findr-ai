@@ -65,6 +65,8 @@ import { useReviewStats } from '@/hooks/useReviews';
 import { projectSocial } from '@/lib/landing/projectSocial';
 import { LandingLeadForm } from '@/pages/landing/LandingLeadForm';
 import { resolveProjectInquiryLot } from '@/lib/projects/projectInquiry';
+import { ProjectAerialShowcase } from '@/components/projects/ProjectAerialShowcase';
+import { ProjectNarrative } from '@/components/projects/ProjectNarrative';
 
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
@@ -496,6 +498,17 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
           </section>
         )}
 
+        {/* Sin panorámicas 360 pero con fotos de dron: recorrido aéreo real */}
+        {!tourScenesLoading && tourScenes.length === 0 && Array.isArray((project as any).images) && (project as any).images.length > 0 && (
+          <section ref={tourSectionRef} className="container px-4 pb-4 scroll-mt-20" aria-label="Recorrido aéreo del proyecto">
+            <ProjectAerialShowcase
+              images={(project as any).images}
+              projectName={project.name}
+              onOpenMap={() => openProjectMode('map')}
+            />
+          </section>
+        )}
+
         {/* Immersive Hero */}
         <ProjectHero
           project={project}
@@ -528,9 +541,16 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                 <Camera className="h-4 w-4" aria-hidden="true" />Tour 360
               </Button>
             )}
+            {tourScenes.length === 0 && Array.isArray((project as any).images) && (project as any).images.length > 0 && (
+              <Button type="button" size="sm" variant="outline" onClick={scrollToTour} className="min-h-10 gap-2">
+                <Camera className="h-4 w-4" aria-hidden="true" />Vista aérea
+              </Button>
+            )}
           </nav>
           <Button onClick={() => setLeadOpen(true)} className="min-h-11">Agendar visita o consultar</Button>
         </div>
+
+        <ProjectNarrative project={project} lotCount={lotsLoading || lotsError ? null : lots.length} />
         <Dialog open={leadOpen} onOpenChange={setLeadOpen}>
           <DialogContent>
             <DialogTitle>Consulta por {project.name}</DialogTitle>
