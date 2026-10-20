@@ -71,3 +71,23 @@ test('sin WebGL, el explorador conserva una superficie de contenido', async ({ p
   await expect(page.locator('#contenido-principal')).toBeAttached();
   await expect(page.locator('body')).not.toContainText('Oops! Page not found');
 });
+
+test('landings premium mantienen identidad y navegación del proyecto', async ({ page }) => {
+  await page.goto('/valle-hualane');
+  await expect(page.getByRole('heading', { name: 'Valle de Hualañé' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Visitas y consultas' })).toBeVisible();
+
+  await page.goto('/p/valle-escondido-licanten');
+  await expect(page.getByRole('heading', { name: /Valle Escondido/i })).toBeVisible();
+});
+
+test('portada, contacto y agendamiento no desbordan horizontalmente', async ({ page }) => {
+  for (const route of ['/', '/contacto', '/agendar?meeting_type=visita_terreno']) {
+    await page.goto(route);
+    await expect(page.locator('body')).toBeVisible();
+    const overflow = await page.evaluate(() =>
+      document.documentElement.scrollWidth - document.documentElement.clientWidth
+    );
+    expect(overflow, `desborde horizontal en ${route}`).toBeLessThanOrEqual(4);
+  }
+});
