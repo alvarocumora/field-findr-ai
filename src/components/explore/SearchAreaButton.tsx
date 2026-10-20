@@ -65,11 +65,12 @@ const SearchAreaButton = ({
           <Button
             onClick={handleSearch}
             disabled={isSearching}
+            aria-busy={isSearching}
             size="sm"
             className={cn(
-              'h-9 px-5 rounded-full shadow-2xl shadow-black/30',
-              'bg-black/70 backdrop-blur-xl text-white',
-              'border border-white/15 hover:bg-black/80 hover:border-white/25',
+              'min-h-11 px-5 rounded-full shadow-md backdrop-blur-xl',
+              'bg-primary/95 text-primary-foreground',
+              'border border-primary/30 hover:bg-primary',
               'transition-all duration-300 gap-2 text-xs font-semibold',
               isSearching && 'opacity-80'
             )}
@@ -77,7 +78,7 @@ const SearchAreaButton = ({
             {isSearching ? (
               <>
                 <RefreshCw className="h-4 w-4 animate-spin" />
-                <span>Buscando...</span>
+                <span>Actualizando resultados…</span>
               </>
             ) : (
               <>
