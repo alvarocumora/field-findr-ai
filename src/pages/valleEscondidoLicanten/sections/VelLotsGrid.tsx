@@ -394,7 +394,7 @@ export default function VelLotsGrid() {
             <VelLeadForm
               lotId={leadLot.id}
               lotNumber={leadLot.number}
-              lotStatus={leadLot.status}
+              lotStatus={leadLot.verified ? leadLot.status : undefined}
               defaultReason={leadLot.verified && leadLot.status === 'available' ? 'reserva' : 'informacion'}
               compact
               onSuccess={() => setTimeout(() => setLeadLot(null), 1800)}
