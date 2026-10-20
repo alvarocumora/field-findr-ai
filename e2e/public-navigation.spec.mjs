@@ -3,6 +3,14 @@ import { expect, test } from '@playwright/test';
 // Public routes only: no privileged login, Supabase mutation, reservation,
 // payment, or dependency on live prices. The local production bundle is served
 // by Vite preview and is tested in actual Chromium at mobile/desktop widths.
+test('Atlas territorial de portada tiene una sección navegable', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Explorar Chile por región' }).click();
+  await expect(page).toHaveURL(/#atlas$/);
+  await expect(page.locator('#atlas')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Explora Chile desde su territorio.' })).toBeVisible();
+});
+
 test('portada → explorador mantiene filtro real de parcela', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /Encuentra tierra con/i })).toBeVisible();

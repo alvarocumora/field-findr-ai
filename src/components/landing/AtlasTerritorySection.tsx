@@ -7,20 +7,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
 import { groupByCanonicalRegion, resolveChileCommune, resolveRegionTerritory } from '@/lib/territories';
+import { projectLandingPath } from '@/lib/landing/paths';
 
 interface AtlasProject {
   id: string;
   name: string;
+  slug: string | null;
   city: string | null;
   region: string | null;
   country: string | null;
-  total_lots: number | null;
-  available_lots: number | null;
 }
 
 interface TravelState {
   project: AtlasProject;
-  stage: 'region' | 'project' | 'parcel';
+  stage: 'region' | 'commune' | 'project';
 }
 
 const AtlasTerritorySection = () => {
@@ -32,12 +32,12 @@ const AtlasTerritorySection = () => {
   const [travel, setTravel] = useState<TravelState | null>(null);
   const travelTimers = useRef<number[]>([]);
 
-  const { data: projects = [], isLoading } = useQuery({
+  const { data: projects = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['atlas-active-projects', 'Chile'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, name, city, region, country, total_lots, available_lots')
+        .select('id, name, slug, city, region, country')
         .eq('status', 'active')
         .eq('country', 'Chile')
         .order('featured', { ascending: false })
@@ -61,10 +61,8 @@ const AtlasTerritorySection = () => {
         name: territory.displayName,
         canonicalName: territory.name,
         projects: items.length,
-        lots: items.reduce((sum, project) => sum + Number(project.total_lots ?? 0), 0),
-        available: items.reduce((sum, project) => sum + Number(project.available_lots ?? 0), 0),
       }))
-      .sort((a, b) => b.projects - a.projects || b.available - a.available)
+      .sort((a, b) => b.projects - a.projects || a.name.localeCompare(b.name, 'es'))
       .slice(0, 6);
   }, [projects]);
 
@@ -86,7 +84,6 @@ const AtlasTerritorySection = () => {
       code: string | null;
       province: string | null;
       projects: number;
-      available: number;
     }>();
 
     regionProjects.forEach((project) => {
@@ -100,10 +97,8 @@ const AtlasTerritorySection = () => {
         code: resolved?.communeCode || null,
         province: resolved?.province || null,
         projects: 0,
-        available: 0,
       };
       current.projects += 1;
-      current.available += Number(project.available_lots ?? 0);
       grouped.set(key, current);
     });
 
@@ -145,16 +140,16 @@ const AtlasTerritorySection = () => {
     });
 
     if (prefersReducedMotion) {
-      navigate(`/proyecto/${project.id}/experiencia`);
+      navigate(projectLandingPath(project));
       return;
     }
 
     travelTimers.current.forEach((timer) => window.clearTimeout(timer));
     setTravel({ project, stage: 'region' });
     travelTimers.current = [
-      window.setTimeout(() => setTravel({ project, stage: 'project' }), 520),
-      window.setTimeout(() => setTravel({ project, stage: 'parcel' }), 1040),
-      window.setTimeout(() => navigate(`/proyecto/${project.id}/experiencia`), 1600),
+      window.setTimeout(() => setTravel({ project, stage: 'commune' }), 520),
+      window.setTimeout(() => setTravel({ project, stage: 'project' }), 1040),
+      window.setTimeout(() => navigate(projectLandingPath(project)), 1600),
     ];
   };
 
@@ -178,14 +173,14 @@ const AtlasTerritorySection = () => {
               <span className="font-swiss text-[11px]">OfertaTerrenos Atlas</span>
             </div>
             <h2 id="atlas-title" className="mt-5 max-w-xl font-editorial text-4xl font-medium leading-[1.05] md:text-6xl">
-              Chile no es una lista. Es un territorio para explorar.
+              Explora Chile desde su territorio.
             </h2>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-background/65 md:text-lg">
-              Navega desde la región hasta el proyecto y la parcela. Atlas convierte inventario real en una experiencia territorial, sin perder disponibilidad ni contexto comercial.
+              Navega por región y comuna, descubre los proyectos y llega a sus fichas territoriales. La disponibilidad y los precios se verifican en cada proyecto.
             </p>
 
             <div className="mt-8 flex items-center gap-2 font-swiss text-[11px] text-background/50" aria-label="Flujo Atlas">
-              <span>Chile</span><span>→</span><span>Región</span><span>→</span><span>Comuna</span><span>→</span><span>Proyecto</span><span>→</span><span className="text-background">Parcela</span>
+              <span>Chile</span><span>→</span><span>Región</span><span>→</span><span>Comuna</span><span>→</span><span className="text-background">Proyecto</span>
             </div>
           </motion.div>
 
@@ -200,7 +195,12 @@ const AtlasTerritorySection = () => {
               </Button>
             </div>
 
-            {isLoading ? (
+            {isError ? (
+              <div role="alert" className="py-8 text-sm text-background">
+                <p>No pudimos cargar las regiones en este momento. Puedes seguir al explorador o volver a intentarlo.</p>
+                <Button type="button" variant="secondary" className="mt-4 min-h-11" onClick={() => void refetch()}>Reintentar Atlas</Button>
+              </div>
+            ) : isLoading ? (
               <div className="grid gap-3 py-6 sm:grid-cols-2">
                 {[0, 1, 2, 3].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl bg-background/10" />)}
               </div>
@@ -222,7 +222,7 @@ const AtlasTerritorySection = () => {
                       >
                         <span className={`block font-swiss text-[10px] ${active ? 'text-foreground/55' : 'text-background/45'}`}>{region.projects} proyecto{region.projects === 1 ? '' : 's'}</span>
                         <span className="mt-1 block font-editorial text-lg font-medium">{region.name}</span>
-                        <span className={`mt-1 block text-xs ${active ? 'text-foreground/60' : 'text-background/55'}`}>{region.available} lotes disponibles</span>
+                        <span className={`mt-1 block text-xs ${active ? 'text-foreground/60' : 'text-background/55'}`}>Explorar proyectos en esta región</span>
                       </button>
                     );
                   })}
@@ -282,15 +282,14 @@ const AtlasTerritorySection = () => {
                       <h3 className={`font-editorial text-xl font-medium ${showCardCommuneLabel ? 'mt-1' : ''}`}>{project.name}</h3>
                       <div className="mt-5 flex items-end justify-between gap-4">
                         <div>
-                          <p className="text-2xl font-bold">{Number(project.available_lots ?? 0)}</p>
-                          <p className="text-xs text-background/45">lotes disponibles</p>
+                          <p className="text-xs text-background/65">Disponibilidad por confirmar en la ficha del proyecto</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => travelToProject(project)}
                           className="inline-flex items-center text-sm font-medium text-background/75 transition-colors hover:text-background"
                         >
-                          Viajar al proyecto <ArrowRight className="ml-1.5 h-4 w-4" />
+                          Ver proyecto <ArrowRight className="ml-1.5 h-4 w-4" />
                         </button>
                       </div>
                     </motion.div>
@@ -319,13 +318,13 @@ const AtlasTerritorySection = () => {
             <motion.div
               className="absolute h-[26rem] w-[26rem] rounded-full border border-white/15 md:h-[40rem] md:w-[40rem]"
               initial={{ scale: 0.35, opacity: 0.2 }}
-              animate={{ scale: travel.stage === 'parcel' ? 2.6 : travel.stage === 'project' ? 1.45 : 0.8, opacity: 0.5 }}
+              animate={{ scale: travel.stage === 'project' ? 2.6 : travel.stage === 'commune' ? 1.45 : 0.8, opacity: 0.5 }}
               transition={{ duration: 0.52, ease: 'easeInOut' }}
             />
             <motion.div
               className="absolute h-[15rem] w-[15rem] rounded-full border border-white/10 md:h-[24rem] md:w-[24rem]"
               initial={{ scale: 0.4 }}
-              animate={{ scale: travel.stage === 'parcel' ? 2.2 : travel.stage === 'project' ? 1.25 : 0.72 }}
+              animate={{ scale: travel.stage === 'project' ? 2.2 : travel.stage === 'commune' ? 1.25 : 0.72 }}
               transition={{ duration: 0.52, ease: 'easeInOut' }}
             />
 
@@ -335,11 +334,11 @@ const AtlasTerritorySection = () => {
                 key={travel.stage}
                 initial={{ opacity: 0, y: 12, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                className="mt-5 font-heading text-4xl font-bold md:text-7xl"
+                className="mt-5 font-editorial text-4xl font-medium md:text-7xl"
               >
                 {travel.stage === 'region' && (travel.project.region || 'Chile')}
+                {travel.stage === 'commune' && (travel.project.city || 'Chile')}
                 {travel.stage === 'project' && travel.project.name}
-                {travel.stage === 'parcel' && 'Entrando al proyecto'}
               </motion.p>
               <motion.div
                 className="mx-auto mt-8 h-px max-w-md origin-left bg-white/35"
@@ -350,9 +349,9 @@ const AtlasTerritorySection = () => {
               <div className="mt-5 flex items-center justify-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-white/45">
                 <span className={travel.stage === 'region' ? 'text-white' : undefined}>Región</span>
                 <span>→</span>
-                <span className={travel.stage === 'project' ? 'text-white' : undefined}>Proyecto</span>
+                <span className={travel.stage === 'commune' ? 'text-white' : undefined}>Comuna</span>
                 <span>→</span>
-                <span className={travel.stage === 'parcel' ? 'text-white' : undefined}>Experiencia</span>
+                <span className={travel.stage === 'project' ? 'text-white' : undefined}>Proyecto</span>
               </div>
             </div>
           </motion.div>
