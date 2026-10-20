@@ -36,7 +36,7 @@ export const HybridCTA = () => (
       </h2>
       <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
         <Button asChild size="lg" className="brand-gradient-btn h-12 rounded-full border-0 px-8 text-base font-semibold">
-          <Link to="/agendar"><CalendarDays className="mr-2 h-4 w-4" />Solicitar una visita</Link>
+          <Link to="/agendar?meeting_type=visita_terreno&amp;source=portada"><CalendarDays className="mr-2 h-4 w-4" />Solicitar una visita</Link>
         </Button>
         <Button asChild size="lg" variant="outline" className="h-12 rounded-full px-8">
           <Link to="/explorar">Explorar mapa completo <ArrowRight className="ml-2 h-4 w-4" /></Link>
