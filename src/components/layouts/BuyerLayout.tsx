@@ -5,11 +5,11 @@ import { useProfile } from '@/hooks/useProfile';
 import { useIsAdmin, useIsAgent } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import {
-  Home, Heart, MapPin, Bell, User, Settings, LogOut, Menu, Search, ChevronLeft,
+  Home, Heart, MapPin, Bell, User, LogOut, Menu, Search, ChevronLeft,
 } from 'lucide-react';
 
 interface BuyerLayoutProps {
@@ -71,7 +71,7 @@ const BuyerSidebar = ({ collapsed, onClose }: { collapsed?: boolean; onClose?: (
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 p-3 space-y-1">
+      <nav aria-label="Navegación de comprador" className="flex-1 p-3 space-y-1">
         {NAV_ITEMS.map(item => {
           const active = location.pathname === item.href;
           return (
@@ -79,6 +79,7 @@ const BuyerSidebar = ({ collapsed, onClose }: { collapsed?: boolean; onClose?: (
               key={item.href}
               to={item.href}
               onClick={onClose}
+              aria-current={active ? 'page' : undefined}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
                 active
@@ -117,6 +118,8 @@ const BuyerSidebar = ({ collapsed, onClose }: { collapsed?: boolean; onClose?: (
 const BuyerLayout = ({ children }: BuyerLayoutProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, loading: authLoading } = useAuth();
+  const { pathname } = useLocation();
+  const currentSection = NAV_ITEMS.find((item) => pathname === item.href)?.label ?? 'Mi espacio';
 
   if (authLoading) {
     return (
@@ -131,7 +134,7 @@ const BuyerLayout = ({ children }: BuyerLayoutProps) => {
   }
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="theme-rural min-h-screen flex w-full bg-background text-foreground">
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <BuyerSidebar />
@@ -139,22 +142,24 @@ const BuyerLayout = ({ children }: BuyerLayoutProps) => {
 
       {/* Mobile Sidebar */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="p-0 w-60">
+        <SheetContent side="left" className="w-60 border-border bg-background p-0">
+          <SheetTitle className="sr-only">Navegación de comprador</SheetTitle>
           <BuyerSidebar onClose={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
 
       {/* Main */}
-      <main className="flex-1 md:ml-0">
+      <main className="min-w-0 flex-1 bg-background md:ml-0">
         {/* Mobile Header */}
-        <div className="md:hidden flex items-center h-14 px-4 border-b border-border bg-background sticky top-0 z-30">
-          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}>
-            <Menu className="h-5 w-5" />
+        <div className="sticky top-0 z-sticky flex h-14 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur md:hidden">
+          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)} className="min-h-11 min-w-11" aria-label="Abrir menú de comprador">
+            <Menu className="h-5 w-5" aria-hidden="true" />
           </Button>
-          <span className="ml-3 font-bold text-sm">Mi Panel</span>
+          <span className="font-editorial text-lg font-medium">{currentSection}</span>
+          <span className="ml-auto text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Mi espacio</span>
         </div>
 
-        <div className="p-4 md:p-6 lg:p-8">
+        <div className="mx-auto w-full max-w-[1680px] p-4 md:p-6 lg:p-8">
           {children}
         </div>
       </main>
