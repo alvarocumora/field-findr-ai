@@ -35,7 +35,7 @@ const Agendar = () => {
   // repetirlo a mano en "Cuéntanos de tu caso".
   const lotContext = lotId
     ? `Visita para el Lote ${lotNumber ?? ''}${projectName ? ` · ${projectName}` : ''}`.trim()
-    : '';
+    : projectId && projectName ? `Visita a ${projectName}` : '';
   const createMeeting = useCreateMeetingRequest();
   const [submitted, setSubmitted] = useState(false);
   const requestedType = searchParams.get('meeting_type');
@@ -138,11 +138,11 @@ const Agendar = () => {
               <CardTitle>{submitted ? 'Solicitud enviada' : 'Solicita una fecha y bloque'}</CardTitle>
             </CardHeader>
             <CardContent>
-              {lotId && !submitted && (
+              {projectId && !submitted && (
                 <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
                   <span className="font-medium text-foreground">Agendando para: </span>
                   <span className="text-muted-foreground">
-                    Lote {lotNumber ?? '—'}{projectName ? ` · ${projectName}` : ''}
+                    {lotId ? `Lote ${lotNumber ?? '—'}${projectName ? ` · ${projectName}` : ''}` : projectName || 'Proyecto seleccionado'}
                   </span>
                 </div>
               )}
