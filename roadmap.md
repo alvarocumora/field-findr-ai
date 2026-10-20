@@ -1,5 +1,11 @@
 # Roadmap
 
+## Oferta Licantén y simulador simple
+
+- [ ] Añadir campaña con fotografía real y enlace canónico, sin alterar buscador ni inventario
+- [ ] Integrar simulador simple CLP y consulta existente en portada y acceso en ficha Licantén
+- [ ] Validar fórmula, botones y vistas 1440/390/320; dejar preview sin publicar
+
 - [x] Construir portada Territorio cinematográfico con búsqueda y proyectos reales
 - [x] Unificar navegación, tarjetas, confianza, proceso y CTA comercial
 - [x] Crear e integrar símbolo, wordmark, kit social, favicon e iconos PWA
