@@ -125,7 +125,7 @@ export default function ValleHualaneMasterplan() {
     type: 'website',
     url: 'https://ofertaterrenos.com/valle-hualane/plano',
     canonicalUrl: 'https://ofertaterrenos.com/valle-hualane/plano',
-    image: 'https://ofertaterrenos.com/social/valle-hualane-og.png',
+    image: 'https://ofertaterrenos.com/social/valle-hualane-og.jpg',
   });
 
   const fitProject = useCallback(() => {

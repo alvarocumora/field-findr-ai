@@ -40,11 +40,20 @@ export function projectSocial(project: SocialProject, lots?: SocialLot[]) {
     title: project.name,
     description,
     url: projectCanonicalUrl(project),
-    image: publicImageUrl(config.hero.image)
+    // WhatsApp drops share images over ~300 KB, so curated 1200x630 cards win
+    // over unsized originals from the project gallery.
+    image: (project.slug && SHARE_IMAGE_BY_SLUG[project.slug])
+      || publicImageUrl(config.hero.image)
       || project.images?.map(publicImageUrl).find(Boolean)
-      || `${SITE_URL}/og-oferta-terrenos.png`,
+      || DEFAULT_SHARE_IMAGE,
   };
 }
+
+export const DEFAULT_SHARE_IMAGE = `${SITE_URL}/og-oferta-terrenos.jpg`;
+export const SHARE_IMAGE_BY_SLUG: Record<string, string> = {
+  'valle-escondido-licanten': `${SITE_URL}/social/valle-escondido-licanten-og.jpg`,
+  'valle-hualane': `${SITE_URL}/social/valle-hualane-og.jpg`,
+};
 
 export const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);

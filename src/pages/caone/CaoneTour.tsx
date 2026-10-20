@@ -115,7 +115,7 @@ export default function CaoneTour() {
     type: 'website',
     url: tourUrl,
     canonicalUrl: tourUrl,
-    image: 'https://ofertaterrenos.com/social/valle-hualane-og.png',
+    image: 'https://ofertaterrenos.com/social/valle-hualane-og.jpg',
   });
 
   const copyProjectLink = async () => {
