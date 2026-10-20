@@ -125,3 +125,18 @@ test('Terrain View distingue inventario no verificable de stock vacío y no ofre
   await expect(page.getByText('No hay inventario verificado para dibujar el masterplan')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reservar', exact: true })).toHaveCount(0);
 });
+
+test('rutas privadas sin sesión regresan a autenticación sin perder contexto', async ({ page }) => {
+  const destinations = [
+    '/comprador/inicio?tab=favoritos#guardados',
+    '/asesor/projects?tab=inventario#lotes',
+    '/admin/dashboard?view=operaciones#resumen',
+  ];
+  for (const destination of destinations) {
+    await page.goto(destination);
+    await expect(page).toHaveURL(/\/auth\?redirect=/, { timeout: 20_000 });
+    const current = new URL(page.url());
+    expect(current.searchParams.get('redirect'), `destino tras login: ${destination}`)
+      .toBe(destination);
+  }
+});
