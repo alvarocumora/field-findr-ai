@@ -165,8 +165,14 @@ const ProjectGallery = ({ images, isOwner }: { images: string[]; isOwner: boolea
 const isValidUUID = (val?: string) =>
   !!val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
 
-const ProjectDetail = () => {
-  const { id } = useParams<{ id: string }>();
+/**
+ * Experiencia única de proyecto: /proyecto/:id y /p/:slug (vía ProjectLanding)
+ * montan esta misma ficha dentro del shell público, con tour 360, masterplan,
+ * cotizador y reserva. No existen landings paralelas por proyecto.
+ */
+const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
+  const params = useParams<{ id: string }>();
+  const id = projectId ?? params.id;
   const validId = isValidUUID(id);
   const queryClient = useQueryClient();
   const { user } = useAuth();
