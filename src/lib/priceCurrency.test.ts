@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bestPricePerM2, formatPricePerM2, formatPriceWithCurrency, minPriceByCurrency } from './priceCurrency';
+import { bestPricePerM2, formatPricePerM2, formatPriceWithCurrency, hasMixedCurrencies, minPriceByCurrency } from './priceCurrency';
 
 describe('priceCurrency', () => {
   it('never renders 35.000 UF as $35K', () => {
@@ -26,5 +26,17 @@ describe('priceCurrency', () => {
     const uf = { price: 100, area_m2: 10000, currency: 'UF' };
     const clp = { price: 10000000, area_m2: 5000, currency: 'CLP' };
     expect(bestPricePerM2([uf, clp], 'CLP')).toBe(clp);
+  });
+  it('a comparador never treats CLP and UF as one comparable currency', () => {
+    expect(hasMixedCurrencies([
+      { currency: 'UF' }, { currency: 'CLP' },
+    ])).toBe(true);
+    expect(hasMixedCurrencies([{ currency: 'UF' }, { currency: 'uf' }])).toBe(false);
+    expect(hasMixedCurrencies([{ currency: null }, { currency: 'CLP' }])).toBe(false);
+  });
+  it('formats UF unit prices without collapsing fractions to CLP pesos', () => {
+    expect(formatPricePerM2(3500, 10000, 'UF')).toBe('0,35 UF/m²');
+    expect(formatPricePerM2(3500, 10000, 'CLP')).toBeNull();
+    expect(formatPricePerM2(10000, 0, 'CLP')).toBeNull();
   });
 });

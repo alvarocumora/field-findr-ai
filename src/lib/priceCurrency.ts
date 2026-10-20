@@ -63,3 +63,8 @@ export const bestPricePerM2 = <T extends Priced>(items: T[], currency?: string):
   }
   return best;
 };
+
+/** A comparative winner or price rank cannot be asserted across currencies
+ * without an explicit, trusted UF/CLP exchange rate. */
+export const hasMixedCurrencies = (items: ReadonlyArray<{ currency?: string | null }>): boolean =>
+  new Set(items.map(item => cur(item.currency))).size > 1;

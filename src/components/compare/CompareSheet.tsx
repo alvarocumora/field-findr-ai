@@ -4,19 +4,23 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useCompare } from '@/hooks/useCompare';
-import { formatPrice, formatArea, getListingTypeLabel, getPricePerM2, getLegalStatusLabel } from '@/hooks/useListings';
+import { formatPrice, formatArea, getListingTypeLabel, getLegalStatusLabel } from '@/hooks/useListings';
+import { formatPricePerM2, hasMixedCurrencies } from '@/lib/priceCurrency';
 import { calculateInvestmentScore } from '@/lib/investmentScore';
 import { cn } from '@/lib/utils';
 
 const CompareSheet = memo(() => {
   const { compareList, removeFromCompare, isCompareOpen, setCompareOpen } = useCompare();
 
-  const scores = useMemo(() => compareList.map(l => calculateInvestmentScore(l)), [compareList]);
+  const mixedCurrencies = useMemo(() => hasMixedCurrencies(compareList), [compareList]);
+  // investmentScore benchmarks price against CLP/m². It is not valid for UF.
+  const scores = useMemo(() => compareList.map(l => (l.currency || 'CLP').toUpperCase() === 'CLP' ? calculateInvestmentScore(l) : null), [compareList]);
   const bestScoreIdx = useMemo(() => {
     let best = -1, bestVal = -1;
-    scores.forEach((s, i) => { if (s.score > bestVal) { bestVal = s.score; best = i; } });
+    if (mixedCurrencies || scores.some(s => s === null)) return -1;
+    scores.forEach((s, i) => { if (s && s.score > bestVal) { bestVal = s.score; best = i; } });
     return best;
-  }, [scores]);
+  }, [scores, mixedCurrencies]);
 
   const rows: { label: string; icon: React.ReactNode; render: (l: typeof compareList[0], idx: number) => React.ReactNode }[] = [
     {
@@ -24,6 +28,7 @@ const CompareSheet = memo(() => {
       icon: <TrendingUp className="h-4 w-4" />,
       render: (_, idx) => {
         const s = scores[idx];
+        if (!s) return <span className="text-xs text-muted-foreground">Sin score: moneda UF</span>;
         return (
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -44,8 +49,8 @@ const CompareSheet = memo(() => {
       label: 'Precio/m²',
       icon: <Ruler className="h-4 w-4" />,
       render: (l) => {
-        const pm2 = getPricePerM2(l.price, l.area_m2);
-        return <span className="text-sm">{pm2 ? `$${pm2.toLocaleString('es-CL')}/m²` : 'N/A'}</span>;
+        const pm2 = formatPricePerM2(l.price, l.area_m2, l.currency);
+        return <span className="text-sm">{pm2 ?? 'No informado'}</span>;
       },
     },
     {
@@ -102,14 +107,18 @@ const CompareSheet = memo(() => {
 
   return (
     <Sheet open={isCompareOpen} onOpenChange={setCompareOpen}>
-      <SheetContent side="bottom" className="h-[85vh] overflow-auto">
+      <SheetContent side="bottom" className="theme-rural h-[85vh] overflow-auto bg-background text-foreground">
         <SheetHeader className="pb-4">
-          <SheetTitle className="flex items-center gap-2">
+          <SheetTitle className="flex items-center gap-2 font-editorial text-xl font-medium">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Comparador Side-by-Side
+            Comparación de terrenos
           </SheetTitle>
         </SheetHeader>
 
+        {mixedCurrencies && <p role="note" className="mb-4 rounded-lg border border-border bg-secondary/50 p-3 text-sm">Las propiedades usan monedas distintas. Los precios se muestran en CLP o UF sin conversión; no se determina una mejor opción económica entre monedas.</p>}
+        {compareList.some(l => (l.currency || 'CLP').toUpperCase() !== 'CLP') && (
+          <p className="mb-4 text-xs text-muted-foreground">El score de inversión actual usa un referente de precios CLP/m²: no se calcula para publicaciones en UF hasta contar con un modelo válido.</p>
+        )}
         {compareList.length < 2 ? (
           <p className="text-center text-muted-foreground py-12">Selecciona al menos 2 propiedades para comparar.</p>
         ) : (
@@ -131,8 +140,10 @@ const CompareSheet = memo(() => {
                         )}
                         <img src={l.images[0] || '/placeholder.svg'} alt="" className="w-full h-28 object-cover" />
                         <button
+                          type="button"
+                          aria-label={`Quitar ${l.title} de comparación`}
                           onClick={() => removeFromCompare(l.id)}
-                          className="absolute top-2 right-2 p-1 rounded-full bg-black/50 text-white hover:bg-destructive transition-colors"
+                          className="absolute top-2 right-2 grid h-9 w-9 place-items-center rounded-full bg-black/70 text-white hover:bg-destructive transition-colors"
                         >
                           <X className="h-3.5 w-3.5" />
                         </button>
