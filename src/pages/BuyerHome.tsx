@@ -16,7 +16,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '@/components/Layout';
-import { projectLandingPath } from '@/lib/landing/paths';
 import ActivityTimeline from '@/components/buyer/ActivityTimeline';
 import PriceAlertCard from '@/components/buyer/PriceAlertCard';
 
@@ -208,7 +207,7 @@ const BuyerHome = () => {
             ) : (
               <div className="grid sm:grid-cols-2 gap-4">
                 {featuredProjects?.map((project: any) => (
-                  <Link key={project.id} to={projectLandingPath(project)}>
+                  <Link key={project.id} to={`/proyecto/${encodeURIComponent(project.id)}`}>
                     <Card className="border-border/40 hover:border-primary/30 transition-all hover:shadow-md cursor-pointer overflow-hidden group">
                       {project.images?.[0] && (
                         <div className="h-28 overflow-hidden">
