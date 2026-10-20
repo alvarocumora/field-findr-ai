@@ -11,10 +11,13 @@ import { LotDetailSheet } from '@/components/lots/LotDetailSheet';
 import { LotDesigner3DDialog } from '@/components/lots/LotDesigner3DDialog';
 import { LotReservationDialog } from '@/components/lots/LotReservationDialog';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
+import { projectLandingPath } from '@/lib/landing/paths';
+import { canReservePublicLot, formatPublicLotPrice } from '@/lib/lots/publicLotCommercial';
 import {
   ArrowLeft,
   Bookmark,
   Box,
+  CalendarDays,
   Compass,
   Crosshair,
   DollarSign,
@@ -28,15 +31,6 @@ import {
 } from 'lucide-react';
 
 type FocusTransitionPhase = 'idle' | 'departing' | 'arriving' | 'settled';
-
-const formatPrice = (price: number | null | undefined) => {
-  if (!price) return 'Consultar';
-  return new Intl.NumberFormat('es-CL', {
-    style: 'currency',
-    currency: 'CLP',
-    maximumFractionDigits: 0,
-  }).format(price);
-};
 
 const statusLabel = (status: string | null | undefined) => {
   if (status === 'available') return 'Disponible';
@@ -80,7 +74,7 @@ const ProjectExperience = () => {
   const didHydrateDeepLink = useRef(false);
   const travelTimersRef = useRef<number[]>([]);
   const [activeView, setActiveView] = useState('masterplan');
-  const [selectedLot, setSelectedLot] = useState<any | null>(null);
+  const [selectedLotSnapshot, setSelectedLot] = useState<any | null>(null);
   const [selectionSource, setSelectionSource] = useState<'masterplan' | 'inventory' | 'deeplink'>('masterplan');
   const [focusPulse, setFocusPulse] = useState(0);
   const [cinematicFocus, setCinematicFocus] = useState(false);
@@ -90,7 +84,7 @@ const ProjectExperience = () => {
   const [designerLot, setDesignerLot] = useState<any | null>(null);
   const [reservationLot, setReservationLot] = useState<any | null>(null);
 
-  const { data: project, isLoading } = useQuery({
+  const { data: project, isLoading, isError: projectError, refetch: retryProject } = useQuery({
     queryKey: ['terrain-view-project', id],
     queryFn: async () => {
       const { data, error } = await supabase.from('projects').select('*').eq('id', id!).single();
@@ -100,7 +94,7 @@ const ProjectExperience = () => {
     enabled: !!id,
   });
 
-  const { data: lots = [], isLoading: lotsLoading } = useQuery({
+  const { data: lots = [], isLoading: lotsLoading, isError: lotsError, refetch: retryLots } = useQuery({
     queryKey: ['terrain-view-lots', id],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: id! });
@@ -123,28 +117,37 @@ const ProjectExperience = () => {
     travelTimersRef.current = [];
   };
 
+  // React Query can retain stale data after an RPC failure. Commercial
+  // stock and the selected parcel must only use a successful public RPC.
+  const verifiedLots = useMemo(() => lotsError ? [] : lots, [lots, lotsError]);
+  const selectedLot = useMemo(
+    () => verifiedLots.find((lot: any) => lot.id === selectedLotSnapshot?.id) ?? null,
+    [verifiedLots, selectedLotSnapshot?.id],
+  );
+  const inventoryReady = !lotsLoading && !lotsError;
   const sortedLots = useMemo(
-    () => [...lots].sort((a: any, b: any) => (parseInt(a.lot_number) || 0) - (parseInt(b.lot_number) || 0)),
-    [lots],
+    () => [...verifiedLots].sort((a: any, b: any) => String(a.lot_number).localeCompare(String(b.lot_number), 'es', { numeric: true })),
+    [verifiedLots],
   );
 
-  const availableLots = useMemo(() => lots.filter((lot: any) => lot.status === 'available'), [lots]);
-  const reservedLots = useMemo(() => lots.filter((lot: any) => lot.status === 'reserved'), [lots]);
-  const soldLots = useMemo(() => lots.filter((lot: any) => lot.status === 'sold'), [lots]);
+  const availableLots = useMemo(() => verifiedLots.filter((lot: any) => lot.status === 'available'), [verifiedLots]);
+  const reservedLots = useMemo(() => verifiedLots.filter((lot: any) => lot.status === 'reserved'), [verifiedLots]);
+  const soldLots = useMemo(() => verifiedLots.filter((lot: any) => lot.status === 'sold'), [verifiedLots]);
 
   const prices = useMemo(
-    () => availableLots.map((lot: any) => Number(lot.price)).filter((price: number) => price > 0),
+    () => availableLots.map((lot: any) => lot.price).filter((price: unknown): price is number =>
+      typeof price === 'number' && Number.isFinite(price) && price > 0),
     [availableLots],
   );
 
   const minPrice = prices.length ? Math.min(...prices) : null;
 
   const focusLots = useMemo(() => {
-    if (!cinematicFocus || !selectedLot) return lots;
+    if (!cinematicFocus || !selectedLot) return verifiedLots;
     const selectedCenter = getLotCenter(selectedLot);
     if (!selectedCenter) return [selectedLot];
 
-    return [...lots]
+    return [...verifiedLots]
       .map((lot: any) => {
         const center = getLotCenter(lot);
         const distance = center
@@ -155,7 +158,7 @@ const ProjectExperience = () => {
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 9)
       .map(({ lot }) => lot);
-  }, [cinematicFocus, lots, selectedLot]);
+  }, [cinematicFocus, verifiedLots, selectedLot]);
 
   const focusCenter = useMemo(() => {
     if (cinematicFocus && selectedLot) return getLotCenter(selectedLot);
@@ -190,18 +193,18 @@ const ProjectExperience = () => {
   };
 
   useEffect(() => {
-    if (didHydrateDeepLink.current || lots.length === 0) return;
+    if (didHydrateDeepLink.current || !inventoryReady || verifiedLots.length === 0) return;
     const requestedLot = searchParams.get('lote');
     if (!requestedLot) {
       didHydrateDeepLink.current = true;
       return;
     }
-    const deepLinkedLot = lots.find((lot: any) => String(lot.lot_number) === requestedLot || lot.id === requestedLot);
+    const deepLinkedLot = verifiedLots.find((lot: any) => String(lot.lot_number) === requestedLot || lot.id === requestedLot);
     if (deepLinkedLot) {
       selectLot(deepLinkedLot, { source: 'deeplink', syncUrl: false });
     }
     didHydrateDeepLink.current = true;
-  }, [lots, searchParams]);
+  }, [verifiedLots, inventoryReady, searchParams]);
 
   useEffect(() => {
     if (!selectedLot || activeView !== 'lots') return;
@@ -270,6 +273,19 @@ const ProjectExperience = () => {
     );
   }
 
+  if (projectError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#080a0b] px-5 text-white">
+        <div role="alert" className="max-w-md rounded-2xl border border-amber-300/25 bg-white/5 p-6 text-center">
+          <p className="font-editorial text-2xl">No pudimos cargar este proyecto</p>
+          <p className="mt-3 text-sm text-white/65">Comprueba tu conexión o inténtalo de nuevo. No mostraremos información comercial sin verificar.</p>
+          <Button className="mt-5" onClick={() => void retryProject()}>Reintentar</Button>
+          <Button asChild variant="ghost" className="mt-3 text-white"><Link to="/explorar">Volver a explorar</Link></Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!project) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#080a0b] text-white">
@@ -284,6 +300,8 @@ const ProjectExperience = () => {
   }
 
   const location = [project.city, project.region].filter(Boolean).join(', ') || project.location || 'Chile';
+  const projectHome = projectLandingPath({ id: project.id, slug: project.slug });
+  const visitUrl = `/agendar?meeting_type=visita_terreno&project_id=${encodeURIComponent(project.id)}&project_name=${encodeURIComponent(project.name)}&source=terrain-view`;
   const legalDocuments = (project as any)?.legal_documents || [];
   const isTraveling = focusTransition === 'departing' || focusTransition === 'arriving';
 
@@ -293,7 +311,7 @@ const ProjectExperience = () => {
         <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-4 px-4 py-3 md:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <Button asChild variant="ghost" size="icon" className="shrink-0 text-white/70 hover:bg-white/10 hover:text-white">
-              <Link to={`/proyecto/${id}`} aria-label="Volver a la ficha del proyecto">
+              <Link to={projectHome} aria-label="Volver a la ficha del proyecto">
                 <ArrowLeft className="h-5 w-5" />
               </Link>
             </Button>
@@ -313,7 +331,7 @@ const ProjectExperience = () => {
               <MapPin className="mr-1 h-3 w-3" /> {location}
             </Badge>
             <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
-              {availableLots.length} disponibles
+              {inventoryReady ? `${availableLots.length} disponibles` : 'Stock por confirmar'}
             </Badge>
           </div>
         </div>
@@ -324,7 +342,7 @@ const ProjectExperience = () => {
           <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
               <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-emerald-400">Masterplan vivo</p>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-4xl">Explora el proyecto. Elige la parcela. Decide sin salir del contexto.</h1>
+              <h1 className="mt-2 font-editorial text-2xl font-medium tracking-tight md:text-4xl">Explora el proyecto. Elige la parcela. Decide sin salir del contexto.</h1>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50 md:text-base">
                 Mapa, inventario, ficha y diseño 3D comparten la misma selección. El lote activo permanece sincronizado mientras cambias de vista.
               </p>
@@ -332,23 +350,30 @@ const ProjectExperience = () => {
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:min-w-[560px]">
               <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
                 <p className="text-[10px] uppercase tracking-wider text-white/35">Disponibles</p>
-                <p className="mt-1 text-xl font-bold text-emerald-300">{availableLots.length}</p>
+                <p className="mt-1 text-xl font-bold text-emerald-300">{inventoryReady ? availableLots.length : '—'}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
                 <p className="text-[10px] uppercase tracking-wider text-white/35">Reservados</p>
-                <p className="mt-1 text-xl font-bold text-amber-300">{reservedLots.length}</p>
+                <p className="mt-1 text-xl font-bold text-amber-300">{inventoryReady ? reservedLots.length : '—'}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
                 <p className="text-[10px] uppercase tracking-wider text-white/35">Vendidos</p>
-                <p className="mt-1 text-xl font-bold">{soldLots.length}</p>
+                <p className="mt-1 text-xl font-bold">{inventoryReady ? soldLots.length : '—'}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
                 <p className="text-[10px] uppercase tracking-wider text-white/35">Desde</p>
-                <p className="mt-1 truncate text-base font-bold">{formatPrice(minPrice)}</p>
+                <p className="mt-1 truncate text-base font-bold">{inventoryReady ? formatPublicLotPrice(minPrice) : 'Por confirmar'}</p>
               </div>
             </div>
           </div>
         </section>
+
+        {lotsError && (
+          <section role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-4 text-sm">
+            <p>No pudimos verificar el inventario. Los precios y acciones de reserva se reactivarán al recuperar la consulta.</p>
+            <Button type="button" variant="secondary" className="min-h-11" onClick={() => void retryLots()}>Reintentar inventario</Button>
+          </section>
+        )}
 
         {selectedLot ? (
           <section
@@ -367,7 +392,7 @@ const ProjectExperience = () => {
                   <Ruler className="h-4 w-4" /> {Number(selectedLot.area).toLocaleString('es-CL')} m²
                 </span>
                 <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white">
-                  <DollarSign className="h-4 w-4 text-emerald-400" /> {formatPrice(selectedLot.price)}
+                  <DollarSign className="h-4 w-4 text-emerald-400" /> {formatPublicLotPrice(selectedLot.price)}
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -384,7 +409,7 @@ const ProjectExperience = () => {
                 <Button variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10" onClick={() => setDesignerLot(selectedLot)}>
                   <Box className="mr-1.5 h-4 w-4" /> 3D
                 </Button>
-                {selectedLot.status === 'available' && (
+                {canReservePublicLot(selectedLot) && inventoryReady && (
                   <Button size="sm" variant="secondary" onClick={() => setReservationLot(selectedLot)}>
                     <Bookmark className="mr-1.5 h-4 w-4" /> Reservar
                   </Button>
@@ -458,7 +483,7 @@ const ProjectExperience = () => {
                           <p className="mt-1 text-base font-semibold">Lote {selectedLot.lot_number}</p>
                           <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/55">
                             <span>{Number(selectedLot.area).toLocaleString('es-CL')} m²</span>
-                            <span className="font-semibold text-white">{formatPrice(selectedLot.price)}</span>
+                            <span className="font-semibold text-white">{formatPublicLotPrice(selectedLot.price)}</span>
                             <span>{focusLots.length} parcelas en contexto</span>
                           </div>
                         </div>
@@ -466,7 +491,7 @@ const ProjectExperience = () => {
                           <Button size="sm" variant="outline" className="border-white/15 bg-white/5 text-white" onClick={() => setInspectorLot(selectedLot)}>
                             <Eye className="mr-1.5 h-4 w-4" /> Ver lote
                           </Button>
-                          {selectedLot.status === 'available' && (
+                          {canReservePublicLot(selectedLot) && inventoryReady && (
                             <Button size="sm" onClick={() => setReservationLot(selectedLot)}>
                               <Bookmark className="mr-1.5 h-4 w-4" /> Reservar
                             </Button>
@@ -477,12 +502,14 @@ const ProjectExperience = () => {
                   </div>
                 )}
 
-                {lotsLoading ? (
+                {lotsError ? (
+                  <div className="flex min-h-[340px] items-center justify-center px-5 text-center text-sm text-white/60">No hay inventario verificado para dibujar el masterplan. Puedes reintentar arriba.</div>
+                ) : lotsLoading ? (
                   <div className="flex h-[68vh] items-center justify-center text-sm text-white/40">Cargando masterplan...</div>
                 ) : (
                   <div className={`transition-all duration-700 ${focusTransition === 'departing' ? 'scale-[0.985] opacity-45' : focusTransition === 'arriving' ? 'scale-[1.015] opacity-90' : 'scale-100 opacity-100'}`}>
                     <LotMapView
-                      lots={lots as any}
+                      lots={verifiedLots as any}
                       focusSignal={focusVersion}
                       projectCenter={{
                         lat: project.latitude ?? -34.9767,
@@ -502,7 +529,9 @@ const ProjectExperience = () => {
             </TabsContent>
 
             <TabsContent value="lots" className="mt-0">
-              {lotsLoading ? (
+              {lotsError ? (
+                <div className="flex min-h-[320px] items-center justify-center text-center text-sm text-white/60">Inventario no disponible. Usa «Reintentar inventario» para verificar las parcelas.</div>
+              ) : lotsLoading ? (
                 <div className="flex min-h-[420px] items-center justify-center text-sm text-white/40">Cargando inventario...</div>
               ) : (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -542,6 +571,7 @@ const ProjectExperience = () => {
         legalDocuments={legalDocuments}
         project={project as any}
         onReserve={(lot) => {
+          if (!inventoryReady || !canReservePublicLot(lot)) return;
           setInspectorLot(null);
           selectLot(lot, { source: selectionSource });
           setReservationLot(lot);
@@ -560,9 +590,9 @@ const ProjectExperience = () => {
       />
 
       <LotReservationDialog
-        lot={reservationLot}
+        lot={inventoryReady && canReservePublicLot(reservationLot) ? reservationLot : null}
         projectName={project.name}
-        open={!!reservationLot}
+        open={!!reservationLot && inventoryReady && canReservePublicLot(reservationLot)}
         onOpenChange={(open) => !open && setReservationLot(null)}
         reservationAmount={(project as any).reservation_deposit || 500000}
       />
