@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { LotMapView } from './LotMapView';
 
 const state = vi.hoisted(() => ({ created: 0, removed: 0, resized: 0 }));
@@ -43,9 +43,18 @@ it('keeps the loading map alive across equivalent parent values and new callback
   expect(state.removed).toBe(1);
 });
 
-it('recreates a stalled map when the visitor retries and cleans the old instance', () => {
+it('replaces the map exactly once when the style changes', () => {
   const view = render(<LotMapView {...props()} />);
   fireEvent.click(view.getByRole('button', { name: 'Calles' }));
+  expect(state.created).toBe(2);
+  expect(state.removed).toBe(1);
+});
+
+it('allows retrying a stalled load without leaking the old map', () => {
+  const view = render(<LotMapView {...props()} />);
+  act(() => { vi.advanceTimersByTime(25000); });
+  expect(view.getByRole('alert')).toBeTruthy();
+  fireEvent.click(view.getByRole('button', { name: 'Reintentar mapa' }));
   expect(state.created).toBe(2);
   expect(state.removed).toBe(1);
 });
