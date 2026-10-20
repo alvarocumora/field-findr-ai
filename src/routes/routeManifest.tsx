@@ -124,8 +124,13 @@ const QuoteView = lazy(() => import("@/pages/QuoteView"));
 const InvestorsLogin = lazy(() => import("@/pages/forestal/InvestorsLogin"));
 const IslaDeMaipoDossier = lazy(() => import("@/pages/dossier/IslaDeMaipoDossier"));
 const ProjectLanding = lazy(() => import("@/pages/landing/ProjectLanding"));
-const CaoneTour = lazy(() => import("@/pages/caone/CaoneTour"));
-const ValleHualaneMasterplan = lazy(() => import("@/pages/caone/ValleHualaneMasterplan"));
+/** Rutas satélite históricas: redirigen a la experiencia única del proyecto. */
+const SatelliteRedirect = ({ to, tab }: { to: string; tab: string }) => {
+  const { lotNumber } = useParams<{ lotNumber?: string }>();
+  const q = new URLSearchParams({ tab });
+  if (lotNumber) q.set("lote", lotNumber);
+  return <Navigate to={`${to}?${q}`} replace />;
+};
 
 // Comprador
 const BuyerHome = lazy(() => import("@/pages/BuyerHome"));
@@ -412,20 +417,20 @@ export const publicRouteEntries: RouteEntry[] = [
 /** Landings de proyecto: URLs congeladas por SEO, agrupadas para no ser casos sueltos. */
 export const projectLandingEntries: RouteEntry[] = [
   // Todas pasan por el motor único (`ProjectLanding`); el slug decide si se
-  // renderiza la experiencia a medida o la landing por configuración.
+  // Todas montan la misma experiencia de proyecto dentro del shell público.
   pub("forestal-landing", "/forestal-valle-escondido", <ProjectLanding slug="forestal-valle-escondido" />),
   pub("forestal-investors", "/forestal-valle-escondido/investors", <InvestorsLogin />, { indexable: false }),
   pub("huellelhue", "/huellelhue", <ProjectLanding slug="huellelhue" />),
   pub("playa-alvaro", "/playa-alvaro", <ProjectLanding slug="playa-alvaro" />),
   pub("explora-park", "/explora-park", <ProjectLanding slug="explora-park" />),
   pub("valle-hualane", "/valle-hualane", <ProjectLanding slug="parcelas-caone-hualane" />),
-  pub("valle-hualane-tour", "/valle-hualane/tour", <CaoneTour />),
-  pub("valle-hualane-lot", "/valle-hualane/l/:lotNumber", <CaoneTour />, { indexable: false }),
-  pub("valle-hualane-masterplan", "/valle-hualane/plano", <ValleHualaneMasterplan />),
+  pub("valle-hualane-tour", "/valle-hualane/tour", <SatelliteRedirect to="/valle-hualane" tab="tour360" />, { indexable: false }),
+  pub("valle-hualane-lot", "/valle-hualane/l/:lotNumber", <SatelliteRedirect to="/valle-hualane" tab="lots" />, { indexable: false }),
+  pub("valle-hualane-masterplan", "/valle-hualane/plano", <SatelliteRedirect to="/valle-hualane" tab="map" />, { indexable: false }),
   // URLs históricas: siguen resolviendo pero ya no son canónicas ni entran al sitemap.
   pub("parcelas-caone-hualane", "/parcelas-caone-hualane", <ProjectLanding slug="parcelas-caone-hualane" />, { indexable: false }),
-  pub("parcelas-caone-hualane-tour", "/parcelas-caone-hualane/tour", <CaoneTour />, { indexable: false }),
-  pub("valle-de-hualane-masterplan", "/valle-de-hualane/masterplan", <ValleHualaneMasterplan />, { indexable: false }),
+  pub("parcelas-caone-hualane-tour", "/parcelas-caone-hualane/tour", <SatelliteRedirect to="/valle-hualane" tab="tour360" />, { indexable: false }),
+  pub("valle-de-hualane-masterplan", "/valle-de-hualane/masterplan", <SatelliteRedirect to="/valle-hualane" tab="map" />, { indexable: false }),
   pub("dossier-isla-maipo", "/ficha/isla-de-maipo-galvez-1458", <IslaDeMaipoDossier />, {
     indexable: false,
   }),
