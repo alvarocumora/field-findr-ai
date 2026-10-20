@@ -78,7 +78,7 @@ test('landings premium mantienen identidad y navegación del proyecto', async ({
   await expect(page.getByRole('link', { name: 'Visitas y consultas' })).toBeVisible();
 
   await page.goto('/p/valle-escondido-licanten');
-  await expect(page.getByRole('heading', { name: /Valle Escondido/i })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /Valle Escondido/i })).toBeVisible();
 });
 
 test('portada, contacto y agendamiento no desbordan horizontalmente', async ({ page }) => {
