@@ -1,9 +1,16 @@
 name: Deploy DreamHost
 
+# The production domain is currently DNS-only in DreamHost and is hosted
+# externally (Lovable). Do not automatically rsync main into DreamHost.
+# Retain this workflow solely for an explicit, audited future hosting migration.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      confirm_dreamhost_target:
+        description: 'I verified a dedicated DreamHost web root and SSH credentials for this site'
+        type: boolean
+        required: true
+        default: false
 
 permissions:
   contents: read
@@ -14,6 +21,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ inputs.confirm_dreamhost_target == true }}
     name: Build and deploy production
     runs-on: ubuntu-latest
     timeout-minutes: 25
