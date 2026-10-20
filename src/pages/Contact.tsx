@@ -89,7 +89,15 @@ const Contact = () => {
 
     // No backend for this global contact form: hand off to the email client,
     // explicitly without claiming a successful submission.
-    const mailto = createContactMailto(result.data);
+    const mailto = createContactMailto({
+      // Zod validated these required fields above; explicitly normalize for
+      // the project's non-strict inference of optional parsed properties.
+      name: result.data.name ?? '',
+      email: result.data.email ?? '',
+      phone: result.data.phone || undefined,
+      subject: result.data.subject ?? '',
+      message: result.data.message ?? '',
+    });
     setPreparedMailto(mailto);
     window.location.href = mailto;
   };
