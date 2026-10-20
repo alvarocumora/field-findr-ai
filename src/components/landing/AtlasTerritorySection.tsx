@@ -142,7 +142,7 @@ const AtlasTerritorySection = () => {
     // (si existe) — una misma tarjeta/transición no debe competir con
     // ProjectCommercialCard por el destino de un mismo proyecto (gap
     // encontrado al revisar el lote Rural Finder).
-    const projectHome = `/proyecto/${encodeURIComponent(project.id)}/experiencia`;
+    const projectHome = `/proyecto/${encodeURIComponent(project.id)}?tab=map`;
 
     if (prefersReducedMotion) {
       navigate(projectHome);

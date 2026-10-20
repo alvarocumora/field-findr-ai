@@ -169,7 +169,7 @@ const InteractiveEarth = ({ reducedMotion, onReady }: InteractiveEarthProps) => 
           markersRef.current = ((data ?? []) as GlobeProject[])
             .filter((project) => Number.isFinite(project.latitude) && Number.isFinite(project.longitude))
             .map((project) => new mapboxgl.Marker({
-              element: makeProjectMarker(project, () => navigate(`/proyecto/${project.id}/experiencia`)),
+              element: makeProjectMarker(project, () => navigate(`/proyecto/${project.id}?tab=map`)),
               anchor: 'center',
             })
               .setLngLat([Number(project.longitude), Number(project.latitude)])
