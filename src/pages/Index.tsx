@@ -1,6 +1,7 @@
 import PublicLayout from '@/components/layouts/PublicLayout';
 import CinematicShowcaseHero from '@/components/landing/CinematicShowcaseHero';
 import InsigniaShowcase from '@/components/landing/InsigniaShowcase';
+import AtlasTerritorySection from '@/components/landing/AtlasTerritorySection';
 import { EcosystemStandard, HybridCTA } from '@/components/landing/StandardAndPartner';
 import { useSEO } from '@/hooks/useSEO';
 
@@ -17,6 +18,7 @@ const Index = () => {
     <div className="theme-rural">
       <PublicLayout showFooter={true} showAssistant={false}>
         <CinematicShowcaseHero />
+        <AtlasTerritorySection />
         <InsigniaShowcase />
         <EcosystemStandard />
         <HybridCTA />
