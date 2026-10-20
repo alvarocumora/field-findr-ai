@@ -193,6 +193,7 @@ const ProjectDetail = () => {
   const [editingSceneIdx, setEditingSceneIdx] = useState<number | null>(null);
   const [tourYaw, setTourYaw] = useState(0);
   const tourSectionRef = useRef<HTMLDivElement>(null);
+  const projectSectionsRef = useRef<HTMLDivElement>(null);
   const scrollToTour = () => tourSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const { scenes: tourScenes, isLoading: tourScenesLoading } = useTourScenes(id);
   const [searchParamsTab, setSearchParamsTab] = useSearchParams();
@@ -210,6 +211,13 @@ const ProjectDetail = () => {
     const next = new URLSearchParams(searchParamsTab);
     next.set('tab', tab);
     setSearchParamsTab(next, { replace: true });
+  };
+  // A navigation layer over existing tabs and the one real 360 viewer.
+  // Global 3D is deliberately absent; 3D is available only in supported lot tools.
+  const openProjectMode = (tab: 'map' | 'lots' | 'tour360') => {
+    changeTab(tab);
+    const target = tab === 'tour360' ? tourSectionRef : projectSectionsRef;
+    requestAnimationFrame(() => target.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   };
 
   // Las landings específicas pueden abrir directamente el formulario de consulta.
@@ -486,7 +494,24 @@ const ProjectDetail = () => {
           onMessage={handleMessage}
         />
 
-        <div className="container px-4 py-3">
+        <div className="container px-4 py-4 space-y-3">
+          <nav aria-label="Explorar este proyecto" className="flex flex-wrap items-center gap-2">
+            <span className="w-full text-xs uppercase tracking-widest text-muted-foreground sm:w-auto sm:mr-2">Explorar proyecto</span>
+            <Button type="button" size="sm" variant={activeTab === 'map' ? 'default' : 'outline'}
+              aria-pressed={activeTab === 'map'} onClick={() => openProjectMode('map')} className="min-h-10 gap-2">
+              <Map className="h-4 w-4" aria-hidden="true" />Mapa de lotes
+            </Button>
+            <Button type="button" size="sm" variant={activeTab === 'lots' ? 'default' : 'outline'}
+              aria-pressed={activeTab === 'lots'} onClick={() => openProjectMode('lots')} className="min-h-10 gap-2">
+              <List className="h-4 w-4" aria-hidden="true" />Lotes ({lotsLoading || lotsError ? '—' : lots.length})
+            </Button>
+            {tourScenes.length > 0 && (
+              <Button type="button" size="sm" variant={activeTab === 'tour360' ? 'default' : 'outline'}
+                aria-pressed={activeTab === 'tour360'} onClick={() => openProjectMode('tour360')} className="min-h-10 gap-2">
+                <Camera className="h-4 w-4" aria-hidden="true" />Tour 360
+              </Button>
+            )}
+          </nav>
           <Button onClick={() => setLeadOpen(true)} className="min-h-11">Agendar visita o consultar</Button>
         </div>
         <Dialog open={leadOpen} onOpenChange={setLeadOpen}>
@@ -549,7 +574,7 @@ const ProjectDetail = () => {
         )}
 
         {/* Main Content - Full Width */}
-        <div className="container px-4 py-6">
+        <div ref={projectSectionsRef} className="container px-4 py-6 scroll-mt-20">
           <Tabs value={activeTab} onValueChange={changeTab} className="space-y-4">
             <TabsList aria-label="Secciones del proyecto" className="flex h-auto w-full max-w-full justify-start gap-1 overflow-x-auto rounded-xl border border-border/60 bg-card/90 p-1.5 shadow-sm">
               <TabsTrigger value="map" className="gap-2">
