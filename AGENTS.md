@@ -10,3 +10,4 @@
 
 - Explorer text search is server-side (`ListingFilters.search` in `useInfiniteListings`), never a client filter over loaded pages. Why: search must cover the full inventory.
 - Project pages: `/p/:slug`, historical slugs and `/proyecto/:id` all render `ProjectDetail` inside the public shell (bespoke landings removed; satellite tour/plano routes redirect with `?tab=`/`?lote=`). Why: one project experience with tour 360, masterplan, lot sheet and reservation.
+- Simple public credit simulations reuse the buyer-tools French calculation through a finite-input adapter; project links pass selected live CLP prices to the homepage widget and inquiries reuse the canonical project consultation with campaign attribution. Why: no second credit workflow, no inventory mutation, and financing intent remains in the existing CRM.
