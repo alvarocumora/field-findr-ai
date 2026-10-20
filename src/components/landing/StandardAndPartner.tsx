@@ -3,22 +3,22 @@ import { ArrowRight, CalendarDays, FileCheck2, MapPinned, Orbit, Building2 } fro
 import { Button } from '@/components/ui/button';
 
 const PILLARS = [
-  { icon: Orbit, title: 'Recorrido aéreo real', text: 'Panorámicas de dron con cada parcela marcada y su estado en vivo.' },
-  { icon: MapPinned, title: 'Cartografía de cada lote', text: 'Límites, superficie y ubicación sobre imagen satelital, no planos dibujados.' },
-  { icon: FileCheck2, title: 'Reserva trazable', text: 'Comprobante con folio oficial y código QR verificable.' },
+  { icon: Orbit, title: 'Recorridos según disponibilidad', text: 'Explora las panorámicas 360 de los proyectos que cuentan con escenas publicadas.' },
+  { icon: MapPinned, title: 'Contexto cartográfico', text: 'Consulta mapas, superficies y límites cuando el proyecto dispone de estos antecedentes.' },
+  { icon: FileCheck2, title: 'Información y consulta', text: 'Revisa antecedentes publicados y consulta por el lote antes de iniciar una reserva.' },
 ];
 
 export const EcosystemStandard = () => (
   <section className="relative border-y border-border/50 bg-muted/10 py-16 md:py-24" aria-labelledby="standard-title">
     <div className="container px-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] gradient-text">El estándar OfertaTerrenos</p>
-      <h2 id="standard-title" className="mt-3 max-w-3xl font-heading text-3xl font-bold md:text-5xl">Certeza antes de pisar el terreno.</h2>
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Explora con información</p>
+      <h2 id="standard-title" className="mt-3 max-w-3xl font-editorial text-3xl font-medium md:text-5xl">Más contexto para elegir tu terreno.</h2>
       <div className="mt-10 grid gap-4 md:grid-cols-3">
         {PILLARS.map((p, i) => (
           <article key={p.title} className="brand-border relative overflow-hidden rounded-3xl bg-card p-7">
-            <span className="font-heading text-6xl font-bold gradient-text opacity-30">0{i + 1}</span>
+            <span className="font-editorial text-6xl text-primary/30">0{i + 1}</span>
             <span className="brand-gradient-btn mt-4 grid h-11 w-11 place-items-center rounded-2xl"><p.icon className="h-5 w-5" /></span>
-            <h3 className="mt-5 font-heading text-xl font-semibold">{p.title}</h3>
+            <h3 className="mt-5 font-editorial text-xl font-medium">{p.title}</h3>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.text}</p>
           </article>
         ))}
@@ -31,12 +31,12 @@ export const HybridCTA = () => (
   <section className="relative overflow-hidden py-20 md:py-28">
     <div className="brand-aurora absolute inset-0" aria-hidden="true" />
     <div className="container relative px-4 text-center">
-      <h2 className="mx-auto max-w-3xl font-heading text-4xl font-bold md:text-6xl">
+      <h2 className="mx-auto max-w-3xl font-editorial text-4xl font-medium md:text-6xl">
         Tu parcela te está <span className="gradient-text-hero">esperando.</span>
       </h2>
       <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
         <Button asChild size="lg" className="brand-gradient-btn h-12 rounded-full border-0 px-8 text-base font-semibold">
-          <Link to="/agendar"><CalendarDays className="mr-2 h-4 w-4" />Agendar visita a terreno</Link>
+          <Link to="/agendar"><CalendarDays className="mr-2 h-4 w-4" />Solicitar una visita</Link>
         </Button>
         <Button asChild size="lg" variant="outline" className="h-12 rounded-full px-8">
           <Link to="/explorar">Explorar mapa completo <ArrowRight className="ml-2 h-4 w-4" /></Link>
@@ -48,7 +48,7 @@ export const HybridCTA = () => (
           <Building2 className="h-5 w-5 shrink-0 text-primary" />
           <span>
             <span className="block text-sm font-semibold text-foreground">¿Inmobiliaria o loteador?</span>
-            <span className="block text-xs text-muted-foreground">Publica tu proyecto con tour 360, masterplan y sistema de ventas.</span>
+            <span className="block text-xs text-muted-foreground">Publica terrenos y administra inventario, consultas y ventas desde un mismo espacio.</span>
           </span>
         </span>
         <ArrowRight className="h-4 w-4 shrink-0 text-primary transition-transform group-hover:translate-x-1" />
