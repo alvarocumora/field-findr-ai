@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
 import ModernSidebar from '@/components/ModernSidebar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -65,6 +65,7 @@ const DashboardLayout = ({ children, requiredRole }: DashboardLayoutProps) => {
 
   return (
     <div className="min-h-screen flex w-full bg-background">
+      {/* Keep the legacy sidebar's styling isolated while dashboard content adopts Rural Institutional. */}
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <ModernSidebar
@@ -75,26 +76,30 @@ const DashboardLayout = ({ children, requiredRole }: DashboardLayoutProps) => {
 
       {/* Mobile Sidebar via Sheet */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="p-0 w-60">
+        <SheetContent side="left" className="p-0 w-60 bg-background border-border">
+          <SheetTitle className="sr-only">Navegación del panel</SheetTitle>
           <ModernSidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
 
       {/* Main Content */}
-      <main className={`flex-1 transition-all duration-200 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-60'}`}>
+      <main className={`theme-rural min-w-0 flex-1 bg-background text-foreground transition-all duration-200 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-60'}`}>
         {/* Mobile Header */}
-        <div className="md:hidden flex items-center h-14 px-4 border-b border-border bg-background sticky top-0 z-30">
+        <div className="sticky top-0 z-sticky flex h-14 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur md:hidden">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setMobileOpen(true)}
+            aria-label="Abrir menú del panel"
+            className="min-h-11 min-w-11"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5" aria-hidden="true" />
           </Button>
-          <span className="ml-3 font-bold tracking-tight font-heading uppercase text-foreground">OFERTA<span className="gradient-text-hero">TERRENOS</span></span>
+          <Link to="/panel" className="font-editorial text-lg font-medium text-foreground focus-ring" aria-label="Ir a mi espacio de trabajo">OfertaTerrenos</Link>
+          <span className="ml-auto text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Panel de gestión</span>
         </div>
 
-        <div className="p-4 md:p-6 lg:p-8">
+        <div className="mx-auto w-full max-w-[1680px] p-4 md:p-6 lg:p-8">
           {children}
         </div>
       </main>
