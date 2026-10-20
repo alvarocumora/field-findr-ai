@@ -44,7 +44,7 @@ const toStatus = (s: string | null | undefined): CaoneLotStatus | null => {
 
 export const useCaoneLots = () => {
   const queryClient = useQueryClient();
-  const { data: live, isLoading, isError } = useQuery({
+  const { data: live, isLoading, isError, refetch } = useQuery({
     queryKey: QUERY_KEY,
     staleTime: 15_000,
     refetchInterval: 20_000,
@@ -120,6 +120,8 @@ export const useCaoneLots = () => {
     lots,
     available,
     isLoading,
+    isError,
+    refetch,
     isLive: verifiedCount > 0,
     verifiedCount,
     verifiedLotNumbers,
