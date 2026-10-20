@@ -59,7 +59,7 @@ const ReservationsManager = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const { data: reservations = [], isLoading } = useQuery({
+  const { data: reservations = [], isLoading, error, refetch } = useQuery({
     queryKey: ['admin-reservations', user?.id, projectId ?? 'all'],
     queryFn: async () => {
       if (!user) return [];
