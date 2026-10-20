@@ -22,8 +22,13 @@
 - Se mantienen contratos actuales de lots, listings y reservas: sin nuevas migraciones, auth ni despliegue automático.
 - Validación pendiente: CI del PR en GitHub y revisión manual del flujo 320/390/1440 y con WebGL deshabilitado.
 
+## Corte 2c — Navegación de modos por proyecto (PR en curso)
+- `/proyecto/:id`: banda contextual de Mapa de lotes / Lotes / Tour 360 integrada con las pestañas canónicas y el visor 360 existente. El tour solo aparece si existen escenas; no se ofrece un 3D general ficticio.
+- Compartición por `?tab=` y desplazamiento al visor o al panel correcto; sin duplicar TourViewer ni LotMapView, y conservando CTAs de consulta y reserva.
+- Pendiente de validación automática CI y visual 320/390/1440 antes de fusionar.
+
 ## Pendientes de siguientes PR (no incluidos en este corte)
-- Diseñar un switch Tour / 2D / 3D / Masterplan verdaderamente canónico solo cuando exista cada modo; las pestañas actuales y el diseñador 3D por lote se conservan, sin duplicar motor.
+- Eventual modo 3D global o masterplan independiente solo si existe un visor canónico verificable y geometría real; por ahora mapa/lotes/tour están cubiertos por la banda contextual sin duplicación.
 - Migrar landings bespoke y el resto del sistema visual sin cambiar la identidad ni el flujo de conversión de cada proyecto.
 - Completar armonización visual del inspector y overlays restantes del mapa, con QA visual en todos los breakpoints.
 - Revisar contexto de ventas y roles autenticados (comprador, asesor, inmobiliaria, superadmin) mediante cuentas de prueba, con RLS vigente.
