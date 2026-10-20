@@ -541,9 +541,16 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                 <Camera className="h-4 w-4" aria-hidden="true" />Tour 360
               </Button>
             )}
+            {tourScenes.length === 0 && Array.isArray((project as any).images) && (project as any).images.length > 0 && (
+              <Button type="button" size="sm" variant="outline" onClick={scrollToTour} className="min-h-10 gap-2">
+                <Camera className="h-4 w-4" aria-hidden="true" />Vista aérea
+              </Button>
+            )}
           </nav>
           <Button onClick={() => setLeadOpen(true)} className="min-h-11">Agendar visita o consultar</Button>
         </div>
+
+        <ProjectNarrative project={project} lotCount={lotsLoading || lotsError ? null : lots.length} />
         <Dialog open={leadOpen} onOpenChange={setLeadOpen}>
           <DialogContent>
             <DialogTitle>Consulta por {project.name}</DialogTitle>
