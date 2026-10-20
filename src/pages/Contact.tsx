@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { toast } from 'sonner';
+import { createContactMailto } from '@/lib/contactMailto';
 import { z } from 'zod';
 
 const contactSchema = z.object({
@@ -59,8 +59,7 @@ const Contact = () => {
     message: '',
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ContactForm, string>>>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [preparedMailto, setPreparedMailto] = useState<string | null>(null);
 
   useSEO({
     title: 'Contacto',
@@ -88,22 +87,22 @@ const Contact = () => {
       return;
     }
 
-    setLoading(true);
-    // Simulate send — replace with edge function if needed
-    await new Promise(r => setTimeout(r, 1200));
-    setLoading(false);
-    setSubmitted(true);
-    toast.success('Mensaje enviado correctamente');
+    // No backend for this global contact form: hand off to the email client,
+    // explicitly without claiming a successful submission.
+    const mailto = createContactMailto(result.data);
+    setPreparedMailto(mailto);
+    window.location.href = mailto;
   };
 
   return (
     <PublicLayout>
+      <div className="theme-rural bg-background text-foreground">
       {/* Hero */}
       <section className="relative py-16 md:py-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
         <div className="relative container px-4 text-center">
           <motion.h1
-            className="text-3xl md:text-5xl font-bold text-foreground mb-4"
+            className="font-editorial text-4xl md:text-5xl font-medium text-foreground mb-4"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           >
             Contáctanos
@@ -175,14 +174,17 @@ const Contact = () => {
             >
               <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
                 <CardContent className="p-6 md:p-8">
-                  {submitted ? (
+                  {preparedMailto ? (
                     <div className="text-center py-12">
                       <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4" />
-                      <h3 className="text-xl font-bold text-foreground mb-2">¡Mensaje enviado!</h3>
-                      <p className="text-muted-foreground mb-6">Te responderemos pronto a {formData.email}</p>
-                      <Button variant="outline" onClick={() => { setSubmitted(false); setFormData({ name: '', email: '', phone: '', subject: '', message: '' }); }}>
-                        Enviar otro mensaje
-                      </Button>
+                      <h3 className="font-editorial text-2xl font-medium text-foreground mb-2">Tu consulta está preparada</h3>
+                      <p className="text-muted-foreground mb-6">Se intentó abrir tu aplicación de correo. El mensaje todavía no está enviado: confirma el envío desde tu correo. Si no se abrió, pulsa el botón siguiente.</p>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                        <Button asChild><a href={preparedMailto}><Mail className="mr-2 h-4 w-4" />Abrir aplicación de correo</a></Button>
+                        <Button variant="outline" onClick={() => { setPreparedMailto(null); setFormData({ name: '', email: '', phone: '', subject: '', message: '' }); }}>
+                          Preparar otra consulta
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <form onSubmit={handleSubmit} className="space-y-5">
@@ -220,8 +222,9 @@ const Contact = () => {
                         {errors.message && <p className="text-xs text-destructive mt-1">{errors.message}</p>}
                       </div>
 
-                      <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                        {loading ? 'Enviando...' : <><Send className="h-4 w-4 mr-2" /> Enviar mensaje</>}
+                      <p className="text-xs leading-relaxed text-muted-foreground">Al continuar, se abrirá tu aplicación de correo. Revisa el mensaje y confirma su envío allí; todavía no contamos con envío directo desde este formulario.</p>
+                      <Button type="submit" className="w-full" size="lg">
+                        <Send className="h-4 w-4 mr-2" /> Preparar correo
                       </Button>
                     </form>
                   )}
@@ -231,6 +234,7 @@ const Contact = () => {
           </div>
         </div>
       </section>
+      </div>
     </PublicLayout>
   );
 };
