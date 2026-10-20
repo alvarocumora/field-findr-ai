@@ -283,8 +283,17 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const fileInputRef = useRef<HTMLInputElement>(null);
   const reimportFileInputRef = useRef<HTMLInputElement>(null);
   const renumberModeRef = useRef(false);
-  const { token, loading: tokenLoading, error: tokenError } = useMapboxToken();
+  const { token, loading: tokenLoading, error: tokenError, retry: retryToken } = useMapboxToken();
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const [mapAttempt, setMapAttempt] = useState(0);
+  // Parent renders supply fresh arrays/objects and callbacks. They must not
+  // destroy an in-flight map; rebuild only when actual inventory changes.
+  const lotSignature = JSON.stringify(lots);
+  const lotsRef = useRef(lots);
+  lotsRef.current = lots;
+  const onLotClickRef = useRef(onLotClick);
+  onLotClickRef.current = onLotClick;
   const [mapStyle, setMapStyle] = useState<'satellite' | 'streets'>('satellite');
   const [showContours, setShowContours] = useState(false);
   // El cambio de estilo re-crea el mapa: el handler de load lee el ref para
@@ -958,7 +967,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   };
 
   const calculateBounds = useCallback(() => {
-    const lotsWithPolygons = lots.filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3);
+    const lotsWithPolygons = lotsRef.current.filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3);
     
     if (lotsWithPolygons.length > 0) {
       let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
@@ -976,12 +985,15 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     }
     
     return null;
-  }, [lots]);
+  }, [lotSignature]);
 
   const planBearing = calculatePlanBearing(lots);
 
   const initializeMap = useCallback(() => {
-    if (!mapContainer.current || !token || map.current) return;
+    if (!mapContainer.current || !token || tokenLoading || map.current) return;
+
+    setMapLoaded(false);
+    setMapError(null);
 
     mapboxgl.accessToken = token;
     
@@ -1002,9 +1014,44 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     map.current.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
     if (tourMode) map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right');
 
+    const currentMap = map.current;
+    const container = mapContainer.current;
+    let loaded = false;
+    const loadTimeout = window.setTimeout(() => {
+      if (!loaded && map.current === currentMap) {
+        setMapError('El mapa tardó demasiado en cargar. Revisa tu conexión e inténtalo nuevamente.');
+      }
+    }, 25000);
+    const resizeObserver = new ResizeObserver(() => {
+      if (map.current === currentMap && container.clientWidth && container.clientHeight) currentMap.resize();
+    });
+    resizeObserver.observe(container);
+    currentMap.on('error', () => {
+      // Do not log request URLs: they may contain credentials. Optional
+      // terrain/contour tile errors must not hide a working commercial map.
+      if (!loaded && map.current === currentMap) {
+        setMapError('No se pudo cargar el mapa. Revisa tu conexión o vuelve a intentarlo.');
+      }
+    });
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      setMapError('El navegador interrumpió el mapa 3D. Puedes volver a cargarlo.');
+    };
+    const handleContextRestored = () => {
+      setMapError(null);
+      currentMap.resize();
+      currentMap.triggerRepaint();
+    };
+    currentMap.getCanvas().addEventListener('webglcontextlost', handleContextLost);
+    currentMap.getCanvas().addEventListener('webglcontextrestored', handleContextRestored);
+
     map.current.on('load', () => {
-      if (!map.current) return;
+      if (map.current !== currentMap) return;
+      loaded = true;
+      window.clearTimeout(loadTimeout);
+      setMapError(null);
       setMapLoaded(true);
+      currentMap.resize();
       
       // Fit to bounds if we have real polygons — extra top/bottom padding on mobile
       // so the plan doesn't collide with sticky header, legend, color-mode toggle or mapbox attribution.
@@ -1295,7 +1342,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           }
 
           // Los vendidos también se pueden consultar (ficha informativa).
-          onLotClick(lot);
+          onLotClickRef.current(lot);
         }
       };
       map.current.on('click', 'lots-fill', handleLotClick);
@@ -1310,21 +1357,26 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     });
 
     return () => {
+      window.clearTimeout(loadTimeout);
+      resizeObserver.disconnect();
+      currentMap.getCanvas().removeEventListener('webglcontextlost', handleContextLost);
+      currentMap.getCanvas().removeEventListener('webglcontextrestored', handleContextRestored);
+      if (cinematicTimerRef.current) window.clearTimeout(cinematicTimerRef.current);
+      cinematicTimerRef.current = null;
       popup.current?.remove();
-      map.current?.remove();
-      map.current = null;
+      currentMap.remove();
+      if (map.current === currentMap) map.current = null;
     };
-  }, [token, lots, projectCenter, onLotClick, mapStyle, calculateBounds, planBearing, tourMode, roadGeojson]);
+  }, [token, tokenLoading, lotSignature, projectCenter.lat, projectCenter.lng, mapStyle, calculateBounds, planBearing, tourMode, roadGeojson, mapAttempt]);
 
   useEffect(() => {
-    initializeMap();
-    return () => {
-      popup.current?.remove();
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
+    try {
+      return initializeMap();
+    } catch {
+      map.current?.remove();
+      map.current = null;
+      setMapError('No se pudo iniciar el mapa 3D en este navegador.');
+    }
   }, [initializeMap]);
 
   // Update selected lot highlight
@@ -1446,11 +1498,6 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   const toggleStyle = () => {
     const newStyle = mapStyle === 'satellite' ? 'streets' : 'satellite';
     setMapStyle(newStyle);
-    if (map.current) {
-      map.current.remove();
-      map.current = null;
-      setMapLoaded(false);
-    }
   };
 
   if (tokenLoading) {
@@ -1463,6 +1510,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-2" />
           <p className="text-muted-foreground">Error al cargar el mapa</p>
+          <Button variant="outline" onClick={retryToken} className="mt-3"><RefreshCw className="mr-2 h-4 w-4" />Reintentar</Button>
         </div>
       </div>
     );
@@ -1474,6 +1522,12 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
   return (
     <div className={`relative w-full ${tourMode ? 'h-full min-h-[520px]' : 'h-[650px]'} rounded-2xl overflow-hidden shadow-lg border border-border/50`}>
       <div ref={mapContainer} className="w-full h-full" />
+      {!mapLoaded && !mapError && <div role="status" className="pointer-events-none absolute inset-0 z-[var(--z-map-overlay)] flex items-center justify-center bg-background/80 text-muted-foreground">Cargando mapa…</div>}
+      {mapError && <div role="alert" className="absolute inset-0 z-[var(--z-map-overlay)] flex flex-col items-center justify-center gap-3 bg-background/95 p-6 text-center">
+        <AlertCircle className="h-8 w-8 text-destructive" />
+        <p className="max-w-md text-muted-foreground">{mapError}</p>
+        <Button variant="outline" onClick={() => setMapAttempt(value => value + 1)}><RefreshCw className="mr-2 h-4 w-4" />Reintentar mapa</Button>
+      </div>}
       
       {/* Hidden file inputs */}
       <input ref={fileInputRef} type="file" accept=".kmz,.kml" onChange={handleFileImport} className="hidden" />

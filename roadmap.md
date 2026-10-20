@@ -1,5 +1,10 @@
 # Roadmap
 
+## Mapa del tour en blanco
+
+- [x] Verificar Hualañé con sesión real: satélite, 40 polígonos y estados visibles; solicitudes Mapbox correctas
+- [ ] Estabilizar ciclo de carga, ajuste de tamaño y recuperación visible; validar regresiones y recorrido real
+
 ## Oferta Licantén y simulador simple
 
 - [x] Añadir campaña con fotografía real y enlace canónico, sin alterar buscador ni inventario
