@@ -30,9 +30,13 @@ export default function VelMasterplan() {
   const { token, loading: tokenLoading } = useMapboxToken();
   const { data: terrainData, loading: terrainLoading, getElevation } = useTerrainElevation();
 
-  const { lots } = useVelLots();
+  const { lots, isLoading: inventoryLoading, isError: inventoryError, refetch: refetchInventory, verifiedLotNumbers, verifiedPricedLotNumbers } = useVelLots();
   const lotsRef = useRef(lots);
   lotsRef.current = lots;
+  const verifiedRef = useRef(verifiedLotNumbers);
+  verifiedRef.current = verifiedLotNumbers;
+  const pricedRef = useRef(verifiedPricedLotNumbers);
+  pricedRef.current = verifiedPricedLotNumbers;
 
   const {
     activeStatus,
@@ -53,23 +57,24 @@ export default function VelMasterplan() {
 
   const counts = useMemo(() => {
     const c: Record<StatusFilter, number> = { available: 0, reserved: 0, sold: 0 };
-    for (const l of lots) c[l.status]++;
+    for (const l of lots) if (verifiedLotNumbers.has(l.lot_number)) c[l.status]++;
     return c;
-  }, [lots]);
+  }, [lots, verifiedLotNumbers]);
 
   // Live summary based on active filters
   const summary = useMemo(() => {
-    const visible = lots.filter((l) => activeStatus.has(l.status));
+    const visible = lots.filter((l) => verifiedLotNumbers.has(l.lot_number) && activeStatus.has(l.status));
+    const priced = visible.filter(l => verifiedPricedLotNumbers.has(l.lot_number));
     const total = visible.length;
     const totalArea = visible.reduce((s, l) => s + l.area_m2, 0);
-    const totalPrice = visible.reduce((s, l) => s + l.price_clp, 0);
+    const totalPrice = priced.reduce((s, l) => s + l.price_clp, 0);
     return {
       total,
       totalHa: totalArea / 10000,
       avgAreaM2: total ? Math.round(totalArea / total) : 0,
-      avgPriceClp: total ? Math.round(totalPrice / total) : 0,
+      avgPriceClp: priced.length ? Math.round(totalPrice / priced.length) : 0,
     };
-  }, [activeStatus, lots]);
+  }, [activeStatus, lots, verifiedLotNumbers, verifiedPricedLotNumbers]);
 
   useEffect(() => {
     if (!containerRef.current || tokenLoading || !token || mapRef.current) return;
@@ -95,9 +100,9 @@ export default function VelMasterplan() {
           properties: {
             id: l.id,
             num: l.lot_number,
-            status: l.status,
+            status: verifiedRef.current.has(l.lot_number) ? l.status : 'unverified',
             area: l.area_m2,
-            price: l.price_clp,
+            price: pricedRef.current.has(l.lot_number) ? l.price_clp : null,
             listing_id: l.listing_id ?? '',
           },
           geometry: {
@@ -171,7 +176,7 @@ export default function VelMasterplan() {
         type: 'FeatureCollection',
         features: lotsRef.current.map((l) => ({
           type: 'Feature',
-          properties: { num: l.lot_number, status: l.status },
+          properties: { num: l.lot_number, status: verifiedRef.current.has(l.lot_number) ? l.status : 'unverified' },
           geometry: { type: 'Point', coordinates: l.centroid },
         })),
       };
@@ -262,8 +267,8 @@ export default function VelMasterplan() {
         type: 'Feature',
         id: l.id,
         properties: {
-          id: l.id, num: l.lot_number, status: l.status,
-          area: l.area_m2, price: l.price_clp, listing_id: l.listing_id ?? '',
+          id: l.id, num: l.lot_number, status: verifiedLotNumbers.has(l.lot_number) ? l.status : 'unverified',
+          area: l.area_m2, price: verifiedPricedLotNumbers.has(l.lot_number) ? l.price_clp : null, listing_id: l.listing_id ?? '',
         },
         geometry: { type: 'Polygon', coordinates: [[...l.polygon, l.polygon[0]]] },
       })),
@@ -272,17 +277,21 @@ export default function VelMasterplan() {
       type: 'FeatureCollection',
       features: lots.map((l) => ({
         type: 'Feature',
-        properties: { num: l.lot_number, status: l.status },
+        properties: { num: l.lot_number, status: verifiedRef.current.has(l.lot_number) ? l.status : 'unverified' },
         geometry: { type: 'Point', coordinates: l.centroid },
       })),
     } as GeoJSON.FeatureCollection);
-  }, [lots, styleReady]);
+  }, [lots, styleReady, verifiedLotNumbers, verifiedPricedLotNumbers]);
 
   // Apply status filter
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !styleReady) return;
-    const filter = ['in', ['get', 'status'], ['literal', Array.from(activeStatus)]] as any;
+    // Keep unverified KMZ geometry visible in grey, regardless of status filter.
+    const filter = ['any',
+      ['in', ['get', 'status'], ['literal', Array.from(activeStatus)]],
+      ['==', ['get', 'status'], 'unverified'],
+    ] as any;
     try {
       map.setFilter('lots-fill', filter);
       map.setFilter('lots-line', filter);
@@ -386,6 +395,12 @@ export default function VelMasterplan() {
           </p>
         </motion.div>
 
+        {(inventoryLoading || inventoryError || verifiedLotNumbers.size < lots.length) && (
+          <div role="status" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--hue-amber)]/30 bg-[var(--hue-amber)]/10 p-4 text-xs text-[var(--hue-bone)]">
+            <span>{inventoryLoading ? 'Verificando inventario comercial…' : inventoryError ? 'No se pudo verificar el inventario. Los lotes sin confirmar se muestran en gris.' : 'Los lotes grises todavía no tienen estado comercial verificado.'}</span>
+            {inventoryError && <button type="button" onClick={() => void refetchInventory()} className="hue-pill min-h-11">Reintentar</button>}
+          </div>
+        )}
         <div className="rounded-md overflow-hidden border border-white/8 bg-[#08110c] shadow-[0_40px_120px_-20px_rgba(0,0,0,0.9)]">
           <div className="grid grid-cols-12 gap-0">
             <aside className="order-2 lg:order-1 col-span-12 lg:col-span-3 border-t lg:border-t-0 lg:border-r border-white/8 bg-[#06110a]/95 backdrop-blur-md p-4 md:p-6 space-y-6">
@@ -404,7 +419,7 @@ export default function VelMasterplan() {
               <div className="space-y-3">
                 <div className="hue-eyebrow text-[10px]">Resumen del filtro</div>
                 {[
-                  ['Parcelas visibles', `${summary.total} / ${VEL_PROJECT.totalLots}`],
+                  ['Parcelas verificadas visibles', `${summary.total} / ${VEL_PROJECT.totalLots}`],
                   ['Superficie filtrada', `${summary.totalHa.toFixed(1)} ha`],
                   ['Superficie promedio', `${summary.avgAreaM2.toLocaleString('es-CL')} m²`],
                   ['Precio promedio', summary.avgPriceClp ? `$${summary.avgPriceClp.toLocaleString('es-CL')}` : '—'],
@@ -494,6 +509,8 @@ export default function VelMasterplan() {
                 <VelLotPanel
                   lot={selectedLot}
                   allLots={lots}
+                  inventoryVerified={verifiedLotNumbers.has(selectedLot.lot_number)}
+                  priceVerified={verifiedPricedLotNumbers.has(selectedLot.lot_number)}
                   terrain={terrainData}
                   terrainLoading={terrainLoading}
                   onClose={() => selectLot(null)}

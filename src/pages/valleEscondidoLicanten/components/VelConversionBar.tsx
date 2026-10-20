@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { CalendarDays, Map, MessageCircle } from 'lucide-react';
 import VisitScheduleDialog from '@/components/visits/VisitScheduleDialog';
 import { VEL_PROJECT } from '../data/project';
@@ -10,19 +10,7 @@ const scrollTo = (id: string) =>
 
 export default function VelConversionBar() {
   const [visitOpen, setVisitOpen] = useState(false);
-  const { lots } = useVelLots();
-
-  const commercial = useMemo(() => {
-    const available = lots.filter((lot) => lot.status === 'available');
-    const priced = available.filter((lot) => lot.price_clp > 0);
-    return {
-      availableLots: available.length,
-      priceFrom:
-        priced.length > 0
-          ? Math.min(...priced.map((lot) => lot.price_clp))
-          : VEL_PROJECT.priceFromClp,
-    };
-  }, [lots]);
+  const { available, isLive, isLoading, verifiedPriceFrom } = useVelLots();
 
   const wa = whatsappDigits(VEL_CONTACT.whatsapp);
   const waHref = wa
@@ -37,12 +25,12 @@ export default function VelConversionBar() {
         <div className="mx-auto flex items-center gap-2 px-3 py-2.5 md:px-5">
           <div className="min-w-0 flex-1">
             <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--hue-bone)]/50">
-              Parcelas desde
+              {verifiedPriceFrom !== null ? 'Parcelas desde · CLP' : 'Precio a consultar'}
             </p>
             <p className="truncate text-sm font-semibold text-[var(--hue-bone)] md:text-base">
-              ${commercial.priceFrom.toLocaleString('es-CL')}
+              {verifiedPriceFrom !== null ? `${verifiedPriceFrom.toLocaleString('es-CL')}` : 'Consultar'}
               <span className="ml-2 font-normal text-[var(--hue-bone)]/55">
-                · {commercial.availableLots} disponibles
+                · {isLoading ? 'Verificando…' : isLive ? `${available} disponibles` : 'Disponibilidad por confirmar'}
               </span>
             </p>
           </div>

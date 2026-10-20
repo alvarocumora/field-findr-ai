@@ -15,6 +15,8 @@ interface Props {
   allLots: VelLot[];
   terrain: VelTerrainInsight | null;
   terrainLoading?: boolean;
+  inventoryVerified: boolean;
+  priceVerified: boolean;
   onClose: () => void;
   onFocus: () => void;
 }
@@ -25,11 +27,12 @@ const STATUS_LABEL = {
   sold: 'Vendida',
 } as const;
 
-export default function VelLotPanel({ lot, allLots, terrain, terrainLoading, onClose, onFocus }: Props) {
+export default function VelLotPanel({ lot, allLots, terrain, terrainLoading, inventoryVerified, priceVerified, onClose, onFocus }: Props) {
   const [visitOpen, setVisitOpen] = useState(false);
   const [reserveOpen, setReserveOpen] = useState(false);
   const [buildOpen, setBuildOpen] = useState(false);
   const score = useMemo(() => calculateRuralScore(lot, allLots, terrain), [lot, allLots, terrain]);
+  const canReserve = inventoryVerified && priceVerified && lot.status === 'available';
 
   const salesLot: SalesLot = {
     id: lot.id,
@@ -59,13 +62,13 @@ export default function VelLotPanel({ lot, allLots, terrain, terrainLoading, onC
 
         <div className="pr-10">
           <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--hue-amber)]">
-            Lote {lot.lot_number} · {STATUS_LABEL[lot.status]}
+            Lote {lot.lot_number} · {inventoryVerified ? STATUS_LABEL[lot.status] : 'Disponibilidad por confirmar'}
           </div>
           <div className="mt-2 serif text-3xl text-[var(--hue-bone)]">
             {lot.area_m2.toLocaleString('es-CL')} m²
           </div>
           <div className="mt-1 text-sm text-[var(--hue-bone)]/65">
-            {lot.price_clp > 0 ? `$${lot.price_clp.toLocaleString('es-CL')} CLP` : 'Precio no publicado'}
+            {priceVerified ? `${lot.price_clp.toLocaleString('es-CL')} CLP` : 'Precio por confirmar'}
           </div>
         </div>
 
@@ -74,7 +77,7 @@ export default function VelLotPanel({ lot, allLots, terrain, terrainLoading, onC
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-[var(--hue-bone)]/55">
               <Sparkles className="h-3.5 w-3.5 text-[var(--hue-amber)]" /> Rural Score
             </div>
-            <div className="serif text-3xl text-[var(--hue-bone)]">{score.overall}</div>
+            <div className="serif text-3xl text-[var(--hue-bone)]">{priceVerified ? score.overall : '—'}</div>
           </div>
 
           <div className="mt-4 grid grid-cols-3 gap-2">
@@ -82,7 +85,7 @@ export default function VelLotPanel({ lot, allLots, terrain, terrainLoading, onC
               <div key={metric.label} className="rounded-md border border-white/8 bg-black/15 p-2">
                 <div className="text-[9px] uppercase tracking-[0.1em] text-[var(--hue-bone)]/40">{metric.label}</div>
                 <div className="mt-1 text-sm font-medium text-[var(--hue-bone)]">
-                  {metric.value === null ? '—' : metric.value}
+                  {metric.label === 'Valor' && !priceVerified ? '—' : metric.value === null ? '—' : metric.value}
                 </div>
               </div>
             ))}
@@ -106,7 +109,7 @@ export default function VelLotPanel({ lot, allLots, terrain, terrainLoading, onC
           <div className="rounded-md bg-white/[0.025] p-3">
             <div className="text-[9px] uppercase tracking-[0.1em] text-[var(--hue-bone)]/40">Precio/m²</div>
             <div className="mt-1 text-sm text-[var(--hue-bone)]">
-              {score.pricePerM2 ? `$${score.pricePerM2.toLocaleString('es-CL')}` : '—'}
+              {priceVerified && score.pricePerM2 ? `${score.pricePerM2.toLocaleString('es-CL')}` : '—'}
             </div>
           </div>
           <div className="rounded-md bg-white/[0.025] p-3">
@@ -136,6 +139,7 @@ export default function VelLotPanel({ lot, allLots, terrain, terrainLoading, onC
           Casa · piscina · quincho · huerto · energía solar · accesos
         </p>
 
+        {!inventoryVerified && <p role="status" className="mt-3 text-xs text-[var(--hue-amber)]">El plano es referencial. Consulta el estado comercial antes de reservar.</p>}
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button type="button" onClick={onFocus} className="hue-pill justify-center text-[10px]">
             Ver en 3D
@@ -149,7 +153,7 @@ export default function VelLotPanel({ lot, allLots, terrain, terrainLoading, onC
           )}
         </div>
 
-        {lot.status === 'available' && (
+        {canReserve && (
           <div className="mt-2 grid grid-cols-2 gap-2">
             <button
               type="button"

@@ -41,7 +41,9 @@
 - DreamHost manual, GitHub es desarrollo y Lovable hosting: PR #195.
 - Header/nav pública Rural Institutional + accesibilidad móvil: en este PR.
 - Mapas: controles, leyenda y feedback genuino de carga: siguiente PR.
-- Fichas y landings bespoke: migrar sección por sección conservando identidad, deep links y conversión.
+- Caone (Valle de Hualañé): navegación premium y recuperación de inventario integradas mediante PR #202, conservando KMZ y CRM.
+- Valle Escondido Licantén: PR #203 — preservar geometría KMZ con disponibilidad y precios verificables; bloquear reserva comercial si el estado/precio solo procede de fallback; SEO oferta validada; pruebas de inventario parcial, nulo y fallo de refetch.
+- Pendiente: QA visual real de las dos landings en 320/390/1440, WebGL deshabilitado, inventario parcial, recorrido de compra y contacto; conservar identidad premium y flujo de conversión.
 - QA visual pendiente: 320/390/1440, con WebGL deshabilitado; pruebas con cuentas autorizadas y RLS.
 
 ## Política de PR antiguos

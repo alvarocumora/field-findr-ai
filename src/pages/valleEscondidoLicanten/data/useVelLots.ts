@@ -43,7 +43,7 @@ const toStatus = (s: string | null | undefined): VelLotStatus | null => {
 
 export const useVelLots = () => {
   const queryClient = useQueryClient();
-  const { data: live, isLoading } = useQuery({
+  const { data: live, isLoading, isError, refetch } = useQuery({
     queryKey: QUERY_KEY,
     staleTime: 15_000,
     refetchInterval: 20_000,
@@ -79,6 +79,23 @@ export const useVelLots = () => {
     };
   }, [queryClient]);
 
+  // The static KMZ supplies parcel geometry only. Never treat its commercial
+  // statuses or prices as live inventory when the RPC is incomplete or fails.
+  const verifiedLotNumbers = useMemo(() => {
+    if (isError) return new Set<string>();
+    return new Set((live ?? [])
+      .filter(l => l.lot_number != null && toStatus(l.status) !== null)
+      .map(l => String(l.lot_number)));
+  }, [live, isError]);
+
+  const verifiedPricedLotNumbers = useMemo(() => {
+    if (isError) return new Set<string>();
+    return new Set((live ?? [])
+      .filter(l => l.lot_number != null && toStatus(l.status) === 'available' &&
+        typeof l.price === 'number' && Number.isFinite(l.price) && l.price > 0)
+      .map(l => String(l.lot_number)));
+  }, [live, isError]);
+
   const lots = useMemo<VelLot[]>(() => {
     if (!live?.length) return VEL_LOTS;
     const byNumber = new Map<string, PublicLot>();
@@ -98,5 +115,24 @@ export const useVelLots = () => {
     });
   }, [live]);
 
-  return { lots, isLoading, isLive: !!live?.length };
+  const verifiedCount = lots.filter(l => verifiedLotNumbers.has(l.lot_number)).length;
+  const available = lots.filter(l =>
+    verifiedLotNumbers.has(l.lot_number) && l.status === 'available').length;
+  const verifiedPrices = lots
+    .filter(l => verifiedPricedLotNumbers.has(l.lot_number))
+    .map(l => l.price_clp);
+  const verifiedPriceFrom = verifiedPrices.length > 0 ? Math.min(...verifiedPrices) : null;
+
+  return {
+    lots,
+    isLoading,
+    isError,
+    refetch,
+    isLive: verifiedCount > 0,
+    verifiedCount,
+    verifiedLotNumbers,
+    verifiedPricedLotNumbers,
+    available,
+    verifiedPriceFrom,
+  };
 };

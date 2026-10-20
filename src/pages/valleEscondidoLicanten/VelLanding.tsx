@@ -12,6 +12,7 @@ import VelFooter from './sections/VelFooter';
 import VelConversionBar from './components/VelConversionBar';
 import { VelStateProvider } from './state/VelContext';
 import { VEL_PROJECT } from './data/project';
+import { useVelLots } from './data/useVelLots';
 import { ProjectDownloadsBySlug } from '@/components/projects/ProjectDownloadsBySlug';
 import { useSEO } from '@/hooks/useSEO';
 import heroImg from '@/assets/valle-escondido-licanten/vel-valle.jpg';
@@ -20,8 +21,9 @@ import { VEL_CONTACT } from './data/commercial';
 const canonicalUrl = 'https://ofertaterrenos.com/p/valle-escondido-licanten';
 
 export default function VelLanding() {
+  const { available, verifiedPriceFrom } = useVelLots();
   const description =
-    `Valle Escondido Licantén: ${VEL_PROJECT.totalLots} parcelas rurales sobre ${VEL_PROJECT.totalAreaHa} hectáreas, a pocos minutos de Licantén, con acceso asfaltado y conexión hacia Lago Vichuquén. Plano interactivo, disponibilidad en vivo y reserva desde $${VEL_PROJECT.priceFromClp.toLocaleString('es-CL')}.`;
+    `Valle Escondido Licantén: ${VEL_PROJECT.totalLots} parcelas rurales sobre ${VEL_PROJECT.totalAreaHa} hectáreas, a pocos minutos de Licantén, con acceso asfaltado y conexión hacia Lago Vichuquén. Plano interactivo, consulta de disponibilidad y condiciones de reserva sujetas a confirmación.`;
 
   const socialImage =
     typeof window !== 'undefined' ? new URL(heroImg, window.location.origin).href : heroImg;
@@ -51,14 +53,17 @@ export default function VelLanding() {
         latitude: VEL_PROJECT.center.lat,
         longitude: VEL_PROJECT.center.lng,
       },
-      offers: {
-        '@type': 'AggregateOffer',
-        priceCurrency: 'CLP',
-        lowPrice: VEL_PROJECT.priceFromClp,
-        highPrice: VEL_PROJECT.priceToClp,
-        offerCount: VEL_PROJECT.availableLots,
-        availability: 'https://schema.org/InStock',
-      },
+      // Search engines only receive an offer when the live public inventory
+      // confirms at least one priced, available lot.
+      ...(verifiedPriceFrom !== null && available > 0 ? {
+        offers: {
+          '@type': 'AggregateOffer',
+          priceCurrency: 'CLP',
+          lowPrice: verifiedPriceFrom,
+          offerCount: available,
+          availability: 'https://schema.org/InStock',
+        },
+      } : {}),
       additionalProperty: [
         {
           '@type': 'PropertyValue',
