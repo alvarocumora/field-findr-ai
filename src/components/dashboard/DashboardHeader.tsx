@@ -29,13 +29,13 @@ export const DashboardHeader = ({
     <div
       className={cn(
         'flex flex-col lg:flex-row lg:items-end justify-between gap-4',
-        'pb-6 border-b border-border/50',
+        'pb-6 border-b border-border/60',
         className,
       )}
     >
-      <div className="space-y-1">
+      <div className="min-w-0 space-y-2">
         {userName && (
-          <p className="text-sm text-muted-foreground animate-fade-in">
+          <p className="text-sm text-muted-foreground">
             {greeting()},{' '}
             <span className="font-medium text-foreground">{userName}</span>
             {roleLabel && (
@@ -45,16 +45,16 @@ export const DashboardHeader = ({
             )}
           </p>
         )}
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight animate-fade-in stagger-1">
+        <h1 className="font-editorial text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
           {title}
         </h1>
-        <p className="text-muted-foreground text-sm animate-fade-in stagger-2">
+        <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
           {subtitle}
         </p>
       </div>
 
       {actions && (
-        <div className="animate-fade-in stagger-3">{actions}</div>
+        <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:justify-end">{actions}</div>
       )}
     </div>
   );
