@@ -118,6 +118,8 @@ export const useVisits = (projectId?: string) => {
   return {
     visits: query.data ?? [],
     isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
     createVisit,
     updateVisit,
     deleteVisit,
