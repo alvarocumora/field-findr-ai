@@ -41,7 +41,7 @@ const CaoneLanding = () => {
 
   useSEO({
     title: 'Valle de Hualañé · Parcelas desde 1 ha · ROL 168-921',
-    description: 'Valle de Hualañé, ROL 168-921 en Sector Caone. Masterplan generado desde KMZ, todas las parcelas a $12.990.000 CLP precio único y tour satelital 3D.',
+    description: 'Valle de Hualañé, ROL 168-921 en Sector Caone. Parcelas desde 1 ha, masterplan desde KMZ, precios referenciales sujetos a confirmación y recorridos virtuales del proyecto.',
     type: 'website',
     url: 'https://ofertaterrenos.com/valle-hualane',
     canonicalUrl: 'https://ofertaterrenos.com/valle-hualane',
@@ -158,12 +158,12 @@ const CaoneLanding = () => {
                 </Button>
               </div>
             </div>
-            <Link to={projectTabUrl('tour360')} className="group relative block min-h-[360px] overflow-hidden bg-black md:min-h-[430px]">
+            <div className="group relative block min-h-[360px] overflow-hidden bg-black md:min-h-[430px]">
               <MapErrorBoundary>
                 <ProjectScene3D latitude={-35.001545359260206} longitude={-71.65328947973632} />
               </MapErrorBoundary>
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/10" />
-              <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between gap-3">
+              <Link to={projectTabUrl('tour360')} className="absolute bottom-5 left-5 right-5 flex min-h-12 items-center justify-between gap-3 rounded-xl bg-black/40 p-2 backdrop-blur-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f6c64e]">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#f6c64e]">Vista satelital 3D</p>
                   <p className="mt-1 text-lg font-bold text-white">Abrir experiencia interactiva</p>
@@ -171,8 +171,8 @@ const CaoneLanding = () => {
                 <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white text-[#17352d] transition group-hover:scale-105">
                   <PlayCircle className="h-6 w-6" />
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
           </div>
         </section>
 
