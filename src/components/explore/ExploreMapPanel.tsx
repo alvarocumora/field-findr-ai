@@ -15,6 +15,8 @@ interface ExploreMapPanelProps {
   onListingHover: (listing: Listing | null) => void;
   onListingClick: (listing: Listing) => void;
   onBoundsSearch?: (bounds: MapBoundsData) => void;
+  /** Use the real React Query fetch state, never a fixed-duration fake spinner. */
+  isSearching?: boolean;
   /** Draw-to-search: emits the drawn polygon ([lng,lat][]) or null when cleared. */
   onPolygonSearch?: (polygon: number[][] | null) => void;
   className?: string;
@@ -27,20 +29,18 @@ const ExploreMapPanel = ({
   onListingHover,
   onListingClick,
   onBoundsSearch,
+  isSearching = false,
   onPolygonSearch,
   className,
 }: ExploreMapPanelProps) => {
   const [currentBounds, setCurrentBounds] = useState<MapBoundsData | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
-
+ 
   const handleBoundsChange = useCallback((bounds: MapBoundsData) => {
     setCurrentBounds(bounds);
   }, []);
 
   const handleSearchArea = useCallback((bounds: MapBoundsData) => {
-    setIsSearching(true);
     onBoundsSearch?.(bounds);
-    setTimeout(() => setIsSearching(false), 500);
   }, [onBoundsSearch]);
 
   return (
@@ -73,6 +73,7 @@ const ExploreMapPanel = ({
       <MapLegend
         className="absolute bottom-24 left-3 z-10 hidden md:flex"
         listingsCount={listings.length}
+        title="Tipo de terreno"
         statusConfig={{
           parcela_rural: { color: '#22c55e', label: 'Parcela' },
           campo_agricola: { color: '#84cc16', label: 'Agrícola' },
