@@ -15,6 +15,7 @@ import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
 import { useLeadScoring } from '@/hooks/useLeadScoring';
 import LeadScoreBadge from '@/components/leads/LeadScoreBadge';
 import LeadDetailSheet from '@/components/leads/LeadDetailSheet';
+import WorkspaceLoadError from '@/components/dashboard/WorkspaceLoadError';
 
 type FollowUpFilter = 'all' | 'overdue' | 'week' | 'none';
 
@@ -95,6 +96,8 @@ const LeadManagement = () => {
       </div>
     );
   }
+
+  if (error) return <WorkspaceLoadError title="No pudimos cargar los leads" description="No podemos confirmar el estado del CRM en este momento. Tus contactos siguen guardados; reintenta la consulta." onRetry={() => refetch()} />;
 
   return (
     <div className="p-6 space-y-6">
