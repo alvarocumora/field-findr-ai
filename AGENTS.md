@@ -9,3 +9,4 @@
 - Rural Institutional design system is a scoped theme: pages adopt it by wrapping in `.theme-rural` (tokens in `src/index.css`), never by hardcoding paper/ink hex values. Why: incremental migration without breaking dark panels.
 
 - Explorer text search is server-side (`ListingFilters.search` in `useInfiniteListings`), never a client filter over loaded pages. Why: search must cover the full inventory.
+- Project pages: `/p/:slug`, historical slugs and `/proyecto/:id` all render `ProjectDetail` inside the public shell (bespoke landings removed; satellite tour/plano routes redirect with `?tab=`/`?lote=`). Why: one project experience with tour 360, masterplan, lot sheet and reservation.
