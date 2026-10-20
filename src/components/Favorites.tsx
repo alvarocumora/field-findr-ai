@@ -1,221 +1,163 @@
-import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Heart, Search, MapPin, TrendingUp, Share2, Trash2, Eye } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Heart, Search, MapPin, Share2, Trash2, Eye, Scale, ImageOff, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useFavorites, useRemoveFavorite } from '@/hooks/useFavorites';
+import { useCompare } from '@/hooks/useCompare';
+import { formatArea, type Listing } from '@/hooks/useListings';
+import { isPublishedFavorite, favoritePriceLabel } from '@/lib/buyer/favoriteView';
+import { getShareUrl } from '@/lib/publicUrls';
 
+/**
+ * Private buyer workspace. A favorite must be a real, saved listing belonging
+ * to the authenticated user; this view must never synthesize property data.
+ */
 const Favorites = () => {
-  const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
+  const { data, isLoading, isError, refetch } = useFavorites();
+  const removeFavorite = useRemoveFavorite();
+  const { addToCompare, isInCompare, removeFromCompare, compareList } = useCompare();
 
-  const favorites = [
-    {
-      id: 1,
-      title: "Lote 45 - Valle Verde",
-      location: "Los Ángeles, Bío Bío",
-      area: "5.2 há",
-      price: 32500000,
-      priceChange: "+5%",
-      status: "Disponible",
-      image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400",
-      savedDate: "2024-11-20",
-      notes: "Excelente ubicación cerca de ruta principal",
-      views: 234,
-      lastViewed: "Hace 2 días"
-    },
-    {
-      id: 2,
-      title: "Lote 18 - Los Aromos",
-      location: "Nacimiento, Bío Bío",
-      area: "3.8 há",
-      price: 28000000,
-      priceChange: "0%",
-      status: "Disponible",
-      image: "https://images.unsplash.com/photo-1464817739973-0128fe77aaa1?w=400",
-      savedDate: "2024-11-18",
-      notes: "Buena topografía, ideal para viñedo",
-      views: 189,
-      lastViewed: "Hace 5 días"
-    },
-    {
-      id: 3,
-      title: "Lote 32 - Pinar del Sol",
-      location: "Tucapel, Bío Bío",
-      area: "7.5 há",
-      price: 45000000,
-      priceChange: "-2%",
-      status: "Disponible",
-      image: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=400",
-      savedDate: "2024-11-15",
-      notes: "Amplio terreno con bosque nativo",
-      views: 312,
-      lastViewed: "Ayer"
-    },
-  ];
+  const favorites = useMemo(() => (data ?? []).map((record) => ({
+    id: record.id,
+    listingId: record.listing_id,
+    savedAt: record.created_at,
+    listing: record.listings as unknown as Listing | null,
+  })), [data]);
 
-  const filteredFavorites = favorites.filter(fav =>
-    fav.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    fav.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    const query = searchTerm.trim().toLocaleLowerCase('es');
+    if (!query) return favorites;
+    return favorites.filter(({ listing }) =>
+      (listing?.title ?? 'Publicación no disponible').toLocaleLowerCase('es').includes(query) ||
+      (listing?.location ?? '').toLocaleLowerCase('es').includes(query) ||
+      (listing?.region ?? '').toLocaleLowerCase('es').includes(query)
+    );
+  }, [favorites, searchTerm]);
 
-  const handleRemoveFavorite = (id: number, title: string) => {
-    toast({
-      title: "Removido de favoritos",
-      description: `${title} ha sido eliminado de tus favoritos`,
-    });
+  const remove = (listingId: string) => {
+    removeFromCompare(listingId);
+    removeFavorite.mutate(listingId);
   };
 
-  const handleShare = (title: string) => {
-    toast({
-      title: "Enlace copiado",
-      description: `Enlace de ${title} copiado al portapapeles`,
-    });
+  const share = async (listingId: string) => {
+    try {
+      await navigator.clipboard.writeText(getShareUrl(`/propiedad/${encodeURIComponent(listingId)}`));
+      toast.success('Enlace de la propiedad copiado');
+    } catch {
+      toast.error('No se pudo copiar el enlace. Puedes abrir la ficha y compartir su URL.');
+    }
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <section aria-labelledby="favorites-title" className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Mis Favoritos</h1>
-          <p className="text-muted-foreground">Parcelas guardadas para comparar o revisar después</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Mi espacio · Comprador</p>
+          <h1 id="favorites-title" className="mt-2 font-editorial text-3xl font-medium text-foreground sm:text-4xl">Terrenos guardados</h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Revisa publicaciones reales, compara sus características o retira terrenos de tus favoritos.</p>
         </div>
-        <Badge variant="secondary" className="text-lg">
-          <Heart className="mr-2 h-4 w-4 fill-current" />
-          {favorites.length} parcelas
+        <Badge variant="secondary" className="gap-2 px-3 py-2 text-sm">
+          <Heart className="h-4 w-4" aria-hidden="true" />{isLoading ? 'Cargando…' : `${favorites.length} guardados`}
         </Badge>
+      </header>
+
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Input aria-label="Buscar en favoritos" placeholder="Buscar por propiedad o ubicación…" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} className="min-h-11 pl-10" />
+        </div>
+        <Button asChild variant="outline" className="min-h-11 gap-2">
+          <Link to="/comparar"><Scale className="h-4 w-4" aria-hidden="true" />Ver comparador ({compareList.length})</Link>
+        </Button>
       </div>
 
-      {/* Búsqueda */}
-      <Card className="p-4">
-        <div className="flex gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar en favoritos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Button variant="outline">
-            Comparar Seleccionados
-          </Button>
+      {isError ? (
+        <div role="alert" className="space-y-4 rounded-2xl border border-destructive/30 bg-card p-7 text-center">
+          <p className="font-medium">No pudimos cargar tus favoritos</p>
+          <p className="text-sm text-muted-foreground">Los terrenos guardados siguen asociados a tu cuenta. Prueba nuevamente.</p>
+          <Button variant="outline" onClick={() => void refetch()}><RefreshCw className="mr-2 h-4 w-4" />Reintentar</Button>
         </div>
-      </Card>
-
-      {/* Lista de Favoritos */}
-      {filteredFavorites.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredFavorites.map((property) => (
-            <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="relative h-48">
-                <img
-                  src={property.image}
-                  alt={property.title}
-                  className="w-full h-full object-cover"
-                />
-                <Badge className="absolute top-4 right-4" variant="secondary">
-                  {property.status}
-                </Badge>
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="absolute top-4 left-4"
-                  onClick={() => handleRemoveFavorite(property.id, property.title)}
-                >
-                  <Heart className="h-4 w-4 fill-current" />
-                </Button>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <div>
-                  <h3 className="text-xl font-semibold mb-1 text-foreground">{property.title}</h3>
-                  <div className="flex items-center text-muted-foreground text-sm">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {property.location}
-                  </div>
+      ) : isLoading ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {[1, 2].map((i) => <Skeleton key={i} className="h-72 rounded-2xl" />)}
+        </div>
+      ) : filtered.length > 0 ? (
+        <div className="grid gap-5 md:grid-cols-2">
+          {filtered.map(({ id, listingId, savedAt, listing }) => {
+            const published = isPublishedFavorite(listing);
+            const selected = isInCompare(listingId);
+            const price = favoritePriceLabel(listing);
+            return (
+              <Card key={id} className="overflow-hidden border-border bg-card">
+                <div className="relative aspect-[16/9] overflow-hidden bg-muted">
+                  {published && listing?.images?.[0] ? (
+                    <img src={listing.images[0]} alt={listing.title} loading="lazy" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground"><ImageOff className="h-5 w-5" />{published ? 'Sin imagen publicada' : 'Publicación no disponible'}</div>
+                  )}
+                  <Badge className="absolute right-3 top-3 border border-border bg-card text-foreground" variant="outline">
+                    {published ? 'Publicada' : 'No disponible'}
+                  </Badge>
                 </div>
-
-                <div className="flex items-center justify-between">
+                <CardContent className="space-y-4 p-5">
                   <div>
-                    <p className="text-3xl font-bold text-primary">
-                      ${(property.price / 1000000).toFixed(1)}M
-                    </p>
-                    <p className="text-sm text-muted-foreground">{property.area}</p>
+                    <h2 className="font-editorial text-xl font-medium text-foreground">{published && listing ? listing.title : 'Publicación no disponible'}</h2>
+                    {published && listing && (
+                      <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        {[listing.location, listing.region].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={property.priceChange.startsWith("+") ? "destructive" : "default"}>
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      {property.priceChange}
-                    </Badge>
+                  {published && listing ? (
+                    <div className="flex flex-wrap items-baseline justify-between gap-2 border-y border-border/60 py-3">
+                      <span className="text-xl font-semibold text-primary">{price ?? 'Consultar precio'}</span>
+                      <span className="text-sm text-muted-foreground">{formatArea(listing.area_m2, listing.area_ha)}</span>
+                    </div>
+                  ) : (
+                    <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">La publicación fue retirada, desactivada o ya no es accesible. Puedes eliminarla de tus favoritos.</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">Guardado el {new Date(savedAt).toLocaleDateString('es-CL')}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {published && listing && (
+                      <>
+                        <Button asChild size="sm" className="min-h-10 flex-1 gap-2">
+                          <Link to={`/propiedad/${listingId}`}><Eye className="h-4 w-4" />Ver ficha</Link>
+                        </Button>
+                        <Button size="sm" variant="outline" className="min-h-10 gap-2" onClick={() => selected ? removeFromCompare(listingId) : addToCompare(listing)}>
+                          <Scale className="h-4 w-4" />{selected ? 'Quitar de comparación' : 'Comparar'}
+                        </Button>
+                        <Button type="button" size="icon" variant="outline" className="h-10 w-10" onClick={() => void share(listingId)} aria-label={`Compartir ${listing.title}`}>
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                    <Button type="button" size="icon" variant="outline" className="h-10 w-10 text-destructive hover:text-destructive" disabled={removeFavorite.isPending} onClick={() => remove(listingId)} aria-label="Eliminar de favoritos">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                </div>
-
-                {property.notes && (
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <p className="text-sm text-foreground">
-                      <span className="font-semibold">Mis notas:</span> {property.notes}
-                    </p>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center gap-4">
-                    <span className="flex items-center gap-1">
-                      <Eye className="h-4 w-4" />
-                      {property.views}
-                    </span>
-                    <span>Última visita: {property.lastViewed}</span>
-                  </div>
-                  <span>Guardado: {new Date(property.savedDate).toLocaleDateString()}</span>
-                </div>
-
-                <div className="flex gap-2 pt-2 border-t">
-                  <Button className="flex-1" variant="default">
-                    Ver Detalles
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={() => handleShare(property.title)}
-                  >
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={() => handleRemoveFavorite(property.id, property.title)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       ) : (
-        <Card className="p-12">
-          <div className="flex flex-col items-center justify-center text-center">
-            <Heart className="h-20 w-20 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2 text-foreground">
-              {searchTerm ? "No se encontraron resultados" : "No tienes favoritos guardados"}
-            </h3>
-            <p className="text-muted-foreground max-w-md mb-6">
-              {searchTerm
-                ? "Intenta con otros términos de búsqueda"
-                : "Comienza a explorar parcelas y guarda tus favoritas para revisarlas después"}
-            </p>
-            {!searchTerm && (
-              <Button>
-                Explorar Parcelas
-              </Button>
-            )}
-          </div>
+        <Card className="border-border bg-card p-8 text-center sm:p-12">
+          <Heart className="mx-auto mb-4 h-10 w-10 text-muted-foreground" aria-hidden="true" />
+          <h2 className="font-editorial text-2xl font-medium">{searchTerm ? 'No hay coincidencias' : 'Todavía no guardaste terrenos'}</h2>
+          <p className="mx-auto mt-3 max-w-lg text-sm text-muted-foreground">
+            {searchTerm ? 'Prueba buscando por otro nombre o ubicación.' : 'Explora terrenos publicados y guarda tus opciones preferidas para compararlas desde aquí.'}
+          </p>
+          <Button asChild className="mt-5 min-h-11"><Link to="/explorar">Explorar terrenos</Link></Button>
         </Card>
       )}
-    </div>
+    </section>
   );
 };
 
