@@ -25,7 +25,7 @@ const startOfToday = () => {
 };
 
 const LeadManagement = () => {
-  const { leads, isLoading, stats, deleteLead, updateLead } = useLeads();
+  const { leads, isLoading, error, refetch, stats, deleteLead, updateLead } = useLeads();
   const { scoredLeads, stats: scoreStats } = useLeadScoring(leads);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
