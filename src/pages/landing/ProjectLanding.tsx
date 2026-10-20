@@ -50,7 +50,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
 
 
 
-  const { data: project, isLoading: projectLoading } = useQuery({
+  const { data: project, isLoading: projectLoading, isError: projectError, refetch: retryProject } = useQuery({
     queryKey: ['landing-project', slug],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -65,7 +65,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
     enabled: !!slug && !Bespoke,
   });
 
-  const { data: lots = [], isLoading: lotsLoading, error: lotsError } = useQuery({
+  const { data: lots = [], isLoading: lotsLoading, error: lotsError, refetch: retryLots } = useQuery({
     queryKey: ['landing-lots', project?.id],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: project!.id });
@@ -139,9 +139,20 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
     );
   }
 
+  if (projectError) {
+    return (
+      <div className="theme-rural min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center" role="alert">
+        <Trees className="h-10 w-10 text-muted-foreground" />
+        <h1 className="font-editorial text-3xl text-foreground">No pudimos cargar el proyecto</h1>
+        <p className="text-muted-foreground">Es un problema de conexión; no significa que el proyecto haya sido retirado.</p>
+        <Button onClick={() => void retryProject()}>Reintentar</Button>
+      </div>
+    );
+  }
+
   if (!project) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center">
+      <div className="theme-rural min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center">
         <Trees className="h-10 w-10 text-muted-foreground" />
         <h1 className="text-2xl font-bold text-foreground">Proyecto no encontrado</h1>
         <p className="text-muted-foreground">El enlace puede haber cambiado o el proyecto ya no está publicado.</p>
@@ -173,29 +184,29 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
     : '—';
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
+    <div className="theme-rural min-h-screen bg-background pb-20 md:pb-0">
       {/* Hero — sala de ventas */}
-      <header className="relative min-h-[62vh] flex items-end">
+      <header className="relative min-h-[62vh] flex items-end bg-foreground">
         {heroImage && (
           <img src={heroImage} alt={title} className="absolute inset-0 h-full w-full object-cover" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/25" />
         <div className="relative container max-w-5xl pb-12 pt-28 text-white">
           <Badge className="bg-primary text-primary-foreground mb-3">Venta de lotes</Badge>
-          <h1 className="text-4xl md:text-5xl font-bold drop-shadow">{title}</h1>
+          <h1 className="font-editorial text-4xl md:text-6xl font-normal tracking-tight drop-shadow">{title}</h1>
           {location && (
             <p className="mt-2 flex items-center gap-1.5 text-white/90"><MapPin className="h-4 w-4" />{location}</p>
           )}
           <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm text-white/90">
-            <span><strong className="font-semibold">{stats.available}</strong> lotes disponibles</span>
+            <span>{lotsError ? 'Disponibilidad sin verificar' : <><strong className="font-semibold">{stats.available}</strong> lotes disponibles</>}</span>
             {stats.priceFrom && <span>Desde <strong className="font-semibold">{clp(stats.priceFrom)}</strong></span>}
             {stats.areaMin && <span>Parcelas desde <strong className="font-semibold">{Math.round(stats.areaMin).toLocaleString('es-CL')} m²</strong></span>}
           </div>
           {subtitle && <p className="mt-3 max-w-2xl text-white/80 line-clamp-3">{subtitle}</p>}
           <div className="mt-6 flex flex-wrap gap-3">
             <ShareButtons title={project.name} description={social?.description} url={social?.url} />
-            <Button size="lg" className="min-h-11" onClick={goMasterplan}>
-              Ver lotes disponibles<ArrowRight className="h-4 w-4 ml-2" />
+            <Button size="lg" className="min-h-11" onClick={cfg.sections.masterplan && lots.length > 0 ? goMasterplan : () => openLead()}>
+              {cfg.sections.masterplan && lots.length > 0 ? 'Ver plano de lotes' : 'Consultar disponibilidad'}<ArrowRight className="h-4 w-4 ml-2" />
             </Button>
             <Button size="lg" variant="secondary" className="min-h-11" onClick={() => openLead()}>
               <CalendarDays className="h-4 w-4 mr-2" />{cfg.hero.cta ?? 'Agendar visita'}
@@ -206,7 +217,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
               className="min-h-11 border-white/40 bg-white/10 text-white hover:bg-white/20"
               asChild
             >
-              <Link to={`/proyecto/${project.id}?tab=tour360`}>Tour 360, cotizador y reserva</Link>
+              <Link to={`/proyecto/${project.id}?tab=map`}>Mapa, cotizador y reserva</Link>
             </Button>
 
             {cfg.contact.whatsapp && (
@@ -230,12 +241,18 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
       </header>
 
       <main className="container max-w-5xl py-10 space-y-14">
+        {lotsError && (
+          <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/50 bg-warning/10 p-4 text-sm text-foreground">
+            <span>No podemos verificar el inventario de lotes ahora. Los estados y precios pueden estar temporalmente indisponibles.</span>
+            <Button size="sm" variant="outline" onClick={() => void retryLots()}>Reintentar inventario</Button>
+          </div>
+        )}
         {/* Ficha comercial */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3 -mt-20 relative z-10">
           {[
-            { label: 'Lotes', value: `${stats.available} disponibles de ${stats.total}` },
+            { label: 'Lotes', value: lotsError ? 'Sin verificar' : `${stats.available} disponibles de ${stats.total}` },
             { label: 'Superficies', value: areaLabel },
-            { label: 'Desde', value: stats.priceFrom ? clp(stats.priceFrom) : 'Consultar' },
+            { label: 'Desde', value: lotsError ? 'No disponible' : stats.priceFrom ? `${clp(stats.priceFrom)} CLP` : 'Consultar' },
             { label: 'Ubicación', value: location || '—' },
           ].map((s) => (
             <Card key={s.label} className="border-border/60 bg-card/95 backdrop-blur">
@@ -262,7 +279,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
         {cfg.sections.masterplan && lots.length > 0 && (
           <section ref={masterplanRef} className="scroll-mt-20">
             <div className="flex flex-wrap items-end justify-between gap-3 mb-1">
-              <h2 className="text-2xl font-bold text-foreground">Plano de lotes</h2>
+              <h2 className="font-editorial text-3xl text-foreground">Plano de lotes</h2>
               <div className="inline-flex rounded-full border border-border/60 p-0.5" role="group" aria-label="Filtrar lotes">
                 {([
                   { key: true, label: `Disponibles (${stats.available})` },
@@ -312,7 +329,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
         {/* Galería */}
         {cfg.sections.gallery && gallery.length > 1 && (
           <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Galería</h2>
+            <h2 className="font-editorial text-3xl text-foreground mb-4">Galería</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {gallery.slice(0, 9).map((src, i) => (
                 <img
@@ -330,7 +347,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
         {/* Amenities */}
         {cfg.sections.amenities && cfg.amenities.length > 0 && (
           <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">El proyecto</h2>
+            <h2 className="font-editorial text-3xl text-foreground mb-4">El proyecto</h2>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
               {cfg.amenities.map((a) => (
                 <Card key={a.title} className="border-border/60">
@@ -370,7 +387,7 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
         {cfg.sections.contact && (
           <section className="grid md:grid-cols-2 gap-6 items-start">
             <div>
-              <h2 className="text-2xl font-bold text-foreground">Conversemos</h2>
+              <h2 className="font-editorial text-3xl text-foreground">Conversemos</h2>
               <p className="text-muted-foreground mt-1 text-sm">
                 Déjanos tus datos y el equipo del proyecto te contacta. Sin compromiso.
               </p>
@@ -458,8 +475,8 @@ const ProjectLanding = ({ slug: slugProp }: { slug?: string } = {}) => {
       {/* Barra sticky de conversión (mobile) */}
       <ProjectConversionBar
         projectName={title}
-        priceFrom={stats.priceFrom}
-        availableLots={stats.available}
+        priceFrom={lotsError ? null : stats.priceFrom}
+        availableLots={lotsError ? undefined : stats.available}
         whatsapp={cfg.contact.whatsapp}
         onLead={() => openLead()}
         onSeeLots={goMasterplan}
