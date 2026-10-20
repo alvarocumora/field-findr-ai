@@ -14,13 +14,20 @@
 - `ViewerErrorBoundary`: tour 360, mapas de parcelas y vista 3D aislados; un fallo muestra "Error técnico" + Reintentar sin tumbar la ficha.
 - `/contacto-loteos`: no quedan CTA de comprador apuntando ahí; los usos restantes son B2B (planes, inmobiliarias, red profesional).
 
-## Corte 2b (pendiente)
-- `/p/:slug` (ProjectLanding): aún con estética cinematográfica propia; migrar a `.theme-rural` sección por sección.
-- Selector de modos Tour/Mapa/Masterplan/3D unificado en la cabecera (hoy son pestañas existentes, ya condicionadas a datos para Tour 360).
-- Rango de precio en UF dedicado (hoy solo CLP).
-- Ficha proyecto/parcela: header editorial, selector de modo (Tour/2D/3D/Masterplan) solo con modos disponibles, inspector de lote unificado con CTAs Agendar/Consultar/Reservar con contexto de lote.
-- Overlays del mapa del explorador con colores hardcodeados (`bg-emerald-600 text-white`) → tokens.
-- Revisar `ProfessionalNetworkSection` y CTAs comprador que pudieran ir a `/contacto-loteos`.
+## Corte 2b — GitHub First (implementado en rama, pendiente de revisión/merge)
+- `/explorar`: rangos de precio independientes para CLP y UF, presets y etiquetas correctas en FilterBar compartida por escritorio y móvil. Selección de "Todas" mantiene la regla existente: al activar un rango solo busca CLP. Nunca se aplica un límite CLP a UF.
+- `/p/:slug`: tema Rural Institutional y titulares editoriales en la landing genérica; distingue error del proyecto, fallo de inventario y carga inicial de una disponibilidad real de cero. CTA del hero navega al masterplan solo si existe; el acceso al proyecto principal abre un modo mapa existente, sin prometer un tour inexistente.
+- `/proyecto/:id`: pestañas desplazables en móvil con el tab activo sincronizado con la URL para compartir navegación.
+- `/explorar`: overlay de área dibujada adaptado a tokens de marca en lugar de colores hardcodeados.
+- Se mantienen contratos actuales de lots, listings y reservas: sin nuevas migraciones, auth ni despliegue automático.
+- Validación pendiente: CI del PR en GitHub y revisión manual del flujo 320/390/1440 y con WebGL deshabilitado.
+
+## Pendientes de siguientes PR (no incluidos en este corte)
+- Diseñar un switch Tour / 2D / 3D / Masterplan verdaderamente canónico solo cuando exista cada modo; las pestañas actuales y el diseñador 3D por lote se conservan, sin duplicar motor.
+- Migrar landings bespoke y el resto del sistema visual sin cambiar la identidad ni el flujo de conversión de cada proyecto.
+- Completar armonización visual del inspector y overlays restantes del mapa, con QA visual en todos los breakpoints.
+- Revisar contexto de ventas y roles autenticados (comprador, asesor, inmobiliaria, superadmin) mediante cuentas de prueba, con RLS vigente.
+- El fallo de deploy DreamHost es independiente: faltan secretos del entorno de producción en GitHub; no enviar secretos por chat.
 
 ## Corte 3 (pendiente)
 - Header/nav pública y paneles por rol con patrón header → toolbar → contenido → inspector; piloto en una zona privada (`/panel`).
