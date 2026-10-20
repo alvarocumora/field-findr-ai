@@ -33,6 +33,8 @@ interface MobileExploreViewProps {
   selectedCountries: string[];
   selectedTags: string[];
   priceRange: [number, number];
+  priceCurrency?: 'CLP' | 'UF';
+  priceRangeMax?: number;
   areaRange: [number, number];
   onToggleType: (t: string) => void;
   onToggleRegion: (r: string) => void;
@@ -203,6 +205,8 @@ const MobileExploreView = (props: MobileExploreViewProps) => {
               selectedTags={props.selectedTags}
               onToggleTag={props.onToggleTag}
               priceRange={props.priceRange}
+              priceCurrency={props.priceCurrency}
+              priceRangeMax={props.priceRangeMax}
               onPriceRangeChange={props.onPriceRangeChange}
               areaRange={props.areaRange}
               onAreaRangeChange={props.onAreaRangeChange}
