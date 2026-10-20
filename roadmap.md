@@ -2,9 +2,9 @@
 
 ## Oferta Licantén y simulador simple
 
-- [ ] Añadir campaña con fotografía real y enlace canónico, sin alterar buscador ni inventario
-- [ ] Integrar simulador simple CLP y consulta existente en portada y acceso en ficha Licantén
-- [ ] Validar fórmula, botones y vistas 1440/390/320; dejar preview sin publicar
+- [x] Añadir campaña con fotografía real y enlace canónico, sin alterar buscador ni inventario
+- [x] Integrar simulador simple CLP y consulta existente en portada y acceso en ficha Licantén
+- [x] Validar fórmula, botones y vistas 1440/390/320; dejar preview sin publicar (detalle: docs/LICANTEN_CREDIT_QA.md)
 
 - [x] Construir portada Territorio cinematográfico con búsqueda y proyectos reales
 - [x] Unificar navegación, tarjetas, confianza, proceso y CTA comercial
