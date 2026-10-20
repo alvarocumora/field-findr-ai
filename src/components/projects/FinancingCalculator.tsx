@@ -126,7 +126,7 @@ export const FinancingCalculator = ({
   const canAffordLot = maxAffordablePrice >= lotPrice;
 
   // Generate PDF quote
-  const handleGeneratePDF = () => {
+  const handleGeneratePDF = async () => {
     setIsGeneratingPDF(true);
     
     try {
@@ -154,7 +154,7 @@ export const FinancingCalculator = ({
         validUntil,
       };
       
-      generateQuotePDF(pdfData);
+      await generateQuotePDF(pdfData);
       toast.success('Cotización PDF generada exitosamente');
     } catch (error) {
       console.error('Error generating PDF:', error);

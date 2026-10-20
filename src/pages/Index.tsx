@@ -16,7 +16,7 @@ const Index = () => {
   useSEO({
     title: 'OfertaTerrenos | Explora parcelas, campos y proyectos rurales',
     description: 'Explora parcelas, campos y loteos en Chile. Consulta información territorial, mapas y precios publicados; agenda visitas y revisa la disponibilidad de cada proyecto.',
-    image: 'https://ofertaterrenos.com/og-oferta-terrenos.png',
+    image: 'https://ofertaterrenos.com/og-oferta-terrenos.jpg',
     url: 'https://ofertaterrenos.com/',
     canonicalUrl: 'https://ofertaterrenos.com/',
   });

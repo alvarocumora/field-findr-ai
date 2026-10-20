@@ -56,7 +56,7 @@ export function projectSocialPlugin(apiUrl: string, publishableKey: string): Plu
       // readable metadata even when the project row is not yet public in DB.
       // WhatsApp/Facebook do not execute the SPA, so these static HTML files
       // are the source of truth for the share card.
-      const valleImage = 'https://ofertaterrenos.com/social/valle-hualane-og.png';
+      const valleImage = 'https://ofertaterrenos.com/social/valle-hualane-og.jpg';
       const writeSocialRoute = async (
         route: string,
         social: { title: string; description: string; url: string; image: string },

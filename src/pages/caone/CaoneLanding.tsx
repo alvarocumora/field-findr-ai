@@ -45,7 +45,7 @@ const CaoneLanding = () => {
     type: 'website',
     url: 'https://ofertaterrenos.com/valle-hualane',
     canonicalUrl: 'https://ofertaterrenos.com/valle-hualane',
-    image: 'https://ofertaterrenos.com/social/valle-hualane-og.png',
+    image: 'https://ofertaterrenos.com/social/valle-hualane-og.jpg',
   });
 
   const copyProjectLink = async () => {

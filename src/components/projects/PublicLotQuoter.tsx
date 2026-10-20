@@ -24,6 +24,7 @@ import {
 import { cn } from '@/lib/utils';
 import { generateQuotePDF, QuotePDFData } from '@/lib/pdfGenerator';
 import { toast } from 'sonner';
+import { getShareUrl } from '@/lib/publicUrls';
 
 interface Lot {
   id: string;
@@ -94,7 +95,7 @@ export const PublicLotQuoter = ({
     ? `Pie ${downPaymentPercent}% (${formatCurrency(calculations.downPayment)}) + ${termMonths} cuotas de ${formatCurrency(calculations.monthlyPayment)}`
     : undefined;
 
-  const handleGeneratePDF = () => {
+  const handleGeneratePDF = async () => {
     if (!selectedLot || !calculations) return;
     setIsGeneratingPDF(true);
     try {
@@ -120,7 +121,7 @@ export const PublicLotQuoter = ({
         generatedAt: now,
         validUntil,
       };
-      generateQuotePDF(pdfData);
+      await generateQuotePDF({ ...pdfData, verifyUrl: getShareUrl(`/proyecto/${projectId}`, { lote: selectedLot.lot_number }) });
       toast.success('Cotización PDF descargada');
     } catch {
       toast.error('Error al generar PDF');
