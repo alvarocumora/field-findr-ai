@@ -125,6 +125,15 @@ const ProjectExperience = () => {
     [verifiedLots, selectedLotSnapshot?.id],
   );
   const inventoryReady = !lotsLoading && !lotsError;
+  const currentInspectorLot = useMemo(
+    () => verifiedLots.find((lot: any) => lot.id === inspectorLot?.id) ?? null,
+    [verifiedLots, inspectorLot?.id],
+  );
+  const currentReservationLot = useMemo(
+    () => verifiedLots.find((lot: any) => lot.id === reservationLot?.id) ?? null,
+    [verifiedLots, reservationLot?.id],
+  );
+  const canCompleteReservation = inventoryReady && canReservePublicLot(currentReservationLot);
   const sortedLots = useMemo(
     () => [...verifiedLots].sort((a: any, b: any) => String(a.lot_number).localeCompare(String(b.lot_number), 'es', { numeric: true })),
     [verifiedLots],
@@ -576,8 +585,8 @@ const ProjectExperience = () => {
       </main>
 
       <LotDetailSheet
-        lot={inspectorLot}
-        open={!!inspectorLot}
+        lot={inventoryReady ? currentInspectorLot : null}
+        open={inventoryReady && !!currentInspectorLot}
         onOpenChange={(open) => !open && setInspectorLot(null)}
         projectName={project.name}
         legalDocuments={legalDocuments}
@@ -602,9 +611,9 @@ const ProjectExperience = () => {
       />
 
       <LotReservationDialog
-        lot={inventoryReady && canReservePublicLot(reservationLot) ? reservationLot : null}
+        lot={canCompleteReservation ? currentReservationLot : null}
         projectName={project.name}
-        open={!!reservationLot && inventoryReady && canReservePublicLot(reservationLot)}
+        open={!!reservationLot && canCompleteReservation}
         onOpenChange={(open) => !open && setReservationLot(null)}
         reservationAmount={(project as any).reservation_deposit || 500000}
       />
