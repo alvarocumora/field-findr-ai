@@ -13,7 +13,7 @@ export function EasyCreditSimulator({ defaultPrice = LICANTEN_PROMO_PRICE, lotId
   const [price, setPrice] = useState(defaultPrice);
   const [downPct, setDownPct] = useState(20);
   const [months, setMonths] = useState(36);
-  const [annualRatePct, setAnnualRatePct] = useState(0);
+  const [annualRatePct, setAnnualRatePct] = useState(12);
   const result = computeEasyCredit({ price, downPct, months, annualRatePct });
   const updateNumber = (value: string, max: number) => Math.min(max, Math.max(0, Number(value) || 0));
 
@@ -44,9 +44,9 @@ export function EasyCreditSimulator({ defaultPrice = LICANTEN_PROMO_PRICE, lotId
               </div>
             </fieldset>
             <div className="space-y-2">
-              <Label htmlFor={`${id}-rate`}>Tasa anual referencial (%)</Label>
+              <Label htmlFor={`${id}-rate`}>Tasa nominal anual referencial (%)</Label>
               <Input id={`${id}-rate`} type="number" inputMode="decimal" min={0} max={60} step={0.1} value={annualRatePct} onChange={e => setAnnualRatePct(updateNumber(e.target.value, 60))} aria-describedby={`${id}-rate-note`} className="h-12" />
-              <p id={`${id}-rate-note`} className="text-xs text-muted-foreground">Tasa nominal anual fija, dividida por 12 para el cálculo mensual. El 0% inicial es un supuesto editable, no una condición comercial.</p>
+              <p id={`${id}-rate-note`} className="text-xs text-muted-foreground">12% es un supuesto ilustrativo editable, no una tasa ofrecida por una institución financiera ni una condición disponible para terrenos rurales</p>
             </div>
           </div>
           <div className="min-w-0 border-t border-border pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">

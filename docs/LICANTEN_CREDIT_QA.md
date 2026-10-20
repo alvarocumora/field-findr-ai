@@ -2,7 +2,7 @@
 
 ## Changed files
 - `src/components/landing/LicantenOfferHero.tsx`: real project drone photograph, promotional starting price and basic-kit scope, canonical parcel CTA and simulator anchor.
-- `src/components/fintech/EasyCreditSimulator.tsx`: editable CLP price, accessible down-payment slider, 12/24/36/48/60-month controls, nominal annual rate, immediate French-system results and visible disclaimer. Initial 0% is explicitly an editable assumption, not a commercial condition.
+- `src/components/fintech/EasyCreditSimulator.tsx`: editable CLP price, accessible down-payment slider, 12/24/36/48/60-month controls, nominal annual rate, immediate French-system results and visible disclaimer. Initial 12% nominal annual is an editable illustrative assumption, not a financial institution's offered rate or an available condition for rural land. Manual 0% remains supported as a mathematical scenario.
 - `src/lib/easyCredit.ts` and `src/lib/easyCredit.test.ts`: finite bounded inputs, existing French calculator reuse, zero-interest rounding correction, existing consultation URL and lot context.
 - `src/pages/Index.tsx`: offer and simulator immediately after existing cinematic hero; original search and remaining sections retained.
 - `src/pages/ProjectDetail.tsx`: Licantén-only access near commercial CTAs; selected live lot price/ID transfer, existing consultation title and message intent.
