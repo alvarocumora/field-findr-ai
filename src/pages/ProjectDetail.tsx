@@ -294,6 +294,17 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
     enabled: !!project?.user_id,
   });
 
+  // Deep link ?lote=<id|número> abre directamente la ficha del lote.
+  const sharedLot = searchParamsTab.get('lote');
+  const openedSharedLot = useRef<string | null>(null);
+  useEffect(() => {
+    if (!sharedLot || openedSharedLot.current === sharedLot || lots.length === 0) return;
+    const match = lots.find((l: any) => l.id === sharedLot || String(l.lot_number) === sharedLot);
+    if (!match) return;
+    openedSharedLot.current = sharedLot;
+    setDetailLot(match);
+  }, [sharedLot, lots]);
+
   const sortedLots = useMemo(() => {
     return [...lots].sort((a, b) => {
       const numA = parseInt(a.lot_number) || 0;
