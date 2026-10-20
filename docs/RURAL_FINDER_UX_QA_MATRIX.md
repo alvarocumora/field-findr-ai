@@ -75,3 +75,30 @@ Los tests no requieren sesión ni mutan el inventario.
   única de rutas y permisos.
 - `src/lib/publicUrls.ts` y `src/lib/landing/paths.ts` definen canónicos.
 - Nunca presentar fallas de RPC como inventario a cero o reserva disponible.
+
+
+## Validación de transiciones públicas → espacios privados
+
+**Automatizado en PR de roles:**
+- `/comprador/inicio?tab=...#...`, `/asesor/projects?tab=...#...` y
+  `/admin/dashboard?view=...#...` redirigen a `/auth` sin perder parámetros.
+- El destino posterior al login se valida como ruta interna: nunca se acepta
+  una URL absoluta, protocol-relative ni un bucle de regreso a `/auth`.
+- Se verifica el manifiesto de acceso `public/auth/agent/admin` y que
+  herramientas de CRM mantengan su política por capability + feature.
+- El selector de contextos no ofrece Broker si falta el rol Agent, aunque
+  exista un perfil comercial activo.
+
+**QA manual posterior con cuentas autorizadas (no se simula ni se afirma aquí):**
+| Perfil | Recorrido de aceptación |
+| --- | --- |
+| Comprador | Publicación → autenticación → favoritos, visitas y reservas propias |
+| Broker | Selección de Broker → proyectos asignados, captaciones, links y CRM permitido |
+| Inmobiliaria | Selección Empresa → inventario, lotes, equipo y permisos organizacionales |
+| Administrador | Plataforma → organizaciones, suscripciones y auditoría |
+| Cuenta multi-rol | Elegir espacio → alternar al permitido → volver a landing sin perder sesión |
+| Cuenta sin permisos | URL directa a CRM/admin produce denegación sin cargar datos restringidos |
+
+Las pruebas automatizadas de rutas **no sustituyen** la verificación de RLS
+ni las comprobaciones de servidor mediante credenciales de testing asignadas.
+No usar cuentas reales, copiar tokens ni modificar datos comerciales durante QA.
