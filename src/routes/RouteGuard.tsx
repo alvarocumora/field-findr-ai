@@ -1,4 +1,5 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
+import { buildAuthRedirect } from "@/lib/access/authReturn";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useSmartRedirect } from "@/hooks/useSmartRedirect";
@@ -19,9 +20,14 @@ const Denied = ({ title, cta, to }: { title: string; cta: string; to: string }) 
     <div className="text-center p-8 max-w-md">
       <h1 className="text-2xl font-bold text-foreground mb-4">Acceso denegado</h1>
       <p className="text-muted-foreground mb-6">{title}</p>
-      <a href={to} className="text-primary hover:underline">
-        {cta}
-      </a>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Link to={to} className="min-h-11 inline-flex items-center rounded-xl border border-primary bg-primary px-4 py-2 text-sm font-medium text-primary-foreground focus-ring">
+          {cta}
+        </Link>
+        <Link to="/panel" className="min-h-11 inline-flex items-center rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground focus-ring">
+          Ir a mi espacio de trabajo
+        </Link>
+      </div>
     </div>
   </div>
 );
@@ -42,7 +48,7 @@ const RouteGuard = ({ access, layout }: RouteGuardProps) => {
 
     if (!user) {
       return (
-        <Navigate to={`/auth?redirect=${encodeURIComponent(location.pathname)}`} replace />
+        <Navigate to={buildAuthRedirect(location.pathname, location.search, location.hash)} replace />
       );
     }
 
