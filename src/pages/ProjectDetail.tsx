@@ -424,7 +424,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
   // selectedLotData removed - now using LotDetailSheet
   const isOwner = !!user && project.user_id === user.id;
   const publishableCount = isOwner ? publishableLots(lots as any[]).length : 0;
-  const creditLot = detailLot || lots.find(lot => lot.id === selectedLot);
+  const creditLot = detailLot || lots.find(lot => lot.id === selectedLot) || resolveProjectInquiryLot(lots, searchParamsTab);
   const creditLinkParams = new URLSearchParams();
   if (creditLot && Number.isFinite(creditLot.price) && creditLot.price > 0) {
     creditLinkParams.set('creditPrice', String(creditLot.price));
