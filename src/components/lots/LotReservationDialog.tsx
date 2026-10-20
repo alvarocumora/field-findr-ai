@@ -107,7 +107,7 @@ export const LotReservationDialog = ({
   }, [lot, form]);
 
   const submitReservation = async (data: ReservationFormData) => {
-    if (!canReservePublicLot(lot)) {
+    if (!lot || !canReservePublicLot(lot)) {
       toast.error('No se puede reservar una parcela sin disponibilidad y precio confirmado.');
       return;
     }
