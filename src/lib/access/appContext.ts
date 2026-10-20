@@ -64,7 +64,9 @@ export const resolveAvailableContexts = (identity: ContextIdentity): AppContextO
     (identity.hasOrganization || normalizedPlan !== 'free' || !identity.isBroker);
 
   if (hasCompanyWorkspace) result.push(APP_CONTEXTS.empresa);
-  if (identity.isBroker) result.push(APP_CONTEXTS.broker);
+  // A broker profile by itself does not grant access to agent routes.
+  // The route guard requires the agent role (or admin, handled separately).
+  if (identity.isBroker && identity.isAgent) result.push(APP_CONTEXTS.broker);
   if (identity.isBuyer) result.push(APP_CONTEXTS.buyer);
   if (identity.isAdmin) result.push(APP_CONTEXTS.plataforma);
 
@@ -84,15 +86,15 @@ export const resolveContextFromPath = (
 ): AppContext | null => {
   const has = (id: AppContext) => available.some((option) => option.id === id);
 
-  if (pathname.startsWith('/admin') && has('plataforma')) return 'plataforma';
+  if ((pathname === '/admin' || pathname.startsWith('/admin/')) && has('plataforma')) return 'plataforma';
   if (
-    (pathname.startsWith('/comprador') ||
-      pathname.startsWith('/favoritos') ||
-      pathname.startsWith('/mi-terreno')) &&
+    ((pathname === '/comprador' || pathname.startsWith('/comprador/')) ||
+      pathname === '/favoritos' ||
+      pathname === '/mi-terreno') &&
     has('buyer')
   ) return 'buyer';
 
-  if (pathname.startsWith('/asesor')) {
+  if (pathname === '/asesor' || pathname.startsWith('/asesor/')) {
     if ((current === 'broker' || current === 'empresa') && has(current)) return current;
 
     const brokerFirstRoutes = [
@@ -100,7 +102,7 @@ export const resolveContextFromPath = (
       '/asesor/red',
       '/asesor/proyectos-en-venta',
     ];
-    if (brokerFirstRoutes.some((path) => pathname.startsWith(path)) && has('broker')) {
+    if (brokerFirstRoutes.some((path) => pathname === path || pathname.startsWith(`${path}/`)) && has('broker')) {
       return 'broker';
     }
 
