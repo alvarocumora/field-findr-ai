@@ -102,3 +102,25 @@ Los tests no requieren sesión ni mutan el inventario.
 Las pruebas automatizadas de rutas **no sustituyen** la verificación de RLS
 ni las comprobaciones de servidor mediante credenciales de testing asignadas.
 No usar cuentas reales, copiar tokens ni modificar datos comerciales durante QA.
+
+
+## Integridad comercial y estados de datos
+
+Se diferencia el error real de lectura de un conjunto verdaderamente vacío,
+sin presentar un CRM, agenda o cartera «vacíos» cuando falla una consulta.
+Cada módulo ofrece una acción **Reintentar consulta**, sin ejecutar mutaciones.
+
+- CRM / Leads: el error impide mostrar «Sin leads» como si se hubiera consultado
+  correctamente la base de datos.
+- Proyectos: se abandona el cálculo ficticio de ingresos que multiplicaba lotes
+  vendidos por **$25.000.000 CLP** sin evidencia de transacciones. La tarjeta
+  ahora muestra la cantidad verificable de proyectos con estado activo.
+- Visitas: el error de lectura muestra un aviso, no «No hay visitas registradas».
+- Reservas: el error de lectura impide mostrar métricas de ingresos y reservas
+  en cero o acciones basadas en datos posiblemente obsoletos.
+
+**QA adicional con cuentas autorizadas:** simular un error de red/consulta para
+cada módulo y comprobar que se preserve la sesión, aparezca el aviso, no se
+realicen cambios al inventario y una recuperación válida permita navegar.
+Mantener explícito que los valores de `projects.sold_lots` son resúmenes de
+proyecto, no prueba de una escritura o un pago recibido.
