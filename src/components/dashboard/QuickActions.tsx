@@ -11,6 +11,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { useAccess } from '@/hooks/useAccess';
+import { routeManifest } from '@/routes/routeManifest';
+import { visibleCommercialActions } from '@/lib/access/commercialQuickActions';
 
 interface QuickAction {
   id: string;
@@ -26,7 +29,7 @@ interface QuickActionsProps {
 }
 
 const agentActions: QuickAction[] = [
-  { id: 'new-project', label: 'Nuevo Proyecto', icon: Plus, route: '/asesor/projects', variant: 'default' },
+  { id: 'publish', label: 'Publicar propiedad', icon: Plus, route: '/publicar', variant: 'default' },
   { id: 'leads', label: 'CRM Leads', icon: Users, route: '/asesor/leads', variant: 'outline' },
   { id: 'projects', label: 'Mis Proyectos', icon: FolderKanban, route: '/asesor/projects', variant: 'outline' },
   { id: 'view-map', label: 'Explorar Mapa', icon: Map, route: '/explorar', variant: 'outline' },
@@ -45,15 +48,20 @@ const adminActions: QuickAction[] = [
 
 export const QuickActions = ({ className, isAdmin = false }: QuickActionsProps) => {
   const navigate = useNavigate();
-  const actions = isAdmin ? adminActions : agentActions;
+  const access = useAccess();
+  const actions = visibleCommercialActions(isAdmin ? adminActions : agentActions, routeManifest, access);
 
   return (
     <Card className={cn('overflow-hidden', className)}>
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-semibold">Acciones Rápidas</CardTitle>
+        <CardTitle className="font-editorial text-lg font-medium">Acciones rápidas</CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {access.isLoading ? (
+          <p className="py-5 text-sm text-muted-foreground">Verificando accesos disponibles…</p>
+        ) : actions.length === 0 ? (
+          <p className="py-5 text-sm text-muted-foreground">No hay accesos rápidos para este espacio de trabajo.</p>
+        ) : <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {actions.map((action, index) => {
             const Icon = action.icon;
             return (
@@ -61,7 +69,7 @@ export const QuickActions = ({ className, isAdmin = false }: QuickActionsProps) 
                 key={action.id}
                 variant={action.variant || 'outline'}
                 className={cn(
-                  'h-auto py-3 px-3 flex-col gap-2 justify-start',
+                  'min-h-20 h-auto py-3 px-3 flex-col gap-2 justify-start',
                   'opacity-0 animate-scale-in',
                   'hover:scale-[1.02] transition-transform',
                   action.variant === 'default' && 'bg-primary hover:bg-primary/90'
@@ -85,7 +93,7 @@ export const QuickActions = ({ className, isAdmin = false }: QuickActionsProps) 
               </Button>
             );
           })}
-        </div>
+        </div>}
       </CardContent>
     </Card>
   );

@@ -76,9 +76,9 @@ const DashboardLayout = ({ children, requiredRole }: DashboardLayoutProps) => {
 
       {/* Mobile Sidebar via Sheet */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="p-0 w-60 bg-background border-border">
+        <SheetContent side="left" className="theme-rural w-[min(88vw,19rem)] max-w-[19rem] overflow-hidden border-border bg-background p-0 text-foreground">
           <SheetTitle className="sr-only">Navegación del panel</SheetTitle>
-          <ModernSidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
+          <ModernSidebar mobile onNavigate={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
 
