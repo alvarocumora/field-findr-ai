@@ -3,7 +3,8 @@ import { defineConfig } from '@playwright/test';
 const CI = Boolean(process.env.CI);
 
 export default defineConfig({
-  testDir: './e2e',
+  // Config is itself inside e2e/, so resolve tests relative to this directory.
+  testDir: '.',
   testMatch: '**/*.spec.mjs',
   fullyParallel: false,
   timeout: 45_000,
