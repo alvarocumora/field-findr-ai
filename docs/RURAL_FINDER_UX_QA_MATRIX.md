@@ -24,6 +24,20 @@ de navegación y manualmente desde GitHub Actions → **Public browser smoke**.
 Ejecuta en tres anchos: **320, 390 y 1440 px**. Chromium debe reportar éxito
 para fusionar cambios de navegación pública, además del CI de código.
 
+## Incidencia detectada por la primera ejecución de navegador
+
+El primer pase real obtuvo **26 pruebas aprobadas y 3 fallidas**: la landing de
+Valle Escondido mostraba el error global en los tres anchos. El trace comprobó
+`cannot add postgres_changes callbacks ... after subscribe()`. Varias secciones
+consumían `useVelLots` y cada una intentaba abrir el mismo topic Realtime.
+
+Corregido en este PR: se eliminó la suscripción Realtime **por consumidor**,
+manteniendo la consulta compartida `get_public_lots` con refresco de 20 s,
+invalidación de stock al fallar RPC y todas las salvaguardas de disponibilidad.
+Se añadió un test de doble montaje del hook para impedir regresiones.
+
+La segunda ejecución de navegador debe validar los tres anchos antes del merge.
+
 ## Verificaciones manuales que siguen siendo obligatorias
 
 - Sesión real por contexto comprador, broker, empresa y plataforma con RLS.
