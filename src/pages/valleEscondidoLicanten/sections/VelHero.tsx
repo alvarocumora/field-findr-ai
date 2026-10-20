@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CalendarCheck, ChevronDown, MapPin, ShoppingCart } from 'lucide-react';
 import VisitScheduleDialog from '@/components/visits/VisitScheduleDialog';
@@ -8,22 +8,10 @@ import heroImg from '@/assets/valle-escondido-licanten/vel-valle.jpg';
 
 export default function VelHero() {
   const [visitOpen, setVisitOpen] = useState(false);
-  const { lots } = useVelLots();
-
-  const commercial = useMemo(() => {
-    const available = lots.filter((lot) => lot.status === 'available');
-    const priced = available.filter((lot) => lot.price_clp > 0);
-    return {
-      availableLots: available.length,
-      priceFrom:
-        priced.length > 0
-          ? Math.min(...priced.map((lot) => lot.price_clp))
-          : VEL_PROJECT.priceFromClp,
-    };
-  }, [lots]);
+  const { available, isLive, isLoading, verifiedPriceFrom } = useVelLots();
 
   return (
-    <section className="relative h-screen min-h-[680px] w-full overflow-hidden">
+    <section className="relative min-h-[680px] w-full overflow-hidden lg:min-h-screen">
       <motion.div
         initial={{ scale: 1.12 }}
         animate={{ scale: 1 }}
@@ -35,7 +23,7 @@ export default function VelHero() {
       <div className="hue-fog" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-transparent to-transparent" />
 
-      <div className="relative z-10 flex h-full flex-col justify-between px-6 py-12 md:px-16 md:py-20">
+      <div className="relative z-10 flex min-h-[680px] flex-col justify-between gap-12 px-5 py-12 pb-20 sm:px-6 md:px-16 md:py-20 lg:min-h-screen">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -66,18 +54,18 @@ export default function VelHero() {
             Acceso por carretera asfaltada y conexión directa por la ruta principal hacia Lago Vichuquén.
           </p>
           <p className="mt-6 inline-flex items-baseline gap-3 rounded-sm border border-[var(--hue-amber)]/40 bg-[var(--hue-amber)]/10 px-5 py-3">
-            <span className="text-[10px] uppercase tracking-[0.28em] text-[var(--hue-bone)]/70">Parcelas desde</span>
+            <span className="text-[10px] uppercase tracking-[0.28em] text-[var(--hue-bone)]/70">{verifiedPriceFrom !== null ? 'Parcelas desde · CLP' : 'Precio de parcelas'}</span>
             <span className="serif text-[clamp(1.5rem,4vw,2.4rem)] font-light leading-none text-[var(--hue-bone)]">
-              ${commercial.priceFrom.toLocaleString('es-CL')}
+              {verifiedPriceFrom !== null ? `${verifiedPriceFrom.toLocaleString('es-CL')}` : 'Consultar'}
             </span>
           </p>
 
           <div className="mt-10 flex flex-wrap gap-3">
-            <a href="#masterplan" className="hue-pill transition hover:bg-white/10">Ver plano interactivo</a>
-            <button type="button" onClick={() => setVisitOpen(true)} className="hue-pill transition hover:bg-white/10">
+            <a href="#masterplan" className="hue-pill min-h-11 transition hover:bg-white/10">Ver plano interactivo</a>
+            <button type="button" onClick={() => setVisitOpen(true)} className="hue-pill min-h-11 transition hover:bg-white/10">
               <CalendarCheck className="h-3.5 w-3.5" /> Agendar visita
             </button>
-            <a href="#lotes" className="hue-pill transition hover:bg-white/10">
+            <a href="#lotes" className="hue-pill min-h-11 transition hover:bg-white/10">
               <ShoppingCart className="h-3.5 w-3.5" /> Reservar parcela
             </a>
           </div>
@@ -87,13 +75,13 @@ export default function VelHero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.5, delay: 1.2 }}
-          className="flex items-end justify-between"
+          className="flex flex-wrap items-end justify-between gap-6"
         >
           <div className="grid grid-cols-3 gap-6 text-[var(--hue-bone)] md:gap-10">
             {[
               ['Superficie', `${VEL_PROJECT.totalAreaHa} ha`],
               ['Parcelas', String(VEL_PROJECT.totalLots)],
-              ['Disponibles', String(commercial.availableLots)],
+              ['Disponibles', isLoading ? 'Cargando…' : isLive ? String(available) : 'Por confirmar'],
             ].map(([k, v]) => (
               <div key={k}>
                 <div className="serif text-3xl font-light md:text-4xl">{v}</div>
