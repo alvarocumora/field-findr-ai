@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import NotFound from "@/pages/NotFound";
 import AccountTypeOnboarding from "@/components/auth/AccountTypeOnboarding";
@@ -9,6 +9,7 @@ import RouteSeo from "./RouteSeo";
 import RoutePolicyGate from "./RoutePolicyGate";
 import ReferralAttributionCapture from "@/components/referrals/ReferralAttributionCapture";
 import { PageLoader } from "./routeUtils";
+import { resolveAliasDestination } from "./aliasDestination";
 import {
   routeAliases,
   routeManifest,
@@ -28,6 +29,12 @@ const groups = routeManifest.reduce<Record<GroupKey, RouteEntry[]>>((acc, entry)
   (acc[key] ||= []).push(entry);
   return acc;
 }, {} as Record<GroupKey, RouteEntry[]>);
+
+/** An alias must preserve deep links, search filters and anchor context. */
+const AliasRedirect = ({ to }: { to: string }) => {
+  const { search, hash } = useLocation();
+  return <Navigate to={resolveAliasDestination(to, search, hash)} replace />;
+};
 
 const AppRouter = () => (
   <BrowserRouter>
@@ -65,7 +72,7 @@ const AppRouter = () => (
             <Route
               key={`alias-${alias.from}`}
               path={alias.from}
-              element={<Navigate to={alias.to} replace />}
+              element={<AliasRedirect to={alias.to} />}
             />
           ))}
 

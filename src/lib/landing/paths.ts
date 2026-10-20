@@ -17,7 +17,11 @@ export const canonicalPathForSlug = (slug: string) =>
     ? landingCanonicalPath[slug]
     : `/p/${encodeURIComponent(slug)}`;
 
-export const projectCanonicalUrl = (project: { id: string; slug?: string | null }) =>
-  SITE_URL + (isPublicSlug(project.slug)
+/** Canonical in-app destination: bespoke projects retain their premium landing. */
+export const projectLandingPath = (project: { id: string; slug?: string | null }) =>
+  isPublicSlug(project.slug)
     ? canonicalPathForSlug(project.slug)
-    : `/proyecto/${encodeURIComponent(project.id)}`);
+    : `/proyecto/${encodeURIComponent(project.id)}`;
+
+export const projectCanonicalUrl = (project: { id: string; slug?: string | null }) =>
+  SITE_URL + projectLandingPath(project);

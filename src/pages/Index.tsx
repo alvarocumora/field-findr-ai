@@ -6,8 +6,8 @@ import { useSEO } from '@/hooks/useSEO';
 
 const Index = () => {
   useSEO({
-    title: 'OfertaTerrenos | Parcelas y loteos con tour 360 y reserva online',
-    description: 'Recorre proyectos de parcelas en Chile con tour 360 de dron, masterplan, precios y disponibilidad en vivo. Agenda tu visita o reserva en línea.',
+    title: 'OfertaTerrenos | Explora parcelas, campos y proyectos rurales',
+    description: 'Explora parcelas, campos y loteos en Chile. Consulta información territorial, mapas y precios publicados; agenda visitas y revisa la disponibilidad de cada proyecto.',
     image: 'https://ofertaterrenos.com/og-oferta-terrenos.png',
     url: 'https://ofertaterrenos.com/',
     canonicalUrl: 'https://ofertaterrenos.com/',
@@ -15,12 +15,12 @@ const Index = () => {
 
   return (
     <div className="theme-rural">
-    <PublicLayout showFooter={true} showAssistant={false}>
-      <CinematicShowcaseHero />
-      <InsigniaShowcase />
-      <EcosystemStandard />
-      <HybridCTA />
-    </PublicLayout>
+      <PublicLayout showFooter={true} showAssistant={false}>
+        <CinematicShowcaseHero />
+        <InsigniaShowcase />
+        <EcosystemStandard />
+        <HybridCTA />
+      </PublicLayout>
     </div>
   );
 };
