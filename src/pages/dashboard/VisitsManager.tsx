@@ -53,7 +53,7 @@ const toLocalDateTimeInput = (iso: string) => {
 const VisitsManager = () => {
   const { user } = useAuth();
   const { projectId } = useWorkspaceScope();
-  const { visits, isLoading, createVisit, updateVisit } = useVisits(projectId);
+  const { visits, isLoading, error, refetch, createVisit, updateVisit } = useVisits(projectId);
   const { leads } = useLeads(projectId);
   const { projects } = useProjects();
   const { lots } = useLots(projectId);
