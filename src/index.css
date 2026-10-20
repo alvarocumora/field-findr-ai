@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Campaign overlay inherits Rural Institutional roles; no alternate theme. */
+.licanten-offer-overlay {
+  background: linear-gradient(90deg, hsl(var(--primary) / .97), hsl(var(--foreground) / .78) 55%, hsl(var(--foreground) / .12));
+}
+.easy-credit-range { accent-color: hsl(var(--primary)); }
+@media (max-width: 639px) {
+  .licanten-offer-overlay { background: hsl(var(--primary) / .85); }
+}
+
 /* Pines de parcela en el tour 360: anillo blanco legible sobre bosque/terreno */
 .tour-lot-label {
   display: grid;

@@ -67,6 +67,7 @@ import { LandingLeadForm } from '@/pages/landing/LandingLeadForm';
 import { resolveProjectInquiryLot } from '@/lib/projects/projectInquiry';
 import { ProjectAerialShowcase } from '@/components/projects/ProjectAerialShowcase';
 import { ProjectNarrative } from '@/components/projects/ProjectNarrative';
+import { LICANTEN_PATH } from '@/lib/easyCredit';
 
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
@@ -423,6 +424,16 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
   // selectedLotData removed - now using LotDetailSheet
   const isOwner = !!user && project.user_id === user.id;
   const publishableCount = isOwner ? publishableLots(lots as any[]).length : 0;
+  const creditLot = detailLot || lots.find(lot => lot.id === selectedLot) || resolveProjectInquiryLot(lots, searchParamsTab)
+    || lots.find(lot => sharedLot && String(lot.lot_number) === sharedLot);
+  const creditLinkParams = new URLSearchParams();
+  if (creditLot && Number.isFinite(creditLot.price) && creditLot.price > 0) {
+    creditLinkParams.set('creditPrice', String(creditLot.price));
+    creditLinkParams.set('creditLot', creditLot.id);
+  } else if (!lotsError && priceRange) {
+    creditLinkParams.set('creditPrice', String(priceRange.min));
+  }
+  const easyCreditLink = `/?${creditLinkParams}#simula-tu-cuota`;
 
   const handleCall = () => {
     const phone = ownerProfile?.phone;
@@ -549,13 +560,17 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
             )}
           </nav>
           <Button onClick={() => setLeadOpen(true)} className="min-h-11">Agendar visita o consultar</Button>
+          {`/p/${project.slug}` === LICANTEN_PATH && (
+            <Button asChild variant="outline" className="min-h-11 sm:ml-3"><Link to={easyCreditLink}><Calculator aria-hidden="true" />Simula tu cuota</Link></Button>
+          )}
         </div>
 
         <ProjectNarrative project={project} lotCount={lotsLoading || lotsError ? null : lots.length} />
         <Dialog open={leadOpen} onOpenChange={setLeadOpen}>
           <DialogContent>
-            <DialogTitle>Consulta por {project.name}</DialogTitle>
+            <DialogTitle>{searchParamsTab.get('utm_campaign') === 'consulta_financiamiento' ? 'Consultar financiamiento' : `Consulta por ${project.name}`}</DialogTitle>
             <LandingLeadForm
+              defaultMessage={searchParamsTab.get('utm_campaign') === 'consulta_financiamiento' ? 'Quiero consultar alternativas de financiamiento para una parcela de Valle Escondido Licantén.' : ''}
               projectId={project.id}
               projectOwnerId={project.user_id}
               projectSlug={project.slug || project.id}
