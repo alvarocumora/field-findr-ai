@@ -10,7 +10,7 @@ export default function VelFicha() {
     ['Superficie total', `${VEL_PROJECT.totalAreaHa} ha`],
     ['Cantidad de parcelas', String(VEL_PROJECT.totalLots)],
     ['Superficie promedio', `${VEL_PROJECT.avgAreaM2.toLocaleString('es-CL')} m²`],
-    ['Rango de precios', `${fmtClp(VEL_PROJECT.priceFromClp)} – ${fmtClp(VEL_PROJECT.priceToClp)}`],
+    ['Rango comercial referencial', `${fmtClp(VEL_PROJECT.priceFromClp)} – ${fmtClp(VEL_PROJECT.priceToClp)} CLP · consultar valor vigente`],
     ['Régimen', 'Subdivisión rural DL 3.516'],
     ['Inscripción', VEL_PROJECT.registro],
     [
@@ -49,7 +49,7 @@ export default function VelFicha() {
           </p>
           <p className="mt-4 text-[15px] leading-relaxed text-[var(--hue-bone)]/70">
             La subdivisión está inscrita en el Conservador de Bienes Raíces de Licantén y cada
-            parcela cuenta con su ficha pública, superficie oficial del plano y precio publicado.
+            parcela cuenta con antecedentes de superficie del plano; precios, documentación y disponibilidad deben confirmarse antes de reservar.
           </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
