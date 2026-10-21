@@ -64,3 +64,16 @@ describe('commercial PDF integrity', () => {
     expect(blob!.size).toBeGreaterThan(1000);
   });
 });
+
+import { creditExamples, creditSimulatorPath, frenchPayment, isReadyToDeed } from './projectKit';
+describe('crédito directo en dossier', () => {
+  it('calcula la cuota de $19.990.000 con 20% pie, 12% y 36 meses', () => {
+    expect(Math.round(frenchPayment(15_992_000, 12, 36))).toBe(531163);
+    expect(creditExamples(19_990_000)[2]).toMatchObject({ downPct: 0, months: 60, down: 0 });
+    expect(creditSimulatorPath(19_990_000)).toBe('/?creditPrice=19990000#simula-tu-cuota');
+  });
+  it('solo marca listas para escriturar con rol propio', () => {
+    expect(isReadyToDeed({ id: 'a', name: 'x', highlights: ['Subdivisión con rol propio'] })).toBe(true);
+    expect(isReadyToDeed({ id: 'a', name: 'x' })).toBe(false);
+  });
+});

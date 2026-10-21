@@ -740,6 +740,27 @@ const purchaseSteps = (f: FichaDoc, steps: [string, string][]) => {
 /* Dossier comercial                                                    */
 /* ------------------------------------------------------------------ */
 
+export const CREDIT_EXAMPLE_RATE = 12;
+
+/** Cuota francesa; tasa 0 => cuotas lineales. */
+export const frenchPayment = (principal: number, annualRatePct: number, months: number) => {
+  if (principal <= 0 || months <= 0) return 0;
+  const i = annualRatePct / 100 / 12;
+  return i === 0 ? principal / months : (principal * i) / (1 - Math.pow(1 + i, -months));
+};
+
+export const creditExamples = (price: number) =>
+  ([[20, 36], [20, 60], [0, 60]] as const).map(([downPct, months]) => {
+    const down = Math.round(price * downPct / 100);
+    return { downPct, months, down, payment: Math.round(frenchPayment(price - down, CREDIT_EXAMPLE_RATE, months)) };
+  });
+
+export const creditSimulatorPath = (price: number) => `/?creditPrice=${Math.round(price)}#simula-tu-cuota`;
+
+/** Solo se declara "listas para escriturar" si el proyecto informa rol propio. */
+export const isReadyToDeed = (project: KitProject) =>
+  [project.description ?? '', ...(project.highlights ?? [])].some(t => /rol propio/i.test(t));
+
 export const agendarPath = (project: KitProject) =>
   `/agendar?source=${encodeURIComponent(`dossier-${project.slug ?? project.id}`)}`;
 
@@ -754,6 +775,7 @@ export const generateProjectDossierPdf = async (
   const path = projectPath(project, options);
   const location = [project.location, project.region].filter(Boolean).join(', ');
   const t = getFichaTemplate('proyecto');
+  const readyToDeed = isReadyToDeed(project);
 
   // Load concurrently, bounded to five assets. No invented replacement photos.
   const configuredMedia = [...(project.media ?? []), ...(project.images ?? []).map(src => ({ src, caption: 'Imagen del proyecto · referencial' }))].filter(item => item.src);
@@ -774,6 +796,7 @@ export const generateProjectDossierPdf = async (
     hero: media[0]?.data ?? plan?.image ?? null,
     heroCaption: media[0]?.caption ?? (plan?.image ? 'Imagen satelital del sector · referencial' : undefined),
     agendarUrl: agendarPath(project),
+    readyToDeed,
   });
 
   // ---- El proyecto
@@ -818,6 +841,17 @@ export const generateProjectDossierPdf = async (
     f.section('Entorno y accesos');
     f.bullets(project.pois.slice(0, 10).map((p) => `${p.name} — ${p.detail}`));
   }
+  // ---- Crédito directo (ejemplo ilustrativo sobre el precio desde real)
+  if (s.priceMin) {
+    f.ensure(90);
+    f.section('Crédito directo con la inmobiliaria');
+    f.paragraph('Compra con pie flexible (desde 0%) y cuotas fijas mensuales de hasta 60 meses, sin banco. Ejemplo sobre la parcela de menor precio:', { size: 9.5 });
+    const rows = creditExamples(s.priceMin);
+    rows.forEach(r => f.kv(`Pie ${r.downPct}% · ${r.months} cuotas`, `${clp(r.payment)} / mes · pie ${clp(r.down)}`));
+    f.note(`Simulación referencial con tasa nominal anual de ${CREDIT_EXAMPLE_RATE}% (supuesto ilustrativo editable), sistema francés. No constituye oferta de crédito; condiciones finales sujetas a evaluación y a la promesa de compraventa.`);
+    f.actions([{ label: 'Simula tu crédito en línea', url: creditSimulatorPath(s.priceMin) }]);
+  }
+
   const conds = conditionLines(project);
   if (conds.length) {
     f.section('Condiciones comerciales');
@@ -857,7 +891,9 @@ export const generateProjectDossierPdf = async (
   purchaseSteps(f, [
     ['Reserva', 'Eliges tu parcela y la reservas en línea o con tu ejecutivo; queda bloqueada para ti.'],
     ['Promesa', 'Firmamos la promesa de compraventa con las condiciones de pago acordadas.'],
-    ['Escritura', 'Firma de la escritura pública de compraventa en notaría.'],
+    ['Escritura', readyToDeed
+      ? 'Parcelas con rol propio, listas para escriturar: firma de la escritura pública de compraventa en notaría.'
+      : 'Firma de la escritura pública de compraventa en notaría.'],
     ['Inscripción', 'Inscripción en el Conservador de Bienes Raíces: la parcela queda a tu nombre.'],
   ]);
 
