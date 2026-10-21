@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { projectImages } from '@/lib/projectCovers';
+import HeroTerrainGlobe from '@/components/landing/HeroTerrainGlobe';
 
 interface ShowcaseProject {
   id: string;
@@ -15,6 +16,8 @@ interface ShowcaseProject {
   city: string | null;
   region: string | null;
   image?: string;
+  lat: number | null;
+  lng: number | null;
   total: number | null;
   available: number | null;
   inventoryReady: boolean;
@@ -36,11 +39,11 @@ export const useShowcaseProjects = () =>
     queryFn: async (): Promise<ShowcaseProject[]> => {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, slug, name, city, region, images, total_lots, available_lots, featured, created_at')
+        .select('id, slug, name, city, region, images, latitude, longitude, total_lots, available_lots, featured, created_at')
         .eq('status', 'active')
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
-        .limit(6);
+        .limit(8);
       if (error) throw error;
       return Promise.all((data ?? []).map(async (p) => {
         const { data: lots, error: lotsError } = await supabase.rpc('get_public_lots', { p_project_id: p.id });
@@ -51,6 +54,7 @@ export const useShowcaseProjects = () =>
         return {
           id: p.id, slug: p.slug, name: p.name, city: p.city, region: p.region,
           image: projectImages(p)[0],
+          lat: p.latitude ?? null, lng: p.longitude ?? null,
           inventoryReady: !lotsError,
           total: lotsError ? null : list.length,
           available: lotsError ? null : avail.length,
@@ -72,7 +76,7 @@ const CinematicShowcaseHero = () => {
 
   useEffect(() => {
     if (reduced || withImage.length < 2) return;
-    const t = window.setInterval(() => setIndex((i) => (i + 1) % withImage.length), 7000);
+    const t = window.setInterval(() => setIndex((i) => (i + 1) % withImage.length), 11000);
     return () => window.clearInterval(t);
   }, [reduced, withImage.length]);
 
@@ -130,7 +134,14 @@ const CinematicShowcaseHero = () => {
         </motion.div>
 
         <div className="min-w-0">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-muted rural-shadow">
+          <div className="relative aspect-[4/5] sm:aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-muted rural-shadow">
+            <HeroTerrainGlobe
+              projects={withImage.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng }))}
+              activeId={active?.id}
+              reducedMotion={!!reduced}
+              onSelect={(id) => { const i = withImage.findIndex((p) => p.id === id); if (i >= 0) setIndex(i); }}
+              fallback={
+                <>
             <AnimatePresence mode="sync">
               {active?.image ? (
                 <motion.img
@@ -147,8 +158,11 @@ const CinematicShowcaseHero = () => {
                 <div className="absolute inset-0 grid-topo opacity-40" aria-hidden="true" />
               )}
             </AnimatePresence>
+                </>
+              }
+            />
             {active && (
-              <Link to={`/proyecto/${encodeURIComponent(active.id)}`} className="absolute inset-x-3 bottom-3 flex flex-wrap items-end justify-between gap-3 rounded-xl border border-border bg-card/95 p-4 backdrop-blur focus-ring">
+              <Link to={active.slug ? `/p/${encodeURIComponent(active.slug)}` : `/proyecto/${encodeURIComponent(active.id)}`} className="absolute inset-x-3 bottom-3 z-10 flex flex-wrap items-end justify-between gap-3 rounded-xl border border-border bg-card/95 p-4 backdrop-blur focus-ring">
                 <div className="min-w-0">
                   <p className="truncate font-editorial text-lg font-medium text-foreground">{active.name}</p>
                   <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground"><MapPin className="h-3 w-3" aria-hidden="true" />{[active.city, active.region].filter(Boolean).join(', ') || 'Chile'}</p>
