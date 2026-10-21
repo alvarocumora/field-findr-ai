@@ -19,11 +19,12 @@ import {
 } from '@/components/ui/alert-dialog';
 import {
   Search, Filter, Clock, CheckCircle2, XCircle, AlertTriangle, ArrowUpRight,
-  DollarSign, Calendar, Loader2, RefreshCw, Building2, MessageCircle, Copy,
+  DollarSign, Calendar, Loader2, RefreshCw, Building2, MessageCircle, Copy, FileText,
 } from 'lucide-react';
 import { differenceInMinutes, format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { downloadReservationCertificate } from '@/lib/reservationCertificate';
 
 type ReservationStatus = 'pending_payment' | 'paid' | 'expired' | 'cancelled' | 'converted';
 
@@ -247,6 +248,14 @@ const ReservationsManager = () => {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        {['pending_payment', 'paid', 'converted'].includes(reservation.status) && (
+                          <Button size="sm" variant="outline" title="Descargar certificado de reserva" onClick={() => {
+                            void downloadReservationCertificate({
+                              ...reservation,
+                              lot: { ...lot, projectName: lot?.projects?.name },
+                            }).catch(() => toast.error('No se pudo generar el certificado'));
+                          }}><FileText className="h-4 w-4 mr-1" />Certificado</Button>
+                        )}
                         {reservation.status === 'pending_payment' && reservation.payment_url && (
                           <>
                             <Button size="sm" onClick={() => sharePaymentWhatsApp(reservation)}><MessageCircle className="h-4 w-4 mr-1" />Cobrar por WhatsApp</Button>

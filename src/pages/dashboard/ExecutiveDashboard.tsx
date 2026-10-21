@@ -39,6 +39,7 @@ import { useActiveSalesQuotesCount, useCreateSalesQuote, useMarkSalesQuoteSent, 
 import { formatPriceLatam } from '@/lib/latam';
 import { toast } from 'sonner';
 import { canReserveFromQuote, reservationDraftFromQuote, type QuoteLike } from '@/lib/crm/quoteToReservation';
+import { downloadReservationCertificate } from '@/lib/reservationCertificate';
 
 const ExecutiveDashboard = () => {
   const { projects } = useProjects();
@@ -272,6 +273,18 @@ const ExecutiveDashboard = () => {
         : 'Reserva iniciada por ejecutivo desde Dashboard Ejecutivo',
     });
 
+    if (result.reservation) {
+      const project = projects.find((p: any) => p.id === reserveLot.project_id) as any;
+      toast.success('Reserva creada', {
+        action: {
+          label: 'Certificado PDF',
+          onClick: () => void downloadReservationCertificate({
+            ...result.reservation,
+            lot: { ...reserveLot, projectName: project?.name, projectLocation: project?.location },
+          }),
+        },
+      });
+    }
     setReserveLot(null);
     setReserveQuoteId(null);
     setReserve({ name: '', email: '', phone: '', amount: '100000' });
