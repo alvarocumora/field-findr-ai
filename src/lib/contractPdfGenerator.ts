@@ -468,6 +468,40 @@ export const generateContractPDF = (
     doc.text(`RUT: ${data.buyerRut}`, sigX1 + sigW / 2, y + 40, { align: 'center' });
   }
 
+  // ── Anexo N° 1: Tabla de Desarrollo (crédito directo) ──
+  if (credit) {
+    doc.addPage();
+    addWatermark(doc);
+    addHeaderToPage(doc, contractNum, false);
+    y = 24;
+    sectionTitle('ANEXO 1', 'TABLA DE DESARROLLO DEL CRÉDITO DIRECTO');
+    const cols = [20, 34, 70, 108, 142, 176];
+    const head = ['N°', 'Vencimiento', 'Cuota', 'Capital', 'Interés', 'Saldo'];
+    const drawHead = () => {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...GRAY);
+      head.forEach((h, i) => doc.text(h, cols[i], y));
+      y += 5;
+    };
+    drawHead();
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(...DARK);
+    const fmtShort = (d: Date) => new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
+    const money = (v: number) => formatCurrency(v, data.currency);
+    buildCreditSchedule(credit, data.generatedAt).forEach((row, i) => {
+      if (y > 266) {
+        doc.addPage(); addWatermark(doc); addHeaderToPage(doc, contractNum, false); y = 24; drawHead();
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(...DARK);
+      }
+      if (i % 2 === 0) { doc.setFillColor(...LIGHT_BG); doc.rect(18, y - 3.6, pw - 36, 5, 'F'); }
+      doc.setFontSize(7.5);
+      [String(row.n), fmtShort(row.due), money(row.payment), money(row.capital), money(row.interest), money(row.balance)]
+        .forEach((t, j) => doc.text(t, cols[j], y));
+      y += 5;
+    });
+    y += 4;
+    doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5); doc.setTextColor(...GRAY);
+    doc.text(doc.splitTextToSize('Aviso de riesgo: la tabla es parte integrante de la promesa. Montos redondeados al peso; la última cuota ajusta diferencias. No incluye seguros, gastos notariales, impuestos ni inscripciones. El incumplimiento puede generar intereses moratorios, aceleración del saldo y pérdida de las arras. Revise este documento con un abogado antes de firmar ante notario.', pw - 40), 20, y);
+  }
+
   // ── Apply footers to all pages ──
   const totalPages = doc.getNumberOfPages();
   for (let p = 1; p <= totalPages; p++) {
