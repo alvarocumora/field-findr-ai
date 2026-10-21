@@ -54,17 +54,20 @@ export default function ProjectsRail() {
     queryKey: ['explorer-projects-rail-stats', ids],
     enabled: ids.length > 0,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('lots')
-        .select('project_id,price,area_m2,status')
-        .in('project_id', ids);
+      // Use the same public, PII-free inventory contract as ProjectDetail.
+      // Direct lots reads are not granted to anonymous visitors.
+      const inventories = await Promise.all(ids.map(async (projectId) => {
+        const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: projectId });
+        if (error) throw error;
+        return (data ?? []).map(lot => ({ ...lot, project_id: projectId }));
+      }));
       const out: Record<string, LotStat> = {};
-      for (const l of (data ?? []) as any[]) {
+      for (const l of inventories.flat()) {
         const s = (out[l.project_id] ??= { minPrice: null, minArea: null, maxArea: null });
-        if (l.status === 'available' && l.price > 0) s.minPrice = s.minPrice == null ? l.price : Math.min(s.minPrice, l.price);
-        if (l.area_m2 > 0) {
-          s.minArea = s.minArea == null ? l.area_m2 : Math.min(s.minArea, l.area_m2);
-          s.maxArea = s.maxArea == null ? l.area_m2 : Math.max(s.maxArea, l.area_m2);
+        if (l.status === 'available' && l.price != null && l.price > 0) s.minPrice = s.minPrice == null ? l.price : Math.min(s.minPrice, l.price);
+        if (l.area > 0) {
+          s.minArea = s.minArea == null ? l.area : Math.min(s.minArea, l.area);
+          s.maxArea = s.maxArea == null ? l.area : Math.max(s.maxArea, l.area);
         }
       }
       return out;

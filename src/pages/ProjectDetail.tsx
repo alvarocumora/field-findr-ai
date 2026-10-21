@@ -64,7 +64,7 @@ import { useSEO, buildProjectJsonLd } from '@/hooks/useSEO';
 import { useReviewStats } from '@/hooks/useReviews';
 import { projectSocial } from '@/lib/landing/projectSocial';
 import { LandingLeadForm } from '@/pages/landing/LandingLeadForm';
-import { resolveProjectInquiryLot } from '@/lib/projects/projectInquiry';
+import { consumeProjectInquiry, resolveProjectInquiryLot } from '@/lib/projects/projectInquiry';
 import { ProjectAerialShowcase } from '@/components/projects/ProjectAerialShowcase';
 import { ProjectNarrative } from '@/components/projects/ProjectNarrative';
 import { LICANTEN_PATH } from '@/lib/easyCredit';
@@ -233,8 +233,11 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
   // Las landings específicas pueden abrir directamente el formulario de consulta.
   // El ID del lote se resuelve contra el inventario público antes de enviarlo al CRM.
   useEffect(() => {
-    if (searchParamsTab.get('consulta') === '1') setLeadOpen(true);
-  }, [searchParamsTab]);
+    const next = consumeProjectInquiry(searchParamsTab);
+    if (!next) return;
+    setLeadOpen(true);
+    setSearchParamsTab(next, { replace: true });
+  }, [searchParamsTab, setSearchParamsTab]);
   const bulkPublish = useBulkPublishLots();
 
   // Links con ?tab=tour360 (landings de proyecto) esperan ver el tour de

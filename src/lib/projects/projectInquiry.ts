@@ -4,6 +4,14 @@ export interface ProjectInquiryLot {
   lot_number?: string | null;
 }
 
+/** Consume only the one-shot dialog request, preserving the commercial context. */
+export function consumeProjectInquiry(params: URLSearchParams): URLSearchParams | null {
+  if (params.get('consulta') !== '1') return null;
+  const next = new URLSearchParams(params);
+  next.delete('consulta');
+  return next;
+}
+
 /**
  * Tour geometry IDs may differ from the database's lot UUID.
  * Prefer the displayed lot number when supplied, and fall back to the DB ID.
