@@ -74,6 +74,17 @@ export const drawBrandMark = (doc: jsPDF, x: number, y: number, size = 10) => {
   drawLeaf(doc, x + size * 0.18, y + size * 0.18, size * 0.64, BRAND.white, BRAND.forest);
 };
 
+/** Ancho aproximado (mm) del logotipo vectorial, para dimensionar chips/fondos. */
+export const brandLogoWidth = (doc: jsPDF, size = 10) => {
+  const theme = getFichaTheme();
+  doc.setFont(themeFont('heading'), 'bold');
+  doc.setFontSize(size * 1.25);
+  const label = theme.logo.primary === 'OFERTA' && theme.logo.secondary === 'TERRENOS'
+    ? 'Oferta Terrenos'
+    : `${theme.logo.primary} ${theme.logo.secondary}`;
+  return size + size * 0.35 + doc.getTextWidth(label);
+};
+
 /** Logotipo completo: imagen del tema, o marca vectorial + wordmark. */
 export const drawBrandLogo = (
   doc: jsPDF,
