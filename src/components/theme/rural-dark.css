@@ -1,0 +1,36 @@
+/* Rural Finder's paper palette is defined in index.css for light mode.
+   The global ThemeProvider toggles .dark on <html>; these higher-specificity
+   tokens restore a genuine dark palette without changing other app themes. */
+.dark .theme-rural,
+.theme-rural.dark {
+  --background: 161 31% 7%;
+  --foreground: 47 27% 95%;
+  --card: 158 24% 12%;
+  --card-foreground: 47 27% 95%;
+  --popover: 158 24% 12%;
+  --popover-foreground: 47 27% 95%;
+  --primary: 164 52% 48%;
+  --primary-foreground: 161 31% 7%;
+  --secondary: 159 20% 17%;
+  --secondary-foreground: 47 27% 95%;
+  --muted: 159 18% 15%;
+  --muted-foreground: 151 12% 72%;
+  --accent: 164 40% 52%;
+  --accent-foreground: 161 31% 7%;
+  --destructive: 4 70% 64%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 158 57% 48%;
+  --warning: 39 86% 65%;
+  --info: 200 78% 69%;
+  --border: 158 18% 25%;
+  --input: 158 18% 25%;
+  --ring: 164 52% 48%;
+  --gradient-brand: linear-gradient(135deg, hsl(164 52% 48%), hsl(187 57% 52%));
+  --glass-bg: hsla(160, 29%, 10%, 0.78);
+  --glass-border: hsla(47, 27%, 95%, 0.12);
+  --glass-strong-bg: hsla(160, 29%, 10%, 0.94);
+  --shadow-rural: 0 2px 7px hsl(160 31% 3% / 0.3), 0 20px 40px -14px hsl(160 31% 3% / 0.65);
+  color-scheme: dark;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
