@@ -421,7 +421,7 @@ export const projectLandingEntries: RouteEntry[] = [
   // Todas montan la misma experiencia de proyecto dentro del shell público.
   pub("forestal-landing", "/forestal-valle-escondido", <ProjectLanding slug="forestal-valle-escondido" />),
   pub("forestal-investors", "/forestal-valle-escondido/investors", <InvestorsLogin />, { indexable: false }),
-  pub("huellelhue", "/huellelhue", <ProjectLanding slug="huellelhue" />),
+  pub("huellelhue", "/huellelhue", <ProjectLanding slug="reserva-huellelhue" />),
   pub("playa-alvaro", "/playa-alvaro", <ProjectLanding slug="playa-alvaro" />),
   pub("explora-park", "/explora-park", <ProjectLanding slug="explora-park" />),
   pub("valle-hualane", "/valle-hualane", <ProjectLanding slug="parcelas-caone-hualane" />),
