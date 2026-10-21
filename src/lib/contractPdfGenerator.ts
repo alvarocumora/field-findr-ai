@@ -19,6 +19,34 @@ interface ContractPDFData {
   generatedAt: Date;
   /** Buyer's digital signature (PNG data URL) — drawn over the buyer line. */
   signatureDataUrl?: string;
+  /** Direct seller financing: switches price clause to instalments and adds the amortization annex. */
+  credit?: ContractCreditTerms;
+}
+
+export interface ContractCreditTerms {
+  totalAmount: number;
+  downPayment: number;
+  financedAmount: number;
+  annualRatePct: number;
+  termMonths: number;
+  monthlyPayment: number;
+  /** ISO date of the first instalment; defaults to one month after generation. */
+  firstDueDate?: string;
+}
+
+/** French amortization rows (capital, interest, balance) for the annex. */
+export function buildCreditSchedule(c: ContractCreditTerms, generatedAt: Date) {
+  const r = c.annualRatePct / 100 / 12;
+  let balance = c.financedAmount;
+  const start = c.firstDueDate ? new Date(c.firstDueDate) : new Date(generatedAt.getFullYear(), generatedAt.getMonth() + 1, generatedAt.getDate());
+  return Array.from({ length: c.termMonths }, (_, i) => {
+    const interest = Math.round(balance * r);
+    const isLast = i === c.termMonths - 1;
+    const capital = isLast ? balance : Math.min(balance, c.monthlyPayment - interest);
+    balance = Math.max(0, balance - capital);
+    const due = new Date(start.getFullYear(), start.getMonth() + i, start.getDate());
+    return { n: i + 1, due, payment: capital + interest, capital, interest, balance };
+  });
 }
 
 const formatCurrency = (value: number, currency = 'CLP'): string =>
@@ -293,6 +321,31 @@ export const generateContractPDF = (
     },
   ];
 
+  const credit = data.credit;
+  if (credit) {
+    const day = (credit.firstDueDate ? new Date(credit.firstDueDate) : new Date(data.generatedAt)).getDate();
+    const cur = (v: number) => formatCurrency(v, data.currency);
+    clauses[1] = {
+      title: 'Precio y Forma de Pago con Crédito Directo',
+      text: `El precio total de la compraventa prometida es la suma de ${cur(credit.totalAmount)}, que el promitente comprador pagará de la siguiente forma: (a) con la suma de ${cur(credit.downPayment)} a título de pie, en la que se imputa el depósito de reserva de ${cur(data.reservationAmount)}, entregada a título de arras confirmatorias; y (b) el saldo de ${cur(credit.financedAmount)}, financiado directamente por el promitente vendedor, en ${credit.termMonths} cuotas mensuales, iguales y sucesivas de ${cur(credit.monthlyPayment)} cada una, que incluyen capital e intereses a una tasa nominal anual de ${credit.annualRatePct.toLocaleString('es-CL')}% (${(credit.annualRatePct / 12).toLocaleString('es-CL', { maximumFractionDigits: 4 })}% mensual), con vencimiento el día ${day} de cada mes, conforme a la Tabla de Desarrollo del Anexo N° 1, que forma parte integrante de este instrumento.`,
+    };
+    clauses.splice(2, 0,
+      {
+        title: 'Mora y Cláusula de Aceleración',
+        text: 'El simple retardo en el pago de cualquiera de las cuotas devengará, desde su vencimiento y hasta su pago efectivo, el interés máximo convencional que la ley permita estipular. El no pago íntegro y oportuno de dos o más cuotas consecutivas facultará al promitente vendedor para hacer exigible de inmediato el total del saldo insoluto adeudado, como si fuere de plazo vencido, sin necesidad de requerimiento judicial previo, de conformidad con el artículo 1496 del Código Civil.',
+      },
+      {
+        title: 'Escritura Definitiva y Garantía del Saldo',
+        text: 'Las partes suscribirán la escritura pública de compraventa definitiva ante notario dentro del plazo de noventa (90) días corridos contados desde la fecha de este instrumento. En dicho acto, y para caucionar el saldo de precio financiado, el comprador constituirá hipoteca de primer grado y prohibición de gravar y enajenar a favor del vendedor, las que se alzarán una vez pagada íntegramente la última cuota. Alternativamente, las partes podrán convenir que la escritura definitiva se otorgue contra el pago total del saldo de precio.',
+      },
+      {
+        title: 'Prepago',
+        text: 'El promitente comprador podrá prepagar total o parcialmente el saldo insoluto en cualquier momento, con aviso escrito de treinta (30) días, pagando el capital adeudado más los intereses devengados a la fecha del prepago, sin otra comisión que la que permita la ley.',
+      },
+    );
+    clauses.splice(clauses.findIndex(c => c.title === 'Plazo para Escritura Definitiva'), 1);
+  }
+
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...DARK);
@@ -413,6 +466,40 @@ export const generateContractPDF = (
     doc.setFontSize(8);
     doc.setTextColor(...GRAY);
     doc.text(`RUT: ${data.buyerRut}`, sigX1 + sigW / 2, y + 40, { align: 'center' });
+  }
+
+  // ── Anexo N° 1: Tabla de Desarrollo (crédito directo) ──
+  if (credit) {
+    doc.addPage();
+    addWatermark(doc);
+    addHeaderToPage(doc, contractNum, false);
+    y = 24;
+    sectionTitle('ANEXO 1', 'TABLA DE DESARROLLO DEL CRÉDITO DIRECTO');
+    const cols = [20, 34, 70, 108, 142, 176];
+    const head = ['N°', 'Vencimiento', 'Cuota', 'Capital', 'Interés', 'Saldo'];
+    const drawHead = () => {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...GRAY);
+      head.forEach((h, i) => doc.text(h, cols[i], y));
+      y += 5;
+    };
+    drawHead();
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(...DARK);
+    const fmtShort = (d: Date) => new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
+    const money = (v: number) => formatCurrency(v, data.currency);
+    buildCreditSchedule(credit, data.generatedAt).forEach((row, i) => {
+      if (y > 266) {
+        doc.addPage(); addWatermark(doc); addHeaderToPage(doc, contractNum, false); y = 24; drawHead();
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(...DARK);
+      }
+      if (i % 2 === 0) { doc.setFillColor(...LIGHT_BG); doc.rect(18, y - 3.6, pw - 36, 5, 'F'); }
+      doc.setFontSize(7.5);
+      [String(row.n), fmtShort(row.due), money(row.payment), money(row.capital), money(row.interest), money(row.balance)]
+        .forEach((t, j) => doc.text(t, cols[j], y));
+      y += 5;
+    });
+    y += 4;
+    doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5); doc.setTextColor(...GRAY);
+    doc.text(doc.splitTextToSize('Aviso de riesgo: la tabla es parte integrante de la promesa. Montos redondeados al peso; la última cuota ajusta diferencias. No incluye seguros, gastos notariales, impuestos ni inscripciones. El incumplimiento puede generar intereses moratorios, aceleración del saldo y pérdida de las arras. Revise este documento con un abogado antes de firmar ante notario.', pw - 40), 20, y);
   }
 
   // ── Apply footers to all pages ──

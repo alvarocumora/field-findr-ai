@@ -115,7 +115,7 @@ export const generateQuotePDF = async (data: QuotePDFData): Promise<jsPDF> => {
   doc.setFillColor(...FOREST); doc.roundedRect(M, y, 3, 40, 1.5, 1.5, 'F');
   const cols = [
     ['LOTE', data.lotNumber],
-    ['SUPERFICIE', `${Number(data.lotArea || 0).toLocaleString('es-CL')} m²`],
+    ['SUPERFICIE', data.lotArea > 0 ? `${Number(data.lotArea).toLocaleString('es-CL')} m²` : 'No informado'],
     ['PRECIO / M²', data.pricePerSqm > 0 ? clp(data.pricePerSqm) : 'No informado'],
   ];
   const cw = (W - 2 * M - 12) / 3;
