@@ -14,6 +14,7 @@ vi.mock('mapbox-gl', () => ({ default: {
     resize() { state.resized++; }
   },
   NavigationControl: class {},
+  LngLatBounds: class { getCenter() { return [-71, -34]; } extend() { return this; } },
   FullscreenControl: class {},
 } }));
 vi.mock('@/hooks/useMapboxToken', () => ({ useMapboxToken: () => ({ token: 'pk.test', loading: false, error: null, retry: vi.fn() }) }));
