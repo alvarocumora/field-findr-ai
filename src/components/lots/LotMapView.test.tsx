@@ -28,6 +28,7 @@ beforeEach(() => {
   state.removed = 0;
   state.resized = 0;
   vi.useFakeTimers();
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({} as never);
   vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });
 });
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });

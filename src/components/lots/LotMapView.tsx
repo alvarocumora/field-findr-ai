@@ -276,6 +276,16 @@ const formatPrice = (price: number | null) => {
   }).format(price);
 };
 
+function hasWebGLSupport(): boolean {
+  try {
+    if (typeof document === 'undefined') return true;
+    const canvas = document.createElement('canvas');
+    return Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl'));
+  } catch {
+    return false;
+  }
+}
+
 export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, planImages, onLotsUpdated, readOnly = false, showAdminControls = false, onOpenCompare, tourMode = false, externalRoads = null, focusSignal = 0 }: LotMapViewProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -995,6 +1005,11 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     setMapLoaded(false);
     setMapError(null);
 
+    if (!hasWebGLSupport()) {
+      setMapError('Tu navegador tiene desactivada la aceleración gráfica (WebGL). Reinicia el navegador o activa la aceleración por hardware para ver el mapa.');
+      return;
+    }
+
     mapboxgl.accessToken = token;
     
     const bounds = calculateBounds();
@@ -1079,6 +1094,16 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           });
         }
         map.current.setTerrain({ source: 'tour-dem', exaggeration: 1.25 });
+        // Graceful fallback: if the 3D terrain never settles (weak GPU,
+        // software rendering), drop to a flat satellite view so the lots stay visible.
+        let settled = false;
+        currentMap.once('idle', () => { settled = true; });
+        window.setTimeout(() => {
+          if (settled || map.current !== currentMap) return;
+          currentMap.setTerrain(null);
+          setTerrainEnabled(false);
+          currentMap.easeTo({ pitch: 0, bearing: planBearing, duration: 0 });
+        }, 6000);
         try {
           map.current.setFog({
             color: 'rgb(215, 228, 222)',
