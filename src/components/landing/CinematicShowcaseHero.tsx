@@ -86,12 +86,12 @@ const CinematicShowcaseHero = () => {
   return (
     <section className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden bg-background" aria-labelledby="hero-title">
       <GlobeHeroBackdrop />
-      <div className="container relative z-10 grid gap-8 px-4 pb-12 pt-12 md:pt-16 lg:min-h-[calc(100svh-4rem)] lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-12 lg:pb-20">
+      <div className="container pointer-events-none relative z-10 grid gap-8 px-4 pb-12 pt-12 md:pt-16 lg:min-h-[calc(100svh-4rem)] lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-12 lg:pb-20">
         <motion.div
           initial={reduced ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="min-w-0"
+          className="pointer-events-auto min-w-0"
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">Rural Finder · Atlas de Chile</p>
           <h1 id="hero-title" className="mt-4 font-editorial text-4xl font-medium leading-[1.02] text-foreground sm:text-5xl lg:text-6xl">
@@ -135,11 +135,11 @@ const CinematicShowcaseHero = () => {
 
         {/* The planet is the visual anchor. Keep the featured project as a compact
             glass card so it does not hide the globe, including on wide monitors. */}
-        <div className="relative hidden min-h-[470px] min-w-0 flex-col items-end justify-end gap-3 lg:flex">
+        <div className="pointer-events-none relative hidden min-h-[470px] min-w-0 flex-col items-end justify-end gap-3 lg:flex">
           {active && (
             <Link
               to={`/proyecto/${encodeURIComponent(active.id)}`}
-              className="group w-full max-w-[340px] rounded-2xl border border-border/70 bg-card/85 p-4 text-card-foreground shadow-2xl backdrop-blur-xl transition-colors hover:border-primary focus-ring"
+              className="pointer-events-auto group w-full max-w-[340px] rounded-2xl border border-border/70 bg-card/85 p-4 text-card-foreground shadow-2xl backdrop-blur-xl transition-colors hover:border-primary focus-ring"
             >
               <div className="flex items-center gap-3">
                 {active.image && (
@@ -169,7 +169,7 @@ const CinematicShowcaseHero = () => {
                   aria-label={`Mostrar ${p.name}`}
                   aria-pressed={p.id === active?.id}
                   onClick={() => setIndex(i)}
-                  className={`h-2.5 w-2.5 rounded-full border border-border transition-colors focus-ring ${p.id === active?.id ? 'bg-primary' : 'bg-card/80 hover:bg-primary/60'}`}
+                  className={`pointer-events-auto h-2.5 w-2.5 rounded-full border border-border transition-colors focus-ring ${p.id === active?.id ? 'bg-primary' : 'bg-card/80 hover:bg-primary/60'}`}
                 />
               ))}
             </div>
