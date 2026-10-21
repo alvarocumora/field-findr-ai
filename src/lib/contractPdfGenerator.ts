@@ -56,13 +56,13 @@ const formatDate = (date: Date): string =>
   new Intl.DateTimeFormat('es-CL', { year: 'numeric', month: 'long', day: 'numeric' }).format(date);
 
 // Brand colors
-const EMERALD: [number, number, number] = [34, 197, 94];
-const SKY: [number, number, number] = [14, 165, 233];
-const DARK: [number, number, number] = [15, 23, 42];
-const GRAY: [number, number, number] = [100, 116, 139];
-const LIGHT_BG: [number, number, number] = [248, 250, 252];
+const EMERALD: [number, number, number] = [33, 76, 60];
+const SKY: [number, number, number] = [122, 141, 116];
+const DARK: [number, number, number] = [26, 36, 32];
+const GRAY: [number, number, number] = [90, 101, 96];
+const LIGHT_BG: [number, number, number] = [247, 245, 240];
 const WHITE: [number, number, number] = [255, 255, 255];
-const EMERALD_LIGHT: [number, number, number] = [220, 252, 231];
+const EMERALD_LIGHT: [number, number, number] = [226, 225, 216];
 
 const drawTextLogo = (doc: jsPDF, x: number, y: number) => {
   doc.setFont('helvetica', 'bold');
