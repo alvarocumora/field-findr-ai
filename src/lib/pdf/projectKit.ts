@@ -847,7 +847,7 @@ export const generateProjectDossierPdf = async (
     f.section('Crédito directo con la inmobiliaria');
     f.paragraph('Compra con pie flexible (desde 0%) y cuotas fijas mensuales de hasta 60 meses, sin banco. Ejemplo sobre la parcela de menor precio:', { size: 9.5 });
     const rows = creditExamples(s.priceMin);
-    rows.forEach(r => f.kv(`Pie ${r.downPct}% · ${r.months} cuotas`, `${clp(r.payment)} / mes · pie ${clp(r.down)}`));
+    rows.forEach(r => f.kv(`Pie ${r.downPct}% · ${r.months} cuotas`, `${clp(r.payment)} / mes · ${r.down > 0 ? `pie ${clp(r.down)}` : 'sin pie'}`));
     f.note(`Simulación referencial con tasa nominal anual de ${CREDIT_EXAMPLE_RATE}% (supuesto ilustrativo editable), sistema francés. No constituye oferta de crédito; condiciones finales sujetas a evaluación y a la promesa de compraventa.`);
     f.actions([{ label: 'Simula tu crédito en línea', url: creditSimulatorPath(s.priceMin) }]);
   }
