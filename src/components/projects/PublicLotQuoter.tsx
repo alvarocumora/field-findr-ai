@@ -1,4 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { resolveQuoteImage, type QuoteImage } from '@/lib/quoteImage';
+import type { TourScene } from '@/hooks/useTourScenes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +45,8 @@ interface PublicLotQuoterProps {
   projectId: string;
   projectOwnerId: string;
   projectLocation?: string;
+  tourScenes?: TourScene[];
+  projectImages?: string[];
 }
 
 const TERM_OPTIONS = [12, 24, 36, 48, 60];
@@ -64,6 +68,8 @@ export const PublicLotQuoter = ({
   projectId,
   projectOwnerId,
   projectLocation = '',
+  tourScenes = [],
+  projectImages = [],
 }: PublicLotQuoterProps) => {
   const availableLots = useMemo(
     () => lots.filter((l) => l.status === 'available' && l.price),
@@ -78,6 +84,19 @@ export const PublicLotQuoter = ({
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const selectedLot = availableLots.find((l) => l.id === selectedLotId) || null;
+  const [quoteImage, setQuoteImage] = useState<QuoteImage | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+  const imagesKey = projectImages.join('|');
+  useEffect(() => {
+    if (!selectedLot) { setQuoteImage(null); return; }
+    let cancelled = false;
+    setImageLoading(true);
+    resolveQuoteImage({ lotId: selectedLot.id, lotNumber: selectedLot.lot_number, scenes: tourScenes, projectImages })
+      .then((img) => { if (!cancelled) setQuoteImage(img); })
+      .finally(() => { if (!cancelled) setImageLoading(false); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLot?.id, tourScenes, imagesKey]);
   const lotPrice = selectedLot?.price || 0;
 
   const calculations = useMemo(() => {
@@ -120,6 +139,7 @@ export const PublicLotQuoter = ({
         cae: 0,
         generatedAt: now,
         validUntil,
+        image: quoteImage ?? undefined,
       };
       await generateQuotePDF({ ...pdfData, verifyUrl: getShareUrl(`/proyecto/${projectId}`, { lote: selectedLot.lot_number }) });
       toast.success('Cotización PDF descargada');
@@ -235,6 +255,18 @@ export const PublicLotQuoter = ({
                 </p>
               </CardHeader>
               <CardContent className="space-y-5">
+                <figure className="overflow-hidden rounded-lg border border-border bg-muted">
+                  <div className="aspect-[1280/516] w-full">
+                    {quoteImage ? (
+                      <img src={quoteImage.dataUrl} alt={`Lote ${selectedLot.lot_number}: ${quoteImage.caption}`} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                        {imageLoading ? 'Preparando imagen del lote…' : 'Sin imagen disponible para este lote'}
+                      </div>
+                    )}
+                  </div>
+                  {quoteImage && <figcaption className="px-3 py-2 text-xs text-muted-foreground">{quoteImage.caption}</figcaption>}
+                </figure>
                 {/* Down Payment */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -249,13 +281,17 @@ export const PublicLotQuoter = ({
                   <Slider
                     value={[downPaymentPercent]}
                     onValueChange={([v]) => setDownPaymentPercent(v)}
-                    min={10}
-                    max={50}
+                    min={0}
+                    max={100}
                     step={5}
+                    aria-label="Pie inicial en porcentaje"
                   />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>10%</span>
-                    <span>50%</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[0, 10, 20, 30, 50].map((p) => (
+                      <Button key={p} type="button" size="sm" variant={downPaymentPercent === p ? 'default' : 'outline'} aria-pressed={downPaymentPercent === p} onClick={() => setDownPaymentPercent(p)} className="h-8 px-3 text-xs">
+                        {p === 0 ? 'Pie 0' : `${p}%`}
+                      </Button>
+                    ))}
                   </div>
                 </div>
 

@@ -27,6 +27,8 @@ interface QuotePDFData {
   sellerContact?: string;
   /** Public URL encoded in the verification QR (lot sheet or quote link). */
   verifyUrl?: string;
+  /** Lot/tour/project image (JPEG data URL, ~2.48:1) with its caption. */
+  image?: { dataUrl: string; caption: string };
 }
 
 // Rural Institutional palette (docs/RURAL_FINDER_DESIGN_SYSTEM.md)
@@ -90,6 +92,22 @@ export const generateQuotePDF = async (data: QuotePDFData): Promise<jsPDF> => {
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...MOSS);
   if (data.projectLocation) doc.text(data.projectLocation, M, y);
 
+  if (data.image) {
+    y += 5;
+    const iw = W - 2 * M, ih = iw / (1280 / 516);
+    try {
+      doc.addImage(data.image.dataUrl, 'JPEG', M, y, iw, ih);
+      doc.setDrawColor(...SAND); doc.setLineWidth(0.4); doc.rect(M, y, iw, ih);
+      y += ih + 4.5;
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(7.6); doc.setTextColor(...MOSS);
+      doc.text(doc.splitTextToSize(data.image.caption, iw)[0], M, y);
+    } catch { /* image is optional */ }
+  }
+  const ensure = (space: number) => {
+    if (y + space <= H - 12) return;
+    doc.addPage(); doc.setFillColor(...PAPER); doc.rect(0, 0, W, H, 'F'); y = 22;
+  };
+
   // Lot card
   y += 9;
   doc.setFillColor(255, 255, 255); doc.setDrawColor(...SAND); doc.setLineWidth(0.4);
@@ -119,6 +137,7 @@ export const generateQuotePDF = async (data: QuotePDFData): Promise<jsPDF> => {
 
   // Financing parameters (left) + result (right)
   y += 52;
+  ensure(60);
   doc.setFont('times', 'bold'); doc.setFontSize(14); doc.setTextColor(...INK);
   doc.text('Plan de pago referencial', M, y);
   y += 7;
@@ -149,6 +168,7 @@ export const generateQuotePDF = async (data: QuotePDFData): Promise<jsPDF> => {
 
   // Cost summary
   y += bh + 6;
+  ensure(45);
   doc.setFont('times', 'bold'); doc.setFontSize(14); doc.setTextColor(...INK);
   doc.text('Resumen de costos', M, y);
   y += 4;
@@ -171,6 +191,7 @@ export const generateQuotePDF = async (data: QuotePDFData): Promise<jsPDF> => {
 
   // Verification QR + next steps
   y += 20;
+  ensure(62);
   const qrSize = 30;
   let qr: string | null = null;
   if (data.verifyUrl) {
