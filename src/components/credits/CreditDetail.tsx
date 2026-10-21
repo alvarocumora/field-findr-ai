@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Credit, useCreditPayments, useRecordPayment } from '@/hooks/useCredits';
-import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, DollarSign } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, DollarSign, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -36,19 +36,60 @@ export function CreditDetail({ credit, onBack }: { credit: Credit; onBack: () =>
     );
   };
 
+  const handlePromesa = async () => {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { generateContractPDF } = await import('@/lib/contractPdfGenerator');
+      const { data: res, error } = credit.reservation_id
+        ? await supabase.from('reservations')
+            .select('id, buyer_name, buyer_email, buyer_phone, buyer_rut, reservation_amount, currency, paid_at, created_at, lots(lot_number, area, price, projects(name, location, city, rol_number))')
+            .eq('id', credit.reservation_id).maybeSingle()
+        : { data: null, error: null };
+      if (error) throw error;
+      if (!res) { toast.error('El crédito no tiene una reserva asociada con los datos del comprador'); return; }
+      const lot: any = (res as any).lots; const project = lot?.projects;
+      generateContractPDF({
+        projectName: project?.name || 'Proyecto',
+        projectLocation: project?.location || project?.city || '',
+        projectRol: project?.rol_number || undefined,
+        lotNumber: lot?.lot_number || '',
+        lotArea: Number(lot?.area || 0),
+        lotPrice: Number(credit.total_amount),
+        buyerName: res.buyer_name, buyerRut: res.buyer_rut || undefined,
+        buyerEmail: res.buyer_email, buyerPhone: res.buyer_phone || undefined,
+        reservationId: res.id, reservationAmount: Number(res.reservation_amount || 0),
+        currency: cur, paidAt: res.paid_at || undefined, createdAt: res.created_at,
+        generatedAt: new Date(),
+        credit: {
+          totalAmount: Number(credit.total_amount), downPayment: Number(credit.down_payment),
+          financedAmount: Number(credit.financed_amount), annualRatePct: Number(credit.interest_rate),
+          termMonths: credit.term_months, monthlyPayment: Number(credit.monthly_payment),
+          firstDueDate: payments[0]?.due_date,
+        },
+      });
+    } catch {
+      toast.error('No se pudo generar la promesa');
+    }
+  };
+
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <Button variant="ghost" onClick={onBack} className="gap-2">
         <ArrowLeft className="h-4 w-4" /> Volver
       </Button>
 
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">
-          Crédito — Lote {(credit as any).lots?.lot_number}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {(credit as any).lots?.projects?.name}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            Crédito — Lote {(credit as any).lots?.lot_number}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {(credit as any).lots?.projects?.name}
+          </p>
+        </div>
+        <Button variant="outline" className="gap-2" onClick={handlePromesa} disabled={isLoading}>
+          <FileText className="h-4 w-4" /> Promesa de compraventa (PDF)
+        </Button>
       </div>
 
       {/* Summary */}
