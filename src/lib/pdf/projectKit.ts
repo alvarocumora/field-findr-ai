@@ -1,6 +1,6 @@
 import QRCode from 'qrcode';
 import {
-  BRAND, createFichaDoc, drawBrandLogo, fetchImageAsBase64, publicUrl, getPublicOrigin,
+  BRAND, brandLogoWidth, createFichaDoc, drawBrandLogo, fetchImageAsBase64, publicUrl, getPublicOrigin,
   scriptFont, semiboldFont, themeFont,
 } from '@/lib/pdf/fichaShell';
 import { getFichaTemplate, renderFicha } from '@/lib/pdf/fichaTemplates';
@@ -501,7 +501,7 @@ const drawCover = async (
   f: FichaDoc,
   o: {
     project: KitProject; s: ReturnType<typeof summarize>; hero: string | null; heroCaption?: string;
-    location: string; path: string; agendarUrl: string;
+    location: string; path: string; agendarUrl: string; readyToDeed?: boolean;
   },
 ) => {
   const { doc, W, H, margin, contentW } = f;
@@ -530,9 +530,27 @@ const drawCover = async (
     doc.text(o.heroCaption, W - margin, heroH - 4, { align: 'right' });
   }
 
-  // Logo on a translucent chip for legibility over any photo.
-  withOpacity(f, 0.72, () => { doc.setFillColor(...BRAND.forest); doc.roundedRect(margin - 3, 9, 72, 17, 8.5, 8.5, 'F'); });
-  drawBrandLogo(doc, margin, 12, { size: 11 });
+  // Logo on a chip sized to the wordmark (no clipped/overflowing pill).
+  const logoSize = 10;
+  const chipPad = 4.5;
+  const chipW = brandLogoWidth(doc, logoSize) + chipPad * 2;
+  const chipH = logoSize + 7;
+  withOpacity(f, 0.82, () => { doc.setFillColor(...BRAND.forest); doc.roundedRect(margin - chipPad, 10, chipW, chipH, chipH / 2, chipH / 2, 'F'); });
+  drawBrandLogo(doc, margin, 10 + (chipH - logoSize) / 2, { size: logoSize });
+
+  // "Listas para escriturar" solo cuando el proyecto declara rol propio.
+  if (o.readyToDeed) {
+    const label = 'LISTAS PARA ESCRITURAR · ROL PROPIO';
+    doc.setFont(semiboldFont(), 'normal');
+    doc.setFontSize(7);
+    doc.setCharSpace(0.3);
+    const bw = doc.getTextWidth(label) + 10 + label.length * 0.3;
+    doc.setFillColor(...BRAND.leaf);
+    doc.roundedRect(W - margin - bw, 12, bw, 9, 4.5, 4.5, 'F');
+    doc.setTextColor(...BRAND.forest);
+    doc.text(label, W - margin - bw + 5, 17.6);
+    doc.setCharSpace(0);
+  }
 
   let y = heroH + 6;
   doc.setFont(scriptFont(), 'normal');
