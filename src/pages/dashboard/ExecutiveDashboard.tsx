@@ -38,6 +38,7 @@ import { useCreateReservation, useReservations } from '@/hooks/useReservations';
 import { useActiveSalesQuotesCount, useCreateSalesQuote, useMarkSalesQuoteSent, useSalesQuotes } from '@/hooks/useSalesQuotes';
 import { formatPriceLatam } from '@/lib/latam';
 import { toast } from 'sonner';
+import { canReserveFromQuote, reservationDraftFromQuote, type QuoteLike } from '@/lib/crm/quoteToReservation';
 
 const ExecutiveDashboard = () => {
   const { projects } = useProjects();
@@ -58,6 +59,7 @@ const ExecutiveDashboard = () => {
   const [savedQuoteId, setSavedQuoteId] = useState<string | null>(null);
   const [quote, setQuote] = useState({ customer: '', email: '', phone: '', discount: '0', validDays: '7' });
   const [reserve, setReserve] = useState({ name: '', email: '', phone: '', amount: '100000' });
+  const [reserveQuoteId, setReserveQuoteId] = useState<string | null>(null);
 
   const updateQuote = (values: Partial<typeof quote>) => {
     setSavedQuoteId(null);
@@ -231,6 +233,27 @@ const ExecutiveDashboard = () => {
     }
   };
 
+  const openReservationFromQuote = (item: QuoteLike, lot: Lot) => {
+    setReserve((r) => ({ ...r, ...reservationDraftFromQuote(item) }));
+    setReserveQuoteId(item.id);
+    setReserveLot(lot);
+  };
+
+  const reserveFromCurrentQuote = async () => {
+    if (!quoteLot) return;
+    try {
+      const id = await ensureQuote();
+      setReserve((r) => ({ ...r, name: quote.customer, email: quote.email, phone: quote.phone }));
+      setReserveQuoteId(id);
+      setReserveLot(quoteLot);
+      setQuoteLot(null);
+    } catch (error) {
+      if ((error as Error).message !== 'Cliente requerido' && (error as Error).message !== 'Descuento inválido') {
+        toast.error((error as Error).message);
+      }
+    }
+  };
+
   const submitReservation = async () => {
     if (!reserveLot || !reserve.name.trim() || !reserve.email.trim()) {
       toast.error('Completa nombre y email del comprador');
@@ -243,10 +266,14 @@ const ExecutiveDashboard = () => {
       buyer_email: reserve.email.trim(),
       buyer_phone: reserve.phone.trim() || undefined,
       reservation_amount: Number(reserve.amount || 0) || undefined,
-      notes: 'Reserva iniciada por ejecutivo desde Dashboard Ejecutivo',
+      source_quote_id: reserveQuoteId ?? undefined,
+      notes: reserveQuoteId
+        ? 'Reserva generada desde cotización en Dashboard Ejecutivo'
+        : 'Reserva iniciada por ejecutivo desde Dashboard Ejecutivo',
     });
 
     setReserveLot(null);
+    setReserveQuoteId(null);
     setReserve({ name: '', email: '', phone: '', amount: '100000' });
     if (result.payment_url) {
       window.open(result.payment_url, '_blank', 'noopener,noreferrer');
@@ -392,7 +419,15 @@ const ExecutiveDashboard = () => {
                         {projectById.get(item.project_id)?.name || 'Proyecto'} · {lot?.name || (lot ? `Lote ${lot.lot_number}` : 'Parcela')} · vence {new Date(item.valid_until).toLocaleDateString('es-CL')}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3"><p className="font-semibold">{formatMoney(item.quoted_price)}</p><Button size="sm" variant="outline" asChild><Link to={`/cotizacion/${item.public_token}`} target="_blank">Abrir link</Link></Button></div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold">{formatMoney(item.quoted_price)}</p>
+                      <Button size="sm" variant="outline" asChild><Link to={`/cotizacion/${item.public_token}`} target="_blank">Abrir link</Link></Button>
+                      {lot && canReserveFromQuote(item, lot.status) && (
+                        <Button size="sm" onClick={() => openReservationFromQuote(item, lot)}>
+                          <ShoppingCart className="mr-1.5 h-4 w-4" />Reservar
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
