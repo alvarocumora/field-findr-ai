@@ -29,3 +29,16 @@ Adoptado hoy: portada (`/`), explorador (`/explorar`, desktop y móvil).
 - Error de consulta ≠ "sin inventario": mostrar alerta con "Reintentar".
 - Búsqueda de texto server-side sobre todo el inventario.
 - CTA de comprador nunca apunta a `/contacto-loteos` (demo B2B).
+
+## Modo oscuro rural (Remix of Rural Ai Finder)
+- La paleta paper/ink/forest anterior se mantiene intacta en modo claro.
+- `src/components/theme/rural-dark.css` define la variante dark con selector `.dark .theme-rural`, sin interferir con las superficies PropTech que usan el tema global.
+- El `ThemeProvider` controla el modo y recuerda la selección bajo `ofertaterrenos-theme`.
+- Todos los contrastes de texto, formularios, bordes y tarjetas deben utilizar tokens semánticos: `text-foreground`, `bg-card`, `border-border`.
+
+## Globo como identidad de portada
+- `CinematicShowcaseHero` conserva texto, búsqueda y filtros de la portada Rural Finder.
+- `GlobeHeroBackdrop` carga `InteractiveEarth` solo cuando existe WebGL2; `ot-globe-wide.jpg` permanece como respaldo desde el primer render y si Mapbox falla.
+- La vista principal conserva un encuadre reconocible de Sudamérica y Chile en lugar de acercarse demasiado a un mapa local.
+- En escritorio el globo puede explorarse fuera del contenido interactivo. En móvil no debe impedir el scroll vertical; respetar `prefers-reduced-motion`.
+- No remover el globo en futuras iteraciones del hero ni cubrirlo con tarjetas de gran tamaño: es un activo visual identitario de la marca.
