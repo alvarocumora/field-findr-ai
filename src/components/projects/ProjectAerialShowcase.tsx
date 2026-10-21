@@ -47,7 +47,7 @@ export function ProjectAerialShowcase({ images, projectName, onOpenMap }: Props)
         ))}
         <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-foreground/70 to-transparent" />
         <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 text-xs font-medium text-foreground shadow">
-          <Plane className="h-3.5 w-3.5" aria-hidden="true" /> Recorrido aéreo · foto real de dron
+          <Plane className="h-3.5 w-3.5" aria-hidden="true" /> {/dron|drone/i.test(images[idx] ?? '') ? 'Recorrido aéreo · foto real de dron' : 'Recorrido del terreno · foto real'}
         </div>
         {count > 1 && (
           <>
