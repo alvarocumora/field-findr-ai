@@ -276,6 +276,16 @@ const formatPrice = (price: number | null) => {
   }).format(price);
 };
 
+function hasWebGLSupport(): boolean {
+  try {
+    if (typeof document === 'undefined') return true;
+    const canvas = document.createElement('canvas');
+    return Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl'));
+  } catch {
+    return false;
+  }
+}
+
 export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, planImages, onLotsUpdated, readOnly = false, showAdminControls = false, onOpenCompare, tourMode = false, externalRoads = null, focusSignal = 0 }: LotMapViewProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
