@@ -54,7 +54,7 @@ const HeroTerrainGlobe = ({ projects, activeId, reducedMotion, onSelect, fallbac
     try {
       m = new mapboxgl.Map({
         container: container.current,
-        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        style: 'mapbox://styles/mapbox/outdoors-v12',
         projection: 'globe',
         center: [-71.5, -30],
         zoom: 1.6,
@@ -72,20 +72,21 @@ const HeroTerrainGlobe = ({ projects, activeId, reducedMotion, onSelect, fallbac
     const giveUp = window.setTimeout(() => { if (!m.loaded()) setFailed(true); }, 15000);
 
     m.on('style.load', () => {
-      m.setFog({ color: 'rgb(214,226,220)', 'high-color': 'rgb(36,92,120)', 'horizon-blend': 0.08, 'space-color': 'rgb(11,22,26)', 'star-intensity': 0.25 });
+      // Atlas look: the globe floats on the platform's paper tone, no black space.
+      m.setFog({ color: 'rgb(236,233,224)', 'high-color': 'rgb(226,225,216)', 'horizon-blend': 0.12, 'space-color': 'rgb(247,245,240)', 'star-intensity': 0 });
       if (!m.getSource('dem')) m.addSource('dem', { type: 'raster-dem', url: 'mapbox://mapbox.mapbox-terrain-dem-v1', tileSize: 512, maxzoom: 14 });
-      m.setTerrain({ source: 'dem', exaggeration: 1.4 });
+      m.setTerrain({ source: 'dem', exaggeration: 1.6 });
       m.addSource('hero-projects', { type: 'geojson', data: toGeoJSON(dataRef.current.projects, dataRef.current.activeId) });
       m.addLayer({ id: 'hero-projects-halo', type: 'circle', source: 'hero-projects', paint: {
-        'circle-radius': ['case', ['==', ['get', 'active'], 1], 18, 0], 'circle-color': '#22C55E', 'circle-opacity': 0.25,
+        'circle-radius': ['case', ['==', ['get', 'active'], 1], 20, 0], 'circle-color': '#22C55E', 'circle-opacity': 0.3,
       } });
       m.addLayer({ id: 'hero-projects-dot', type: 'circle', source: 'hero-projects', paint: {
-        'circle-radius': ['case', ['==', ['get', 'active'], 1], 8, 5], 'circle-color': ['case', ['==', ['get', 'active'], 1], '#22C55E', '#ffffff'],
-        'circle-stroke-color': '#0EA5E9', 'circle-stroke-width': 2,
+        'circle-radius': ['case', ['==', ['get', 'active'], 1], 8, 5], 'circle-color': ['case', ['==', ['get', 'active'], 1], '#22C55E', '#214C3C'],
+        'circle-stroke-color': '#F7F5F0', 'circle-stroke-width': 2,
       } });
       m.addLayer({ id: 'hero-projects-label', type: 'symbol', source: 'hero-projects', layout: {
         'text-field': ['get', 'name'], 'text-size': 12, 'text-offset': [0, 1.4], 'text-anchor': 'top', 'text-optional': true,
-      }, paint: { 'text-color': '#ffffff', 'text-halo-color': 'rgba(0,0,0,0.75)', 'text-halo-width': 1.4 } });
+      }, paint: { 'text-color': '#1A2420', 'text-halo-color': 'rgba(247,245,240,0.95)', 'text-halo-width': 1.6 } });
       m.on('click', 'hero-projects-dot', (e) => {
         const id = e.features?.[0]?.properties?.id;
         if (id) onSelectRef.current?.(String(id));
