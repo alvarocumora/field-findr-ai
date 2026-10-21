@@ -140,6 +140,7 @@ export async function generateReservationCertificatePDF(r: ReservationCertificat
 
   // Risk notice
   doc.setFillColor(...SAND);
+  doc.setFontSize(8);
   const notice = doc.splitTextToSize(CERTIFICATE_RISK_NOTICE, W - 2 * M - 8);
   const nh = notice.length * 4 + 8;
   doc.roundedRect(M, y, W - 2 * M, nh, 2, 2, 'F');
@@ -149,7 +150,7 @@ export async function generateReservationCertificatePDF(r: ReservationCertificat
 
   // Signatures
   const sw = (W - 2 * M - 40) / 2;
-  const sy = Math.min(y + 18, H - 52);
+  const sy = Math.min(y + 30, H - 30);
   doc.setDrawColor(...INK);
   doc.line(M, sy, M + sw, sy); doc.line(M + sw + 10, sy, M + 2 * sw + 10, sy);
   doc.setFontSize(8.5); doc.setTextColor(...MOSS);
