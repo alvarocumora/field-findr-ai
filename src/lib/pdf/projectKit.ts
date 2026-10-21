@@ -533,9 +533,9 @@ const drawCover = async (
   // Logo on a chip sized to the wordmark (no clipped/overflowing pill).
   const logoSize = 10;
   const chipPad = 4.5;
-  const chipW = brandLogoWidth(doc, logoSize) + chipPad * 2;
+  const logoChipW = brandLogoWidth(doc, logoSize) + chipPad * 2;
   const chipH = logoSize + 7;
-  withOpacity(f, 0.82, () => { doc.setFillColor(...BRAND.forest); doc.roundedRect(margin - chipPad, 10, chipW, chipH, chipH / 2, chipH / 2, 'F'); });
+  withOpacity(f, 0.82, () => { doc.setFillColor(...BRAND.forest); doc.roundedRect(margin - chipPad, 10, logoChipW, chipH, chipH / 2, chipH / 2, 'F'); });
   drawBrandLogo(doc, margin, 10 + (chipH - logoSize) / 2, { size: logoSize });
 
   // "Listas para escriturar" solo cuando el proyecto declara rol propio.
