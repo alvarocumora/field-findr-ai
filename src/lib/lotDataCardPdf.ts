@@ -5,8 +5,6 @@ import type { SentinelImageryResult } from '@/lib/satellite/sentinel';
 import { formatSentinelDate, sentinelCloudLabel } from '@/lib/satellite/sentinel';
 import { renderLotSatelliteSnapshot } from '@/lib/satellite/renderLotSatelliteSnapshot';
 
-const TERRACOTTA = [184, 80, 66] as [number, number, number];
-const SAND = [232, 220, 200] as [number, number, number];
 
 const formatCLP = (n: number | null) => {
   if (!n) return 'Consultar';
@@ -28,16 +26,16 @@ const buildMapboxStaticUrl = (lot: Lot, token: string, width = 800, height = 450
     const geojson = {
       type: 'Feature',
       properties: {
-        stroke: '#22C55E',
+        stroke: '#9DB88F',
         'stroke-width': 3,
-        fill: '#22C55E',
+        fill: '#9DB88F',
         'fill-opacity': 0.25,
       },
       geometry: { type: 'Polygon', coordinates: [coords] },
     };
     overlay = `geojson(${encodeURIComponent(JSON.stringify(geojson))})`;
   } else {
-    overlay = `pin-l+22c55e(${lng},${lat})`;
+    overlay = `pin-l+214c3c(${lng},${lat})`;
   }
   return `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${overlay}/${lng},${lat},15,0/${width}x${height}@2x?access_token=${token}`;
 };
@@ -65,14 +63,14 @@ export const generateLotDataCardPdf = async (
   const statusLabel =
     lot.status === 'available' ? 'DISPONIBLE' : lot.status === 'reserved' ? 'RESERVADO' : 'VENDIDO';
   const statusColor: [number, number, number] =
-    lot.status === 'available' ? BRAND.emerald : lot.status === 'reserved' ? [200, 150, 30] : [120, 120, 120];
+    lot.status === 'available' ? BRAND.forest : lot.status === 'reserved' ? [190, 140, 40] : [120, 120, 120];
 
   f.ensure(26);
-  doc.setFillColor(...SAND);
+  doc.setFillColor(...BRAND.soft);
   doc.roundedRect(margin, f.y, contentW, 20, 3, 3, 'F');
   doc.setFontSize(19);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...TERRACOTTA);
+  doc.setTextColor(...BRAND.forest);
   doc.text(formatCLP(lot.price), margin + 6, f.y + 13);
 
   const pricePerSqm = lot.price && lot.area ? lot.price / Number(lot.area) : null;
@@ -177,7 +175,7 @@ export const generateLotDataCardPdf = async (
   f.section('Enlaces');
   doc.setFontSize(8.5);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...BRAND.emerald);
+  doc.setTextColor(...BRAND.forest);
   if (lot.latitude && lot.longitude) {
     f.ensure(8);
     doc.textWithLink('Ver ubicacion en Google Maps', margin, f.y, {

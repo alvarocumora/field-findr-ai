@@ -94,7 +94,7 @@ export default function IslaDeMaipoDossier() {
   const ufPorM2 = (PROPIEDAD.tasacionUf / PROPIEDAD.superficieTotalM2).toFixed(2);
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="theme-rural min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="border-b bg-card">
         <div className="mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-12">

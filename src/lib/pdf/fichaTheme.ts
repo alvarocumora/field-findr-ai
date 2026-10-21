@@ -57,29 +57,29 @@ export const DEFAULT_FICHA_THEME: FichaTheme = {
   logo: { primary: 'OFERTA', secondary: 'TERRENOS', imageDataUrl: null, imageHeight: 10 },
   // Identidad de marca (manual 2026): papel crema, verdes bosque, verde hoja.
   colors: {
-    emerald: '#55803A',
-    sky: '#2F7DAB',
-    forest: '#203D27',
-    dark: '#23301F',
-    gray: '#6B6F5E',
-    line: '#E0D6BD',
-    soft: '#F7F1E1',
+    emerald: '#2F7A55',
+    sky: '#7A8D74',
+    forest: '#214C3C',
+    dark: '#1A2420',
+    gray: '#5A6560',
+    line: '#E2E1D8',
+    soft: '#EFEDE6',
     white: '#FFFFFF',
-    accent: '#2D5233',
-    paper: '#ECE4D1',
-    leaf: '#A8CB5E',
+    accent: '#2D5E4C',
+    paper: '#F7F5F0',
+    leaf: '#9DB88F',
   },
   fonts: { heading: 'montserrat', body: 'montserrat' },
   publicOrigin: 'https://ofertaterrenos.com',
   footerSuffix: 'ofertaterrenos.com',
 };
 
-const STORAGE_KEY = 'ot.ficha.theme.v2';
+const STORAGE_KEY = 'ot.ficha.theme.v3';
 /**
  * v1 guardaba el tema completo (colores y fuentes antiguos incluidos), lo que
  * taparía la identidad nueva. Al migrar se conservan solo los datos de marca.
  */
-const LEGACY_STORAGE_KEY = 'ot.ficha.theme.v1';
+const LEGACY_STORAGE_KEY = 'ot.ficha.theme.v2';
 
 export const hexToRgb = (hex: string): RGB => {
   const h = hex.replace('#', '').trim();
