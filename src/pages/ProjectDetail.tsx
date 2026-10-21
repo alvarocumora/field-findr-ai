@@ -22,6 +22,7 @@ import { LegalTab } from '@/components/projects/LegalTab';
 import { applyLegalOverrides } from '@/lib/projects/legalOverrides';
 import { FinancingCalculator } from '@/components/projects/FinancingCalculator';
 import { PublicLotQuoter } from '@/components/projects/PublicLotQuoter';
+import { projectImages } from '@/lib/projectCovers';
 import { EnhancedLotCard } from '@/components/lots/EnhancedLotCard';
 import { ProjectReviews } from '@/components/projects/ProjectReviews';
 import { ShareButtons } from '@/components/social/ShareButtons';
@@ -768,6 +769,8 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                 projectId={project.id}
                 projectOwnerId={project.user_id}
                 projectLocation={`${project.city}, ${project.region}`}
+                tourScenes={tourScenes}
+                projectImages={projectImages({ id: project.id, slug: project.slug, images: (project as any)?.images })}
               />
             </TabsContent>
 
