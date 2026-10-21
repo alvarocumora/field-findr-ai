@@ -88,7 +88,7 @@ const CinematicShowcaseHero = () => {
 
   return (
     <section className="relative bg-background" aria-labelledby="hero-title">
-      <div className="container grid gap-10 px-4 pb-14 pt-10 md:pt-16 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14 lg:pb-20">
+      <div className="container flex flex-col gap-6 px-4 pb-10 pt-4 md:pt-16 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14 lg:pb-20">
         <motion.div
           initial={reduced ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
