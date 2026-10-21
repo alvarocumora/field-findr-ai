@@ -83,7 +83,10 @@ test('sin WebGL, el explorador conserva una superficie de contenido', async ({ p
 test('landings premium mantienen identidad y navegación del proyecto', async ({ page }) => {
   await page.goto('/valle-hualane');
   await expect(page.getByRole('heading', { name: 'Valle de Hualañé', level: 1 })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Visitas y consultas' })).toBeVisible();
+  // /valle-hualane now renders the unified ProjectDetail commercial flow.
+  // Check the real inquiry CTA and dialog instead of a retired bespoke nav link.
+  await page.getByRole('button', { name: 'Agendar visita o consultar' }).click();
+  await expect(page.getByRole('dialog', { name: 'Consulta por Valle de Hualañé' })).toBeVisible();
 
   await page.goto('/p/valle-escondido-licanten');
   await expect(page.getByRole('heading', { level: 1, name: /Valle Escondido/i })).toBeVisible();
