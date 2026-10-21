@@ -53,6 +53,9 @@ export const DEFAULT_SHARE_IMAGE = `${SITE_URL}/og-oferta-terrenos.jpg`;
 export const SHARE_IMAGE_BY_SLUG: Record<string, string> = {
   'valle-escondido-licanten': `${SITE_URL}/social/valle-escondido-licanten-og.jpg`,
   'valle-hualane': `${SITE_URL}/social/valle-hualane-og.jpg`,
+  'parcelas-caone-hualane': `${SITE_URL}/social/valle-hualane-og.jpg`,
+  'explora-park': `${SITE_URL}/social/explora-park-og.jpg`,
+  'reserva-huellelhue': `${SITE_URL}/social/reserva-huellelhue-og.jpg`,
 };
 
 export const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) =>

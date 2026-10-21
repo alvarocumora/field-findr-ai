@@ -69,7 +69,7 @@ export function projectSocialPlugin(apiUrl: string, publishableKey: string): Plu
 
       const valleMain = {
         title: 'Valle de Hualañé',
-        description: 'Parcelas rurales desde 1 hectárea en Sector Caone, Hualañé. $12.990.000 por hectárea. Revisa masterplan, tour 3D y disponibilidad.',
+        description: 'Parcelas de 1 hectárea en Sector Caone, Hualañé. Desde $19.990.000; con kit casa mediterránea $23.990.000. Crédito directo.',
         url: 'https://ofertaterrenos.com/valle-hualane',
         image: valleImage,
       };

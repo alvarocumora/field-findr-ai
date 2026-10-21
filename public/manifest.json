@@ -4,18 +4,22 @@
   "description": "Explora proyectos completos, planos, lotes disponibles y recorridos de terrenos en Chile.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0A0A0B",
+  "background_color": "#10261D",
   "theme_color": "#22C55E",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "es-CL",
-  "categories": ["business", "finance", "real estate"],
+  "categories": [
+    "business",
+    "finance",
+    "real estate"
+  ],
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-72x72.png",
@@ -56,6 +60,12 @@
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
