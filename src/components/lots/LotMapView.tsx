@@ -995,6 +995,11 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     setMapLoaded(false);
     setMapError(null);
 
+    if (!hasWebGLSupport()) {
+      setMapError('Tu navegador tiene desactivada la aceleración gráfica (WebGL). Reinicia el navegador o activa la aceleración por hardware para ver el mapa.');
+      return;
+    }
+
     mapboxgl.accessToken = token;
     
     const bounds = calculateBounds();
@@ -1079,6 +1084,16 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
           });
         }
         map.current.setTerrain({ source: 'tour-dem', exaggeration: 1.25 });
+        // Graceful fallback: if the 3D terrain never settles (weak GPU,
+        // software rendering), drop to a flat satellite view so the lots stay visible.
+        let settled = false;
+        currentMap.once('idle', () => { settled = true; });
+        window.setTimeout(() => {
+          if (settled || map.current !== currentMap) return;
+          currentMap.setTerrain(null);
+          setTerrainEnabled(false);
+          currentMap.easeTo({ pitch: 0, bearing: planBearing, duration: 0 });
+        }, 6000);
         try {
           map.current.setFog({
             color: 'rgb(215, 228, 222)',
