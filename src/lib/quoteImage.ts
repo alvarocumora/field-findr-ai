@@ -4,6 +4,7 @@ export type QuoteImageSource = 'tour-lot' | 'tour' | 'project';
 export interface QuoteImage { dataUrl: string; caption: string; source: QuoteImageSource }
 
 const TAU = Math.PI * 2;
+export const BANNER = 1280 / 516;
 
 /** Equirectangular projection (Photo Sphere Viewer convention: yaw 0 = image centre, radians). */
 export const yawPitchToPixel = (yaw: number, pitch: number, w: number, h: number) => {
@@ -21,7 +22,7 @@ export const overlayCropBox = (overlay: Pick<PolygonOverlay, 'points'>, w: numbe
   const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
   let cw = Math.max((maxX - minX) * 2.2, w * 0.08);
   let ch = Math.max((maxY - minY) * 2.2, h * 0.08);
-  if (cw / ch > 16 / 9) ch = cw * 9 / 16; else cw = ch * 16 / 9;
+  if (cw / ch > BANNER) ch = cw / BANNER; else cw = ch * BANNER;
   const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
   const sy = Math.min(Math.max(0, cy - ch / 2), Math.max(0, h - ch));
   return { sx: cx - cw / 2, sy, sw: cw, sh: Math.min(ch, h), points: xs.map((x, i) => ({ x, y: ys[i] })) };
@@ -35,7 +36,7 @@ const loadImage = (src: string) => new Promise<HTMLImageElement>((resolve, rejec
   img.src = src;
 });
 
-const OUT_W = 1280, OUT_H = 720;
+const OUT_W = 1280, OUT_H = 516; // ~2.48:1 banner used by the quote PDF and preview card
 
 async function cropOverlay(scene: TourScene, overlay: PolygonOverlay): Promise<string> {
   const img = await loadImage(scene.panorama_url);
