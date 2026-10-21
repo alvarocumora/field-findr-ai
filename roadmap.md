@@ -1,5 +1,10 @@
 # Roadmap
 
+## Avisos de monitoreo: tarjetas y consulta
+
+- [ ] Corregir el campo de superficie de ProjectsRail y comprobar precios/superficies reales
+- [ ] Consumir la apertura automática de consulta sin perder lote, pestaña ni campaña; comprobar cierre y navegación
+
 ## Mapa del tour en blanco
 
 - [x] Verificar Hualañé con sesión real: satélite, 40 polígonos y estados visibles; solicitudes Mapbox correctas
