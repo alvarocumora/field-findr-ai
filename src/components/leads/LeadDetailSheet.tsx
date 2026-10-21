@@ -24,6 +24,7 @@ import { LEAD_STATUS_CONFIG, type Lead, type LeadStatus, useLeads } from '@/hook
 import LeadScoreBadge from '@/components/leads/LeadScoreBadge';
 import { useNotificationTemplates } from '@/hooks/useNotificationTemplates';
 import { useProfile } from '@/hooks/useProfile';
+import { useTeamMembers } from '@/hooks/useTeam';
 import { renderTemplate, whatsappLink } from '@/lib/notifications/templates';
 
 interface LeadDetailSheetProps {
@@ -55,6 +56,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
   const { updateLead } = useLeads();
   const { getTemplate } = useNotificationTemplates();
   const { profile } = useProfile();
+  const { data: members = [] } = useTeamMembers();
   const [status, setStatus] = useState<LeadStatus>('new');
   const [followUp, setFollowUp] = useState('');
   const [reply, setReply] = useState('');
@@ -157,6 +159,28 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
 
         {/* Estado y seguimiento */}
         <div className="space-y-4">
+          {members.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="lead-owner">Vendedor responsable</Label>
+              <Select
+                value={lead.assigned_to ?? 'none'}
+                onValueChange={(v) =>
+                  updateLead.mutate({ id: lead.id, assigned_to: v === 'none' ? null : v })
+                }
+              >
+                <SelectTrigger id="lead-owner">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin asignar</SelectItem>
+                  {members.map((m) => (
+                    <SelectItem key={m.user_id} value={m.user_id}>{m.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="lead-status">Estado</Label>
             <Select value={status} onValueChange={(v) => setStatus(v as LeadStatus)}>

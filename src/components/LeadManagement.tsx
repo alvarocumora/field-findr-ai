@@ -15,6 +15,8 @@ import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
 import { useLeadScoring } from '@/hooks/useLeadScoring';
 import LeadScoreBadge from '@/components/leads/LeadScoreBadge';
 import LeadDetailSheet from '@/components/leads/LeadDetailSheet';
+import { useAuth } from '@/hooks/useAuth';
+import { matchesLeadOwner, type LeadOwnerFilter } from '@/lib/crm/leadOwnership';
 
 type FollowUpFilter = 'all' | 'overdue' | 'week' | 'none';
 
@@ -33,6 +35,8 @@ const LeadManagement = () => {
   const [followUpFilter, setFollowUpFilter] = useState<FollowUpFilter>('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sortByScore, setSortByScore] = useState(true);
+  const [ownerFilter, setOwnerFilter] = useState<LeadOwnerFilter>('all');
+  const { user } = useAuth();
 
   const sources = useMemo(
     () => Array.from(new Set(leads.map((l) => l.source).filter(Boolean) as string[])).sort(),
@@ -59,13 +63,15 @@ const LeadManagement = () => {
         due >= startOfToday() && due <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     }
 
-    return matchesSearch && matchesStatus && matchesSource && matchesFollowUp;
+    return matchesSearch && matchesStatus && matchesSource && matchesFollowUp
+      && matchesLeadOwner(lead, ownerFilter, user?.id);
   });
 
   const activeFilters =
     (statusFilter !== 'all' ? 1 : 0) +
     (sourceFilter !== 'all' ? 1 : 0) +
     (followUpFilter !== 'all' ? 1 : 0) +
+    (ownerFilter !== 'all' ? 1 : 0) +
     (searchQuery ? 1 : 0);
 
   const clearFilters = () => {
@@ -73,11 +79,13 @@ const LeadManagement = () => {
     setStatusFilter('all');
     setSourceFilter('all');
     setFollowUpFilter('all');
+    setOwnerFilter('all');
   };
 
   const overdueCount = leads.filter(
     (l) => l.next_follow_up && new Date(l.next_follow_up) < startOfToday(),
   ).length;
+  const unassignedCount = leads.filter((l) => !l.assigned_to).length;
 
   const getInitials = (firstName: string, lastName?: string | null) => {
     return `${firstName[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
@@ -220,6 +228,16 @@ const LeadManagement = () => {
               <SelectItem value="overdue">Atrasados ({overdueCount})</SelectItem>
               <SelectItem value="week">Próximos 7 días</SelectItem>
               <SelectItem value="none">Sin seguimiento</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={ownerFilter} onValueChange={(v) => setOwnerFilter(v as LeadOwnerFilter)}>
+            <SelectTrigger className="md:w-44" aria-label="Filtrar por responsable">
+              <SelectValue placeholder="Responsable" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todo el equipo</SelectItem>
+              <SelectItem value="mine">Mis leads</SelectItem>
+              <SelectItem value="unassigned">Sin asignar ({unassignedCount})</SelectItem>
             </SelectContent>
           </Select>
         </div>
