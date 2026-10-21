@@ -280,7 +280,7 @@ const formatPrice = (price: number | null) => {
 // live WebGL contexts (~16) and silently kill the oldest — which can be the
 // 360 tour or the map itself.
 let webglSupportCache: boolean | null = null;
-function hasWebGLSupport(): boolean {
+export function hasWebGLSupport(): boolean {
   if (webglSupportCache !== null) return webglSupportCache;
   try {
     if (typeof document === 'undefined') return true;
