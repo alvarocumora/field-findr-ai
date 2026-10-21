@@ -134,7 +134,8 @@ const CinematicShowcaseHero = () => {
         </motion.div>
 
         <div className="min-w-0">
-          <div className="relative aspect-[4/5] sm:aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-muted rural-shadow">
+          <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-background rural-shadow">
+            <div className="pointer-events-none absolute inset-0 z-[1] shadow-[inset_0_0_60px_hsl(var(--background))]" aria-hidden="true" />
             <HeroTerrainGlobe
               projects={withImage.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng }))}
               activeId={active?.id}
