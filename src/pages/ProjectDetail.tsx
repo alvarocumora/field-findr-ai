@@ -510,9 +510,9 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
           </section>
         )}
 
-        {/* Sin panorámicas 360 pero con fotos de dron: recorrido aéreo real */}
-        {!tourScenesLoading && tourScenes.length === 0 && Array.isArray((project as any).images) && (project as any).images.length > 0 && (
-          <section ref={tourSectionRef} className="container px-4 pb-4 scroll-mt-20" aria-label="Recorrido aéreo del proyecto">
+        {/* Fotos de dron: recorrido aéreo real (complementa el tour 360 si existe) */}
+        {!tourScenesLoading && Array.isArray((project as any).images) && (project as any).images.length > 0 && (
+          <section ref={tourScenes.length === 0 ? tourSectionRef : undefined} className="container px-4 pb-4 scroll-mt-20" aria-label="Recorrido aéreo del proyecto">
             <ProjectAerialShowcase
               images={(project as any).images}
               projectName={project.name}
@@ -520,6 +520,35 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
             />
           </section>
         )}
+
+        {(() => {
+          const cc = (project as any).commercial_conditions as { kit_mediterraneo?: { price_with_kit_clp?: number; optional?: boolean }; credito_directo?: boolean } | null;
+          const kit = cc?.kit_mediterraneo?.price_with_kit_clp;
+          if (!kit && !cc?.credito_directo) return null;
+          return (
+            <section className="container px-4 pb-4" aria-label="Oferta comercial">
+              <div className="grid gap-4 rounded-2xl border bg-card p-5 sm:grid-cols-3 sm:items-center">
+                <div>
+                  <p className="text-xs uppercase text-muted-foreground">Parcela sola</p>
+                  <p className="text-2xl font-bold">{priceRange ? `Desde $${priceRange.min.toLocaleString('es-CL')}` : 'No informado'}</p>
+                </div>
+                {kit ? (
+                  <div>
+                    <p className="text-xs uppercase text-muted-foreground">Opcional · parcela + kit de casa mediterránea</p>
+                    <p className="text-2xl font-bold text-primary">${kit.toLocaleString('es-CL')}</p>
+                    <p className="text-xs text-muted-foreground">Kit básico prefabricado; no es vivienda terminada.</p>
+                  </div>
+                ) : <div />}
+                {cc?.credito_directo && (
+                  <div className="flex flex-col gap-2 sm:items-end">
+                    <p className="text-sm font-semibold">Crédito directo con el propietario</p>
+                    <a href="#simula-tu-cuota" className="text-sm font-medium text-primary underline underline-offset-4">Simular cuota</a>
+                  </div>
+                )}
+              </div>
+            </section>
+          );
+        })()}
 
         {/* Immersive Hero */}
         <ProjectHero

@@ -174,7 +174,7 @@ export default function CaoneTour() {
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Badge className="bg-[#f6c64e] text-[#17352d] hover:bg-[#f6c64e]"><PlayCircle className="mr-1 h-3.5 w-3.5" />Terrain Tour 3D</Badge>
           <Badge className="bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/15">38 parcelas ≥ 1 ha</Badge>
-          <Badge variant="outline" className="border-white/15 text-white/70">$12.990.000 CLP por parcela</Badge>
+          <Badge variant="outline" className="border-white/15 text-white/70">Desde $19.990.000 · con kit casa $23.990.000</Badge>
           <Badge variant="outline" className="border-white/15 text-white/70"><MapPin className="mr-1 h-3 w-3" />Caone, Hualañé</Badge>
         </div>
 
