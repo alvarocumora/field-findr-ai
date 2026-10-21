@@ -2,8 +2,8 @@
 
 ## Avisos de monitoreo: tarjetas y consulta
 
-- [ ] Corregir el campo de superficie de ProjectsRail y comprobar precios/superficies reales
-- [ ] Consumir la apertura automática de consulta sin perder lote, pestaña ni campaña; comprobar cierre y navegación
+- [x] Corregir superficie usando `area` y el inventario público existente: cuatro solicitudes correctas, precios y superficies visibles sin sesión
+- [x] Consumir la apertura automática de consulta sin perder lote, pestaña ni campaña; cierre y cambio a Lotes comprobados; 9 pruebas pasan
 
 ## Mapa del tour en blanco
 
