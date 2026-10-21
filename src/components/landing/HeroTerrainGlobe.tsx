@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
+import { useTheme } from '@/components/theme/ThemeProvider';
 import { hasWebGLSupport } from '@/components/lots/LotMapView';
 
 export interface GlobeProject {
@@ -19,6 +20,26 @@ interface Props {
   /** Rendered when the globe can't run (no WebGL / token / style error). */
   fallback: React.ReactNode;
 }
+
+// Keep the Earth visible in every selected-project state; the visitor should
+// never unexpectedly leave the brand-level world view for a parcel close-up.
+const GLOBE_ZOOM = 1.7;
+
+const getAtmosphere = (isDark: boolean) => isDark
+  ? {
+      color: 'rgb(5, 25, 24)',
+      'high-color': 'rgb(12, 59, 66)',
+      'horizon-blend': 0.1,
+      'space-color': 'rgb(3, 11, 17)',
+      'star-intensity': 0.12,
+    }
+  : {
+      color: 'rgb(236,233,224)',
+      'high-color': 'rgb(226,225,216)',
+      'horizon-blend': 0.12,
+      'space-color': 'rgb(247,245,240)',
+      'star-intensity': 0,
+    };
 
 const toGeoJSON = (projects: GlobeProject[], activeId?: string) => ({
   type: 'FeatureCollection' as const,
@@ -42,6 +63,9 @@ const HeroTerrainGlobe = ({ projects, activeId, reducedMotion, onSelect, fallbac
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(() => !hasWebGLSupport());
   const { token, error } = useMapboxToken();
+  const { resolvedTheme } = useTheme();
+  const themeRef = useRef(resolvedTheme);
+  themeRef.current = resolvedTheme;
   const dataRef = useRef({ projects, activeId });
   dataRef.current = { projects, activeId };
   const onSelectRef = useRef(onSelect);
@@ -72,8 +96,8 @@ const HeroTerrainGlobe = ({ projects, activeId, reducedMotion, onSelect, fallbac
     const giveUp = window.setTimeout(() => { if (!m.loaded()) setFailed(true); }, 15000);
 
     m.on('style.load', () => {
-      // Atlas look: the globe floats on the platform's paper tone, no black space.
-      m.setFog({ color: 'rgb(236,233,224)', 'high-color': 'rgb(226,225,216)', 'horizon-blend': 0.12, 'space-color': 'rgb(247,245,240)', 'star-intensity': 0 });
+      // The globe inherits the Rural Finder light/dark identity.
+      m.setFog(getAtmosphere(themeRef.current === 'dark'));
       if (!m.getSource('dem')) m.addSource('dem', { type: 'raster-dem', url: 'mapbox://mapbox.mapbox-terrain-dem-v1', tileSize: 512, maxzoom: 14 });
       m.setTerrain({ source: 'dem', exaggeration: 1.6 });
       m.addSource('hero-projects', { type: 'geojson', data: toGeoJSON(dataRef.current.projects, dataRef.current.activeId) });
@@ -93,13 +117,22 @@ const HeroTerrainGlobe = ({ projects, activeId, reducedMotion, onSelect, fallbac
       });
       m.on('mouseenter', 'hero-projects-dot', () => { m.getCanvas().style.cursor = 'pointer'; });
       m.on('mouseleave', 'hero-projects-dot', () => { m.getCanvas().style.cursor = ''; });
-      setReady(true);
+      // Keep the static Earth visible until the map actually finishes its first load.
+      m.once('load', () => setReady(true));
     });
     m.on('error', (e) => { if (!m.isStyleLoaded() && /style/i.test(String(e?.error?.message))) setFailed(true); });
     m.getCanvas().addEventListener('webglcontextlost', () => setFailed(true));
 
     return () => { window.clearTimeout(giveUp); m.remove(); map.current = null; setReady(false); };
   }, [token, failed]);
+
+  // Update the atmosphere on theme changes without rebuilding WebGL.
+  useEffect(() => {
+    const current = map.current;
+    if (ready && current?.isStyleLoaded()) {
+      current.setFog(getAtmosphere(resolvedTheme === 'dark'));
+    }
+  }, [ready, resolvedTheme]);
 
   // Sync markers.
   useEffect(() => {
@@ -112,9 +145,14 @@ const HeroTerrainGlobe = ({ projects, activeId, reducedMotion, onSelect, fallbac
     const m = map.current;
     const p = projects.find((x) => x.id === activeId);
     if (!ready || !m || !p || !Number.isFinite(p.lat) || !Number.isFinite(p.lng)) return;
-    const target = { center: [p.lng as number, p.lat as number] as [number, number], zoom: 13.2, pitch: 62, bearing: -25 };
+    const target = {
+      center: [p.lng as number, p.lat as number] as [number, number],
+      zoom: GLOBE_ZOOM,
+      pitch: 0,
+      bearing: 0,
+    };
     if (reducedMotion) m.jumpTo(target);
-    else m.flyTo({ ...target, duration: 6500, curve: 1.6, essential: false });
+    else m.easeTo({ ...target, duration: 1900, essential: false });
   }, [ready, activeId, projects, reducedMotion]);
 
   if (failed || error) return <>{fallback}</>;

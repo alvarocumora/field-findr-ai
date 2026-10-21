@@ -29,3 +29,15 @@ Adoptado hoy: portada (`/`), explorador (`/explorar`, desktop y móvil).
 - Error de consulta ≠ "sin inventario": mostrar alerta con "Reintentar".
 - Búsqueda de texto server-side sobre todo el inventario.
 - CTA de comprador nunca apunta a `/contacto-loteos` (demo B2B).
+
+## Modo oscuro institucional
+- El modo claro usa los tokens paper/ink/forest definidos arriba.
+- La variante oscura está aislada en `src/components/theme/rural-dark.css` con el selector `.dark .theme-rural`.
+- La selección la gestiona el `ThemeProvider` existente; utilizar tokens `bg-background`, `text-foreground`, `bg-card`, `border-border` para conservar contraste y la identidad de marca en ambos modos.
+
+## Globo terrestre como identidad permanente
+- La portada actual integra `HeroTerrainGlobe` dentro de `CinematicShowcaseHero`.
+- Mantener la vista global visible (planeta completo y Sudamérica reconocible), sin transiciones automáticas a zoom de parcela cuando cambia el proyecto destacado. Los detalles del predio permanecen en las fichas individuales.
+- Fondo espacial y atmósfera cartográfica adaptados al modo oscuro/claro sin recrear el mapa al cambiar de tema.
+- Cuando Mapbox o WebGL no están disponibles se muestra la imagen de marca local `ot-globe-wide.jpg`, no un espacio vacío. Preservar buscador, CTA y filtros.
+- Respetar movimiento reducido y la disposición móvil actual (globo primero, buscador accesible y scroll vertical libre).

@@ -82,8 +82,11 @@ test('sin WebGL, el explorador conserva una superficie de contenido', async ({ p
 
 test('landings premium mantienen identidad y navegación del proyecto', async ({ page }) => {
   await page.goto('/valle-hualane');
-  await expect(page.getByRole('heading', { name: 'Valle de Hualañé' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Visitas y consultas' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Valle de Hualañé', level: 1 })).toBeVisible();
+  // /valle-hualane now renders the unified ProjectDetail commercial flow.
+  // Check the real inquiry CTA and dialog instead of a retired bespoke nav link.
+  await page.getByRole('button', { name: 'Agendar visita o consultar' }).click();
+  await expect(page.getByRole('dialog', { name: 'Consulta por Valle de Hualañé' })).toBeVisible();
 
   await page.goto('/p/valle-escondido-licanten');
   await expect(page.getByRole('heading', { level: 1, name: /Valle Escondido/i })).toBeVisible();
@@ -153,4 +156,26 @@ test('rutas comerciales requieren sesión y retienen filtros del módulo elegido
     await expect(page).toHaveURL(/\/auth\?redirect=/, { timeout: 20_000 });
     expect(new URL(page.url()).searchParams.get('redirect')).toBe(target);
   }
+});
+
+
+test('Rural Finder conserva un modo oscuro real en la portada', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('ofertaterrenos-theme', 'dark'));
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await expect(page.locator('.theme-rural').first()).toHaveCSS('color-scheme', 'dark');
+  await expect(page.getByRole('heading', { name: /Encuentra tierra con/i })).toBeVisible();
+});
+
+test('sin WebGL el hero conserva la imagen del globo de marca', async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (kind, ...args) {
+      if (kind === 'webgl' || kind === 'webgl2' || kind === 'experimental-webgl') return null;
+      return original.call(this, kind, ...args);
+    };
+  });
+  await page.goto('/');
+  await expect(page.getByRole('img', { name: 'Globo cartográfico de Sudamérica y Chile' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Explorar terrenos' })).toBeVisible();
 });
