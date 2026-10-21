@@ -452,13 +452,15 @@ const ExecutiveDashboard = () => {
             <Button variant="outline" onClick={copyQuote} disabled={createQuote.isPending}><ClipboardCopy className="mr-2 h-4 w-4" />Guardar y copiar</Button>
             <Button variant="outline" onClick={sendEmail} disabled={createQuote.isPending || markQuoteSent.isPending}><Send className="mr-2 h-4 w-4" />Email</Button>
             <Button onClick={sendWhatsApp} disabled={createQuote.isPending || markQuoteSent.isPending}><MessageCircle className="mr-2 h-4 w-4" />WhatsApp</Button>
+            <Button variant="secondary" onClick={reserveFromCurrentQuote} disabled={createQuote.isPending}><ShoppingCart className="mr-2 h-4 w-4" />Reservar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!reserveLot} onOpenChange={(open) => !open && setReserveLot(null)}>
+      <Dialog open={!!reserveLot} onOpenChange={(open) => { if (!open) { setReserveLot(null); setReserveQuoteId(null); } }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader><DialogTitle>Reservar {reserveLot?.name || (reserveLot ? `Lote ${reserveLot.lot_number}` : '')}</DialogTitle></DialogHeader>
+          {reserveQuoteId && <p className="text-xs text-muted-foreground">Vinculada a la cotización: el lote, el cliente y el ejecutivo quedan trazados.</p>}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2"><Label>Comprador *</Label><Input value={reserve.name} onChange={(e) => setReserve((r) => ({ ...r, name: e.target.value }))} /></div>
             <div><Label>Email *</Label><Input type="email" value={reserve.email} onChange={(e) => setReserve((r) => ({ ...r, email: e.target.value }))} /></div>
