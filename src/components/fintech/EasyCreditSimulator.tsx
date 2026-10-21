@@ -1,10 +1,12 @@
 import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calculator, ArrowUpRight } from 'lucide-react';
+import { Calculator, ArrowUpRight, FileDown, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { computeEasyCredit, EASY_CREDIT_TERMS, financingInquiryUrl, LICANTEN_PROMO_PRICE } from '@/lib/easyCredit';
+import { computeEasyCredit, EASY_CREDIT_TERMS, financingInquiryUrl, LICANTEN_PATH, LICANTEN_PROMO_PRICE } from '@/lib/easyCredit';
+import { getShareUrl } from '@/lib/publicUrls';
 
 const clp = (value: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(value);
 
@@ -14,8 +16,43 @@ export function EasyCreditSimulator({ defaultPrice = LICANTEN_PROMO_PRICE, lotId
   const [downPct, setDownPct] = useState(20);
   const [months, setMonths] = useState(36);
   const [annualRatePct, setAnnualRatePct] = useState(12);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const result = computeEasyCredit({ price, downPct, months, annualRatePct });
   const updateNumber = (value: string, max: number) => Math.min(max, Math.max(0, Number(value) || 0));
+
+  const downloadPdf = async () => {
+    setPdfBusy(true);
+    try {
+      const { generateQuotePDF } = await import('@/lib/pdfGenerator');
+      const now = new Date();
+      const validUntil = new Date(now);
+      validUntil.setDate(validUntil.getDate() + 30);
+      await generateQuotePDF({
+        projectName: 'Valle Escondido · Licantén',
+        projectLocation: 'Licantén, Región del Maule',
+        lotNumber: 'Simulación libre',
+        lotArea: 0,
+        lotPrice: price,
+        pricePerSqm: 0,
+        downPaymentPercent: downPct,
+        downPayment: result.downPayment,
+        financedAmount: result.principal,
+        termMonths: months,
+        interestRate: annualRatePct / 12,
+        monthlyPayment: result.monthlyPayment,
+        totalInterest: result.totalInterest,
+        totalCost: result.totalPaid,
+        generatedAt: now,
+        validUntil,
+        verifyUrl: getShareUrl(LICANTEN_PATH),
+      });
+      toast.success('Simulación descargada en PDF');
+    } catch {
+      toast.error('No se pudo generar el PDF');
+    } finally {
+      setPdfBusy(false);
+    }
+  };
 
   return (
     <section id="simula-tu-cuota" aria-labelledby={`${id}-title`} className="scroll-mt-24 border-b border-border bg-background">
@@ -59,7 +96,12 @@ export function EasyCreditSimulator({ defaultPrice = LICANTEN_PROMO_PRICE, lotId
                 ['Intereses referenciales', result.totalInterest], ['Costo total (pie + cuotas)', result.totalPaid],
               ].map(([label, value]) => <div key={label} className="flex flex-wrap justify-between gap-x-3 gap-y-1 py-3"><dt className="text-muted-foreground">{label}</dt><dd className="rural-data font-medium">{clp(Number(value))} CLP</dd></div>)}
             </dl>
-            <Button asChild size="lg" className="w-full whitespace-normal px-3"><Link to={financingInquiryUrl(lotId)}>Consultar financiamiento<ArrowUpRight aria-hidden="true" /></Link></Button>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button type="button" size="lg" variant="outline" className="w-full whitespace-normal px-3" disabled={pdfBusy || price <= 0} onClick={downloadPdf}>
+                {pdfBusy ? <Loader2 className="animate-spin" aria-hidden="true" /> : <FileDown aria-hidden="true" />}Descargar PDF
+              </Button>
+              <Button asChild size="lg" className="w-full whitespace-normal px-3"><Link to={financingInquiryUrl(lotId)}>Consultar financiamiento<ArrowUpRight aria-hidden="true" /></Link></Button>
+            </div>
           </div>
         </div>
         <p className="mt-8 border-t border-border pt-5 text-xs leading-relaxed text-muted-foreground">Simulación referencial, no constituye oferta de crédito ni aprobación; excluye seguros, comisiones, impuestos y otros gastos. Financiamiento sujeto a evaluación y disponibilidad de producto para terrenos rurales.</p>
