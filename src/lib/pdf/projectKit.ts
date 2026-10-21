@@ -1,6 +1,6 @@
 import QRCode from 'qrcode';
 import {
-  BRAND, createFichaDoc, drawBrandLogo, fetchImageAsBase64, publicUrl, getPublicOrigin,
+  BRAND, brandLogoWidth, createFichaDoc, drawBrandLogo, fetchImageAsBase64, publicUrl, getPublicOrigin,
   scriptFont, semiboldFont, themeFont,
 } from '@/lib/pdf/fichaShell';
 import { getFichaTemplate, renderFicha } from '@/lib/pdf/fichaTemplates';
@@ -501,7 +501,7 @@ const drawCover = async (
   f: FichaDoc,
   o: {
     project: KitProject; s: ReturnType<typeof summarize>; hero: string | null; heroCaption?: string;
-    location: string; path: string; agendarUrl: string;
+    location: string; path: string; agendarUrl: string; readyToDeed?: boolean;
   },
 ) => {
   const { doc, W, H, margin, contentW } = f;
@@ -530,9 +530,27 @@ const drawCover = async (
     doc.text(o.heroCaption, W - margin, heroH - 4, { align: 'right' });
   }
 
-  // Logo on a translucent chip for legibility over any photo.
-  withOpacity(f, 0.72, () => { doc.setFillColor(...BRAND.forest); doc.roundedRect(margin - 3, 9, 72, 17, 8.5, 8.5, 'F'); });
-  drawBrandLogo(doc, margin, 12, { size: 11 });
+  // Logo on a chip sized to the wordmark (no clipped/overflowing pill).
+  const logoSize = 10;
+  const chipPad = 4.5;
+  const logoChipW = brandLogoWidth(doc, logoSize) + chipPad * 2;
+  const chipH = logoSize + 7;
+  withOpacity(f, 0.82, () => { doc.setFillColor(...BRAND.forest); doc.roundedRect(margin - chipPad, 10, logoChipW, chipH, chipH / 2, chipH / 2, 'F'); });
+  drawBrandLogo(doc, margin, 10 + (chipH - logoSize) / 2, { size: logoSize });
+
+  // "Listas para escriturar" solo cuando el proyecto declara rol propio.
+  if (o.readyToDeed) {
+    const label = 'LISTAS PARA ESCRITURAR · ROL PROPIO';
+    doc.setFont(semiboldFont(), 'normal');
+    doc.setFontSize(7);
+    doc.setCharSpace(0.3);
+    const bw = doc.getTextWidth(label) + 10 + label.length * 0.3;
+    doc.setFillColor(...BRAND.leaf);
+    doc.roundedRect(W - margin - bw, 12, bw, 9, 4.5, 4.5, 'F');
+    doc.setTextColor(...BRAND.forest);
+    doc.text(label, W - margin - bw + 5, 17.6);
+    doc.setCharSpace(0);
+  }
 
   let y = heroH + 6;
   doc.setFont(scriptFont(), 'normal');
@@ -722,6 +740,27 @@ const purchaseSteps = (f: FichaDoc, steps: [string, string][]) => {
 /* Dossier comercial                                                    */
 /* ------------------------------------------------------------------ */
 
+export const CREDIT_EXAMPLE_RATE = 12;
+
+/** Cuota francesa; tasa 0 => cuotas lineales. */
+export const frenchPayment = (principal: number, annualRatePct: number, months: number) => {
+  if (principal <= 0 || months <= 0) return 0;
+  const i = annualRatePct / 100 / 12;
+  return i === 0 ? principal / months : (principal * i) / (1 - Math.pow(1 + i, -months));
+};
+
+export const creditExamples = (price: number) =>
+  ([[20, 36], [20, 60], [0, 60]] as const).map(([downPct, months]) => {
+    const down = Math.round(price * downPct / 100);
+    return { downPct, months, down, payment: Math.round(frenchPayment(price - down, CREDIT_EXAMPLE_RATE, months)) };
+  });
+
+export const creditSimulatorPath = (price: number) => `/?creditPrice=${Math.round(price)}#simula-tu-cuota`;
+
+/** Solo se declara "listas para escriturar" si el proyecto informa rol propio. */
+export const isReadyToDeed = (project: KitProject) =>
+  [project.description ?? '', ...(project.highlights ?? [])].some(t => /rol propio/i.test(t));
+
 export const agendarPath = (project: KitProject) =>
   `/agendar?source=${encodeURIComponent(`dossier-${project.slug ?? project.id}`)}`;
 
@@ -736,6 +775,7 @@ export const generateProjectDossierPdf = async (
   const path = projectPath(project, options);
   const location = [project.location, project.region].filter(Boolean).join(', ');
   const t = getFichaTemplate('proyecto');
+  const readyToDeed = isReadyToDeed(project);
 
   // Load concurrently, bounded to five assets. No invented replacement photos.
   const configuredMedia = [...(project.media ?? []), ...(project.images ?? []).map(src => ({ src, caption: 'Imagen del proyecto · referencial' }))].filter(item => item.src);
@@ -756,6 +796,7 @@ export const generateProjectDossierPdf = async (
     hero: media[0]?.data ?? plan?.image ?? null,
     heroCaption: media[0]?.caption ?? (plan?.image ? 'Imagen satelital del sector · referencial' : undefined),
     agendarUrl: agendarPath(project),
+    readyToDeed,
   });
 
   // ---- El proyecto
@@ -800,6 +841,17 @@ export const generateProjectDossierPdf = async (
     f.section('Entorno y accesos');
     f.bullets(project.pois.slice(0, 10).map((p) => `${p.name} — ${p.detail}`));
   }
+  // ---- Crédito directo (ejemplo ilustrativo sobre el precio desde real)
+  if (s.priceMin) {
+    f.ensure(90);
+    f.section('Crédito directo con la inmobiliaria');
+    f.paragraph('Compra con pie flexible (desde 0%) y cuotas fijas mensuales de hasta 60 meses, sin banco. Ejemplo sobre la parcela de menor precio:', { size: 9.5 });
+    const rows = creditExamples(s.priceMin);
+    rows.forEach(r => f.kv(`Pie ${r.downPct}% · ${r.months} cuotas`, `${clp(r.payment)} / mes · ${r.down > 0 ? `pie ${clp(r.down)}` : 'sin pie'}`));
+    f.note(`Simulación referencial con tasa nominal anual de ${CREDIT_EXAMPLE_RATE}% (supuesto ilustrativo editable), sistema francés. No constituye oferta de crédito; condiciones finales sujetas a evaluación y a la promesa de compraventa.`);
+    f.actions([{ label: 'Simula tu crédito en línea', url: creditSimulatorPath(s.priceMin) }]);
+  }
+
   const conds = conditionLines(project);
   if (conds.length) {
     f.section('Condiciones comerciales');
@@ -839,7 +891,9 @@ export const generateProjectDossierPdf = async (
   purchaseSteps(f, [
     ['Reserva', 'Eliges tu parcela y la reservas en línea o con tu ejecutivo; queda bloqueada para ti.'],
     ['Promesa', 'Firmamos la promesa de compraventa con las condiciones de pago acordadas.'],
-    ['Escritura', 'Firma de la escritura pública de compraventa en notaría.'],
+    ['Escritura', readyToDeed
+      ? 'Parcelas con rol propio, listas para escriturar: firma de la escritura pública de compraventa en notaría.'
+      : 'Firma de la escritura pública de compraventa en notaría.'],
     ['Inscripción', 'Inscripción en el Conservador de Bienes Raíces: la parcela queda a tu nombre.'],
   ]);
 
