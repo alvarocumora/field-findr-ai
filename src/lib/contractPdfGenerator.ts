@@ -19,6 +19,34 @@ interface ContractPDFData {
   generatedAt: Date;
   /** Buyer's digital signature (PNG data URL) — drawn over the buyer line. */
   signatureDataUrl?: string;
+  /** Direct seller financing: switches price clause to instalments and adds the amortization annex. */
+  credit?: ContractCreditTerms;
+}
+
+export interface ContractCreditTerms {
+  totalAmount: number;
+  downPayment: number;
+  financedAmount: number;
+  annualRatePct: number;
+  termMonths: number;
+  monthlyPayment: number;
+  /** ISO date of the first instalment; defaults to one month after generation. */
+  firstDueDate?: string;
+}
+
+/** French amortization rows (capital, interest, balance) for the annex. */
+export function buildCreditSchedule(c: ContractCreditTerms, generatedAt: Date) {
+  const r = c.annualRatePct / 100 / 12;
+  let balance = c.financedAmount;
+  const start = c.firstDueDate ? new Date(c.firstDueDate) : new Date(generatedAt.getFullYear(), generatedAt.getMonth() + 1, generatedAt.getDate());
+  return Array.from({ length: c.termMonths }, (_, i) => {
+    const interest = Math.round(balance * r);
+    const isLast = i === c.termMonths - 1;
+    const capital = isLast ? balance : Math.min(balance, c.monthlyPayment - interest);
+    balance = Math.max(0, balance - capital);
+    const due = new Date(start.getFullYear(), start.getMonth() + i, start.getDate());
+    return { n: i + 1, due, payment: capital + interest, capital, interest, balance };
+  });
 }
 
 const formatCurrency = (value: number, currency = 'CLP'): string =>
