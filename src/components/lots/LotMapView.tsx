@@ -276,14 +276,22 @@ const formatPrice = (price: number | null) => {
   }).format(price);
 };
 
+// Probe once per page and release the probe context immediately: browsers cap
+// live WebGL contexts (~16) and silently kill the oldest — which can be the
+// 360 tour or the map itself.
+let webglSupportCache: boolean | null = null;
 function hasWebGLSupport(): boolean {
+  if (webglSupportCache !== null) return webglSupportCache;
   try {
     if (typeof document === 'undefined') return true;
     const canvas = document.createElement('canvas');
-    return Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl'));
+    const gl = (canvas.getContext('webgl2') || canvas.getContext('webgl')) as WebGLRenderingContext | null;
+    (gl as WebGLRenderingContext | null)?.getExtension?.('WEBGL_lose_context')?.loseContext();
+    webglSupportCache = Boolean(gl);
   } catch {
-    return false;
+    webglSupportCache = false;
   }
+  return webglSupportCache;
 }
 
 export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, projectId, kmzFileUrl, planImages, onLotsUpdated, readOnly = false, showAdminControls = false, onOpenCompare, tourMode = false, externalRoads = null, focusSignal = 0 }: LotMapViewProps) => {
@@ -999,6 +1007,17 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
 
   const planBearing = calculatePlanBearing(lots);
 
+  // The map instance is created once per token/style/mode. Inventory, center,
+  // colour mode and roads are read from refs at load time and then synced onto
+  // the live sources, so parent refetches never destroy a loading map.
+  const calculateBoundsRef = useRef(calculateBounds);
+  calculateBoundsRef.current = calculateBounds;
+  const projectCenterRef = useRef(projectCenter);
+  projectCenterRef.current = projectCenter;
+  const colorModeRef = useRef(colorMode);
+  colorModeRef.current = colorMode;
+  const initialBoundsAppliedRef = useRef(false);
+
   const initializeMap = useCallback(() => {
     if (!mapContainer.current || !token || tokenLoading || map.current) return;
 
@@ -1384,6 +1403,64 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       setMapError('No se pudo iniciar el mapa 3D en este navegador.');
     }
   }, [initializeMap]);
+
+  // Sync inventory changes onto the existing map (no rebuild).
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !mapLoaded) return;
+    const lotsSource = m.getSource('lots') as mapboxgl.GeoJSONSource | undefined;
+    if (!lotsSource) return;
+    const geojson = generateLotGeoJSON(lotsRef.current, projectCenterRef.current);
+    lotsSource.setData(geojson);
+    (m.getSource('lot-centers') as mapboxgl.GeoJSONSource | undefined)?.setData(generateLotCentersGeoJSON(geojson));
+    if (m.getLayer('lots-fill')) m.setPaintProperty('lots-fill', 'fill-color', getColorExpression(colorModeRef.current, lotsRef.current));
+    applyAvailabilityView(m, onlyAvailableRef.current, colorModeRef.current, lotsRef.current);
+    if (!initialBoundsAppliedRef.current) {
+      const bounds = calculateBoundsRef.current();
+      if (bounds) {
+        initialBoundsAppliedRef.current = true;
+        const nextBearing = calculatePlanBearing(lotsRef.current);
+        m.fitBounds(bounds, { padding: 50, pitch: tourMode ? 58 : 0, bearing: tourMode ? nextBearing - 18 : nextBearing, maxZoom: tourMode ? 16.2 : undefined, duration: 800 });
+      }
+    }
+  }, [lotSignature, mapLoaded, tourMode]);
+
+  // Roads/servidumbres: added or updated on the live map.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !mapLoaded || !m.getLayer('lots-fill')) return;
+    const source = m.getSource('roads-kmz') as mapboxgl.GeoJSONSource | undefined;
+    if (!roadGeojson || roadGeojson.features.length === 0) return;
+    if (source) {
+      source.setData(roadGeojson);
+      return;
+    }
+    m.addSource('roads-kmz', { type: 'geojson', data: roadGeojson });
+    m.addLayer({
+      id: 'roads-kmz-outline',
+      type: 'line',
+      source: 'roads-kmz',
+      layout: { visibility: showRoads ? 'visible' : 'none' },
+      paint: {
+        'line-color': tourMode ? '#ef2b2d' : '#fbbf24',
+        'line-width': tourMode ? 5 : 4,
+        'line-opacity': tourMode ? 0.9 : 0.6,
+      },
+    }, 'lots-fill');
+    m.addLayer({
+      id: 'roads-kmz-center',
+      type: 'line',
+      source: 'roads-kmz',
+      layout: { visibility: showRoads ? 'visible' : 'none' },
+      paint: {
+        'line-color': '#ffffff',
+        'line-width': tourMode ? 1.2 : 1.5,
+        'line-opacity': tourMode ? 0.95 : 0.8,
+        'line-dasharray': tourMode ? [1, 0] : [4, 3],
+      },
+    }, 'lots-fill');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roadGeojson, mapLoaded, tourMode]);
 
   // Update selected lot highlight
   useEffect(() => {
