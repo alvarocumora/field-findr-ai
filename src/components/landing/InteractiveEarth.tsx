@@ -102,11 +102,15 @@ const InteractiveEarth = ({ reducedMotion, onReady }: InteractiveEarthProps) => 
           map.touchZoomRotate.disableRotation();
           map.getCanvas().style.touchAction = 'pan-y';
         }
-        map.addControl(new mapboxgl.NavigationControl({
-          showCompass: true,
-          showZoom: true,
-          visualizePitch: true,
-        }), 'bottom-right');
+        // On phones, keep the globe visual and let one finger scroll the page.
+        // Desktop retains zoom/compass controls for active globe exploration.
+        if (!window.matchMedia('(pointer: coarse)').matches) {
+          map.addControl(new mapboxgl.NavigationControl({
+            showCompass: true,
+            showZoom: true,
+            visualizePitch: true,
+          }), 'bottom-right');
+        }
         map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-left');
 
         map.on('load', async () => {
@@ -143,14 +147,14 @@ const InteractiveEarth = ({ reducedMotion, onReady }: InteractiveEarthProps) => 
           if (!reducedMotion) {
             map.easeTo({
               center: CHILE_CENTER,
-              zoom: 2.05,
-              pitch: 18,
+              zoom: 1.65,
+              pitch: 12,
               bearing: -4,
               duration: 4200,
               essential: true,
             });
           } else {
-            map.jumpTo({ center: CHILE_CENTER, zoom: 2.05, pitch: 12 });
+            map.jumpTo({ center: CHILE_CENTER, zoom: 1.65, pitch: 12 });
           }
 
           const { data } = await supabase
