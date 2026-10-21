@@ -44,6 +44,15 @@ it('keeps the loading map alive across equivalent parent values and new callback
   expect(state.removed).toBe(1);
 });
 
+it('does not rebuild the map when the inventory is refetched with new data', () => {
+  const lot = { id: 'a', lot_number: '1', area: 5000, price: 1000, status: 'available', polygon: [[-71, -34], [-71.001, -34], [-71.001, -34.001]] };
+  const view = render(<LotMapView {...props()} lots={[lot] as never} />);
+  view.rerender(<LotMapView {...props()} lots={[{ ...lot, status: 'reserved' }] as never} />);
+  view.rerender(<LotMapView {...props()} lots={[{ ...lot, status: 'reserved' }, { ...lot, id: 'b', lot_number: '2' }] as never} />);
+  expect(state.created).toBe(1);
+  expect(state.removed).toBe(0);
+});
+
 it('replaces the map exactly once when the style changes', () => {
   const view = render(<LotMapView {...props()} />);
   fireEvent.click(view.getByRole('button', { name: 'Calles' }));
