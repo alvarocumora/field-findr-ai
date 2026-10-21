@@ -542,7 +542,8 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                 {cc?.credito_directo && (
                   <div className="flex flex-col gap-2 sm:items-end">
                     <p className="text-sm font-semibold">Crédito directo con el propietario</p>
-                    <a href="#simula-tu-cuota" className="text-sm font-medium text-primary underline underline-offset-4">Simular cuota</a>
+                    <Link to={easyCreditLink} className="text-sm font-medium text-primary underline underline-offset-4">Simular cuota parcela</Link>
+                    {kit ? <Link to={`/?creditPrice=${kit}#simula-tu-cuota`} className="text-sm font-medium text-primary underline underline-offset-4">Simular cuota con kit</Link> : null}
                   </div>
                 )}
               </div>
