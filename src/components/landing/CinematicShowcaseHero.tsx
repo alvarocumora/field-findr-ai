@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Building2, MapPin, Search, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { projectImages } from '@/lib/projectCovers';
 import HeroTerrainGlobe from '@/components/landing/HeroTerrainGlobe';
+import globeFallbackImage from '@/assets/brand/ot-globe-wide.jpg';
 
 interface ShowcaseProject {
   id: string;
@@ -142,24 +143,14 @@ const CinematicShowcaseHero = () => {
               reducedMotion={!!reduced}
               onSelect={(id) => { const i = withImage.findIndex((p) => p.id === id); if (i >= 0) setIndex(i); }}
               fallback={
-                <>
-            <AnimatePresence mode="sync">
-              {active?.image ? (
-                <motion.img
-                  key={active.id}
-                  src={active.image}
-                  alt={`Vista aérea de ${active.name}`}
-                  className="absolute inset-0 h-full w-full object-cover"
-                  initial={reduced ? false : { opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 1 }}
+                <img
+                  src={globeFallbackImage}
+                  alt="Globo cartográfico de Sudamérica y Chile"
+                  className="absolute inset-0 h-full w-full object-cover object-[65%_center]"
+                  width={1920}
+                  height={1088}
+                  loading="eager"
                 />
-              ) : (
-                <div className="absolute inset-0 grid-topo opacity-40" aria-hidden="true" />
-              )}
-            </AnimatePresence>
-                </>
               }
             />
             {active && (
