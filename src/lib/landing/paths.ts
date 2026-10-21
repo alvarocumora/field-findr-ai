@@ -3,7 +3,7 @@ export const SITE_URL = 'https://ofertaterrenos.com';
 
 export const landingCanonicalPath: Record<string, string> = {
   'explora-park': '/explora-park',
-  huellelhue: '/huellelhue',
+  'reserva-huellelhue': '/huellelhue',
   'playa-alvaro': '/playa-alvaro',
   'forestal-valle-escondido': '/forestal-valle-escondido',
   'parcelas-caone-hualane': '/valle-hualane',

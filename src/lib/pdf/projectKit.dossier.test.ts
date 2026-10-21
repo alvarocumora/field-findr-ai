@@ -16,7 +16,7 @@ vi.mock('./media', async (original) => ({ ...(await original<typeof import('./me
 
 import { generateProjectDossierPdf, generateProjectMasterplanPdf } from './projectKit';
 
-const project = { id: 'p1', slug: 'huellelhue', name: 'Proyecto de prueba', latitude: -34.9, longitude: -71.9 };
+const project = { id: 'p1', slug: 'reserva-huellelhue', name: 'Proyecto de prueba', latitude: -34.9, longitude: -71.9 };
 const lots = Array.from({ length: 70 }, (_, i) => ({
   lot_number: String(i + 1),
   status: i % 10 === 0 ? 'sold' : 'available',
@@ -48,7 +48,7 @@ describe('dossier comercial (identidad de marca)', () => {
 
   it('enlaza el agendamiento desde la portada y el cierre', async () => {
     const pdf = await readBlob(await generateProjectDossierPdf(project, lots, { output: 'blob' }));
-    const links = pdf.match(/\/agendar\?source=dossier-huellelhue/g) ?? [];
+    const links = pdf.match(/\/agendar\?source=dossier-reserva-huellelhue/g) ?? [];
     expect(links.length).toBeGreaterThanOrEqual(2);
   });
 

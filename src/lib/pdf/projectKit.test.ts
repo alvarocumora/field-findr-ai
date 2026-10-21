@@ -7,7 +7,7 @@ vi.mock('./fichaFonts', async (original) => ({ ...(await original<typeof import(
 vi.mock('qrcode', () => ({ default: { toDataURL: vi.fn().mockRejectedValue(new Error('QR unavailable')) } }));
 vi.mock('./media', async (original) => ({ ...(await original<typeof import('./media')>()), fetchPdfImage: vi.fn().mockResolvedValue(null) }));
 
-const project = { id: 'p1', slug: 'huellelhue', name: 'Proyecto de prueba', latitude: -34.9, longitude: -71.9 };
+const project = { id: 'p1', slug: 'reserva-huellelhue', name: 'Proyecto de prueba', latitude: -34.9, longitude: -71.9 };
 
 describe('commercial PDF integrity', () => {
   it('does not advertise unknown, sold, reserved or non-finite prices as available', () => {
