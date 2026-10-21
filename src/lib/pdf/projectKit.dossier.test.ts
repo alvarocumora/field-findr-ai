@@ -48,7 +48,7 @@ describe('dossier comercial (identidad de marca)', () => {
 
   it('enlaza el agendamiento desde la portada y el cierre', async () => {
     const pdf = await readBlob(await generateProjectDossierPdf(project, lots, { output: 'blob' }));
-    const links = pdf.match(/\/agendar\?source=dossier-huellelhue/g) ?? [];
+    const links = pdf.match(/\/agendar\?source=dossier-reserva-huellelhue/g) ?? [];
     expect(links.length).toBeGreaterThanOrEqual(2);
   });
 
