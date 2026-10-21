@@ -1,12 +1,13 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Building2, MapPin, Search, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { projectImages } from '@/lib/projectCovers';
+import GlobeHeroBackdrop from './GlobeHeroBackdrop';
 
 interface ShowcaseProject {
   id: string;
@@ -83,8 +84,9 @@ const CinematicShowcaseHero = () => {
   };
 
   return (
-    <section className="relative bg-background" aria-labelledby="hero-title">
-      <div className="container grid gap-10 px-4 pb-14 pt-10 md:pt-16 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14 lg:pb-20">
+    <section className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden bg-background" aria-labelledby="hero-title">
+      <GlobeHeroBackdrop />
+      <div className="container relative z-10 grid gap-8 px-4 pb-12 pt-12 md:pt-16 lg:min-h-[calc(100svh-4rem)] lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-12 lg:pb-20">
         <motion.div
           initial={reduced ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -120,6 +122,8 @@ const CinematicShowcaseHero = () => {
             ))}
           </div>
 
+          {isError && <p role="alert" className="mt-3 text-sm text-destructive">No pudimos cargar los proyectos destacados. Puedes explorar el mapa igualmente.</p>}
+
           <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
             <a href="#atlas" className="inline-flex min-h-11 items-center gap-1.5 text-primary underline-offset-4 hover:underline focus-ring"><MapPin className="h-4 w-4" aria-hidden="true" />Explorar Chile por región</a>
             <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />Consulta documentación e inventario por proyecto</span>
@@ -129,45 +133,44 @@ const CinematicShowcaseHero = () => {
           </div>
         </motion.div>
 
-        <div className="min-w-0">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-muted rural-shadow">
-            <AnimatePresence mode="sync">
-              {active?.image ? (
-                <motion.img
-                  key={active.id}
-                  src={active.image}
-                  alt={`Vista aérea de ${active.name}`}
-                  className="absolute inset-0 h-full w-full object-cover"
-                  initial={reduced ? false : { opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 1 }}
-                />
-              ) : (
-                <div className="absolute inset-0 grid-topo opacity-40" aria-hidden="true" />
-              )}
-            </AnimatePresence>
-            {active && (
-              <Link to={`/proyecto/${encodeURIComponent(active.id)}`} className="absolute inset-x-3 bottom-3 flex flex-wrap items-end justify-between gap-3 rounded-xl border border-border bg-card/95 p-4 backdrop-blur focus-ring">
+        {/* The planet is the visual anchor. Keep the featured project as a compact
+            glass card so it does not hide the globe, including on wide monitors. */}
+        <div className="relative hidden min-h-[470px] min-w-0 flex-col items-end justify-end gap-3 lg:flex">
+          {active && (
+            <Link
+              to={`/proyecto/${encodeURIComponent(active.id)}`}
+              className="group w-full max-w-[340px] rounded-2xl border border-border/70 bg-card/85 p-4 text-card-foreground shadow-2xl backdrop-blur-xl transition-colors hover:border-primary focus-ring"
+            >
+              <div className="flex items-center gap-3">
+                {active.image && (
+                  <img src={active.image} alt="" className="h-16 w-20 shrink-0 rounded-lg object-cover" loading="lazy" />
+                )}
                 <div className="min-w-0">
-                  <p className="truncate font-editorial text-lg font-medium text-foreground">{active.name}</p>
-                  <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground"><MapPin className="h-3 w-3" aria-hidden="true" />{[active.city, active.region].filter(Boolean).join(', ') || 'Chile'}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">Proyecto destacado</p>
+                  <p className="mt-1 truncate font-editorial text-lg font-medium text-foreground">{active.name}</p>
+                  <p className="mt-1 flex items-center gap-1 truncate text-xs text-muted-foreground">
+                    <MapPin className="h-3 w-3" aria-hidden="true" />
+                    {[active.city, active.region].filter(Boolean).join(', ') || 'Chile'}
+                  </p>
                 </div>
-                <dl className="flex gap-5 text-right">
-                  <div><dt className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Disponibles</dt><dd className="rural-data text-sm font-semibold text-foreground">{active.inventoryReady ? `${active.available}/${active.total}` : 'Consultar'}</dd></div>
-                  <div><dt className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Desde</dt><dd className="rural-data text-sm font-semibold text-primary">{clp(active.minPrice)}</dd></div>
-                </dl>
-              </Link>
-            )}
-          </div>
-          {isError && <p role="alert" className="mt-3 text-sm text-destructive">No pudimos cargar los proyectos destacados. Puedes explorar el mapa igualmente.</p>}
+              </div>
+              <dl className="mt-3 flex justify-between gap-4 border-t border-border pt-3">
+                <div><dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Disponibles</dt><dd className="rural-data mt-1 text-sm font-semibold">{active.inventoryReady ? `${active.available}/${active.total}` : 'Consultar'}</dd></div>
+                <div className="text-right"><dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Desde</dt><dd className="rural-data mt-1 text-sm font-semibold text-primary">{clp(active.minPrice)}</dd></div>
+              </dl>
+            </Link>
+          )}
           {withImage.length > 1 && (
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Proyectos destacados">
+            <div className="flex max-w-[340px] flex-wrap justify-end gap-2" aria-label="Cambiar proyecto destacado">
               {withImage.map((p, i) => (
-                <button key={p.id} type="button" role="tab" aria-selected={p.id === active?.id} onClick={() => setIndex(i)}
-                  className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-ring ${p.id === active?.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:border-primary'}`}>
-                  {p.name}
-                </button>
+                <button
+                  key={p.id}
+                  type="button"
+                  aria-label={`Mostrar ${p.name}`}
+                  aria-pressed={p.id === active?.id}
+                  onClick={() => setIndex(i)}
+                  className={`h-2.5 w-2.5 rounded-full border border-border transition-colors focus-ring ${p.id === active?.id ? 'bg-primary' : 'bg-card/80 hover:bg-primary/60'}`}
+                />
               ))}
             </div>
           )}
