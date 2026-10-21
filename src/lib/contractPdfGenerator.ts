@@ -321,6 +321,31 @@ export const generateContractPDF = (
     },
   ];
 
+  const credit = data.credit;
+  if (credit) {
+    const day = (credit.firstDueDate ? new Date(credit.firstDueDate) : new Date(data.generatedAt)).getDate();
+    const cur = (v: number) => formatCurrency(v, data.currency);
+    clauses[1] = {
+      title: 'Precio y Forma de Pago con Crédito Directo',
+      text: `El precio total de la compraventa prometida es la suma de ${cur(credit.totalAmount)}, que el promitente comprador pagará de la siguiente forma: (a) con la suma de ${cur(credit.downPayment)} a título de pie, en la que se imputa el depósito de reserva de ${cur(data.reservationAmount)}, entregada a título de arras confirmatorias; y (b) el saldo de ${cur(credit.financedAmount)}, financiado directamente por el promitente vendedor, en ${credit.termMonths} cuotas mensuales, iguales y sucesivas de ${cur(credit.monthlyPayment)} cada una, que incluyen capital e intereses a una tasa nominal anual de ${credit.annualRatePct.toLocaleString('es-CL')}% (${(credit.annualRatePct / 12).toLocaleString('es-CL', { maximumFractionDigits: 4 })}% mensual), con vencimiento el día ${day} de cada mes, conforme a la Tabla de Desarrollo del Anexo N° 1, que forma parte integrante de este instrumento.`,
+    };
+    clauses.splice(2, 0,
+      {
+        title: 'Mora y Cláusula de Aceleración',
+        text: 'El simple retardo en el pago de cualquiera de las cuotas devengará, desde su vencimiento y hasta su pago efectivo, el interés máximo convencional que la ley permita estipular. El no pago íntegro y oportuno de dos o más cuotas consecutivas facultará al promitente vendedor para hacer exigible de inmediato el total del saldo insoluto adeudado, como si fuere de plazo vencido, sin necesidad de requerimiento judicial previo, de conformidad con el artículo 1496 del Código Civil.',
+      },
+      {
+        title: 'Escritura Definitiva y Garantía del Saldo',
+        text: 'Las partes suscribirán la escritura pública de compraventa definitiva ante notario dentro del plazo de noventa (90) días corridos contados desde la fecha de este instrumento. En dicho acto, y para caucionar el saldo de precio financiado, el comprador constituirá hipoteca de primer grado y prohibición de gravar y enajenar a favor del vendedor, las que se alzarán una vez pagada íntegramente la última cuota. Alternativamente, las partes podrán convenir que la escritura definitiva se otorgue contra el pago total del saldo de precio.',
+      },
+      {
+        title: 'Prepago',
+        text: 'El promitente comprador podrá prepagar total o parcialmente el saldo insoluto en cualquier momento, con aviso escrito de treinta (30) días, pagando el capital adeudado más los intereses devengados a la fecha del prepago, sin otra comisión que la que permita la ley.',
+      },
+    );
+    clauses.splice(clauses.findIndex(c => c.title === 'Plazo para Escritura Definitiva'), 1);
+  }
+
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...DARK);
