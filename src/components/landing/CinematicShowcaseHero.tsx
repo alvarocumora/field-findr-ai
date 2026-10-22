@@ -65,6 +65,19 @@ export const useShowcaseProjects = () =>
     staleTime: 5 * 60 * 1000,
   });
 
+const ProjectSummary = ({ active }: { active: ShowcaseProject }) => (
+  <>
+    <div className="min-w-0">
+      <p className="truncate font-editorial text-base font-medium text-foreground sm:text-lg">{active.name}</p>
+      <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground"><MapPin className="h-3 w-3" aria-hidden="true" />{[active.city, active.region].filter(Boolean).join(', ') || 'Chile'}</p>
+    </div>
+    <dl className="flex shrink-0 gap-3 text-right sm:gap-4">
+      <div><dt className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Disponibles</dt><dd className="rural-data text-sm font-semibold text-foreground">{active.inventoryReady ? `${active.available}/${active.total}` : 'Consultar'}</dd></div>
+      <div><dt className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Desde</dt><dd className="rural-data text-sm font-semibold text-primary">{clp(active.minPrice)}</dd></div>
+    </dl>
+  </>
+);
+
 const CinematicShowcaseHero = () => {
   const reduced = useReducedMotion();
   const navigate = useNavigate();
