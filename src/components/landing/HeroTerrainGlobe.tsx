@@ -117,6 +117,21 @@ const HeroTerrainGlobe = ({ projects, activeId, reducedMotion, onSelect, fallbac
     else m.flyTo({ ...target, duration: 6500, curve: 1.6, essential: false });
   }, [ready, activeId, projects, reducedMotion]);
 
+  // Slow cinematic orbit around the active project while nobody interacts.
+  useEffect(() => {
+    const m = map.current;
+    if (!ready || !m || reducedMotion) return;
+    let touched = false;
+    const stop = () => { touched = true; };
+    const drift = (e: { originalEvent?: unknown }) => {
+      if (touched || e.originalEvent) return;
+      m.easeTo({ bearing: m.getBearing() + 40, duration: 24000, easing: (t) => t, essential: false });
+    };
+    m.on('moveend', drift);
+    m.on('mousedown', stop); m.on('touchstart', stop); m.on('wheel', stop);
+    return () => { m.off('moveend', drift); m.off('mousedown', stop); m.off('touchstart', stop); m.off('wheel', stop); };
+  }, [ready, reducedMotion]);
+
   if (failed || error) return <>{fallback}</>;
   return (
     <div className="absolute inset-0">
