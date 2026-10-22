@@ -128,7 +128,7 @@ const CinematicShowcaseHero = () => {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-24 bg-gradient-to-t from-background to-transparent" aria-hidden="true" />
 
         {active && (
-          <Link to={projectHref} className="absolute bottom-4 right-4 z-10 hidden w-[340px] items-center justify-between gap-3 rounded-2xl border border-border bg-card/90 p-4 backdrop-blur-md rural-shadow focus-ring lg:flex">
+          <Link to={projectHref} className="absolute bottom-4 right-4 z-10 hidden w-[440px] items-center justify-between gap-3 rounded-2xl border border-border bg-card/90 p-4 backdrop-blur-md rural-shadow focus-ring lg:flex">
             <ProjectSummary active={active} />
           </Link>
         )}
