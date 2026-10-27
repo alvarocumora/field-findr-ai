@@ -41,7 +41,7 @@ const DashboardAsesor = () => {
   const { data: notifications } = useNotifications();
   const planLimits = usePlanLimits();
 
-  // Hot leads: high score, not contacted in 48h+
+  // Hot leads: high score, no record updates in 48h+
   const { data: hotLeads } = useQuery({
     queryKey: ['hot-leads', user?.id],
     queryFn: async () => {
@@ -150,7 +150,7 @@ const DashboardAsesor = () => {
 
   const statsConfig = [
     { label: 'Oportunidades', value: stats?.properties || 0, icon: Target, color: 'text-primary', delta: 'Total activas' },
-    { label: 'Leads Activos', value: stats?.activeLeads || 0, icon: Users, color: 'text-blue-500', delta: '+3 esta semana' },
+    { label: 'Leads registrados', value: stats?.activeLeads || 0, icon: Users, color: 'text-blue-500', delta: 'Mis contactos' },
     { label: 'En Revisión', value: (leads || []).filter((l: any) => l.status === 'interested').length, icon: Clock, color: 'text-amber-500', delta: 'Revisión legal/técnica' },
     { label: 'Deals Prioritarios', value: (hotLeads || []).length, icon: Flame, color: 'text-red-500', delta: 'Alta prioridad' },
     { label: 'Ventas del Mes', value: formatCurrency(stats?.monthlySales || 0), icon: DollarSign, color: 'text-emerald-500' },
@@ -513,7 +513,7 @@ const DashboardAsesor = () => {
                           <div className="flex items-center gap-2">
                             <p className="text-xs text-muted-foreground">Score: {lead.lead_score}</p>
                             <Badge variant="outline" className="text-[9px] h-3.5 px-1 border-red-500/30 text-red-500">
-                              {hoursSince}h sin contacto
+                              {hoursSince}h sin actualizar
                             </Badge>
                           </div>
                         </div>

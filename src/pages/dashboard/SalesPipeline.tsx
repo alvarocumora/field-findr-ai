@@ -4,23 +4,24 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useLeads } from '@/hooks/useLeads';
+import { useLeads, LEAD_STATUS_CONFIG, type LeadStatus } from '@/hooks/useLeads';
+import LeadDetailSheet from '@/components/leads/LeadDetailSheet';
 import { useWorkspaceScope } from '@/hooks/useWorkspaceScope';
 import LeadScoreBadge from '@/components/leads/LeadScoreBadge';
 import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
-import { Search, Phone, Mail, FolderKanban, Users, TrendingUp, Target, GripVertical, Calendar, MessageSquare, UserPlus } from 'lucide-react';
+import { Search, Phone, Mail, FolderKanban, Users, TrendingUp, Target, Clock, GripVertical, Calendar, MessageSquare, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { differenceInHours } from 'date-fns';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 const PIPELINE_COLUMNS = [
-  { key: 'new', label: 'Capturado', color: 'bg-blue-500', bgColor: 'bg-blue-500/10 border-blue-500/20', accent: 'border-t-blue-500' },
-  { key: 'contacted', label: 'Pre-evaluación', color: 'bg-amber-500', bgColor: 'bg-amber-500/10 border-amber-500/20', accent: 'border-t-amber-500' },
-  { key: 'interested', label: 'Revisión Legal', color: 'bg-purple-500', bgColor: 'bg-purple-500/10 border-purple-500/20', accent: 'border-t-purple-500' },
-  { key: 'negotiating', label: 'Negociación', color: 'bg-orange-500', bgColor: 'bg-orange-500/10 border-orange-500/20', accent: 'border-t-orange-500' },
-  { key: 'converted', label: 'Cerrado', color: 'bg-green-500', bgColor: 'bg-green-500/10 border-green-500/20', accent: 'border-t-green-500' },
-  { key: 'lost', label: 'Descartado', color: 'bg-red-500', bgColor: 'bg-red-500/10 border-red-500/20', accent: 'border-t-red-500' },
+  { key: 'new', label: LEAD_STATUS_CONFIG.new.label, color: 'bg-blue-500', bgColor: 'bg-blue-500/10 border-blue-500/20', accent: 'border-t-blue-500' },
+  { key: 'contacted', label: LEAD_STATUS_CONFIG.contacted.label, color: 'bg-amber-500', bgColor: 'bg-amber-500/10 border-amber-500/20', accent: 'border-t-amber-500' },
+  { key: 'interested', label: LEAD_STATUS_CONFIG.interested.label, color: 'bg-purple-500', bgColor: 'bg-purple-500/10 border-purple-500/20', accent: 'border-t-purple-500' },
+  { key: 'negotiating', label: LEAD_STATUS_CONFIG.negotiating.label, color: 'bg-orange-500', bgColor: 'bg-orange-500/10 border-orange-500/20', accent: 'border-t-orange-500' },
+  { key: 'converted', label: LEAD_STATUS_CONFIG.converted.label, color: 'bg-green-500', bgColor: 'bg-green-500/10 border-green-500/20', accent: 'border-t-green-500' },
+  { key: 'lost', label: LEAD_STATUS_CONFIG.lost.label, color: 'bg-red-500', bgColor: 'bg-red-500/10 border-red-500/20', accent: 'border-t-red-500' },
 ];
 
 const SalesPipeline = () => {
@@ -29,6 +30,8 @@ const SalesPipeline = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const selectedLead = leads.find((lead) => lead.id === selectedLeadId) ?? null;
 
   const filteredLeads = useMemo(() => {
     if (!searchQuery) return leads;
@@ -43,9 +46,12 @@ const SalesPipeline = () => {
   const pipelineStats = useMemo(() => {
     const total = leads.length;
     const converted = leads.filter(l => l.status === 'converted').length;
-    const totalValue = leads.reduce((sum, l) => sum + (l.budget_max || 0), 0);
+    const overdue = leads.filter((lead) =>
+      lead.next_follow_up && new Date(lead.next_follow_up).getTime() < Date.now()
+      && !['converted', 'lost'].includes(lead.status || 'new')
+    ).length;
     const conversionRate = total > 0 ? Math.round((converted / total) * 100) : 0;
-    return { total, converted, totalValue, conversionRate };
+    return { total, converted, overdue, conversionRate };
   }, [leads]);
 
   // Funnel proportions
@@ -131,7 +137,7 @@ const SalesPipeline = () => {
           { icon: Users, label: 'Total Leads', value: pipelineStats.total, iconClass: 'text-primary' },
           { icon: Target, label: 'Convertidos', value: pipelineStats.converted, iconClass: 'text-green-500' },
           { icon: TrendingUp, label: 'Tasa Conversión', value: `${pipelineStats.conversionRate}%`, iconClass: 'text-purple-500' },
-          { icon: TrendingUp, label: 'Valor Pipeline', value: `$${(pipelineStats.totalValue / 1000000).toFixed(0)}M`, iconClass: 'text-emerald-500' },
+          { icon: Clock, label: 'Seguimientos vencidos', value: pipelineStats.overdue, iconClass: 'text-amber-600' },
         ].map((s, i) => (
           <Card key={i}><CardContent className="p-4 flex items-center gap-3">
             <s.icon className={cn('h-8 w-8', s.iconClass)} />
@@ -156,8 +162,47 @@ const SalesPipeline = () => {
         ))}
       </div>
 
-      {/* Kanban Board */}
-      <div className="overflow-x-auto pb-4">
+      {/* Vista móvil: operativa sin drag horizontal. */}
+      <section aria-label="Gestión móvil de oportunidades" className="space-y-3 md:hidden">
+        {filteredLeads.length === 0 && (
+          <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">No hay prospectos para estos filtros.</p>
+        )}
+        {filteredLeads.map((lead) => (
+          <article key={lead.id} className="space-y-3 rounded-xl border border-border bg-card p-4">
+            <div className="flex items-start justify-between gap-3">
+              <button type="button" onClick={() => setSelectedLeadId(lead.id)} className="min-w-0 text-left font-semibold underline-offset-4 hover:underline">
+                {lead.first_name} {lead.last_name || ''}
+              </button>
+              <LeadScoreBadge lead={lead} showBreakdown={false} />
+            </div>
+            <div>
+              <label htmlFor={`pipeline-status-${lead.id}`} className="mb-1 block text-xs font-medium text-muted-foreground">Etapa comercial</label>
+              <select
+                id={`pipeline-status-${lead.id}`}
+                value={lead.status || 'new'}
+                disabled={updateLead.isPending}
+                onChange={(event) => updateLead.mutate({ id: lead.id, status: event.target.value as LeadStatus })}
+                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              >
+                {PIPELINE_COLUMNS.map((stage) => <option key={stage.key} value={stage.key}>{stage.label}</option>)}
+              </select>
+            </div>
+            {lead.next_follow_up && (
+              <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Calendar className="h-4 w-4" /> Seguimiento {formatDistanceToNow(new Date(lead.next_follow_up), { addSuffix: true, locale: es })}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => setSelectedLeadId(lead.id)}>Ver ficha</Button>
+              {lead.phone && <Button size="sm" variant="outline" asChild><a href={`tel:${lead.phone}`}>Llamar</a></Button>}
+            </div>
+          </article>
+        ))}
+      </section>
+      <LeadDetailSheet lead={selectedLead} open={!!selectedLead} onOpenChange={(open) => { if (!open) setSelectedLeadId(null); }} />
+
+      {/* Kanban Board: escritorio */}
+      <div className="hidden overflow-x-auto pb-4 md:block">
         <div className="grid grid-cols-6 gap-3 min-w-[1200px]">
           {PIPELINE_COLUMNS.map(col => {
             const colLeads = filteredLeads.filter(l => (l.status || 'new') === col.key);
@@ -220,7 +265,7 @@ const SalesPipeline = () => {
 
                         {isStale && (
                           <Badge variant="outline" className="text-[9px] h-3.5 px-1 mb-1 border-red-500/30 text-red-500">
-                            ⚠ {Math.floor(hoursSinceUpdate / 24)}d sin contacto
+                            ⚠ {Math.floor(hoursSinceUpdate / 24)}d sin actualizar
                           </Badge>
                         )}
 

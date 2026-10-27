@@ -245,7 +245,7 @@ export const useAgentGoals = () => {
       const monthlySales = soldLots?.reduce((sum, lot) => sum + (lot.price || 0), 0) || 0;
       
       // Default goals (could be configurable)
-      const salesGoal = 5000000000; // 5M CLP
+      const salesGoal = 5_000_000; // Meta inicial ilustrativa: cinco millones CLP
       const leadsGoal = 15;
 
       return {

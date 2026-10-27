@@ -17,7 +17,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import Layout from '@/components/Layout';
 import { useAgencyStats, useAgencyAgents, useAgencyProperties } from '@/hooks/useDashboardStats';
 import { LeadFormDialog } from '@/components/leads/LeadFormDialog';
 import { ListingFormDialog } from '@/components/listings/ListingFormDialog';
@@ -52,7 +51,7 @@ const DashboardInmobiliaria = () => {
     : 0;
 
   return (
-    <Layout>
+    <>
       <div className="min-h-screen bg-background">
         <div className="container py-8 space-y-8">
           {/* Header */}
@@ -286,7 +285,7 @@ const DashboardInmobiliaria = () => {
           <AgencyShowcaseSettings />
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

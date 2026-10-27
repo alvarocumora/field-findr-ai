@@ -102,7 +102,7 @@ const MorningBriefing = () => {
           <span className="text-sm font-semibold text-foreground">{greeting}</span>
           <Badge variant="outline" className="text-[10px] gap-1">
             <Sparkles className="h-3 w-3" />
-            Briefing IA
+            Resumen automático
           </Badge>
         </div>
         <ul className="space-y-1">
