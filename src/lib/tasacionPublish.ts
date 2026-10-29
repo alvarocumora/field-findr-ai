@@ -1,3 +1,4 @@
+import { toJson } from '@/lib/jsonData';
 import { getCanonicalUrl } from '@/lib/publicUrls';
 import QRCode from 'qrcode';
 import { supabase } from '@/integrations/supabase/client';
@@ -97,7 +98,7 @@ export const publishTasacion = async (
     pdf_final_path: pdfFinalPath,
     pdf_final_sha256: finalSha,
     firma_data_hash: firmaHash,
-    payload_json: data as any,
+    payload_json: toJson(data),
     payload_hash: payloadHash,
     version: 1,
   });

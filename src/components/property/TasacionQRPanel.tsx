@@ -1,3 +1,5 @@
+import { getErrorMessage } from '@/lib/errorMessage';
+import type { AppraisalAnchor, AppraisalVerification } from '@/lib/appraisalTypes';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,10 +33,10 @@ interface Props {
 const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
   const [loading, setLoading] = useState(false);
   const [anchoring, setAnchoring] = useState(false);
-  const [anchor, setAnchor] = useState<any | null>(null);
+  const [anchor, setAnchor] = useState<AppraisalAnchor | null>(null);
   const [result, setResult] = useState<PublishResult | null>(null);
   const [verifying, setVerifying] = useState(false);
-  const [verify, setVerify] = useState<any | null>(null);
+  const [verify, setVerify] = useState<AppraisalVerification | null>(null);
   const [verifyAt, setVerifyAt] = useState<Date | null>(null);
 
   const onPublish = async () => {
@@ -48,8 +50,8 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
       toast.success('Tasación publicada', {
         description: copied ? 'Link copiado al portapapeles. El PDF final ya incluye el QR.' : 'No se pudo copiar el enlace. Puedes copiarlo desde el resultado. El PDF final ya incluye el QR.',
       });
-    } catch (err: any) {
-      toast.error('No se pudo publicar', { description: err.message ?? 'Error desconocido' });
+    } catch (err: unknown) {
+      toast.error('No se pudo publicar', { description: getErrorMessage(err) ?? 'Error desconocido' });
     } finally {
       setLoading(false);
     }
@@ -90,8 +92,8 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
       toast.success('Anclado a Bitcoin (OpenTimestamps)', {
         description: `${ok}/${data.anchor?.calendars?.length ?? 0} calendarios confirmaron la recepción.`,
       });
-    } catch (err: any) {
-      toast.error('No se pudo anclar', { description: err.message ?? 'Error desconocido' });
+    } catch (err: unknown) {
+      toast.error('No se pudo anclar', { description: getErrorMessage(err) ?? 'Error desconocido' });
     } finally {
       setAnchoring(false);
     }
@@ -116,8 +118,8 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
       } else {
         toast.warning('Estado desconocido', { description: 'Reintenta en unos minutos.' });
       }
-    } catch (err: any) {
-      toast.error('No se pudo verificar', { description: err.message ?? 'Error desconocido' });
+    } catch (err: unknown) {
+      toast.error('No se pudo verificar', { description: getErrorMessage(err) ?? 'Error desconocido' });
     } finally {
       setVerifying(false);
     }
@@ -292,7 +294,7 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
                 )}
                 {Array.isArray(verify.checks) && verify.checks.length > 0 && (
                   <ul className="space-y-0.5 pt-1">
-                    {verify.checks.map((c: any) => (
+                    {verify.checks.map((c) => (
                       <li key={c.url} className="flex items-center gap-1 font-mono text-[10px]">
                         <span
                           className={
@@ -324,7 +326,7 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
                   Enviado: {new Date(anchor.submitted_at).toLocaleString()}
                 </div>
                 <ul className="space-y-0.5">
-                  {anchor.calendars?.map((c: any) => (
+                  {anchor.calendars?.map((c) => (
                     <li key={c.url} className="flex items-center gap-1 font-mono text-[10px]">
                       <span className={c.ok ? 'text-emerald-500' : 'text-red-500'}>●</span>
                       <span className="truncate">{c.url}</span>

@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errorMessage';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,8 +50,8 @@ export const LotRenumberTool = ({ lots, selectedLot, onLotUpdated, onFinish }: L
       setNewNumber('');
       toast.success(`Lote ${selectedLot.lot_number} → ${newNumber}`);
       onLotUpdated();
-    } catch (err: any) {
-      toast.error('Error: ' + err.message);
+    } catch (err: unknown) {
+      toast.error('Error: ' + getErrorMessage(err));
     } finally {
       setSaving(false);
     }

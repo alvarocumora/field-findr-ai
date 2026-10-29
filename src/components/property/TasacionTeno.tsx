@@ -1,3 +1,6 @@
+import { getErrorMessage } from '@/lib/errorMessage';
+import type { Listing } from '@/hooks/useListings';
+import type { LucideIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -69,7 +72,7 @@ const TENO_TASACION: TasacionData = {
   observaciones: 'El valor de UF 0,50/m² se ubica en el rango medio-alto del mercado comparable, justificado por: (a) acceso directo a Ruta 5 Sur, (b) IFC industrial aprobado, (c) servicios básicos disponibles, (d) topografía plana lista para construir, y (e) demanda creciente de plataformas logísticas y cadena de frío en la zona Curicó-Teno-Molina.',
 };
 
-const SectionCard = ({ icon: Icon, n, title, children }: { icon: any; n: number; title: string; children: React.ReactNode }) => (
+const SectionCard = ({ icon: Icon, n, title, children }: { icon: LucideIcon; n: number; title: string; children: React.ReactNode }) => (
   <Card className="glass border-border/50">
     <CardHeader className="pb-3">
       <CardTitle className="flex items-center gap-3 text-base md:text-lg">
@@ -89,7 +92,7 @@ const Row = ({ k, v }: { k: string; v: React.ReactNode }) => (
   </div>
 );
 
-const ServiceBadge = ({ ok, icon: Icon, label }: { ok: boolean; icon: any; label: string }) => (
+const ServiceBadge = ({ ok, icon: Icon, label }: { ok: boolean; icon: LucideIcon; label: string }) => (
   <div className={`flex items-center gap-2 rounded-md px-2.5 py-2 border text-xs ${ok ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500' : 'border-border/50 bg-muted/30 text-muted-foreground'}`}>
     <Icon className="h-3.5 w-3.5" />
     <span className="flex-1">{label}</span>
@@ -101,7 +104,7 @@ const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
 const fmtUF = (n: number) => `UF ${n.toLocaleString('es-CL', { maximumFractionDigits: 2 })}`;
 
 interface TasacionInformeProps {
-  listing?: any;
+  listing?: Listing;
   data?: TasacionData;
   valuationMode?: TasacionMode;
 }
@@ -223,9 +226,9 @@ export default function TasacionTeno({
   const setField = <K extends keyof TasacionData>(k: K, v: TasacionData[K]) =>
     setOverrides((o) => ({ ...o, [k]: v }));
   const setDeslinde = (k: keyof TasacionData['deslindes'], v: string) =>
-    setOverrides((o) => ({ ...o, deslindes: { ...(o.deslindes || base.deslindes), [k]: v } as any }));
+    setOverrides((o) => ({ ...o, deslindes: { ...(o.deslindes || base.deslindes), [k]: v } }));
   const setServicio = (k: keyof TasacionData['servicios'], v: boolean) =>
-    setOverrides((o) => ({ ...o, servicios: { ...(o.servicios || base.servicios), [k]: v } as any }));
+    setOverrides((o) => ({ ...o, servicios: { ...(o.servicios || base.servicios), [k]: v } }));
 
   const lookupSII = async (useDemoData = false) => {
     const rolRaw = (siiRol || d.rol || '').trim();
@@ -260,8 +263,8 @@ export default function TasacionTeno({
       toast.success('Avalúo fiscal actualizado', {
         description: sii.source === 'demo' ? 'Datos de demostración aplicados.' : 'Datos obtenidos del SII.',
       });
-    } catch (err: any) {
-      toast.error('No se pudo consultar el SII', { description: err.message });
+    } catch (err: unknown) {
+      toast.error('No se pudo consultar el SII', { description: getErrorMessage(err) });
     } finally {
       setSiiLoading(false);
     }
@@ -303,8 +306,8 @@ export default function TasacionTeno({
       toast.success(copied ? 'Enlace generado y copiado' : 'Enlace generado; cópialo desde el campo de enlace', {
         description: `Vigencia: ${Math.round(expiresIn / 3600)} h`,
       });
-    } catch (err: any) {
-      toast.error('No se pudo compartir el PDF', { description: err.message || 'Error desconocido' });
+    } catch (err: unknown) {
+      toast.error('No se pudo compartir el PDF', { description: getErrorMessage(err) || 'Error desconocido' });
     } finally {
       setShareLoading(false);
     }

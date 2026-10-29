@@ -1,3 +1,6 @@
+import { normalizePolygon } from '@/lib/polygonUtils';
+import { jsonObject } from '@/lib/jsonData';
+import type { PublicLot } from '@/lib/lots/publicLotTypes';
 import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
@@ -8,7 +11,7 @@ import { formatSentinelDate } from '@/lib/satellite/sentinel';
 
 interface TourMinimapProps {
   center: { lat: number; lng: number };
-  lots: any[];
+  lots: (Pick<PublicLot, 'id' | 'lot_number'> & Partial<Pick<PublicLot, 'polygon' | 'latitude' | 'longitude' | 'status'>>)[];
   yaw?: number;
   onLotClick?: (lotId: string) => void;
 }
@@ -63,21 +66,11 @@ export function TourMinimap({ center, lots, yaw = 0, onLotClick }: TourMinimapPr
 
       // Add lot polygons
       const features = lots.flatMap((l) => {
-        const geometry = l.polygon?.coordinates
-          ? l.polygon
-          : Array.isArray(l.polygon) && l.polygon.length >= 3
-            ? {
-                type: 'Polygon' as const,
-                coordinates: [[
-                  ...l.polygon,
-                  ...(l.polygon[0]?.[0] === l.polygon[l.polygon.length - 1]?.[0] &&
-                  l.polygon[0]?.[1] === l.polygon[l.polygon.length - 1]?.[1]
-                    ? []
-                    : [l.polygon[0]]),
-                ]],
-              }
-            : null;
-        if (!geometry) return [];
+        const candidate = Array.isArray(l.polygon) ? l.polygon : (jsonObject(l.polygon).coordinates as unknown[])?.[0];
+        const normalized = normalizePolygon(candidate);
+        if (!normalized.valid) return [];
+        const ring = normalized.coords;
+        const geometry: GeoJSON.Polygon = { type: 'Polygon', coordinates: [[...ring, ring[0]]] };
         return [{
           type: 'Feature' as const,
           properties: { id: l.id, lot_number: l.lot_number, status: l.status },
@@ -118,7 +111,7 @@ export function TourMinimap({ center, lots, yaw = 0, onLotClick }: TourMinimapPr
         });
 
         const bounds = new mapboxgl.LngLatBounds();
-        features.forEach((feature: any) => {
+        features.forEach((feature) => {
           feature.geometry.coordinates[0].forEach(([lng, lat]: [number, number]) => bounds.extend([lng, lat]));
         });
         if (!bounds.isEmpty()) map.fitBounds(bounds, { padding: 18, duration: 0 });

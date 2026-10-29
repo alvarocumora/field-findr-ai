@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errorMessage';
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -122,8 +123,8 @@ const OnboardingWizard = ({ onComplete }: OnboardingWizardProps) => {
       });
       // Move to plan recommendation step
       setStep(4);
-    } catch (error: any) {
-      toast.error('Error al crear proyecto: ' + error.message);
+    } catch (error: unknown) {
+      toast.error('Error al crear proyecto: ' + getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }

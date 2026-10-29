@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errorMessage';
 import { useState } from 'react';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,12 +68,12 @@ export default function FeatureProjectButton({
         body: { project_id: projectId, plan },
       });
       if (error) throw error;
-      const url = (data as any)?.init_point || (data as any)?.sandbox_init_point;
+      const url = (data)?.init_point || (data)?.sandbox_init_point;
       if (!url) throw new Error('No se recibió URL de pago');
       window.location.href = url;
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('checkout error', e);
-      toast.error(e?.message ?? 'No se pudo iniciar el pago');
+      toast.error( getErrorMessage(e) ?? 'No se pudo iniciar el pago');
       setLoading(false);
     }
   };

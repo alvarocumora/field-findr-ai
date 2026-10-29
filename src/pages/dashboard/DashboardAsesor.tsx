@@ -104,7 +104,7 @@ const DashboardAsesor = () => {
     enabled: !!user,
   });
 
-  const unreadNotifs = notifications?.filter((n: any) => !n.read).slice(0, 3) || [];
+  const unreadNotifs = notifications?.filter((n) => !n.read).slice(0, 3) || [];
 
   const hasNoProjects = !projectsLoading && projects.length === 0;
   // Show the wizard only to agents who never finished onboarding — gating on
@@ -151,7 +151,7 @@ const DashboardAsesor = () => {
   const statsConfig = [
     { label: 'Oportunidades', value: stats?.properties || 0, icon: Target, color: 'text-primary', delta: 'Total activas' },
     { label: 'Leads registrados', value: stats?.activeLeads || 0, icon: Users, color: 'text-blue-500', delta: 'Mis contactos' },
-    { label: 'En Revisión', value: (leads || []).filter((l: any) => l.status === 'interested').length, icon: Clock, color: 'text-amber-500', delta: 'Revisión legal/técnica' },
+    { label: 'Interesados recientes', value: (leads || []).filter((l) => l.lifecycleStatus === 'interested').length, icon: Clock, color: 'text-amber-500', delta: 'Entre los últimos 10 contactos' },
     { label: 'Deals Prioritarios', value: (hotLeads || []).length, icon: Flame, color: 'text-red-500', delta: 'Alta prioridad' },
     { label: 'Ventas del Mes', value: formatCurrency(stats?.monthlySales || 0), icon: DollarSign, color: 'text-emerald-500' },
     { label: 'Lotes Vendidos', value: stats?.soldCount || 0, icon: Building2, color: 'text-purple-500' },
@@ -166,8 +166,8 @@ const DashboardAsesor = () => {
     return styles[status as keyof typeof styles] || styles.cold;
   };
 
-  const totalProjectLots = projects.reduce((sum, p: any) => sum + (p.total_lots || 0), 0);
-  const totalSoldLots = projects.reduce((sum, p: any) => sum + (p.sold_lots || 0), 0);
+  const totalProjectLots = projects.reduce((sum, p) => sum + (p.total_lots || 0), 0);
+  const totalSoldLots = projects.reduce((sum, p) => sum + (p.sold_lots || 0), 0);
   const globalProgress = totalProjectLots > 0 ? Math.round((totalSoldLots / totalProjectLots) * 100) : 0;
 
   return (
@@ -295,7 +295,7 @@ const DashboardAsesor = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {expiringReservations?.map((res: any) => (
+                  {expiringReservations?.map((res) => (
                     <div key={res.id} className="flex items-center justify-between p-2 rounded-lg bg-background border border-border/40">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">
@@ -310,7 +310,7 @@ const DashboardAsesor = () => {
                       </Button>
                     </div>
                   ))}
-                  {upcomingFollowUps?.map((lead: any) => (
+                  {upcomingFollowUps?.map((lead) => (
                     <div key={lead.id} className="flex items-center justify-between p-2 rounded-lg bg-background border border-border/40">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">
@@ -502,7 +502,7 @@ const DashboardAsesor = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {hotLeads.map((lead: any) => {
+                  {hotLeads.map((lead) => {
                     const hoursSince = differenceInHours(new Date(), new Date(lead.updated_at));
                     return (
                       <div key={lead.id} className="flex items-center justify-between p-2 rounded-lg bg-background border border-border/40">
@@ -541,7 +541,7 @@ const DashboardAsesor = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {unreadNotifs.map((notif: any) => (
+                  {unreadNotifs.map((notif) => (
                     <div key={notif.id} className="p-2 rounded-lg bg-muted/30 text-sm">
                       <p className="font-medium text-foreground text-xs">{notif.title}</p>
                       <p className="text-xs text-muted-foreground truncate">{notif.message}</p>
@@ -565,7 +565,7 @@ const DashboardAsesor = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {projects.slice(0, 4).map((project: any) => {
+                  {projects.slice(0, 4).map((project) => {
                     const total = project.total_lots || 1;
                     const sold = project.sold_lots || 0;
                     const reserved = project.reserved_lots || 0;

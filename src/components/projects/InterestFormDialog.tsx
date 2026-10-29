@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errorMessage';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -86,8 +87,8 @@ export const InterestFormDialog = ({
       setEmail('');
       setPhone('');
       setMessage('');
-    } catch (err: any) {
-      toast.error('Error al enviar', { description: err.message });
+    } catch (err: unknown) {
+      toast.error('Error al enviar', { description: getErrorMessage(err) });
     } finally {
       setSubmitting(false);
     }

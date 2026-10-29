@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { applyLegalOverrides } from './legalOverrides';
+import { applyLegalOverrides, parseLegalItems } from './legalOverrides';
 
 describe('applyLegalOverrides', () => {
+  it('normalizes legacy names and malformed JSON without inventing verified status', () => {
+    expect(parseLegalItems([null, 1, [], 'escritura', { type: 'plano', status: 'pending', file_url: 'document.pdf', name: 7 }]))
+      .toEqual([{ type: 'escritura', name: 'escritura' }, { type: 'plano', status: 'pending', file_url: 'document.pdf' }]);
+    expect(parseLegalItems({})).toEqual([]);
+  });
   it('aprueba todo en el proyecto de Licantén, conservando campos existentes', () => {
     const r = applyLegalOverrides(
       { slug: 'valle-escondido-licanten', name: 'Valle Escondido Licantén' },

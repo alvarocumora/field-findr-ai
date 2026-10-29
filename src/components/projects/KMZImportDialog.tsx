@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errorMessage';
 import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -133,8 +134,8 @@ export const KMZImportDialog = ({
 
       setParsedData(result);
       setStep('preview');
-    } catch (err: any) {
-      setError(err.message || 'Error al procesar el archivo');
+    } catch (err: unknown) {
+      setError( getErrorMessage(err) || 'Error al procesar el archivo');
       setSourceFile(null);
     }
   }, []);
@@ -200,8 +201,8 @@ export const KMZImportDialog = ({
       ].filter(Boolean);
 
       toast.success(`Spatial Engine: ${parts.join(' · ') || 'fuente sincronizada'}`);
-    } catch (err: any) {
-      setError(err.message || 'Error durante la importación');
+    } catch (err: unknown) {
+      setError( getErrorMessage(err) || 'Error durante la importación');
       setStep('configure');
     }
   };

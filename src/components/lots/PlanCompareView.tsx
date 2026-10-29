@@ -1,3 +1,4 @@
+import { normalizePolygon } from '@/lib/polygonUtils';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -21,7 +22,7 @@ interface Lot {
   status: string | null;
   latitude: number | null;
   longitude: number | null;
-  polygon: any;
+  polygon: unknown;
 }
 
 interface PlanImage {
@@ -45,9 +46,9 @@ interface OverlaySettings {
 
 const generateLotGeoJSON = (lots: Lot[]) => {
   const features: GeoJSON.Feature[] = lots
-    .filter(lot => lot.polygon && Array.isArray(lot.polygon) && lot.polygon.length >= 3)
+    .filter(lot => lot.polygon && Array.isArray(lot.polygon) && normalizePolygon(lot.polygon).coords.length >= 3)
     .map(lot => {
-      const coords = [...lot.polygon];
+      const coords = [...normalizePolygon(lot.polygon).coords];
       if (coords.length > 0 && (coords[0][0] !== coords[coords.length - 1][0] || coords[0][1] !== coords[coords.length - 1][1])) {
         coords.push(coords[0]);
       }
@@ -92,11 +93,11 @@ export const PlanCompareView = ({ lots, projectCenter, planImages }: PlanCompare
 
   // Calculate bounds from lots
   const calculateBounds = useCallback(() => {
-    const lotsWithPolygons = lots.filter(l => l.polygon?.length >= 3);
+    const lotsWithPolygons = lots.filter(l => normalizePolygon(l.polygon).coords.length >= 3);
     if (lotsWithPolygons.length === 0) return null;
     let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
     lotsWithPolygons.forEach(lot => {
-      lot.polygon.forEach(([lng, lat]: [number, number]) => {
+      normalizePolygon(lot.polygon).coords.forEach(([lng, lat]: [number, number]) => {
         if (lng < minLng) minLng = lng;
         if (lng > maxLng) maxLng = lng;
         if (lat < minLat) minLat = lat;

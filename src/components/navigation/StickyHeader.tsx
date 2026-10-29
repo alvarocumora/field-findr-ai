@@ -126,9 +126,9 @@ const StickyHeader = () => {
                 )}
               >
                 {item.name}
-                {'badge' in item && (item as any).badge && (
+                {'badge' in item && typeof item.badge === 'string' && item.badge && (
                   <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full bg-primary text-primary-foreground">
-                    {(item as any).badge}
+                    {'badge' in item && typeof item.badge === 'string' ? item.badge : null}
                   </span>
                 )}
               </Link>
@@ -246,9 +246,9 @@ const StickyHeader = () => {
                         )}
                       >
                         {item.name}
-                        {'badge' in item && (item as any).badge && (
+                        {'badge' in item && typeof item.badge === 'string' && item.badge && (
                           <span className="ml-2 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-foreground">
-                            {(item as any).badge}
+                            {'badge' in item && typeof item.badge === 'string' ? item.badge : null}
                           </span>
                         )}
                       </Link>

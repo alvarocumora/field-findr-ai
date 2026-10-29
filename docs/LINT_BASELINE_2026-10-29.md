@@ -28,3 +28,15 @@ Se declaran explícitamente los valores predeterminados en `eslint.config.js`. L
 Priorizar los diagnósticos en módulos comerciales que se modifiquen y corregirlos por dominio, sin bajar severidades ni mezclar una limpieza masiva con cambios de negocio. Esta línea base no declara lint aprobado.
 
 Actions sigue bloqueado por pagos/límite de gasto, según anotación de CI del PR 0; resolver en la cuenta GitHub y repetir controles remotos. No se alteran workflows ni protecciones.
+
+## Corrección posterior de los diagnósticos
+
+Los 38 diagnósticos estructurales se corrigieron en #221. La tanda posterior elimina los 483 usos explícitos de `any` con inferencia, tipos de esquema, contratos de los SDK y validación de JSON. Los errores capturados mantienen mensajes de objetos PostgREST, además de instancias Error.
+
+Se distinguen los lotes de la RPC pública de las filas privadas, las proyecciones de reservas/créditos y la prioridad del lead de su estado comercial. El contador de interesados se identifica como muestra de los últimos diez contactos, conforme al límite de la consulta. Las anotaciones de tours conservan coordenadas angulares e IDs de lote.
+
+El build demostró que `supabase/functions/mcp/index.ts` es una salida del plugin MCP: regenera las cuatro declaraciones `var` que se habían corregido manualmente en #221. Se conserva la salida del generador y se excluye únicamente ese archivo de lint, igual que `dist`; sus fuentes mantenidas en `src/lib/mcp/**` y las demás Edge Functions siguen analizadas con las mismas reglas. No se retiran banners de generación ni se añaden supresiones de reglas.
+
+CI incorpora `npm run lint` para impedir regresiones de errores; las advertencias existentes siguen visibles. No se modifican dependencias, lockfile, SQL, RLS ni configuración de despliegue. Las funciones Deno no se desplegaron ni se certificaron contra un backend autenticado; la validación local cubre tipos de aplicación, lint, pruebas y build. La suite completa pasó con Node 20: 83 archivos, 465 pruebas.
+
+Última pasada global: 944 archivos, cero errores, cero errores fatales y 549 advertencias. Las advertencias quedan como deuda visible para una tanda posterior; no impiden que el comando lint termine correctamente.

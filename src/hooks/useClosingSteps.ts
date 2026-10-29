@@ -54,7 +54,7 @@ export function useAllClosingSteps() {
         .select('*, reservations(id, buyer_name, buyer_email, buyer_phone, buyer_rut, reservation_amount, currency, paid_at, created_at, lot_id, lots(lot_number, name, area, price, project_id, projects(name, location, city, region, rol_number)))')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data || []) as (ClosingStep & { reservations: any })[];
+      return (data || []).map(step => ({ ...step, step_type: step.step_type as ClosingStepType, status: step.status as ClosingStepStatus }));
     },
     enabled: !!user,
   });
@@ -66,7 +66,7 @@ export function useUpdateClosingStep() {
     mutationFn: async ({ id, ...updates }: Partial<ClosingStep> & { id: string }) => {
       const { error } = await supabase
         .from('closing_steps')
-        .update(updates as any)
+        .update(updates)
         .eq('id', id);
       if (error) throw error;
     },

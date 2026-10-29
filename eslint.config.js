@@ -5,7 +5,11 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist"] },
+  {
+    // The MCP Vite plugin bundles src/lib/mcp into this generated Deno entry.
+    // Lint its maintained sources instead; every build replaces the output.
+    ignores: ["dist", "supabase/functions/mcp/index.ts"],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

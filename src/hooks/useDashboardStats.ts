@@ -203,6 +203,7 @@ export const useAgentLeads = () => {
         name: `${lead.first_name} ${lead.last_name || ''}`.trim(),
         interest: lead.projects?.name || 'Sin proyecto asignado',
         status: getLeadStatus(lead.status),
+        lifecycleStatus: lead.status,
         lastContact: getRelativeTime(lead.updated_at),
         budget: formatBudget(lead.budget_min, lead.budget_max),
         email: lead.email,

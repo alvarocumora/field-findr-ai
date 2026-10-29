@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errorMessage';
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -123,8 +124,8 @@ export const AssetCatalog = ({ onSelectAsset, uploadedAssets, onAssetsChange, on
       };
       onAssetsChange([...uploadedAssets, newAsset]);
       toast.success(`Modelo "${newAsset.name}" subido`);
-    } catch (err: any) {
-      toast.error(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      toast.error(`Error: ${ getErrorMessage(err)}`);
     } finally {
       setUploading(false);
       e.target.value = '';
