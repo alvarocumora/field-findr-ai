@@ -1,3 +1,4 @@
+import CommercialTasks from '@/components/dashboard/CommercialTasks';
 import { TeamActivityFeed } from "@/components/dashboard/TeamActivityFeed";
 import ModulesHub from "@/components/dashboard/ModulesHub";
 import { DashboardAsesor } from "@/pages/dashboard";
@@ -24,6 +25,7 @@ const AgentDashboard = () => {
 
   return (
     <>
+      <div className="container pt-6"><CommercialTasks /></div>
       {variant === "organization" ? (
         <DashboardInmobiliaria />
       ) : (
@@ -35,7 +37,7 @@ const AgentDashboard = () => {
         </>
       )}
       <div className="container pb-10">
-        <ModulesHub area="agent" plan={access.plan ?? undefined} context="empresa" />
+        <ModulesHub area="agent" plan={access.plan ?? undefined} context={access.context === "broker" ? "broker" : "empresa"} />
       </div>
     </>
   );

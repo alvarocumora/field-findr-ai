@@ -1,3 +1,6 @@
+import CommercialTasks from '@/components/dashboard/CommercialTasks';
+import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,12 +46,17 @@ const RESOURCES = [
 ];
 
 const MyBrokerBusiness = () => {
-  const { data: profile } = useMyBrokerProfile();
+  const profileQuery = useMyBrokerProfile();
+  const { data: profile } = profileQuery;
   const updateProfile = useUpdateMyBrokerProfile();
-  const { data: commissions = [] } = useAgentCommissions();
-  const { data: earned = [] } = useReferralCommissionsEarned();
-  const { data: assignments = [] } = useProjectAssignments();
-  const { data: ranking = [] } = useBrokerRanking(10);
+  const commissionsQuery = useAgentCommissions();
+  const { data: commissions = [] } = commissionsQuery;
+  const earnedQuery = useReferralCommissionsEarned();
+  const { data: earned = [] } = earnedQuery;
+  const assignmentsQuery = useProjectAssignments();
+  const { data: assignments = [] } = assignmentsQuery;
+  const rankingQuery = useBrokerRanking(10);
+  const { data: ranking = [] } = rankingQuery;
 
   const [bio, setBio] = useState<string | null>(null);
   const [zones, setZones] = useState<string | null>(null);
@@ -61,7 +69,7 @@ const MyBrokerBusiness = () => {
         .reduce((s, c) => s + (c.commission_amount || 0), 0),
       pending: active.filter((c) => c.status !== 'paid')
         .reduce((s, c) => s + (c.commission_amount || 0), 0),
-      sales: active.length,
+      sales: active.filter((c) => ['earned', 'approved', 'paid'].includes(c.status)).length,
       network: earned.reduce((s, c) => s + (c.referral_amount || 0), 0),
     };
   }, [commissions, earned]);
@@ -79,14 +87,30 @@ const MyBrokerBusiness = () => {
     { label: 'Agrega tus especialidades', done: (profile?.specialties?.length ?? 0) > 0 },
     { label: 'Solicita tu primer proyecto', done: assignments.length > 0 },
     { label: 'Comparte tu link personal', done: (profile?.onboarding_step ?? 0) >= 4 },
-    { label: 'Registra tu primera venta', done: totals.sales > 0 },
+    { label: 'Obtén tu primera comisión ganada', done: totals.sales > 0 },
   ];
   const progress = Math.round((steps.filter((s) => s.done).length / steps.length) * 100);
 
-  const copy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Link copiado');
+  const copy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Link copiado');
+    } catch {
+      toast.error('No se pudo copiar. Selecciona el enlace y cópialo manualmente.');
+    }
   };
+
+  const queries = [profileQuery, commissionsQuery, earnedQuery, assignmentsQuery, rankingQuery];
+  if (queries.some((query) => query.error)) return (
+    <div className="container p-4 md:p-6">
+      <WorkspaceLoadError title="No pudimos cargar tu negocio" onRetry={() => Promise.all(queries.map((query) => query.refetch()))} />
+    </div>
+  );
+  if (queries.some((query) => query.isLoading)) return (
+    <div className="container p-4 md:p-6 space-y-4" role="status" aria-label="Cargando tu negocio">
+      <Skeleton className="h-12 w-1/2" /><Skeleton className="h-48 w-full" />
+    </div>
+  );
 
   if (!profile) {
     return (
@@ -120,11 +144,13 @@ const MyBrokerBusiness = () => {
         </Badge>
       </div>
 
+      <CommercialTasks />
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Comisiones cobradas', value: fmt(totals.paid), icon: DollarSign },
-          { label: 'Por cobrar', value: fmt(totals.pending), icon: DollarSign },
-          { label: 'Ventas registradas', value: String(totals.sales), icon: Trophy },
+          { label: 'Comisiones no pagadas (incluye potenciales)', value: fmt(totals.pending), icon: DollarSign },
+          { label: 'Comisiones ganadas o pagadas', value: String(totals.sales), icon: Trophy },
           { label: 'Proyectos asignados', value: String(approvedProjects), icon: Briefcase },
         ].map((s) => (
           <Card key={s.label}>
