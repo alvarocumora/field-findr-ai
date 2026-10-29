@@ -479,7 +479,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("clientes", "/clientes", <ClientsBook />, { label: "Clientes", group: "ventas", icon: "users" }),
   agent("asesor-leads", "/asesor/leads", <LeadManagement />, { label: "Leads", group: "ventas", icon: "users", contexts: ["broker", "empresa"], capability: "crm.read", feature: "crm" }),
   agent("asesor-buyer-requirements", "/asesor/demanda-compradores", <BuyerRequirements />, { label: "Tengo comprador", group: "ventas", icon: "target" }),
-  agent("asesor-messages", "/asesor/messages", <Messages />, { label: "Mensajes", group: "ventas", icon: "message", contexts: ["broker", "empresa"] }),
+  agent("asesor-messages", "/asesor/messages", <Messages />, { label: "Mensajes", group: "ventas", icon: "message", contexts: ["empresa"] }),
   agent("asesor-eventos", "/asesor/eventos", <EventsManager />, { label: "Eventos", group: "ventas", icon: "calendar" }),
   agent("asesor-notificaciones", "/asesor/notificaciones/plantillas", <NotificationTemplates />, { label: "Plantillas de aviso", group: "ventas", icon: "bell" }),
 
@@ -489,12 +489,12 @@ export const agentRouteEntries: RouteEntry[] = [
   // confuso), que vivía en /asesor/crm con capability "crm.read". Se deja
   // "crm.read" para no dejar afuera a external_broker, que hoy tiene
   // crm.read pero no sales.read (ver src/lib/access/organizationPermissions.ts).
-  agent("asesor-pipeline", "/asesor/pipeline", <SalesPipeline />, { label: "Pipeline", group: "ventas", icon: "workflow", contexts: ["broker", "empresa"], capability: "crm.read", feature: "crm" }),
+  agent("asesor-pipeline", "/asesor/pipeline", <SalesPipeline />, { label: "Pipeline", group: "ventas", icon: "workflow", contexts: ["empresa"], capability: "crm.read", feature: "crm" }),
   agent("asesor-reservations", "/asesor/reservations", <ReservationsManager />, { label: "Reservas", group: "ventas", icon: "calendar", contexts: ["broker", "empresa"], capability: "reservations.read", feature: "reservations" }),
-  agent("asesor-visitas", "/asesor/visitas", <VisitsManager />, { label: "Visitas", group: "ventas", icon: "calendar", contexts: ["broker", "empresa"], capability: "crm.read", feature: "crm" }),
+  agent("asesor-visitas", "/asesor/visitas", <VisitsManager />, { label: "Visitas", group: "ventas", icon: "calendar", contexts: ["empresa"], capability: "crm.read", feature: "crm" }),
   agent("asesor-reuniones", "/asesor/reuniones", <MeetingsManager />, { label: "Reuniones", group: "ventas", icon: "calendar" }),
   agent("asesor-cierres", "/asesor/cierres", <ClosingsManager />, { label: "Cierres de venta", group: "ventas", icon: "handshake", capability: "sales.read" }),
-  agent("asesor-sales", "/asesor/sales", <SalesManagement />, { label: "Ventas", group: "ventas", icon: "handshake", contexts: ["broker", "empresa"], capability: "sales.read" }),
+  agent("asesor-sales", "/asesor/sales", <SalesManagement />, { label: "Ventas", group: "ventas", icon: "handshake", contexts: ["empresa"], capability: "sales.read" }),
   agent("asesor-closing", "/asesor/closing", <ClosingManager />, { label: "Cierre", group: "ventas", icon: "scale" }),
   agent("asesor-credits", "/asesor/credits", <CreditManager />, { label: "Créditos", group: "ventas", icon: "credit-card", capability: "sales.read", feature: "financing" }),
   agent("asesor-payments", "/asesor/payments", <PaymentManagement />, { label: "Pagos", group: "ventas", icon: "dollar", capability: "payments.read", feature: "payments" }),
