@@ -19,6 +19,7 @@ import {
   useBrokerApplications, useApproveBrokerApplication, useUpdateBrokerApplication,
   useAllBrokerProfiles, useAdminUpdateBrokerProfile, type BrokerApplication,
 } from '@/hooks/useBrokers';
+import { supabase } from '@/integrations/supabase/client';
 
 const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) => (
   <Card>
@@ -48,6 +49,21 @@ const BrokersAdmin = () => {
 
   const pending = applications.filter((a) => a.status === 'pending');
   const approved = applications.filter((a) => a.status === 'approved');
+  const [lookup, setLookup] = useState<'idle' | 'searching' | 'found' | 'missing'>('idle');
+
+  const openApprove = async (a: BrokerApplication) => {
+    setSelected(a);
+    setUserId(a.user_id ?? '');
+    if (a.user_id) { setLookup('found'); return; }
+    setLookup('searching');
+    const { data } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .ilike('email', a.email.trim())
+      .maybeSingle();
+    if (data?.user_id) { setUserId(data.user_id); setLookup('found'); }
+    else setLookup('missing');
+  };
 
   const onApprove = async () => {
     if (!selected || !userId.trim()) return;
@@ -124,7 +140,7 @@ const BrokersAdmin = () => {
                       <TableCell className="text-right space-x-2 whitespace-nowrap">
                         {a.status === 'pending' && (
                           <>
-                            <Button size="sm" onClick={() => setSelected(a)}>Aprobar</Button>
+                            <Button size="sm" onClick={() => openApprove(a)}>Aprobar</Button>
                             <Button size="sm" variant="outline"
                               onClick={() => updateApp.mutate({ id: a.id, status: 'rejected' })}>
                               Rechazar
@@ -231,16 +247,23 @@ const BrokersAdmin = () => {
           <DialogHeader>
             <DialogTitle>Aprobar broker</DialogTitle>
             <DialogDescription>
-              {selected?.full_name} · {selected?.email}. Indica el ID de usuario de su cuenta
-              para otorgarle el rol de asesor y crear su perfil público.
+              {selected?.full_name} · {selected?.email}. Se le otorga el rol de asesor y se crea su perfil público.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="userId">ID de usuario</Label>
-              <Input id="userId" value={userId} placeholder="uuid del usuario"
-                onChange={(e) => setUserId(e.target.value)} />
-            </div>
+            {lookup === 'searching' && <p className="text-sm text-muted-foreground">Buscando su cuenta por correo…</p>}
+            {lookup === 'found' && <p className="text-sm text-primary">Cuenta encontrada con este correo. Lista para aprobar.</p>}
+            {lookup === 'missing' && (
+              <div className="space-y-2">
+                <p className="text-sm text-destructive">
+                  Aún no existe una cuenta con {selected?.email}. Pídele que se registre con ese correo y vuelve a aprobar,
+                  o pega el ID de su cuenta (está en Usuarios → Info).
+                </p>
+                <Label htmlFor="userId">ID de usuario</Label>
+                <Input id="userId" value={userId} placeholder="ID de la cuenta"
+                  onChange={(e) => setUserId(e.target.value)} />
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="level">Nivel</Label>

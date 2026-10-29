@@ -99,6 +99,13 @@
       "when": 1793288319546,
       "tag": "0013_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793289777504,
+      "tag": "0014_admin_update_profiles",
+      "breakpoints": true
     }
   ]
 }
