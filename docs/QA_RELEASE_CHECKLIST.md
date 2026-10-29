@@ -15,11 +15,18 @@
 Ejecutar cuando sea posible:
 
 ```sh
+npm ci --no-audit --no-fund
+npm run typecheck
+VITE_SUPABASE_URL=https://example.supabase.co VITE_SUPABASE_PUBLISHABLE_KEY=ci-test-publishable-key npm test
 npm run lint
 npm run build
 ```
 
 Si no se ejecutan, declararlo explícitamente en el PR.
+
+Los valores del comando de pruebas son placeholders exclusivos de tests; no usarlos en un build de producción. El build requiere Bun para los prehooks existentes. Usar Node 20 para reproducir el runtime declarado en CI.
+
+Consultar la [base del PR 0](./PR0_BASELINE_2026-10-29.md) para bloqueos conocidos de Actions y lint. Un job que no inició no valida ni invalida el código. No omitir checks ni confundir merge con despliegue.
 
 ## 3. QA de rutas públicas
 
