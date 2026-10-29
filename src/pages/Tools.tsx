@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,8 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSmartRedirect } from '@/hooks/useSmartRedirect';
 
 const Tools = () => {
-  const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'ai-chat');
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { isAgent, isAdmin } = useSmartRedirect();
   const isPro = isAgent || isAdmin;
@@ -46,6 +44,13 @@ const Tools = () => {
   ] : [];
 
   const tabs = [...aiTabs, ...financeTabs, ...dataTabs, ...proTabs];
+  const requestedTab = searchParams.get('tab');
+  const activeTab = tabs.some(tab => tab.id === requestedTab) ? requestedTab! : 'ai-chat';
+  const setActiveTab = (tab: string) => setSearchParams(current => {
+    const next = new URLSearchParams(current);
+    next.set('tab', tab);
+    return next;
+  });
 
   return (
     <Layout>

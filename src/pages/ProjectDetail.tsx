@@ -387,7 +387,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
 
   if (projectLoading) {
     return (
-      <PublicLayout>
+      <PublicLayout showAssistant={false}>
         <div className="container px-4 py-8">
           <Skeleton className="h-8 w-64 mb-4" />
           <Skeleton className="h-[600px] rounded-xl" />
@@ -398,7 +398,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
 
   if (!project) {
     return (
-      <PublicLayout>
+      <PublicLayout showAssistant={false}>
         <div className="container px-4 py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">Proyecto no encontrado</h1>
           <Button asChild>
@@ -414,7 +414,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
   const isProjectOwner = !!user && project.user_id === user.id;
   if (isDraft && !isProjectOwner) {
     return (
-      <PublicLayout>
+      <PublicLayout showAssistant={false}>
         <div className="container px-4 py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">Proyecto no disponible</h1>
           <p className="text-muted-foreground mb-6">Este proyecto aún no ha sido publicado.</p>
@@ -462,7 +462,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
   };
 
   return (
-    <div className="theme-rural"><PublicLayout>
+    <div className="theme-rural"><PublicLayout showAssistant={false}>
       <div className={`min-h-screen bg-background ${isMobile ? 'pb-20' : ''}`}>
         {/* Breadcrumbs */}
         <div className="container px-4 pt-4 pb-2">
@@ -479,9 +479,53 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
             Única instancia del visor: la pestaña "Tour 360" de abajo apunta
             aquí en vez de montar un segundo TourViewer360 (antes se veía
             duplicado al entrar con ?tab=tour360). */}
+        {/* Immersive Hero */}
+        <ProjectHero
+          project={project}
+          lots={lots}
+          inventoryReady={!lotsLoading && !lotsError}
+          availableLots={availableLots}
+          reservedLots={reservedLots}
+          soldLots={soldLots}
+          priceRange={priceRange}
+          areaRange={areaRange}
+          isMobile={isMobile}
+          onCall={handleCall}
+          onMessage={handleMessage}
+        />
+
+        <div className="container px-4 py-4 space-y-3">
+          <nav aria-label="Accesos del proyecto" className="flex flex-wrap items-center gap-2">
+            <span className="w-full text-xs uppercase tracking-widest text-muted-foreground sm:w-auto sm:mr-2">Explorar proyecto</span>
+            <Button type="button" size="sm" variant={activeTab === 'map' ? 'default' : 'outline'}
+              aria-pressed={activeTab === 'map'} onClick={() => openProjectMode('map')} className="min-h-10 gap-2">
+              <Map className="h-4 w-4" aria-hidden="true" />Mapa de lotes
+            </Button>
+            <Button type="button" size="sm" variant={activeTab === 'lots' ? 'default' : 'outline'}
+              aria-pressed={activeTab === 'lots'} onClick={() => openProjectMode('lots')} className="min-h-10 gap-2">
+              <List className="h-4 w-4" aria-hidden="true" />Lotes ({lotsLoading || lotsError ? '—' : lots.length})
+            </Button>
+            {tourScenes.length > 0 && (
+              <Button type="button" size="sm" variant={activeTab === 'tour360' ? 'default' : 'outline'}
+                aria-pressed={activeTab === 'tour360'} onClick={() => openProjectMode('tour360')} className="min-h-10 gap-2">
+                <Camera className="h-4 w-4" aria-hidden="true" />Tour 360
+              </Button>
+            )}
+            {tourScenes.length === 0 && Array.isArray((project).images) && (project).images.length > 0 && (
+              <Button type="button" size="sm" variant="outline" onClick={scrollToTour} className="min-h-10 gap-2">
+                <Camera className="h-4 w-4" aria-hidden="true" />Vista aérea
+              </Button>
+            )}
+          </nav>
+          <Button onClick={() => setLeadOpen(true)} className="min-h-11">Agendar visita o consultar</Button>
+          {`/p/${project.slug}` === LICANTEN_PATH && (
+            <Button asChild variant="outline" className="min-h-11 sm:ml-3"><Link to={easyCreditLink}><Calculator aria-hidden="true" />Simula tu cuota</Link></Button>
+          )}
+        </div>
+
         {tourScenes.length > 0 && (
           <section ref={tourSectionRef} className="container px-4 pb-4 space-y-3 scroll-mt-20" aria-label="Tour 360 del proyecto">
-            <ViewerErrorBoundary label="el tour 360" className="h-[420px]">
+            <ViewerErrorBoundary label="el tour 360" className="h-[240px] sm:h-[420px]">
             <TourViewer360
               scenes={tourScenes}
               lots={lots}
@@ -555,50 +599,6 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
             </section>
           );
         })()}
-
-        {/* Immersive Hero */}
-        <ProjectHero
-          project={project}
-          lots={lots}
-          inventoryReady={!lotsLoading && !lotsError}
-          availableLots={availableLots}
-          reservedLots={reservedLots}
-          soldLots={soldLots}
-          priceRange={priceRange}
-          areaRange={areaRange}
-          isMobile={isMobile}
-          onCall={handleCall}
-          onMessage={handleMessage}
-        />
-
-        <div className="container px-4 py-4 space-y-3">
-          <nav aria-label="Explorar este proyecto" className="flex flex-wrap items-center gap-2">
-            <span className="w-full text-xs uppercase tracking-widest text-muted-foreground sm:w-auto sm:mr-2">Explorar proyecto</span>
-            <Button type="button" size="sm" variant={activeTab === 'map' ? 'default' : 'outline'}
-              aria-pressed={activeTab === 'map'} onClick={() => openProjectMode('map')} className="min-h-10 gap-2">
-              <Map className="h-4 w-4" aria-hidden="true" />Mapa de lotes
-            </Button>
-            <Button type="button" size="sm" variant={activeTab === 'lots' ? 'default' : 'outline'}
-              aria-pressed={activeTab === 'lots'} onClick={() => openProjectMode('lots')} className="min-h-10 gap-2">
-              <List className="h-4 w-4" aria-hidden="true" />Lotes ({lotsLoading || lotsError ? '—' : lots.length})
-            </Button>
-            {tourScenes.length > 0 && (
-              <Button type="button" size="sm" variant={activeTab === 'tour360' ? 'default' : 'outline'}
-                aria-pressed={activeTab === 'tour360'} onClick={() => openProjectMode('tour360')} className="min-h-10 gap-2">
-                <Camera className="h-4 w-4" aria-hidden="true" />Tour 360
-              </Button>
-            )}
-            {tourScenes.length === 0 && Array.isArray((project).images) && (project).images.length > 0 && (
-              <Button type="button" size="sm" variant="outline" onClick={scrollToTour} className="min-h-10 gap-2">
-                <Camera className="h-4 w-4" aria-hidden="true" />Vista aérea
-              </Button>
-            )}
-          </nav>
-          <Button onClick={() => setLeadOpen(true)} className="min-h-11">Agendar visita o consultar</Button>
-          {`/p/${project.slug}` === LICANTEN_PATH && (
-            <Button asChild variant="outline" className="min-h-11 sm:ml-3"><Link to={easyCreditLink}><Calculator aria-hidden="true" />Simula tu cuota</Link></Button>
-          )}
-        </div>
 
         <ProjectNarrative project={project} lotCount={lotsLoading || lotsError ? null : lots.length} />
         <Dialog open={leadOpen} onOpenChange={setLeadOpen}>
@@ -710,7 +710,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                 </div>
               )}
               <div className={mapEditMode && isOwner ? '' : 'h-[70vh] min-h-[520px] max-h-[760px]'}>
-              <ViewerErrorBoundary label="el mapa de parcelas" className="h-[420px]"><LotMapView
+              <ViewerErrorBoundary label="el mapa de parcelas" className="h-[240px] sm:h-[420px]"><LotMapView
                 key={mapEditMode && isOwner ? 'edit' : 'tour'}
                 lots={lots}
                 projectCenter={{
@@ -889,7 +889,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                       <ArrowUp className="h-4 w-4" />
                       Ver tour 360 arriba
                     </Button>
-                    <div className="rounded-2xl overflow-hidden border h-[420px] lg:h-[600px]">
+                    <div className="rounded-2xl overflow-hidden border h-[240px] sm:h-[420px] lg:h-[600px]">
                       <TourMinimap
                         center={{
                           lat: project.latitude || -34.9767,
@@ -942,7 +942,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                       </p>
                     </div>
                     <div className="rounded-2xl overflow-hidden border h-[520px]">
-                      <ViewerErrorBoundary label="el mapa de parcelas" className="h-[420px]"><LotMapView
+                      <ViewerErrorBoundary label="el mapa de parcelas" className="h-[240px] sm:h-[420px]"><LotMapView
                         lots={lots}
                         projectCenter={{
                           lat: project.latitude || -34.9767,

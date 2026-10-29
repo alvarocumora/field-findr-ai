@@ -37,7 +37,7 @@ export function ProjectNarrative({ project, lotCount }: Props) {
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">El proyecto</p>
           <h2 id="project-narrative" className="mt-2 font-editorial text-3xl md:text-4xl text-foreground">
-            {project?.name}
+            Información del proyecto
           </h2>
           {subtitle && <p className="mt-4 max-w-2xl leading-relaxed text-muted-foreground">{subtitle}</p>}
           {amenities.length > 0 && (

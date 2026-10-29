@@ -104,7 +104,7 @@ const CinematicShowcaseHero = () => {
   return (
     <section className="relative isolate overflow-hidden bg-background" aria-labelledby="hero-title">
       {/* Full-bleed living globe */}
-      <div className="relative h-[62svh] min-h-[380px] w-full lg:absolute lg:inset-0 lg:h-full">
+      <div className="relative h-[32svh] min-h-[180px] w-full lg:absolute lg:inset-0 lg:h-full">
         <HeroTerrainGlobe
           projects={withImage.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng }))}
           activeId={active?.id}
