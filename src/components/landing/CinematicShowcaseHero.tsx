@@ -1,13 +1,12 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Building2, MapPin, Search, ShieldCheck, Pause, Play } from 'lucide-react';
+import { ArrowRight, Building2, MapPin, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { projectImages } from '@/lib/projectCovers';
-import HeroTerrainGlobe from '@/components/landing/HeroTerrainGlobe';
+import landscape from '@/assets/valle-escondido-licanten/drone/vel-dron-2.jpg.asset.json';
 
 interface ShowcaseProject {
   id: string;
@@ -65,149 +64,93 @@ export const useShowcaseProjects = () =>
     staleTime: 5 * 60 * 1000,
   });
 
-const ProjectSummary = ({ active }: { active: ShowcaseProject }) => (
-  <>
-    <div className="min-w-0">
-      <p className="truncate font-editorial text-base font-medium text-foreground sm:text-lg">{active.name}</p>
-      <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground"><MapPin className="h-3 w-3" aria-hidden="true" />{[active.city, active.region].filter(Boolean).join(', ') || 'Chile'}</p>
-    </div>
-    <dl className="flex shrink-0 gap-3 text-right sm:gap-4">
-      <div><dt className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Disponibles</dt><dd className="rural-data text-sm font-semibold text-foreground">{active.inventoryReady ? `${active.available}/${active.total}` : 'Consultar'}</dd></div>
-      <div><dt className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Desde</dt><dd className="rural-data text-sm font-semibold text-primary">{clp(active.minPrice)}</dd></div>
-    </dl>
-  </>
-);
-
 const CinematicShowcaseHero = () => {
-  const reduced = useReducedMotion();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const [type, setType] = useState('');
+  const [budget, setBudget] = useState('');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: projects = [], isError, isLoading, refetch, isFetching } = useShowcaseProjects();
-  const [paused, setPaused] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const withImage = projects.filter((p) => p.image);
-  const [index, setIndex] = useState(0);
-  const active = withImage[index % Math.max(withImage.length, 1)];
+  const active = projects.find((project) => project.id === selectedId) ?? projects[0];
+  const projectHref = active ? (active.slug ? `/p/${encodeURIComponent(active.slug)}` : `/proyecto/${encodeURIComponent(active.id)}`) : null;
 
-  useEffect(() => {
-    if (reduced || paused || hovered || focused || withImage.length < 2) return;
-    const t = window.setInterval(() => setIndex((i) => (i + 1) % withImage.length), 11000);
-    return () => window.clearInterval(t);
-  }, [reduced, paused, hovered, focused, withImage.length]);
-
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    const q = query.trim();
-    navigate(q ? `/explorar?q=${encodeURIComponent(q)}` : '/explorar');
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    const params = new URLSearchParams();
+    if (query.trim()) params.set('q', query.trim());
+    if (type) params.set('type', type);
+    if (budget) { params.set('currency', 'CLP'); params.set('clpMax', budget); }
+    navigate(`/explorar${params.size ? `?${params}` : ''}`);
   };
 
-  const projectHref = active ? (active.slug ? `/p/${encodeURIComponent(active.slug)}` : `/proyecto/${encodeURIComponent(active.id)}`) : '/explorar';
-
   return (
-    <section className="relative isolate overflow-hidden bg-background" aria-labelledby="hero-title"
-      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      onFocusCapture={() => setFocused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
-      {/* Full-bleed living globe */}
-      <div className="relative h-[32svh] min-h-[180px] w-full lg:absolute lg:inset-0 lg:h-full">
-        <HeroTerrainGlobe
-          projects={withImage.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng }))}
-          activeId={active?.id}
-          reducedMotion={!!reduced}
-          onSelect={(id) => { const i = withImage.findIndex((p) => p.id === id); if (i >= 0) { setIndex(i); setPaused(true); } }}
-          fallback={
-            <AnimatePresence mode="sync">
-              {active?.image ? (
-                <motion.img key={active.id} src={active.image} alt={`Vista de ${active.name}`} fetchPriority="high"
-                  className="absolute inset-0 h-full w-full object-cover"
-                  initial={reduced ? false : { opacity: 0, scale: 1.06 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-                  transition={{ duration: 1.4 }} />
-              ) : (
-                <div className="absolute inset-0 grid-topo opacity-40" aria-hidden="true" />
-              )}
-            </AnimatePresence>
-          }
-        />
-        {/* Paper vignette so the world melts into the page */}
-        <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-background/70 via-transparent to-background lg:bg-gradient-to-r lg:from-background lg:via-background/40 lg:to-transparent" aria-hidden="true" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-24 bg-gradient-to-t from-background to-transparent" aria-hidden="true" />
-
-        {active && (
-          <Link to={projectHref} className="absolute bottom-4 right-4 z-10 hidden w-[440px] items-center justify-between gap-3 rounded-2xl border border-border bg-card/90 p-4 backdrop-blur-md rural-shadow focus-ring lg:flex">
-            <ProjectSummary active={active} />
-          </Link>
-        )}
-      </div>
-
-      <div className="container relative z-10 px-4 pb-10 lg:flex lg:min-h-[min(92svh,860px)] lg:flex-col lg:justify-center lg:py-20">
-        <motion.div
-          initial={reduced ? false : { opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="-mt-16 min-w-0 rounded-2xl border border-border bg-card/85 p-5 backdrop-blur-md rural-shadow sm:p-7 lg:mt-0 lg:max-w-xl"
-        >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">Parcelas y loteos en Chile</p>
-          <h1 id="hero-title" className="mt-3 font-editorial text-[2rem] font-medium leading-[1.05] text-foreground sm:text-5xl">
-            Encuentra el terreno para <em className="text-primary">tu próximo proyecto.</em>
+    <section className="bg-background py-8 sm:py-12 lg:py-16" aria-labelledby="hero-title">
+      <div className="container grid gap-6 px-4 lg:grid-cols-2 lg:items-center lg:gap-10">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Parcelas y loteos en venta</p>
+          <h1 id="hero-title" className="mt-3 max-w-xl font-editorial text-4xl font-medium leading-[1.08] text-foreground sm:text-5xl lg:text-6xl">
+            Tu próxima parcela <span className="text-primary">está aquí.</span>
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
-            Busca por comuna o proyecto. Compara terrenos y revisa precios, disponibilidad y los documentos publicados en cada proyecto.
+          <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
+            Elige dónde comprar, descubre proyectos y encuentra una parcela para vivir, descansar o invertir.
           </p>
 
-          <form onSubmit={submit} role="search" className="mt-5">
-            <label htmlFor="hero-search" className="sr-only">Destino, comuna o proyecto</label>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <div className="relative flex-1">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                <Input id="hero-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ej. Licantén, Hualañé, Maule" className="h-12 rounded-xl bg-background pl-10 text-base" />
+          <form onSubmit={submit} role="search" aria-label="Buscar terrenos en venta" className="mt-6 space-y-4 rounded-2xl border bg-card p-4 rural-shadow sm:p-5">
+            <div>
+              <label htmlFor="hero-search" className="mb-2 block text-sm font-medium">¿Dónde quieres comprar?</label>
+              <div className="relative">
+                <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                <Input id="hero-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Comuna, región o proyecto" className="h-12 rounded-lg bg-background pl-10 text-base" />
               </div>
-              <Button type="submit" size="lg" className="h-12 rounded-xl px-6">
-                Explorar terrenos <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-              </Button>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="min-w-0">
+                <label htmlFor="hero-type" className="mb-2 block text-sm font-medium">Tipo de terreno</label>
+                <select id="hero-type" value={type} onChange={(event) => setType(event.target.value)} className="h-12 w-full min-w-0 rounded-lg border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <option value="">Todos</option>
+                  {QUICK_FILTERS.map((filter) => <option key={filter.type} value={filter.type}>{filter.label}</option>)}
+                </select>
+              </div>
+              <div className="min-w-0">
+                <label htmlFor="hero-budget" className="mb-2 block text-sm font-medium">Presupuesto CLP</label>
+                <select id="hero-budget" value={budget} onChange={(event) => setBudget(event.target.value)} className="h-12 w-full min-w-0 rounded-lg border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <option value="">Sin límite</option>
+                  <option value="20000000">Hasta $20 millones</option>
+                  <option value="40000000">Hasta $40 millones</option>
+                  <option value="80000000">Hasta $80 millones</option>
+                  <option value="150000000">Hasta $150 millones</option>
+                </select>
+              </div>
+            </div>
+            <Button type="submit" size="lg" className="h-12 w-full rounded-lg text-base"><Search className="mr-2 h-4 w-4" aria-hidden="true" />Buscar parcelas y terrenos</Button>
           </form>
-
-          <div className="mt-3 flex flex-wrap gap-2" aria-label="Filtros rápidos">
-            {QUICK_FILTERS.map((f) => (
-              <Link key={f.type} to={`/explorar?type=${f.type}`} className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary focus-ring">
-                {f.label}
-              </Link>
-            ))}
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            <a href="#proyectos-en-venta" className="inline-flex min-h-11 items-center gap-1 font-medium text-primary underline-offset-4 hover:underline focus-ring">Ver proyectos en venta<ArrowRight className="h-4 w-4" aria-hidden="true" /></a>
+            <Link to="/planes-loteos" className="inline-flex min-h-11 items-center gap-1 text-muted-foreground underline-offset-4 hover:underline focus-ring"><Building2 className="h-4 w-4" aria-hidden="true" />Quiero vender un terreno</Link>
           </div>
+        </div>
 
-          {withImage.length > 1 && (
-            <div className="mt-5 flex snap-x gap-2 overflow-x-auto pb-1 [scrollbar-width:none]" role="group" aria-label="Proyectos destacados">
-              {!reduced && <Button type="button" variant="outline" size="icon" className="shrink-0 rounded-full" aria-label={paused ? 'Reanudar proyectos destacados' : 'Pausar proyectos destacados'} onClick={() => setPaused((value) => !value)}>
-                {paused ? <Play className="h-4 w-4" aria-hidden="true" /> : <Pause className="h-4 w-4" aria-hidden="true" />}
-              </Button>}
-              {withImage.map((p, i) => (
-                <button key={p.id} type="button" aria-pressed={p.id === active?.id} onClick={() => { setIndex(i); setPaused(true); }}
-                  className={`min-h-10 shrink-0 snap-start rounded-full border px-4 py-2 text-xs font-medium transition-colors focus-ring ${p.id === active?.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground hover:border-primary'}`}>
-                  {p.name}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {active && (
-            <Link to={projectHref} className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-3 focus-ring lg:hidden">
-              <ProjectSummary active={active} />
-            </Link>
-          )}
-          {isLoading && <p role="status" className="mt-3 text-sm text-muted-foreground">Cargando proyectos destacados…</p>}
-          {isError && <div role="alert" className="mt-3 space-y-2 text-sm">
-            <p>No pudimos cargar los proyectos destacados. La búsqueda sigue disponible.</p>
-            <Button type="button" variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>Reintentar destacados</Button>
+        <div className="min-w-0 space-y-3">
+          <div className="relative overflow-hidden rounded-2xl border bg-muted">
+            {active && !active.image ? <div className="grid h-56 place-items-center bg-muted p-6 text-center text-muted-foreground sm:h-80 lg:h-[440px]">Imágenes del proyecto por confirmar</div> : <img src={active?.image || landscape.url} alt={active ? `Vista de ${active.name}` : 'Paisaje de Valle Escondido, Licantén'} fetchPriority="high" className="h-56 w-full object-cover sm:h-80 lg:h-[440px]" />}
+            <p className="absolute left-4 top-4 rounded-full bg-card px-3 py-1.5 text-xs font-semibold text-foreground">{active ? 'Proyecto en venta' : 'Descubre parcelas en Chile'}</p>
+            {active && projectHref ? (
+              <div className="border-t bg-card p-4 sm:p-5">
+                <p className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" aria-hidden="true" />{[active.city, active.region].filter(Boolean).join(', ') || 'Chile'}</p>
+                <h2 className="mt-1 font-editorial text-2xl font-medium">{active.name}</h2>
+                <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
+                  <div><p className="text-xs text-muted-foreground">{active.minPrice ? 'Parcelas desde' : 'Precio'}</p><p className="text-xl font-semibold text-primary">{clp(active.minPrice)}</p><p className="mt-1 text-xs text-muted-foreground">{active.inventoryReady ? `${active.available} lotes disponibles` : 'Consulta disponibilidad'}</p></div>
+                  <Button asChild className="min-h-11"><Link to={projectHref}>Ver parcelas y precios<ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" /></Link></Button>
+                </div>
+              </div>
+            ) : <p className="bg-card px-4 py-3 text-sm text-muted-foreground">Valle Escondido · Licantén. Revisa los proyectos y sus opciones de compra.</p>}
+          </div>
+          {projects.length > 1 && <div className="flex gap-2 overflow-x-auto pb-2" role="group" aria-label="Elegir proyecto en venta">
+            {projects.map((project) => <button key={project.id} type="button" aria-pressed={active?.id === project.id} onClick={() => setSelectedId(project.id)} className={`min-h-11 shrink-0 rounded-full border px-4 py-2 text-sm focus-ring ${active?.id === project.id ? 'border-primary bg-primary text-primary-foreground' : 'bg-card text-foreground hover:border-primary'}`}>{project.name}</button>)}
           </div>}
-
-          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-            <a href="#atlas" className="inline-flex min-h-11 items-center gap-1.5 text-primary underline-offset-4 hover:underline focus-ring"><MapPin className="h-4 w-4" aria-hidden="true" />Explorar Chile por región</a>
-            <span className="hidden items-center gap-1.5 sm:inline-flex"><ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />Documentación por proyecto</span>
-            <Link to="/planes-loteos" className="inline-flex items-center gap-1.5 underline-offset-4 hover:text-foreground hover:underline">
-              <Building2 className="h-4 w-4" aria-hidden="true" />¿Vendes terrenos?
-            </Link>
-          </div>
-        </motion.div>
+          {isLoading && <p role="status" className="text-sm text-muted-foreground">Cargando precios y proyectos…</p>}
+          {isError && <div role="alert" className="space-y-2 text-sm"><p>No pudimos cargar los proyectos. Puedes seguir buscando terrenos.</p><Button type="button" variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>Reintentar proyectos</Button></div>}
+        </div>
       </div>
     </section>
   );

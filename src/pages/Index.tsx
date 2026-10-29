@@ -25,9 +25,9 @@ const Index = () => {
     <div className="theme-rural">
       <PublicLayout showFooter={true} showAssistant={false}>
         <CinematicShowcaseHero />
+        <FluidProjectDock />
         <LicantenOfferHero />
         <EasyCreditSimulator key={creditPrice} defaultPrice={creditPrice} lotId={searchParams.get('creditLot')} />
-        <FluidProjectDock />
         <AtlasTerritorySection />
         <EcosystemStandard />
         <HybridCTA />

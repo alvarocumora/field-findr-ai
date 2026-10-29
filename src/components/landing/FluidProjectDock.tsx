@@ -31,18 +31,18 @@ const FluidProjectDock = () => {
   const { data: tours } = useProjectsWithTour(projects.map((p) => p.id));
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  if (isLoading) return <section className="container px-4 py-16"><div className="h-[420px] animate-pulse rounded-3xl bg-muted" /></section>;
-  if (isError || !projects.length) return null;
+  if (isLoading) return <section id="proyectos-en-venta" className="container scroll-mt-20 px-4 py-16"><div className="h-[420px] animate-pulse rounded-3xl bg-muted" /></section>;
+  if (isError || !projects.length) return <section id="proyectos-en-venta" className="container scroll-mt-20 px-4 py-12"><h2 className="font-editorial text-3xl">Encuentra tu terreno</h2><p className="mt-3 text-muted-foreground">{isError ? 'No pudimos cargar los proyectos en este momento.' : 'Explora las publicaciones y consulta sus opciones de compra.'}</p><Link to="/explorar" className="mt-4 inline-flex min-h-11 items-center text-primary underline focus-ring">Ver terrenos en venta</Link></section>;
 
   const active = projects.find((p) => p.id === activeId) ?? projects[0];
   const base = `/proyecto/${encodeURIComponent(active.id)}`;
   const hasTour = tours?.has(active.id) ?? false;
 
   return (
-    <section className="py-16 md:py-24" aria-labelledby="dock-title">
+    <section id="proyectos-en-venta" className="scroll-mt-20 py-16 md:py-24" aria-labelledby="dock-title">
       <div className="container px-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Proyectos en vivo</p>
-        <h2 id="dock-title" className="mt-3 max-w-3xl font-editorial text-3xl font-medium md:text-5xl">Elige un proyecto y recórrelo sin salir de aquí.</h2>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Encuentra tu parcela</p>
+        <h2 id="dock-title" className="mt-3 max-w-3xl font-editorial text-3xl font-medium md:text-5xl">Proyectos en venta. Encuentra el tuyo.</h2>
 
         <div className="mt-10 grid gap-4 lg:grid-cols-[320px_1fr]">
           <div role="tablist" aria-label="Proyectos" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0">
