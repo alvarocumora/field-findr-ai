@@ -1,0 +1,59 @@
+[
+  {
+    "name": "home-assets-320",
+    "viewport": [
+      320,
+      740
+    ],
+    "headings": [
+      "Encuentra el terreno para tu próximo proyecto.",
+      "VALLE ESCONDIDO · LICANTÉN",
+      "Simula tu cuota",
+      "Elige un proyecto y recórrelo sin salir de aquí.",
+      "Explora Chile desde su territorio.",
+      "Más contexto para elegir tu terreno.",
+      "Tu parcela te está esperando."
+    ],
+    "overflow": false,
+    "searchBox": {
+      "x": 37,
+      "y": 510.078125,
+      "width": 246,
+      "height": 48
+    },
+    "submitBox": {
+      "x": 37,
+      "y": 566.078125,
+      "width": 246,
+      "height": 48
+    }
+  },
+  {
+    "name": "home-assets-390",
+    "viewport": [
+      390,
+      844
+    ],
+    "headings": [
+      "Encuentra el terreno para tu próximo proyecto.",
+      "VALLE ESCONDIDO · LICANTÉN",
+      "Simula tu cuota",
+      "Explora Chile desde su territorio.",
+      "Más contexto para elegir tu terreno.",
+      "Tu parcela te está esperando."
+    ],
+    "overflow": false,
+    "searchBox": {
+      "x": 37,
+      "y": 520.609375,
+      "width": 316,
+      "height": 48
+    },
+    "submitBox": {
+      "x": 37,
+      "y": 576.609375,
+      "width": 316,
+      "height": 48
+    }
+  }
+]
