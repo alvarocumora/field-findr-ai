@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPriceShort } from '@/hooks/useListings';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface SearchResult {
   id: string;
@@ -30,17 +30,18 @@ interface SearchAutocompleteProps {
 const RECENT_SEARCHES_KEY = 'terreno-recent-searches';
 const MAX_RECENT = 5;
 
-const POPULAR_SUGGESTIONS: { label: string; hint: string }[] = [
-  { label: 'Parcelas en Colina', hint: 'Región Metropolitana' },
-  { label: 'Terrenos en Pucón', hint: 'Araucanía' },
-  { label: 'Sitios en Algarrobo', hint: 'Valparaíso' },
-  { label: 'Campos en Los Ángeles', hint: 'Biobío' },
-  { label: 'Loteos en Chicureo', hint: 'RM Norte' },
+const POPULAR_SUGGESTIONS: { label: string; hint: string; query: string }[] = [
+  { query: 'Colina', label: 'Parcelas en Colina', hint: 'Región Metropolitana' },
+  { query: 'Pucón', label: 'Terrenos en Pucón', hint: 'Araucanía' },
+  { query: 'Algarrobo', label: 'Sitios en Algarrobo', hint: 'Valparaíso' },
+  { query: 'Los Ángeles', label: 'Campos en Los Ángeles', hint: 'Biobío' },
+  { query: 'Chicureo', label: 'Loteos en Chicureo', hint: 'RM Norte' },
 ];
 
 const getRecentSearches = (): string[] => {
   try {
-    return JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) || '[]');
+    const parsed: unknown = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string' && !!item.trim()).slice(0, MAX_RECENT) : [];
   } catch { return []; }
 };
 
@@ -50,12 +51,12 @@ const saveRecentSearch = (query: string): string[] => {
   const recent = getRecentSearches().filter(s => s.toLowerCase() !== q.toLowerCase());
   recent.unshift(q);
   const next = recent.slice(0, MAX_RECENT);
-  localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+  try { localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next)); } catch { /* Search remains available without browser storage. */ }
   return next;
 };
 
 const clearRecentSearches = () => {
-  localStorage.removeItem(RECENT_SEARCHES_KEY);
+  try { localStorage.removeItem(RECENT_SEARCHES_KEY); } catch { /* Optional browser history. */ }
 };
 
 /** Highlights the first case-insensitive occurrence of `q` inside `text`. */
@@ -81,10 +82,13 @@ const SearchAutocomplete = ({
   initialQuery = '',
 }: SearchAutocompleteProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [query, setQuery] = useState(initialQuery);
-  useEffect(() => setQuery(initialQuery), [initialQuery]);
+
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchFailed, setSearchFailed] = useState(false);
+  const [completedQuery, setCompletedQuery] = useState<string | null>(null);
   const [properties, setProperties] = useState<SearchResult[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>(getRecentSearches);
@@ -94,34 +98,55 @@ const SearchAutocomplete = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const listboxRef = useRef<HTMLDivElement>(null);
 
-  const search = useCallback(async (q: string) => {
-    if (q.trim().length < 2) {
-      setProperties([]);
-      setLocations([]);
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
+  const requestId = useRef(0);
+  const queryRef = useRef(initialQuery);
+  useEffect(() => {
+    if (queryRef.current === initialQuery) return;
+    queryRef.current = initialQuery;
+    requestId.current += 1;
+    clearTimeout(debounceRef.current);
+    setQuery(initialQuery);
+    setProperties([]); setLocations([]); setIsLoading(false); setSearchFailed(false);
+    setCompletedQuery(null); setActiveIndex(-1);
+  }, [initialQuery]);
+  useEffect(() => () => { requestId.current += 1; clearTimeout(debounceRef.current); }, []);
+
+  const search = useCallback(async (q: string, version: number) => {
     try {
-      const { data } = await supabase.functions.invoke('search-autocomplete', {
+      const { data, error } = await supabase.functions.invoke('search-autocomplete', {
         body: { query: q, limit: 6 },
       });
+      if (version !== requestId.current) return;
+      if (error) throw error;
       setProperties(data?.properties || []);
       setLocations(data?.locations || []);
-    } catch { /* ignore */ }
-    setIsLoading(false);
+      setCompletedQuery(q);
+    } catch {
+      if (version !== requestId.current) return;
+      setProperties([]); setLocations([]); setSearchFailed(true);
+    } finally {
+      if (version === requestId.current) setIsLoading(false);
+    }
   }, []);
 
   const handleChange = (value: string) => {
+    queryRef.current = value;
+    const version = ++requestId.current;
     setQuery(value);
     onSearchChange?.(value);
-    setIsOpen(true);
-    setActiveIndex(-1);
+    setIsOpen(true); setActiveIndex(-1);
+    setProperties([]); setLocations([]); setSearchFailed(false); setCompletedQuery(null);
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => search(value), 250);
+    const eligible = value.trim().length >= 2;
+    setIsLoading(eligible);
+    if (eligible) debounceRef.current = setTimeout(() => void search(value, version), 250);
   };
 
   const commitQuery = (q: string) => {
+    queryRef.current = q;
+    requestId.current += 1;
+    clearTimeout(debounceRef.current);
+    setIsLoading(false);
     setQuery(q);
     onSearchChange?.(q);
     setRecentSearches(saveRecentSearch(q));
@@ -132,21 +157,16 @@ const SearchAutocomplete = ({
   const handleSelectProperty = (propertyId: string) => {
     setRecentSearches(saveRecentSearch(query));
     setIsOpen(false);
-    navigate(`/propiedad/${propertyId}`);
+    const params = new URLSearchParams(location.pathname === '/explorar' ? location.search : '');
+    params.set('listing', propertyId);
+    navigate(`/explorar?${params}`);
   };
 
   const handleLocationSelect = (location: string) => {
     commitQuery(location);
   };
 
-  const handleRecentSelect = (recent: string) => {
-    setQuery(recent);
-    onSearchChange?.(recent);
-    setIsOpen(true);
-    setActiveIndex(-1);
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => search(recent), 0);
-  };
+  const handleRecentSelect = (recent: string) => handleChange(recent);
 
   // Flat list of navigable items for keyboard control
   type Item =
@@ -162,7 +182,7 @@ const SearchAutocomplete = ({
     if (hasQ) list.push({ kind: 'submit' });
     if (!hasQ) {
       recentSearches.forEach(r => list.push({ kind: 'recent', value: r }));
-      POPULAR_SUGGESTIONS.forEach(s => list.push({ kind: 'suggestion', value: s.label, hint: s.hint }));
+      POPULAR_SUGGESTIONS.forEach(s => list.push({ kind: 'suggestion', value: s.query, hint: s.hint }));
     }
     locations.forEach(l => list.push({ kind: 'location', value: l }));
     properties.forEach(p => list.push({ kind: 'property', value: p }));
@@ -230,8 +250,8 @@ const SearchAutocomplete = ({
 
   const hasResults = properties.length > 0 || locations.length > 0;
   const hasQ = query.trim().length >= 2;
-  const showEmptyState = hasQ && !isLoading && !hasResults;
-  const showDropdown = isOpen && (hasQ || recentSearches.length > 0 || isLoading);
+  const showEmptyState = hasQ && !isLoading && !searchFailed && completedQuery === query && !hasResults;
+  const showDropdown = isOpen;
 
   // Compute item index offsets for aria/highlight lookup
   const submitIdx = hasQ ? 0 : -1;
@@ -257,6 +277,7 @@ const SearchAutocomplete = ({
         <Input
           ref={inputRef}
           placeholder={placeholder}
+          aria-label="Buscar terrenos y ubicaciones"
           value={query}
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => setIsOpen(true)}
@@ -269,15 +290,11 @@ const SearchAutocomplete = ({
         />
         <div className="absolute right-2 flex items-center gap-1">
           {isLoading && <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />}
-          {query && !isLoading && (
+          {query && (
             <button
               type="button"
               onClick={() => {
-                setQuery('');
-                onSearchChange?.('');
-                setProperties([]);
-                setLocations([]);
-                setActiveIndex(-1);
+                handleChange('');
                 inputRef.current?.focus();
               }}
               className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -379,7 +396,7 @@ const SearchAutocomplete = ({
                       data-idx={idx}
                       id={`search-item-${idx}`}
                       onMouseEnter={() => setActiveIndex(idx)}
-                      onClick={() => commitQuery(s.label)}
+                      onClick={() => commitQuery(s.query)}
                       className={cn(
                         'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors text-left',
                         activeIndex === idx ? 'bg-primary/10' : 'hover:bg-muted/50'
@@ -483,6 +500,7 @@ const SearchAutocomplete = ({
           )}
 
           {/* Empty state */}
+          {searchFailed && <p role="status" className="p-4 text-sm text-muted-foreground">No pudimos cargar las sugerencias. Presiona Enter para buscar en el catálogo.</p>}
           {showEmptyState && (
             <div className="p-6 flex flex-col items-center justify-center gap-2 text-center">
               <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
