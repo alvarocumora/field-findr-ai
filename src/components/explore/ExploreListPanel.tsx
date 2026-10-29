@@ -288,6 +288,7 @@ const VirtualizedListings = ({
 interface ExploreListPanelProps {
   listings: Listing[];
   totalCount?: number;
+  partialResults?: boolean;
   isLoading?: boolean;
   hasMore?: boolean;
   isLoadingMore?: boolean;
@@ -327,6 +328,7 @@ interface ExploreListPanelProps {
 const ExploreListPanel = ({
   listings,
   totalCount,
+  partialResults = false,
   isLoading = false,
   hasMore = false,
   isLoadingMore = false,
@@ -435,7 +437,8 @@ const ExploreListPanel = ({
   const sortedListings = useDeferredValue(sortedListingsRaw);
 
   // Smart summary
-  const displayCount = totalCount ?? listings.length;
+  const partial = partialResults || territorialFilter.aptitudes.length > 0 || territorialFilter.hasWater === true || territorialFilter.hasRoad === true || Boolean(territorialFilter.legalStatus) || activeTab !== 'all';
+  const displayCount = partial ? territorialFilteredListings.length : totalCount ?? listings.length;
   // Never convert UF↔CLP without a trusted rate: one minimum per currency,
   // best price/m² only within the dominant currency.
   const summary = useMemo(() => {
@@ -556,7 +559,7 @@ const ExploreListPanel = ({
         <div className="flex items-center justify-between gap-2">
           <p className="min-w-0 truncate text-sm text-muted-foreground">
             <span className="text-base font-bold text-foreground tabular-nums">{displayCount}</span>{' '}
-            terreno{displayCount === 1 ? '' : 's'}
+            terreno{displayCount === 1 ? '' : 's'}{partial ? ' en la selección cargada' : ''}
             {summary?.byCurrency.length ? ` desde ${summary.byCurrency.map(c => formatPriceWithCurrency(c.min, c.currency)).join(' · ')}` : ''}
             {summary && summary.regionCount > 1 ? ` en ${summary.regionCount} regiones` : ''}
           </p>
@@ -619,7 +622,7 @@ const ExploreListPanel = ({
         >
           <div className="flex items-center gap-2 mb-0.5">
             <TrendingDown className="h-3.5 w-3.5 text-primary" />
-            <span className="text-[11px] font-semibold text-primary">Mejor oportunidad</span>
+            <span className="text-[11px] font-semibold text-primary">Menor precio/m² cargado</span>
           </div>
           <p className="text-xs text-foreground font-medium truncate">{bestOpportunity.title}</p>
           <p className="text-[11px] text-muted-foreground">
@@ -674,6 +677,8 @@ const ExploreListPanel = ({
         </div>
       </div>
 
+      {partial && <p role="status" className="px-4 py-2 text-xs text-muted-foreground">Resultados de las publicaciones cargadas. Carga más para ampliar esta selección.</p>}
+      {hasMore && <Button type="button" variant="outline" className="mx-4 my-2" disabled={isLoadingMore} onClick={onLoadMore}>{isLoadingMore ? 'Cargando…' : 'Cargar más publicaciones'}</Button>}
       {/* Footer CTA */}
       <div className="px-4 py-3 border-t border-border/20">
         <button className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-primary bg-primary/5 hover:bg-primary/10 transition-colors">

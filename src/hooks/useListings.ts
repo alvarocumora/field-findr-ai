@@ -1,3 +1,4 @@
+import { SLOPE_TAGS, VALUATION_TAGS, expandFilterTags } from '@/lib/explore/searchState';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -46,6 +47,8 @@ export interface ListingFilters {
   areaMin?: number;
   areaMax?: number;
   tags?: string[];
+  slopes?: string[];
+  valuation?: string[];
   featured?: boolean;
   /** Include individual lots of a loteo (tagged `loteo`) in the feed. */
   includeLoteoLots?: boolean;
@@ -115,6 +118,10 @@ export const useListings = (filters?: ListingFilters) => {
           .gte('lng', filters.bounds.west)
           .lte('lng', filters.bounds.east);
       }
+
+      if (filters?.tags?.length) query = query.overlaps('tags', filters.tags);
+      if (filters?.slopes?.length) query = query.overlaps('tags', expandFilterTags(filters.slopes, SLOPE_TAGS));
+      if (filters?.valuation?.length) query = query.overlaps('tags', expandFilterTags(filters.valuation, VALUATION_TAGS));
 
       if (filters?.featured !== undefined) {
         query = query.eq('featured', filters.featured);
@@ -187,6 +194,8 @@ export const useCreateListing = () => {
       lng?: number;
       images?: string[];
       tags?: string[];
+  slopes?: string[];
+  valuation?: string[];
       utilities?: Json;
       zoning?: string;
       rol?: string;
