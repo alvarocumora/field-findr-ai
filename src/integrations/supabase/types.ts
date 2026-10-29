@@ -657,9 +657,11 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          min_commission_amount: number | null
           notes: string | null
           plan_type: string | null
           project_id: string | null
+          referral_fixed_amount: number | null
           referral_override_rate: number
           scope: string
           updated_at: string
@@ -669,9 +671,11 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          min_commission_amount?: number | null
           notes?: string | null
           plan_type?: string | null
           project_id?: string | null
+          referral_fixed_amount?: number | null
           referral_override_rate?: number
           scope: string
           updated_at?: string
@@ -681,9 +685,11 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          min_commission_amount?: number | null
           notes?: string | null
           plan_type?: string | null
           project_id?: string | null
+          referral_fixed_amount?: number | null
           referral_override_rate?: number
           scope?: string
           updated_at?: string

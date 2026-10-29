@@ -16,8 +16,8 @@ const benefits = [
   },
   {
     icon: TrendingUp,
-    title: 'Comisiones claras y trazables',
-    text: 'Cada proyecto publica su porcentaje. Tu comisión queda registrada desde el primer contacto.',
+    title: 'Mínimo $500.000 por lote vendido',
+    text: 'Ganas al menos $500.000 por lote, sin importar su precio, y $200.000 por cada lote que venda un vendedor que invitaste.',
   },
   {
     icon: FileText,
