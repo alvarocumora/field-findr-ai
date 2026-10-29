@@ -20,6 +20,7 @@ import {
 } from '@/hooks/useBrokers';
 import { useCommissionRules } from '@/hooks/useAdminCommissions';
 import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
+import { whatsappShareUrl } from '@/lib/brokerProgram';
 
 interface MarketProject {
   id: string;
@@ -160,7 +161,7 @@ const BrokerMarketplace = () => {
                       <div className="flex flex-wrap gap-2 mt-3">
                         <Badge variant="secondary" className="gap-1">
                           <Percent className="h-3 w-3" aria-hidden="true" />
-                          {rateFor(p.id)}% comisión
+                          {rateFor(p.id)}% · mín. $500.000/lote
                         </Badge>
                         <Badge variant="outline">
                           {p.available_lots ?? 0}/{p.total_lots ?? 0} disponibles
@@ -235,6 +236,15 @@ const BrokerMarketplace = () => {
                             disabled={!p}>
                             <Share2 className="h-3.5 w-3.5 mr-1" /> Compartir
                           </Button>
+                          {p && (
+                            <Button size="sm" variant="outline" asChild>
+                              <a target="_blank" rel="noopener noreferrer"
+                                href={whatsappShareUrl(`Parcelas en venta: ${p.name}`,
+                                  getCanonicalUrl(`${p.slug ? `/p/${p.slug}` : `/proyecto/${p.id}`}${brokerProfile?.invite_code ? `?ref=${brokerProfile.invite_code}` : ''}`))}>
+                                WhatsApp
+                              </a>
+                            </Button>
+                          )}
                           <Button size="sm" variant="outline" asChild>
                             <Link to={p?.slug ? `/p/${p.slug}` : `/proyecto/${a.project_id}`}>
                               Ver material

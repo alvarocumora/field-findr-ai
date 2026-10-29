@@ -69,7 +69,8 @@ const CommissionsPage = () => {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Comisiones</h1>
         <p className="text-muted-foreground">
-          Ventas propias y referidos entre corredores.
+          Ventas propias y referidos entre corredores. Mínimo $500.000 por lote vendido
+          y $200.000 por cada lote que venda un vendedor que invitaste (ventas en pesos).
         </p>
       </div>
 
