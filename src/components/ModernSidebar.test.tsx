@@ -80,11 +80,11 @@ describe('ModernSidebar — segmentación por tipo de cuenta', () => {
     expect(screen.getByText('Inmobiliaria')).toBeInTheDocument();
     expect(screen.queryByText('CORREDOR')).not.toBeInTheDocument();
     expect(screen.getByText('INMOBILIARIA')).toBeInTheDocument();
-    expect(screen.getByText('proyectos')).toBeInTheDocument();
-    expect(screen.getByText('ventas')).toBeInTheDocument();
-    expect(screen.getByText('red comercial')).toBeInTheDocument();
-    expect(screen.getByText('administración')).toBeInTheDocument();
-    expect(screen.getByText('configuración')).toBeInTheDocument();
+    expect(screen.getByText('propiedades')).toBeInTheDocument();
+    expect(screen.getByText('ventas y cobros')).toBeInTheDocument();
+    expect(screen.getByText('mi red')).toBeInTheDocument();
+    expect(screen.getByText('gestión y reportes')).toBeInTheDocument();
+    expect(screen.getByText('mi cuenta')).toBeInTheDocument();
   });
 
   it('plan grupo/enterprise también recibe el panel de inmobiliaria', () => {
@@ -103,7 +103,7 @@ describe('ModernSidebar — segmentación por tipo de cuenta', () => {
     );
     expect(container.querySelector('aside')?.className).toContain('relative w-full');
     expect(screen.queryByRole('button', { name: 'Colapsar menú' })).not.toBeInTheDocument();
-    const leadLink = screen.getByRole('link', { name: 'Leads' });
+    const leadLink = screen.getByRole('link', { name: 'Consultas y prospectos' });
     expect(leadLink).toHaveAttribute('aria-current', 'page');
     fireEvent.click(leadLink);
     expect(onNavigate).toHaveBeenCalledTimes(1);
@@ -132,4 +132,26 @@ describe('ModernSidebar — segmentación por tipo de cuenta', () => {
     expect(screen.getByText('gestión')).toBeInTheDocument();
     expect(screen.getByText('aprobaciones')).toBeInTheDocument();
   });
+  it('search reveals a matching module and clearing restores groups', () => {
+    renderSidebar('/asesor/dashboard');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Buscar en el menú' }), { target: { value: 'comisiones' } });
+    expect(screen.getByRole('link', { name: 'Comisiones' })).toHaveAttribute('href', '/asesor/comisiones');
+    expect(screen.queryByRole('link', { name: 'Equipo' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar búsqueda del menú' }));
+    expect(screen.getByText('mi cuenta')).toBeInTheDocument();
+  });
+  it('keeps the only profile destination inside the current workspace', () => {
+    renderSidebar('/asesor/profile');
+    const profiles = screen.getAllByRole('link', { name: 'Mi perfil' });
+    expect(profiles).toHaveLength(1);
+    expect(profiles[0]).toHaveAttribute('href', '/asesor/profile');
+    expect(screen.queryByRole('link', { name: 'Mi negocio broker' })).not.toBeInTheDocument();
+  });
+  it('menu search cannot reveal another workspace administration', () => {
+    renderSidebar('/asesor/dashboard');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Buscar en el menú' }), { target: { value: 'Usuarios' } });
+    expect(screen.getByRole('status')).toHaveTextContent('No hay módulos');
+    expect(screen.queryByRole('link', { name: 'Usuarios' })).not.toBeInTheDocument();
+  });
+
 });

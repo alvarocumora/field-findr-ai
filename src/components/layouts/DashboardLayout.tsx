@@ -1,3 +1,4 @@
+import WorkspaceBreadcrumbs from '@/components/dashboard/WorkspaceBreadcrumbs';
 import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -100,6 +101,7 @@ const DashboardLayout = ({ children, requiredRole }: DashboardLayoutProps) => {
         </div>
 
         <div className="mx-auto w-full max-w-[1680px] p-4 md:p-6 lg:p-8">
+          <WorkspaceBreadcrumbs />
           {children}
         </div>
       </main>
