@@ -1,3 +1,4 @@
+import { hasRecordedLegalReview } from '@/lib/projects/legalReview';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -123,22 +124,22 @@ export const LegalTab = ({
   });
 
   // Calculate verification progress
-  const verifiedCount = documents.filter(d => d.status === 'verified' || d.status === 'not_required').length;
+  const verifiedCount = documents.filter(hasRecordedLegalReview).length;
   const totalDocuments = documents.length;
   const verificationProgress = Math.round((verifiedCount / totalDocuments) * 100);
 
-  const approvedPermits = projectPermits.filter(p => p.status === 'approved').length;
+  const approvedPermits = projectPermits.filter(hasRecordedLegalReview).length;
   const totalPermits = projectPermits.length;
   const permitsProgress = Math.round((approvedPermits / totalPermits) * 100);
 
   const getOverallStatusColor = () => {
-    if (legalStatus === 'verified') return 'text-emerald-500';
+    if (legalStatus === 'verified') return 'text-muted-foreground';
     if (legalStatus === 'issues') return 'text-destructive';
     return 'text-amber-500';
   };
 
   const getOverallStatusLabel = () => {
-    if (legalStatus === 'verified') return 'Verificado';
+    if (legalStatus === 'verified') return 'Estado declarado: verificado';
     if (legalStatus === 'issues') return 'Con observaciones';
     return 'En revisión';
   };
@@ -176,14 +177,14 @@ export const LegalTab = ({
           <div className="grid grid-cols-2 gap-4 mt-6">
             <div>
               <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Documentos verificados</span>
+                <span className="text-muted-foreground">Documentos con revisión registrada</span>
                 <span className="font-medium">{verifiedCount}/{totalDocuments}</span>
               </div>
               <Progress value={verificationProgress} className="h-2" />
             </div>
             <div>
               <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Permisos aprobados</span>
+                <span className="text-muted-foreground">Permisos con revisión registrada</span>
                 <span className="font-medium">{approvedPermits}/{totalPermits}</span>
               </div>
               <Progress value={permitsProgress} className="h-2" />
@@ -268,7 +269,7 @@ export const LegalTab = ({
                     </p>
                   )}
                 </div>
-                {getStatusBadge(permit.status)}
+                {permit.status === 'approved' && !hasRecordedLegalReview(permit) ? <Badge variant="outline">Sin revisión registrada</Badge> : getStatusBadge(permit.status)}
               </div>
             ))}
           </CardContent>

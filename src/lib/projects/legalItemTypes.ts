@@ -6,4 +6,7 @@ export interface LegalItem {
   status?: string;
   url?: string;
   file_url?: string;
+  verified_at?: string;
+  reviewed_at?: string;
+  verified_by?: string;
 }
