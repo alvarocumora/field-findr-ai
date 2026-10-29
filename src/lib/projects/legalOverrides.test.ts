@@ -1,43 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import { applyLegalOverrides, parseLegalItems } from './legalOverrides';
+import { hasRecordedLegalReview, uniqueLegalTypes } from './legalReview';
 
-describe('applyLegalOverrides', () => {
-  it('normalizes legacy names and malformed JSON without inventing verified status', () => {
-    expect(parseLegalItems([null, 1, [], 'escritura', { type: 'plano', status: 'pending', file_url: 'document.pdf', name: 7 }]))
-      .toEqual([{ type: 'escritura', name: 'escritura' }, { type: 'plano', status: 'pending', file_url: 'document.pdf' }]);
-    expect(parseLegalItems({})).toEqual([]);
+describe('project legal evidence', () => {
+  it('never elevates approval based on a project name, slug or known ID', () => {
+    for (const project of [{ name: 'Parcelas Licantén' }, { slug: 'valle-escondido-licanten' }, { id: 'b4363fda-e99f-400d-ae95-2cbc8244b770' }]) {
+      expect(applyLegalOverrides(project, [{ type: 'titulo_dominio', status: 'pending' }], [], 'pending'))
+        .toEqual({ legalDocuments: [{ type: 'titulo_dominio', status: 'pending' }], permits: [], legalStatus: 'pending' });
+    }
   });
-  it('aprueba todo en el proyecto de Licantén, conservando campos existentes', () => {
-    const r = applyLegalOverrides(
-      { slug: 'valle-escondido-licanten', name: 'Valle Escondido Licantén' },
-      [{ type: 'titulo_dominio', name: 'Título de Dominio', status: 'pending', file_url: 'x' }],
-      [],
-      'pending',
-    );
-    expect(r.legalStatus).toBe('verified');
-    expect(r.legalDocuments).toHaveLength(7);
-    expect(r.legalDocuments.every((d) => d.status === 'verified')).toBe(true);
-    expect(r.legalDocuments[0].file_url).toBe('x');
-    expect(r.permits).toHaveLength(4);
-    expect(r.permits.every((p) => p.status === 'approved')).toBe(true);
+  it('preserves actual persisted status and review data without changing remote records', () => {
+    const doc = { type: 'plano', status: 'verified', file_url: '/plano.pdf', verified_at: '2026-10-01' };
+    expect(applyLegalOverrides(null, [doc], [], 'verified').legalDocuments).toEqual([doc]);
+    expect(hasRecordedLegalReview(doc)).toBe(true);
   });
-
-  it('detecta Licantén por nombre aunque el slug sea otro', () => {
-    const r = applyLegalOverrides({ slug: 'parcelas-x', name: 'Parcelas Licantén' }, [], [], 'pending');
-    expect(r.legalStatus).toBe('verified');
+  it('does not count pending, missing evidence, invalid dates or duplicate types as verified', () => {
+    const reviewed = { type: 'plano', status: 'verified', file_url: 'https://example.com/plano.pdf', verified_at: '2026-10-01' };
+    for (const doc of [{ ...reviewed, status: 'pending' }, { ...reviewed, file_url: undefined }, { ...reviewed, verified_at: 'invalid' }, { ...reviewed, file_url: 'javascript:alert(1)' }]) expect(hasRecordedLegalReview(doc)).toBe(false);
+    const types = uniqueLegalTypes([{ type: 'PLANO', status: 'pending' }, reviewed, reviewed]);
+    expect(types).toHaveLength(1);
+    expect(types.filter(hasRecordedLegalReview)).toHaveLength(1);
   });
-
-  it('detecta Licantén por id aunque nombre y slug sean otros', () => {
-    const r = applyLegalOverrides(
-      { id: 'b4363fda-e99f-400d-ae95-2cbc8244b770', slug: 'valle-escondido', name: 'Valle Escondido' },
-      [], [], 'pending',
-    );
-    expect(r.legalStatus).toBe('verified');
-  });
-
-  it('no toca otros proyectos', () => {
-    const docs = [{ type: 'titulo_dominio', name: 'Título de Dominio', status: 'pending' }];
-    const r = applyLegalOverrides({ slug: 'brisas-de-caone', name: 'Brisas de Caone' }, docs, [], 'pending');
-    expect(r).toEqual({ legalDocuments: docs, permits: [], legalStatus: 'pending' });
+  it('normalizes legacy and malformed JSON without inventing approvals', () => {
+    expect(parseLegalItems([null, 1, [], 'escritura', { type: 'plano', status: 'pending', name: 7 }]))
+      .toEqual([{ type: 'escritura', name: 'escritura' }, { type: 'plano', status: 'pending' }]);
   });
 });
