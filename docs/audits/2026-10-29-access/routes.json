@@ -1,0 +1,1157 @@
+{
+  "counts": {
+    "pub": 64,
+    "buyer": 6,
+    "agent": 45,
+    "admin": 23
+  },
+  "note": "Call expressions only. /panel is a separate literal RouteEntry and aliases are not counted.",
+  "agentWithPolicy": 25,
+  "routes": [
+    {
+      "area": "pub",
+      "id": "home",
+      "path": "/",
+      "line": 274,
+      "nav": "{ label: \"Inicio\", group: \"principal\" }"
+    },
+    {
+      "area": "pub",
+      "id": "auth",
+      "path": "/auth",
+      "line": 275,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "explorar",
+      "path": "/explorar",
+      "line": 276,
+      "nav": "{ label: \"Explorar\", group: \"principal\" }",
+      "seo": "{\n      title: \"Explorar terrenos y parcelas en venta | Oferta Terrenos\",\n      description:\n        \"Busca terrenos, parcelas y loteos en venta con mapa, filtros por superficie, precio y servicios. Fichas verificadas en Chile y LATAM.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "propiedad",
+      "path": "/propiedad/:id",
+      "line": 284
+    },
+    {
+      "area": "pub",
+      "id": "mercado",
+      "path": "/mercado",
+      "line": 285,
+      "seo": "{\n      title: \"Mercado de terrenos: precios y tendencias | Oferta Terrenos\",\n      description:\n        \"Precios por región, plusvalía, categorías de terreno y oportunidades de inversión en Chile y LATAM, con publicaciones comparadas de otros portales.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "proyecto",
+      "path": "/proyecto/:id",
+      "line": 292
+    },
+    {
+      "area": "pub",
+      "id": "proyecto-experiencia",
+      "path": "/proyecto/:id/experiencia",
+      "line": 293
+    },
+    {
+      "area": "pub",
+      "id": "pricing",
+      "path": "/pricing",
+      "line": 294,
+      "nav": "{ label: \"Planes\", group: \"principal\" }",
+      "seo": "{\n      title: \"Planes y precios para publicar terrenos | Oferta Terrenos\",\n      description:\n        \"Compara los planes de Oferta Terrenos: publicaciones, herramientas de gestión de loteos, CRM y comisiones para corredores e inmobiliarias.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "planes-loteos",
+      "path": "/planes-loteos",
+      "line": 302,
+      "seo": "{\n      title: \"Planes para loteos y parcelaciones | Oferta Terrenos\",\n      description:\n        \"Software y vitrina para vender loteos: gestión de parcelas, reservas, contratos y comisiones. Precios por tamaño de proyecto.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "contacto-loteos",
+      "path": "/contacto-loteos",
+      "line": 309,
+      "seo": "{\n      title: \"Contacto para proyectos de loteo | Oferta Terrenos\",\n      description:\n        \"Cuéntanos de tu loteo o parcelación y te mostramos cómo publicarlo, gestionarlo y venderlo con Oferta Terrenos.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "para-corredoras",
+      "path": "/para-corredoras",
+      "line": 316,
+      "seo": "{\n      title: \"Oferta Terrenos para corredoras de propiedades\",\n      description:\n        \"Publica tu cartera de terrenos, capta leads calificados y gestiona comisiones y referidos desde un solo panel.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "para-inmobiliarias",
+      "path": "/para-inmobiliarias",
+      "line": 323,
+      "seo": "{\n      title: \"Oferta Terrenos para inmobiliarias y loteadoras\",\n      description:\n        \"Gestiona proyectos, inventario de parcelas, reservas y equipo de ventas con landings propias y reportes en tiempo real.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "tools",
+      "path": "/tools",
+      "line": 330,
+      "nav": "{ label: \"Herramientas\", group: \"principal\" }",
+      "seo": "{\n      title: \"Calculadoras y herramientas de terrenos | Oferta Terrenos\",\n      description:\n        \"Calculadora de ROI, simulador de crédito, estimador de subdivisión y análisis de riesgo para invertir en terrenos.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "search",
+      "path": "/search",
+      "line": 338,
+      "seo": "{\n      title: \"Búsqueda inteligente de terrenos | Oferta Terrenos\",\n      description:\n        \"Describe el terreno que buscas en lenguaje natural y la búsqueda inteligente filtra por zona, superficie, precio y uso.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "demo-visual-scenarios",
+      "path": "/demo/visual-scenarios",
+      "line": 345,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "instalar",
+      "path": "/instalar",
+      "line": 346,
+      "seo": "{\n      title: \"Instalar la app de Oferta Terrenos\",\n      description:\n        \"Instala Oferta Terrenos en tu teléfono para explorar terrenos con mapas offline, alertas y acceso rápido a tu panel.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "referidos",
+      "path": "/referidos",
+      "line": 353,
+      "seo": "{\n      title: \"Programa de referidos | Oferta Terrenos\",\n      description:\n        \"Invita brokers y compradores con tu código y gana recompensas y comisiones de override por cada venta atribuida.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "region",
+      "path": "/region/:slug",
+      "line": 360
+    },
+    {
+      "area": "pub",
+      "id": "pais",
+      "path": "/pais/:code",
+      "line": 361
+    },
+    {
+      "area": "pub",
+      "id": "ciudad",
+      "path": "/ciudad/:slug",
+      "line": 362
+    },
+    {
+      "area": "pub",
+      "id": "contacto",
+      "path": "/contacto",
+      "line": 363,
+      "nav": "{ label: \"Contacto\", group: \"principal\" }"
+    },
+    {
+      "area": "pub",
+      "id": "comparar",
+      "path": "/comparar",
+      "line": 364,
+      "seo": "{\n      title: \"Comparar terrenos lado a lado | Oferta Terrenos\",\n      description:\n        \"Compara precio, superficie, valor por m², servicios y ubicación de varios terrenos antes de decidir tu compra.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "alertas",
+      "path": "/alertas",
+      "line": 371,
+      "seo": "{\n      title: \"Alertas de terrenos y bajadas de precio | Oferta Terrenos\",\n      description:\n        \"Guarda tus búsquedas y recibe avisos cuando aparezca un terreno que calce contigo o baje de precio.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "blog",
+      "path": "/blog",
+      "line": 378
+    },
+    {
+      "area": "pub",
+      "id": "oportunidades",
+      "path": "/oportunidades",
+      "line": 379
+    },
+    {
+      "area": "pub",
+      "id": "eventos",
+      "path": "/eventos",
+      "line": 380,
+      "nav": "{ label: \"Eventos\", group: \"principal\" }"
+    },
+    {
+      "area": "pub",
+      "id": "evento-detalle",
+      "path": "/eventos/:slug",
+      "line": 381
+    },
+    {
+      "area": "pub",
+      "id": "quiz",
+      "path": "/quiz",
+      "line": 382,
+      "seo": "{\n      title: \"Test: encuentra tu terreno ideal | Oferta Terrenos\",\n      description:\n        \"Responde unas preguntas sobre uso, presupuesto y zona y te mostramos los terrenos con mayor porcentaje de match.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "cotizacion-publica",
+      "path": "/cotizacion/:token",
+      "line": 389,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "agendar",
+      "path": "/agendar",
+      "line": 390,
+      "seo": "{\n      title: \"Agendar reunión | Oferta Terrenos\",\n      description: \"Solicita una reunión comercial, visita a terreno o conversación sobre tu campo con Oferta Terrenos.\",\n    }"
+    },
+    {
+      "area": "pub",
+      "id": "reset-password",
+      "path": "/reset-password",
+      "line": 396,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "subscription-success",
+      "path": "/subscription/success",
+      "line": 397,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "subscription-failure",
+      "path": "/subscription/failure",
+      "line": 398,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "subscription-pending",
+      "path": "/subscription/pending",
+      "line": 399,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "reserva-exito",
+      "path": "/reserva/exito",
+      "line": 400,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "reserva-error",
+      "path": "/reserva/error",
+      "line": 401,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "reserva-pendiente",
+      "path": "/reserva/pendiente",
+      "line": 402,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "tasacion-live",
+      "path": "/tasacion/v/:id",
+      "line": 403
+    },
+    {
+      "area": "pub",
+      "id": "tasacion-validar",
+      "path": "/tasacion/validar",
+      "line": 404
+    },
+    {
+      "area": "pub",
+      "id": "diseno-compartido",
+      "path": "/diseno/:token",
+      "line": 405,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "inmobiliaria-showcase",
+      "path": "/inmobiliaria/:slug",
+      "line": 406
+    },
+    {
+      "area": "pub",
+      "id": "brokers",
+      "path": "/brokers",
+      "line": 407,
+      "nav": "{ label: \"Brokers\", group: \"principal\" }"
+    },
+    {
+      "area": "pub",
+      "id": "corredores",
+      "path": "/corredores",
+      "line": 408
+    },
+    {
+      "area": "pub",
+      "id": "brokers-inscripcion",
+      "path": "/brokers/inscripcion",
+      "line": 409
+    },
+    {
+      "area": "pub",
+      "id": "brokers-ranking",
+      "path": "/brokers/ranking",
+      "line": 410
+    },
+    {
+      "area": "pub",
+      "id": "broker-showcase",
+      "path": "/b/:slug",
+      "line": 411
+    },
+    {
+      "area": "pub",
+      "id": "corredor-showcase",
+      "path": "/corredor/:slug",
+      "line": 412
+    },
+    {
+      "area": "pub",
+      "id": "comunidad",
+      "path": "/comunidad",
+      "line": 413,
+      "nav": "{ label: \"Comunidad\", group: \"principal\" }"
+    },
+    {
+      "area": "pub",
+      "id": "comenzar",
+      "path": "/comenzar",
+      "line": 414,
+      "nav": "{ label: \"Comenzar\", group: \"principal\" }"
+    },
+    {
+      "area": "pub",
+      "id": "ayuda",
+      "path": "/ayuda",
+      "line": 415,
+      "nav": "{ label: \"Ayuda\", group: \"soporte\" }"
+    },
+    {
+      "area": "pub",
+      "id": "forestal-landing",
+      "path": "/forestal-valle-escondido",
+      "line": 422
+    },
+    {
+      "area": "pub",
+      "id": "forestal-investors",
+      "path": "/forestal-valle-escondido/investors",
+      "line": 423,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "huellelhue",
+      "path": "/huellelhue",
+      "line": 424
+    },
+    {
+      "area": "pub",
+      "id": "playa-alvaro",
+      "path": "/playa-alvaro",
+      "line": 425
+    },
+    {
+      "area": "pub",
+      "id": "explora-park",
+      "path": "/explora-park",
+      "line": 426
+    },
+    {
+      "area": "pub",
+      "id": "valle-hualane",
+      "path": "/valle-hualane",
+      "line": 427
+    },
+    {
+      "area": "pub",
+      "id": "valle-hualane-tour",
+      "path": "/valle-hualane/tour",
+      "line": 428,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "valle-hualane-lot",
+      "path": "/valle-hualane/l/:lotNumber",
+      "line": 429,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "valle-hualane-masterplan",
+      "path": "/valle-hualane/plano",
+      "line": 430,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "parcelas-caone-hualane",
+      "path": "/parcelas-caone-hualane",
+      "line": 432,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "parcelas-caone-hualane-tour",
+      "path": "/parcelas-caone-hualane/tour",
+      "line": 433,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "valle-de-hualane-masterplan",
+      "path": "/valle-de-hualane/masterplan",
+      "line": 434,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "dossier-isla-maipo",
+      "path": "/ficha/isla-de-maipo-galvez-1458",
+      "line": 435,
+      "indexable": "false"
+    },
+    {
+      "area": "pub",
+      "id": "project-landing",
+      "path": "/p/:slug",
+      "line": 438
+    },
+    {
+      "area": "buyer",
+      "id": "buyer-home",
+      "path": "/comprador/inicio",
+      "line": 451,
+      "label": "\"Inicio\"",
+      "group": "\"comprador\"",
+      "icon": "\"home\"",
+      "primary": "true"
+    },
+    {
+      "area": "buyer",
+      "id": "comprador-progreso",
+      "path": "/comprador",
+      "line": 452,
+      "label": "\"Mi Progreso\"",
+      "group": "\"comprador\"",
+      "icon": "\"trending-up\""
+    },
+    {
+      "area": "buyer",
+      "id": "favoritos",
+      "path": "/favoritos",
+      "line": 453,
+      "label": "\"Favoritos\"",
+      "group": "\"comprador\"",
+      "icon": "\"heart\""
+    },
+    {
+      "area": "buyer",
+      "id": "mi-terreno",
+      "path": "/mi-terreno",
+      "line": 454,
+      "label": "\"Mi Terreno\"",
+      "group": "\"comprador\"",
+      "icon": "\"map-pin\""
+    },
+    {
+      "area": "buyer",
+      "id": "perfil",
+      "path": "/perfil",
+      "line": 455,
+      "label": "\"Mi Perfil\"",
+      "group": "\"comprador\"",
+      "icon": "\"user\""
+    },
+    {
+      "area": "buyer",
+      "id": "suscripcion",
+      "path": "/suscripcion",
+      "line": 456,
+      "label": "\"Suscripción\"",
+      "group": "\"comprador\"",
+      "icon": "\"credit-card\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-dashboard",
+      "path": "/asesor/dashboard",
+      "line": 460,
+      "label": "\"Dashboard\"",
+      "group": "\"principal\"",
+      "icon": "\"dashboard\"",
+      "primary": "true"
+    },
+    {
+      "area": "agent",
+      "id": "asesor-opportunities",
+      "path": "/asesor/opportunities",
+      "line": 463,
+      "label": "\"Oportunidades\"",
+      "group": "\"proyectos\"",
+      "icon": "\"target\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-opportunity",
+      "path": "/asesor/opportunity/:id",
+      "line": 464
+    },
+    {
+      "area": "agent",
+      "id": "asesor-captaciones",
+      "path": "/asesor/captaciones",
+      "line": 465,
+      "label": "\"Mis captaciones\"",
+      "group": "\"proyectos\"",
+      "icon": "\"handshake\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-broker-marketplace",
+      "path": "/asesor/proyectos-en-venta",
+      "line": 466,
+      "label": "\"Proyectos en venta\"",
+      "group": "\"red comercial\"",
+      "icon": "\"store\"",
+      "contexts": "[\"broker\", \"empresa\"]"
+    },
+    {
+      "area": "agent",
+      "id": "panel-inventario",
+      "path": "/panel/inventario",
+      "line": 469,
+      "label": "\"Mapa de inventario\"",
+      "group": "\"proyectos\"",
+      "icon": "\"map\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-listings",
+      "path": "/asesor/listings",
+      "line": 470,
+      "label": "\"Inventario\"",
+      "group": "\"proyectos\"",
+      "icon": "\"building\"",
+      "capability": "\"inventory.read\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-projects",
+      "path": "/asesor/projects",
+      "line": 471,
+      "label": "\"Proyectos\"",
+      "group": "\"proyectos\"",
+      "icon": "\"folder\"",
+      "capability": "\"projects.read\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-project-workspace",
+      "path": "/asesor/project/:projectId",
+      "line": 472
+    },
+    {
+      "area": "agent",
+      "id": "asesor-lots",
+      "path": "/asesor/lots",
+      "line": 473,
+      "label": "\"Lotes\"",
+      "group": "\"proyectos\"",
+      "icon": "\"grid\"",
+      "capability": "\"inventory.read\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-loteos",
+      "path": "/asesor/loteos",
+      "line": 474,
+      "label": "\"Control de loteo\"",
+      "group": "\"proyectos\"",
+      "icon": "\"gauge\"",
+      "capability": "\"inventory.read\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-spatial",
+      "path": "/asesor/spatial",
+      "line": 475,
+      "label": "\"Spatial Studio\"",
+      "group": "\"proyectos\"",
+      "icon": "\"map\"",
+      "capability": "\"inventory.read\"",
+      "feature": "\"spatial3d\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-subdivision",
+      "path": "/asesor/subdivision",
+      "line": 476,
+      "label": "\"Estudio de subdivisión\"",
+      "group": "\"proyectos\"",
+      "icon": "\"grid\"",
+      "capability": "\"inventory.write\"",
+      "feature": "\"kmz\""
+    },
+    {
+      "area": "agent",
+      "id": "clientes",
+      "path": "/clientes",
+      "line": 479,
+      "label": "\"Clientes\"",
+      "group": "\"ventas\"",
+      "icon": "\"users\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-leads",
+      "path": "/asesor/leads",
+      "line": 480,
+      "label": "\"Leads\"",
+      "group": "\"ventas\"",
+      "icon": "\"users\"",
+      "contexts": "[\"broker\", \"empresa\"]",
+      "capability": "\"crm.read\"",
+      "feature": "\"crm\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-buyer-requirements",
+      "path": "/asesor/demanda-compradores",
+      "line": 481,
+      "label": "\"Tengo comprador\"",
+      "group": "\"ventas\"",
+      "icon": "\"target\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-messages",
+      "path": "/asesor/messages",
+      "line": 482,
+      "label": "\"Mensajes\"",
+      "group": "\"ventas\"",
+      "icon": "\"message\"",
+      "contexts": "[\"empresa\"]"
+    },
+    {
+      "area": "agent",
+      "id": "asesor-eventos",
+      "path": "/asesor/eventos",
+      "line": 483,
+      "label": "\"Eventos\"",
+      "group": "\"ventas\"",
+      "icon": "\"calendar\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-notificaciones",
+      "path": "/asesor/notificaciones/plantillas",
+      "line": 484,
+      "label": "\"Plantillas de aviso\"",
+      "group": "\"ventas\"",
+      "icon": "\"bell\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-pipeline",
+      "path": "/asesor/pipeline",
+      "line": 492,
+      "label": "\"Pipeline\"",
+      "group": "\"ventas\"",
+      "icon": "\"workflow\"",
+      "contexts": "[\"empresa\"]",
+      "capability": "\"crm.read\"",
+      "feature": "\"crm\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-reservations",
+      "path": "/asesor/reservations",
+      "line": 493,
+      "label": "\"Reservas\"",
+      "group": "\"ventas\"",
+      "icon": "\"calendar\"",
+      "contexts": "[\"broker\", \"empresa\"]",
+      "capability": "\"reservations.read\"",
+      "feature": "\"reservations\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-visitas",
+      "path": "/asesor/visitas",
+      "line": 494,
+      "label": "\"Visitas\"",
+      "group": "\"ventas\"",
+      "icon": "\"calendar\"",
+      "contexts": "[\"empresa\"]",
+      "capability": "\"crm.read\"",
+      "feature": "\"crm\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-reuniones",
+      "path": "/asesor/reuniones",
+      "line": 495,
+      "label": "\"Reuniones\"",
+      "group": "\"ventas\"",
+      "icon": "\"calendar\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-cierres",
+      "path": "/asesor/cierres",
+      "line": 496,
+      "label": "\"Cierres de venta\"",
+      "group": "\"ventas\"",
+      "icon": "\"handshake\"",
+      "capability": "\"sales.read\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-sales",
+      "path": "/asesor/sales",
+      "line": 497,
+      "label": "\"Ventas\"",
+      "group": "\"ventas\"",
+      "icon": "\"handshake\"",
+      "contexts": "[\"empresa\"]",
+      "capability": "\"sales.read\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-closing",
+      "path": "/asesor/closing",
+      "line": 498,
+      "label": "\"Cierre\"",
+      "group": "\"ventas\"",
+      "icon": "\"scale\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-credits",
+      "path": "/asesor/credits",
+      "line": 499,
+      "label": "\"Créditos\"",
+      "group": "\"ventas\"",
+      "icon": "\"credit-card\"",
+      "capability": "\"sales.read\"",
+      "feature": "\"financing\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-payments",
+      "path": "/asesor/payments",
+      "line": 500,
+      "label": "\"Pagos\"",
+      "group": "\"ventas\"",
+      "icon": "\"dollar\"",
+      "capability": "\"payments.read\"",
+      "feature": "\"payments\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-comisiones",
+      "path": "/asesor/comisiones",
+      "line": 501,
+      "label": "\"Comisiones\"",
+      "group": "\"ventas\"",
+      "icon": "\"dollar\"",
+      "contexts": "[\"broker\", \"empresa\"]",
+      "capability": "\"commissions.read\"",
+      "feature": "\"commissions\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-mi-negocio",
+      "path": "/asesor/mi-negocio",
+      "line": 504,
+      "label": "\"Mi negocio\"",
+      "group": "\"red comercial\"",
+      "icon": "\"trending\"",
+      "contexts": "[\"broker\", \"empresa\"]",
+      "primary": "true"
+    },
+    {
+      "area": "agent",
+      "id": "asesor-red",
+      "path": "/asesor/red",
+      "line": 505,
+      "label": "\"Red y atribución\"",
+      "group": "\"red comercial\"",
+      "icon": "\"share\"",
+      "contexts": "[\"broker\", \"empresa\"]"
+    },
+    {
+      "area": "agent",
+      "id": "asesor-analytics",
+      "path": "/asesor/analytics",
+      "line": 506,
+      "label": "\"Analytics\"",
+      "group": "\"administración\"",
+      "icon": "\"chart\"",
+      "capability": "\"reports.read\"",
+      "feature": "\"analytics\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-financial",
+      "path": "/asesor/financial",
+      "line": 507,
+      "label": "\"Financiero\"",
+      "group": "\"administración\"",
+      "icon": "\"trending\"",
+      "capability": "\"payments.read\"",
+      "feature": "\"analytics\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-performance",
+      "path": "/asesor/performance",
+      "line": 508,
+      "label": "\"Performance\"",
+      "group": "\"administración\"",
+      "icon": "\"gauge\"",
+      "capability": "\"reports.read\"",
+      "feature": "\"analytics\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-demand",
+      "path": "/asesor/demand",
+      "line": 509,
+      "label": "\"Demanda\"",
+      "group": "\"administración\"",
+      "icon": "\"flame\"",
+      "capability": "\"reports.read\"",
+      "feature": "\"analytics\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-reports",
+      "path": "/asesor/reports",
+      "line": 510,
+      "label": "\"Reportes\"",
+      "group": "\"administración\"",
+      "icon": "\"report\"",
+      "capability": "\"reports.read\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-executive",
+      "path": "/asesor/executive",
+      "line": 511,
+      "label": "\"Ejecutivo\"",
+      "group": "\"administración\"",
+      "icon": "\"pie\"",
+      "capability": "\"reports.read\"",
+      "feature": "\"analytics\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-multi-project",
+      "path": "/asesor/multi-project",
+      "line": 512,
+      "label": "\"Multi proyecto\"",
+      "group": "\"administración\"",
+      "icon": "\"chart\"",
+      "capability": "\"reports.read\"",
+      "feature": "\"analytics\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-team",
+      "path": "/asesor/team",
+      "line": 515,
+      "label": "\"Equipo\"",
+      "group": "\"administración\"",
+      "icon": "\"users\"",
+      "capability": "\"team.read\"",
+      "feature": "\"team\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-enterprise",
+      "path": "/asesor/enterprise",
+      "line": 516,
+      "label": "\"Empresa\"",
+      "group": "\"administración\"",
+      "icon": "\"building\"",
+      "capability": "\"projects.write\"",
+      "feature": "\"team\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-api",
+      "path": "/asesor/api",
+      "line": 517,
+      "label": "\"API\"",
+      "group": "\"configuración\"",
+      "icon": "\"code\"",
+      "feature": "\"api\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-notifications",
+      "path": "/asesor/notifications",
+      "line": 518,
+      "label": "\"Notificaciones\"",
+      "group": "\"configuración\"",
+      "icon": "\"bell\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-tools",
+      "path": "/asesor/tools",
+      "line": 519,
+      "label": "\"Herramientas\"",
+      "group": "\"configuración\"",
+      "icon": "\"sparkles\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-soporte",
+      "path": "/asesor/soporte",
+      "line": 520,
+      "label": "\"Soporte\"",
+      "group": "\"configuración\"",
+      "icon": "\"lifebuoy\""
+    },
+    {
+      "area": "agent",
+      "id": "asesor-profile",
+      "path": "/asesor/profile",
+      "line": 521,
+      "label": "\"Mi perfil\"",
+      "group": "\"configuración\"",
+      "icon": "\"user\"",
+      "contexts": "[\"broker\", \"empresa\"]"
+    },
+    {
+      "area": "admin",
+      "id": "admin-dashboard",
+      "path": "/admin/dashboard",
+      "line": 544,
+      "label": "\"Panel admin\"",
+      "group": "\"principal\"",
+      "icon": "\"dashboard\"",
+      "primary": "true"
+    },
+    {
+      "area": "admin",
+      "id": "admin-organizations",
+      "path": "/admin/inmobiliarias",
+      "line": 547,
+      "label": "\"Inmobiliarias\"",
+      "group": "\"gestión\"",
+      "icon": "\"building\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-subscriptions",
+      "path": "/admin/suscripciones",
+      "line": 548,
+      "label": "\"Suscripciones y permisos\"",
+      "group": "\"gestión\"",
+      "icon": "\"credit-card\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-users",
+      "path": "/admin/users",
+      "line": 557,
+      "label": "\"Usuarios\"",
+      "group": "\"gestión\"",
+      "icon": "\"users\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-agents",
+      "path": "/admin/agents",
+      "line": 558,
+      "label": "\"Agentes\"",
+      "group": "\"gestión\"",
+      "icon": "\"shield\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-brokers",
+      "path": "/admin/brokers",
+      "line": 559,
+      "label": "\"Brokers\"",
+      "group": "\"gestión\"",
+      "icon": "\"handshake\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-projects",
+      "path": "/admin/projects",
+      "line": 560,
+      "label": "\"Proyectos\"",
+      "group": "\"gestión\"",
+      "icon": "\"folder\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-featured",
+      "path": "/admin/featured",
+      "line": 561,
+      "label": "\"Destacados\"",
+      "group": "\"gestión\"",
+      "icon": "\"sparkles\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-reservations",
+      "path": "/admin/reservations",
+      "line": 562,
+      "label": "\"Reservas\"",
+      "group": "\"gestión\"",
+      "icon": "\"calendar\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-documents",
+      "path": "/admin/documents",
+      "line": 563,
+      "label": "\"Documentos\"",
+      "group": "\"gestión\"",
+      "icon": "\"clipboard\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-approvals",
+      "path": "/admin/approvals",
+      "line": 566,
+      "label": "\"Propiedades\"",
+      "group": "\"aprobaciones\"",
+      "icon": "\"clipboard\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-project-approvals",
+      "path": "/admin/project-approvals",
+      "line": 567,
+      "label": "\"Loteos\"",
+      "group": "\"aprobaciones\"",
+      "icon": "\"clipboard\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-captaciones",
+      "path": "/admin/captaciones",
+      "line": 568,
+      "label": "\"Captaciones\"",
+      "group": "\"aprobaciones\"",
+      "icon": "\"map-pin\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-commercial-leads",
+      "path": "/admin/commercial-leads",
+      "line": 569,
+      "label": "\"Leads comerciales\"",
+      "group": "\"aprobaciones\"",
+      "icon": "\"handshake\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-comisiones",
+      "path": "/admin/comisiones",
+      "line": 572,
+      "label": "\"Comisiones\"",
+      "group": "\"finanzas\"",
+      "icon": "\"dollar\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-ventas",
+      "path": "/admin/ventas",
+      "line": 573,
+      "label": "\"Ventas\"",
+      "group": "\"finanzas\"",
+      "icon": "\"handshake\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-credits",
+      "path": "/admin/credits",
+      "line": 574,
+      "label": "\"Créditos\"",
+      "group": "\"finanzas\"",
+      "icon": "\"credit-card\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-financial",
+      "path": "/admin/financial",
+      "line": 575,
+      "label": "\"Financiero\"",
+      "group": "\"finanzas\"",
+      "icon": "\"trending\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-analytics",
+      "path": "/admin/analytics",
+      "line": 576,
+      "label": "\"Analytics\"",
+      "group": "\"finanzas\"",
+      "icon": "\"chart\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-visual-scenarios",
+      "path": "/admin/visual-scenarios",
+      "line": 579,
+      "label": "\"Escenarios visuales\"",
+      "group": "\"sistema\"",
+      "icon": "\"sparkles\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-branding-fichas",
+      "path": "/admin/branding-fichas",
+      "line": 580,
+      "label": "\"Branding fichas\"",
+      "group": "\"sistema\"",
+      "icon": "\"palette\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-soporte",
+      "path": "/admin/soporte",
+      "line": 581,
+      "label": "\"Soporte\"",
+      "group": "\"sistema\"",
+      "icon": "\"lifebuoy\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-audit",
+      "path": "/admin/audit",
+      "line": 582,
+      "label": "\"Auditoría\"",
+      "group": "\"sistema\"",
+      "icon": "\"shield\""
+    }
+  ]
+}

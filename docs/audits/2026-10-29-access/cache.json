@@ -1,0 +1,10 @@
+{
+  "experiment": "Fresh shared query key across synthetic identity change",
+  "queryKey": ["reservations", null],
+  "staleTimeMs": 60000,
+  "firstData": [{"audit_marker":"account-A-synthetic"}],
+  "secondQueryExpectedData": [{"audit_marker":"account-B-synthetic"}],
+  "returned": [{"audit_marker":"account-A-synthetic"}],
+  "secondQueryCalls": 0,
+  "scope": "Local QueryClient only. No real accounts, backend requests or private data. Demonstrates cache mechanism, not a production exploit."
+}

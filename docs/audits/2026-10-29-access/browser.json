@@ -1,0 +1,512 @@
+[
+  {
+    "name": "login",
+    "viewport": [
+      320,
+      740
+    ],
+    "requested": "/auth",
+    "final": "/auth?",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ]
+  },
+  {
+    "name": "signup",
+    "viewport": [
+      320,
+      740
+    ],
+    "requested": "/auth?role=agent",
+    "final": "/auth?role=agent",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "first-name",
+        "type": "text",
+        "autocomplete": ""
+      },
+      {
+        "id": "last-name",
+        "type": "text",
+        "autocomplete": ""
+      },
+      {
+        "id": "signup-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signup-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ]
+  },
+  {
+    "name": "forgot",
+    "viewport": [
+      320,
+      740
+    ],
+    "requested": "/auth",
+    "final": "/auth?",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "forgot-email",
+        "type": "email",
+        "autocomplete": ""
+      }
+    ]
+  },
+  {
+    "name": "reset-invalid",
+    "viewport": [
+      320,
+      740
+    ],
+    "requested": "/reset-password",
+    "final": "/reset-password?",
+    "overflow": false,
+    "forms": 0,
+    "inputs": [],
+    "invalidShown": true
+  },
+  {
+    "name": "buyer",
+    "viewport": [
+      320,
+      740
+    ],
+    "requested": "/comprador/inicio",
+    "final": "/auth?redirect=%2Fcomprador%2Finicio",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  },
+  {
+    "name": "broker",
+    "viewport": [
+      320,
+      740
+    ],
+    "requested": "/asesor/mi-negocio",
+    "final": "/auth?redirect=%2Fasesor%2Fmi-negocio",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  },
+  {
+    "name": "captador",
+    "viewport": [
+      320,
+      740
+    ],
+    "requested": "/asesor/captaciones",
+    "final": "/auth?redirect=%2Fasesor%2Fcaptaciones",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  },
+  {
+    "name": "finance",
+    "viewport": [
+      320,
+      740
+    ],
+    "requested": "/asesor/payments?project=qa#resumen",
+    "final": "/auth?redirect=%2Fasesor%2Fpayments%3Fproject%3Dqa%23resumen",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  },
+  {
+    "name": "admin",
+    "viewport": [
+      320,
+      740
+    ],
+    "requested": "/admin/users",
+    "final": "/auth?redirect=%2Fadmin%2Fusers",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  },
+  {
+    "name": "panel",
+    "viewport": [
+      320,
+      740
+    ],
+    "requested": "/panel",
+    "final": "/auth?redirect=%2Fpanel",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  },
+  {
+    "name": "profile",
+    "viewport": [
+      320,
+      740
+    ],
+    "requested": "/perfil",
+    "final": "/auth?redirect=%2Fperfil",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  },
+  {
+    "name": "login",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "requested": "/auth",
+    "final": "/auth?",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ]
+  },
+  {
+    "name": "signup",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "requested": "/auth?role=agent",
+    "final": "/auth?role=agent",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "first-name",
+        "type": "text",
+        "autocomplete": ""
+      },
+      {
+        "id": "last-name",
+        "type": "text",
+        "autocomplete": ""
+      },
+      {
+        "id": "signup-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signup-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ]
+  },
+  {
+    "name": "forgot",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "requested": "/auth",
+    "final": "/auth?",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "forgot-email",
+        "type": "email",
+        "autocomplete": ""
+      }
+    ]
+  },
+  {
+    "name": "reset-invalid",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "requested": "/reset-password",
+    "final": "/reset-password?",
+    "overflow": false,
+    "forms": 0,
+    "inputs": [],
+    "invalidShown": true
+  },
+  {
+    "name": "buyer",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "requested": "/comprador/inicio",
+    "final": "/auth?redirect=%2Fcomprador%2Finicio",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  },
+  {
+    "name": "broker",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "requested": "/asesor/mi-negocio",
+    "final": "/auth?redirect=%2Fasesor%2Fmi-negocio",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  },
+  {
+    "name": "captador",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "requested": "/asesor/captaciones",
+    "final": "/auth?redirect=%2Fasesor%2Fcaptaciones",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  },
+  {
+    "name": "finance",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "requested": "/asesor/payments?project=qa#resumen",
+    "final": "/auth?redirect=%2Fasesor%2Fpayments%3Fproject%3Dqa%23resumen",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  },
+  {
+    "name": "admin",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "requested": "/admin/users",
+    "final": "/auth?redirect=%2Fadmin%2Fusers",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  },
+  {
+    "name": "panel",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "requested": "/panel",
+    "final": "/auth?redirect=%2Fpanel",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  },
+  {
+    "name": "profile",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "requested": "/perfil",
+    "final": "/auth?redirect=%2Fperfil",
+    "overflow": false,
+    "forms": 1,
+    "inputs": [
+      {
+        "id": "signin-email",
+        "type": "email",
+        "autocomplete": ""
+      },
+      {
+        "id": "signin-password",
+        "type": "password",
+        "autocomplete": ""
+      }
+    ],
+    "returnPreserved": true
+  }
+]
