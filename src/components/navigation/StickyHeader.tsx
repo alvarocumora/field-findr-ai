@@ -49,12 +49,13 @@ const StickyHeader = () => {
   // Close the mobile sheet even when route changes via back/forward or external navigation.
   useEffect(() => setIsMobileMenuOpen(false), [location.pathname]);
 
-  // Tres puertas de entrada: Explorar (comprar), Vender, Comunidad.
+  // Una puerta por tipo de usuario: comprador, vendedor/broker (gratis, gana comisión),
+  // inmobiliaria (planes pagados) y comunidad.
   const publicNavigation = [
-    { name: 'Explorar', href: '/explorar' },
-    { name: 'Vender', href: '/comenzar' },
+    { name: 'Comprar terreno', href: '/explorar' },
+    { name: 'Vender como broker', href: '/brokers' },
+    { name: 'Inmobiliarias', href: '/planes-loteos', badge: 'B2B' },
     { name: 'Comunidad', href: '/comunidad' },
-    { name: 'Para profesionales', href: '/planes-loteos', badge: 'B2B' },
   ];
 
   // Contextual nav items based on role.
@@ -80,13 +81,13 @@ const StickyHeader = () => {
 
     if (isAgent || isAdmin) {
       items.push({ label: 'Mi Panel', href: '/panel', icon: LayoutDashboard });
-      items.push({ label: 'Mis Propiedades', href: '/asesor/listings', icon: Building2 });
-      items.push({ label: 'Vista comprador', href: '/comprador', icon: Home });
+      items.push({ label: 'Mi negocio (broker)', href: '/asesor/mi-negocio', icon: Building2 });
     }
 
     if (!isAgent && !isAdmin) {
+      // Portal único del comprador: favoritos, reservas y documentos viven en Mi Terreno.
       items.push({ label: 'Mi Terreno', href: '/mi-terreno', icon: Home });
-      items.push({ label: 'Mis Favoritos', href: '/favoritos', icon: Heart });
+      items.push({ label: 'Favoritos', href: '/favoritos', icon: Heart });
     }
 
     items.push({ label: 'Configuración', href: '/perfil', icon: Settings });
