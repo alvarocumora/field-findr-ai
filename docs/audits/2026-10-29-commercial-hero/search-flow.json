@@ -1,0 +1,46 @@
+[
+  {
+    "viewport": [
+      320,
+      740
+    ],
+    "path": "/explorar",
+    "query": {
+      "q": [
+        "Maule"
+      ],
+      "type": [
+        "parcela_rural"
+      ],
+      "currency": [
+        "CLP"
+      ],
+      "clpMax": [
+        "40000000"
+      ]
+    },
+    "passed": true
+  },
+  {
+    "viewport": [
+      1440,
+      1000
+    ],
+    "path": "/explorar",
+    "query": {
+      "q": [
+        "Maule"
+      ],
+      "type": [
+        "parcela_rural"
+      ],
+      "currency": [
+        "CLP"
+      ],
+      "clpMax": [
+        "40000000"
+      ]
+    },
+    "passed": true
+  }
+]

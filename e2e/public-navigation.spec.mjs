@@ -3,19 +3,20 @@ import { expect, test } from '@playwright/test';
 // Public routes only: no privileged login, Supabase mutation, reservation,
 // payment, or dependency on live prices. The local production bundle is served
 // by Vite preview and is tested in actual Chromium at mobile/desktop widths.
-test('Atlas territorial de portada tiene una sección navegable', async ({ page }) => {
+test('portada lleva al catálogo de proyectos en venta', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('link', { name: 'Explorar Chile por región' }).click();
-  await expect(page).toHaveURL(/#atlas$/);
-  await expect(page.locator('#atlas')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Explora Chile desde su territorio.' })).toBeVisible();
+  await page.getByRole('link', { name: 'Ver proyectos en venta', exact: true }).click();
+  await expect(page).toHaveURL(/#proyectos-en-venta$/);
+  await expect(page.locator('#proyectos-en-venta')).toBeVisible();
 });
 
-test('portada → explorador mantiene filtro real de parcela', async ({ page }) => {
+test('portada → explorador mantiene tipo y presupuesto', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: /Encuentra tierra con/i })).toBeVisible();
-  await page.getByRole('link', { name: 'Parcelas', exact: true }).click();
-  await expect(page).toHaveURL(/\/explorar\?type=parcela_rural/);
+  await expect(page.getByRole('heading', { name: 'Tu próxima parcela está aquí.' })).toBeVisible();
+  await page.getByLabel('Tipo de terreno', { exact: true }).selectOption('parcela_rural');
+  await page.getByLabel('Presupuesto CLP', { exact: true }).selectOption('40000000');
+  await page.getByRole('button', { name: 'Buscar parcelas y terrenos', exact: true }).click();
+  await expect(page).toHaveURL(/\/explorar\?type=parcela_rural&currency=CLP&clpMax=40000000/);
   await expect(page.locator('#contenido-principal')).toBeAttached();
 });
 
@@ -159,7 +160,7 @@ test('rutas comerciales requieren sesión y retienen filtros del módulo elegido
 test('buscador y CTA de portada quedan dentro del primer viewport', async ({ page }) => {
   await page.goto('/');
   const search = page.locator('#hero-search');
-  const submit = page.getByRole('button', { name: 'Explorar terrenos', exact: true });
+  const submit = page.getByRole('button', { name: 'Buscar parcelas y terrenos', exact: true });
   await expect(search).toBeVisible();
   await expect(submit).toBeVisible();
   const viewport = page.viewportSize();

@@ -1,0 +1,62 @@
+[
+  {
+    "name": "home-assets-320",
+    "viewport": [
+      320,
+      740
+    ],
+    "overflow": false,
+    "searchBox": {
+      "x": 33,
+      "y": 364.75,
+      "width": 254,
+      "height": 48
+    },
+    "submitBox": {
+      "x": 33,
+      "y": 520.75,
+      "width": 254,
+      "height": 48
+    }
+  },
+  {
+    "name": "home-assets-390",
+    "viewport": [
+      390,
+      844
+    ],
+    "overflow": false,
+    "searchBox": {
+      "x": 33,
+      "y": 364.75,
+      "width": 324,
+      "height": 48
+    },
+    "submitBox": {
+      "x": 33,
+      "y": 520.75,
+      "width": 324,
+      "height": 48
+    }
+  },
+  {
+    "name": "home-desktop",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "overflow": false,
+    "searchBox": {
+      "x": 57,
+      "y": 467.5,
+      "width": 622,
+      "height": 48
+    },
+    "submitBox": {
+      "x": 57,
+      "y": 623.5,
+      "width": 622,
+      "height": 48
+    }
+  }
+]
