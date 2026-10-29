@@ -338,7 +338,7 @@ const ProjectWorkspace = () => {
                 <div className="py-10 text-center text-sm text-muted-foreground">No hay reservas activas en este proyecto.</div>
               ) : (
                 <div className="divide-y rounded-xl border">
-                  {activeReservations.slice(0, 10).map((reservation: any) => (
+                  {activeReservations.slice(0, 10).map((reservation) => (
                     <div key={reservation.id} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="font-medium">{reservation.buyer_name}</p>
@@ -394,7 +394,7 @@ const ProjectWorkspace = () => {
                 </div>
               ) : (
                 <div className="divide-y rounded-xl border">
-                  {docs.slice(0, 12).map((doc: any, index: number) => (
+                  {docs.slice(0, 12).map((doc, index: number) => (
                     <div key={doc.id || doc.url || index} className="flex items-center justify-between p-3">
                       <span className="text-sm font-medium">{doc.name || doc.title || `Documento ${index + 1}`}</span>
                       {doc.url && <Button asChild size="sm" variant="ghost"><a href={doc.url} target="_blank" rel="noreferrer">Abrir</a></Button>}

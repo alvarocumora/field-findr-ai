@@ -51,7 +51,7 @@ const waitForSentinelIdle = (
     else resolve();
   };
 
-  const onError = (event: any) => {
+  const onError = (event: { error?: Error; sourceId?: string; source?: { id?: string } }) => {
     const sourceId = event?.sourceId ?? event?.source?.id ?? null;
     if (!sourceId || sourceIds.includes(sourceId)) {
       finish(new Error("Sentinel raster failed to load"));

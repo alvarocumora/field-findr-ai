@@ -24,14 +24,14 @@ export function useOrganizations() {
       if (!user) return [];
       // Get orgs where user is owner or member
       const { data: memberOf } = await supabase
-        .from('organization_members' as any)
+        .from('organization_members')
         .select('organization_id')
         .eq('user_id', user.id);
 
-      const orgIds = (memberOf || []).map((m: any) => m.organization_id);
+      const orgIds = (memberOf || []).map((m) => m.organization_id);
 
       const { data, error } = await supabase
-        .from('organizations' as any)
+        .from('organizations')
         .select('*')
         .or(`owner_id.eq.${user.id}${orgIds.length > 0 ? `,id.in.(${orgIds.join(',')})` : ''}`);
 
@@ -53,18 +53,18 @@ export function useCreateOrganization() {
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('organizations' as any)
-        .insert({ ...org, owner_id: user.id } as any)
+        .from('organizations')
+        .insert({ ...org, owner_id: user.id })
         .select()
         .single();
 
       if (error) throw error;
-      const newOrg = data as any;
+      const newOrg = data;
 
       // Add owner as member
       await supabase
-        .from('organization_members' as any)
-        .insert({ organization_id: newOrg.id, user_id: user.id, role: 'owner' } as any);
+        .from('organization_members')
+        .insert({ organization_id: newOrg.id, user_id: user.id, role: 'owner' });
 
       return newOrg;
     },
@@ -80,7 +80,7 @@ export function useWebhookSubscriptions() {
     queryFn: async () => {
       if (!user) return [];
       const { data, error } = await supabase
-        .from('webhook_subscriptions' as any)
+        .from('webhook_subscriptions')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -99,8 +99,8 @@ export function useCreateWebhook() {
     mutationFn: async (webhook: { url: string; events: string[]; secret: string }) => {
       if (!user) throw new Error('Not authenticated');
       const { data, error } = await supabase
-        .from('webhook_subscriptions' as any)
-        .insert({ ...webhook, user_id: user.id } as any)
+        .from('webhook_subscriptions')
+        .insert({ ...webhook, user_id: user.id })
         .select()
         .single();
       if (error) throw error;
@@ -114,7 +114,7 @@ export function useDeleteWebhook() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('webhook_subscriptions' as any).delete().eq('id', id);
+      const { error } = await supabase.from('webhook_subscriptions').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['webhook-subscriptions'] }),

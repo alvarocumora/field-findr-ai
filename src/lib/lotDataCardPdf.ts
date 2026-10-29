@@ -1,4 +1,5 @@
-import { Lot, LotFeatures } from '@/hooks/useLots';
+import type { LotFeatures } from '@/hooks/useLots';
+import type { PublicLot as Lot } from '@/lib/lots/publicLotTypes';
 import { BRAND, fetchImageAsBase64, publicUrl } from '@/lib/pdf/fichaShell';
 import { renderFicha } from '@/lib/pdf/fichaTemplates';
 import type { SentinelImageryResult } from '@/lib/satellite/sentinel';
@@ -16,7 +17,7 @@ const buildMapboxStaticUrl = (lot: Lot, token: string, width = 800, height = 450
   const lat = lot.latitude ? Number(lot.latitude) : null;
   if (lng == null || lat == null || Number.isNaN(lng) || Number.isNaN(lat)) return null;
 
-  const polygon = (lot as any).polygon as number[][] | null;
+  const polygon = (lot).polygon as number[][] | null;
   let overlay = '';
   if (polygon && polygon.length >= 3) {
     const coords = [...polygon];
@@ -91,7 +92,7 @@ export const generateLotDataCardPdf = async (
   f.y += 26;
 
   // ── Imagen principal ──
-  const images = (lot as any).images as string[] | null;
+  const images = (lot).images as string[] | null;
   if (images && images.length > 0) {
     const base64 = await fetchImageAsBase64(images[0]);
     if (base64) f.image(base64, contentW * (9 / 16));

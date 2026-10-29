@@ -102,7 +102,7 @@ export function useCreateTransactionDocument() {
     mutationFn: async (doc: { reservation_id: string; doc_type: TransactionDocType; deadline?: string; notes?: string }) => {
       const { data, error } = await supabase
         .from('transaction_documents')
-        .insert({ ...doc, uploaded_by: user?.id } as any)
+        .insert({ ...doc, uploaded_by: user?.id })
         .select()
         .single();
       if (error) throw error;
@@ -123,7 +123,7 @@ export function useUpdateTransactionDocument() {
     mutationFn: async ({ id, ...updates }: Partial<TransactionDocument> & { id: string }) => {
       const { error } = await supabase
         .from('transaction_documents')
-        .update(updates as any)
+        .update(updates)
         .eq('id', id);
       if (error) throw error;
     },
@@ -153,7 +153,7 @@ export function useUploadTransactionFile() {
 
       const { error: updateError } = await supabase
         .from('transaction_documents')
-        .update({ file_url: publicUrl, file_name: file.name, status: 'uploaded' as any })
+        .update({ file_url: publicUrl, file_name: file.name, status: 'uploaded' })
         .eq('id', documentId);
       if (updateError) throw updateError;
 

@@ -1,3 +1,4 @@
+type PricePrediction = { price: number; pricePerHectare: number; confidence: string; range: { min: number; max: number; }; factors: { name: string; impact: string; positive: boolean; }[]; comparables: { location: string; price: number; area: number; distance: string; }[]; };
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ const PricePredictor = () => {
   const [areaHectares, setAreaHectares] = useState([5]);
   const [landType, setLandType] = useState("");
   const [hasWater, setHasWater] = useState("");
-  const [prediction, setPrediction] = useState<any>(null);
+  const [prediction, setPrediction] = useState<PricePrediction | null>(null);
 
   const historicalData = [
     { month: "Ene 2024", price: 3200000 },
@@ -169,7 +170,7 @@ const PricePredictor = () => {
               <div>
                 <h3 className="font-semibold mb-3 text-foreground">Factores que Influyen en el Precio</h3>
                 <div className="space-y-2">
-                  {prediction.factors.map((factor: any, index: number) => (
+                  {prediction.factors.map((factor, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                       <div className="flex items-center gap-2">
                         {factor.positive ? (
@@ -191,7 +192,7 @@ const PricePredictor = () => {
               <div>
                 <h3 className="font-semibold mb-3 text-foreground">Propiedades Comparables</h3>
                 <div className="space-y-2">
-                  {prediction.comparables.map((comp: any, index: number) => (
+                  {prediction.comparables.map((comp, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-muted-foreground" />

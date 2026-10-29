@@ -81,7 +81,7 @@ serve(async (req) => {
         else if (prefs.size === "xlarge" && area > 10000) score += 25;
 
         // Services match
-        const features = (lot.features || {}) as Record<string, any>;
+        const features = (lot.features || {}) as Record<string, unknown>;
         if (prefs.services === "all" && features.hasWater && features.hasElectricity && features.hasRoad) score += 25;
         else if (prefs.services === "basic" && (features.hasWater || features.hasElectricity)) score += 20;
         else if (prefs.services === "none") score += 20;

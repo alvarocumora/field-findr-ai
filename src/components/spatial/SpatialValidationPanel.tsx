@@ -16,7 +16,7 @@ interface Props {
 
 /** Validates each stage of KMZ → masterplan → PDF → 3D with explicit, actionable errors. */
 export function buildSpatialStages({ project, lots, roads, sourceReady }: Props): Stage[] {
-  const normalized = lots.map((l) => normalizePolygon(l.polygon as any, l.latitude ?? undefined, l.longitude ?? undefined));
+  const normalized = lots.map((l) => normalizePolygon(l.polygon, l.latitude ?? undefined, l.longitude ?? undefined));
   const valid = normalized.filter((n) => n.valid).length;
   const invalidNums = lots.filter((_, i) => !normalized[i].valid).map((l) => l.lot_number);
   const dupNums = lots.map((l) => l.lot_number).filter((n, i, a) => a.indexOf(n) !== i);

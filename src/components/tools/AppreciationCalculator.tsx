@@ -33,7 +33,7 @@ const AppreciationCalculator = () => {
 
       // Group by month
       const byMonth: Record<string, number[]> = {};
-      data.forEach((d: any) => {
+      data.forEach((d) => {
         const month = format(new Date(d.recorded_at), 'yyyy-MM');
         if (!byMonth[month]) byMonth[month] = [];
         byMonth[month].push(Number(d.price));

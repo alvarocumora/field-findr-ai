@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
 
     if (error || !row) return json(404, { error: 'Tasación no encontrada' });
 
-    const anchor = row.blockchain_anchor as any;
+    const anchor = row.blockchain_anchor;
     if (!anchor || anchor.protocol !== 'opentimestamps' || !anchor.digest) {
       return json(200, {
         ok: true,
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
 
     const calendars: string[] =
       Array.isArray(anchor.calendars) && anchor.calendars.length > 0
-        ? anchor.calendars.map((c: any) => c.url).filter(Boolean)
+        ? anchor.calendars.map((c) => c.url).filter(Boolean)
         : ['https://a.pool.opentimestamps.org', 'https://b.pool.opentimestamps.org', 'https://finney.calendar.eternitywall.com'];
 
     const checks = await Promise.all(calendars.map((u) => checkCalendar(u, anchor.digest)));

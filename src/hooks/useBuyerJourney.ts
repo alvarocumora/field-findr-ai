@@ -1,3 +1,5 @@
+import type { Tables } from '@/integrations/supabase/types';
+import type { ReservationWithLot } from '@/hooks/useReservations';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -11,12 +13,12 @@ export interface JourneyEvent {
 }
 
 export interface BuyerJourney {
-  reservation: any;
-  lead: any | null;
-  closingSteps: any[];
-  credit: any | null;
-  creditPayments: any[];
-  commission: any | null;
+  reservation: ReservationWithLot;
+  lead: Tables<'leads'> | null;
+  closingSteps: Tables<'closing_steps'>[];
+  credit: Tables<'credits'> | null;
+  creditPayments: Tables<'credit_payments'>[];
+  commission: Tables<'agent_commissions'> | null;
   events: JourneyEvent[];
 }
 
@@ -55,7 +57,7 @@ export const useBuyerJourney = (reservationId: string | null) => {
       const credit = creditRes.data ?? null;
       const commission = commissionRes.data ?? null;
 
-      let creditPayments: any[] = [];
+      let creditPayments: Tables<'credit_payments'>[] = [];
       if (credit) {
         const { data } = await supabase
           .from('credit_payments')
@@ -110,7 +112,7 @@ export const useBuyerJourney = (reservationId: string | null) => {
           : reservation.status === 'paid' ? 'current' : 'pending',
       });
 
-      const promesa = closingSteps.find((s: any) => s.step_type === 'promesa');
+      const promesa = closingSteps.find((s) => s.step_type === 'promesa');
       events.push({
         key: 'contrato',
         date: promesa?.completed_at ?? null,
@@ -123,7 +125,7 @@ export const useBuyerJourney = (reservationId: string | null) => {
       });
 
       if (credit) {
-        const paidCount = creditPayments.filter((p: any) => p.status === 'paid').length;
+        const paidCount = creditPayments.filter((p) => p.status === 'paid').length;
         events.push({
           key: 'credito',
           date: credit.started_at,
@@ -134,7 +136,7 @@ export const useBuyerJourney = (reservationId: string | null) => {
       }
 
       for (const stepType of ['escritura', 'inscripcion_cbr'] as const) {
-        const step = closingSteps.find((s: any) => s.step_type === stepType);
+        const step = closingSteps.find((s) => s.step_type === stepType);
         if (!step) continue;
         events.push({
           key: stepType,

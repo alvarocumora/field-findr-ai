@@ -23,7 +23,7 @@ serve(async (req) => {
     }
 
     // Send top 10 listings for analysis to keep token usage low
-    const subset = listings.slice(0, 10).map((l: any) => ({
+    const subset = listings.slice(0, 10).map((l) => ({
       id: l.id,
       title: l.title,
       price: l.price,

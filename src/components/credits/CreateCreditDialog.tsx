@@ -24,7 +24,7 @@ export function CreateCreditDialog({ trigger }: Props) {
   const { data: reservations = [] } = useReservations();
   const createCredit = useCreateCredit();
 
-  const paidReservations = (reservations as any[]).filter(r => r.status === 'paid');
+  const paidReservations = (reservations).filter(r => r.status === 'paid');
 
   const [reservationId, setReservationId] = useState('');
   const [totalAmount, setTotalAmount] = useState('');
@@ -96,7 +96,7 @@ export function CreateCreditDialog({ trigger }: Props) {
             <Select value={reservationId} onValueChange={handleSelectReservation}>
               <SelectTrigger><SelectValue placeholder="Seleccionar reserva" /></SelectTrigger>
               <SelectContent>
-                {paidReservations.map((r: any) => (
+                {paidReservations.map((r) => (
                   <SelectItem key={r.id} value={r.id}>
                     {r.buyer_name} — Lote {r.lots?.lot_number}
                   </SelectItem>

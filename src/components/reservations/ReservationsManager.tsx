@@ -1,3 +1,4 @@
+import type { ReservationWithLot } from '@/hooks/useReservations';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,7 +43,7 @@ const ReservationsManager = () => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [convertTarget, setConvertTarget] = useState<any>(null);
+  const [convertTarget, setConvertTarget] = useState<ReservationWithLot | null>(null);
   const [journeyReservationId, setJourneyReservationId] = useState<string | null>(null);
   const expireStale = useExpireStaleReservations();
   const extendReservation = useExtendReservation();
@@ -122,14 +123,14 @@ const ReservationsManager = () => {
     if (!error) queryClient.invalidateQueries({ queryKey: ['admin-reservations'] });
   };
 
-  const copyPaymentLink = async (reservation: any) => {
+  const copyPaymentLink = async (reservation: ReservationWithLot) => {
     if (!reservation.payment_url) return;
     await navigator.clipboard.writeText(reservation.payment_url);
     void stampShared(reservation.id);
     toast.success('Link de pago copiado');
   };
 
-  const sharePaymentWhatsApp = (reservation: any) => {
+  const sharePaymentWhatsApp = (reservation: ReservationWithLot) => {
     if (!reservation.payment_url) return;
     const phone = String(reservation.buyer_phone || '').replace(/\D/g, '');
     const lot = reservation.lots;
@@ -148,7 +149,7 @@ const ReservationsManager = () => {
     void stampShared(reservation.id);
   };
 
-  const filtered = reservations.filter((r: any) => {
+  const filtered = reservations.filter((r) => {
     const needle = searchQuery.toLowerCase();
     const matchesSearch = !needle || r.buyer_name?.toLowerCase().includes(needle) || r.buyer_email?.toLowerCase().includes(needle);
     const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
@@ -157,11 +158,11 @@ const ReservationsManager = () => {
 
   const stats = {
     total: reservations.length,
-    pending: reservations.filter((r: any) => r.status === 'pending_payment').length,
-    paid: reservations.filter((r: any) => r.status === 'paid').length,
+    pending: reservations.filter((r) => r.status === 'pending_payment').length,
+    paid: reservations.filter((r) => r.status === 'paid').length,
     totalAmount: reservations
-      .filter((r: any) => r.status === 'paid')
-      .reduce((sum: number, r: any) => sum + (r.reservation_amount || 0), 0),
+      .filter((r) => r.status === 'paid')
+      .reduce((sum: number, r) => sum + (r.reservation_amount || 0), 0),
   };
 
   return (
@@ -210,7 +211,7 @@ const ReservationsManager = () => {
             </div>
           ) : (
             <div className="divide-y divide-border/40">
-              {filtered.map((reservation: any) => {
+              {filtered.map((reservation) => {
                 const config = STATUS_CONFIG[reservation.status as ReservationStatus] || STATUS_CONFIG.pending_payment;
                 const StatusIcon = config.icon;
                 const lot = reservation.lots;

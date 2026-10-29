@@ -32,6 +32,7 @@ describe('normalizePolygon', () => {
     const closed = [...quad, quad[0]];
     const n = normalizePolygon(closed);
     expect(n.coords).toHaveLength(4); // closing point removed
+    expect(closed).toEqual([...quad, quad[0]]); // never mutate surveyed geometry
   });
 
   it('terrainSize is at least 60 m and scales with the polygon span', () => {
@@ -53,5 +54,14 @@ describe('normalizePolygon', () => {
   it('handles null/undefined polygon safely', () => {
     expect(normalizePolygon(null).valid).toBe(false);
     expect(normalizePolygon(undefined).valid).toBe(false);
+  });
+
+  it('rejects malformed JSON coordinates before geometry calculations', () => {
+    for (const value of ['polygon', {}, [null, null, null], [[1], [2], [3]], [[1, 2], [2, 3], ['4', 5]], [[1, 2], [2, 3], [NaN, 4]], [[1, 2], [2, 3], [Infinity, 4]]]) {
+      const result = normalizePolygon(value, -34, -71);
+      expect(result.valid).toBe(false);
+      expect(result.coords).toEqual([]);
+      expect(result.centroidLat).toBe(-34);
+    }
   });
 });

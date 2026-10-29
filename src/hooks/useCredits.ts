@@ -1,3 +1,4 @@
+import type { Tables } from '@/integrations/supabase/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,7 +22,7 @@ export interface Credit {
   next_payment_date: string | null;
   created_at: string;
   updated_at: string;
-  lots?: any;
+  lots?: Pick<Tables<'lots'>, 'lot_number' | 'name' | 'area' | 'project_id'> & { projects?: Pick<Tables<'projects'>, 'name'> | null };
 }
 
 export interface CreditPayment {
@@ -105,7 +106,7 @@ export function useCreateCredit() {
         .insert({
           ...creditData,
           next_payment_date: payments[0]?.due_date || null,
-        } as any)
+        })
         .select()
         .single();
       if (error) throw error;
@@ -113,7 +114,7 @@ export function useCreateCredit() {
       if (payments.length > 0) {
         const { error: pErr } = await supabase
           .from('credit_payments')
-          .insert(payments.map(p => ({ ...p, credit_id: newCredit.id })) as any[]);
+          .insert(payments.map(p => ({ ...p, credit_id: newCredit.id })));
         if (pErr) throw pErr;
       }
       return newCredit;
@@ -128,7 +129,7 @@ export function useRecordPayment() {
     mutationFn: async ({ paymentId, paidDate, method }: { paymentId: string; paidDate: string; method?: string }) => {
       const { error } = await supabase
         .from('credit_payments')
-        .update({ status: 'paid' as any, paid_date: paidDate, payment_method: method || null } as any)
+        .update({ status: 'paid', paid_date: paidDate, payment_method: method || null })
         .eq('id', paymentId);
       if (error) throw error;
     },

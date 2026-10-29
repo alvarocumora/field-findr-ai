@@ -1,3 +1,4 @@
+import type { ReservationWithLot } from '@/hooks/useReservations';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -92,7 +93,7 @@ const LoteoControlCenter = () => {
   const queryClient = useQueryClient();
   const { projects, isLoading: projectsLoading } = useProjects();
   const [projectId, setProjectId] = useState<string>('');
-  const [convertTarget, setConvertTarget] = useState<any>(null);
+  const [convertTarget, setConvertTarget] = useState<ReservationWithLot | null>(null);
   const [quoteLot, setQuoteLot] = useState<Lot | null>(null);
   const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
 
@@ -126,8 +127,8 @@ const LoteoControlCenter = () => {
     const soldPct = lots.length > 0 ? Math.round((sold.length / lots.length) * 100) : 0;
 
     const senasCollected = reservations
-      .filter((r: any) => r.status === 'paid' || r.status === 'converted')
-      .reduce((s: number, r: any) => s + Number(r.reservation_amount || 0), 0);
+      .filter((r) => r.status === 'paid' || r.status === 'converted')
+      .reduce((s: number, r) => s + Number(r.reservation_amount || 0), 0);
     const soldValue = sold.reduce((s, l) => s + Number(l.price || 0), 0);
     const inventoryValue = available.reduce((s, l) => s + Number(l.price || 0), 0);
 
@@ -163,7 +164,7 @@ const LoteoControlCenter = () => {
   const now = Date.now();
   const expiringSoon = useMemo(
     () =>
-      (reservations as any[])
+      (reservations)
         .filter(
           (r) =>
             r.status === 'pending_payment' &&
@@ -174,7 +175,7 @@ const LoteoControlCenter = () => {
     [reservations, now],
   );
   const readyToConvert = useMemo(
-    () => (reservations as any[]).filter((r) => r.status === 'paid'),
+    () => (reservations).filter((r) => r.status === 'paid'),
     [reservations],
   );
 
@@ -649,7 +650,7 @@ const LoteoControlCenter = () => {
         lot={quoteLot}
         projectName={activeProject?.name ?? ''}
         projectLocation={[activeProject?.city, activeProject?.region].filter(Boolean).join(', ')}
-        reservationDeposit={(activeProject as any)?.reservation_deposit ?? null}
+        reservationDeposit={(activeProject)?.reservation_deposit ?? null}
       />
 
       <BulkPriceAdjustDialog

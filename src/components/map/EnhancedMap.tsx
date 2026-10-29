@@ -243,7 +243,7 @@ const EnhancedMap = ({
                 ].map(({ key, label, desc }) => (
                   <button
                     key={key}
-                    onClick={() => layersHook.handleLayerChange(key as any, !layersHook.infoLayers[key as keyof typeof layersHook.infoLayers])}
+                    onClick={() => layersHook.handleLayerChange(key as keyof typeof layersHook.infoLayers, !layersHook.infoLayers[key as keyof typeof layersHook.infoLayers])}
                     className={`w-full p-4 rounded-xl border transition-all touch-manipulation ${
                       layersHook.infoLayers[key as keyof typeof layersHook.infoLayers]
                         ? 'bg-primary/10 border-primary'

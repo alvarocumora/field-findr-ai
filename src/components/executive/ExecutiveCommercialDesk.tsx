@@ -31,7 +31,7 @@ const ExecutiveCommercialDesk = () => {
 
   const commercial = useMemo(() => {
     const next24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const rows = (reservations as any[]).filter((reservation) => ownedProjectIds.has(reservation.lots?.project_id));
+    const rows = (reservations).filter((reservation) => ownedProjectIds.has(reservation.lots?.project_id));
 
     const pendingPayment = rows
       .filter((reservation) => reservation.status === 'pending_payment' && new Date(reservation.expires_at) >= now)

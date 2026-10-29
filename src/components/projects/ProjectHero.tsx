@@ -1,3 +1,5 @@
+import type { Project } from '@/hooks/useProjects';
+import type { PublicLot } from '@/lib/lots/publicLotTypes';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -10,12 +12,12 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 interface ProjectHeroProps {
-  project: any;
-  lots: any[];
+  project: Project;
+  lots: PublicLot[];
   inventoryReady?: boolean;
-  availableLots: any[];
-  reservedLots: any[];
-  soldLots: any[];
+  availableLots: PublicLot[];
+  reservedLots: PublicLot[];
+  soldLots: PublicLot[];
   priceRange: { min: number; max: number } | null;
   areaRange: { min: number; max: number } | null;
   isMobile: boolean;
@@ -47,7 +49,7 @@ export const ProjectHero = ({
   project, lots, availableLots, reservedLots, soldLots, inventoryReady = true,
   priceRange, areaRange, isMobile, onCall, onMessage,
 }: ProjectHeroProps) => {
-  const heroImage = (project as any)?.images?.[0];
+  const heroImage = (project)?.images?.[0];
   const social = projectSocial(project, inventoryReady ? lots : undefined);
   const totalLots = lots.length;
   const soldPercent = totalLots > 0 ? Math.round((soldLots.length / totalLots) * 100) : 0;

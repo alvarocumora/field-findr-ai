@@ -154,7 +154,7 @@ const flattenGeometryCollections = (features: Feature<Geometry, GeoJsonPropertie
     if (!feature.geometry) continue;
 
     if (feature.geometry.type === 'GeometryCollection') {
-      for (const geom of (feature.geometry as any).geometries) {
+      for (const geom of (feature.geometry).geometries) {
         flattened.push({
           type: 'Feature',
           properties: { ...feature.properties },
@@ -244,7 +244,7 @@ const polygonizeLines = (lineFeatures: Feature<LineString, GeoJsonProperties>[])
       const lineCollection = turf.featureCollection(snapped);
 
       try {
-        const polygonized = turf.polygonize(lineCollection as any);
+        const polygonized = turf.polygonize(lineCollection);
 
         if (polygonized && polygonized.features && polygonized.features.length > 0) {
           const validPolygons = polygonized.features
@@ -775,7 +775,7 @@ export const parseKMZFile = async (file: File): Promise<ParsedKMZ> => {
         const expanded: Feature<Polygon, GeoJsonProperties>[] = [];
         for (const f of rawPolygonFeatures) {
           if (f.geometry!.type === 'MultiPolygon') {
-            const mp = f.geometry as any;
+            const mp = f.geometry;
             mp.coordinates.forEach((coords: Position[][], idx: number) => {
               expanded.push({
                 type: 'Feature',

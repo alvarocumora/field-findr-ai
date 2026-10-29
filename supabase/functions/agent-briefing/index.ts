@@ -48,8 +48,8 @@ serve(async (req) => {
     ]);
 
     const context = {
-      hotLeads: (leadsRes.data || []).filter((l: any) => (l.lead_score || 0) >= 50),
-      pendingReservations: (reservationsRes.data || []).filter((r: any) => r.status === "pending_payment"),
+      hotLeads: (leadsRes.data || []).filter((l) => (l.lead_score || 0) >= 50),
+      pendingReservations: (reservationsRes.data || []).filter((r) => r.status === "pending_payment"),
       projects: projectsRes.data || [],
     };
 
@@ -58,7 +58,7 @@ serve(async (req) => {
 - ${context.hotLeads.length} leads calientes (score ≥50)
 - ${context.pendingReservations.length} reservas pendientes de pago
 - ${context.projects.length} proyectos activos
-- Proyectos: ${context.projects.map((p: any) => `${p.name}: ${p.sold_lots || 0}/${p.total_lots || 0} vendidos`).join(', ')}
+- Proyectos: ${context.projects.map((p) => `${p.name}: ${p.sold_lots || 0}/${p.total_lots || 0} vendidos`).join(', ')}
 
 Genera un resumen de máximo 4 bullet points con acciones concretas para hoy. Sé conciso y motivador.`;
 

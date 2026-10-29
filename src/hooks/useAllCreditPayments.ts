@@ -33,7 +33,7 @@ export function useAllCreditPayments() {
       if (credits.length === 0) return [];
 
       const creditIds = credits.map(c => c.id);
-      const creditMap = new Map(credits.map((c: any) => [
+      const creditMap = new Map(credits.map((c) => [
         c.id,
         `${c.lots?.projects?.name || 'Proyecto'} — Lote ${c.lots?.lot_number || '?'}`,
       ]));
@@ -44,7 +44,7 @@ export function useAllCreditPayments() {
         .in('credit_id', creditIds)
         .order('due_date', { ascending: true });
 
-      return payments.map((p: any) => ({
+      return payments.map((p) => ({
         ...p,
         credit_name: creditMap.get(p.credit_id) || 'Crédito',
       }));

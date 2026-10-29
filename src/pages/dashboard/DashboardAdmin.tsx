@@ -1,3 +1,4 @@
+import type { Enums } from '@/integrations/supabase/types';
 import { useState } from 'react';
 import { 
   Users, Building2, TrendingUp, Shield, Settings, BarChart3, Bell, Search, Filter,
@@ -143,7 +144,7 @@ const SecurityTab = () => {
             </div>
           ) : logs && logs.length > 0 ? (
             <div className="divide-y divide-border/40">
-              {logs.map((log: any) => (
+              {logs.map((log) => (
                 <div key={log.id} className="p-4 hover:bg-muted/30 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
@@ -197,7 +198,7 @@ const DocumentsTab = () => {
         .limit(50);
 
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter as any);
+        query = query.eq('status', statusFilter as Enums<'doc_status'>);
       }
 
       const { data, error } = await query;
@@ -268,14 +269,14 @@ const DocumentsTab = () => {
             </div>
           ) : docs && docs.length > 0 ? (
             <div className="divide-y divide-border/40">
-              {docs.map((doc: any) => (
+              {docs.map((doc) => (
                 <div key={doc.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <p className="font-medium text-sm text-foreground">{doc.doc_type?.replace(/_/g, ' ')}</p>
                       <p className="text-xs text-muted-foreground">
-                        {(doc.reservations as any)?.buyer_name} • {(doc.reservations as any)?.lots?.projects?.name || 'Sin proyecto'}
+                        {(doc.reservations)?.buyer_name} • {(doc.reservations)?.lots?.projects?.name || 'Sin proyecto'}
                       </p>
                     </div>
                   </div>

@@ -1,3 +1,4 @@
+import type { Enums } from '@/integrations/supabase/types';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,8 +32,8 @@ const DocumentCenter = () => {
         .select('*, reservations(buyer_name, lot_id, lots(lot_number, project_id, projects(name)))')
         .order('deadline', { ascending: true, nullsFirst: false });
 
-      if (statusFilter !== 'all') query = query.eq('status', statusFilter as any);
-      if (typeFilter !== 'all') query = query.eq('doc_type', typeFilter as any);
+      if (statusFilter !== 'all') query = query.eq('status', statusFilter as Enums<'doc_status'>);
+      if (typeFilter !== 'all') query = query.eq('doc_type', typeFilter as Enums<'transaction_doc_type'>);
 
       const { data, error } = await query;
       if (error) throw error;
@@ -44,7 +45,7 @@ const DocumentCenter = () => {
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase
         .from('transaction_documents')
-        .update({ status: status as any, reviewed_at: new Date().toISOString() } as any)
+        .update({ status: status as Enums<'doc_status'>, reviewed_at: new Date().toISOString() })
         .eq('id', id);
       if (error) throw error;
     },
@@ -187,7 +188,7 @@ const DocumentCenter = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {docs?.map((doc: any) => {
+                  {docs?.map((doc) => {
                     const daysLeft = doc.deadline ? differenceInDays(new Date(doc.deadline), new Date()) : null;
                     const isExpiring = daysLeft !== null && daysLeft <= 3 && daysLeft >= 0;
                     return (

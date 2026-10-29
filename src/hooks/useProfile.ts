@@ -1,3 +1,4 @@
+import type { Json } from '@/integrations/supabase/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -18,7 +19,7 @@ export interface Profile {
   price_drop_alerts: boolean | null;
   marketing_emails: boolean | null;
   onboarding_completed: boolean | null;
-  onboarding_data: Record<string, any> | null;
+  onboarding_data: Record<string, Json> | null;
   created_at: string;
   updated_at: string;
 }
@@ -35,7 +36,7 @@ export interface ProfileUpdate {
   price_drop_alerts?: boolean | null;
   marketing_emails?: boolean | null;
   onboarding_completed?: boolean | null;
-  onboarding_data?: Record<string, any> | null;
+  onboarding_data?: Record<string, Json> | null;
 }
 
 export const useProfile = () => {

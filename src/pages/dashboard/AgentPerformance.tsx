@@ -217,7 +217,7 @@ const AgentPerformance = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {commissions.map((c: any) => (
+                    {commissions.map((c) => (
                       <TableRow key={c.id}>
                         <TableCell className="text-sm">{new Date(c.created_at).toLocaleDateString('es-CL')}</TableCell>
                         <TableCell className="text-sm">{c.projects?.name || '—'}</TableCell>

@@ -85,7 +85,7 @@ export async function generateIslaMaipoDossierPdf(options: { mapboxToken?: strin
   f.y += 2;
 
   // ── Predios urbanos de la misma sociedad ──
-  const predios = (PROPIEDAD as any).prediosUrbanos as
+  const predios = (PROPIEDAD).prediosUrbanos as
     | {
         rol: string;
         direccion: string;

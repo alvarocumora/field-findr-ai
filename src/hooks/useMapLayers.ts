@@ -152,30 +152,30 @@ export function useMapLayers(options: UseMapLayersOptions) {
     });
 
     // Layers (only add if not present)
-    const addFill = (id: string, source: string, colorExpr: any, opBase: number, vis: boolean) => {
+    const addFill = (id: string, source: string, colorExpr: mapboxgl.DataDrivenPropertyValueSpecification<string>, opBase: number, vis: boolean) => {
       try {
         if (!map.current!.getLayer(id)) {
           map.current!.addLayer({ id, type: 'fill', source, paint: { 'fill-color': colorExpr, 'fill-opacity': layerConfig.opacity * opBase }, layout: { visibility: vis ? 'visible' : 'none' } });
         }
       } catch { /* layer already exists */ }
     };
-    const addLine = (id: string, source: string, colorExpr: any, width: any, opBase: number, vis: boolean, extra?: object) => {
+    const addLine = (id: string, source: string, colorExpr: mapboxgl.DataDrivenPropertyValueSpecification<string>, width: mapboxgl.DataDrivenPropertyValueSpecification<number>, opBase: number, vis: boolean, extra?: object) => {
       try {
         if (!map.current!.getLayer(id)) {
-          map.current!.addLayer({ id, type: 'line', source, paint: { 'line-color': colorExpr, 'line-width': width, 'line-opacity': layerConfig.opacity * opBase, ...extra } as any, layout: { visibility: vis ? 'visible' : 'none' } });
+          map.current!.addLayer({ id, type: 'line', source, paint: { 'line-color': colorExpr, 'line-width': width, 'line-opacity': layerConfig.opacity * opBase, ...extra }, layout: { visibility: vis ? 'visible' : 'none' } });
         }
       } catch { /* layer already exists */ }
     };
 
-    const matchZoning = ['match', ['get', 'type'], 'residential', zoningColors.residential, 'commercial', zoningColors.commercial, 'industrial', zoningColors.industrial, 'agricultural', zoningColors.agricultural, 'mixed', zoningColors.mixed, 'protected', zoningColors.protected, '#888888'];
+    const matchZoning: mapboxgl.ExpressionSpecification = ['match', ['get', 'type'], 'residential', zoningColors.residential, 'commercial', zoningColors.commercial, 'industrial', zoningColors.industrial, 'agricultural', zoningColors.agricultural, 'mixed', zoningColors.mixed, 'protected', zoningColors.protected, '#888888'];
     addFill('zoning-layer', 'zoning-source', matchZoning, 0.5, infoLayers.zoning);
     addLine('zoning-outline', 'zoning-source', matchZoning, 2, 1, infoLayers.zoning);
 
-    const matchRisk = ['match', ['get', 'type'], 'flood', riskColors.flood, 'landslide', riskColors.landslide, 'seismic', riskColors.seismic, 'tsunami', riskColors.tsunami, '#888888'];
+    const matchRisk: mapboxgl.ExpressionSpecification = ['match', ['get', 'type'], 'flood', riskColors.flood, 'landslide', riskColors.landslide, 'seismic', riskColors.seismic, 'tsunami', riskColors.tsunami, '#888888'];
     addFill('risk-layer', 'risk-source', matchRisk, 0.4, infoLayers.riskZones);
     addLine('risk-outline', 'risk-source', matchRisk, 2, 1, infoLayers.riskZones, { 'line-dasharray': [2, 2] });
 
-    const matchInfra = ['match', ['get', 'coverage'], 'full', infraColors.full, 'partial', infraColors.partial, 'limited', infraColors.limited, '#888888'];
+    const matchInfra: mapboxgl.ExpressionSpecification = ['match', ['get', 'coverage'], 'full', infraColors.full, 'partial', infraColors.partial, 'limited', infraColors.limited, '#888888'];
     addFill('infrastructure-layer', 'infrastructure-source', matchInfra, 0.3, infoLayers.infrastructure);
 
     // Water
@@ -316,7 +316,7 @@ export function useMapLayers(options: UseMapLayersOptions) {
       { id: 'heatmap-layer', prop: 'heatmap-opacity', base: 1 },
     ];
     opacityLayers.forEach(({ id, prop, base }) => {
-      if (map.current?.getLayer(id)) map.current.setPaintProperty(id, prop as any, layerConfig.opacity * base);
+      if (map.current?.getLayer(id)) map.current.setPaintProperty(id, prop as keyof mapboxgl.PaintSpecification, layerConfig.opacity * base);
     });
     if (map.current?.getLayer('heatmap-layer')) {
       map.current.setPaintProperty('heatmap-layer', 'heatmap-intensity', layerConfig.heatmapIntensity);

@@ -49,7 +49,7 @@ const AuditLog = () => {
   const exportCSV = () => {
     if (!logs?.length) return;
     const headers = ['Fecha', 'Acción', 'Tipo Entidad', 'ID Entidad', 'IP', 'Detalles'];
-    const rows = logs.map((l: any) => [
+    const rows = logs.map((l) => [
       format(new Date(l.created_at), 'dd/MM/yyyy HH:mm'),
       l.action,
       l.entity_type || '',
@@ -121,7 +121,7 @@ const AuditLog = () => {
         <Card className="border-border/40">
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-blue-500">
-              {logs?.filter((l: any) => l.action?.includes('login')).length || 0}
+              {logs?.filter((l) => l.action?.includes('login')).length || 0}
             </p>
             <p className="text-xs text-muted-foreground">Logins</p>
           </CardContent>
@@ -129,7 +129,7 @@ const AuditLog = () => {
         <Card className="border-border/40">
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-amber-500">
-              {logs?.filter((l: any) => l.action?.includes('price')).length || 0}
+              {logs?.filter((l) => l.action?.includes('price')).length || 0}
             </p>
             <p className="text-xs text-muted-foreground">Cambios precio</p>
           </CardContent>
@@ -137,7 +137,7 @@ const AuditLog = () => {
         <Card className="border-border/40">
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-destructive">
-              {logs?.filter((l: any) => l.action?.includes('cancel')).length || 0}
+              {logs?.filter((l) => l.action?.includes('cancel')).length || 0}
             </p>
             <p className="text-xs text-muted-foreground">Cancelaciones</p>
           </CardContent>
@@ -153,7 +153,7 @@ const AuditLog = () => {
             </div>
           ) : logs && logs.length > 0 ? (
             <div className="divide-y divide-border/40">
-              {logs.map((log: any) => {
+              {logs.map((log) => {
                 const actionColor = Object.entries(ACTION_COLORS).find(
                   ([key]) => log.action?.toLowerCase().includes(key)
                 )?.[1] || 'bg-muted text-muted-foreground';

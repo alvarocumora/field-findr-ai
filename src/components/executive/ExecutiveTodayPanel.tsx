@@ -51,7 +51,7 @@ const ExecutiveTodayPanel = () => {
       .filter((quote) => new Date(quote.valid_until) >= now)
       .sort((a, b) => new Date(a.valid_until).getTime() - new Date(b.valid_until).getTime());
 
-    const pendingReservations = (reservations as any[])
+    const pendingReservations = (reservations)
       .filter((reservation) => ownedProjectIds.has(reservation.lots?.project_id))
       .filter((reservation) => ['pending_payment', 'paid'].includes(reservation.status))
       .sort((a, b) => new Date(a.expires_at ?? a.created_at ?? 0).getTime() - new Date(b.expires_at ?? b.created_at ?? 0).getTime());

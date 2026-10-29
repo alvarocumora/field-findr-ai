@@ -18,25 +18,12 @@ import {
   ExternalLink,
   Download
 } from 'lucide-react';
+import type { LegalItem } from '@/lib/projects/legalItemTypes';
 import { cn } from '@/lib/utils';
 
-interface LegalDocument {
-  type: string;
-  name: string;
-  status: 'pending' | 'verified' | 'rejected' | 'not_required';
-  file_url?: string;
-  verified_at?: string;
-  notes?: string;
-}
+type LegalDocument = LegalItem & { verified_at?: string; notes?: string };
 
-interface Permit {
-  type: string;
-  name: string;
-  number?: string;
-  status: 'pending' | 'approved' | 'rejected' | 'expired';
-  issued_date?: string;
-  expiry_date?: string;
-}
+type Permit = LegalItem & { number?: string; issued_date?: string; expiry_date?: string };
 
 interface LegalTabProps {
   legalDocuments: LegalDocument[];

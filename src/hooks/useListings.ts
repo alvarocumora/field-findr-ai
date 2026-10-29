@@ -4,6 +4,8 @@ import { useToast } from '@/hooks/use-toast';
 import type { Json, Tables, TablesUpdate } from '@/integrations/supabase/types';
 
 export interface Listing {
+  contact_phone?: string | null;
+  owner_phone?: string | null;
   id: string;
   user_id: string | null;
   title: string;

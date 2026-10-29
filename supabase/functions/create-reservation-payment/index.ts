@@ -79,7 +79,7 @@ serve(async (req) => {
       });
     }
 
-    const reservation_amount = Number((lot as any).projects?.reservation_deposit) || 500000;
+    const reservation_amount = Number((lot).projects?.reservation_deposit) || 500000;
     if (!(reservation_amount > 0)) {
       return new Response(JSON.stringify({ error: "Invalid reservation amount configuration" }), {
         status: 400,
@@ -140,7 +140,7 @@ serve(async (req) => {
           .maybeSingle();
 
         if (broker && broker.user_id !== user.id) {
-          const projectOwnerId = (lot as any).projects?.user_id as string | undefined;
+          const projectOwnerId = (lot).projects?.user_id as string | undefined;
           const isOwnerBroker = broker.user_id === projectOwnerId;
           const { data: assignment } = isOwnerBroker
             ? { data: { id: "owner" } }
@@ -207,7 +207,7 @@ serve(async (req) => {
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const projectName = (lot as any).projects?.name || "Proyecto";
+    const projectName = (lot).projects?.name || "Proyecto";
     const preferenceData = {
       items: [{
         id: reservation.id,

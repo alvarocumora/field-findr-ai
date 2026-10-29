@@ -1,3 +1,4 @@
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Html, Sky } from '@react-three/drei';
@@ -255,7 +256,7 @@ function Ocean() {
 
 /* Camera orbit / flyTo */
 function CameraRig({ target }: { target: THREE.Vector3 | null }) {
-  const controlsRef = useRef<any>(null);
+  const controlsRef = useRef<OrbitControlsImpl | null>(null);
   useFrame(() => {
     if (target && controlsRef.current) {
       const ctl = controlsRef.current;

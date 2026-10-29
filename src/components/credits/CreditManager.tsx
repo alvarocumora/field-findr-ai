@@ -128,7 +128,7 @@ const CreditManager = () => {
                   </div>
                   <div>
                     <p className="font-medium text-foreground">
-                      {(credit as any).lots?.projects?.name || 'Proyecto'} — Lote {(credit as any).lots?.lot_number}
+                      {(credit).lots?.projects?.name || 'Proyecto'} — Lote {(credit).lots?.lot_number}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {formatPriceLatam(Number(credit.financed_amount), credit.currency || 'CLP')} · {credit.term_months} cuotas · {credit.interest_rate}%

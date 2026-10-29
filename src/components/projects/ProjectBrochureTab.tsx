@@ -1,3 +1,5 @@
+import type { Project } from '@/hooks/useProjects';
+import type { PublicLot } from '@/lib/lots/publicLotTypes';
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,8 +27,8 @@ interface CommercialConditions {
 }
 
 interface Props {
-  project: any;
-  lots: any[];
+  project: Project;
+  lots: PublicLot[];
 }
 
 const formatPrice = (price: number | null) => {
@@ -44,7 +46,7 @@ export const ProjectBrochureTab = ({ project, lots }: Props) => {
   const [pdfBusy, setPdfBusy] = useState(false);
   const cfg = parseLandingConfig(project.landing_config);
   const spatial = project.landing_config && typeof project.landing_config === 'object' && !Array.isArray(project.landing_config)
-    ? (project.landing_config as Record<string, any>).spatial ?? null
+    ? (project.landing_config as Record<string, unknown>).spatial ?? null
     : null;
 
   const available = lots.filter(l => l.status === 'available');

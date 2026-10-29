@@ -1,3 +1,4 @@
+import type { Project } from '@/hooks/useProjects';
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import { publishableLots } from '@/lib/marketplace/lotToListing';
 import type { Lot } from '@/hooks/useLots';
 
 interface LoteoPlanPublishCardProps {
-  project: any;
+  project: Project;
   lots: Lot[];
   onLotClick: (lot: Lot) => void;
 }
@@ -37,8 +38,8 @@ export const LoteoPlanPublishCard = ({ project, lots, onLotClick }: LoteoPlanPub
     };
   }, [project, lots]);
 
-  const publishedCount = lots.filter((l: any) => l.listing_id).length;
-  const pending = publishableLots(lots as any);
+  const publishedCount = lots.filter((l) => l.listing_id).length;
+  const pending = publishableLots(lots);
 
   return (
     <Card className="border-border/40">
@@ -71,14 +72,14 @@ export const LoteoPlanPublishCard = ({ project, lots, onLotClick }: LoteoPlanPub
         ) : (
           <div className="h-[380px] rounded-xl overflow-hidden border border-border/40">
             <LotMapView
-              lots={lots as any}
+              lots={lots}
               projectCenter={center}
               projectId={project?.id}
               kmzFileUrl={project?.kmz_file_url ?? null}
               planImages={project?.plan_images ?? []}
               selectedLotId={selectedLotId}
               readOnly
-              onLotClick={(lot: any) => {
+              onLotClick={(lot) => {
                 setSelectedLotId(lot.id);
                 onLotClick(lot as Lot);
               }}
@@ -104,7 +105,7 @@ export const LoteoPlanPublishCard = ({ project, lots, onLotClick }: LoteoPlanPub
               size="sm"
               className="gap-1.5"
               disabled={pending.length === 0 || bulkPublish.isPending}
-              onClick={() => bulkPublish.mutate({ project, lots: lots as any })}
+              onClick={() => bulkPublish.mutate({ project, lots: lots })}
             >
               {bulkPublish.isPending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />

@@ -1,3 +1,4 @@
+import type { Json } from '@/integrations/supabase/types';
 import { useState, useMemo, useEffect } from 'react';
 import { resolveQuoteImage, type QuoteImage } from '@/lib/quoteImage';
 import type { TourScene } from '@/hooks/useTourScenes';
@@ -36,7 +37,7 @@ interface Lot {
   price_per_sqm: number | null;
   status: string | null;
   name: string | null;
-  features: any;
+  features: Json;
 }
 
 interface PublicLotQuoterProps {

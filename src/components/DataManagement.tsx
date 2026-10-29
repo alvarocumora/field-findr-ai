@@ -78,7 +78,7 @@ const DataManagement = () => {
     }
   };
 
-  const getActivityText = (activity: any) => {
+  const getActivityText = (activity: (typeof recentActivity)[number]) => {
     switch (activity.type) {
       case 'property_added': 
         return `${activity.agent} agregó ${activity.property}`;

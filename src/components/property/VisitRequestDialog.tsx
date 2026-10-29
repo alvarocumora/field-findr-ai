@@ -58,7 +58,7 @@ const VisitRequestDialog = ({ listingId, listingOwnerId, listingTitle, trigger }
         return;
       }
 
-      const { error } = await supabase.from('visit_requests' as any).insert({
+      const { error } = await supabase.from('visit_requests').insert({
         listing_id: listingId,
         listing_owner_id: listingOwnerId || '',
         requester_user_id: user.id,

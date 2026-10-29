@@ -56,7 +56,7 @@ export default function ReservationSuccess() {
     );
   }
 
-  const lot = reservation.lots as any;
+  const lot = reservation.lots;
   const project = lot?.projects;
 
   // The URL only says MP redirected with "approved" — the source of truth is

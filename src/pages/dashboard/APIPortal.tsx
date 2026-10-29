@@ -231,7 +231,7 @@ console.log(data); // Array of active listings`}</code>
             </Card>
           ) : (
             <div className="space-y-3">
-              {(apiKeys as any[]).map((key: any) => (
+              {(apiKeys).map((key) => (
                 <Card key={key.id}>
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>

@@ -152,7 +152,7 @@ const BuyerHome = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {reservations.map((res: any) => (
+              {reservations.map((res) => (
                 <div key={res.id} className="flex items-center justify-between p-3 bg-background rounded-lg border border-border/40">
                   <div>
                     <p className="font-medium text-sm text-foreground">
@@ -206,7 +206,7 @@ const BuyerHome = () => {
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 gap-4">
-                {featuredProjects?.map((project: any) => (
+                {featuredProjects?.map((project) => (
                   <Link key={project.id} to={`/proyecto/${encodeURIComponent(project.id)}`}>
                     <Card className="border-border/40 hover:border-primary/30 transition-all hover:shadow-md cursor-pointer overflow-hidden group">
                       {project.images?.[0] && (
@@ -249,7 +249,7 @@ const BuyerHome = () => {
               </CardHeader>
               <CardContent className="space-y-2">
                 {savedSearches && savedSearches.length > 0 ? (
-                  savedSearches.map((s: any) => (
+                  savedSearches.map((s) => (
                     <div key={s.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                       <div>
                         <p className="text-sm font-medium text-foreground">{s.name}</p>
@@ -324,7 +324,7 @@ const BuyerHome = () => {
                   <Skeleton className="h-20" />
                 ) : favorites && favorites.length > 0 ? (
                   <div className="space-y-2">
-                    {favorites.slice(0, 3).map((fav: any) => (
+                    {favorites.slice(0, 3).map((fav) => (
                       <div key={fav.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50">
                         <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
                           <Heart className="h-4 w-4 text-destructive" />
