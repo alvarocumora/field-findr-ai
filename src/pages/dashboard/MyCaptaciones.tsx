@@ -1,7 +1,10 @@
+import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
+import { Link } from 'react-router-dom';
+import { CAPTACION_NEXT_STEP } from '@/lib/captaciones/experience';
 import { useState } from 'react';
 import { MapPin, Plus, Handshake, Building2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +20,7 @@ import { useMyLandReferrals, useCreateLandReferral, type LandReferralInput } fro
 import { CAPTACION_STATUS_META } from '@/lib/captaciones/status';
 
 const MyCaptaciones = () => {
-  const { data: captaciones = [], isLoading } = useMyLandReferrals();
+  const { data: captaciones = [], isLoading, error, refetch } = useMyLandReferrals();
   const createReferral = useCreateLandReferral();
   const [open, setOpen] = useState(false);
 
@@ -42,7 +45,7 @@ const MyCaptaciones = () => {
         {[
           { icon: MapPin, title: '1. Ofrece el terreno', text: 'Datos del terreno y del dueño. No se publica todavía.' },
           { icon: Handshake, title: '2. Gerencia negocia', text: 'OT revisa, contacta al dueño y cierra el acuerdo.' },
-          { icon: Building2, title: '3. Se publica y cobras', text: 'Quedas registrado como captador para tu comisión.' },
+          { icon: Building2, title: '3. Publicación y venta', text: 'La comisión depende de la venta y de las condiciones acordadas.' },
         ].map((s) => (
           <Card key={s.title} className="border-border/60 bg-card/50">
             <CardContent className="p-4 flex items-start gap-3">
@@ -57,7 +60,9 @@ const MyCaptaciones = () => {
       </div>
 
       {/* Lista */}
-      {isLoading ? (
+      {error ? (
+        <WorkspaceLoadError title="No pudimos cargar tus captaciones" onRetry={refetch} />
+      ) : isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
         </div>
@@ -92,6 +97,10 @@ const MyCaptaciones = () => {
                       </span>
                     </div>
                   </div>
+                  <p className="text-sm mt-3"><span className="font-medium">Siguiente paso: </span>{CAPTACION_NEXT_STEP[c.status] ?? 'Consulta el estado con gerencia.'}</p>
+                  {c.status === 'publicada' && c.listing_id && (
+                    <Button asChild variant="link" className="px-0"><Link to={`/explorar?listing=${encodeURIComponent(c.listing_id)}`}>Ver publicación</Link></Button>
+                  )}
                   {c.admin_notes && c.status !== 'nueva' && (
                     <p className="text-xs text-muted-foreground mt-2 border-t border-border/40 pt-2">
                       <span className="font-medium text-foreground">Gerencia:</span> {c.admin_notes}
@@ -111,7 +120,7 @@ const MyCaptaciones = () => {
         onSubmit={(input) =>
           createReferral.mutate(input, {
             onSuccess: () => {
-              toast({ title: 'Captación enviada', description: 'Gerencia la revisará y te avisaremos de cada avance.' });
+              toast({ title: 'Captación enviada', description: 'Gerencia la revisará y podrás revisar el estado en Mis captaciones.' });
               setOpen(false);
             },
             onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
@@ -145,7 +154,7 @@ const OfferLandDialog = ({
             <MapPin className="h-5 w-5" /> Ofrecer un terreno
           </DialogTitle>
           <DialogDescription>
-            La información del dueño es confidencial: solo la ve la gerencia de OT.
+            Comparte los datos del dueño solo con su autorización. Se usarán para gestionar esta captación.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
