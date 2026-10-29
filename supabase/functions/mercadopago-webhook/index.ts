@@ -92,8 +92,7 @@ async function verifyMercadoPagoSignature(req: Request, dataId: string): Promise
  * insert must be idempotent: `payments.mercadopago_payment_id` has a unique
  * index and retries update the status of the existing row instead of inserting.
  */
-// deno-lint-ignore no-explicit-any
-async function recordPayment(supabase: any, row: {
+async function recordPayment(supabase: ReturnType<typeof createClient>, row: {
   user_id?: string;
   organization_id?: string | null;
   amount: number;

@@ -45,17 +45,17 @@ export function useFinancialDashboard() {
         .order('due_date', { ascending: false });
 
       // Calculate metrics
-      const paidRes = reservations.filter((r: any) => r.status === 'paid' || r.status === 'converted');
-      const expiredRes = reservations.filter((r: any) => r.status === 'expired');
-      const pendingRes = reservations.filter((r: any) => r.status === 'pending_payment');
+      const paidRes = reservations.filter((r) => r.status === 'paid' || r.status === 'converted');
+      const expiredRes = reservations.filter((r) => r.status === 'expired');
+      const pendingRes = reservations.filter((r) => r.status === 'pending_payment');
 
-      const totalRevenue = paidRes.reduce((sum: number, r: any) => sum + (r.reservation_amount || 0), 0);
-      const pendingRevenue = pendingRes.reduce((sum: number, r: any) => sum + (r.reservation_amount || 0), 0);
+      const totalRevenue = paidRes.reduce((sum: number, r) => sum + (r.reservation_amount || 0), 0);
+      const pendingRevenue = pendingRes.reduce((sum: number, r) => sum + (r.reservation_amount || 0), 0);
 
-      const overduePaymentsList = creditPayments.filter((p: any) => p.status === 'overdue');
-      const overdueAmount = overduePaymentsList.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
-      const paidPayments = creditPayments.filter((p: any) => p.status === 'paid');
-      const totalCollected = paidPayments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+      const overduePaymentsList = creditPayments.filter((p) => p.status === 'overdue');
+      const overdueAmount = overduePaymentsList.reduce((sum: number, p) => sum + (p.amount || 0), 0);
+      const paidPayments = creditPayments.filter((p) => p.status === 'paid');
+      const totalCollected = paidPayments.reduce((sum: number, p) => sum + (p.amount || 0), 0);
 
       // Monthly data (last 6 months)
       const monthlyMap = new Map<string, { revenue: number; reservations: number }>();
@@ -67,11 +67,11 @@ export function useFinancialDashboard() {
       }
 
       for (const r of paidRes) {
-        const d = new Date((r as any).paid_at || (r as any).created_at);
+        const d = new Date((r).paid_at || (r).created_at);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         const entry = monthlyMap.get(key);
         if (entry) {
-          entry.revenue += (r as any).reservation_amount || 0;
+          entry.revenue += (r).reservation_amount || 0;
           entry.reservations += 1;
         }
       }
@@ -83,7 +83,7 @@ export function useFinancialDashboard() {
 
       // Project breakdown
       const projectMap = new Map<string, { name: string; revenue: number; total: number; paid: number }>();
-      for (const r of reservations as any[]) {
+      for (const r of reservations) {
         const projName = r.lots?.projects?.name || 'Sin proyecto';
         const existing = projectMap.get(projName) || { name: projName, revenue: 0, total: 0, paid: 0 };
         existing.total += 1;
@@ -109,7 +109,7 @@ export function useFinancialDashboard() {
         expiredReservations: expiredRes.length,
         conversionRate: reservations.length > 0 ? Math.round((paidRes.length / reservations.length) * 100) : 0,
         totalCredits: credits.length,
-        activeCredits: credits.filter((c: any) => c.status === 'active').length,
+        activeCredits: credits.filter((c) => c.status === 'active').length,
         overduePayments: overduePaymentsList.length,
         overdueAmount,
         totalCollected,

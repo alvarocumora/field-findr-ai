@@ -207,7 +207,7 @@ export default function VelMasterplan() {
       map.on('mousemove', 'lots-fill', (e) => {
         if (!e.features?.length) return;
         map.getCanvas().style.cursor = 'pointer';
-        const lotId = (e.features[0].properties as any)?.id as string | undefined;
+        const lotId = (e.features[0].properties)?.id as string | undefined;
         if (lotId) setHoveredLotId(lotId);
       });
       map.on('mouseleave', 'lots-fill', () => {
@@ -216,7 +216,7 @@ export default function VelMasterplan() {
       });
       map.on('click', 'lots-fill', (e) => {
         if (!e.features?.length) return;
-        const lotId = (e.features[0].properties as any)?.id as string | undefined;
+        const lotId = (e.features[0].properties)?.id as string | undefined;
         if (lotId) selectLot(lotId);
       });
 
@@ -291,7 +291,7 @@ export default function VelMasterplan() {
     const filter = ['any',
       ['in', ['get', 'status'], ['literal', Array.from(activeStatus)]],
       ['==', ['get', 'status'], 'unverified'],
-    ] as any;
+    ];
     try {
       map.setFilter('lots-fill', filter);
       map.setFilter('lots-line', filter);

@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -5,7 +6,7 @@ import PropertyCard from './PropertyCard';
 import { Grid, List } from 'lucide-react';
 
 interface PropertyGridProps {
-  properties: any[];
+  properties: (ComponentProps<typeof PropertyCard>['property'] & { daysPosted: number })[];
   loading?: boolean;
 }
 

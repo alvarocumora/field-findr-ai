@@ -41,8 +41,8 @@ export const getScoreConfig = (score: number) => {
 };
 
 export const getLeadScoreInfo = (lead: Lead): LeadScoreInfo => {
-  const score = (lead as any).lead_score ?? 0;
-  const breakdown = ((lead as any).score_breakdown as Record<string, number>) ?? {};
+  const score = (lead).lead_score ?? 0;
+  const breakdown = ((lead).score_breakdown as Record<string, number>) ?? {};
   const config = getScoreConfig(score);
   return { score, breakdown, ...config };
 };

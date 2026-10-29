@@ -1,3 +1,4 @@
+import type { Geometry } from 'geojson';
 /**
  * Huellelhue Lote B — Generador de lotes alineado al KMZ real (LOTE_B.kmz).
  *
@@ -162,7 +163,7 @@ const macroN = bounds.maxY - bounds.h * 0.05;  // Reserva núcleo (recorta borde
 // perpendiculares a la vía (estilo masterplan resort de referencia)
 // ────────────────────────────────────────────────────────────────────────────
 
-const CATEGORY_META: Record<string, any> = {
+const CATEGORY_META: Record<string, { line: number; label: string; ocean_exposure: string; privacy: string; conservation: string; architecture: string }> = {
   ocean_front:  { line: 1, label: 'Ocean Front',  ocean_exposure: 'Directa · 100%',     privacy: 'Máxima',          conservation: '75% nativo intocado', architecture: 'Cabaña costera oculta · Japandi coastal' },
   forest_ocean: { line: 2, label: 'Forest Ocean', ocean_exposure: 'Vista filtrada',     privacy: 'Alta',            conservation: '70% nativo',          architecture: 'Refugio elevado · madera nativa' },
   bosque_vivo:  { line: 3, label: 'Bosque Vivo',  ocean_exposure: 'Indirecta · sonido', privacy: 'Total inmersión', conservation: '80% nativo',          architecture: 'Cabaña dosel · pasarela' },
@@ -194,7 +195,7 @@ const SPINES: Spine[] = [
 ];
 
 
-type Feature = { type: 'Feature'; properties: Record<string, any>; geometry: any };
+type Feature = { type: 'Feature'; properties: Record<string, unknown>; geometry: Geometry };
 
 function rotatedLocalToGeo(poly: [number, number][]): [number, number][] {
   const unrotated = poly.map((p) => rotate(p, COAST_ANGLE_RAD));

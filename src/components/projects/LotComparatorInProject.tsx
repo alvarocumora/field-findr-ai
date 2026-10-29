@@ -1,3 +1,4 @@
+import type { Json } from '@/integrations/supabase/types';
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ interface Lot {
   price?: number | null;
   price_per_sqm?: number | null;
   status?: string | null;
-  features?: any;
+  features?: Json;
   description?: string | null;
 }
 

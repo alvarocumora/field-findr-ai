@@ -1,3 +1,4 @@
+import type { OrbitControls as OrbitControlsImpl, TransformControls as TransformControlsImpl } from 'three-stdlib';
 import { useRef, useMemo, useCallback, useEffect, useState, Suspense } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Sky, TransformControls } from '@react-three/drei';
@@ -127,13 +128,12 @@ const SelectedObjectGizmo = ({
   objectsVersion: number;
   mode: 'translate' | 'rotate' | 'scale';
   snapEnabled: boolean;
-  orbitRef: React.MutableRefObject<any>;
+  orbitRef: React.MutableRefObject<OrbitControlsImpl | null>;
   onCommit: (id: string, target: THREE.Object3D) => void;
 }) => {
   const { scene } = useThree();
   const [target, setTarget] = useState<THREE.Object3D | null>(null);
-  // deno-lint-ignore no-explicit-any -- drei's TransformControls ref type is unwieldy
-  const tcRef = useRef<any>(null);
+  const tcRef = useRef<TransformControlsImpl | null>(null);
 
   // Resolve the target after commit so the group actually exists in the scene.
   useEffect(() => {
@@ -142,7 +142,11 @@ const SelectedObjectGizmo = ({
 
   // Disable orbit while dragging the gizmo; persist the transform on release.
   useEffect(() => {
-    const tc = tcRef.current;
+    // three-stdlib dispatches this event at runtime but omits it from Object3DEventMap.
+    const tc = tcRef.current as unknown as {
+      addEventListener(type: 'dragging-changed', callback: (event: { value: boolean }) => void): void;
+      removeEventListener(type: 'dragging-changed', callback: (event: { value: boolean }) => void): void;
+    } | null;
     if (!tc || !target || !selectedId) return;
     const onDraggingChanged = (e: { value: boolean }) => {
       if (orbitRef.current) orbitRef.current.enabled = !e.value;
@@ -177,7 +181,7 @@ const CameraController = ({
   terrainSize,
 }: {
   viewMode: string;
-  controlsRef: React.MutableRefObject<any>;
+  controlsRef: React.MutableRefObject<OrbitControlsImpl | null>;
   terrainSize: number;
 }) => {
   const { camera } = useThree();
@@ -210,7 +214,7 @@ export const ParcelaDesigner3D = ({
   const captureRef = useRef<(() => void) | null>(null);
   const pendingPlaceRef = useRef<ParcelaObjectType | null>(null);
   const pendingGLBRef = useRef<GLBAsset | null>(null);
-  const controlsRef = useRef<any>(null);
+  const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const terrainRef = useRef<TerrainHandle>(null);
 
   // Determine if polygon has valid geo data

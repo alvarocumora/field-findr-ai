@@ -13,12 +13,12 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const available = lots.filter((l: any) => l.status === "available").length;
-    const reserved = lots.filter((l: any) => l.status === "reserved").length;
-    const sold = lots.filter((l: any) => l.status === "sold").length;
-    const areas = lots.map((l: any) => l.area).filter(Boolean);
-    const prices = lots.map((l: any) => l.price).filter(Boolean);
-    const withPolygon = lots.filter((l: any) => l.hasPolygon).length;
+    const available = lots.filter((l) => l.status === "available").length;
+    const reserved = lots.filter((l) => l.status === "reserved").length;
+    const sold = lots.filter((l) => l.status === "sold").length;
+    const areas = lots.map((l) => l.area).filter(Boolean);
+    const prices = lots.map((l) => l.price).filter(Boolean);
+    const withPolygon = lots.filter((l) => l.hasPolygon).length;
 
     const systemPrompt = `Eres un experto en desarrollo inmobiliario y loteos en Chile y Latinoamérica. Analiza los datos del proyecto y genera recomendaciones profesionales en español. Usa formato Markdown con secciones claras. Sé específico y accionable.`;
 
@@ -39,7 +39,7 @@ serve(async (req) => {
 **Precios:** ${prices.length > 0 ? `Min: $${Math.min(...prices).toLocaleString()}, Max: $${Math.max(...prices).toLocaleString()}, Promedio: $${Math.round(prices.reduce((a: number, b: number) => a + b, 0) / prices.length).toLocaleString()}` : "Sin datos"}
 
 **Detalle por lote:**
-${lots.map((l: any) => `- Lote ${l.lot_number}: ${l.area}m², $${l.price?.toLocaleString() || "S/P"}, ${l.status}`).join("\n")}
+${lots.map((l) => `- Lote ${l.lot_number}: ${l.area}m², $${l.price?.toLocaleString() || "S/P"}, ${l.status}`).join("\n")}
 
 Genera un análisis con estas secciones:
 1. **Resumen Ejecutivo** - Estado general del proyecto

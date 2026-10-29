@@ -170,7 +170,7 @@ const BuyerJourneySheet = ({ reservationId, open, onOpenChange }: BuyerJourneySh
                     Cuotas del crédito
                   </p>
                   <div className="grid grid-cols-10 gap-1">
-                    {journey.creditPayments.map((p: any) => (
+                    {journey.creditPayments.map((p) => (
                       <span
                         key={p.id}
                         title={`Cuota ${p.payment_number} · ${p.status}`}
@@ -186,9 +186,9 @@ const BuyerJourneySheet = ({ reservationId, open, onOpenChange }: BuyerJourneySh
                     ))}
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    {journey.creditPayments.filter((p: any) => p.status === 'paid').length} pagadas ·{' '}
-                    {journey.creditPayments.filter((p: any) => p.status === 'overdue').length} vencidas ·{' '}
-                    {journey.creditPayments.filter((p: any) => p.status === 'pending').length} pendientes
+                    {journey.creditPayments.filter((p) => p.status === 'paid').length} pagadas ·{' '}
+                    {journey.creditPayments.filter((p) => p.status === 'overdue').length} vencidas ·{' '}
+                    {journey.creditPayments.filter((p) => p.status === 'pending').length} pendientes
                   </p>
                 </div>
               </>

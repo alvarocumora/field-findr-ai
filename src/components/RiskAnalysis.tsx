@@ -1,3 +1,4 @@
+type RiskReport = { overallScore: number; riskLevel: string; categories: { name: string; score: number; level: string; risks: { item: string; status: string; description: string; }[]; }[]; recommendations: { priority: string; title: string; description: string; estimatedCost: string; estimatedTime: string; }[]; };
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { AlertTriangle, Shield, FileText, MapPin, Droplet, TrendingDown, CheckCi
 
 const RiskAnalysis = () => {
   const [parcelId, setParcelId] = useState("");
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<RiskReport | null>(null);
 
   const handleAnalyze = () => {
     // Simulación de análisis de riesgos
@@ -189,7 +190,7 @@ const RiskAnalysis = () => {
 
           {/* Categorías de Riesgo */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {analysis.categories.map((category: any, index: number) => (
+            {analysis.categories.map((category, index: number) => (
               <Card key={index} className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-foreground">{category.name}</h3>
@@ -202,7 +203,7 @@ const RiskAnalysis = () => {
                 </div>
                 <Progress value={category.score} className="h-2 mb-4" />
                 <div className="space-y-3">
-                  {category.risks.map((risk: any, riskIndex: number) => (
+                  {category.risks.map((risk, riskIndex: number) => (
                     <div key={riskIndex} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
                       {getStatusIcon(risk.status)}
                       <div className="flex-1">
@@ -223,7 +224,7 @@ const RiskAnalysis = () => {
               Acciones recomendadas para reducir los riesgos identificados, ordenadas por prioridad
             </p>
             <div className="space-y-4">
-              {analysis.recommendations.map((rec: any, index: number) => (
+              {analysis.recommendations.map((rec, index: number) => (
                 <div key={index} className="border rounded-lg p-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

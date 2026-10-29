@@ -7,7 +7,7 @@ import { Search, Sparkles, Loader2, MapPin, DollarSign, Maximize2 } from 'lucide
 import { useSmartSearch } from '@/hooks/useAI';
 
 interface SmartSearchBarProps {
-  onSearchComplete?: (result: any) => void;
+  onSearchComplete?: (result: NonNullable<ReturnType<typeof useSmartSearch>['result']>) => void;
   className?: string;
 }
 

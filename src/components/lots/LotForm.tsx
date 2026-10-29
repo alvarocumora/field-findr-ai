@@ -48,7 +48,7 @@ interface LotFormProps {
 export const LotForm = ({ projects, initialData, onSubmit, onCancel, isLoading }: LotFormProps) => {
   const features = initialData?.features as LotFeatures | null;
   const [lotImages, setLotImages] = useState<string[]>(
-    ((initialData as any)?.images as string[]) || []
+    ((initialData)?.images as string[]) || []
   );
   const [generatingDesc, setGeneratingDesc] = useState(false);
   
@@ -109,7 +109,7 @@ export const LotForm = ({ projects, initialData, onSubmit, onCancel, isLoading }
       buyer_email: data.buyer_email?.trim() || null,
       buyer_phone: data.buyer_phone?.trim() || null,
       images: lotImages,
-    } as any;
+    };
     onSubmit(lotData);
   };
 

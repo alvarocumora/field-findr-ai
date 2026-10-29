@@ -50,7 +50,7 @@ export const SocialProofToast = ({ projectId }: SocialProofToastProps) => {
 
       const activities: { name: string; action: string; timeAgo: string }[] = [];
 
-      (data || []).forEach((r: any) => {
+      (data || []).forEach((r) => {
         const hours = Math.round((Date.now() - new Date(r.created_at).getTime()) / 3600000);
         activities.push({
           name: r.buyer_name?.split(' ')[0] || 'Alguien',
@@ -59,7 +59,7 @@ export const SocialProofToast = ({ projectId }: SocialProofToastProps) => {
         });
       });
 
-      (leads || []).forEach((l: any) => {
+      (leads || []).forEach((l) => {
         const hours = Math.round((Date.now() - new Date(l.created_at).getTime()) / 3600000);
         activities.push({
           name: l.first_name || 'Alguien',

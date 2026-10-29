@@ -47,7 +47,7 @@ export function useMultiProjectMetrics(projectId?: string) {
 
       // Filter reservations to our lots
       const lotIds = new Set(lots.map(l => l.id));
-      const ourReservations = reservations.filter((r: any) => lotIds.has(r.lot_id));
+      const ourReservations = reservations.filter((r) => lotIds.has(r.lot_id));
 
       // Credits
       const { data: credits = [] } = await supabase
@@ -57,7 +57,7 @@ export function useMultiProjectMetrics(projectId?: string) {
       const { data: overdueP = [] } = await supabase
         .from('credit_payments').select('id, credit_id, status').eq('status', 'overdue');
       const creditIds = new Set(credits.map(c => c.id));
-      const ourOverdue = overdueP.filter((p: any) => creditIds.has(p.credit_id));
+      const ourOverdue = overdueP.filter((p) => creditIds.has(p.credit_id));
 
       // Leads
       const { data: leads = [] } = await supabase
@@ -71,11 +71,11 @@ export function useMultiProjectMetrics(projectId?: string) {
       const reservedLots = projects.reduce((s, p) => s + (p.reserved_lots || 0), 0);
       const soldLots = projects.reduce((s, p) => s + (p.sold_lots || 0), 0);
 
-      const paidRes = ourReservations.filter((r: any) => r.status === 'paid' || r.status === 'converted');
-      const reservationRevenue = paidRes.reduce((s: number, r: any) => s + (r.reservation_amount || 0), 0);
+      const paidRes = ourReservations.filter((r) => r.status === 'paid' || r.status === 'converted');
+      const reservationRevenue = paidRes.reduce((s: number, r) => s + (r.reservation_amount || 0), 0);
       const creditRevenue = credits
-        .filter((c: any) => c.status === 'active' || c.status === 'completed')
-        .reduce((s: number, c: any) => s + Number(c.financed_amount || 0), 0);
+        .filter((c) => c.status === 'active' || c.status === 'completed')
+        .reduce((s: number, c) => s + Number(c.financed_amount || 0), 0);
 
       const projectComparison = projects.map(p => ({
         name: p.name.length > 15 ? p.name.slice(0, 15) + '…' : p.name,

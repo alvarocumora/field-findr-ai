@@ -123,7 +123,7 @@ const ExecutiveDashboard = () => {
     available: lots.filter((lot) => lot.status === 'available').length,
     reserved: lots.filter((lot) => lot.status === 'reserved').length,
     sold: lots.filter((lot) => lot.status === 'sold').length,
-    activeReservations: (reservations as any[]).filter((r) => ['pending_payment', 'paid'].includes(r.status)).length,
+    activeReservations: (reservations).filter((r) => ['pending_payment', 'paid'].includes(r.status)).length,
     quotes: activeSalesQuotesCount,
     leads: leads.length,
   }), [lots, reservations, activeSalesQuotesCount, leads]);
@@ -274,7 +274,7 @@ const ExecutiveDashboard = () => {
     });
 
     if (result.reservation) {
-      const project = projects.find((p: any) => p.id === reserveLot.project_id) as any;
+      const project = projects.find((p) => p.id === reserveLot.project_id);
       toast.success('Reserva creada', {
         action: {
           label: 'Certificado PDF',

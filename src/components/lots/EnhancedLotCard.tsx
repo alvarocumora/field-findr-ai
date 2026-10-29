@@ -7,7 +7,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Lot, parseLotFeatures } from '@/hooks/useLots';
+import { parseLotFeatures } from '@/hooks/useLots';
+import type { PublicLot } from '@/lib/lots/publicLotTypes';
 import {
   Eye,
   Edit,
@@ -32,6 +33,8 @@ import { useMemo } from 'react';
 import { toast } from 'sonner';
 import { normalizePolygon } from '@/lib/polygonUtils';
 import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
+
+type Lot = PublicLot & { buyer_name?: string | null };
 
 interface EnhancedLotCardProps {
   lot: Lot;
@@ -159,11 +162,11 @@ export const EnhancedLotCard = ({
   projectName,
 }: EnhancedLotCardProps) => {
   const features = parseLotFeatures(lot.features);
-  const normalizedPolygon = normalizePolygon(lot.polygon as any, lot.latitude ?? undefined, lot.longitude ?? undefined);
+  const normalizedPolygon = normalizePolygon(lot.polygon, lot.latitude ?? undefined, lot.longitude ?? undefined);
   const polygon = normalizedPolygon.valid ? normalizedPolygon.coords : null;
   const pricePerSqm =
     lot.price_per_sqm || (lot.price && lot.area ? lot.price / Number(lot.area) : null);
-  const images = (lot as any).images as string[] | null;
+  const images = (lot).images as string[] | null;
   const heroImage = images && images.length > 0 ? images[0] : null;
 
   const isLastAvailable =

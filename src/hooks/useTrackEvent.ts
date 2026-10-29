@@ -1,3 +1,4 @@
+import type { Json } from '@/integrations/supabase/types';
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -5,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 export const useTrackEvent = () => {
   const { user } = useAuth();
 
-  const track = useCallback(async (eventType: string, metadata: Record<string, any> = {}) => {
+  const track = useCallback(async (eventType: string, metadata: Record<string, Json> = {}) => {
     if (!user) return;
     try {
       await supabase.from('user_events').insert({

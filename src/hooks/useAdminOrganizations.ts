@@ -1,3 +1,4 @@
+import type { Tables } from '@/integrations/supabase/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { normalizePlanId, type PlanType } from '@/hooks/useSubscription';
@@ -66,7 +67,7 @@ export const useAdminOrganizations = () =>
           supabase.from('organizations').select('id, name, slug, logo_url, owner_id, created_at'),
           supabase.from('organization_members').select('organization_id, user_id, role'),
           supabase.from('profiles').select('user_id, first_name, last_name, email'),
-          (supabase as any).from('subscriptions').select('user_id, organization_id, plan_type, status, updated_at'),
+          (supabase).from('subscriptions').select('user_id, organization_id, plan_type, status, updated_at'),
           supabase
             .from('projects')
             .select('id, name, status, total_lots, sold_lots, slug, organization_id, user_id, updated_at'),
@@ -84,8 +85,8 @@ export const useAdminOrganizations = () =>
       const profiles = new Map(
         (profilesRes.data ?? []).map((p) => [p.user_id, p as typeof p]),
       );
-      const userSubs = new Map<string, any>((subsRes.data ?? []).map((subscription: any) => [subscription.user_id, subscription]));
-      const organizationSubs = new Map<string, any>(
+      const userSubs = new Map<string, Pick<Tables<'subscriptions'>, 'user_id' | 'organization_id' | 'plan_type' | 'status' | 'updated_at'>>((subsRes.data ?? []).map((subscription) => [subscription.user_id, subscription]));
+      const organizationSubs = new Map<string, Pick<Tables<'subscriptions'>, 'user_id' | 'organization_id' | 'plan_type' | 'status' | 'updated_at'>>(
         (subsRes.data ?? [])
           .filter((subscription) => subscription.organization_id)
           .map((subscription) => [subscription.organization_id as string, subscription]),
@@ -174,7 +175,7 @@ export const useAdminSetOrgPlan = () => {
       ownerId: string;
       plan: PlanType;
     }) => {
-      const organizationUpdate = await (supabase as any)
+      const organizationUpdate = await (supabase)
         .from('subscriptions')
         .update({ plan_type: plan })
         .eq('organization_id', organizationId)
@@ -182,14 +183,14 @@ export const useAdminSetOrgPlan = () => {
       if (organizationUpdate.error) throw organizationUpdate.error;
 
       if ((organizationUpdate.data ?? []).length === 0) {
-        const legacyUpdate = await (supabase as any)
+        const legacyUpdate = await (supabase)
           .from('subscriptions')
           .update({ plan_type: plan, organization_id: organizationId })
           .eq('user_id', ownerId)
           .select('id');
         if (legacyUpdate.error) throw legacyUpdate.error;
         if ((legacyUpdate.data ?? []).length === 0) {
-          const { error } = await (supabase as any).from('subscriptions').insert({
+          const { error } = await (supabase).from('subscriptions').insert({
             user_id: ownerId,
             organization_id: organizationId,
             plan_type: plan,

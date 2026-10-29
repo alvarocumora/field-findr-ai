@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const hexHash = (row as any)[hashField] as string | null;
+    const hexHash = (row)[hashField] as string | null;
     if (!hexHash) {
       return new Response(JSON.stringify({ error: `${hashField} no disponible` }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

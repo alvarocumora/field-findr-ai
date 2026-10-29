@@ -35,7 +35,7 @@ export interface NormalizedPolygon {
  * - GeoJSON-style with closing duplicate removed
  */
 export function normalizePolygon(
-  polygon: number[][] | null | undefined,
+  polygon: unknown,
   fallbackLat?: number,
   fallbackLng?: number
 ): NormalizedPolygon {
@@ -49,7 +49,12 @@ export function normalizePolygon(
     valid: false,
   };
 
-  if (!polygon || !Array.isArray(polygon) || polygon.length < 3) return empty;
+  if (!Array.isArray(polygon) || polygon.length < 3) return empty;
+  if (!polygon.every((point): point is number[] =>
+    Array.isArray(point) && point.length >= 2 &&
+    typeof point[0] === 'number' && Number.isFinite(point[0]) &&
+    typeof point[1] === 'number' && Number.isFinite(point[1])
+  )) return empty;
 
   // Remove duplicate closing point
   let coords = [...polygon];

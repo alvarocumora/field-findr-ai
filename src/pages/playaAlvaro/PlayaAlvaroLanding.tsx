@@ -40,9 +40,9 @@ export default function PlayaAlvaroLanding() {
       style={
         {
           // Coastal palette override (azul océano + arena)
-          ['--hue-amber' as any]: '#5cc4d6',
-          ['--hue-forest' as any]: '#0a2540',
-          ['--hue-forest-mid' as any]: '#0e3a5f',
+          ['--hue-amber']: '#5cc4d6',
+          ['--hue-forest']: '#0a2540',
+          ['--hue-forest-mid']: '#0e3a5f',
         } as React.CSSProperties
       }
     >

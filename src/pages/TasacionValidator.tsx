@@ -1,3 +1,4 @@
+import type { Tables } from '@/integrations/supabase/types';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,7 +51,7 @@ type LookupResult =
   | { kind: 'notfound' };
 
 
-const toFound = (data: any, matched: string): Found => ({
+const toFound = (data: Pick<Tables<'tasaciones_publicadas'>, 'id' | 'revoked_at' | 'revoked_reason' | 'comuna' | 'valor_uf' | 'tasador_nombre' | 'fecha_emision' | 'pdf_path' | 'pdf_final_path' | 'pdf_sha256' | 'pdf_final_sha256'>, matched: string): Found => ({
   kind: 'found',
   id: data.id,
   revoked: !!data.revoked_at,

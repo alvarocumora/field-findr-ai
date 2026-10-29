@@ -1,3 +1,4 @@
+import type { Listing } from '@/hooks/useListings';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { OpportunityDocuments } from '@/components/opportunities/OpportunityDocuments';
 
-const getAIScore = (listing: any): number => {
+const getAIScore = (listing: Listing): number => {
   let score = 50;
   if (listing.area_m2 && listing.area_m2 > 5000) score += 10;
   if (listing.featured) score += 15;
@@ -38,7 +39,7 @@ const getRiskLevel = (score: number) => {
   return { label: 'Alto', color: 'text-red-500', bg: 'bg-red-500/15' };
 };
 
-const getNextAction = (listing: any): { action: string; icon: typeof CheckCircle2; priority: string } => {
+const getNextAction = (listing: Listing): { action: string; icon: typeof CheckCircle2; priority: string } => {
   const u = listing.utilities as Record<string, boolean> | null;
   if (listing.legal_status === 'pending') return { action: 'Verificar estado legal del terreno', icon: Shield, priority: 'Alta' };
   if (!u?.water && !u?.electricity) return { action: 'Evaluar factibilidad de servicios básicos', icon: Zap, priority: 'Alta' };

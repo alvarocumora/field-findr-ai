@@ -24,7 +24,7 @@ const PropertyApprovalQueue = () => {
       const { data, error } = await supabase
         .from('property_approvals')
         .select('*, listings(id, title, location, price, type, currency, area_m2, images, user_id)')
-        .eq('status', 'pending' as any)
+        .eq('status', 'pending')
         .order('created_at', { ascending: true });
       if (error) throw error;
       return data || [];
@@ -39,11 +39,11 @@ const PropertyApprovalQueue = () => {
       const { error } = await supabase
         .from('property_approvals')
         .update({
-          status: status as any,
+          status: status,
           reviewer_id: user?.id,
           reviewed_at: new Date().toISOString(),
           rejection_reason: status === 'rejected' ? (reason ?? null) : null,
-        } as any)
+        })
         .eq('id', id);
       if (error) throw error;
     },
@@ -75,7 +75,7 @@ const PropertyApprovalQueue = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {approvals.map((approval: any) => {
+          {approvals.map((approval) => {
             const listing = approval.listings;
             if (!listing) return null;
 

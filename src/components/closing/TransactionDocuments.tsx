@@ -74,7 +74,7 @@ export const TransactionDocuments = ({ reservationId, readOnly = false }: Transa
       status: approved ? 'approved' : 'rejected',
       reviewed_at: new Date().toISOString(),
       rejection_reason: approved ? null : 'Documento no cumple requisitos',
-    } as any);
+    });
   };
 
   const approvedCount = docs.filter(d => d.status === 'approved').length;

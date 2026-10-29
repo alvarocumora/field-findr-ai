@@ -1,3 +1,4 @@
+import type { Json } from '@/integrations/supabase/types';
 import type { TasacionData } from './tasacionPdfGenerator';
 import { computeMethods } from './tasacionMethodsV12';
 
@@ -32,7 +33,7 @@ interface ListingLike {
   rol?: string | null;
   zoning?: string | null;
   tags?: string[] | null;
-  utilities?: any;
+  utilities?: Json;
 }
 
 const cap = (s?: string | null) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
@@ -97,7 +98,7 @@ export function buildTasacionData(
     ? (listing.price || 0)
     : Math.round((listing.price || 0) / ufRate);
   const valorM2UF = areaM2 > 0 ? +(priceUF / areaM2).toFixed(3) : 0;
-  const utilities = (listing.utilities || {}) as Record<string, any>;
+  const utilities = (listing.utilities || {}) as Record<string, Json>;
   const tipo = typeLabel(listing.type);
 
   const valorUnitarioSII = Math.max(1500, Math.round(valorM2UF * ufRate * 0.18));

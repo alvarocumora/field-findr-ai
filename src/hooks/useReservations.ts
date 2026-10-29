@@ -1,3 +1,4 @@
+import type { Json } from '@/integrations/supabase/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
@@ -5,6 +6,13 @@ import { toast } from 'sonner';
 import { readReferralAttribution } from '@/lib/referrals/referralAttribution';
 
 export type Reservation = Tables<'reservations'>;
+export type ReservationWithLot = Reservation & {
+  lots: (Pick<Tables<'lots'>, 'lot_number' | 'name' | 'area' | 'price' | 'project_id'> & {
+    id?: string;
+    polygon?: Json;
+    projects: Pick<Tables<'projects'>, 'name'> & Partial<Pick<Tables<'projects'>, 'id' | 'location' | 'city' | 'rol_number'>> | null;
+  }) | null;
+};
 
 export interface CreateReservationData {
   lot_id: string;
@@ -64,7 +72,7 @@ export const useReservations = (projectId?: string) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data;
+      return data as ReservationWithLot[];
     },
     enabled: true,
   });

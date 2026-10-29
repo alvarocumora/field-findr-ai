@@ -47,7 +47,7 @@ const CommissionsPage = () => {
   const mineNet = useMemo(
     () => mine.map(c => ({
       ...c,
-      net_amount: (c.commission_amount || 0) - ((c as any).referral_amount || 0),
+      net_amount: (c.commission_amount || 0) - ((c).referral_amount || 0),
     })),
     [mine],
   );
@@ -119,7 +119,7 @@ const CommissionsPage = () => {
                       <TableCell>{new Date(c.created_at).toLocaleDateString('es-CL')}</TableCell>
                       <TableCell>{fmt(c.sale_amount)}</TableCell>
                       <TableCell>{c.commission_rate}% · {fmt(c.commission_amount)}</TableCell>
-                      <TableCell>{(c as any).referral_amount > 0 ? `-${fmt((c as any).referral_amount)}` : '—'}</TableCell>
+                      <TableCell>{(c).referral_amount > 0 ? `-${fmt((c).referral_amount)}` : '—'}</TableCell>
                       <TableCell className="font-medium">{fmt(c.net_amount)}</TableCell>
                       <TableCell><StatusBadge status={c.status} /></TableCell>
                       <TableCell className="text-right">

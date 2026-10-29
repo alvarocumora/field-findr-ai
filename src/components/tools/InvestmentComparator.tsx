@@ -1,3 +1,4 @@
+import type { Project } from '@/hooks/useProjects';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +37,7 @@ const InvestmentComparator = () => {
     },
   });
 
-  const calculateScore = (project: any, index: number): ProjectScore => {
+  const calculateScore = (project: Pick<Project, 'id' | 'name' | 'location' | 'total_lots' | 'available_lots' | 'sold_lots' | 'total_area' | 'city' | 'region'>, index: number): ProjectScore => {
     const totalLots = project.total_lots || 1;
     const soldLots = project.sold_lots || 0;
     const availableLots = project.available_lots || 0;

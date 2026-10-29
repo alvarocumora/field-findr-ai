@@ -43,9 +43,9 @@ export default function ExploraParkLanding() {
       style={
         {
           // Valle / campo palette (verdes tierra + trigo)
-          ['--hue-amber' as any]: '#c9b06b',
-          ['--hue-forest' as any]: '#122318',
-          ['--hue-forest-mid' as any]: '#1e3a24',
+          ['--hue-amber']: '#c9b06b',
+          ['--hue-forest']: '#122318',
+          ['--hue-forest-mid']: '#1e3a24',
         } as React.CSSProperties
       }
     >

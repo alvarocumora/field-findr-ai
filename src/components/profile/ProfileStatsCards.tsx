@@ -28,7 +28,7 @@ const ProfileStatsCards = ({ userId }: ProfileStatsCardsProps) => {
         reservations: resRes.count || 0,
         credits: credRes.count || 0,
         plan: subRes.data?.plan_type || 'free',
-        roles: (roleRes.data || []).map((r: any) => r.role as string),
+        roles: (roleRes.data || []).map((r) => r.role as string),
       };
     },
     enabled: !!userId,

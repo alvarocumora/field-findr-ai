@@ -36,7 +36,7 @@ const AchievementsBadges = () => {
         .eq('user_id', user.id);
       
       const counts: Record<string, number> = {};
-      (data || []).forEach((e: any) => {
+      (data || []).forEach((e) => {
         counts[e.event_type] = (counts[e.event_type] || 0) + 1;
       });
       return counts;

@@ -664,12 +664,12 @@ const SwipeExplorer = ({
               <div className="p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-2xl font-bold text-primary">
-                    {formatPrice(current.price, (current as any).currency ?? 'CLP')}
+                    {formatPrice(current.price, (current).currency ?? 'CLP')}
                   </span>
                   <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                    {pricePerM2 !== null && pricePerM2 >= 100 && ((current as any).currency ?? 'CLP') === 'CLP' && (
+                    {pricePerM2 !== null && pricePerM2 >= 100 && ((current).currency ?? 'CLP') === 'CLP' && (
                       <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">
-                        {formatPricePerM2(current.price, current.area_m2, (current as any).currency)}
+                        {formatPricePerM2(current.price, current.area_m2, (current).currency)}
                       </span>
                     )}
                     {current.area_m2 && (
@@ -822,7 +822,7 @@ const SwipeExplorer = ({
                 </DialogHeader>
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-bold text-primary text-lg">
-                    {formatPrice(confirmed.listing.price, (confirmed.listing as any).currency ?? 'CLP')}
+                    {formatPrice(confirmed.listing.price, (confirmed.listing).currency ?? 'CLP')}
                   </span>
                   {confirmed.listing.area_m2 && (
                     <span className="flex items-center gap-1 text-muted-foreground">

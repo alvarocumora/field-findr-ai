@@ -42,7 +42,7 @@ export const InventoryStats = ({
 }: InventoryStatsProps) => {
   const total = distribution.reduce((sum, item) => sum + item.value, 0);
   
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: { payload: InventoryStatsProps['distribution'][number] }[] }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const percentage = ((data.value / total) * 100).toFixed(1);

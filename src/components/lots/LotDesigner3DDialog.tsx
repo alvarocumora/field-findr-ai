@@ -8,7 +8,8 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Lot, useLots } from '@/hooks/useLots';
+import { useLots } from '@/hooks/useLots';
+import type { PublicLot as Lot } from '@/lib/lots/publicLotTypes';
 import { normalizePolygon } from '@/lib/polygonUtils';
 
 const ParcelaDesigner3D = lazy(() =>
@@ -47,11 +48,11 @@ export const LotDesigner3DDialog = ({
 
   if (!lot) return null;
 
-  const normalized = normalizePolygon(lot.polygon as any, lot.latitude ?? undefined, lot.longitude ?? undefined);
+  const normalized = normalizePolygon(lot.polygon, lot.latitude ?? undefined, lot.longitude ?? undefined);
   const polygon = normalized.valid ? normalized.coords : null;
   const neighbors = projectLots
     .filter((l) => l.id !== lot.id)
-    .map((l) => normalizePolygon(l.polygon as any, l.latitude ?? undefined, l.longitude ?? undefined))
+    .map((l) => normalizePolygon(l.polygon, l.latitude ?? undefined, l.longitude ?? undefined))
     .filter((candidate) => candidate.valid)
     .map((candidate) => candidate.coords);
 

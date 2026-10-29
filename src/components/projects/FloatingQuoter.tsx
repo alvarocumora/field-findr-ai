@@ -1,3 +1,4 @@
+import type { PublicLot } from '@/lib/lots/publicLotTypes';
 import { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,10 +9,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface FloatingQuoterProps {
-  selectedLot: any | null;
+  selectedLot: PublicLot | null;
   projectName: string;
-  onReserve: (lot: any) => void;
-  onFinance: (lot: any) => void;
+  onReserve: (lot: PublicLot) => void;
+  onFinance: (lot: PublicLot) => void;
   /** Deselecciona el lote y oculta el panel. */
   onClose: () => void;
 }

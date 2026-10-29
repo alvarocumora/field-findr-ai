@@ -1,3 +1,4 @@
+import type { Listing } from '@/hooks/useListings';
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,7 @@ const LEGAL_STATUSES = [
   { key: 'rejected', label: 'Rechazado', color: 'bg-red-500/15 text-red-500' },
 ];
 
-const getAIScore = (listing: any): number => {
+const getAIScore = (listing: Listing): number => {
   let score = 50;
   if (listing.area_m2 && listing.area_m2 > 5000) score += 10;
   if (listing.featured) score += 15;
@@ -43,14 +44,14 @@ const getAIScore = (listing: any): number => {
   return Math.min(score, 100);
 };
 
-const getRiskLevel = (listing: any): { label: string; color: string } => {
+const getRiskLevel = (listing: Listing): { label: string; color: string } => {
   const score = getAIScore(listing);
   if (score >= 80) return { label: 'Bajo', color: 'text-green-500' };
   if (score >= 60) return { label: 'Medio', color: 'text-amber-500' };
   return { label: 'Alto', color: 'text-red-500' };
 };
 
-const getPipelineStage = (listing: any) => {
+const getPipelineStage = (listing: Listing) => {
   if (listing.status === 'sold') return PIPELINE_STAGES[4];
   if (listing.legal_status === 'verified') return PIPELINE_STAGES[2];
   if (listing.featured) return PIPELINE_STAGES[1];

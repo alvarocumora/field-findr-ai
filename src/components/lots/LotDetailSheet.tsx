@@ -1,3 +1,4 @@
+import type { LegalItem } from '@/lib/projects/legalItemTypes';
 import ViewerErrorBoundary from '@/components/viewer/ViewerErrorBoundary';
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -12,7 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
-import { Lot, parseLotFeatures } from '@/hooks/useLots';
+import { parseLotFeatures } from '@/hooks/useLots';
+import type { PublicLot as Lot } from '@/lib/lots/publicLotTypes';
 import {
   DollarSign,
   Ruler,
@@ -61,7 +63,7 @@ interface LotDetailSheetProps {
   onReserve?: (lot: Lot) => void;
   onDesign?: (lot: Lot) => void;
   onFinance?: (lot: Lot) => void;
-  legalDocuments?: any[];
+  legalDocuments?: LegalItem[];
   project?: import('@/lib/marketplace/lotToListing').ProjectForListing | null;
   canManage?: boolean;
 }
@@ -187,7 +189,7 @@ export const LotDetailSheet = ({
   const polygon = lot.polygon as number[][] | null;
   const pricePerSqm = formatPublicLotUnitPrice(lot.price, Number(lot.area));
   const slopeLabel = getSlopeLabel(lot.slope_category);
-  const images = ((lot as any).images as string[] | null) || [];
+  const images = ((lot).images as string[] | null) || [];
 
   const handleDownloadFicha = async () => {
     setIsDownloading(true);
@@ -344,7 +346,7 @@ export const LotDetailSheet = ({
             <section>
               <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Documentos del proyecto</p>
               <div className="divide-y divide-white/10 rounded-2xl border border-border bg-muted/60">
-                {legalDocuments.slice(0, 4).map((doc: any, i: number) => (
+                {legalDocuments.slice(0, 4).map((doc, i: number) => (
                   <a key={i} href={doc.url || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
                     <span>📄 {doc.name || `Documento ${i + 1}`}</span><ExternalLink className="h-3.5 w-3.5" />
                   </a>
@@ -370,7 +372,7 @@ export const LotDetailSheet = ({
           {canManage && project && (
             <div className="border-t border-border pt-4">
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Gestión</p>
-              <PublishLotButton lot={lot as any} project={project} />
+              <PublishLotButton lot={lot} project={project} />
             </div>
           )}
         </div>

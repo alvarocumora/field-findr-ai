@@ -191,7 +191,7 @@ const Dashboard = () => {
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie data={projectsData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
-                    {projectsData.map((entry: any, index: number) => (
+                    {projectsData.map((entry, index: number) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -199,7 +199,7 @@ const Dashboard = () => {
                 </PieChart>
               </ResponsiveContainer>
               <div className="grid grid-cols-2 gap-2 mt-2">
-                {projectsData.map((item: any, index: number) => (
+                {projectsData.map((item, index: number) => (
                   <div key={index} className="flex items-center gap-2 text-xs">
                     <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
                     <span className="truncate text-muted-foreground">{item.name}</span>

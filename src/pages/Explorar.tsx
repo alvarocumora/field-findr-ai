@@ -103,7 +103,7 @@ const Explorar = () => {
   const [selectedValuation, setSelectedValuation] = useState<string[]>([]);
 
   // Cinematic 3D transition
-  const [cinematicLot, setCinematicLot] = useState<any>(null);
+  const [cinematicLot, setCinematicLot] = useState<Parameters<typeof CinematicTransition>[0]['targetLot'] | null>(null);
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
 
   // Data — infinite pagination with cursor. Text search runs server-side so
@@ -401,10 +401,10 @@ const Explorar = () => {
             const url = whatsapp.listingInquiry({
               title: l.title,
               price: l.price,
-              currency: (l as any).currency ?? 'CLP',
+              currency: (l).currency ?? 'CLP',
               area: l.area_m2 ?? null,
               location: l.location,
-              phone: (l as any).contact_phone ?? (l as any).owner_phone ?? undefined,
+              phone: (l).contact_phone ?? (l).owner_phone ?? undefined,
             });
             window.open(url, '_blank', 'noopener,noreferrer');
             track('swipe_contact', { listing_id: l.id, channel: 'whatsapp' });
@@ -639,10 +639,10 @@ const Explorar = () => {
                 const url = whatsapp.listingInquiry({
                   title: l.title,
                   price: l.price,
-                  currency: (l as any).currency ?? 'CLP',
+                  currency: (l).currency ?? 'CLP',
                   area: l.area_m2 ?? null,
                   location: l.location,
-                  phone: (l as any).contact_phone ?? (l as any).owner_phone ?? undefined,
+                  phone: (l).contact_phone ?? (l).owner_phone ?? undefined,
                 });
                 window.open(url, '_blank', 'noopener,noreferrer');
                 track('swipe_contact', { listing_id: l.id, channel: 'whatsapp' });

@@ -47,7 +47,7 @@ export function CreditDetail({ credit, onBack }: { credit: Credit; onBack: () =>
         : { data: null, error: null };
       if (error) throw error;
       if (!res) { toast.error('El crédito no tiene una reserva asociada con los datos del comprador'); return; }
-      const lot: any = (res as any).lots; const project = lot?.projects;
+      const lot = (res).lots; const project = lot?.projects;
       generateContractPDF({
         projectName: project?.name || 'Proyecto',
         projectLocation: project?.location || project?.city || '',
@@ -81,10 +81,10 @@ export function CreditDetail({ credit, onBack }: { credit: Credit; onBack: () =>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            Crédito — Lote {(credit as any).lots?.lot_number}
+            Crédito — Lote {(credit).lots?.lot_number}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {(credit as any).lots?.projects?.name}
+            {(credit).lots?.projects?.name}
           </p>
         </div>
         <Button variant="outline" className="gap-2" onClick={handlePromesa} disabled={isLoading}>

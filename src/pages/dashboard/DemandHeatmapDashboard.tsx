@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -37,7 +38,7 @@ const DemandHeatmapDashboard = () => {
         .not('project_id', 'is', null);
       // Count by project
       const counts: Record<string, { name: string; city: string; region: string; count: number }> = {};
-      (data || []).forEach((l: any) => {
+      (data || []).forEach((l) => {
         const pid = l.project_id;
         if (!counts[pid]) {
           counts[pid] = {
@@ -77,7 +78,7 @@ const DemandHeatmapDashboard = () => {
         .select('source')
         .eq('user_id', user!.id);
       const counts: Record<string, number> = {};
-      (data || []).forEach((l: any) => {
+      (data || []).forEach((l) => {
         const src = l.source || 'Directo';
         counts[src] = (counts[src] || 0) + 1;
       });
@@ -96,7 +97,7 @@ const DemandHeatmapDashboard = () => {
         .eq('user_id', user!.id)
         .not('project_id', 'is', null);
       const counts: Record<string, number> = {};
-      (data || []).forEach((l: any) => {
+      (data || []).forEach((l) => {
         const region = l.projects?.region || 'Sin región';
         counts[region] = (counts[region] || 0) + 1;
       });
@@ -114,7 +115,7 @@ const DemandHeatmapDashboard = () => {
         .select('status')
         .eq('user_id', user!.id);
       const counts: Record<string, number> = {};
-      (data || []).forEach((l: any) => {
+      (data || []).forEach((l) => {
         const st = l.status || 'new';
         counts[st] = (counts[st] || 0) + 1;
       });
@@ -306,7 +307,7 @@ const statusLabel = (s: string) => {
 };
 
 const KPICard = ({ icon: Icon, label, value, subtext, color }: {
-  icon: any; label: string; value: string; subtext?: string; color: string;
+  icon: LucideIcon; label: string; value: string; subtext?: string; color: string;
 }) => (
   <Card className="border-border/40">
     <CardContent className="p-4">

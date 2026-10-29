@@ -24,7 +24,7 @@ const ClosingManager = () => {
   const [signingData, setSigningData] = useState<{
     open: boolean;
     stepId: string;
-    reservation: any;
+    reservation: NonNullable<ReturnType<typeof useAllClosingSteps>['data']>[number]['reservations'];
     projectName: string;
     lotNumber: string;
     buyerName: string;
@@ -37,7 +37,7 @@ const ClosingManager = () => {
     if (!acc[rId]) acc[rId] = { reservation: step.reservations, steps: [] };
     acc[rId].steps.push(step);
     return acc;
-  }, {} as Record<string, { reservation: any; steps: typeof allSteps }>);
+  }, {} as Record<string, { reservation: NonNullable<ReturnType<typeof useAllClosingSteps>['data']>[number]['reservations']; steps: typeof allSteps }>);
 
   const entries = Object.entries(grouped).filter(([, g]) => {
     if (filter === 'all') return true;

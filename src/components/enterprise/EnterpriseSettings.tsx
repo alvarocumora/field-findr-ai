@@ -141,7 +141,7 @@ const EnterpriseSettings = () => {
             </CardContent></Card>
           ) : (
             <div className="space-y-3">
-              {orgs.map((org: any) => (
+              {orgs.map((org) => (
                 <Card key={org.id}>
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -255,7 +255,7 @@ const EnterpriseSettings = () => {
 
           {webhooksLoading ? (
             <Card><CardContent className="p-6 text-center text-muted-foreground">Cargando...</CardContent></Card>
-          ) : (webhooks as any[]).length === 0 ? (
+          ) : (webhooks).length === 0 ? (
             <Card><CardContent className="p-12 text-center">
               <Webhook className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="font-semibold mb-2">Sin webhooks configurados</h3>
@@ -263,7 +263,7 @@ const EnterpriseSettings = () => {
             </CardContent></Card>
           ) : (
             <div className="space-y-3">
-              {(webhooks as any[]).map((wh: any) => (
+              {(webhooks).map((wh) => (
                 <Card key={wh.id}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">

@@ -179,7 +179,7 @@ export default function EpMasterplan() {
       map.on('mousemove', 'lots-fill', (e) => {
         if (!e.features?.length) return;
         map.getCanvas().style.cursor = 'pointer';
-        const lotId = (e.features[0].properties as any)?.id as string | undefined;
+        const lotId = (e.features[0].properties)?.id as string | undefined;
         if (lotId) setHoveredLotId(lotId);
       });
       map.on('mouseleave', 'lots-fill', () => {
@@ -188,7 +188,7 @@ export default function EpMasterplan() {
       });
       map.on('click', 'lots-fill', (e) => {
         if (!e.features?.length) return;
-        openPopupForFeature(map, e.features[0] as any, e.lngLat);
+        openPopupForFeature(map, e.features[0], e.lngLat);
       });
 
       setStyleReady(true);
@@ -237,7 +237,7 @@ export default function EpMasterplan() {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !styleReady) return;
-    const filter = ['in', ['get', 'status'], ['literal', Array.from(activeStatus)]] as any;
+    const filter = ['in', ['get', 'status'], ['literal', Array.from(activeStatus)]];
     try {
       map.setFilter('lots-fill', filter);
       map.setFilter('lots-line', filter);
@@ -294,11 +294,11 @@ export default function EpMasterplan() {
         price: lot.price_clp,
         listing_id: lot.listing_id ?? '',
       },
-    } as any;
-    openPopupForFeature(map, feat, { lng: lot.centroid[0], lat: lot.centroid[1] } as any);
+    };
+    openPopupForFeature(map, feat, { lng: lot.centroid[0], lat: lot.centroid[1] });
   }, [focusRequest, styleReady]);
 
-  function openPopupForFeature(map: mapboxgl.Map, feature: any, lngLat: mapboxgl.LngLatLike) {
+  function openPopupForFeature(map: mapboxgl.Map, feature: { properties: Record<string, unknown> | null }, lngLat: mapboxgl.LngLatLike) {
     const p = feature.properties || {};
     const status = String(p.status) as StatusFilter;
     const meta = STATUS_META[status];

@@ -108,7 +108,7 @@ export default function FeaturedManager() {
       queryClient.invalidateQueries({ queryKey: ['featured-projects-landing'] });
       setNotes((prev) => ({ ...prev, [vars.projectId]: '' }));
     },
-    onError: (e: any) => toast.error(e?.message ?? 'No se pudo actualizar'),
+    onError: (e) => toast.error(e?.message ?? 'No se pudo actualizar'),
   });
 
   return (

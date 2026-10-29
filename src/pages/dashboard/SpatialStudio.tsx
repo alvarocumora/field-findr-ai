@@ -1,3 +1,4 @@
+import type { KitProject } from '@/lib/pdf/projectKit';
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
@@ -60,7 +61,7 @@ const SpatialStudio = () => {
     [lots],
   );
 
-  const sourceReady = Boolean((project as any)?.kmz_file_url || spatial.source_file_url);
+  const sourceReady = Boolean((project)?.kmz_file_url || spatial.source_file_url);
   const mapReady = lots.length > 0 && validPolygons > 0;
   const designReady = mapReady;
 
@@ -75,9 +76,9 @@ const SpatialStudio = () => {
         latitude: project.latitude,
         longitude: project.longitude,
         images: project.images,
-        conditions: (project as any).commercial_conditions ?? null,
+        conditions: (project.commercial_conditions as KitProject['conditions']) ?? null,
         spatial,
-      } as any)
+      })
     : null;
 
   const refresh = async () => {
@@ -160,7 +161,7 @@ const SpatialStudio = () => {
           </div>
 
           {!lotsLoading && (
-            <SpatialValidationPanel project={project as any} lots={lots} roads={spatial.roads ?? 0} sourceReady={sourceReady} />
+            <SpatialValidationPanel project={project} lots={lots} roads={spatial.roads ?? 0} sourceReady={sourceReady} />
           )}
 
           <Tabs defaultValue="source" className="space-y-4">
@@ -191,9 +192,9 @@ const SpatialStudio = () => {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Button onClick={() => setImportOpen(true)}><FileArchive className="mr-2 h-4 w-4" />{sourceReady ? 'Actualizar KMZ/KML' : 'Importar KMZ/KML'}</Button>
-                      {(project as any).kmz_file_url && (
+                      {(project).kmz_file_url && (
                         <Button variant="outline" asChild>
-                          <a href={(project as any).kmz_file_url} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Archivo fuente</a>
+                          <a href={(project).kmz_file_url} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Archivo fuente</a>
                         </Button>
                       )}
                     </div>
@@ -236,7 +237,7 @@ const SpatialStudio = () => {
                       selectedLotId={designerLot?.id ?? null}
                       onLotClick={(lot) => setDesignerLot(lot as Lot)}
                       projectId={project.id}
-                      kmzFileUrl={(project as any).kmz_file_url}
+                      kmzFileUrl={(project).kmz_file_url}
                       externalRoads={spatial.roads_geojson ?? null}
                       readOnly
                       tourMode

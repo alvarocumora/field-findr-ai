@@ -1,10 +1,11 @@
+import type { LegalItem } from '@/lib/projects/legalItemTypes';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ShieldCheck, FileCheck } from 'lucide-react';
 
 interface VerificationBadgeProps {
-  legalDocuments?: any[];
-  permits?: any[];
+  legalDocuments?: (LegalItem | string)[];
+  permits?: (LegalItem | string)[];
   className?: string;
 }
 
@@ -40,7 +41,7 @@ export const VerificationBadge = ({ legalDocuments = [], permits = [], className
           <p className="font-semibold text-sm mb-2">Documentos del Proyecto</p>
           <div className="space-y-1.5">
             {DOC_TYPES.map(doc => {
-              const found = allDocs.some((d: any) => 
+              const found = allDocs.some((d) =>
                 typeof d === 'string' ? d.toLowerCase().includes(doc.key) : d?.type?.toLowerCase().includes(doc.key)
               );
               return (

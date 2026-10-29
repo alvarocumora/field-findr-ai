@@ -336,7 +336,7 @@ export default function PaMasterplan() {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
-    const filter = ['in', ['get', 'bucket'], ['literal', Array.from(activeBuckets)]] as any;
+    const filter = ['in', ['get', 'bucket'], ['literal', Array.from(activeBuckets)]];
     try {
       map.setFilter('lots-fill', filter);
       map.setFilter('lots-line', filter);
