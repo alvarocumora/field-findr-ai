@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Building2, MapPin, Search, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Building2, MapPin, Search, ShieldCheck, Pause, Play } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,16 +82,19 @@ const CinematicShowcaseHero = () => {
   const reduced = useReducedMotion();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
-  const { data: projects = [], isError } = useShowcaseProjects();
+  const { data: projects = [], isError, isLoading, refetch, isFetching } = useShowcaseProjects();
+  const [paused, setPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
   const withImage = projects.filter((p) => p.image);
   const [index, setIndex] = useState(0);
   const active = withImage[index % Math.max(withImage.length, 1)];
 
   useEffect(() => {
-    if (reduced || withImage.length < 2) return;
+    if (reduced || paused || hovered || focused || withImage.length < 2) return;
     const t = window.setInterval(() => setIndex((i) => (i + 1) % withImage.length), 11000);
     return () => window.clearInterval(t);
-  }, [reduced, withImage.length]);
+  }, [reduced, paused, hovered, focused, withImage.length]);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -102,18 +105,20 @@ const CinematicShowcaseHero = () => {
   const projectHref = active ? (active.slug ? `/p/${encodeURIComponent(active.slug)}` : `/proyecto/${encodeURIComponent(active.id)}`) : '/explorar';
 
   return (
-    <section className="relative isolate overflow-hidden bg-background" aria-labelledby="hero-title">
+    <section className="relative isolate overflow-hidden bg-background" aria-labelledby="hero-title"
+      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+      onFocusCapture={() => setFocused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
       {/* Full-bleed living globe */}
       <div className="relative h-[32svh] min-h-[180px] w-full lg:absolute lg:inset-0 lg:h-full">
         <HeroTerrainGlobe
           projects={withImage.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng }))}
           activeId={active?.id}
           reducedMotion={!!reduced}
-          onSelect={(id) => { const i = withImage.findIndex((p) => p.id === id); if (i >= 0) setIndex(i); }}
+          onSelect={(id) => { const i = withImage.findIndex((p) => p.id === id); if (i >= 0) { setIndex(i); setPaused(true); } }}
           fallback={
             <AnimatePresence mode="sync">
               {active?.image ? (
-                <motion.img key={active.id} src={active.image} alt={`Vista aérea de ${active.name}`}
+                <motion.img key={active.id} src={active.image} alt={`Vista de ${active.name}`} fetchPriority="high"
                   className="absolute inset-0 h-full w-full object-cover"
                   initial={reduced ? false : { opacity: 0, scale: 1.06 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
                   transition={{ duration: 1.4 }} />
@@ -141,12 +146,12 @@ const CinematicShowcaseHero = () => {
           transition={{ duration: 0.7 }}
           className="-mt-16 min-w-0 rounded-2xl border border-border bg-card/85 p-5 backdrop-blur-md rural-shadow sm:p-7 lg:mt-0 lg:max-w-xl"
         >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">Rural Finder · Atlas de Chile</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">Parcelas y loteos en Chile</p>
           <h1 id="hero-title" className="mt-3 font-editorial text-[2rem] font-medium leading-[1.05] text-foreground sm:text-5xl">
-            Encuentra tierra con <em className="text-primary">papeles claros</em> y precio publicado.
+            Encuentra el terreno para <em className="text-primary">tu próximo proyecto.</em>
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
-            Recorre el territorio en 3D, entra a cada proyecto y revisa lotes, tour 360 y documentos.
+            Busca por comuna o proyecto. Compara terrenos y revisa precios, disponibilidad y los documentos publicados en cada proyecto.
           </p>
 
           <form onSubmit={submit} role="search" className="mt-5">
@@ -171,9 +176,12 @@ const CinematicShowcaseHero = () => {
           </div>
 
           {withImage.length > 1 && (
-            <div className="mt-5 flex snap-x gap-2 overflow-x-auto pb-1 [scrollbar-width:none]" role="tablist" aria-label="Proyectos destacados">
+            <div className="mt-5 flex snap-x gap-2 overflow-x-auto pb-1 [scrollbar-width:none]" role="group" aria-label="Proyectos destacados">
+              {!reduced && <Button type="button" variant="outline" size="icon" className="shrink-0 rounded-full" aria-label={paused ? 'Reanudar proyectos destacados' : 'Pausar proyectos destacados'} onClick={() => setPaused((value) => !value)}>
+                {paused ? <Play className="h-4 w-4" aria-hidden="true" /> : <Pause className="h-4 w-4" aria-hidden="true" />}
+              </Button>}
               {withImage.map((p, i) => (
-                <button key={p.id} type="button" role="tab" aria-selected={p.id === active?.id} onClick={() => setIndex(i)}
+                <button key={p.id} type="button" aria-pressed={p.id === active?.id} onClick={() => { setIndex(i); setPaused(true); }}
                   className={`min-h-10 shrink-0 snap-start rounded-full border px-4 py-2 text-xs font-medium transition-colors focus-ring ${p.id === active?.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground hover:border-primary'}`}>
                   {p.name}
                 </button>
@@ -186,7 +194,11 @@ const CinematicShowcaseHero = () => {
               <ProjectSummary active={active} />
             </Link>
           )}
-          {isError && <p role="alert" className="mt-3 text-sm text-destructive">No pudimos cargar los proyectos destacados. Puedes explorar el mapa igualmente.</p>}
+          {isLoading && <p role="status" className="mt-3 text-sm text-muted-foreground">Cargando proyectos destacados…</p>}
+          {isError && <div role="alert" className="mt-3 space-y-2 text-sm">
+            <p>No pudimos cargar los proyectos destacados. La búsqueda sigue disponible.</p>
+            <Button type="button" variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>Reintentar destacados</Button>
+          </div>}
 
           <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
             <a href="#atlas" className="inline-flex min-h-11 items-center gap-1.5 text-primary underline-offset-4 hover:underline focus-ring"><MapPin className="h-4 w-4" aria-hidden="true" />Explorar Chile por región</a>
