@@ -1,3 +1,4 @@
+import { readExploreSearch, writeExploreSearch, type ExploreSearchState } from '@/lib/explore/searchState';
 import { useState, useMemo, useCallback, useRef, useDeferredValue, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import StickyHeader from '@/components/navigation/StickyHeader';
@@ -41,8 +42,17 @@ const Explorar = () => {
 
   // Initial state from URL (?q=... & ?view=map|list|swipe)
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialQuery = searchParams.get('q') ?? '';
-  const initialView = searchParams.get('view');
+  const urlParamsRef = useRef(searchParams);
+  urlParamsRef.current = searchParams;
+  const urlState = useMemo(() => readExploreSearch(searchParams), [searchParams]);
+  const updateUrlState = <K extends keyof ExploreSearchState,>(key: K, value: ExploreSearchState[K] | ((previous: ExploreSearchState[K]) => ExploreSearchState[K])) => {
+    const current = urlParamsRef.current;
+    const previous = readExploreSearch(current);
+    const resolved = typeof value === 'function' ? (value as (previous: ExploreSearchState[K]) => ExploreSearchState[K])(previous[key]) : value;
+    const next = writeExploreSearch(current, { ...previous, [key]: resolved });
+    urlParamsRef.current = next;
+    setSearchParams(next, { replace: true });
+  };
   const requestedListingId = searchParams.get('listing') ?? '';
   const { data: linkedListing } = useListing(requestedListingId);
   const openedLinkRef = useRef<string | null>(null);
@@ -50,31 +60,33 @@ const Explorar = () => {
   // View mode for mobile. Lista+mapa por defecto: quien busca comparar
   // ubicaciones rápido no quiere partir en modo tarjeta-por-tarjeta; swipe
   // sigue disponible explícitamente vía ?view=swipe o el toggle.
-  const [mobileViewMode, setMobileViewMode] = useState<'swipe' | 'list' | 'map'>(
-    initialView === 'map' || initialView === 'swipe' ? initialView : 'list',
-  );
+  const mobileViewMode = urlState.view;
+  const setMobileViewMode = (value: ExploreSearchState['view']) => updateUrlState('view', value);
   // Desktop: overlay swipe mode
   const [desktopSwipe, setDesktopSwipe] = useState(false);
   // Deck emitted by SwipeExplorer (category + advanced filters). Null = no swipe sync.
   const [swipeDeck, setSwipeDeck] = useState<Listing[] | null>(null);
 
   // Search & Filter state
-  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const searchQuery = urlState.q;
+  const setSearchQuery = (value: string) => updateUrlState('q', value);
   const [showAISearch, setShowAISearch] = useState(false);
 
   // Filters
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(() => {
-    const t = searchParams.get('type');
-    return t ? t.split(',').filter(Boolean) : [];
-  });
-  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
-  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  // Keep independent bounds by currency. Switching currencies never carries a CLP
-  // number into a UF query or silently discards the previous selection.
-  const [clpPriceRange, setClpPriceRange] = useState<[number, number]>([0, 5000000000]);
-  const [ufPriceRange, setUfPriceRange] = useState<[number, number]>([0, 500000]);
-  const [areaRange, setAreaRange] = useState<[number, number]>([0, 1000000]);
+  const selectedTypes = urlState.type;
+  const setSelectedTypes = (value: string[] | ((previous: string[]) => string[])) => updateUrlState('type', value);
+  const selectedRegions = urlState.region;
+  const setSelectedRegions = (value: string[] | ((previous: string[]) => string[])) => updateUrlState('region', value);
+  const selectedCountries = urlState.country;
+  const setSelectedCountries = (value: string[] | ((previous: string[]) => string[])) => updateUrlState('country', value);
+  const selectedTags = urlState.tags;
+  const setSelectedTags = (value: string[] | ((previous: string[]) => string[])) => updateUrlState('tags', value);
+  const clpPriceRange = urlState.clp;
+  const setClpPriceRange = (value: [number, number]) => updateUrlState('clp', value);
+  const ufPriceRange = urlState.uf;
+  const setUfPriceRange = (value: [number, number]) => updateUrlState('uf', value);
+  const areaRange = urlState.area;
+  const setAreaRange = (value: [number, number]) => updateUrlState('area', value);
 
   // Map bounds for spatial filtering
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
@@ -99,8 +111,10 @@ const Explorar = () => {
   }, [requestedListingId, linkedListing]);
 
   // Valuation & topography filters
-  const [selectedSlopes, setSelectedSlopes] = useState<string[]>([]);
-  const [selectedValuation, setSelectedValuation] = useState<string[]>([]);
+  const selectedSlopes = urlState.slopes;
+  const setSelectedSlopes = (value: string[] | ((previous: string[]) => string[])) => updateUrlState('slopes', value);
+  const selectedValuation = urlState.valuation;
+  const setSelectedValuation = (value: string[] | ((previous: string[]) => string[])) => updateUrlState('valuation', value);
 
   // Cinematic 3D transition
   const [cinematicLot, setCinematicLot] = useState<Parameters<typeof CinematicTransition>[0]['targetLot'] | null>(null);
@@ -110,10 +124,8 @@ const Explorar = () => {
   // it covers the whole inventory, not only the pages already loaded.
   const deferredSearch = useDeferredValue(searchQuery);
   // Currency scope: CLP and UF are never mixed in a price range.
-  const [currency, setCurrency] = useState<'all' | 'CLP' | 'UF'>(() => {
-    const c = searchParams.get('currency');
-    return c === 'CLP' || c === 'UF' ? c : 'all';
-  });
+  const currency = urlState.currency;
+  const setCurrency = (value: ExploreSearchState['currency']) => updateUrlState('currency', value);
   const priceRangeMax = currency === 'UF' ? 500000 : 5000000000;
   const priceRange = currency === 'UF' ? ufPriceRange : clpPriceRange;
   const setPriceRange = (next: [number, number]) => {
@@ -122,17 +134,6 @@ const Explorar = () => {
   };
   const priceRangeActive = priceRange[0] > 0 || priceRange[1] < priceRangeMax;
   const effectiveCurrency = currency !== 'all' ? currency : priceRangeActive ? 'CLP' : undefined;
-
-  // Keep q/type/currency in the URL without dropping ?listing or other params.
-  useEffect(() => {
-    const next = new URLSearchParams(searchParams);
-    const set = (k: string, v?: string) => (v ? next.set(k, v) : next.delete(k));
-    set('q', deferredSearch.trim() || undefined);
-    set('type', selectedTypes.join(',') || undefined);
-    set('currency', currency !== 'all' ? currency : undefined);
-    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deferredSearch, selectedTypes, currency]);
 
   const currencySwitch = (
     <div className="flex items-center gap-2 px-3 pt-2 text-xs" role="group" aria-label="Moneda del precio">
@@ -166,6 +167,9 @@ const Explorar = () => {
     areaMin: areaRange[0] > 0 ? areaRange[0] : undefined,
     areaMax: areaRange[1] < 1000000 ? areaRange[1] : undefined,
     bounds: mapBounds ?? undefined,
+    tags: selectedTags,
+    slopes: selectedSlopes,
+    valuation: selectedValuation,
     includeLoteoLots,
     currency: effectiveCurrency,
     search: deferredSearch || undefined,
@@ -181,31 +185,6 @@ const Explorar = () => {
   // Client-side tag/slope/valuation/polygon filter (text search is server-side)
   const filteredListings = useMemo(() => {
     let result = [...listings];
-    if (selectedTags.length > 0) {
-      result = result.filter(l => selectedTags.some(tag => l.tags.includes(tag)));
-    }
-    // Slope filter — matches tag conventions (plano/suave/fuerte or topografia-*)
-    if (selectedSlopes.length > 0) {
-      const slopeSynonyms: Record<string, string[]> = {
-        flat: ['plano', 'topografia-plana', 'pendiente-plana', 'slope-flat'],
-        slight: ['suave', 'topografia-suave', 'pendiente-suave', 'slope-slight'],
-        steep: ['fuerte', 'topografia-fuerte', 'pendiente-fuerte', 'slope-steep'],
-      };
-      result = result.filter(l =>
-        selectedSlopes.some(s => (slopeSynonyms[s] || [s]).some(tag => l.tags.includes(tag)))
-      );
-    }
-    // Valuation / plusvalía filter — matches plusvalia-* or valuation-* tags
-    if (selectedValuation.length > 0) {
-      const valSynonyms: Record<string, string[]> = {
-        low: ['plusvalia-baja', 'valuation-low'],
-        medium: ['plusvalia-media', 'valuation-medium'],
-        high: ['plusvalia-alta', 'valuation-high'],
-      };
-      result = result.filter(l =>
-        selectedValuation.some(v => (valSynonyms[v] || [v]).some(tag => l.tags.includes(tag)))
-      );
-    }
     // Draw-to-search: keep only listings inside the drawn polygon (ray casting)
     if (drawnPolygon && drawnPolygon.length >= 3) {
       const inside = (lng: number, lat: number) => {
@@ -262,34 +241,34 @@ const Explorar = () => {
     (areaRange[0] > 0 || areaRange[1] < 1000000 ? 1 : 0);
 
   // Handlers
-  const clearFilters = useCallback(() => {
+  const clearFilters = () => {
     setSelectedTypes([]); setSelectedRegions([]); setSelectedCountries([]);
     setSelectedTags([]); setClpPriceRange([0, 5000000000]); setUfPriceRange([0, 500000]); setAreaRange([0, 1000000]);
     setSearchQuery(''); setMapBounds(null); setDrawnPolygon(null);
     setSelectedSlopes([]); setSelectedValuation([]);
-  }, []);
+  };
 
-  const toggleSlope = useCallback((slope: string) => {
+  const toggleSlope = (slope: string) => {
     setSelectedSlopes(prev => prev.includes(slope) ? prev.filter(s => s !== slope) : [...prev, slope]);
-  }, []);
-  const toggleValuation = useCallback((val: string) => {
+  };
+  const toggleValuation = (val: string) => {
     setSelectedValuation(prev => prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]);
-  }, []);
+  };
 
-  const toggleType = useCallback((type: string) => {
+  const toggleType = (type: string) => {
     setSelectedTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
-  }, []);
-  const toggleRegion = useCallback((region: string) => {
+  };
+  const toggleRegion = (region: string) => {
     setSelectedRegions(prev => prev.includes(region) ? prev.filter(r => r !== region) : [...prev, region]);
-  }, []);
-  const toggleTag = useCallback((tag: string) => {
+  };
+  const toggleTag = (tag: string) => {
     setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
-  }, []);
-  const toggleCountry = useCallback((country: string) => {
+  };
+  const toggleCountry = (country: string) => {
     setSelectedCountries(prev => prev.includes(country) ? prev.filter(c => c !== country) : [...prev, country]);
-  }, []);
+  };
 
-  const handleAIFilters = useCallback((filters: {
+  const handleAIFilters = (filters: {
     types?: string[]; regions?: string[]; priceRange?: [number, number]; areaRange?: [number, number]; tags?: string[];
   }) => {
     if (filters.types?.length) setSelectedTypes(filters.types);
@@ -298,7 +277,7 @@ const Explorar = () => {
     if (filters.areaRange) setAreaRange(filters.areaRange);
     if (filters.tags?.length) setSelectedTags(filters.tags);
     setShowAISearch(false);
-  }, []);
+  };
 
   const handleViewDetails = useCallback((listing: Listing) => {
     navigate(`/propiedad/${listing.id}`);
@@ -330,6 +309,7 @@ const Explorar = () => {
           onModeChange={setMobileViewMode}
           listings={filteredListings}
           totalCount={totalCount}
+          partialResults={Boolean(drawnPolygon)}
           isLoading={isLoading}
           hasMore={!!hasMore}
           isLoadingMore={!!isLoadingMore}
@@ -481,6 +461,7 @@ const Explorar = () => {
           <ExploreListPanel
             listings={filteredListings}
             totalCount={totalCount}
+            partialResults={Boolean(drawnPolygon)}
             isLoading={isLoading}
             hasMore={!!hasMore}
             isLoadingMore={!!isLoadingMore}
@@ -543,7 +524,7 @@ const Explorar = () => {
           />
           {drawnPolygon && !swipeDeckIds && (
             <div className="absolute top-3 left-1/2 -translate-x-1/2 z-map-overlay flex items-center gap-2 rounded-full bg-primary/95 text-primary-foreground shadow-lg backdrop-blur px-3 py-1.5 text-xs font-medium animate-in fade-in slide-in-from-top-2">
-              <span>Área dibujada · {filteredListings.length} terreno{filteredListings.length === 1 ? '' : 's'} dentro</span>
+              <span>Área dibujada · {filteredListings.length} terreno{filteredListings.length === 1 ? '' : 's'} cargados dentro</span>
               <button
                 type="button"
                 onClick={() => setDrawnPolygon(null)}

@@ -82,6 +82,7 @@ const SearchAutocomplete = ({
 }: SearchAutocompleteProps) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState(initialQuery);
+  useEffect(() => setQuery(initialQuery), [initialQuery]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [properties, setProperties] = useState<SearchResult[]>([]);

@@ -20,6 +20,7 @@ interface MobileExploreViewProps {
   // Data
   listings: Listing[];
   totalCount?: number;
+  partialResults?: boolean;
   isLoading: boolean;
   hasMore?: boolean;
   isLoadingMore?: boolean;
@@ -185,6 +186,7 @@ const MobileExploreView = (props: MobileExploreViewProps) => {
             <ExploreListPanel
               listings={props.listings}
               totalCount={props.totalCount}
+              partialResults={props.partialResults}
               isLoading={props.isLoading}
               hasMore={props.hasMore}
               isLoadingMore={props.isLoadingMore}

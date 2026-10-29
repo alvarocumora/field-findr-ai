@@ -1,3 +1,4 @@
+import { SLOPE_TAGS, VALUATION_TAGS, expandFilterTags } from '@/lib/explore/searchState';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Listing, ListingFilters } from './useListings';
@@ -70,6 +71,10 @@ export const useInfiniteListings = (filters?: ListingFilters) => {
           .gte('lng', filters.bounds.west)
           .lte('lng', filters.bounds.east);
       }
+
+      if (filters?.tags?.length) query = query.overlaps('tags', filters.tags);
+      if (filters?.slopes?.length) query = query.overlaps('tags', expandFilterTags(filters.slopes, SLOPE_TAGS));
+      if (filters?.valuation?.length) query = query.overlaps('tags', expandFilterTags(filters.valuation, VALUATION_TAGS));
 
       if (filters?.featured !== undefined) {
         query = query.eq('featured', filters.featured);
