@@ -154,3 +154,18 @@ test('rutas comerciales requieren sesión y retienen filtros del módulo elegido
     expect(new URL(page.url()).searchParams.get('redirect')).toBe(target);
   }
 });
+
+
+test('buscador y CTA de portada quedan dentro del primer viewport', async ({ page }) => {
+  await page.goto('/');
+  const search = page.locator('#hero-search');
+  const submit = page.getByRole('button', { name: 'Explorar terrenos', exact: true });
+  await expect(search).toBeVisible();
+  await expect(submit).toBeVisible();
+  const viewport = page.viewportSize();
+  for (const element of [search, submit]) {
+    const box = await element.boundingBox();
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+  }
+});
