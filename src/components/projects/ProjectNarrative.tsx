@@ -1,3 +1,4 @@
+import { formatProjectArea } from '@/lib/projects/formatProjectArea';
 import { parseLandingConfig } from '@/lib/landing/config';
 import type { Project } from '@/hooks/useProjects';
 import { CheckCircle2, ShieldCheck } from 'lucide-react';
@@ -22,7 +23,7 @@ export function ProjectNarrative({ project, lotCount }: Props) {
 
   const rows: [string, string][] = [
     ['Ubicación', [project?.city, project?.region].filter(Boolean).join(', ') || 'No informado'],
-    ['Superficie total', project?.total_area ? `${Number(project.total_area).toLocaleString('es-CL')} ha` : 'No informado'],
+    ['Superficie total', formatProjectArea(project?.total_area)],
     ['Parcelas', lotCount != null ? String(lotCount) : 'No informado'],
     ['Régimen legal', project?.legal_status && project.legal_status !== 'pending' ? project.legal_status : 'No informado'],
   ];
