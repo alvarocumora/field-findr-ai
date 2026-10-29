@@ -2,6 +2,8 @@
 
 Auditoría de experiencia posterior a PR 0 y la limpieza de lint: [benchmark, brechas y próximos PR](./PLATFORM_EXPERIENCE_BENCHMARK_2026-10-29.md). Esa revisión concreta las prioridades de landing, rutas y dashboards con evidencia de navegador y código actual.
 
+Auditoría posterior del área privada: [login, sesión, dashboards y matriz de perfiles](./PLATFORM_ACCESS_AUDIT_2026-10-29.md). Sus hallazgos P0/P1 de identidad y aislamiento preceden a ampliar registro o certificar la operación privada. Las bases y brechas de las revisiones anteriores son fotografías históricas.
+
 ## Objetivo
 
 Convertir OfertaTerrenos en una experiencia confiable para descubrir, comparar y comprar parcelas, y en una herramienta diaria para que vendedores y empresas conviertan consultas en visitas y ventas. Priorizar calidad del inventario y continuidad comercial antes de ampliar funciones.
