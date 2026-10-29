@@ -1,3 +1,4 @@
+import { CompareSelectionStatus } from '@/components/compare/CompareSelectionStatus';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Scale, X } from 'lucide-react';
@@ -21,7 +22,7 @@ const COMPARE_ROWS = [
 ] as const;
 
 const Comparar = () => {
-  const { compareList: items, removeFromCompare: removeItem, clearCompare: clearAll } = useCompare();
+  const { compareList: items, removeFromCompare: removeItem, clearCompare: clearAll, selectionCount, isRefreshing, refreshError } = useCompare();
   const mixedCurrencies = useMemo(() => hasMixedCurrencies(items), [items]);
   const columns = items.length + 1;
 
@@ -29,7 +30,7 @@ const Comparar = () => {
     ...row,
     values: items.map(listing => {
       switch (row.key) {
-        case 'price': return formatPrice(listing.price, listing.currency);
+        case 'price': return typeof listing.price === 'number' && listing.price > 0 ? formatPrice(listing.price, listing.currency) : 'Consultar';
         case 'ppm2': return formatPricePerM2(listing.price, listing.area_m2, listing.currency) ?? 'No informado';
         case 'type': return getListingTypeLabel(listing.type);
         case 'area': return formatArea(listing.area_m2, listing.area_ha);
@@ -53,12 +54,13 @@ const Comparar = () => {
             </Link>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Decisión territorial</p>
             <h1 id="compare-title" className="mt-2 font-editorial text-3xl font-medium text-foreground sm:text-5xl">Compara terrenos con contexto</h1>
-            <p className="mt-3 text-sm text-muted-foreground">{items.length} de 4 propiedades seleccionadas. Contrasta superficie, ubicación y antecedentes publicados.</p>
+            <p className="mt-3 text-sm text-muted-foreground">{selectionCount} de 4 propiedades seleccionadas. Contrasta superficie, ubicación y antecedentes publicados.</p>
           </div>
-          {items.length > 0 && <Button variant="outline" onClick={clearAll} className="min-h-11">Limpiar comparación</Button>}
+          {selectionCount > 0 && <Button variant="outline" onClick={clearAll} className="min-h-11">Limpiar comparación</Button>}
         </div>
 
-        {items.length === 0 ? (
+        <CompareSelectionStatus />
+        {selectionCount > 0 && (isRefreshing || refreshError || items.length === 0) ? null : items.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-8 text-center">
             <Scale className="mx-auto mb-4 h-10 w-10 text-primary" aria-hidden="true" />
             <p className="mb-4 text-muted-foreground">Todavía no seleccionaste propiedades. Agrégalas desde el explorador.</p>

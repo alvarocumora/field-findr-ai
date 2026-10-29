@@ -1,3 +1,4 @@
+import { CompareSelectionStatus } from '@/components/compare/CompareSelectionStatus';
 import { memo, useMemo } from 'react';
 import { X, TrendingUp, Droplets, Zap, MapPin, Ruler, Shield, CheckCircle2, XCircle } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -115,6 +116,7 @@ const CompareSheet = memo(() => {
           </SheetTitle>
         </SheetHeader>
 
+        <CompareSelectionStatus />
         {mixedCurrencies && <p role="note" className="mb-4 rounded-lg border border-border bg-secondary/50 p-3 text-sm">Las propiedades usan monedas distintas. Los precios se muestran en CLP o UF sin conversión; no se determina una mejor opción económica entre monedas.</p>}
         {compareList.some(l => (l.currency || 'CLP').toUpperCase() !== 'CLP') && (
           <p className="mb-4 text-xs text-muted-foreground">El score de inversión actual usa un referente de precios CLP/m²: no se calcula para publicaciones en UF hasta contar con un modelo válido.</p>
