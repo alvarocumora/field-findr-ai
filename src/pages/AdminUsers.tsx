@@ -635,6 +635,7 @@ const UserDetailPanel = ({
 
         <ScrollArea className="flex-1">
           <TabsContent value="info" className="p-6 space-y-4 mt-0">
+            <EditProfileForm user={user} />
             <InfoRow label="Email" value={user.email ?? '—'} />
             <InfoRow label="Teléfono" value={user.phone ?? '—'} />
             <InfoRow label="Plan" value={user.plan_type ?? 'Gratis'} />
@@ -764,6 +765,47 @@ const UserDetailPanel = ({
         </ScrollArea>
       </Tabs>
     </>
+  );
+};
+
+const EditProfileForm = ({ user }: { user: UserWithDetails }) => {
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [first, setFirst] = useState(user.first_name ?? '');
+  const [last, setLast] = useState(user.last_name ?? '');
+  const [phone, setPhone] = useState(user.phone ?? '');
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ first_name: first.trim() || null, last_name: last.trim() || null, phone: phone.trim() || null })
+        .eq('user_id', user.user_id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-users-full'] });
+      toast({ title: 'Datos actualizados' });
+      setEditing(false);
+    },
+    onError: (e: Error) => toast({ title: 'No se pudo guardar', description: e.message, variant: 'destructive' }),
+  });
+  if (!editing) {
+    return (
+      <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Editar datos</Button>
+    );
+  }
+  return (
+    <div className="space-y-3 p-3 rounded-lg border border-border/60 bg-card/50">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1"><Label htmlFor="ef-first">Nombre</Label><Input id="ef-first" value={first} onChange={(e) => setFirst(e.target.value)} /></div>
+        <div className="space-y-1"><Label htmlFor="ef-last">Apellido</Label><Input id="ef-last" value={last} onChange={(e) => setLast(e.target.value)} /></div>
+      </div>
+      <div className="space-y-1"><Label htmlFor="ef-phone">Teléfono</Label><Input id="ef-phone" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+      <div className="flex gap-2 justify-end">
+        <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
+        <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>Guardar</Button>
+      </div>
+    </div>
   );
 };
 
