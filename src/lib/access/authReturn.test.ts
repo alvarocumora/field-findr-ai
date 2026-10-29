@@ -29,4 +29,11 @@ describe('return after authentication', () => {
     expect(resolveSafeAuthDestination('/perfil?tab=seguridad#cuenta'))
       .toBe('/perfil?tab=seguridad#cuenta');
   });
+
+  it('rejects every ASCII control character while preserving accented destinations', () => {
+    for (const code of [...Array.from({ length: 32 }, (_, index) => index), 127]) {
+      expect(resolveSafeAuthDestination(`/explorar?q=campo${String.fromCharCode(code)}sur`)).toBeNull();
+    }
+    expect(resolveSafeAuthDestination('/explorar?q=Hualañé')).toBe('/explorar?q=Hualañé');
+  });
 });

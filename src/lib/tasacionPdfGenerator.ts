@@ -194,7 +194,7 @@ const buildTasacionDoc = (data: TasacionData) => {
     const qrSize = 28;
     const qrX = pageW - margin - qrSize;
     const qrY = pageH - margin - qrSize - 12;
-    try { doc.addImage(data.qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize); } catch {}
+    try { doc.addImage(data.qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize); } catch { /* Optional embedded image may be invalid; keep the rest of the report readable. */ }
     doc.setFontSize(7);
     doc.setTextColor(80);
     doc.setFont('helvetica', 'bold');
@@ -290,7 +290,7 @@ const buildTasacionDoc = (data: TasacionData) => {
     doc.setTextColor(0, 0, 0);
     const imgW = contentW;
     const imgH = 95;
-    try { doc.addImage(data.satelliteImageDataUrl, 'JPEG', margin, y, imgW, imgH); } catch {}
+    try { doc.addImage(data.satelliteImageDataUrl, 'JPEG', margin, y, imgW, imgH); } catch { /* Optional embedded image may be invalid; keep the rest of the report readable. */ }
     doc.setDrawColor(180);
     doc.rect(margin, y, imgW, imgH);
     y += imgH + 3;
@@ -463,7 +463,7 @@ const buildTasacionDoc = (data: TasacionData) => {
     const qrSize = 30;
     const qrX = pageW - margin - qrSize;
     const qrY = sigY;
-    try { doc.addImage(data.qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize); } catch {}
+    try { doc.addImage(data.qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize); } catch { /* Optional embedded image may be invalid; keep the rest of the report readable. */ }
     doc.setFontSize(7);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(34, 197, 94);

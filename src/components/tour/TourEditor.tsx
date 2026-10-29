@@ -149,7 +149,7 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
         try {
           markersRef.current.clearMarkers();
           refreshMarkers(markersRef.current);
-        } catch {}
+        } catch { /* The viewer may be disposed while markers refresh; retain the editable scene state. */ }
       }
     }
   }, [mode, selectedTargetScene, hotspotTooltip, hotspots, currentPolygonPoints]);
@@ -202,7 +202,9 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
       });
       setDirty(false);
       toast.success('Cambios guardados');
-    } catch {}
+    } catch {
+      // The mutation hook reports the error; keep dirty state so saving can be retried.
+    }
   };
 
   const plugins: any[] = [[MarkersPlugin, { markers: [] }]];

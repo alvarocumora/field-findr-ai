@@ -70,7 +70,7 @@ export const generatePriceListPdf = (input: PriceListInput): jsPDF => {
     ['Valor total', clp(summary.totalValue)],
     ['Precio prom. /m²', clp(summary.avgPricePerSqm)],
   ];
-  let ky = 52;
+  const ky = 52;
   const kpiW = (pageW - 32) / 4;
   kpis.forEach(([label, val], i) => {
     const col = i % 4;

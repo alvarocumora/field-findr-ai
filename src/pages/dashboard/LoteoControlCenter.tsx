@@ -181,7 +181,7 @@ const LoteoControlCenter = () => {
   const inventoryAlerts = useMemo(() => {
     const sellableLots = lots.filter((lot) => lot.status !== 'sold');
     const withoutPrice = sellableLots.filter((lot) => Number(lot.price || 0) <= 0);
-    const unpublished = sellableLots.filter((lot) => !Boolean((lot as LotWithListing).listing_id));
+    const unpublished = sellableLots.filter((lot) => !(lot as LotWithListing).listing_id);
     return { withoutPrice, unpublished };
   }, [lots]);
 

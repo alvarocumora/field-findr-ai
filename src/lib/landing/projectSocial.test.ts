@@ -31,7 +31,7 @@ describe('project sharing', () => {
   it('rejects non-HTTPS images and escapes database strings in initial HTML', () => {
     expect(publicImageUrl('javascript:alert(1)')).toBeUndefined();
     const template = '<head><title>Generic</title><meta property="og:title" content="Generic" /><meta name="twitter:title" content="Generic" /><link rel="canonical" href="/" /></head><body><script src="/assets/hash.js"></script></body>';
-    const html = renderProjectHtml(template, projectSocial({ ...project, name: '\"><script>alert(1)</script>' }, []));
+    const html = renderProjectHtml(template, projectSocial({ ...project, name: '"><script>alert(1)</script>' }, []));
     expect(html).not.toContain('<script>alert');
     expect(html).toContain('&lt;script&gt;');
     expect(html.match(/property="og:title"/g)).toHaveLength(1);

@@ -1,3 +1,4 @@
+import type { ResolvedConfig } from 'vite';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -17,8 +18,8 @@ async function setup() {
   await mkdir(join(temp, 'dist'));
   await writeFile(join(temp, 'dist/index.html'), '<head><title>Generic</title></head><body><script src="/assets/app.js"></script></body>');
   const plugin = projectSocialPlugin('https://example.supabase.co', 'public-test-key');
-  (plugin.configResolved as Function)({ root: temp, build: { outDir: 'dist' } });
-  return () => (plugin.closeBundle as Function)();
+  (plugin.configResolved as (config: ResolvedConfig) => void)({ root: temp, build: { outDir: 'dist' } } as ResolvedConfig);
+  return () => (plugin.closeBundle as () => Promise<void>)();
 }
 
 describe('static social preview build', () => {

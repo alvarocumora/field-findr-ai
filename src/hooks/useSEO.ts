@@ -12,9 +12,9 @@ interface SEOProps {
 }
 
 const setMetaTag = (property: string, content: string) => {
-  let element = document.querySelector(`meta[property="${property}"]`) || 
+  let element = document.querySelector(`meta[property="${property}"]`) ||
                 document.querySelector(`meta[name="${property}"]`);
-  
+
   if (!element) {
     element = document.createElement('meta');
     if (property.startsWith('og:') || property.startsWith('twitter:')) {
@@ -62,7 +62,7 @@ export const useSEO = ({ title, description, image, url, type = 'website', canon
   useEffect(() => {
     const prevTitle = document.title;
     const suffix = ' | Ofertaterrenos.com';
-    
+
     document.title = title + suffix;
 
     if (description) {
@@ -95,7 +95,7 @@ export const useSEO = ({ title, description, image, url, type = 'website', canon
       document.title = prevTitle;
       removeJsonLd();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [title, description, image, url, type, canonicalUrl, jsonLdKey]);
 };
 

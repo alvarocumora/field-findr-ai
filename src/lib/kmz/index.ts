@@ -170,7 +170,7 @@ const flattenGeometryCollections = (features: Feature<Geometry, GeoJsonPropertie
 };
 
 const lineStringToPolygonGeom = (geometry: LineString): Polygon | null => {
-  let coords = [...geometry.coordinates].map(c => truncateCoord(c as [number, number]));
+  const coords = [...geometry.coordinates].map(c => truncateCoord(c as [number, number]));
   if (coords.length < 3) return null;
 
   const first = coords[0];
@@ -893,7 +893,7 @@ export const parseKMZFromUrl = async (url: string): Promise<ParsedKMZ> => {
 
 // ============= ROAD GEOMETRY EXTRACTION =============
 
-const LOT_NAME_REGEX = /Lote[:\s\-]*\d+/i;
+const LOT_NAME_REGEX = /Lote[:\s-]*\d+/i;
 const ROAD_KEYWORDS = /camino|calle|acceso|road|street|vialidad|pasaje|avenida|sendero|path|servidumbre|transito|tránsito|huella/i;
 
 /**

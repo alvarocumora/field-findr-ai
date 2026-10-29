@@ -9,7 +9,7 @@ import { defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { createClient } from "npm:@supabase/supabase-js@^2.93.1";
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { z } from "npm:zod@^3.23.8";
-var search_listings_default = defineTool({
+const search_listings_default = defineTool({
   name: "search_listings",
   title: "Search land listings",
   description: "Search approved (public) land listings on OFERTA TERRENOS. Filter by free-text query, city/region, price range (CLP), and area range (m\xB2).",
@@ -53,7 +53,7 @@ var search_listings_default = defineTool({
 import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.93.1";
 import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { z as z2 } from "npm:zod@^3.23.8";
-var get_listing_default = defineTool2({
+const get_listing_default = defineTool2({
   name: "get_listing",
   title: "Get listing details",
   description: "Fetch full details for a single approved land listing by its ID.",
@@ -85,7 +85,7 @@ var get_listing_default = defineTool2({
 import { createClient as createClient3 } from "npm:@supabase/supabase-js@^2.93.1";
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { z as z3 } from "npm:zod@^3.23.8";
-var list_projects_default = defineTool3({
+const list_projects_default = defineTool3({
   name: "list_projects",
   title: "List active projects",
   description: "List active land development projects (loteos) with lot availability summary.",
@@ -111,7 +111,7 @@ var list_projects_default = defineTool3({
 });
 
 // src/lib/mcp/index.ts
-var mcp_default = defineMcp({
+const mcp_default = defineMcp({
   name: "oferta-terrenos-mcp",
   title: "OFERTA TERRENOS",
   version: "0.1.0",
