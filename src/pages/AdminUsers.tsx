@@ -1,3 +1,4 @@
+import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -68,7 +69,7 @@ const AdminUsers = () => {
   const [confirmDelete, setConfirmDelete] = useState<UserWithDetails | null>(null);
   const [confirmSuspend, setConfirmSuspend] = useState<UserWithDetails | null>(null);
 
-  const { data: users, isLoading, refetch, isFetching } = useQuery({
+  const { data: users, isLoading, refetch, isFetching, error } = useQuery({
     queryKey: ['admin-users-full'],
     queryFn: async () => {
       const [profilesRes, rolesRes, subsRes] = await Promise.all([
@@ -76,7 +77,7 @@ const AdminUsers = () => {
         supabase.from('user_roles').select('*'),
         supabase.from('subscriptions').select('user_id, plan_type, status'),
       ]);
-      if (profilesRes.error) throw profilesRes.error;
+      for (const response of [profilesRes, rolesRes, subsRes]) if (response.error) throw response.error;
       const roles = rolesRes.data || [];
       const subs = subsRes.data || [];
       return (profilesRes.data ?? []).map((p) => {
@@ -107,7 +108,7 @@ const AdminUsers = () => {
     return {
       total: list.length,
       new30: list.filter((u) => isAfter(new Date(u.created_at), d30)).length,
-      active7: list.filter((u) => isAfter(new Date(u.updated_at), d7)).length,
+      updated7: list.filter((u) => isAfter(new Date(u.updated_at), d7)).length,
       paying: list.filter((u) => u.plan_type && u.plan_type !== 'free').length,
       noRole: list.filter((u) => u.roles.length === 0).length,
     };
@@ -181,7 +182,7 @@ const AdminUsers = () => {
 
   const exportCSV = () => {
     if (!filteredUsers.length) return;
-    const rows = [['Nombre', 'Email', 'Telefono', 'Roles', 'Plan', 'Registro', 'Ult. actividad']];
+    const rows = [['Nombre', 'Email', 'Telefono', 'Roles', 'Plan', 'Registro', 'Actualización de perfil']];
     filteredUsers.forEach((u) => {
       rows.push([
         `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim(),
@@ -247,6 +248,8 @@ const AdminUsers = () => {
       </Badge>
     );
 
+  if (error) return <WorkspaceLoadError title="No pudimos cargar los usuarios y sus permisos" onRetry={refetch} />;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-background/95">
       <div className="container py-6 space-y-6">
@@ -276,7 +279,7 @@ const AdminUsers = () => {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <KpiCard label="Total" value={kpis.total} icon={Users} tone="default" />
           <KpiCard label="Nuevos (30d)" value={kpis.new30} icon={Sparkles} tone="emerald" />
-          <KpiCard label="Activos (7d)" value={kpis.active7} icon={Activity} tone="sky" />
+          <KpiCard label="Perfiles actualizados (7d)" value={kpis.updated7} icon={Activity} tone="sky" />
           <KpiCard label="Con plan" value={kpis.paying} icon={TrendingUp} tone="amber" />
           <KpiCard label="Sin rol" value={kpis.noRole} icon={AlertCircle} tone="rose" />
         </div>
@@ -354,7 +357,7 @@ const AdminUsers = () => {
               <span className="flex-1">Usuario</span>
               <span className="hidden md:block w-40">Roles</span>
               <span className="hidden md:block w-24">Plan</span>
-              <span className="hidden md:block w-32">Últ. actividad</span>
+              <span className="hidden md:block w-32">Perfil actualizado</span>
               <span className="w-10" />
             </div>
             {isLoading ? (
@@ -645,7 +648,7 @@ const UserDetailPanel = ({
               value={format(new Date(user.created_at), "d 'de' MMMM yyyy, HH:mm", { locale: es })}
             />
             <InfoRow
-              label="Última actividad"
+              label="Perfil actualizado"
               value={formatDistanceToNow(new Date(user.updated_at), { addSuffix: true, locale: es })}
             />
             <InfoRow label="User ID" value={user.user_id} mono />

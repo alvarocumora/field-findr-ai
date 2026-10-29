@@ -1,3 +1,4 @@
+import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -36,7 +37,9 @@ interface TodayPanelProps {
  * con el contenido resuelto por alcance en `usePanelToday`.
  */
 const TodayPanel = ({ scope, title = 'Hoy', className }: TodayPanelProps) => {
-  const { data: items = [], isLoading } = usePanelToday(scope);
+  const { data: items = [], isLoading, error, refetch } = usePanelToday(scope);
+
+  if (error) return <WorkspaceLoadError title="No pudimos cargar los pendientes" onRetry={refetch} />;
 
   return (
     <Card className={cn('overflow-hidden', className)}>

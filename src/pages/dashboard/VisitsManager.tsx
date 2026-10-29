@@ -1,3 +1,4 @@
+import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { addDays, addWeeks, endOfDay, format, isAfter, startOfDay, startOfWeek } from 'date-fns';
@@ -53,7 +54,7 @@ const toLocalDateTimeInput = (iso: string) => {
 const VisitsManager = () => {
   const { user } = useAuth();
   const { projectId } = useWorkspaceScope();
-  const { visits, isLoading, createVisit, updateVisit } = useVisits(projectId);
+  const { visits, isLoading, error, refetch, createVisit, updateVisit } = useVisits(projectId);
   const { leads } = useLeads(projectId);
   const { projects } = useProjects();
   const { lots } = useLots(projectId);
@@ -180,6 +181,8 @@ const VisitsManager = () => {
       </div>
     );
   };
+
+  if (error) return <WorkspaceLoadError title="No pudimos cargar las visitas" onRetry={refetch} />;
 
   return (
     <div className="container mx-auto space-y-6 p-4 md:p-6">
