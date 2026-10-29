@@ -9,7 +9,7 @@ import OrganizationSwitcher from '@/components/organization/OrganizationSwitcher
 import { useSidebarCounts } from '@/hooks/useSidebarCounts';
 import { useAccess } from '@/hooks/useAccess';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronLeft, ChevronRight, LockKeyhole, MapPin, Sparkles, UserCircle } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, LockKeyhole, MapPin, Home, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { navGroupsFor, type NavLink } from '@/routes/routeManifest';
 import { navIcon } from '@/routes/navIcons';
@@ -24,16 +24,17 @@ interface ModernSidebarProps {
 /** Accesos comunes a la parte pública, siempre al pie del menú. */
 const commonLinks: NavLink[] = [
   { path: '/explorar', label: 'Explorar mapa', group: 'común', icon: 'map-pin' },
-  { path: '/tools', label: 'Herramientas IA', group: 'común', icon: 'sparkles' },
-  { path: '/perfil', label: 'Mi perfil', group: 'común', icon: 'user' },
+  { path: '/', label: 'Ver sitio público', group: 'común', icon: 'home' },
 ];
 
-const commonIcons = { '/explorar': MapPin, '/tools': Sparkles, '/perfil': UserCircle } as const;
+const commonIcons = { '/explorar': MapPin, '/': Home } as const;
 
 const ModernSidebar = ({ collapsed = false, onToggle, mobile = false, onNavigate }: ModernSidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const counts = useSidebarCounts();
+  const [menuQuery, setMenuQuery] = useState('');
+  useEffect(() => setMenuQuery(''), [location.pathname]);
   const access = useAccess();
   const {
     isAdmin,
@@ -61,7 +62,10 @@ const ModernSidebar = ({ collapsed = false, onToggle, mobile = false, onNavigate
   // Un solo contexto visible a la vez: se acabó el menú con dos
   // "Administración" apiladas.
   const activeArea: 'agent' | 'admin' = context === 'plataforma' ? 'admin' : 'agent';
-  const activeGroups = activeArea === 'admin' ? adminGroups : agentGroups;
+  const allGroups = activeArea === 'admin' ? adminGroups : agentGroups;
+  const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const search = normalize(menuQuery.trim());
+  const activeGroups = allGroups.map((group) => ({ ...group, items: group.items.filter((item) => !search || normalize(`${item.label} ${group.group}`).includes(search)) })).filter((group) => group.items.length);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -113,7 +117,7 @@ const ModernSidebar = ({ collapsed = false, onToggle, mobile = false, onNavigate
         onClick={onNavigate}
         aria-current={isActive(item.path) ? 'page' : undefined}
         className={cn(
-          'relative flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150',
+          'relative flex min-h-11 items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150',
           isActive(item.path)
             ? 'bg-primary/10 text-primary'
             : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -180,7 +184,7 @@ const ModernSidebar = ({ collapsed = false, onToggle, mobile = false, onNavigate
         </div>
         {rest.map((group) => {
           const key = `${area}:${group.group}`;
-          const open = openGroups.has(key);
+          const open = Boolean(search) || openGroups.has(key);
           return (
             <Collapsible key={key} open={open} onOpenChange={() => toggleGroup(key)}>
               <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-1.5 mt-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors">
@@ -277,6 +281,11 @@ const ModernSidebar = ({ collapsed = false, onToggle, mobile = false, onNavigate
           </div>
         )}
 
+        {!collapsed && <div className="relative mx-3 mb-3">
+          <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          <input aria-label="Buscar en el menú" placeholder="Buscar módulo…" value={menuQuery} onChange={(event) => setMenuQuery(event.target.value)} className="h-11 w-full rounded-lg border bg-background pl-9 pr-9 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+          {menuQuery && <button type="button" aria-label="Limpiar búsqueda del menú" onClick={() => setMenuQuery('')} className="absolute right-0 top-0 grid h-11 w-9 place-items-center"><X className="h-4 w-4" aria-hidden="true" /></button>}
+        </div>}
         {/* Navegación */}
         <nav className="flex-1 overflow-y-auto px-3 space-y-1" aria-label="Navegación del panel">
           {(isAgent || isAdmin) && (
@@ -294,6 +303,7 @@ const ModernSidebar = ({ collapsed = false, onToggle, mobile = false, onNavigate
           )}
 
 
+          {search && activeGroups.length === 0 && <p role="status" className="px-3 py-4 text-sm text-muted-foreground">No hay módulos con ese nombre en este espacio.</p>}
           <Separator className="my-2" />
           <div className="space-y-0.5 pb-4">
             {commonLinks.map((item) => (

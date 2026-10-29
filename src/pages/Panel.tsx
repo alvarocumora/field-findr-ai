@@ -1,4 +1,4 @@
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { PageLoader } from '@/routes/routeUtils';
 import { usePanelContext } from '@/hooks/usePanelContext';
 import ContextChooser from '@/components/access/ContextChooser';
@@ -12,6 +12,7 @@ import ContextChooser from '@/components/access/ContextChooser';
  */
 const Panel = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const { active, options, setContext, needsChoice, isLoading } = usePanelContext();
 
   if (isLoading) return <PageLoader />;
@@ -20,7 +21,7 @@ const Panel = () => {
     return <Navigate to="/comenzar" replace />;
   }
 
-  if (needsChoice || !active) {
+  if (needsChoice || !active || (params.get('elegir') === '1' && options.length > 1)) {
     return (
       <ContextChooser
         options={options}

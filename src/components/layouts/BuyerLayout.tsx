@@ -96,6 +96,7 @@ const BuyerSidebar = ({ collapsed, onClose }: { collapsed?: boolean; onClose?: (
 
       {/* Footer */}
       <div className="p-3 border-t border-border/50 space-y-1">
+        {(isAdmin || isAgent) && <Link to="/panel?elegir=1" onClick={onClose} className="flex min-h-11 items-center rounded-xl px-3 py-2 text-sm font-medium text-primary hover:bg-muted/50">Cambiar espacio de trabajo</Link>}
         <Link
           to="/"
           className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all"

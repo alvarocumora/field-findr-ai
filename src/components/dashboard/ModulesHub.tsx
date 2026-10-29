@@ -32,9 +32,9 @@ const ModulesHub = ({ area, plan, title = 'Todos los módulos', className, conte
     .filter((group) => group.items.length > 0);
 
   return (
-    <section className={cn('space-y-6', className)} aria-label={title}>
+    <details className={cn('space-y-6 rounded-xl border p-4', className)}>
+      <summary className="cursor-pointer text-lg font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{title}</summary>
       <div>
-        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
         <p className="text-sm text-muted-foreground">
           Acceso directo a cada herramienta de tu cuenta.
         </p>
@@ -79,7 +79,7 @@ const ModulesHub = ({ area, plan, title = 'Todos los módulos', className, conte
           </div>
         </div>
       ))}
-    </section>
+    </details>
   );
 };
 

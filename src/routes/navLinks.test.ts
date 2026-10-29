@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { routeExists, routeManifest, routeAliases } from './routeManifest';
+import { routeExists, routeManifest, routeAliases, navFor } from './routeManifest';
 
 /**
  * Red anti-links-muertos: extrae todos los href/to/route estáticos de los
@@ -108,3 +108,15 @@ describe('links estáticos en todo src', () => {
   });
 });
 
+
+
+describe('workspace menu structure', () => {
+  it('offers one primary home per commercial context', () => {
+    expect(navFor('agent', 'corredor', 'empresa').filter(item => item.primary).map(item => item.path)).toEqual(['/asesor/dashboard']);
+    expect(navFor('agent', 'free', 'broker').filter(item => item.primary).map(item => item.path)).toEqual(['/asesor/mi-negocio']);
+  });
+  it('keeps personal profile destinations inside their workspace', () => {
+    expect(navFor('admin').find(item => item.label === 'Mi perfil')?.path).toBe('/admin/profile');
+    expect(navFor('agent', 'corredor', 'empresa').find(item => item.label === 'Mi perfil')?.path).toBe('/asesor/profile');
+  });
+});
