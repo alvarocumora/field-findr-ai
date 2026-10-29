@@ -1,3 +1,4 @@
+import { CompareSelectionStatus } from './CompareSelectionStatus';
 import { memo, useEffect } from 'react';
 import { X, Scale, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,20 +7,20 @@ import { useCompare } from '@/hooks/useCompare';
 import { formatPriceShort } from '@/hooks/useListings';
 
 const CompareFloatingBar = memo(() => {
-  const { compareList, removeFromCompare, clearCompare, setCompareOpen } = useCompare();
+  const { compareList, selectionCount, isRefreshing, refreshError, removeFromCompare, clearCompare, setCompareOpen } = useCompare();
 
   // Publish bar height as CSS var so other FABs can stack above via bottom-safe-compare.
   useEffect(() => {
     const root = document.documentElement;
-    if (compareList.length > 0) {
+    if (selectionCount > 0) {
       root.style.setProperty('--compare-bar-h', '4.75rem');
     } else {
       root.style.removeProperty('--compare-bar-h');
     }
     return () => { root.style.removeProperty('--compare-bar-h'); };
-  }, [compareList.length]);
+  }, [selectionCount]);
 
-  if (compareList.length === 0) return null;
+  if (selectionCount === 0) return null;
 
   return (
     <AnimatePresence>
@@ -27,13 +28,14 @@ const CompareFloatingBar = memo(() => {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-safe-nav left-1/2 -translate-x-1/2"
+        className="fixed bottom-safe-nav left-1/2 -translate-x-1/2 w-[calc(100vw-2rem)] max-w-3xl"
         style={{ zIndex: 'var(--z-fab)' }}
       >
-        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/50 shadow-2xl shadow-primary/10">
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/50 shadow-2xl shadow-primary/10">
           <Scale className="h-5 w-5 text-primary flex-shrink-0" />
           
-          <div className="flex items-center gap-2">
+          <span className="sm:hidden text-xs">{selectionCount} seleccionadas</span>
+          <div className="hidden sm:flex items-center gap-2 min-w-0 overflow-x-auto flex-1">
             {compareList.map(listing => (
               <div key={listing.id} className="flex items-center gap-1.5 bg-muted/50 rounded-lg px-2.5 py-1.5">
                 <img
@@ -41,8 +43,9 @@ const CompareFloatingBar = memo(() => {
                   alt=""
                   className="w-7 h-7 rounded object-cover"
                 />
-                <span className="text-xs font-medium max-w-[80px] truncate">{formatPriceShort(listing.price, listing.currency)}</span>
+                <span className="text-xs font-medium max-w-[80px] truncate">{typeof listing.price === 'number' && listing.price > 0 ? formatPriceShort(listing.price, listing.currency) : 'Consultar'}</span>
                 <button
+                  aria-label={`Quitar ${listing.title} de la comparación`}
                   onClick={() => removeFromCompare(listing.id)}
                   className="p-0.5 rounded-full hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
                 >
@@ -64,13 +67,14 @@ const CompareFloatingBar = memo(() => {
             <Button
               size="sm"
               onClick={() => setCompareOpen(true)}
-              disabled={compareList.length < 2}
+              disabled={compareList.length < 2 || isRefreshing || Boolean(refreshError)}
               className="h-8 gap-1.5 text-xs"
             >
-              Comparar ({compareList.length})
+              Comparar ({selectionCount})
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>
+          <div className="w-full"><CompareSelectionStatus /></div>
         </div>
       </motion.div>
     </AnimatePresence>
