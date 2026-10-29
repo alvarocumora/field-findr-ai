@@ -298,8 +298,9 @@ export default function TasacionTeno({
 
       setShareUrl(signed.signedUrl);
       setShareExpiresAt(new Date(Date.now() + expiresIn * 1000).toLocaleString('es-CL'));
-      try { await navigator.clipboard.writeText(signed.signedUrl); } catch {}
-      toast.success('Enlace generado y copiado', {
+      let copied = false;
+      try { await navigator.clipboard.writeText(signed.signedUrl); copied = true; } catch { /* Keep the generated link available for manual copying. */ }
+      toast.success(copied ? 'Enlace generado y copiado' : 'Enlace generado; cópialo desde el campo de enlace', {
         description: `Vigencia: ${Math.round(expiresIn / 3600)} h`,
       });
     } catch (err: any) {

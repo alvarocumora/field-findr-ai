@@ -308,10 +308,10 @@ export default function VelMasterplan() {
     if (!map || !styleReady) return;
     const prev = lastHoverRef.current;
     if (prev && prev !== hoveredLotId) {
-      try { map.setFeatureState({ source: 'lots', id: prev }, { hover: false }); } catch {}
+      try { map.setFeatureState({ source: 'lots', id: prev }, { hover: false }); } catch { /* The map source may be removed during teardown; feature highlighting is optional. */ }
     }
     if (hoveredLotId) {
-      try { map.setFeatureState({ source: 'lots', id: hoveredLotId }, { hover: true }); } catch {}
+      try { map.setFeatureState({ source: 'lots', id: hoveredLotId }, { hover: true }); } catch { /* The map source may be removed during teardown; feature highlighting is optional. */ }
     }
     lastHoverRef.current = hoveredLotId;
   }, [hoveredLotId, styleReady]);
@@ -358,9 +358,9 @@ export default function VelMasterplan() {
 
     // clear previous focus
     if (lastFocusRef.current && lastFocusRef.current !== lot.id) {
-      try { map.setFeatureState({ source: 'lots', id: lastFocusRef.current }, { focus: false }); } catch {}
+      try { map.setFeatureState({ source: 'lots', id: lastFocusRef.current }, { focus: false }); } catch { /* The map source may be removed during teardown; feature highlighting is optional. */ }
     }
-    try { map.setFeatureState({ source: 'lots', id: lot.id }, { focus: true }); } catch {}
+    try { map.setFeatureState({ source: 'lots', id: lot.id }, { focus: true }); } catch { /* The map source may be removed during teardown; feature highlighting is optional. */ }
     lastFocusRef.current = lot.id;
 
     // compute bounds

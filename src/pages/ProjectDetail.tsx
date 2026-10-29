@@ -246,7 +246,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
   // de abajo ya no monta una segunda instancia — así que saltamos ahí.
   useEffect(() => {
     if (tabParam === 'tour360' && tourScenes.length > 0) scrollToTour();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [tabParam, tourScenes.length]);
 
   const { data: project, isLoading: projectLoading } = useQuery({
@@ -325,10 +325,10 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
     const available = lots.filter(l => l.status === 'available');
     const sold = lots.filter(l => l.status === 'sold');
     const reserved = lots.filter(l => l.status === 'reserved');
-    
+
     const prices = available.filter(l => Number.isFinite(l.price) && l.price! > 0).map(l => l.price!);
     const areas = lots.map(l => Number(l.area)).filter(a => a > 0);
-    
+
     // Filter outlier areas using median-based approach
     let reasonableAreas = areas;
     if (areas.length > 2) {
@@ -336,16 +336,16 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
       const median = sortedAreas[Math.floor(sortedAreas.length / 2)];
       reasonableAreas = areas.filter(a => a >= median * 0.05 && a <= median * 10);
     }
-    
+
     return {
       availableLots: available,
       soldLots: sold,
       reservedLots: reserved,
-      priceRange: prices.length > 0 
-        ? { min: Math.min(...prices), max: Math.max(...prices) } 
+      priceRange: prices.length > 0
+        ? { min: Math.min(...prices), max: Math.max(...prices) }
         : null,
-      areaRange: reasonableAreas.length > 0 
-        ? { min: Math.min(...reasonableAreas), max: Math.max(...reasonableAreas) } 
+      areaRange: reasonableAreas.length > 0
+        ? { min: Math.min(...reasonableAreas), max: Math.max(...reasonableAreas) }
         : null,
     };
   }, [lots]);
@@ -758,7 +758,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                   />
                 </DialogContent>
               </Dialog>
-              
+
             </TabsContent>
 
             {/* Cotizador Tab */}

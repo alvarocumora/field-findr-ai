@@ -71,7 +71,7 @@ export function useComparables(subject: SubjectListing | null, ufRate: number): 
 
     (async () => {
       // Buscar listings activos en la misma región (preferentemente misma comuna)
-      let q = supabase
+      const q = supabase
         .from('listings')
         .select('id, title, city, region, type, area_m2, price, currency, lat, lng')
         .eq('status', 'active')

@@ -43,9 +43,10 @@ const TasacionQRPanel = ({ buildPdfData, listingId }: Props) => {
       const data = buildPdfData();
       const r = await publishTasacion(data, { listingId });
       setResult(r);
-      try { await navigator.clipboard.writeText(r.validatorUrl); } catch {}
+      let copied = false;
+      try { await navigator.clipboard.writeText(r.validatorUrl); copied = true; } catch { /* Publication succeeds even if clipboard permission is denied. */ }
       toast.success('Tasación publicada', {
-        description: 'Link copiado al portapapeles. El PDF final ya incluye el QR.',
+        description: copied ? 'Link copiado al portapapeles. El PDF final ya incluye el QR.' : 'No se pudo copiar el enlace. Puedes copiarlo desde el resultado. El PDF final ya incluye el QR.',
       });
     } catch (err: any) {
       toast.error('No se pudo publicar', { description: err.message ?? 'Error desconocido' });

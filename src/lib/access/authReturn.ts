@@ -8,7 +8,7 @@ export const resolveSafeAuthDestination = (raw: string | null | undefined): stri
   // backslashes (including encoded backslashes once decoded by URLSearchParams),
   // control characters and a return loop to /auth.
   if (!raw.startsWith('/') || raw.startsWith('//') || raw.startsWith('/\\')) return null;
-  if (/[\\\u0000-\u001f\u007f]/.test(raw)) return null;
+  if ([...raw].some((char) => char === "\\" || char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)) return null;
   const path = raw.split(/[?#]/, 1)[0].replace(/\/+$/, '') || '/';
   if (path === '/auth') return null;
   return raw;

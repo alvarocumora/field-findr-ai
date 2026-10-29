@@ -91,7 +91,7 @@ const SwipeExplorer = ({
   const [pricePerM2Range, setPricePerM2Range] = useState<[number, number] | null>(null);
 
   useEffect(() => {
-    try { sessionStorage.setItem(DISMISSED_KEY, JSON.stringify([...dismissedIds])); } catch {}
+    try { sessionStorage.setItem(DISMISSED_KEY, JSON.stringify([...dismissedIds])); } catch { /* Dismissed parcels remain in memory when browser storage is unavailable. */ }
   }, [dismissedIds]);
 
   // Data-driven bounds from incoming listings
@@ -150,7 +150,8 @@ const SwipeExplorer = ({
   const toggleRegion = (r: string) => {
     setSelectedRegions(prev => {
       const n = new Set(prev);
-      n.has(r) ? n.delete(r) : n.add(r);
+      if (n.has(r)) n.delete(r);
+      else n.add(r);
       return n;
     });
   };

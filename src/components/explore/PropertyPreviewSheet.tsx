@@ -108,7 +108,8 @@ const PropertyPreviewSheet = ({
   const handleTouchEnd = (e: React.TouchEvent) => {
     const diff = touchStartX - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 50) {
-      diff > 0 ? nextImage() : prevImage();
+      if (diff > 0) nextImage();
+      else prevImage();
     }
   };
 

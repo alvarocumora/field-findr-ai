@@ -22,7 +22,7 @@ const AppreciationCalculator = () => {
   const { data: priceData, isLoading } = useQuery({
     queryKey: ['appreciation', region],
     queryFn: async () => {
-      let query = supabase
+      const query = supabase
         .from('price_history')
         .select('price, recorded_at, listing_id')
         .order('recorded_at', { ascending: true })
