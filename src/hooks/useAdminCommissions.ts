@@ -24,6 +24,22 @@ export interface AdminCommissionRow {
   created_at: string;
 }
 
+export interface AdminNetworkOverrideRow {
+  id: string;
+  commission_id: string;
+  project_id: string | null;
+  reservation_id: string | null;
+  source_broker_id: string;
+  beneficiary_broker_id: string;
+  depth: number;
+  override_rate: number;
+  override_amount: number;
+  status: 'pending' | 'paid' | 'cancelled';
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CommissionRule {
   id: string;
   scope: 'default' | 'plan' | 'project';
@@ -168,5 +184,48 @@ export const useUpsertCommissionRule = () => {
       toast.success('Regla de comisión guardada');
     },
     onError: (e: Error) => toast.error('No se pudo guardar', { description: e.message }),
+  });
+};
+
+
+/** Ledger completo de overrides de red (admin). */
+export const useAllNetworkOverrides = () =>
+  useQuery({
+    queryKey: ['admin-network-overrides'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('broker_network_overrides')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return (data ?? []) as AdminNetworkOverrideRow[];
+    },
+  });
+
+/** Cambia el ciclo de vida de un override mediante RPC auditada. */
+export const useAdminUpdateNetworkOverride = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: {
+      id: string;
+      status: 'paid' | 'cancelled';
+      notes?: string;
+    }) => {
+      const { error } = await (supabase.rpc as CallableFunction)('admin_update_network_override', {
+        p_override_id: v.id,
+        p_status: v.status,
+        p_notes: v.notes ?? null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['admin-network-overrides'] });
+      qc.invalidateQueries({ queryKey: ['broker-metrics'] });
+      qc.invalidateQueries({ queryKey: ['broker-referral-tree'] });
+      toast.success(vars.status === 'paid' ? 'Override marcado como pagado' : 'Override anulado');
+    },
+    onError: (e: Error) =>
+      toast.error('No se pudo actualizar el override', { description: e.message }),
   });
 };

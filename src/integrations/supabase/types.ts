@@ -481,6 +481,47 @@ export type Database = {
           },
         ]
       }
+      broker_network_override_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          details: Json
+          event_type: string
+          from_status: string | null
+          id: string
+          override_id: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          event_type: string
+          from_status?: string | null
+          id?: string
+          override_id: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          override_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broker_network_override_events_override_id_fkey"
+            columns: ["override_id"]
+            isOneToOne: false
+            referencedRelation: "broker_network_overrides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cached_listings: {
         Row: {
           cache_key: string
@@ -3396,6 +3437,14 @@ export type Database = {
           p_commission_rate?: number
           p_notes?: string
           p_status?: string
+        }
+        Returns: string
+      }
+      admin_update_network_override: {
+        Args: {
+          p_notes?: string
+          p_override_id: string
+          p_status: string
         }
         Returns: string
       }
