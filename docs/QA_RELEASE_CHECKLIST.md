@@ -26,7 +26,7 @@ Si no se ejecutan, declararlo explícitamente en el PR.
 
 Los valores del comando de pruebas son placeholders exclusivos de tests; no usarlos en un build de producción. El build requiere Bun para los prehooks existentes. Usar Node 20 para reproducir el runtime declarado en CI.
 
-Consultar la [base del PR 0](./PR0_BASELINE_2026-10-29.md) para bloqueos conocidos de Actions y lint. Un job que no inició no valida ni invalida el código. No omitir checks ni confundir merge con despliegue.
+Consultar la [base del PR 0](./PR0_BASELINE_2026-10-29.md) para el bloqueo de Actions y la [línea base de lint](./LINT_BASELINE_2026-10-29.md) para su corrección de arranque y diagnósticos pendientes. Un job que no inició no valida ni invalida el código. No omitir checks ni confundir merge con despliegue.
 
 ## 3. QA de rutas públicas
 
