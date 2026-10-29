@@ -1,3 +1,4 @@
+import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,7 +44,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 };
 
 const ProjectsManagement = () => {
-  const { projects, isLoading, stats, createProject, updateProject, deleteProject, refetch } = useProjects();
+  const { projects, isLoading, error, stats, createProject, updateProject, deleteProject, refetch } = useProjects();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -53,12 +54,6 @@ const ProjectsManagement = () => {
     project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (project.location || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const formatCurrency = (amount: number) => {
-    if (amount >= 1000000000) return `$${(amount / 1000000000).toFixed(1)}B`;
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(0)}M`;
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
-  };
 
   const getSoldPercentage = (project: Project) => {
     const total = project.total_lots || 0;
@@ -77,12 +72,8 @@ const ProjectsManagement = () => {
     return differenceInDays(new Date(), new Date(project.created_at)) <= 7;
   };
 
-  // Calculate real revenue from sold lot prices (estimate with avg price if not available per-lot)
-  const totalRevenue = projects.reduce((sum, p) => {
-    const soldCount = p.sold_lots || 0;
-    // If no sold, skip. Use total_area / total_lots as avg area, times a rough price/m2
-    return sum + soldCount * 25000000; // fallback estimate
-  }, 0);
+  const activeProjects = projects.filter(project => project.status === 'active').length;
+  if (error) return <WorkspaceLoadError title="No pudimos cargar los proyectos" onRetry={refetch} />;
 
   if (isLoading) {
     return (
@@ -173,8 +164,8 @@ const ProjectsManagement = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Ingresos Est.</p>
-                <p className="text-xl font-bold text-green-600">{formatCurrency(totalRevenue)}</p>
+                <p className="text-sm text-muted-foreground">Proyectos activos</p>
+                <p className="text-xl font-bold text-green-600">{activeProjects}</p>
               </div>
               <BarChart3 className="h-8 w-8 text-purple-500/60" />
             </div>

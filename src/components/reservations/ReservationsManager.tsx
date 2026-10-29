@@ -1,3 +1,4 @@
+import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
 import type { ReservationWithLot } from '@/hooks/useReservations';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -61,7 +62,7 @@ const ReservationsManager = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const { data: reservations = [], isLoading } = useQuery({
+  const { data: reservations = [], isLoading, error, refetch } = useQuery({
     queryKey: ['admin-reservations', user?.id, projectId ?? 'all'],
     queryFn: async () => {
       if (!user) return [];
@@ -164,6 +165,8 @@ const ReservationsManager = () => {
       .filter((r) => r.status === 'paid')
       .reduce((sum: number, r) => sum + (r.reservation_amount || 0), 0),
   };
+
+  if (error) return <WorkspaceLoadError title="No pudimos cargar las reservas" onRetry={refetch} />;
 
   return (
     <div className="space-y-6">

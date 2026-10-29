@@ -54,6 +54,8 @@ export const usePanelToday = (scope: PanelScope) => {
           supabase.from('support_tickets').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_progress']),
         ]);
 
+        for (const response of [props, projects, reservations, tickets]) if (response.error) throw response.error;
+
         return [
           { key: 'props', label: 'Propiedades por aprobar', value: props.count ?? 0, href: '/admin/approvals', tone: 'warning' },
           { key: 'projects', label: 'Loteos por aprobar', value: projects.count ?? 0, href: '/admin/project-approvals', tone: 'warning' },
@@ -87,6 +89,8 @@ export const usePanelToday = (scope: PanelScope) => {
           // sigue existiendo en filas históricas.
           .in('status', ['pending', 'potential', 'reserved', 'earned', 'approved']),
       ]);
+
+      for (const response of [leads, visits, reservations, commissions]) if (response.error) throw response.error;
 
       const pendingCommission = (commissions.data ?? []).reduce(
         (sum, c: { commission_amount: number | string }) => sum + Number(c.commission_amount || 0),

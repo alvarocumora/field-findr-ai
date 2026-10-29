@@ -1,3 +1,4 @@
+import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,7 +28,7 @@ const startOfToday = () => {
 };
 
 const LeadManagement = () => {
-  const { leads, isLoading, stats, deleteLead, updateLead } = useLeads();
+  const { leads, isLoading, error, refetch, stats, deleteLead, updateLead } = useLeads();
   const { scoredLeads, stats: scoreStats } = useLeadScoring(leads);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -91,6 +92,8 @@ const LeadManagement = () => {
     return `${firstName[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
   };
 
+
+  if (error) return <WorkspaceLoadError title="No pudimos cargar las consultas" onRetry={refetch} />;
 
   if (isLoading) {
     return (
