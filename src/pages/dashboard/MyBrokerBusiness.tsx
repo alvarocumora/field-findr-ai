@@ -18,6 +18,7 @@ import {
   useMyBrokerProfile, useUpdateMyBrokerProfile, useProjectAssignments, useBrokerRanking,
 } from '@/hooks/useBrokers';
 import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
+import { BROKER_GUIDE_URL } from '@/lib/brokerProgram';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })
@@ -260,6 +261,17 @@ const MyBrokerBusiness = () => {
       <Card>
         <CardHeader><CardTitle>Centro de recursos</CardTitle></CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-3">
+          <div className="md:col-span-3 rounded-lg border border-primary/30 bg-primary/5 p-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="font-medium text-sm">Guía oficial de la red de vendedores (PDF)</h3>
+              <p className="text-xs text-muted-foreground">
+                Mínimo $500.000 por lote vendido · $200.000 por cada lote que venda un vendedor que invitaste.
+              </p>
+            </div>
+            <Button size="sm" asChild>
+              <a href={BROKER_GUIDE_URL} download="guia-red-vendedores.pdf">Descargar guía</a>
+            </Button>
+          </div>
           {RESOURCES.map((r) => (
             <div key={r.title} className="rounded-lg border border-border/60 p-4">
               <r.icon className="h-5 w-5 text-primary mb-2" aria-hidden="true" />
@@ -267,6 +279,11 @@ const MyBrokerBusiness = () => {
               <p className="text-xs text-muted-foreground">{r.text}</p>
             </div>
           ))}
+          <div className="md:col-span-3 flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" asChild><Link to="/asesor/proyectos-en-venta">Proyectos y material</Link></Button>
+            <Button size="sm" variant="outline" asChild><Link to="/asesor/leads">Mis clientes</Link></Button>
+            <Button size="sm" variant="outline" asChild><Link to="/asesor/comisiones">Mis comisiones</Link></Button>
+          </div>
         </CardContent>
       </Card>
     </div>
