@@ -1,3 +1,4 @@
+import { SaveSearchButton } from '@/components/search/SaveSearchButton';
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Loader2, MapPin, Layers, ArrowUpDown, Star, Clock, Bell, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -389,12 +390,7 @@ const FloatingResultsPanel = ({
 
           {/* Footer with CTA */}
           <div className="px-4 py-3 border-t border-border/20">
-            <button
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
-            >
-              <Bell className="h-3.5 w-3.5" />
-              ¿No encuentras lo que buscas? Activar alertas
-            </button>
+            <SaveSearchButton />
           </div>
         </>
       )}
