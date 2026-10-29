@@ -1,3 +1,6 @@
+import { savedSearchDestination } from '@/lib/explore/savedSearch';
+import { jsonObject } from '@/lib/jsonData';
+import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PublicLayout from '@/components/layouts/PublicLayout';
@@ -25,12 +28,13 @@ const Alertas = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: searches = [], isLoading } = useQuery({
-    queryKey: ['saved-searches'],
+  const { data: searches = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['saved-searches', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('saved_searches')
         .select('*')
+        .eq('user_id', user!.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as SavedSearch[];
@@ -66,8 +70,10 @@ const Alertas = () => {
     if (!filters || typeof filters !== 'object' || Array.isArray(filters)) return 'Sin filtros';
     const parts: string[] = [];
     const f = filters as Record<string, Json>;
-    if (f.type && Array.isArray(f.type) && f.type.length > 0) parts.push(`Tipo: ${(f.type as string[]).join(', ')}`);
-    if (f.region && Array.isArray(f.region) && f.region.length > 0) parts.push(`Región: ${(f.region as string[]).join(', ')}`);
+    const types = f.types || f.type;
+    if (Array.isArray(types) && types.length) parts.push(`Tipo: ${types.join(', ')}`);
+    const regions = f.regions || f.region;
+    if (Array.isArray(regions) && regions.length) parts.push(`Región: ${regions.join(', ')}`);
     if (f.priceMin || f.priceMax) parts.push(`Precio: $${f.priceMin || 0} - $${f.priceMax || '∞'}`);
     return parts.length > 0 ? parts.join(' · ') : 'Todos los terrenos';
   };
@@ -77,22 +83,24 @@ const Alertas = () => {
       <PublicLayout>
         <div className="container px-4 py-16 text-center">
           <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h1 className="text-2xl font-bold text-foreground mb-2">Mis Alertas</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Mis búsquedas y avisos</h1>
           <p className="text-muted-foreground mb-6">Inicia sesión para gestionar tus búsquedas guardadas y alertas.</p>
           <Button asChild>
-            <Link to="/auth">Iniciar sesión</Link>
+            <Link to="/auth?redirect=%2Falertas">Iniciar sesión</Link>
           </Button>
         </div>
       </PublicLayout>
     );
   }
 
+  if (error) return <PublicLayout><WorkspaceLoadError title="No pudimos cargar tus búsquedas" onRetry={refetch} /></PublicLayout>;
+
   return (
     <PublicLayout>
       <div className="container px-4 py-6 max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Mis Alertas</h1>
+            <h1 className="text-2xl font-bold text-foreground">Mis búsquedas y avisos</h1>
             <p className="text-sm text-muted-foreground">
               Recibe notificaciones cuando aparezcan nuevas propiedades que coincidan con tus criterios.
             </p>
@@ -145,8 +153,11 @@ const Alertas = () => {
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" asChild><Link to={savedSearchDestination(search.filters)}>Retomar</Link></Button>
                       <Switch
-                        checked={search.notifications_enabled}
+                        checked={Boolean(search.notifications_enabled)}
+                        disabled={jsonObject(search.filters).notifications_supported === false || toggleNotification.isPending}
+                        aria-label={`Avisos de ${search.name}`}
                         onCheckedChange={(enabled) => toggleNotification.mutate({ id: search.id, enabled })}
                       />
                       <span className="text-xs text-muted-foreground hidden sm:inline">

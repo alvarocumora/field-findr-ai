@@ -1,3 +1,4 @@
+import { SaveSearchButton } from '@/components/search/SaveSearchButton';
 import { useState, useRef, useCallback, useEffect, useMemo, useDeferredValue } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown, LayoutGrid, List, Wheat, Factory, Truck, Zap, Home, Droplets, Car, ShieldCheck, X, Mountain, TrendingUp, Compass, ChevronDown } from 'lucide-react';
@@ -681,10 +682,7 @@ const ExploreListPanel = ({
       {hasMore && <Button type="button" variant="outline" className="mx-4 my-2" disabled={isLoadingMore} onClick={onLoadMore}>{isLoadingMore ? 'Cargando…' : 'Cargar más publicaciones'}</Button>}
       {/* Footer CTA */}
       <div className="px-4 py-3 border-t border-border/20">
-        <button className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-primary bg-primary/5 hover:bg-primary/10 transition-colors">
-          <Bell className="h-3.5 w-3.5" />
-          ¿No encuentras lo que buscas? Activar alertas
-        </button>
+        <SaveSearchButton partial={partial} />
       </div>
     </div>
   );
