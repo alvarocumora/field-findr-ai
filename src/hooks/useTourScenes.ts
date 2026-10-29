@@ -1,3 +1,5 @@
+import { parseTourHotspots, parsePolygonOverlays } from '@/lib/tours/sceneData';
+import { toJson } from '@/lib/jsonData';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -46,16 +48,16 @@ export function useTourScenes(projectId: string | undefined) {
     queryFn: async () => {
       if (!projectId) return [];
       const { data, error } = await supabase
-        .from('tour_scenes' as any)
+        .from('tour_scenes')
         .select('*')
         .eq('project_id', projectId)
         .order('position_index', { ascending: true });
       if (error) throw error;
-      return (data || []).map((s: any) => ({
+      return (data || []).map((s) => ({
         ...s,
-        hotspots: Array.isArray(s.hotspots) ? s.hotspots : [],
-        polygon_overlays: Array.isArray(s.polygon_overlays) ? s.polygon_overlays : [],
-      })) as TourScene[];
+        hotspots: parseTourHotspots(s.hotspots),
+        polygon_overlays: parsePolygonOverlays(s.polygon_overlays),
+      }));
     },
     enabled: !!projectId,
   });
@@ -78,7 +80,7 @@ export function useTourScenes(projectId: string | undefined) {
       if (!user || !projectId) throw new Error('No auth');
       const panorama_url = await uploadPanorama(params.file);
       const { data, error } = await supabase
-        .from('tour_scenes' as any)
+        .from('tour_scenes')
         .insert({
           project_id: projectId,
           user_id: user.id,
@@ -96,14 +98,14 @@ export function useTourScenes(projectId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['tour-scenes', projectId] });
       toast.success('Escena agregada al tour');
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const updateScene = useMutation({
     mutationFn: async (params: { id: string; updates: Partial<TourScene> }) => {
       const { data, error } = await supabase
-        .from('tour_scenes' as any)
-        .update(params.updates as any)
+        .from('tour_scenes')
+        .update({ ...params.updates, hotspots: params.updates.hotspots === undefined ? undefined : toJson(params.updates.hotspots), polygon_overlays: params.updates.polygon_overlays === undefined ? undefined : toJson(params.updates.polygon_overlays) })
         .eq('id', params.id)
         .select()
         .single();
@@ -113,13 +115,13 @@ export function useTourScenes(projectId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tour-scenes', projectId] });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const deleteScene = useMutation({
     mutationFn: async (sceneId: string) => {
       const { error } = await supabase
-        .from('tour_scenes' as any)
+        .from('tour_scenes')
         .delete()
         .eq('id', sceneId);
       if (error) throw error;
@@ -128,7 +130,7 @@ export function useTourScenes(projectId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['tour-scenes', projectId] });
       toast.success('Escena eliminada');
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   return {

@@ -1,3 +1,6 @@
+import { getErrorMessage } from '@/lib/errorMessage';
+import type { Project } from '@/hooks/useProjects';
+import type { PublicLot } from '@/lib/lots/publicLotTypes';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,8 +9,8 @@ import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 
 interface AIMasterplanTabProps {
-  project: any;
-  lots: any[];
+  project: Project;
+  lots: PublicLot[];
 }
 
 export const AIMasterplanTab = ({ project, lots }: AIMasterplanTabProps) => {
@@ -86,9 +89,9 @@ export const AIMasterplanTab = ({ project, lots }: AIMasterplanTabProps) => {
           }
         }
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('AI analysis error:', e);
-      toast.error(e.message || 'Error al analizar con IA');
+      toast.error( getErrorMessage(e) || 'Error al analizar con IA');
     } finally {
       setIsLoading(false);
     }

@@ -1,3 +1,4 @@
+import { jsonObject } from '@/lib/jsonData';
 import { useMemo } from 'react';
 import { useProjects } from '@/hooks/useProjects';
 import { useLots } from '@/hooks/useLots';
@@ -15,7 +16,7 @@ export const useProjectWorkspace = (projectId: string) => {
   const project = projects.find((item) => item.id === projectId);
   const { lots, isLoading: lotsLoading } = useLots(projectId || undefined);
   const reservationsQuery = useReservations(projectId || undefined);
-  const reservations = (reservationsQuery.data ?? []) as any[];
+  const reservations = useMemo(() => reservationsQuery.data ?? [], [reservationsQuery.data]);
 
   const sentinelQuery = useSentinelImagery({
     lots,
@@ -44,9 +45,9 @@ export const useProjectWorkspace = (projectId: string) => {
   }, [project?.landing_config]);
 
   const docs = useMemo(() => {
-    const projectRecord = project as any;
+    const projectRecord = project;
     const config = projectRecord?.landing_config;
-    const configured = config && typeof config === 'object' ? config.documents : null;
+    const configured = jsonObject(config).documents;
     const candidates = [
       ...(Array.isArray(projectRecord?.legal_documents) ? projectRecord.legal_documents : []),
       ...(Array.isArray(configured) ? configured : []),

@@ -1,3 +1,4 @@
+import { jsonObject } from '@/lib/jsonData';
 /**
  * Rural Finder pricing rule. A project price is ALWAYS interpreted with its
  * pricing_mode, so "$12.990.000 por hectárea" is never read as a lot price.
@@ -30,8 +31,8 @@ export function pricingUnitLabel(mode: PricingMode): string {
 
 /** Read pricing from projects.landing_config.pricing (no schema change needed). */
 export function readProjectPricing(landingConfig: unknown): ProjectPricing | null {
-  const cfg = landingConfig && typeof landingConfig === 'object' ? (landingConfig as any).pricing : null;
-  if (!cfg || !['per_lot', 'per_ha', 'per_m2'].includes(cfg.pricing_mode)) return null;
+  const cfg = jsonObject(jsonObject(landingConfig).pricing);
+  if (!cfg || (cfg.pricing_mode !== 'per_lot' && cfg.pricing_mode !== 'per_ha' && cfg.pricing_mode !== 'per_m2')) return null;
   const unit = Number(cfg.unit_price);
   return Number.isFinite(unit) && unit > 0 ? { pricing_mode: cfg.pricing_mode, unit_price: unit } : null;
 }

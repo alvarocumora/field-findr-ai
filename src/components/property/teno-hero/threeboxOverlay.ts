@@ -427,6 +427,15 @@ export interface ThreeboxHandle {
 // rendering and you only see the sky). On subsequent mounts we reuse the
 // existing instance and only swap the placed objects.
 const TB_KEY = '__tenoThreebox';
+interface ThreeboxObject { setCoords(coords: number[]): void; }
+interface ThreeboxInstance {
+  Object3D(options: { obj: THREE.Group; units: string; anchor: string }): ThreeboxObject;
+  update(): void;
+  add(object: ThreeboxObject): void;
+  remove?(object: ThreeboxObject): void;
+}
+type ThreeboxConstructor = new (map: mapboxgl.Map, gl: WebGLRenderingContext | null, options: Record<string, boolean>) => ThreeboxInstance;
+type ThreeboxWindow = Window & { Threebox?: ThreeboxConstructor; tb?: ThreeboxInstance };
 const TB_PLACED_KEY = '__tenoThreeboxPlaced';
 const LAYER_ID = 'teno-threebox-layer';
 
@@ -436,18 +445,18 @@ export async function mountThreeboxOverlay(
   localToLngLat: (x: number, y: number) => [number, number],
 ): Promise<ThreeboxHandle | null> {
   // Dynamic import — threebox is ~250KB, only loaded when hero is shown
-  let Threebox: any;
+  let Threebox: ThreeboxConstructor;
   try {
     const mod = await import('threebox-plugin');
-    Threebox = (mod as any).Threebox ?? (mod as any).default?.Threebox ?? (window as any).Threebox;
+    Threebox = (mod).Threebox ?? (mod).default?.Threebox ?? (window as ThreeboxWindow).Threebox;
   } catch (e) {
     console.warn('[threebox] failed to load', e);
     return null;
   }
   if (!Threebox) return null;
 
-  const mapAny = map as any;
-  let tb: any = mapAny[TB_KEY];
+  const mapAny = map as mapboxgl.Map & { __tenoThreebox?: ThreeboxInstance; __tenoThreeboxPlaced?: ThreeboxObject[]; _removed?: boolean };
+  let tb: ThreeboxInstance = mapAny[TB_KEY];
   if (!tb) {
     tb = new Threebox(map, map.getCanvas().getContext('webgl'), {
       defaultLights: true,
@@ -458,7 +467,7 @@ export async function mountThreeboxOverlay(
       sky: false,
     });
     mapAny[TB_KEY] = tb;
-    (window as any).tb = tb;
+    (window as ThreeboxWindow).tb = tb;
     map.addLayer({
       id: LAYER_ID,
       type: 'custom',
@@ -468,12 +477,12 @@ export async function mountThreeboxOverlay(
     });
   } else {
     // Clear previously placed objects from prior mount
-    const prev: any[] = mapAny[TB_PLACED_KEY] ?? [];
+    const prev: ThreeboxObject[] = mapAny[TB_PLACED_KEY] ?? [];
     for (const o of prev) {
       try { tb.remove?.(o); } catch { /* noop */ }
     }
     mapAny[TB_PLACED_KEY] = [];
-    (window as any).tb = tb;
+    (window as ThreeboxWindow).tb = tb;
   }
 
   // ── Preload GLB templates declared in MODEL_REGISTRY ─────────────
@@ -495,7 +504,7 @@ export async function mountThreeboxOverlay(
   const treeTemplates = [treePine, treeOak].filter(Boolean) as THREE.Group[];
 
   // Track all added objects so we can clear them on rebuild
-  const placed: any[] = [];
+  const placed: ThreeboxObject[] = [];
   // For fade-in animation
   const meshAnimRefs: THREE.Group[] = [];
 
@@ -549,7 +558,7 @@ export async function mountThreeboxOverlay(
         g.scale.z = Math.max(0.001, v);
         if (eased < 1) allDone = false;
       });
-      if (!allDone && !(map as any)._removed) {
+      if (!allDone && !mapAny._removed) {
         rafId = requestAnimationFrame(tick);
       }
     };

@@ -1,3 +1,4 @@
+import type { PublicLot } from '@/lib/lots/publicLotTypes';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -184,9 +185,9 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
   const [selectedLot, setSelectedLot] = useState<string | null>(null);
   const [mapEditMode, setMapEditMode] = useState(false);
   const [leadOpen, setLeadOpen] = useState(false);
-  const [reservationLot, setReservationLot] = useState<any | null>(null);
-  const [financingLot, setFinancingLot] = useState<any | null>(null);
-  const [detailLot, setDetailLot] = useState<any | null>(null);
+  const [reservationLot, setReservationLot] = useState<PublicLot | null>(null);
+  const [financingLot, setFinancingLot] = useState<PublicLot | null>(null);
+  const [detailLot, setDetailLot] = useState<PublicLot | null>(null);
   // The financing overlay is a custom modal: Escape closes it (and only it).
   useEffect(() => {
     if (!financingLot) return;
@@ -199,7 +200,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
     setSelectedLot(null);
     setDetailLot(null);
   }, []);
-  const [designerLot, setDesignerLot] = useState<any | null>(null);
+  const [designerLot, setDesignerLot] = useState<PublicLot | null>(null);
   const [showCompare, setShowCompare] = useState(false);
   const [editingSceneIdx, setEditingSceneIdx] = useState<number | null>(null);
   const [tourYaw, setTourYaw] = useState(0);
@@ -282,7 +283,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
       // buyer_* column grants and silently leave the cards/designer empty.
       const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: id });
       if (error) throw error;
-      return (data || []).sort((a: any, b: any) =>
+      return (data || []).sort((a, b) =>
         String(a.lot_number || '').localeCompare(String(b.lot_number || ''), undefined, { numeric: true })
       );
     },
@@ -307,7 +308,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
   const openedSharedLot = useRef<string | null>(null);
   useEffect(() => {
     if (!sharedLot || openedSharedLot.current === sharedLot || lots.length === 0) return;
-    const match = lots.find((l: any) => l.id === sharedLot || String(l.lot_number) === sharedLot);
+    const match = lots.find((l) => l.id === sharedLot || String(l.lot_number) === sharedLot);
     if (!match) return;
     openedSharedLot.current = sharedLot;
     setDetailLot(match);
@@ -352,11 +353,11 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
 
   const { legalDocuments, permits, legalStatus } = applyLegalOverrides(
     project,
-    (project as any)?.legal_documents || [],
-    (project as any)?.permits || [],
-    (project as any)?.legal_status || 'pending',
+    (project)?.legal_documents || [],
+    (project)?.permits || [],
+    (project)?.legal_status || 'pending',
   );
-  const rolNumber = (project as any)?.rol_number;
+  const rolNumber = (project)?.rol_number;
 
   const projectJsonLd = project ? buildProjectJsonLd({
     id: project.id,
@@ -368,7 +369,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
     country: project.country,
     latitude: project.latitude,
     longitude: project.longitude,
-    images: (project as any)?.images,
+    images: (project)?.images,
     total_lots: lotsLoading || lotsError ? null : lots.length,
     available_lots: lotsLoading || lotsError ? null : availableLots.length,
   }) : undefined;
@@ -427,7 +428,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
 
   // selectedLotData removed - now using LotDetailSheet
   const isOwner = !!user && project.user_id === user.id;
-  const publishableCount = isOwner ? publishableLots(lots as any[]).length : 0;
+  const publishableCount = isOwner ? publishableLots(lots).length : 0;
   const creditLot = detailLot || lots.find(lot => lot.id === selectedLot) || resolveProjectInquiryLot(lots, searchParamsTab)
     || lots.find(lot => sharedLot && String(lot.lot_number) === sharedLot);
   const creditLinkParams = new URLSearchParams();
@@ -489,7 +490,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                 const lot = lots.find(l => l.id === lotId);
                 if (lot) {
                   setSelectedLot(lot.id);
-                  setDetailLot(lot);
+                  setDetailLot(lots.find(candidate => candidate.id === lot.id) ?? null);
                 }
               }}
             />
@@ -515,10 +516,10 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
         )}
 
         {/* Fotos de dron: recorrido aéreo real (complementa el tour 360 si existe) */}
-        {!tourScenesLoading && Array.isArray((project as any).images) && (project as any).images.length > 0 && (
+        {!tourScenesLoading && Array.isArray((project).images) && (project).images.length > 0 && (
           <section ref={tourScenes.length === 0 ? tourSectionRef : undefined} className="container px-4 pb-4 scroll-mt-20" aria-label="Recorrido aéreo del proyecto">
             <ProjectAerialShowcase
-              images={(project as any).images}
+              images={(project).images}
               projectName={project.name}
               onOpenMap={() => openProjectMode('map')}
             />
@@ -526,7 +527,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
         )}
 
         {(() => {
-          const cc = (project as any).commercial_conditions as { kit_mediterraneo?: { price_with_kit_clp?: number; optional?: boolean }; credito_directo?: boolean } | null;
+          const cc = (project).commercial_conditions as { kit_mediterraneo?: { price_with_kit_clp?: number; optional?: boolean }; credito_directo?: boolean } | null;
           const kit = cc?.kit_mediterraneo?.price_with_kit_clp;
           if (!kit && !cc?.credito_directo) return null;
           return (
@@ -587,7 +588,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                 <Camera className="h-4 w-4" aria-hidden="true" />Tour 360
               </Button>
             )}
-            {tourScenes.length === 0 && Array.isArray((project as any).images) && (project as any).images.length > 0 && (
+            {tourScenes.length === 0 && Array.isArray((project).images) && (project).images.length > 0 && (
               <Button type="button" size="sm" variant="outline" onClick={scrollToTour} className="min-h-10 gap-2">
                 <Camera className="h-4 w-4" aria-hidden="true" />Vista aérea
               </Button>
@@ -643,8 +644,8 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
             <FeatureProjectButton
               projectId={project.id}
               projectName={project.name}
-              featured={(project as any).featured}
-              featuredUntil={(project as any).featured_until ?? null}
+              featured={(project).featured}
+              featuredUntil={(project).featured_until ?? null}
             />
           </div>
         )}
@@ -718,12 +719,12 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                 }}
                 onLotClick={(lot) => {
                   setSelectedLot(lot.id);
-                  setDetailLot(lot);
+                  setDetailLot(lots.find(candidate => candidate.id === lot.id) ?? null);
                 }}
                 selectedLotId={selectedLot}
                 projectId={project.id}
-                kmzFileUrl={(project as any).kmz_file_url}
-                planImages={(project as any).plan_images || []}
+                kmzFileUrl={(project).kmz_file_url}
+                planImages={(project).plan_images || []}
                 onLotsUpdated={() => {
                   queryClient.invalidateQueries({ queryKey: ['project-lots', id] });
                   queryClient.invalidateQueries({ queryKey: ['project', id] });
@@ -732,7 +733,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                 showAdminControls={isOwner && mapEditMode}
                 tourMode={!(isOwner && mapEditMode)}
                 onOpenCompare={
-                  ((project as any).plan_images?.length > 0)
+                  ((project).plan_images?.length > 0)
                     ? () => setShowCompare(true)
                     : undefined
                 }
@@ -750,7 +751,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                       lng: project.longitude || -71.7856
                     }}
                     planImages={
-                      ((project as any).plan_images || []).map((url: string, idx: number) => ({
+                      ((project).plan_images || []).map((url: string, idx: number) => ({
                         label: `Lámina ${idx + 1}`,
                         url,
                       }))
@@ -770,7 +771,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                 projectOwnerId={project.user_id}
                 projectLocation={`${project.city}, ${project.region}`}
                 tourScenes={tourScenes}
-                projectImages={projectImages({ id: project.id, slug: project.slug, images: (project as any)?.images })}
+                projectImages={projectImages({ id: project.id, slug: project.slug, images: (project)?.images })}
               />
             </TabsContent>
 
@@ -815,17 +816,17 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                 {sortedLots.map((lot, index) => (
                   <EnhancedLotCard
                     key={lot.id}
-                    lot={lot as any}
+                    lot={lot}
                     index={index}
                     totalAvailable={availableLots.length}
                     isSelected={selectedLot === lot.id}
                     onView3D={(lot) => {
                       setSelectedLot(lot.id);
-                      setDesignerLot(lot);
+                      setDesignerLot(lots.find(candidate => candidate.id === lot.id) ?? null);
                     }}
                     onView={(lot) => {
                       setSelectedLot(lot.id);
-                      setDetailLot(lot);
+                      setDetailLot(lots.find(candidate => candidate.id === lot.id) ?? null);
                     }}
                     onSimulateFinancing={(lot) => {
                       setSelectedLot(lot.id);
@@ -852,7 +853,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
 
                 {/* Gallery Section */}
                 <div>
-                  <ProjectGallery images={(project as any).images || []} isOwner={isOwner} />
+                  <ProjectGallery images={(project).images || []} isOwner={isOwner} />
                 </div>
               </div>
             </TabsContent>
@@ -900,7 +901,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                           const lot = lots.find(l => l.id === lotId);
                           if (lot) {
                             setSelectedLot(lot.id);
-                            setDetailLot(lot);
+                            setDetailLot(lots.find(candidate => candidate.id === lot.id) ?? null);
                           }
                         }}
                       />
@@ -949,11 +950,11 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
                         }}
                         onLotClick={(lot) => {
                           setSelectedLot(lot.id);
-                          setDetailLot(lot);
+                          setDetailLot(lots.find(candidate => candidate.id === lot.id) ?? null);
                         }}
                         selectedLotId={selectedLot}
                         projectId={project.id}
-                        kmzFileUrl={(project as any).kmz_file_url}
+                        kmzFileUrl={(project).kmz_file_url}
                         readOnly
                         tourMode
                       /></ViewerErrorBoundary>
@@ -1010,7 +1011,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
           projectName={project.name}
           open={!!reservationLot}
           onOpenChange={(open) => !open && setReservationLot(null)}
-          reservationAmount={(project as any).reservation_deposit || 500000}
+          reservationAmount={(project).reservation_deposit || 500000}
         />
 
         {/* Lot Detail Sheet */}

@@ -1,3 +1,5 @@
+import type { Viewer } from '@photo-sphere-viewer/core';
+import type { PluginConfig } from 'react-photo-sphere-viewer';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { ReactPhotoSphereViewer } from 'react-photo-sphere-viewer';
 import { MarkersPlugin } from '@photo-sphere-viewer/markers-plugin';
@@ -19,7 +21,7 @@ interface TourViewer360Props {
   onLotClick?: (lotId: string) => void;
   /** Yaw actual de la cámara (radianes) para sincronizar el mini-mapa. */
   onYawChange?: (yaw: number) => void;
-  minimap?: { center: { lat: number; lng: number }; lots: any[] };
+  minimap?: { center: { lat: number; lng: number }; lots: import('react').ComponentProps<typeof TourMinimap>['lots'] };
   lots?: { id: string; status: string | null }[];
   showCompass?: boolean;
 }
@@ -37,7 +39,7 @@ export function TourViewer360({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentYaw, setCurrentYaw] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const viewerRef = useRef<any>(null);
+  const viewerRef = useRef<Viewer | null>(null);
 
   const currentScene = scenes[currentIndex] || null;
 
@@ -55,8 +57,8 @@ export function TourViewer360({
 
   /** Pinta hotspots y polígonos de la escena activa. */
   const renderMarkers = useCallback(
-    (instance: any, scene: TourScene) => {
-      const markersPlugin = instance?.getPlugin?.(MarkersPlugin);
+    (instance: Viewer, scene: TourScene) => {
+      const markersPlugin = instance?.getPlugin<MarkersPlugin>(MarkersPlugin);
       if (!markersPlugin) return;
       markersPlugin.clearMarkers();
 
@@ -102,14 +104,14 @@ export function TourViewer360({
   );
 
   const handleReady = useCallback(
-    (instance: any) => {
+    (instance: Viewer) => {
       viewerRef.current = instance;
       try {
         if (!currentScene) return;
         renderMarkers(instance, currentScene);
 
         const markersPlugin = instance.getPlugin(MarkersPlugin);
-        markersPlugin?.addEventListener('select-marker', (e: any) => {
+        markersPlugin?.addEventListener('select-marker', (e) => {
           const marker = e.marker;
           if (marker.data?.type === 'hotspot' && marker.data.targetId) {
             navigateRef.current(marker.data.targetId);
@@ -120,10 +122,10 @@ export function TourViewer360({
         });
 
         // Giro suave al entrar; se detiene en cuanto el visitante interactúa.
-        const autorotate = instance.getPlugin(AutorotatePlugin);
+        const autorotate = instance.getPlugin<AutorotatePlugin>(AutorotatePlugin);
         autorotate?.start?.();
 
-        instance.addEventListener('position-updated', (e: any) => {
+        instance.addEventListener('position-updated', (e) => {
           const yaw = e.position?.yaw ?? 0;
           setCurrentYaw(yaw);
           onYawChange?.(yaw);
@@ -141,7 +143,7 @@ export function TourViewer360({
     if (!viewer || !currentScene) return;
     viewer
       .setPanorama(currentScene.panorama_url, {
-        transition: 1000,
+        transition: { speed: 1000 },
         showLoader: true,
         position: {
           yaw: currentScene.yaw_default || 0,
@@ -176,7 +178,7 @@ export function TourViewer360({
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
 
-  const plugins: any[] = [
+  const plugins: PluginConfig[] = [
     [MarkersPlugin, { markers: [] }],
     ...(showCompass ? [[
       CompassPlugin,
@@ -187,7 +189,7 @@ export function TourViewer360({
         backgroundSvg:
           '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="49" fill="rgba(0,0,0,.55)" stroke="rgba(255,255,255,.35)"/></svg>',
       },
-    ]] : []),
+    ] as PluginConfig] : []),
     [AutorotatePlugin, { autostartDelay: 2500, autorotateSpeed: '0.25rpm' }],
   ];
 

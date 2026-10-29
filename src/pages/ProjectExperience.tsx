@@ -1,3 +1,5 @@
+import { parseLegalItems } from '@/lib/projects/legalOverrides';
+import type { PublicLot } from '@/lib/lots/publicLotTypes';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -44,16 +46,16 @@ const statusClass = (status: string | null | undefined) => {
   return 'bg-white/5 text-white/50 border-white/10';
 };
 
-const getLotCenter = (lot: any): { lat: number; lng: number } | null => {
+const getLotCenter = (lot: PublicLot): { lat: number; lng: number } | null => {
   if (Number.isFinite(Number(lot?.latitude)) && Number.isFinite(Number(lot?.longitude))) {
     return { lat: Number(lot.latitude), lng: Number(lot.longitude) };
   }
 
   if (Array.isArray(lot?.polygon) && lot.polygon.length >= 3) {
-    const valid = lot.polygon.filter((point: any) => Array.isArray(point) && point.length >= 2);
+    const valid = lot.polygon.filter((point) => Array.isArray(point) && point.length >= 2);
     if (!valid.length) return null;
-    const sum = valid.reduce(
-      (acc: { lat: number; lng: number }, point: any) => ({
+    const sum = valid.reduce<{ lat: number; lng: number }>(
+      (acc: { lat: number; lng: number }, point) => ({
         lat: acc.lat + Number(point[1]),
         lng: acc.lng + Number(point[0]),
       }),
@@ -73,15 +75,15 @@ const ProjectExperience = () => {
   const didHydrateDeepLink = useRef(false);
   const travelTimersRef = useRef<number[]>([]);
   const [activeView, setActiveView] = useState('masterplan');
-  const [selectedLotSnapshot, setSelectedLot] = useState<any | null>(null);
+  const [selectedLotSnapshot, setSelectedLot] = useState<PublicLot | null>(null);
   const [selectionSource, setSelectionSource] = useState<'masterplan' | 'inventory' | 'deeplink'>('masterplan');
   const [focusPulse, setFocusPulse] = useState(0);
   const [cinematicFocus, setCinematicFocus] = useState(false);
   const [focusVersion, setFocusVersion] = useState(0);
   const [focusTransition, setFocusTransition] = useState<FocusTransitionPhase>('idle');
-  const [inspectorLot, setInspectorLot] = useState<any | null>(null);
-  const [designerLot, setDesignerLot] = useState<any | null>(null);
-  const [reservationLot, setReservationLot] = useState<any | null>(null);
+  const [inspectorLot, setInspectorLot] = useState<PublicLot | null>(null);
+  const [designerLot, setDesignerLot] = useState<PublicLot | null>(null);
+  const [reservationLot, setReservationLot] = useState<PublicLot | null>(null);
 
   const { data: project, isLoading, isError: projectError, refetch: retryProject } = useQuery({
     queryKey: ['terrain-view-project', id],
@@ -120,33 +122,33 @@ const ProjectExperience = () => {
   // stock and the selected parcel must only use a successful public RPC.
   const verifiedLots = useMemo(() => lotsError ? [] : lots, [lots, lotsError]);
   const selectedLot = useMemo(
-    () => verifiedLots.find((lot: any) => lot.id === selectedLotSnapshot?.id) ?? null,
+    () => verifiedLots.find((lot) => lot.id === selectedLotSnapshot?.id) ?? null,
     [verifiedLots, selectedLotSnapshot?.id],
   );
   const inventoryReady = !lotsLoading && !lotsError;
   // The public RPC deliberately omits buyer_* PII, whereas LotDetailSheet's
   // legacy TypeScript prop still expects the full private "lots" row.
   // This view only passes safe public fields at runtime.
-  const currentInspectorLot = useMemo<any | null>(
-    () => verifiedLots.find((lot: any) => lot.id === inspectorLot?.id) ?? null,
+  const currentInspectorLot = useMemo<PublicLot | null>(
+    () => verifiedLots.find((lot) => lot.id === inspectorLot?.id) ?? null,
     [verifiedLots, inspectorLot?.id],
   );
   const currentReservationLot = useMemo(
-    () => verifiedLots.find((lot: any) => lot.id === reservationLot?.id) ?? null,
+    () => verifiedLots.find((lot) => lot.id === reservationLot?.id) ?? null,
     [verifiedLots, reservationLot?.id],
   );
   const canCompleteReservation = inventoryReady && canReservePublicLot(currentReservationLot);
   const sortedLots = useMemo(
-    () => [...verifiedLots].sort((a: any, b: any) => String(a.lot_number).localeCompare(String(b.lot_number), 'es', { numeric: true })),
+    () => [...verifiedLots].sort((a, b) => String(a.lot_number).localeCompare(String(b.lot_number), 'es', { numeric: true })),
     [verifiedLots],
   );
 
-  const availableLots = useMemo(() => verifiedLots.filter((lot: any) => lot.status === 'available'), [verifiedLots]);
-  const reservedLots = useMemo(() => verifiedLots.filter((lot: any) => lot.status === 'reserved'), [verifiedLots]);
-  const soldLots = useMemo(() => verifiedLots.filter((lot: any) => lot.status === 'sold'), [verifiedLots]);
+  const availableLots = useMemo(() => verifiedLots.filter((lot) => lot.status === 'available'), [verifiedLots]);
+  const reservedLots = useMemo(() => verifiedLots.filter((lot) => lot.status === 'reserved'), [verifiedLots]);
+  const soldLots = useMemo(() => verifiedLots.filter((lot) => lot.status === 'sold'), [verifiedLots]);
 
   const prices = useMemo(
-    () => availableLots.map((lot: any) => lot.price).filter((price: unknown): price is number =>
+    () => availableLots.map((lot) => lot.price).filter((price: unknown): price is number =>
       typeof price === 'number' && Number.isFinite(price) && price > 0),
     [availableLots],
   );
@@ -159,7 +161,7 @@ const ProjectExperience = () => {
     if (!selectedCenter) return [selectedLot];
 
     return [...verifiedLots]
-      .map((lot: any) => {
+      .map((lot) => {
         const center = getLotCenter(lot);
         const distance = center
           ? Math.hypot(center.lat - selectedCenter.lat, center.lng - selectedCenter.lng)
@@ -176,14 +178,14 @@ const ProjectExperience = () => {
     return null;
   }, [cinematicFocus, selectedLot]);
 
-  const updateLotDeepLink = (lot: any) => {
+  const updateLotDeepLink = (lot: PublicLot) => {
     const next = new URLSearchParams(searchParams);
     next.set('lote', String(lot.lot_number));
     setSearchParams(next, { replace: true });
   };
 
   const selectLot = (
-    lot: any,
+    lot: PublicLot,
     options: { openInspector?: boolean; source?: 'masterplan' | 'inventory' | 'deeplink'; syncUrl?: boolean } = {},
   ) => {
     const { openInspector = false, source = activeView === 'lots' ? 'inventory' : 'masterplan', syncUrl = true } = options;
@@ -210,7 +212,7 @@ const ProjectExperience = () => {
       didHydrateDeepLink.current = true;
       return;
     }
-    const deepLinkedLot = verifiedLots.find((lot: any) => String(lot.lot_number) === requestedLot || lot.id === requestedLot);
+    const deepLinkedLot = verifiedLots.find((lot) => String(lot.lot_number) === requestedLot || lot.id === requestedLot);
     if (deepLinkedLot) {
       selectLot(deepLinkedLot, { source: 'deeplink', syncUrl: false });
     }
@@ -314,7 +316,7 @@ const ProjectExperience = () => {
   // Siempre el proyecto canónico por ID, nunca la landing bespoke por slug.
   const projectHome = `/proyecto/${encodeURIComponent(project.id)}`;
   const visitUrl = `/agendar?meeting_type=visita_terreno&project_id=${encodeURIComponent(project.id)}&project_name=${encodeURIComponent(project.name)}&source=terrain-view`;
-  const legalDocuments = (project as any)?.legal_documents || [];
+  const legalDocuments = parseLegalItems(project?.legal_documents);
   const isTraveling = focusTransition === 'departing' || focusTransition === 'arriving';
 
   return (
@@ -531,17 +533,17 @@ const ProjectExperience = () => {
                 ) : (
                   <div className={`transition-all duration-700 ${focusTransition === 'departing' ? 'scale-[0.985] opacity-45' : focusTransition === 'arriving' ? 'scale-[1.015] opacity-90' : 'scale-100 opacity-100'}`}>
                     <LotMapView
-                      lots={verifiedLots as any}
+                      lots={verifiedLots}
                       focusSignal={focusVersion}
                       projectCenter={{
                         lat: project.latitude ?? -34.9767,
                         lng: project.longitude ?? -71.7856,
                       }}
-                      onLotClick={(lot) => selectLot(lot, { source: 'masterplan', openInspector: true })}
+                      onLotClick={(lot) => selectLot(verifiedLots.find(candidate => candidate.id === lot.id) ?? null, { source: 'masterplan', openInspector: true })}
                       selectedLotId={selectedLot?.id ?? null}
                       projectId={project.id}
-                      kmzFileUrl={(project as any).kmz_file_url}
-                      planImages={(project as any).plan_images || []}
+                      kmzFileUrl={(project).kmz_file_url}
+                      planImages={(project).plan_images || []}
                       readOnly
                       tourMode
                     />
@@ -559,7 +561,7 @@ const ProjectExperience = () => {
                 <div className="flex min-h-[320px] items-center justify-center text-center text-sm text-white/60">No hay parcelas publicadas por el momento. Puedes solicitar una visita o consultar por próximas etapas.</div>
               ) : (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {sortedLots.map((lot: any, index: number) => (
+                  {sortedLots.map((lot, index: number) => (
                     <div
                       id={`terrain-lot-${lot.id}`}
                       key={lot.id}
@@ -593,7 +595,7 @@ const ProjectExperience = () => {
         onOpenChange={(open) => !open && setInspectorLot(null)}
         projectName={project.name}
         legalDocuments={legalDocuments}
-        project={project as any}
+        project={project}
         onReserve={(lot) => {
           if (!inventoryReady || !canReservePublicLot(lot)) return;
           setInspectorLot(null);
@@ -618,7 +620,7 @@ const ProjectExperience = () => {
         projectName={project.name}
         open={!!reservationLot && canCompleteReservation}
         onOpenChange={(open) => !open && setReservationLot(null)}
-        reservationAmount={(project as any).reservation_deposit || 500000}
+        reservationAmount={(project).reservation_deposit || 500000}
       />
     </div>
   );

@@ -35,7 +35,7 @@ interface Lot {
   lot_number: string;
   area: number;
   status: string | null;
-  polygon?: any;
+  polygon?: unknown;
 }
 
 interface LotDrawingToolProps {
@@ -81,12 +81,12 @@ export const LotDrawingTool = ({
 
   // Get lots without polygons (for assignment)
   const lotsWithoutPolygons = lots.filter(
-    (lot) => !lot.polygon || lot.polygon.length < 3
+    (lot) => !Array.isArray(lot.polygon) || lot.polygon.length < 3
   );
 
   // Get lots with polygons (for editing/deleting)
   const lotsWithPolygons = lots.filter(
-    (lot) => lot.polygon && lot.polygon.length >= 3
+    (lot) => Array.isArray(lot.polygon) && lot.polygon.length >= 3
   );
 
   const handleSave = () => {

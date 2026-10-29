@@ -1,3 +1,5 @@
+import { getErrorMessage } from '@/lib/errorMessage';
+import { toJson } from '@/lib/jsonData';
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,14 +73,14 @@ const projectToWizardData = (project: Project): WizardData => ({
   total_area: project.total_area ? Number(project.total_area) : null,
   price_base: null,
   reservation_deposit: project.reservation_deposit ? Number(project.reservation_deposit) : 500000,
-  images: (project as any).images || [],
-  plan_images: (project as any).plan_images || [],
-  commercial_conditions: ((project as any).commercial_conditions as CommercialConditions) || { ...DEFAULT_CONDITIONS },
+  images: (project).images || [],
+  plan_images: (project).plan_images || [],
+  commercial_conditions: ((project).commercial_conditions as unknown as CommercialConditions) || { ...DEFAULT_CONDITIONS },
 });
 
 interface CreateProjectWizardProps {
-  createProject: UseMutationResult<any, Error, Omit<ProjectInsert, 'user_id'>, unknown>;
-  updateProject?: UseMutationResult<any, Error, ProjectUpdate & { id: string }, unknown>;
+  createProject: UseMutationResult<Project, Error, Omit<ProjectInsert, 'user_id'>, unknown>;
+  updateProject?: UseMutationResult<Project, Error, ProjectUpdate & { id: string }, unknown>;
   editingProject?: Project | null;
   onComplete: () => void;
   onCancel: () => void;
@@ -135,8 +137,8 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
       if (!data.total_lots || data.total_lots === 0) {
         update({ total_lots: result.placemarks.length });
       }
-    } catch (err: any) {
-      setKmzError(err.message || 'Error al procesar el archivo');
+    } catch (err: unknown) {
+      setKmzError( getErrorMessage(err) || 'Error al procesar el archivo');
       setParsedKMZ(null);
       setKmzFile(null);
     }
@@ -162,7 +164,7 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
         reservation_deposit: data.reservation_deposit || 500000,
         images: data.images.length > 0 ? data.images : null,
          plan_images: data.plan_images.length > 0 ? data.plan_images : null,
-         commercial_conditions: data.commercial_conditions as any,
+         commercial_conditions: toJson(data.commercial_conditions),
        };
 
       let projectId: string;
@@ -206,8 +208,8 @@ const CreateProjectWizard = ({ createProject, updateProject, editingProject, onC
       }
 
       onComplete();
-    } catch (err: any) {
-      toast.error('Error: ' + (err.message || 'Error desconocido'));
+    } catch (err: unknown) {
+      toast.error('Error: ' + ( getErrorMessage(err) || 'Error desconocido'));
     } finally {
       setIsImporting(false);
     }

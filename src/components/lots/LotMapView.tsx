@@ -27,7 +27,7 @@ interface Lot {
   status: string | null;
   latitude: number | null;
   longitude: number | null;
-  polygon: any;
+  polygon: unknown;
 }
 
 interface LotMapViewProps {
@@ -193,7 +193,7 @@ const getStatusFillColor = (status: string): string => {
 };
 
 // Color expressions for different visualization modes
-const getColorExpression = (mode: 'status' | 'price' | 'area', lots: Lot[]): any => {
+const getColorExpression = (mode: 'status' | 'price' | 'area', lots: Lot[]): mapboxgl.ExpressionSpecification => {
   if (mode === 'price') {
     const prices = lots.filter(l => l.price).map(l => l.price!);
     const minP = Math.min(...prices) || 0;
@@ -241,7 +241,7 @@ const applyAvailabilityView = (
   lots: Lot[],
 ) => {
   if (!m.getLayer('lots-fill')) return;
-  const setHotspotFilter = (filter: any) => {
+  const setHotspotFilter = (filter: mapboxgl.FilterSpecification) => {
     if (m.getLayer('lots-hotspot')) m.setFilter('lots-hotspot', filter);
   };
   if (only) {
@@ -404,7 +404,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
     deletePolygonFromLot,
   } = usePolygonDrawing({
     map: map.current,
-    lots: lots.map(l => ({ id: l.id, lot_number: l.lot_number, area: l.area, polygon: l.polygon })),
+    lots: lots.map(l => ({ id: l.id, lot_number: l.lot_number, area: l.area, polygon: normalizePolygon(l.polygon).valid ? l.polygon as [number, number][] : null })),
     onLotsUpdated,
   });
 
@@ -839,7 +839,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       // Deep copy all polygons
       const polys: { id: string; coords: [number, number][] }[] = lotsWithPolygons.map(l => ({
         id: l.id,
-        coords: l.polygon.map((c: [number, number]) => [...c] as [number, number]),
+        coords: (normalizePolygon(l.polygon).valid ? l.polygon as number[][] : []).map((c) => [...c] as [number, number]),
       }));
 
       // SAFE tolerances
@@ -991,7 +991,7 @@ export const LotMapView = ({ lots, projectCenter, onLotClick, selectedLotId, pro
       let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
       
       lotsWithPolygons.forEach(lot => {
-        lot.polygon.forEach(([lng, lat]: [number, number]) => {
+        normalizePolygon(lot.polygon).coords.forEach(([lng, lat]) => {
           if (lng < minLng) minLng = lng;
           if (lng > maxLng) maxLng = lng;
           if (lat < minLat) minLat = lat;

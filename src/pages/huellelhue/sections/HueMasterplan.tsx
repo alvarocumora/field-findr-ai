@@ -277,9 +277,10 @@ export default function HueMasterplan() {
       const numFC: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
         features: HUELLELHUE_DATA.lots
-          .filter((l: any) => l.geometry?.type === 'Polygon' && ['ocean_front', 'forest_ocean', 'bosque_vivo'].includes(l.properties.category))
-          .map((l: any, i: number) => {
-            const ring = l.geometry.coordinates[0] as [number, number][];
+          .filter((l) => l.geometry?.type === 'Polygon' && ['ocean_front', 'forest_ocean', 'bosque_vivo'].includes(l.properties.category))
+          .map((l, i: number) => {
+            if (l.geometry.type !== 'Polygon') return null;
+            const ring = l.geometry.coordinates[0] as readonly (readonly [number, number])[];
             let sx = 0, sy = 0;
             for (const [x, y] of ring) { sx += x; sy += y; }
             const n = ring.length;
@@ -318,9 +319,9 @@ export default function HueMasterplan() {
       });
 
       // Camera fit
-      const coords = (perim.geometry as any).coordinates[0] as [number, number][];
+      const coords = perim.geometry.type === 'Polygon' ? perim.geometry.coordinates[0] : [];
       const b = new mapboxgl.LngLatBounds();
-      coords.forEach((c) => b.extend(c));
+      coords.forEach(([lng, lat]) => b.extend([lng, lat]));
       map.fitBounds(b, { padding: 70, pitch: 0, bearing: 0, duration: 0 });
 
       // Hover & click on lots

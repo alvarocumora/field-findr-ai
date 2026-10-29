@@ -1,3 +1,4 @@
+import { jsonObject } from '@/lib/jsonData';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -79,10 +80,10 @@ const ActivityTimeline = () => {
           {/* Timeline line */}
           <div className="absolute left-4 top-2 bottom-2 w-px bg-border" />
           
-          {events.map((event: any) => {
+          {events.map((event) => {
             const config = EVENT_CONFIG[event.event_type] || EVENT_CONFIG.search;
             const Icon = config.icon;
-            const metadata = event.metadata as Record<string, any> || {};
+            const metadata = jsonObject(event.metadata);
 
             return (
               <div key={event.id} className="flex items-start gap-4 relative">
@@ -95,10 +96,10 @@ const ActivityTimeline = () => {
                     <Badge variant="outline" className="text-[10px]">{event.event_type}</Badge>
                   </div>
                   {metadata.project_name && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{metadata.project_name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{String(metadata.project_name)}</p>
                   )}
                   {metadata.query && (
-                    <p className="text-xs text-muted-foreground mt-0.5 italic">"{metadata.query}"</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 italic">"{String(metadata.query)}"</p>
                   )}
                   <p className="text-xs text-muted-foreground mt-1">
                     {formatDistanceToNow(new Date(event.created_at), { addSuffix: true, locale: es })}

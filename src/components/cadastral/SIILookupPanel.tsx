@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errorMessage';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,9 +53,9 @@ const SIILookupPanel = () => {
       toast.success('Datos obtenidos', {
         description: result.data.source === 'demo' ? 'Usando datos de demostración' : 'Datos del SII',
       });
-    } catch (err: any) {
-      setError(err.message || 'Error consultando datos');
-      toast.error('Error', { description: err.message });
+    } catch (err: unknown) {
+      setError( getErrorMessage(err) || 'Error consultando datos');
+      toast.error('Error', { description: getErrorMessage(err) });
     } finally {
       setLoading(false);
     }

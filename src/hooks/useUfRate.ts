@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errorMessage';
 import { useEffect, useState } from 'react';
 
 /**
@@ -99,8 +100,8 @@ export function useUfRate() {
         setPresets(newPresets);
         writeCache({ today: newToday, presets: newPresets });
         if (!todayVal) setError('No se pudo obtener la UF actual; usando valor referencial.');
-      } catch (e: any) {
-        if (!cancelled) setError(e?.message || 'Error al consultar UF');
+      } catch (e: unknown) {
+        if (!cancelled) setError( getErrorMessage(e) || 'Error al consultar UF');
       } finally {
         if (!cancelled) setLoading(false);
       }

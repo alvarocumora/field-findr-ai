@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errorMessage';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -60,10 +61,10 @@ const SecurityTab = () => {
         description: "Tu contraseña ha sido cambiada correctamente.",
       });
       form.reset();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
-        description: error.message || "No se pudo actualizar la contraseña.",
+        description: getErrorMessage(error) || "No se pudo actualizar la contraseña.",
         variant: "destructive",
       });
     } finally {

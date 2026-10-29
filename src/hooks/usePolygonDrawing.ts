@@ -1,3 +1,4 @@
+import type { Feature, Polygon } from 'geojson';
 import { useRef, useState, useCallback, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
@@ -153,7 +154,7 @@ export const usePolygonDrawing = ({
   }, [map]);
 
   // Handle polygon creation
-  const handleDrawCreate = useCallback((e: any) => {
+  const handleDrawCreate = useCallback((e: { features: Feature<Polygon>[] }) => {
     const feature = e.features[0];
     if (!feature || feature.geometry.type !== 'Polygon') return;
 
@@ -171,7 +172,7 @@ export const usePolygonDrawing = ({
     }
 
     setCurrentPolygon({
-      id: feature.id,
+      id: String(feature.id),
       coordinates: validation.normalized || coordinates,
       area: validation.area,
     });
@@ -180,7 +181,7 @@ export const usePolygonDrawing = ({
   }, []);
 
   // Handle polygon update
-  const handleDrawUpdate = useCallback((e: any) => {
+  const handleDrawUpdate = useCallback((e: { features: Feature<Polygon>[] }) => {
     const feature = e.features[0];
     if (!feature || feature.geometry.type !== 'Polygon') return;
 
@@ -188,7 +189,7 @@ export const usePolygonDrawing = ({
     const validation = validatePolygonShape(coordinates);
 
     setCurrentPolygon({
-      id: feature.id,
+      id: String(feature.id),
       coordinates: validation.normalized || coordinates,
       area: validation.area,
     });
@@ -201,14 +202,14 @@ export const usePolygonDrawing = ({
   }, []);
 
   // Handle selection change
-  const handleSelectionChange = useCallback((e: any) => {
+  const handleSelectionChange = useCallback((e: { features: Feature<Polygon>[] }) => {
     if (e.features.length > 0) {
       const feature = e.features[0];
       if (feature.geometry.type === 'Polygon') {
         const coordinates = feature.geometry.coordinates[0] as [number, number][];
         const validation = validatePolygonShape(coordinates);
         setCurrentPolygon({
-          id: feature.id,
+          id: String(feature.id),
           coordinates,
           area: validation.area,
         });

@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errorMessage';
 import { useState } from 'react';
 import { Download, Lock, FileSpreadsheet, Package, FileJson, ShieldCheck, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -82,10 +83,10 @@ async function downloadAndVerify(key: BundleKey, setBusy: (k: BundleKey | null) 
       description: `SHA-256 ${meta.sha256.slice(0, 16)}… · ${(buf.byteLength / 1024).toFixed(1)} KB`,
       duration: 5000,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     toast.error('No se pudo descargar el archivo', {
       id: toastId,
-      description: e?.message ?? 'error de red',
+      description: getErrorMessage(e) ?? 'error de red',
     });
   } finally {
     setBusy(null);

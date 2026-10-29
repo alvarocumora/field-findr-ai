@@ -1,7 +1,9 @@
+import { parseLandingConfig } from '@/lib/landing/config';
+import type { Project } from '@/hooks/useProjects';
 import { CheckCircle2, ShieldCheck } from 'lucide-react';
 
 interface Props {
-  project: any;
+  project: Project;
   totalAreaHa?: number | null;
   lotCount: number | null;
 }
@@ -12,10 +14,10 @@ interface Props {
  * Reemplaza las secciones narrativas de las antiguas landings a medida.
  */
 export function ProjectNarrative({ project, lotCount }: Props) {
-  const cfg = (project?.landing_config ?? {}) as any;
+  const cfg = parseLandingConfig(project?.landing_config);
   const highlights: string[] = Array.isArray(cfg.highlights) ? cfg.highlights.filter((h: unknown) => typeof h === 'string') : [];
   const amenities: { title: string; text?: string }[] = Array.isArray(cfg.amenities)
-    ? cfg.amenities.filter((a: any) => a && typeof a.title === 'string') : [];
+    ? cfg.amenities.filter((a) => a && typeof a.title === 'string') : [];
   const subtitle: string | undefined = cfg.hero?.subtitle ?? project?.description ?? undefined;
 
   const rows: [string, string][] = [

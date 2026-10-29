@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/errorMessage';
 import { useState } from 'react';
 import { z } from 'zod';
 import { toast } from 'sonner';
@@ -102,12 +103,12 @@ export default function EpLeadForm({
           budgetMax: budget?.max ?? undefined,
         },
       });
-      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      if (error || (data)?.error) throw new Error((data)?.error || error?.message);
       setDone(true);
       toast.success('¡Contacto enviado! Te escribiremos pronto.');
       onSuccess?.();
-    } catch (err: any) {
-      toast.error(err?.message || 'No pudimos enviar tu consulta. Intenta de nuevo.');
+    } catch (err: unknown) {
+      toast.error( getErrorMessage(err) || 'No pudimos enviar tu consulta. Intenta de nuevo.');
     } finally {
       setSubmitting(false);
     }

@@ -1,3 +1,8 @@
+import { normalizePolygon } from '@/lib/polygonUtils';
+import { jsonObject } from '@/lib/jsonData';
+import type { Credit } from '@/hooks/useCredits';
+import type { ReservationWithLot } from '@/hooks/useReservations';
+import type { LucideIcon } from 'lucide-react';
 import { useState, lazy, Suspense } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useReservations } from '@/hooks/useReservations';
@@ -80,9 +85,9 @@ const MiTerreno = () => {
 
   // Only the buyer's OWN reservations (useReservations also returns a project
   // owner's incoming reservations via RLS — those must not appear here).
-  const mine = ownReservations(reservations as any[], user?.id);
+  const mine = ownReservations(reservations, user?.id);
   const { active: activeReservations, past: pastReservations } = partitionReservations(mine);
-  const summary = reservationsSummary(activeReservations as any[]);
+  const summary = reservationsSummary(activeReservations);
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,7 +133,7 @@ const MiTerreno = () => {
             <StatCard
               icon={CreditCard}
               label="Créditos Activos"
-              value={buyerCredits.filter((c: any) => c.status === 'active').length.toString()}
+              value={buyerCredits.filter((c) => c.status === 'active').length.toString()}
               color="text-blue-600"
             />
             <StatCard
@@ -152,7 +157,7 @@ const MiTerreno = () => {
                   Mis Reservas Activas
                 </h2>
                 <div className="space-y-6">
-                  {activeReservations.map((r: any) => (
+                  {activeReservations.map((r) => (
                     <ReservationCard key={r.id} reservation={r} buyerCredits={buyerCredits} />
                   ))}
                 </div>
@@ -160,7 +165,7 @@ const MiTerreno = () => {
             )}
 
             {/* Active Credits (standalone) */}
-            {buyerCredits.filter((c: any) => c.status === 'active').length > 0 && (
+            {buyerCredits.filter((c) => c.status === 'active').length > 0 && (
               <section className="space-y-4">
                 <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <CreditCard className="h-5 w-5 text-blue-600" />
@@ -168,8 +173,8 @@ const MiTerreno = () => {
                 </h2>
                 <div className="space-y-4">
                   {buyerCredits
-                    .filter((c: any) => c.status === 'active')
-                    .map((credit: any) => (
+                    .filter((c) => c.status === 'active')
+                    .map((credit) => (
                       <CreditSummaryCard key={credit.id} credit={credit} />
                     ))}
                 </div>
@@ -183,7 +188,7 @@ const MiTerreno = () => {
                   Historial
                 </h2>
                 <div className="space-y-3">
-                  {pastReservations.map((r: any) => (
+                  {pastReservations.map((r) => (
                     <PastReservationCard key={r.id} reservation={r} />
                   ))}
                 </div>
@@ -196,7 +201,7 @@ const MiTerreno = () => {
   );
 };
 
-const StatCard = ({ icon: Icon, label, value, color }: { icon: any; label: string; value: string; color: string }) => (
+const StatCard = ({ icon: Icon, label, value, color }: { icon: LucideIcon; label: string; value: string; color: string }) => (
   <Card className="border-border/40">
     <CardContent className="p-4">
       <div className="flex items-center gap-2 mb-1">
@@ -223,7 +228,7 @@ const EmptyState = () => (
   </div>
 );
 
-const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buyerCredits: any[] }) => {
+const ReservationCard = ({ reservation, buyerCredits }: { reservation: ReservationWithLot; buyerCredits: Credit[] }) => {
   const lot = reservation.lots;
   const project = lot?.projects;
   const status = reservation.status as ReservationStatus;
@@ -235,10 +240,10 @@ const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buye
   );
 
   // Find linked credit
-  const linkedCredit = buyerCredits.find((c: any) => c.reservation_id === reservation.id);
+  const linkedCredit = buyerCredits.find((c) => c.reservation_id === reservation.id);
 
   // Visual timeline progress
-  const completedClosingSteps = closingSteps.filter((s: any) => s.status === 'completed');
+  const completedClosingSteps = closingSteps.filter((s) => s.status === 'completed');
   const totalSteps = TIMELINE_STEPS.length;
   const progressPercent = Math.round((completedClosingSteps.length / totalSteps) * 100);
 
@@ -352,7 +357,7 @@ const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buye
               <Progress value={progressPercent} className="h-2" />
               <div className="grid grid-cols-4 gap-1">
                 {TIMELINE_STEPS.map((step) => {
-                  const closingStep = closingSteps.find((cs: any) => cs.step_type === step.key);
+                  const closingStep = closingSteps.find((cs) => cs.step_type === step.key);
                   const isComplete = closingStep?.status === 'completed';
                   const isInProgress = closingStep?.status === 'in_progress';
                   return (
@@ -449,7 +454,7 @@ const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buye
                       <Scale className="h-5 w-5 text-primary" />
                       <h3 className="font-semibold text-foreground">Cierre Legal</h3>
                     </div>
-                    {closingSteps.some((s: any) => s.step_type === 'promesa' && (s.status === 'in_progress' || s.status === 'pending')) && (
+                    {closingSteps.some((s) => s.step_type === 'promesa' && (s.status === 'in_progress' || s.status === 'pending')) && (
                       <Button size="sm" className="gap-2" onClick={() => setSigningOpen(true)}>
                         <FileText className="h-4 w-4" />
                         Firmar Contrato
@@ -500,7 +505,7 @@ const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buye
                   polygon={
                     Array.isArray(lot.polygon)
                       ? lot.polygon as number[][]
-                      : (lot.polygon as any)?.coordinates?.[0] || null
+                      : normalizePolygon((jsonObject(lot.polygon).coordinates as unknown[])?.[0]).coords || null
                   }
                   lotNumber={lot.lot_number}
                   lotArea={lot.area}
@@ -510,7 +515,7 @@ const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buye
                     try {
                       await supabase
                         .from('reservations')
-                        .update({ parcel_design: JSON.parse(json) } as any)
+                        .update({ parcel_design: JSON.parse(json) })
                         .eq('id', reservation.id);
                     } catch (e) {
                       console.error('Error saving design:', e);
@@ -526,12 +531,12 @@ const ReservationCard = ({ reservation, buyerCredits }: { reservation: any; buye
   );
 };
 
-const CreditPaymentsView = ({ creditId, credit }: { creditId: string; credit: any }) => {
+const CreditPaymentsView = ({ creditId, credit }: { creditId: string; credit: Credit }) => {
   const { data: payments = [] } = useCreditPayments(creditId);
 
-  const paidCount = payments.filter((p: any) => p.status === 'paid').length;
-  const overdueCount = payments.filter((p: any) => p.status === 'overdue').length;
-  const nextPayment = payments.find((p: any) => p.status === 'pending');
+  const paidCount = payments.filter((p) => p.status === 'paid').length;
+  const overdueCount = payments.filter((p) => p.status === 'overdue').length;
+  const nextPayment = payments.find((p) => p.status === 'pending');
 
   return (
     <div className="space-y-4">
@@ -583,7 +588,7 @@ const CreditPaymentsView = ({ creditId, credit }: { creditId: string; credit: an
 
       {/* Payment History */}
       <div className="space-y-2 max-h-64 overflow-y-auto">
-        {payments.slice(0, 12).map((p: any) => (
+        {payments.slice(0, 12).map((p) => (
           <div
             key={p.id}
             className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/30 text-sm"
@@ -615,7 +620,7 @@ const CreditPaymentsView = ({ creditId, credit }: { creditId: string; credit: an
   );
 };
 
-const CreditSummaryCard = ({ credit }: { credit: any }) => {
+const CreditSummaryCard = ({ credit }: { credit: Credit }) => {
   const lotInfo = credit.lots;
   const projectName = lotInfo?.projects?.name || 'Proyecto';
 
@@ -648,7 +653,7 @@ const CreditSummaryCard = ({ credit }: { credit: any }) => {
   );
 };
 
-const PastReservationCard = ({ reservation }: { reservation: any }) => {
+const PastReservationCard = ({ reservation }: { reservation: ReservationWithLot }) => {
   const lot = reservation.lots;
   const project = lot?.projects;
   const status = reservation.status as ReservationStatus;

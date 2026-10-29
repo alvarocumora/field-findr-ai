@@ -5,8 +5,16 @@
  * migraciones.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- jsonb sin tipar, igual que en ProjectDetail
-type LegalItem = any;
+import type { LegalItem } from './legalItemTypes';
+export type { LegalItem } from './legalItemTypes';
+export function parseLegalItems(value: unknown): LegalItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap(item => {
+    if (typeof item === 'string') return [{ type: item, name: item }];
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return [];
+    return [Object.fromEntries(Object.entries(item).filter(([, value]) => typeof value === 'string')) as LegalItem];
+  });
+}
 
 const ALL_DOCUMENTS = [
   ['titulo_dominio', 'Título de Dominio'],
@@ -42,10 +50,12 @@ const isFullyApproved = (project: ProjectRef) =>
 
 export function applyLegalOverrides<P extends ProjectRef>(
   project: P | null | undefined,
-  legalDocuments: LegalItem[],
-  permits: LegalItem[],
+  rawLegalDocuments: unknown,
+  rawPermits: unknown,
   legalStatus: string,
 ): { legalDocuments: LegalItem[]; permits: LegalItem[]; legalStatus: string } {
+  const legalDocuments = parseLegalItems(rawLegalDocuments);
+  const permits = parseLegalItems(rawPermits);
   if (!project || !isFullyApproved(project)) return { legalDocuments, permits, legalStatus };
 
   const merge = (defs: readonly (readonly [string, string])[], current: LegalItem[], status: string) =>

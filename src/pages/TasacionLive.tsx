@@ -1,3 +1,6 @@
+import { getErrorMessage } from '@/lib/errorMessage';
+import type { Json } from '@/integrations/supabase/types';
+import type { AppraisalAnchor } from '@/lib/appraisalTypes';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
@@ -45,11 +48,11 @@ interface PublicacionRow {
   pdf_sha256: string;
   pdf_final_path: string | null;
   pdf_final_sha256: string | null;
-  payload_json: any;
+  payload_json: Json;
   version: number;
   revoked_at: string | null;
   revoked_reason: string | null;
-  blockchain_anchor: any;
+  blockchain_anchor: AppraisalAnchor | null;
   created_at: string;
   fmv_min_uf?: number | null;
   fmv_max_uf?: number | null;
@@ -97,8 +100,8 @@ const TasacionLive = () => {
       if (error) throw error;
       setOts(data as OtsVerify);
       setOtsLastChecked(new Date());
-    } catch (e: any) {
-      toast.error('No se pudo verificar OpenTimestamps', { description: e.message });
+    } catch (e: unknown) {
+      toast.error('No se pudo verificar OpenTimestamps', { description: getErrorMessage(e) });
     } finally {
       setOtsLoading(false);
     }

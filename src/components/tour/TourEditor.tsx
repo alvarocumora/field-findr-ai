@@ -1,3 +1,6 @@
+import type { Viewer, events } from '@photo-sphere-viewer/core';
+import type { PluginConfig } from 'react-photo-sphere-viewer';
+import type { PublicLot } from '@/lib/lots/publicLotTypes';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { ReactPhotoSphereViewer } from 'react-photo-sphere-viewer';
 import { MarkersPlugin } from '@photo-sphere-viewer/markers-plugin';
@@ -17,7 +20,7 @@ import { tourLotLabel, tourLotState, tourPolygonCenter } from '@/lib/tourLotMark
 interface TourEditorProps {
   scene: TourScene;
   allScenes: TourScene[];
-  lots: any[];
+  lots: Pick<PublicLot, 'id' | 'lot_number' | 'status'>[];
   projectId: string;
 }
 
@@ -32,10 +35,10 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
   const [selectedTargetScene, setSelectedTargetScene] = useState<string>('');
   const [selectedLotId, setSelectedLotId] = useState<string>('');
   const [hotspotTooltip, setHotspotTooltip] = useState('');
-  const viewerRef = useRef<any>(null);
-  const markersRef = useRef<any>(null);
+  const viewerRef = useRef<Viewer | null>(null);
+  const markersRef = useRef<MarkersPlugin | null>(null);
   const [dirty, setDirty] = useState(false);
-  const clickHandlerRef = useRef<(data: any) => void>(() => {});
+  const clickHandlerRef = useRef<(data: events.ClickEvent) => void>(() => {});
 
   useEffect(() => {
     setHotspots(scene.hotspots);
@@ -47,10 +50,10 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
 
   const otherScenes = allScenes.filter(s => s.id !== scene.id);
 
-  const handleReady = useCallback((instance: any) => {
+  const handleReady = useCallback((instance: Viewer) => {
     viewerRef.current = instance;
     try {
-      const mp = instance.getPlugin(MarkersPlugin);
+      const mp = instance.getPlugin<MarkersPlugin>(MarkersPlugin);
       markersRef.current = mp;
       refreshMarkers(mp);
     } catch (err) {
@@ -58,7 +61,7 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
     }
   }, [hotspots, polygons]);
 
-  const refreshMarkers = (mp: any) => {
+  const refreshMarkers = (mp: MarkersPlugin) => {
     if (!mp) return;
     mp.clearMarkers();
 
@@ -115,11 +118,11 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
     });
   };
 
-  const handleClick = useCallback((data: any) => {
+  const handleClick = useCallback((data: events.ClickEvent) => {
     if (mode === 'view') return;
 
-    const yaw = data.data?.yaw ?? data.yaw;
-    const pitch = data.data?.pitch ?? data.pitch;
+    const yaw = data.data.yaw;
+    const pitch = data.data.pitch;
     if (!Number.isFinite(yaw) || !Number.isFinite(pitch)) return;
 
     if (mode === 'hotspot') {
@@ -160,9 +163,9 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
     if (markersRef.current) refreshMarkers(markersRef.current);
   }, [hotspots, polygons, currentPolygonPoints, lots]);
 
-  const handleViewerReady = useCallback((instance: any) => {
+  const handleViewerReady = useCallback((instance: Viewer) => {
     handleReady(instance);
-    instance.addEventListener('click', (event: any) => clickHandlerRef.current(event));
+    instance.addEventListener('click', (event: events.ClickEvent) => clickHandlerRef.current(event));
   }, [handleReady]);
 
   const finishPolygon = () => {
@@ -194,8 +197,8 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
       await updateScene.mutateAsync({
         id: scene.id,
         updates: {
-          hotspots: hotspots as any,
-          polygon_overlays: polygons as any,
+          hotspots: hotspots,
+          polygon_overlays: polygons,
           yaw_default: viewerRef.current?.getPosition()?.yaw ?? scene.yaw_default,
           pitch_default: viewerRef.current?.getPosition()?.pitch ?? scene.pitch_default,
         },
@@ -207,7 +210,7 @@ export function TourEditor({ scene, allScenes, lots, projectId }: TourEditorProp
     }
   };
 
-  const plugins: any[] = [[MarkersPlugin, { markers: [] }]];
+  const plugins: PluginConfig[] = [[MarkersPlugin, { markers: [] }]];
 
   return (
     <div className="space-y-4">
