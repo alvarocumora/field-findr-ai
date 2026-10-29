@@ -26,6 +26,7 @@ import { useNotificationTemplates } from '@/hooks/useNotificationTemplates';
 import { useProfile } from '@/hooks/useProfile';
 import { useTeamMembers } from '@/hooks/useTeam';
 import { renderTemplate, whatsappLink } from '@/lib/notifications/templates';
+import { LeadInterestPicker } from '@/components/leads/LeadInterestPicker';
 
 interface LeadDetailSheetProps {
   lead: Lead | null;
@@ -180,6 +181,9 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
               </Select>
             </div>
           )}
+
+          <LeadInterestPicker lead={lead}
+            onChange={(patch) => updateLead.mutate({ id: lead.id, ...patch } as Parameters<typeof updateLead.mutate>[0])} />
 
           <div className="space-y-2">
             <Label htmlFor="lead-status">Estado</Label>
