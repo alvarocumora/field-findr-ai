@@ -260,9 +260,11 @@ export const useBrokerRanking = (limit = 20) =>
   });
 
 /** Asignaciones proyecto ↔ broker (el RLS filtra por broker o dueño). */
-export const useProjectAssignments = () =>
-  useQuery({
-    queryKey: ['project-broker-assignments'],
+export const useProjectAssignments = () => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['project-broker-assignments', user?.id],
+    enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('project_broker_assignments')
@@ -272,6 +274,7 @@ export const useProjectAssignments = () =>
       return (data ?? []) as ProjectBrokerAssignment[];
     },
   });
+};
 
 export const useRequestProjectAssignment = () => {
   const qc = useQueryClient();
@@ -287,7 +290,7 @@ export const useRequestProjectAssignment = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['project-broker-assignments'] });
       toast.success('Solicitud enviada', {
-        description: 'El dueño del proyecto la revisará y te avisaremos.',
+        description: 'El dueño del proyecto la revisará. Puedes seguir el estado en Mis solicitudes.',
       });
     },
     onError: (e: Error) => toast.error('No se pudo solicitar', { description: e.message }),
