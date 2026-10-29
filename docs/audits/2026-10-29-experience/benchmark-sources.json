@@ -1,0 +1,37 @@
+[
+  {
+    "platform": "Zillow",
+    "url": "https://www.zillow.com/",
+    "httpStatus": 200,
+    "observedOn": "2026-10-29",
+    "pattern": "Búsqueda protagonista y recomendaciones que explican el uso de ubicación, búsquedas, guardados y filtros."
+  },
+  {
+    "platform": "Rightmove",
+    "url": "https://www.rightmove.co.uk/property-for-sale.html",
+    "httpStatus": 200,
+    "observedOn": "2026-10-29",
+    "pattern": "Buscar por lugar; cuenta para guardar inmuebles, crear alertas y seguir consultas enviadas."
+  },
+  {
+    "platform": "Airbnb",
+    "url": "https://www.airbnb.com/help/article/1236",
+    "httpStatus": 200,
+    "observedOn": "2026-10-29",
+    "pattern": "Listas para guardar, retomar y compartir opciones; colaboración con notas y votos."
+  },
+  {
+    "platform": "HubSpot records",
+    "url": "https://knowledge.hubspot.com/records/work-with-records",
+    "httpStatus": 200,
+    "observedOn": "2026-10-29",
+    "pattern": "Ficha del cliente con actividad, asociaciones y contexto comercial."
+  },
+  {
+    "platform": "HubSpot sales workspace",
+    "url": "https://knowledge.hubspot.com/prospecting/use-the-sales-workspace",
+    "httpStatus": 200,
+    "observedOn": "2026-10-29",
+    "pattern": "Acciones priorizadas y reuniones dentro del espacio de trabajo de ventas."
+  }
+]

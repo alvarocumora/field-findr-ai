@@ -1,0 +1,13 @@
+{
+  "observedOn": "2026-10-29",
+  "samplePath": "/__l5e/assets-v1/179e7f36-e8f0-4fc4-a881-723529f6779e/ep-20231104_125237.jpg",
+  "localPreview": {
+    "status": 200,
+    "contentType": "text/html"
+  },
+  "canonicalHost": {
+    "status": 200,
+    "contentType": "image/jpeg"
+  },
+  "interpretation": "Dependencia del servicio de assets del hosting; la muestra no prueba imágenes rotas en producción."
+}
