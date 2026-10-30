@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { toFormDetails, type ReservationFormValues } from '@/lib/reservations/reservationForm';
 import { RESERVATION_TERMS_VERSION } from '@/lib/reservations/reservationTerms';
+import { readReferralAttribution } from '@/lib/referrals/referralAttribution';
 
 export interface ReservableProject {
   id: string;
@@ -75,13 +76,23 @@ export const useSubmitReservationForm = () => {
   return useMutation({
     mutationFn: async (values: ReservationFormValues): Promise<SubmittedReservation> => {
       const buyer = values.primary.buyer;
+      // First-touch source only; database resolves and validates an approved broker.
+      // The code is never sufficient to accrue a commission without a closed sale.
+      const referral = readReferralAttribution();
+      const buyerDetails = {
+        ...toFormDetails(values),
+        ...(referral?.code ? {
+          brokerReferralCode: referral.code,
+          brokerReferralLandingPath: referral.landingPath,
+        } : {}),
+      };
       const { data, error } = await supabase.rpc('create_public_reservation_form', {
         p_lot_id: values.lotId,
         p_buyer_name: buyer.fullName,
         p_buyer_email: buyer.email,
         p_buyer_phone: buyer.phone,
         p_buyer_rut: buyer.rut,
-        p_buyer_details: toFormDetails(values) as unknown as Json,
+        p_buyer_details: buyerDetails as unknown as Json,
         p_terms_version: RESERVATION_TERMS_VERSION,
         p_notes: 'Formulario de reserva web',
       });

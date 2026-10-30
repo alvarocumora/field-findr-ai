@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAccess } from "@/hooks/useAccess";
 import { useMyBrokerProfile, useProjectAssignments } from "@/hooks/useBrokers";
+import { useCommissionRules } from "@/hooks/useAdminCommissions";
+import { fixedProjectRule, formatCLPCommission } from "@/lib/commissions/fixedProjectRule";
 import type { PublicLot } from "@/lib/lots/publicLotTypes";
 import {
   canReservePublicLot,
@@ -27,6 +29,7 @@ export default function ProjectSalesKit() {
   const access = useAccess();
   const assignments = useProjectAssignments();
   const broker = useMyBrokerProfile();
+  const commissionRules = useCommissionRules();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const projectQuery = useQuery({
@@ -76,7 +79,7 @@ export default function ProjectSalesKit() {
       );
     },
   });
-  const queries = [projectQuery, assignments, broker];
+  const queries = [projectQuery, assignments, broker, commissionRules];
   if (queries.some((query) => query.error))
     return (
       <WorkspaceLoadError
@@ -211,9 +214,13 @@ export default function ProjectSalesKit() {
       </nav>
       {assignment && (
         <p className="rounded-lg border p-4 text-sm">
-          Comisión acordada: {assignment.commission_rate}%. El cobro depende de
-          la operación registrada y su estado; compartir una ficha no acredita
-          una comisión ganada.
+          {(() => {
+            const fixed = fixedProjectRule(commissionRules.data ?? [], project.id);
+            return fixed
+              ? `Comisión vendedor: ${formatCLPCommission(fixed.seller)}; captador: ${fixed.captador === null ? 'por acordar' : formatCLPCommission(fixed.captador)}.`
+              : `Comisión acordada: ${assignment.commission_rate}%.`;
+          })()} El cobro depende del cierre acreditado y su validación;
+          compartir una ficha no acredita una comisión ganada.
         </p>
       )}
       {!ref && !owner && !member && (

@@ -24,6 +24,7 @@ import {
   type MarketProject,
 } from "@/hooks/useBrokerMarketProjects";
 import { useCommissionRules } from "@/hooks/useAdminCommissions";
+import { fixedProjectRule, formatCLPCommission } from "@/lib/commissions/fixedProjectRule";
 import { getShareUrl } from "@/lib/publicUrls";
 import { WorkspaceLoadError } from "@/components/dashboard/WorkspaceLoadError";
 
@@ -109,12 +110,13 @@ export default function BrokerMarketplace() {
   const projectFor = (id: string) =>
     details.data?.find((project) => project.id === id);
   const rateLabel = (projectId: string) => {
+    const fixed = fixedProjectRule(rules, projectId);
+    if (fixed) {
+      return `Venta: ${formatCLPCommission(fixed.seller)} · Captación: ${fixed.captador === null ? "por acordar" : formatCLPCommission(fixed.captador)}`;
+    }
     const assignment = approved.find((item) => item.project_id === projectId);
-    const rate =
-      assignment?.commission_rate ??
-      rules.find(
-        (rule) => rule.scope === "project" && rule.project_id === projectId,
-      )?.commission_rate ??
+    const rate = assignment?.commission_rate ??
+      rules.find((rule) => rule.scope === "project" && rule.project_id === projectId)?.commission_rate ??
       rules.find((rule) => rule.scope === "default")?.commission_rate;
     return rate !== undefined && Number.isFinite(rate) && rate >= 0
       ? `${rate}%${assignment ? " acordado" : " de referencia · por acordar"}`
@@ -377,10 +379,8 @@ export default function BrokerMarketplace() {
                         {statuses[assignment.status].next}
                       </p>
                       <p className="text-sm">
-                        {assignment.commission_rate}%{" "}
-                        {assignment.status === "approved"
-                          ? "acordado"
-                          : "propuesto; sujeto a aprobación"}
+                        {rateLabel(assignment.project_id)}{" "}
+                        {assignment.status === "approved" ? "" : "· sujeto a aprobación"}
                       </p>
                       {project && (
                         <div className="flex flex-wrap gap-2">
@@ -422,7 +422,7 @@ export default function BrokerMarketplace() {
                       {projectFor(assignment.project_id)?.name ||
                         "Proyecto no disponible para consulta"}
                     </h2>
-                    <p>Comisión propuesta: {assignment.commission_rate}%</p>
+                    <p>Condición comercial: {rateLabel(assignment.project_id)}</p>
                     <p className="text-sm text-muted-foreground">
                       {assignment.message || "Sin mensaje adicional"}
                     </p>

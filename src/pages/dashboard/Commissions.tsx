@@ -6,12 +6,11 @@ import { Button } from '@/components/ui/button';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { DollarSign, Handshake, TrendingUp, Users, Clock3, CheckCircle2 } from 'lucide-react';
+import { DollarSign, Handshake, TrendingUp, Users, Clock3 } from 'lucide-react';
 import { useAgentCommissions, useCommissionEvents } from '@/hooks/useAgentCommissions';
 import {
   useReferralCommissionsEarned,
   useReferralCommissionsOwed,
-  useMarkReferralPaid,
 } from '@/hooks/useReferrals.commissions';
 import ReferralCodeCard from '@/components/commissions/ReferralCodeCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -41,42 +40,40 @@ const CommissionsPage = () => {
   const { data: owed = [] } = useReferralCommissionsOwed(projectId);
   const [historyId, setHistoryId] = useState<string>();
   const { data: history = [] } = useCommissionEvents(historyId);
-  const markReferralPaid = useMarkReferralPaid();
-
-  // My commissions net of any referral split I owe out
-  const mineNet = useMemo(
-    () => mine.map(c => ({
-      ...c,
-      net_amount: (c.commission_amount || 0) - ((c).referral_amount || 0),
-    })),
+  // Sale and client-capture commissions are independent amounts. No unapproved deduction.
+  const sellerSales = useMemo(
+    () => mine.map(c => ({ ...c, seller_amount: c.commission_amount || 0 })),
     [mine],
   );
 
   const totals = useMemo(() => {
-    const myPending = mineNet.filter(c => ['potential', 'reserved', 'earned', 'approved'].includes(c.status))
-      .reduce((s, c) => s + c.net_amount, 0);
-    const myPaid = mineNet.filter(c => c.status === 'paid')
-      .reduce((s, c) => s + c.net_amount, 0);
+    const myProjected = sellerSales.filter(c => ['potential', 'reserved'].includes(c.status))
+      .reduce((s, c) => s + c.seller_amount, 0);
+    const myAccrued = sellerSales.filter(c => ['earned', 'approved'].includes(c.status))
+      .reduce((s, c) => s + c.seller_amount, 0);
+    const myPaid = sellerSales.filter(c => c.status === 'paid')
+      .reduce((s, c) => s + c.seller_amount, 0);
     const earnedPending = earned.filter(c => c.referral_status === 'pending')
       .reduce((s, c) => s + (c.referral_amount || 0), 0);
     const earnedPaid = earned.filter(c => c.referral_status === 'paid')
       .reduce((s, c) => s + (c.referral_amount || 0), 0);
-    return { myPending, myPaid, earnedPending, earnedPaid };
-  }, [mineNet, earned]);
+    return { myProjected, myAccrued, myPaid, earnedPending, earnedPaid };
+  }, [sellerSales, earned]);
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Comisiones</h1>
         <p className="text-muted-foreground">
-          Ventas propias y referidos entre corredores. Mínimo $500.000 por lote vendido
-          y $200.000 por cada lote que venda un vendedor que invitaste (ventas en pesos).
+          Consulta tus comisiones por venta y captación según las condiciones del proyecto.
+          Los saldos proyectados no representan pagos aprobados.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard icon={<TrendingUp className="h-5 w-5" />} label="Mis ventas · pagadas" value={fmt(totals.myPaid)} tone="emerald" />
-        <StatCard icon={<DollarSign className="h-5 w-5" />} label="Mis ventas · por cobrar" value={fmt(totals.myPending)} tone="amber" />
+        <StatCard icon={<DollarSign className="h-5 w-5" />} label="Mis ventas · proyectadas" value={fmt(totals.myProjected)} tone="amber" />
+        <StatCard icon={<DollarSign className="h-5 w-5" />} label="Mis ventas · devengadas/aprobadas" value={fmt(totals.myAccrued)} tone="amber" />
         <StatCard icon={<Handshake className="h-5 w-5" />} label="Referidos · cobradas" value={fmt(totals.earnedPaid)} tone="emerald" />
         <StatCard icon={<Users className="h-5 w-5" />} label="Referidos · por cobrar" value={fmt(totals.earnedPending)} tone="amber" />
       </div>
@@ -103,24 +100,24 @@ const CommissionsPage = () => {
                   <TableRow>
                     <TableHead>Fecha</TableHead>
                     <TableHead>Venta</TableHead>
-                    <TableHead>% / Comisión</TableHead>
-                    <TableHead>Referido</TableHead>
-                    <TableHead>Neto</TableHead>
+                    <TableHead>Comisión vendedor</TableHead>
+                    <TableHead>Captación (independiente)</TableHead>
+                    <TableHead>Importe vendedor</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Seguimiento</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mineNet.length === 0 && (
+                  {sellerSales.length === 0 && (
                     <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Sin comisiones aún</TableCell></TableRow>
                   )}
-                  {mineNet.map(c => (
+                  {sellerSales.map(c => (
                     <TableRow key={c.id}>
                       <TableCell>{new Date(c.created_at).toLocaleDateString('es-CL')}</TableCell>
                       <TableCell>{fmt(c.sale_amount)}</TableCell>
-                      <TableCell>{c.commission_rate}% · {fmt(c.commission_amount)}</TableCell>
-                      <TableCell>{(c).referral_amount > 0 ? `-${fmt((c).referral_amount)}` : '—'}</TableCell>
-                      <TableCell className="font-medium">{fmt(c.net_amount)}</TableCell>
+                      <TableCell>{fmt(c.commission_amount)}</TableCell>
+                      <TableCell>{c.referral_amount > 0 ? fmt(c.referral_amount) : '—'}</TableCell>
+                      <TableCell className="font-medium">{fmt(c.seller_amount)}</TableCell>
                       <TableCell><StatusBadge status={c.status} /></TableCell>
                       <TableCell className="text-right">
                         <Button size="sm" variant="outline" onClick={() => setHistoryId(c.id)}>
@@ -195,11 +192,7 @@ const CommissionsPage = () => {
                       <TableCell className="font-medium">{fmt(c.referral_amount)}</TableCell>
                       <TableCell><StatusBadge status={c.referral_status} /></TableCell>
                       <TableCell className="text-right">
-                        {c.referral_status === 'pending' && (
-                          <Button size="sm" onClick={() => markReferralPaid.mutate(c.id)}>
-                            <CheckCircle2 className="h-4 w-4 mr-1" /> Marcar pagada
-                          </Button>
-                        )}
+                        {c.referral_status === 'pending' ? 'Pendiente de validación financiera' : '—'}
                       </TableCell>
                     </TableRow>
                   ))}
