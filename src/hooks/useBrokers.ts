@@ -322,3 +322,36 @@ export const useDecideAssignment = () => {
     onError: (e: Error) => toast.error('No se pudo actualizar', { description: e.message }),
   });
 };
+
+export interface PublicBrokerContact {
+  display_name: string;
+  company_name: string | null;
+  avatar_url: string | null;
+  /** null unless the broker opted in to public contact (public_contact_opt_in). */
+  phone: string | null;
+  email: string | null;
+}
+
+/**
+ * Public, opt-in-gated broker lookup by invite_code (the ?ref= on sales-kit
+ * links). Used to attribute generated marketing material (PDFs, CTAs) to the
+ * broker whose link brought the visitor, instead of the project's own
+ * generic contact. Never reads broker_profiles directly — RLS revokes that
+ * for anon, so this goes through the same SECURITY DEFINER RPC pattern as
+ * get_public_broker_profile.
+ */
+export const useBrokerByInviteCode = (code?: string | null) =>
+  useQuery({
+    queryKey: ['public-broker-by-code', code],
+    queryFn: async () => {
+      if (!code) return null;
+      const { data, error } = await (supabase.rpc as CallableFunction)(
+        'get_public_broker_profile_by_code',
+        { p_invite_code: code },
+      );
+      if (error) throw error;
+      return ((data ?? []) as PublicBrokerContact[])[0] ?? null;
+    },
+    enabled: !!code,
+    staleTime: 5 * 60_000,
+  });

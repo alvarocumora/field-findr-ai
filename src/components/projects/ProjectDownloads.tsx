@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Download, FileText, Map as MapIcon, Table2, Loader2, Eye, FileSpreadsheet, Files } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -7,6 +8,7 @@ import { useStaticMapToken } from '@/hooks/useStaticMapToken';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
 import { useAuth } from '@/hooks/useAuth';
 import { useSentinelImagery } from '@/hooks/useSentinelImagery';
+import { useBrokerByInviteCode } from '@/hooks/useBrokers';
 import { LandingLeadForm } from '@/pages/landing/LandingLeadForm';
 import {
   generateProjectDossierPdf,
@@ -63,6 +65,9 @@ export const ProjectDownloads = ({
   });
   const { track } = useTrackEvent();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const refCode = searchParams.get('ref');
+  const { data: refBroker } = useBrokerByInviteCode(refCode);
   const [busy, setBusy] = useState<KitId | null>(null);
   const [gateOpen, setGateOpen] = useState(false);
   const [pending, setPending] = useState<KitId | null>(null);
@@ -86,7 +91,13 @@ export const ProjectDownloads = ({
       const currentSentinel = needsSatellite
         ? sentinelQuery.data ?? (await sentinelQuery.refetch()).data ?? null
         : sentinelQuery.data ?? null;
-      const opts = { mapboxToken: token, sentinelImagery: currentSentinel };
+      const opts = {
+        mapboxToken: token,
+        sentinelImagery: currentSentinel,
+        broker: refBroker
+          ? { name: refBroker.display_name, phone: refBroker.phone, email: refBroker.email, company_name: refBroker.company_name }
+          : null,
+      };
       if (id === 'preview') {
         const blob = await generateProjectDossierPdf(project, lots, { ...opts, output: 'blob' });
         if (blob) setPreviewUrl(URL.createObjectURL(blob));

@@ -3617,6 +3617,22 @@ export type Database = {
           zones: string[]
         }[]
       }
+      get_public_broker_profile_by_code: {
+        Args: { p_invite_code: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          company_name: string
+          display_name: string
+          email: string
+          is_verified: boolean
+          level: string
+          phone: string
+          slug: string
+          specialties: string[]
+          zones: string[]
+        }[]
+      }
       get_public_lots: {
         Args: { p_project_id?: string }
         Returns: {
