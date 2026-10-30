@@ -7,7 +7,13 @@ const PAGE_SIZE = 30;
 
 /** Strip PostgREST `or()` syntax characters so user text can't break the filter. */
 export const sanitizeSearchTerm = (raw?: string): string =>
-  (raw ?? '').replace(/[%,()*\\:."']/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+  (raw ?? '').replace(/[%,()*\\:."',]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+
+/** Quote the ilike pattern: unquoted values with spaces/commas are invalid in `.or()`. */
+export const searchOrFilter = (columns: readonly string[], term: string): string => {
+  const pattern = `"%${term}%"`;
+  return columns.map((column) => `${column}.ilike.${pattern}`).join(',');
+};
 
 interface InfiniteListingsResult {
   listings: Listing[];
@@ -87,8 +93,7 @@ export const useInfiniteListings = (filters?: ListingFilters) => {
       // Search the whole inventory, not just the pages already loaded.
       const term = sanitizeSearchTerm(filters?.search);
       if (term) {
-        const p = `%${term}%`;
-        query = query.or(`title.ilike.${p},location.ilike.${p},city.ilike.${p},region.ilike.${p}`);
+        query = query.or(searchOrFilter(['title', 'location', 'city', 'region'], term));
       }
 
       const { data, error, count } = await query;

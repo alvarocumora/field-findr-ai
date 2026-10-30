@@ -70,7 +70,7 @@ describe("server-side broker catalog", () => {
     expect(search.result.current.data?.pages[0].map((row) => row.id)).toEqual([
       "project-31",
     ]);
-    expect(api.filters[0]).toContain("name.ilike.%Maule%");
+    expect(api.filters[0]).toContain('name.ilike."%Maule%"');
     catalog.unmount();
     search.unmount();
     client.clear();

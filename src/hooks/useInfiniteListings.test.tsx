@@ -14,7 +14,18 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: { from: () => {
   };
   return query;
 } } }));
-import { useInfiniteListings } from './useInfiniteListings';
+import { sanitizeSearchTerm, searchOrFilter, useInfiniteListings } from './useInfiniteListings';
+
+describe('explorer text search PostgREST encoding', () => {
+  it('strips commas that would split an or() clause', () => {
+    expect(sanitizeSearchTerm('Valle, Chile')).toBe('Valle Chile');
+  });
+
+  it('quotes spaced phrases so ilike remains a single or() value', () => {
+    expect(searchOrFilter(['title', 'location', 'city', 'region'], 'Valle Escondido'))
+      .toBe('title.ilike."%Valle Escondido%",location.ilike."%Valle Escondido%",city.ilike."%Valle Escondido%",region.ilike."%Valle Escondido%"');
+  });
+});
 
 describe('advanced filtering over the whole inventory', () => {
   it('finds a gentle-slope match beyond the first unfiltered page', async () => {

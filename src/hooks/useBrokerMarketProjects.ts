@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { sanitizeSearchTerm } from "@/hooks/useInfiniteListings";
+import { sanitizeSearchTerm, searchOrFilter } from "@/hooks/useInfiniteListings";
 
 export interface MarketProject {
   id: string;
@@ -38,10 +38,7 @@ export function useBrokerMarketProjects(search: string) {
         .order("created_at", { ascending: false })
         .order("id", { ascending: true });
       if (term) {
-        const pattern = `%${term}%`;
-        query = query.or(
-          `name.ilike.${pattern},location.ilike.${pattern},region.ilike.${pattern},city.ilike.${pattern}`,
-        );
+        query = query.or(searchOrFilter(["name", "location", "region", "city"], term));
       }
       const { data, error } = await query.range(
         pageParam,
