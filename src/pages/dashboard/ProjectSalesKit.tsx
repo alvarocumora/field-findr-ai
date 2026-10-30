@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAccess } from "@/hooks/useAccess";
 import { useMyBrokerProfile, useProjectAssignments } from "@/hooks/useBrokers";
 import { useCommissionRules } from "@/hooks/useAdminCommissions";
+import { fixedProjectRule, formatCLPCommission } from "@/lib/commissions/fixedProjectRule";
 import type { PublicLot } from "@/lib/lots/publicLotTypes";
 import {
   canReservePublicLot,
@@ -214,12 +215,14 @@ export default function ProjectSalesKit() {
       {assignment && (
         <p className="rounded-lg border p-4 text-sm">
           {(() => {
-            const rule = commissionRules.data?.find((r) =>
-              r.is_active && r.scope === 'project' && r.project_id === project.id
-              && r.fixed_sale_amount !== null
-            );
-            return rule
-              ? `Comisión vendedor: ${Number(rule.fixed_sale_amount).toLocaleString('es-CL')} CLP; captador: ${rule.referral_fixed_amount === null ? 'por acordar' : '
+            const fixed = fixedProjectRule(commissionRules.data ?? [], project.id);
+            return fixed
+              ? `Comisión vendedor: ${formatCLPCommission(fixed.seller)}; captador: ${fixed.captador === null ? 'por acordar' : formatCLPCommission(fixed.captador)}.`
+              : `Comisión acordada: ${assignment.commission_rate}%.`;
+          })()} El cobro depende del cierre acreditado y su validación;
+          compartir una ficha no acredita una comisión ganada.
+        </p>
+      )}
       {!ref && !owner && !member && (
         <p role="status" className="text-sm text-muted-foreground">
           Tu perfil no tiene código de referencia disponible. Estos enlaces no
