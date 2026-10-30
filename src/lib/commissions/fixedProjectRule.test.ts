@@ -7,14 +7,14 @@ const rules = [
   { scope: "default", project_id: null, is_active: true,
     fixed_sale_amount: null, referral_fixed_amount: 200000 },
   { scope: "project", project_id: HUALANE, is_active: true,
-    fixed_sale_amount: 500000, referral_fixed_amount: 200000 },
+    fixed_sale_amount: 750000, referral_fixed_amount: 200000 },
   { scope: "project", project_id: LICANTEN, is_active: true,
     fixed_sale_amount: 1000000, referral_fixed_amount: 350000 },
 ];
 
 describe("project commission terms", () => {
   it("displays separate CLP amounts for Hualañé", () => {
-    expect(fixedProjectRule(rules, HUALANE)).toEqual({ seller: 500000, captador: 200000 });
+    expect(fixedProjectRule(rules, HUALANE)).toEqual({ seller: 750000, captador: 200000 });
   });
   it("displays separate CLP amounts for Licantén", () => {
     expect(fixedProjectRule(rules, LICANTEN)).toEqual({ seller: 1000000, captador: 350000 });
@@ -27,7 +27,7 @@ describe("project commission terms", () => {
     expect(fixedProjectRule([{ ...rules[1], fixed_sale_amount: undefined }], HUALANE)).toBeNull();
     expect(fixedProjectRule([{ ...rules[1], fixed_sale_amount: NaN }], HUALANE)).toBeNull();
     expect(fixedProjectRule([{ ...rules[1], referral_fixed_amount: null }], HUALANE)).toEqual({
-      seller: 500000, captador: null,
+      seller: 750000, captador: null,
     });
   });
   it("formats real amounts in Chilean pesos", () => {
