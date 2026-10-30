@@ -25,6 +25,9 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() } }));
+vi.mock('@/lib/referrals/referralAttribution', () => ({
+  readReferralAttribution: () => ({ code: 'BK-TEST12', landingPath: '/p/valle-escondido' }),
+}));
 
 import ReservationFormWizard from './ReservationFormWizard';
 
@@ -120,6 +123,8 @@ describe('ReservationFormWizard', () => {
       p_buyer_details: {
         version: 1,
         source: 'formulario_reserva',
+        brokerReferralCode: 'BK-TEST12',
+        brokerReferralLandingPath: '/p/valle-escondido',
         parties: [{ buyer: expect.objectContaining({ maritalStatus: 'soltero', commune: 'Licantén' }), spouse: null }],
       },
     });
