@@ -1,8 +1,10 @@
 import type { Plugin } from 'vite';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
-import { canonicalPathForSlug, isPublicSlug } from '../src/lib/landing/paths';
-import { projectSocial, renderProjectHtml, type SocialProject, type SocialLot } from '../src/lib/landing/projectSocial';
+import { canonicalPathForSlug, isPublicSlug, SITE_URL } from '../src/lib/landing/paths';
+import { projectSocial, renderProjectHtml, DEFAULT_SHARE_IMAGE, type SocialProject, type SocialLot } from '../src/lib/landing/projectSocial';
+import { summarizeLots } from '../src/lib/landing/config';
+import { renderProjectShareImage } from '../src/lib/landing/projectShareImage';
 
 type PublishedProject = SocialProject & { status: string };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -41,7 +43,34 @@ export function projectSocialPlugin(apiUrl: string, publishableKey: string): Plu
         exportedProjects++;
         const lots = await request('rpc/get_public_lots', { p_project_id: project.id }) as SocialLot[];
         if (!Array.isArray(lots)) throw new Error('Invalid public inventory response');
-        const html = renderProjectHtml(template, projectSocial(project, lots));
+        const social = projectSocial(project, lots);
+        // A real curated card, hero image or gallery photo always wins; only
+        // a project that would otherwise fall through to the generic,
+        // site-wide image gets a card rendered from its own data instead.
+        if (project.slug && social.image === DEFAULT_SHARE_IMAGE) {
+          try {
+            const stats = summarizeLots(lots);
+            const imageBuffer = await renderProjectShareImage({
+              name: project.name,
+              location: [project.city || project.location, project.region].filter(Boolean).join(', '),
+              priceFromLabel: stats.priceFrom ? `Desde $${stats.priceFrom.toLocaleString('es-CL')} CLP` : 'Consulta precios',
+              availabilityLabel: stats.available === 1
+                ? '1 parcela disponible'
+                : stats.available
+                  ? `${stats.available} parcelas disponibles`
+                  : 'Consulta disponibilidad',
+            });
+            const imagePath = `/social/${project.slug}-og.jpg`;
+            const imageTarget = resolve(outDir, `.${imagePath}`);
+            await mkdir(dirname(imageTarget), { recursive: true });
+            await writeFile(imageTarget, imageBuffer);
+            social.image = `${SITE_URL}${imagePath}`;
+          } catch (e) {
+            // social.image already falls back to DEFAULT_SHARE_IMAGE from projectSocial().
+            console.warn(`Could not render share image for ${project.slug}:`, e);
+          }
+        }
+        const html = renderProjectHtml(template, social);
         const routes = [`/proyecto/${project.id}`];
         if (isPublicSlug(project.slug)) routes.push(`/p/${project.slug}`, canonicalPathForSlug(project.slug));
         for (const route of new Set(routes)) {

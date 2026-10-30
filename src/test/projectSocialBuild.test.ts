@@ -50,4 +50,16 @@ describe('static social preview build', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('unavailable', { status: 503 })));
     await expect(run()).rejects.toThrow('503');
   });
+  it('renders a share card from real project data for a project with no photo and no curated card', async () => {
+    const run = await setup();
+    const bare = { id, slug: 'no-photo-project', name: 'Proyecto Sin Fotos', status: 'active' };
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => new Response(JSON.stringify(
+      url.includes('/rpc/') ? [{ status: 'available', price: 19000000 }] : [bare],
+    ))));
+    await run();
+    const html = await readFile(join(temp!, 'dist/p/no-photo-project/index.html'), 'utf8');
+    expect(html).toContain('https://ofertaterrenos.com/social/no-photo-project-og.jpg');
+    const image = await readFile(join(temp!, 'dist/social/no-photo-project-og.jpg'));
+    expect(image.subarray(0, 2).toString('hex')).toBe('ffd8');
+  });
 });
