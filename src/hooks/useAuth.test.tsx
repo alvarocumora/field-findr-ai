@@ -18,6 +18,7 @@ import {
 const sdk = vi.hoisted(() => ({
   getSession: vi.fn(),
   signOut: vi.fn(),
+  signUp: vi.fn(),
   listen: null as null | ((event: string, session: Session | null) => void),
   toast: vi.fn(),
 }));
@@ -30,6 +31,7 @@ vi.mock("@/integrations/supabase/client", () => ({
       },
       getSession: sdk.getSession,
       signOut: sdk.signOut,
+      signUp: sdk.signUp,
     },
   },
 }));
@@ -49,6 +51,14 @@ function Probe() {
         }}
       >
         Salir
+      </button>
+      <button
+        onClick={async () => {
+          await auth.signUp("new@example.test", "secret123", undefined, "/auth?redirect=%2Fp%2Flote-1");
+          setResult("signup-called");
+        }}
+      >
+        Registrarse
       </button>
     </>
   );
@@ -70,9 +80,23 @@ describe("auth event ordering and logout", () => {
   beforeEach(() => {
     sdk.getSession.mockReset();
     sdk.signOut.mockReset();
+    sdk.signUp.mockReset();
     sdk.toast.mockReset();
     sessionStorage.clear();
     sdk.listen = null;
+  });
+  it("sends the confirmation email to the caller's validated destination, not a fixed /auth", async () => {
+    sdk.getSession.mockResolvedValue({ data: { session: null }, error: null });
+    sdk.signUp.mockResolvedValue({ data: { session: null }, error: null });
+    mount();
+    await screen.findByText("guest");
+    fireEvent.click(screen.getByRole("button", { name: "Registrarse" }));
+    await screen.findByText("signup-called");
+    expect(sdk.signUp).toHaveBeenCalledWith(expect.objectContaining({
+      options: expect.objectContaining({
+        emailRedirectTo: `${window.location.origin}/auth?redirect=%2Fp%2Flote-1`,
+      }),
+    }));
   });
   it("does not restore a stale initial session after a newer logout event", async () => {
     let resolve!: (value: unknown) => void;
