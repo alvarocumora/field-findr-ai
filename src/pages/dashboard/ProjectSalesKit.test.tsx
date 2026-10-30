@@ -24,6 +24,9 @@ vi.mock("@/hooks/useAccess", () => ({
 vi.mock("@/hooks/useWorkspaceScope", () => ({
   withProjectScope: (path: string, id: string) => `${path}?project=${id}`,
 }));
+vi.mock("@/hooks/useAdminCommissions", () => ({
+  useCommissionRules: () => ({ data: [], error: null, isLoading: false }),
+}));
 vi.mock("@/hooks/useBrokers", () => ({
   useProjectAssignments: () => ({
     data: [
