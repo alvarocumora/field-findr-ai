@@ -27,6 +27,8 @@ import { differenceInMinutes, format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { downloadReservationCertificate } from '@/lib/reservationCertificate';
+import { parseFormDetails } from '@/lib/reservations/reservationForm';
+import { downloadReservationFormPdf } from '@/lib/reservations/reservationFormPdf';
 
 type ReservationStatus = 'pending_payment' | 'paid' | 'expired' | 'cancelled' | 'converted';
 
@@ -259,6 +261,29 @@ const ReservationsManager = () => {
                               lot: { ...lot, projectName: lot?.projects?.name },
                             }).catch(() => toast.error('No se pudo generar el certificado'));
                           }}><FileText className="h-4 w-4 mr-1" />Certificado</Button>
+                        )}
+                        {parseFormDetails(reservation.buyer_details) && (
+                          <Button size="sm" variant="outline" title="Descargar formulario de reserva completado por el comprador" onClick={() => {
+                            const details = parseFormDetails(reservation.buyer_details);
+                            if (!details) return;
+                            try {
+                              downloadReservationFormPdf({
+                                reservationId: reservation.id,
+                                createdAt: reservation.created_at,
+                                termsAcceptedAt: reservation.terms_accepted_at,
+                                termsVersion: reservation.terms_version,
+                                expiresAt: reservation.expires_at,
+                                projectName: project?.name,
+                                lotNumber: lot?.lot_number,
+                                lotArea: lot?.area,
+                                lotPrice: lot?.price,
+                                reservationAmount: Number(reservation.reservation_amount) || 0,
+                                details,
+                              });
+                            } catch {
+                              toast.error('No se pudo generar el formulario');
+                            }
+                          }}><FileText className="h-4 w-4 mr-1" />Formulario</Button>
                         )}
                         {reservation.status === 'pending_payment' && reservation.payment_url && (
                           <>
