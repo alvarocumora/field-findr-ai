@@ -25,6 +25,7 @@ import {
 } from '@/lib/access/organizationPermissions';
 import { useCreateOrganization } from '@/hooks/useEnterprise';
 import { useCurrentPlan } from '@/hooks/useSubscription';
+import { useAccess } from '@/hooks/useAccess';
 import { seatsSummary } from '@/lib/team/seats';
 import { slugifyAgency } from '@/lib/agency/slug';
 import { useQueryClient } from '@tanstack/react-query';
@@ -49,10 +50,16 @@ const TeamManagement = () => {
   const { data: members = [], isLoading, organization } = useTeamMembers();
   const { plan } = useCurrentPlan();
   const teamAction = useTeamAction();
+  const { can, organizationRole } = useAccess();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState<TeamMember | null>(null);
 
   const seats = seatsSummary(plan, members.length);
+  // El backend (manage-team) exige team.write para invitar/remover/cambiar rol,
+  // y exige ser el propietario exacto para cambiar roles o tocar administradores:
+  // la UI debe reflejar esas mismas reglas, no solo team.read.
+  const canManageTeam = can('team.write');
+  const isOwner = organizationRole === 'owner';
 
   if (isLoading) {
     return (
@@ -75,11 +82,19 @@ const TeamManagement = () => {
             {organization.name} · administra los miembros y sus permisos
           </p>
         </div>
-        <Button onClick={() => setInviteOpen(true)} disabled={!seats.canInvite}>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Invitar miembro
-        </Button>
+        {canManageTeam && (
+          <Button onClick={() => setInviteOpen(true)} disabled={!seats.canInvite}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Invitar miembro
+          </Button>
+        )}
       </div>
+
+      {!canManageTeam && (
+        <p className="text-sm text-muted-foreground rounded-lg border border-border/60 bg-muted/30 px-4 py-3">
+          Puedes ver el equipo, pero tu rol no permite invitar, remover ni cambiar roles de miembros.
+        </p>
+      )}
 
       {/* Asientos */}
       <Card className="border-border/60">
@@ -128,38 +143,53 @@ const TeamManagement = () => {
                     <Icon className="h-3 w-3" />
                     {meta.label}
                   </Badge>
-                  {!m.is_owner && (
-                    <div className="flex items-center gap-1">
-                      <Select
-                        value={normalizeLegacyOrgRole(m.org_role)}
-                        onValueChange={(role) =>
-                          teamAction.mutate(
-                            { action: 'set_role', member_user_id: m.user_id, org_role: role as AssignableRole },
-                            {
-                              onSuccess: () => toast({ title: 'Rol actualizado' }),
-                              onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
-                            },
-                          )
-                        }
-                      >
-                        <SelectTrigger className="w-28 h-8 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {ORGANIZATION_ROLE_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => setConfirmRemove(m)}
-                        aria-label={`Remover a ${m.name}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
+                  {!m.is_owner && canManageTeam && (() => {
+                    const isTargetAdmin = ['admin', 'org_admin'].includes(m.org_role);
+                    // Alineado con manage-team: cambiar rol exige ser el propietario exacto,
+                    // y remover a un administrador también, aunque el caller tenga team.write.
+                    const canChangeRole = isOwner;
+                    const canRemove = isOwner || !isTargetAdmin;
+                    return (
+                      <div className="flex items-center gap-1">
+                        <Select
+                          value={normalizeLegacyOrgRole(m.org_role)}
+                          disabled={!canChangeRole}
+                          onValueChange={(role) =>
+                            teamAction.mutate(
+                              { action: 'set_role', member_user_id: m.user_id, org_role: role as AssignableRole },
+                              {
+                                onSuccess: () => toast({ title: 'Rol actualizado' }),
+                                onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+                              },
+                            )
+                          }
+                        >
+                          <SelectTrigger
+                            className="w-28 h-8 text-xs"
+                            title={canChangeRole ? undefined : 'Solo el propietario puede cambiar roles'}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ORGANIZATION_ROLE_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => setConfirmRemove(m)}
+                          disabled={!canRemove}
+                          title={canRemove ? undefined : 'Solo el propietario puede remover administradores'}
+                          aria-label={`Remover a ${m.name}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    );
+                  })()}
                 </li>
               );
             })}
@@ -172,6 +202,7 @@ const TeamManagement = () => {
         open={inviteOpen}
         onOpenChange={setInviteOpen}
         pending={teamAction.isPending}
+        canInviteAdmins={isOwner}
         onSubmit={(payload) =>
           teamAction.mutate(
             { action: 'invite', ...payload },
@@ -275,12 +306,13 @@ const CreateOrganizationCard = () => {
 };
 
 const InviteMemberDialog = ({
-  open, onOpenChange, onSubmit, pending,
+  open, onOpenChange, onSubmit, pending, canInviteAdmins,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onSubmit: (p: { email: string; first_name?: string; last_name?: string; org_role: AssignableRole }) => void;
   pending: boolean;
+  canInviteAdmins: boolean;
 }) => {
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -288,6 +320,10 @@ const InviteMemberDialog = ({
   const [orgRole, setOrgRole] = useState<AssignableRole>('sales_agent');
 
   const reset = () => { setEmail(''); setFirstName(''); setLastName(''); setOrgRole('sales_agent'); };
+  // manage-team exige ser propietario para asignar org_admin al invitar.
+  const roleOptions = canInviteAdmins
+    ? ORGANIZATION_ROLE_OPTIONS
+    : ORGANIZATION_ROLE_OPTIONS.filter((option) => option.value !== 'org_admin');
 
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) reset(); }}>
@@ -320,7 +356,7 @@ const InviteMemberDialog = ({
             <Select value={orgRole} onValueChange={(v) => setOrgRole(v as AssignableRole)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {ORGANIZATION_ROLE_OPTIONS.map((option) => (
+                {roleOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                 ))}
               </SelectContent>
