@@ -23,7 +23,6 @@ interface ShowcaseProject {
   minPrice?: number;
 }
 
-const clp = (v?: number) => (v ? `$${v.toLocaleString('es-CL')} CLP` : 'Consultar');
 
 /** Quick filters map to real listing `type` values used by /explorar. */
 export const QUICK_FILTERS = [
@@ -69,10 +68,6 @@ const CinematicShowcaseHero = () => {
   const [query, setQuery] = useState('');
   const [type, setType] = useState('');
   const [budget, setBudget] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { data: projects = [], isError, isLoading, refetch, isFetching } = useShowcaseProjects();
-  const active = projects.find((project) => project.id === selectedId) ?? projects[0];
-  const projectHref = active ? (active.slug ? `/p/${encodeURIComponent(active.slug)}` : `/proyecto/${encodeURIComponent(active.id)}`) : null;
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -92,7 +87,7 @@ const CinematicShowcaseHero = () => {
             Tu próxima parcela <span className="text-primary">está aquí.</span>
           </h1>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
-            Elige dónde comprar, descubre proyectos y encuentra una parcela para vivir, descansar o invertir.
+            Una nueva forma de comprar tierra en Chile. Busca por ubicación y presupuesto, compara opciones y da el siguiente paso con el equipo del proyecto.
           </p>
 
           <form onSubmit={submit} role="search" aria-label="Buscar terrenos en venta" className="mt-6 space-y-4 rounded-2xl border bg-card p-4 rural-shadow sm:p-5">
@@ -130,26 +125,12 @@ const CinematicShowcaseHero = () => {
           </div>
         </div>
 
-        <div className="min-w-0 space-y-3">
-          <div className="relative overflow-hidden rounded-2xl border bg-muted">
-            {active && !active.image ? <div className="grid h-56 place-items-center bg-muted p-6 text-center text-muted-foreground sm:h-80 lg:h-[440px]">Imágenes del proyecto por confirmar</div> : <img src={active?.image || landscape.url} alt={active ? `Vista de ${active.name}` : 'Paisaje de Valle Escondido, Licantén'} fetchPriority="high" className="h-56 w-full object-cover sm:h-80 lg:h-[440px]" />}
-            <p className="absolute left-4 top-4 rounded-full bg-card px-3 py-1.5 text-xs font-semibold text-foreground">{active ? 'Proyecto en venta' : 'Descubre parcelas en Chile'}</p>
-            {active && projectHref ? (
-              <div className="border-t bg-card p-4 sm:p-5">
-                <p className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" aria-hidden="true" />{[active.city, active.region].filter(Boolean).join(', ') || 'Chile'}</p>
-                <h2 className="mt-1 font-editorial text-2xl font-medium">{active.name}</h2>
-                <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
-                  <div><p className="text-xs text-muted-foreground">{active.minPrice ? 'Parcelas desde' : 'Precio'}</p><p className="text-xl font-semibold text-primary">{clp(active.minPrice)}</p><p className="mt-1 text-xs text-muted-foreground">{active.inventoryReady ? `${active.available} lotes disponibles` : 'Consulta disponibilidad'}</p></div>
-                  <Button asChild className="min-h-11"><Link to={projectHref}>Ver parcelas y precios<ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" /></Link></Button>
-                </div>
-              </div>
-            ) : <p className="bg-card px-4 py-3 text-sm text-muted-foreground">Valle Escondido · Licantén. Revisa los proyectos y sus opciones de compra.</p>}
+        <div className="relative min-w-0 overflow-hidden rounded-3xl bg-muted">
+          <img src={landscape.url} alt="Paisaje rural de Licantén, Región del Maule" fetchPriority="high" className="h-64 w-full object-cover sm:h-96 lg:h-[560px]" />
+          <div className="border-t bg-card p-5">
+            <p className="font-editorial text-2xl">Imagina tu vida con más espacio.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Descubre ubicaciones, compara parcelas y encuentra tu próximo destino.</p>
           </div>
-          {projects.length > 1 && <div className="flex gap-2 overflow-x-auto pb-2" role="group" aria-label="Elegir proyecto en venta">
-            {projects.map((project) => <button key={project.id} type="button" aria-pressed={active?.id === project.id} onClick={() => setSelectedId(project.id)} className={`min-h-11 shrink-0 rounded-full border px-4 py-2 text-sm focus-ring ${active?.id === project.id ? 'border-primary bg-primary text-primary-foreground' : 'bg-card text-foreground hover:border-primary'}`}>{project.name}</button>)}
-          </div>}
-          {isLoading && <p role="status" className="text-sm text-muted-foreground">Cargando precios y proyectos…</p>}
-          {isError && <div role="alert" className="space-y-2 text-sm"><p>No pudimos cargar los proyectos. Puedes seguir buscando terrenos.</p><Button type="button" variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>Reintentar proyectos</Button></div>}
         </div>
       </div>
     </section>
