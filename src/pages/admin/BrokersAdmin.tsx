@@ -1,3 +1,5 @@
+import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -36,8 +38,10 @@ const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string
 );
 
 const BrokersAdmin = () => {
-  const { data: applications = [] } = useBrokerApplications();
-  const { data: profiles = [] } = useAllBrokerProfiles();
+  const applicationsQuery = useBrokerApplications();
+  const { data: applications = [] } = applicationsQuery;
+  const profilesQuery = useAllBrokerProfiles();
+  const { data: profiles = [] } = profilesQuery;
   const approve = useApproveBrokerApplication();
   const updateApp = useUpdateBrokerApplication();
   const updateProfile = useAdminUpdateBrokerProfile();
@@ -76,6 +80,9 @@ const BrokersAdmin = () => {
     setSelected(null);
     setUserId('');
   };
+
+  if (applicationsQuery.error || profilesQuery.error) return <WorkspaceLoadError title="No pudimos cargar postulaciones y brokers" onRetry={() => Promise.all([applicationsQuery.refetch(), profilesQuery.refetch()])} />;
+  if (applicationsQuery.isLoading || profilesQuery.isLoading) return <div role="status" aria-label="Cargando administración de brokers"><Skeleton className="h-56 w-full" /></div>;
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-6">

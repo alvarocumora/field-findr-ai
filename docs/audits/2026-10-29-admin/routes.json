@@ -1,0 +1,229 @@
+{
+  "entries": 25,
+  "scope": "Static route inventory, not runtime authorization certification",
+  "routes": [
+    {
+      "area": "admin",
+      "id": "admin-profile",
+      "path": "/admin/profile",
+      "line": 546,
+      "label": "\"Mi perfil\"",
+      "group": "\"sistema\"",
+      "icon": "\"user\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-dashboard",
+      "path": "/admin/dashboard",
+      "line": 547,
+      "label": "\"Panel admin\"",
+      "group": "\"principal\"",
+      "icon": "\"dashboard\"",
+      "primary": "true"
+    },
+    {
+      "area": "admin",
+      "id": "admin-organizations",
+      "path": "/admin/inmobiliarias",
+      "line": 550,
+      "label": "\"Inmobiliarias\"",
+      "group": "\"gestión\"",
+      "icon": "\"building\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-subscriptions",
+      "path": "/admin/suscripciones",
+      "line": 551,
+      "label": "\"Suscripciones y permisos\"",
+      "group": "\"gestión\"",
+      "icon": "\"credit-card\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-users",
+      "path": "/admin/users",
+      "line": 560,
+      "label": "\"Usuarios\"",
+      "group": "\"gestión\"",
+      "icon": "\"users\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-agents",
+      "path": "/admin/agents",
+      "line": 561,
+      "label": "\"Agentes\"",
+      "group": "\"gestión\"",
+      "icon": "\"shield\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-brokers",
+      "path": "/admin/brokers",
+      "line": 562,
+      "label": "\"Brokers\"",
+      "group": "\"gestión\"",
+      "icon": "\"handshake\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-projects",
+      "path": "/admin/projects",
+      "line": 563,
+      "label": "\"Proyectos\"",
+      "group": "\"gestión\"",
+      "icon": "\"folder\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-featured",
+      "path": "/admin/featured",
+      "line": 564,
+      "label": "\"Destacados\"",
+      "group": "\"gestión\"",
+      "icon": "\"sparkles\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-reservations",
+      "path": "/admin/reservations",
+      "line": 565,
+      "label": "\"Reservas\"",
+      "group": "\"gestión\"",
+      "icon": "\"calendar\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-documents",
+      "path": "/admin/documents",
+      "line": 566,
+      "label": "\"Documentos\"",
+      "group": "\"gestión\"",
+      "icon": "\"clipboard\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-approvals",
+      "path": "/admin/approvals",
+      "line": 569,
+      "label": "\"Propiedades\"",
+      "group": "\"aprobaciones\"",
+      "icon": "\"clipboard\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-project-approvals",
+      "path": "/admin/project-approvals",
+      "line": 570,
+      "label": "\"Loteos\"",
+      "group": "\"aprobaciones\"",
+      "icon": "\"clipboard\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-captaciones",
+      "path": "/admin/captaciones",
+      "line": 571,
+      "label": "\"Captaciones\"",
+      "group": "\"aprobaciones\"",
+      "icon": "\"map-pin\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-commercial-leads",
+      "path": "/admin/commercial-leads",
+      "line": 572,
+      "label": "\"Leads comerciales\"",
+      "group": "\"aprobaciones\"",
+      "icon": "\"handshake\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-comisiones",
+      "path": "/admin/comisiones",
+      "line": 575,
+      "label": "\"Comisiones\"",
+      "group": "\"finanzas\"",
+      "icon": "\"dollar\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-ventas",
+      "path": "/admin/ventas",
+      "line": 576,
+      "label": "\"Ventas\"",
+      "group": "\"finanzas\"",
+      "icon": "\"handshake\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-credits",
+      "path": "/admin/credits",
+      "line": 577,
+      "label": "\"Créditos\"",
+      "group": "\"finanzas\"",
+      "icon": "\"credit-card\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-financial",
+      "path": "/admin/financial",
+      "line": 578,
+      "label": "\"Financiero\"",
+      "group": "\"finanzas\"",
+      "icon": "\"trending\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-analytics",
+      "path": "/admin/analytics",
+      "line": 579,
+      "label": "\"Analytics\"",
+      "group": "\"finanzas\"",
+      "icon": "\"chart\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-visual-scenarios",
+      "path": "/admin/visual-scenarios",
+      "line": 582,
+      "label": "\"Escenarios visuales\"",
+      "group": "\"sistema\"",
+      "icon": "\"sparkles\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-branding-fichas",
+      "path": "/admin/branding-fichas",
+      "line": 583,
+      "label": "\"Branding fichas\"",
+      "group": "\"sistema\"",
+      "icon": "\"palette\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-soporte",
+      "path": "/admin/soporte",
+      "line": 584,
+      "label": "\"Soporte\"",
+      "group": "\"sistema\"",
+      "icon": "\"lifebuoy\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-audit",
+      "path": "/admin/audit",
+      "line": 585,
+      "label": "\"Auditoría\"",
+      "group": "\"sistema\"",
+      "icon": "\"shield\""
+    },
+    {
+      "area": "admin",
+      "id": "admin-organization-detail",
+      "path": "/admin/inmobiliarias/:id",
+      "note": "Literal RouteEntry, role admin, dashboard layout"
+    }
+  ]
+}

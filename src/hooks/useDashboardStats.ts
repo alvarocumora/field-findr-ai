@@ -6,27 +6,23 @@ import { differenceInDays } from 'date-fns';
 
 // Admin Dashboard Stats
 export const useAdminStats = () => {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: ['admin-stats'],
+    queryKey: ['admin-stats', user?.id],
+    enabled: !!user,
     queryFn: async () => {
-      const { count: totalUsers } = await supabase
-        .from('profiles').select('*', { count: 'exact', head: true });
-      const { count: activeListings } = await supabase
-        .from('listings').select('*', { count: 'exact', head: true }).eq('status', 'active');
-      const { count: totalListings } = await supabase
-        .from('listings').select('*', { count: 'exact', head: true });
-      const { count: activeProjects } = await supabase
-        .from('projects').select('*', { count: 'exact', head: true }).eq('status', 'active');
-      const { count: pendingAlerts } = await supabase
-        .from('documents').select('*', { count: 'exact', head: true }).eq('status', 'pending');
-
-      return {
-        totalUsers: totalUsers || 0,
-        activeListings: activeListings || 0,
-        totalListings: totalListings || 0,
-        activeProjects: activeProjects || 0,
-        pendingAlerts: pendingAlerts || 0,
-      };
+      const responses = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('listings').select('id', { count: 'exact', head: true }).eq('status', 'active').eq('is_demo', false),
+        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+        supabase.from('transaction_documents').select('id', { count: 'exact', head: true }).in('status', ['pending', 'uploaded', 'under_review']),
+      ]);
+      const counts = responses.map(response => {
+        if (response.error) throw response.error;
+        if (typeof response.count !== 'number' || !Number.isSafeInteger(response.count) || response.count < 0) throw new Error('No pudimos verificar los conteos de administración');
+        return response.count;
+      });
+      return { totalUsers: counts[0], activeListings: counts[1], activeProjects: counts[2], pendingAlerts: counts[3] };
     },
   });
 };
