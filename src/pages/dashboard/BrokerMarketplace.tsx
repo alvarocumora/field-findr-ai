@@ -109,12 +109,16 @@ export default function BrokerMarketplace() {
   const projectFor = (id: string) =>
     details.data?.find((project) => project.id === id);
   const rateLabel = (projectId: string) => {
+    const fixedRule = rules.find(
+      (rule) => rule.scope === "project" && rule.project_id === projectId &&
+        rule.fixed_sale_amount !== null,
+    );
+    if (fixedRule) {
+      return `Venta: $${Number(fixedRule.fixed_sale_amount).toLocaleString("es-CL")} CLP · Captación: ${fixedRule.referral_fixed_amount === null ? "por acordar" : "$" + Number(fixedRule.referral_fixed_amount).toLocaleString("es-CL") + " CLP"}`;
+    }
     const assignment = approved.find((item) => item.project_id === projectId);
-    const rate =
-      assignment?.commission_rate ??
-      rules.find(
-        (rule) => rule.scope === "project" && rule.project_id === projectId,
-      )?.commission_rate ??
+    const rate = assignment?.commission_rate ??
+      rules.find((rule) => rule.scope === "project" && rule.project_id === projectId)?.commission_rate ??
       rules.find((rule) => rule.scope === "default")?.commission_rate;
     return rate !== undefined && Number.isFinite(rate) && rate >= 0
       ? `${rate}%${assignment ? " acordado" : " de referencia · por acordar"}`
