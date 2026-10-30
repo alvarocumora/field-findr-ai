@@ -25,6 +25,7 @@ interface AuthContextType {
       last_name?: string;
       account_type?: string;
     },
+    emailRedirectPath?: string,
   ) => Promise<{ session: Session | null; error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
 }
@@ -90,12 +91,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       last_name?: string;
       account_type?: string;
     },
+    // Keeps the internal destination the user was headed to (a lot, a saved
+    // search, a commercial inquiry) through the email confirmation round-trip.
+    emailRedirectPath = '/auth',
   ) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth`,
+        emailRedirectTo: `${window.location.origin}${emailRedirectPath}`,
         data: metadata,
       },
     });

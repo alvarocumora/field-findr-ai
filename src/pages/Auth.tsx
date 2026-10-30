@@ -37,13 +37,57 @@ const Auth = () => {
   const [accountType, setAccountType] = useState<AccountType>('buyer');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
+  const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [expiredLinkEmail, setExpiredLinkEmail] = useState('');
+  const [linkExpired, setLinkExpired] = useState(false);
 
   const redirectParam = resolveSafeAuthDestination(searchParams.get('redirect'));
   const defaultRole = searchParams.get('role');
+  // Carries the validated internal destination through the email round-trip,
+  // same pattern already used for the Google OAuth redirect below.
+  const emailRedirectPath = redirectParam ? `/auth?redirect=${encodeURIComponent(redirectParam)}` : '/auth';
 
   useEffect(() => {
     if (defaultRole === 'agent') setAccountType('agent');
   }, [defaultRole]);
+
+  useEffect(() => {
+    // Supabase reports an expired/invalid confirmation link via hash params
+    // on this same redirect target; without this, the person just lands on a
+    // blank login form with no idea why the link didn't work.
+    if (!window.location.hash) return;
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    if (hashParams.get('error_code') === 'otp_expired') {
+      setLinkExpired(true);
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
+
+  const resendConfirmation = async (targetEmail: string) => {
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: targetEmail,
+        options: { emailRedirectTo: `${window.location.origin}${emailRedirectPath}` },
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success('Te enviamos el correo de nuevo.');
+        setResendCooldown(30);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (!user || rolesLoading) return;
@@ -116,7 +160,7 @@ const Auth = () => {
         first_name: firstName,
         last_name: lastName,
         account_type: accountType,
-      });
+      }, emailRedirectPath);
       if (error) {
         if (error.message.includes('already registered')) {
           toast.error('Este email ya está registrado');
@@ -125,7 +169,11 @@ const Auth = () => {
         }
       } else if (!session) {
         // Email confirmation is enabled: there is no session yet, so telling
-        // the user "you can log in" would be false.
+        // the user "you can log in" would be false. A toast alone disappears
+        // before most people read it and act on it, so this also pins a
+        // persistent screen with next steps and a way to resend.
+        setPendingConfirmationEmail(email);
+        setResendCooldown(30);
         toast.success('¡Cuenta creada! Revisa tu email para confirmarla antes de ingresar.');
       } else {
         toast.success('¡Cuenta creada! Bienvenido.');
@@ -185,7 +233,64 @@ const Auth = () => {
         </CardHeader>
 
         <CardContent>
-          {showForgotPassword ? (
+          {linkExpired ? (
+            <div className="space-y-4">
+              <div className="text-center mb-4 space-y-2">
+                <Mail className="h-10 w-10 mx-auto text-muted-foreground" />
+                <h3 className="text-lg font-semibold">Tu enlace de confirmación venció</h3>
+                <p className="text-sm text-muted-foreground">
+                  Los enlaces de confirmación vencen por seguridad. Ingresa tu email y te enviamos uno nuevo.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="expired-email">Email</Label>
+                <Input
+                  id="expired-email"
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={expiredLinkEmail}
+                  onChange={(e) => setExpiredLinkEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <Button
+                type="button"
+                className="w-full"
+                disabled={!expiredLinkEmail || isSubmitting || resendCooldown > 0}
+                onClick={() => void resendConfirmation(expiredLinkEmail)}
+              >
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
+                {resendCooldown > 0 ? `Reenviar en ${resendCooldown}s` : 'Enviar nuevo enlace'}
+              </Button>
+              <Button type="button" variant="ghost" className="w-full" onClick={() => setLinkExpired(false)}>
+                Volver al login
+              </Button>
+            </div>
+          ) : pendingConfirmationEmail ? (
+            <div className="space-y-4 text-center">
+              <Mail className="h-10 w-10 mx-auto text-primary" />
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">Revisa tu correo</h3>
+                <p className="text-sm text-muted-foreground">
+                  Enviamos un enlace de confirmación a{' '}
+                  <span className="font-medium text-foreground">{pendingConfirmationEmail}</span>. Ábrelo para
+                  activar tu cuenta{redirectParam ? ' y continuar donde quedaste' : ''}.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={isSubmitting || resendCooldown > 0}
+                onClick={() => void resendConfirmation(pendingConfirmationEmail)}
+              >
+                {resendCooldown > 0 ? `Reenviar en ${resendCooldown}s` : 'Reenviar correo'}
+              </Button>
+              <Button type="button" variant="ghost" className="w-full" onClick={() => setPendingConfirmationEmail(null)}>
+                Usar otro email
+              </Button>
+            </div>
+          ) : showForgotPassword ? (
             <div className="space-y-4">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold">Recuperar contraseña</h3>
