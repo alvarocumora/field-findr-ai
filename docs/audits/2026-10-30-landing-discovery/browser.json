@@ -1,0 +1,32 @@
+[
+  {
+    "width": 320,
+    "noOverflow": true,
+    "ctaAboveFold": true,
+    "projectsOnce": true,
+    "heroLoaded": true,
+    "mockLeadErrorRetryConsent": true,
+    "legacyCreditContext": true,
+    "realWrites": []
+  },
+  {
+    "width": 390,
+    "noOverflow": true,
+    "ctaAboveFold": true,
+    "projectsOnce": true,
+    "heroLoaded": true,
+    "mockLeadErrorRetryConsent": true,
+    "legacyCreditContext": true,
+    "realWrites": []
+  },
+  {
+    "width": 1440,
+    "noOverflow": true,
+    "ctaAboveFold": true,
+    "projectsOnce": true,
+    "heroLoaded": true,
+    "mockLeadErrorRetryConsent": true,
+    "legacyCreditContext": true,
+    "realWrites": []
+  }
+]

@@ -51,7 +51,10 @@ const StickyHeader = () => {
 
   // Una puerta por tipo de usuario: comprador, vendedor/broker (gratis, gana comisión),
   // inmobiliaria (planes pagados) y comunidad.
-  const publicNavigation = [
+  const publicNavigation = location.pathname === '/' ? [
+    { name: 'Comprar terreno', href: '/explorar' },
+    { name: 'Buscar en el mapa', href: '/explorar?view=map' },
+  ] : [
     { name: 'Comprar terreno', href: '/explorar' },
     { name: 'Vender como broker', href: '/brokers' },
     { name: 'Inmobiliarias', href: '/planes-loteos', badge: 'B2B' },
