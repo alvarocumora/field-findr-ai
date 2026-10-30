@@ -1,3 +1,4 @@
+import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,9 +13,11 @@ import {
 } from '@/hooks/useProjectApprovals';
 
 const ProjectApprovalQueue = () => {
-  const { data: approvals = [], isLoading } = usePendingProjectApprovals();
+  const { data: approvals = [], isLoading, error, refetch } = usePendingProjectApprovals();
   const review = useReviewProjectApproval();
   const [rejectionReason, setRejectionReason] = useState<Record<string, string>>({});
+
+  if (error) return <WorkspaceLoadError title="No pudimos cargar las aprobaciones pendientes" onRetry={refetch} />;
 
   const pendingCount = approvals.length;
 
@@ -23,7 +26,7 @@ const ProjectApprovalQueue = () => {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Cola de Aprobación · Loteos</h1>
         <p className="text-sm text-muted-foreground">
-          {pendingCount} loteo{pendingCount === 1 ? '' : 's'} pendiente{pendingCount === 1 ? '' : 's'} de revisión
+          {isLoading ? 'Cargando pendientes…' : `${pendingCount} loteos pendientes de revisión`}
         </p>
       </div>
 

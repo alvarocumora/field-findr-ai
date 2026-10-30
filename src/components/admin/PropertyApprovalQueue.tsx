@@ -1,3 +1,4 @@
+import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,7 +19,7 @@ const PropertyApprovalQueue = () => {
   const queryClient = useQueryClient();
   const [rejectionReason, setRejectionReason] = useState<Record<string, string>>({});
 
-  const { data: approvals = [], isLoading } = useQuery({
+  const { data: approvals = [], isLoading, error, refetch } = useQuery({
     queryKey: ['property-approvals'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -56,13 +57,15 @@ const PropertyApprovalQueue = () => {
   });
 
 
+  if (error) return <WorkspaceLoadError title="No pudimos cargar las aprobaciones pendientes" onRetry={refetch} />;
+
   const pendingCount = approvals.length;
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Cola de Aprobación</h1>
-        <p className="text-sm text-muted-foreground">{pendingCount} propiedades pendientes de revisión</p>
+        <p className="text-sm text-muted-foreground">{isLoading ? 'Cargando pendientes…' : `${pendingCount} propiedades pendientes de revisión`}</p>
       </div>
 
       {isLoading ? (
