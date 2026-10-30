@@ -77,6 +77,18 @@ export interface KitOptions {
   /** Ruta pública del proyecto; por defecto /p/:slug. */
   path?: string;
   output?: 'download' | 'blob';
+  /**
+   * Cuando el material se genera desde el link de un broker (?ref=), sus
+   * datos reemplazan el contacto genérico del proyecto en los CTAs y en la
+   * firma del dossier: el lead debe llegar a su ejecutivo, no a un buzón
+   * genérico. phone/email ya vienen filtrados por public_contact_opt_in.
+   */
+  broker?: {
+    name: string;
+    phone?: string | null;
+    email?: string | null;
+    company_name?: string | null;
+  } | null;
   editorial?: {
     headline?: string;
     pitch?: string;
@@ -118,12 +130,22 @@ export const projectActions = (project: KitProject, options: KitOptions = {}) =>
   if (lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
     actions.push({ label: 'Cómo llegar · Google Maps', url: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` });
   }
-  const digits = project.contact?.whatsapp?.replace(/\D/g, '');
+  const broker = options.broker;
+  const digits = (broker?.phone ?? project.contact?.whatsapp)?.replace(/\D/g, '');
   if (digits && /^\d{8,15}$/.test(digits)) {
-    actions.push({ label: 'Consultar por WhatsApp', url: `https://wa.me/${digits}?text=${encodeURIComponent(`Hola, quiero información de ${project.name}.`)}` });
+    const greeting = broker ? `Hola ${broker.name.split(' ')[0]}` : 'Hola';
+    actions.push({
+      label: broker ? `Consultar con ${broker.name} por WhatsApp` : 'Consultar por WhatsApp',
+      url: `https://wa.me/${digits}?text=${encodeURIComponent(`${greeting}, quiero información de ${project.name}.`)}`,
+    });
   }
-  const email = project.contact?.email?.trim();
-  if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) actions.push({ label: 'Escribir al equipo comercial', url: `mailto:${email}?subject=${encodeURIComponent(project.name)}` });
+  const email = (broker?.email ?? project.contact?.email)?.trim();
+  if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    actions.push({
+      label: broker ? `Escribir a ${broker.name}` : 'Escribir al equipo comercial',
+      url: `mailto:${email}?subject=${encodeURIComponent(project.name)}`,
+    });
+  }
   return actions;
 };
 
@@ -902,9 +924,17 @@ export const generateProjectDossierPdf = async (
   f.section('Agenda tu reunión');
   f.paragraph('Conversemos por videollamada o visita el proyecto: te mostramos las parcelas disponibles, las formas de pago y el paso a paso de la reserva a la escritura.', { size: 9.5 });
   f.actions([{ label: 'Agenda tu reunión', url: agendarPath(project) }, ...projectActions(project, options)]);
-  if (project.contact?.phone) f.kv('Teléfono', project.contact.phone);
-  if (project.contact?.whatsapp) f.kv('WhatsApp', project.contact.whatsapp);
-  if (project.contact?.email) f.kv('Email', project.contact.email);
+  if (options.broker) {
+    f.kv('Tu ejecutivo', options.broker.company_name
+      ? `${options.broker.name} · ${options.broker.company_name}`
+      : options.broker.name);
+    if (options.broker.phone) f.kv('WhatsApp', options.broker.phone);
+    if (options.broker.email) f.kv('Email', options.broker.email);
+  } else {
+    if (project.contact?.phone) f.kv('Teléfono', project.contact.phone);
+    if (project.contact?.whatsapp) f.kv('WhatsApp', project.contact.whatsapp);
+    if (project.contact?.email) f.kv('Email', project.contact.email);
+  }
   f.kv('Ficha online', `ofertaterrenos.com${path}`);
   f.note(t.disclaimer({ date: new Date().toLocaleDateString('es-CL') }));
 

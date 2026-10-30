@@ -32,6 +32,18 @@ describe('commercial PDF integrity', () => {
     expect(safePdfLink('/huellelhue', 'https://ofertaterrenos.com')).toBe('https://ofertaterrenos.com/huellelhue');
   });
 
+  it('attributes WhatsApp/email CTAs to the referring broker instead of the project contact', () => {
+    const withProjectContact = { ...project, contact: { whatsapp: '+56911112222', email: 'ventas@proyecto.cl' } };
+    const broker = { name: 'Camila Rojas', phone: '+56933334444', email: 'camila@corredora.cl', company_name: 'Rojas Corretajes' };
+    const actions = projectActions(withProjectContact, { broker });
+    expect(actions.find((a) => a.label.includes('WhatsApp'))?.label).toBe('Consultar con Camila Rojas por WhatsApp');
+    expect(actions.find((a) => a.label.includes('WhatsApp'))?.url).toContain('56933334444');
+    expect(actions.find((a) => a.label.startsWith('Escribir a'))?.label).toBe('Escribir a Camila Rojas');
+    expect(actions.find((a) => a.label.startsWith('Escribir a'))?.url).toContain('camila@corredora.cl');
+    // Unattributed visits keep the project's own channels, unchanged.
+    expect(projectActions(withProjectContact).find((a) => a.label.includes('WhatsApp'))?.url).toContain('56911112222');
+  });
+
   it('creates actual PDF link annotations and paginates long text without dropping the end', () => {
     const f = createFichaDoc();
     const text = vi.spyOn(f.doc, 'text');
@@ -61,6 +73,16 @@ describe('commercial PDF integrity', () => {
     const blob = await generateProjectDossierPdf({ ...project, images: ['/unavailable.webp'] }, [{ status: 'available', price: 19990000, area: 5000 }], { output: 'blob' });
     expect(blob).toBeInstanceOf(Blob);
     expect(blob!.type).toBe('application/pdf');
+    expect(blob!.size).toBeGreaterThan(1000);
+  });
+
+  it('generates a broker-attributed dossier without failing', async () => {
+    const blob = await generateProjectDossierPdf(
+      project,
+      [{ status: 'available', price: 19990000, area: 5000 }],
+      { output: 'blob', broker: { name: 'Camila Rojas', phone: '+56933334444', email: 'camila@corredora.cl', company_name: 'Rojas Corretajes' } },
+    );
+    expect(blob).toBeInstanceOf(Blob);
     expect(blob!.size).toBeGreaterThan(1000);
   });
 });
