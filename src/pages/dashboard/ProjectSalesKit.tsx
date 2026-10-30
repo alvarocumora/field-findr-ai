@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAccess } from "@/hooks/useAccess";
 import { useMyBrokerProfile, useProjectAssignments } from "@/hooks/useBrokers";
+import { useCommissionRules } from "@/hooks/useAdminCommissions";
 import type { PublicLot } from "@/lib/lots/publicLotTypes";
 import {
   canReservePublicLot,
@@ -27,6 +28,7 @@ export default function ProjectSalesKit() {
   const access = useAccess();
   const assignments = useProjectAssignments();
   const broker = useMyBrokerProfile();
+  const commissionRules = useCommissionRules();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const projectQuery = useQuery({
@@ -76,7 +78,7 @@ export default function ProjectSalesKit() {
       );
     },
   });
-  const queries = [projectQuery, assignments, broker];
+  const queries = [projectQuery, assignments, broker, commissionRules];
   if (queries.some((query) => query.error))
     return (
       <WorkspaceLoadError
@@ -211,9 +213,179 @@ export default function ProjectSalesKit() {
       </nav>
       {assignment && (
         <p className="rounded-lg border p-4 text-sm">
-          Comisión acordada: {assignment.commission_rate}%. El cobro depende de
-          la operación registrada y su estado; compartir una ficha no acredita
-          una comisión ganada.
+          {(() => {
+            const rule = commissionRules.data?.find((r) =>
+              r.is_active && r.scope === 'project' && r.project_id === project.id
+              && r.fixed_sale_amount !== null
+            );
+            return rule
+              ? `Comisión vendedor: ${Number(rule.fixed_sale_amount).toLocaleString('es-CL')} CLP; captador: ${rule.referral_fixed_amount === null ? 'por acordar' : '
+      {!ref && !owner && !member && (
+        <p role="status" className="text-sm text-muted-foreground">
+          Tu perfil no tiene código de referencia disponible. Estos enlaces no
+          incluyen atribución de broker.
+        </p>
+      )}
+      <section
+        aria-label="Material para compartir"
+        className="grid gap-4 sm:grid-cols-2"
+      >
+        {material.map((item) => {
+          const url = salesMaterialUrl(project, item.tab, ref);
+          return (
+            <Card key={item.tab}>
+              <CardContent className="space-y-3 p-4">
+                <h2 className="font-semibold">{item.label}</h2>
+                <Input
+                  readOnly
+                  aria-label={`Enlace de ${item.label}`}
+                  value={url}
+                  className="text-xs"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button asChild variant="outline">
+                    <a href={url} aria-label={`Abrir ${item.label}`}>
+                      Abrir
+                    </a>
+                  </Button>
+                  <Button
+                    aria-label={`Copiar ${item.label}`}
+                    onClick={() => void copy(url)}
+                  >
+                    Copiar enlace
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </section>
+      <ProjectSocialCopyGenerator
+        input={{
+          projectName: project.name,
+          location: project.location,
+          region: project.region,
+          priceFrom: stockSummary.priceMin,
+          availableLots: stockSummary.available,
+          brokerName: broker.data?.display_name,
+        }}
+        link={salesMaterialUrl(project, "info", ref)}
+      />
+      <section aria-label="Inventario para ventas" className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold">Inventario de parcelas</h2>
+          <Button
+            variant="outline"
+            disabled={stock.isFetching}
+            onClick={() => void stock.refetch()}
+          >
+            Actualizar inventario
+          </Button>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Se actualiza cada 30 segundos mientras esta vista está abierta. La
+          disponibilidad y condiciones se validan nuevamente al solicitar la
+          reserva.
+        </p>
+        {stock.error ? (
+          <WorkspaceLoadError
+            title="No pudimos consultar el inventario"
+            onRetry={stock.refetch}
+          />
+        ) : stock.isLoading ? (
+          <Skeleton className="h-40 w-full" />
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-3">
+              <Input
+                aria-label="Buscar parcela por número o nombre"
+                className="max-w-sm"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Número o nombre de parcela"
+              />
+              <select
+                aria-label="Estado de la parcela"
+                value={status}
+                onChange={(event) => setStatus(event.target.value)}
+                className="h-11 rounded-md border bg-background px-3"
+              >
+                <option value="all">Todos los estados</option>
+                <option value="available">Disponibles</option>
+                <option value="reserved">Reservados</option>
+                <option value="sold">Vendidos</option>
+              </select>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {filtered.length} de {lots.length} parcelas ·{" "}
+              {lots.filter((lot) => canReservePublicLot(lot)).length} con
+              disponibilidad y precio para solicitar reserva
+            </p>
+            {!filtered.length && (
+              <p className="rounded-lg border p-6">
+                {lots.length
+                  ? "No hay parcelas que coincidan con estos filtros."
+                  : "No hay parcelas publicadas en este proyecto."}
+              </p>
+            )}
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {filtered.map((lot) => (
+                <Card key={lot.id}>
+                  <CardContent className="space-y-3 p-4">
+                    <h3 className="font-semibold">
+                      Parcela {lot.lot_number}
+                      {lot.name ? ` · ${lot.name}` : ""}
+                    </h3>
+                    <p>
+                      {labels[lot.status || ""] || "Estado por confirmar"} ·{" "}
+                      {formatPublicLotPrice(lot.price)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {Number.isFinite(lot.area) && lot.area > 0
+                        ? `${lot.area.toLocaleString("es-CL")} m²`
+                        : "Superficie por confirmar"}
+                    </p>
+                    <Button asChild variant="outline">
+                      <a href={salesMaterialUrl(project, "lots", ref, lot.id)}>
+                        Ver ficha de parcela
+                      </a>
+                    </Button>
+                    {canReservePublicLot(lot) && (
+                      <>
+                        <Button asChild>
+                          <a href={reservationFormUrl(project, lot.id, ref)}>
+                            Abrir formulario de reserva
+                          </a>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() =>
+                            void copy(reservationFormUrl(project, lot.id, ref))
+                          }
+                        >
+                          Copiar formulario
+                        </Button>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
+        )}
+      </section>
+      <p className="text-sm text-muted-foreground">
+        El formulario solicita los datos del comprador. Abrirlo no bloquea
+        inventario ni acredita pago. El comprobante se genera desde una reserva
+        registrada en Reservas y comprobantes.
+      </p>
+    </div>
+  );
+}
+ + Number(rule.referral_fixed_amount).toLocaleString('es-CL') + ' CLP'}.`
+              : `Comisión acordada: ${assignment.commission_rate}%.`;
+          })()} El cobro depende de la operación acreditada y su estado;
+          compartir una ficha no acredita una comisión ganada.
         </p>
       )}
       {!ref && !owner && !member && (
