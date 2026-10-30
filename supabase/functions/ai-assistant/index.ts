@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-api-key, x-supabase-api-version, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-type RequestType = "chat" | "predict-price" | "search" | "generate-content" | "generate-listing" | "generate-brochure";
+type RequestType = "chat" | "predict-price" | "search" | "generate-content" | "generate-listing" | "generate-brochure" | "generate-social-copy";
 
 interface AIRequest {
   type: RequestType;
@@ -60,6 +60,15 @@ interface AIRequest {
       delivery_date?: string;
     };
     features?: string[];
+  };
+  socialCopyData?: {
+    projectName: string;
+    location?: string | null;
+    region?: string | null;
+    priceFrom?: number | null;
+    availableLots?: number | null;
+    highlights?: string[];
+    brokerName?: string | null;
   };
 }
 
@@ -326,6 +335,28 @@ Genera el contenido estructurado para el brochure.`;
         break;
       }
 
+      case "generate-social-copy": {
+        if (!body.socialCopyData) throw new Error("Social copy data is required");
+        const sc = body.socialCopyData;
+
+        systemPrompt = `Eres un experto en marketing inmobiliario para redes sociales, especializado en parcelas y loteos rurales en Chile.
+
+REGLAS:
+- Usa solo los datos entregados; nunca inventes precios, cantidades de parcelas ni condiciones que no te dieron.
+- Tono cercano y profesional, sin exagerar ni prometer plusvalía garantizada.
+- Responde siempre en español de Chile.
+- Cada copy invita a escribir o visitar el link, pero no escribas tú ninguna URL: el link real se agrega después.`;
+
+        userMessage = `Genera copy de redes sociales para este proyecto:
+Nombre: ${sc.projectName}
+Ubicación: ${[sc.location, sc.region].filter(Boolean).join(', ') || 'No especificada'}
+${sc.priceFrom ? `Precio desde: $${sc.priceFrom.toLocaleString('es-CL')} CLP` : 'Precio: consultar'}
+${sc.availableLots != null ? `Parcelas disponibles: ${sc.availableLots}` : ''}
+${sc.highlights?.length ? `Destacados: ${sc.highlights.join(', ')}` : ''}
+${sc.brokerName ? `Lo comparte: ${sc.brokerName} (puedes mencionarlo brevemente, por ejemplo invitando a escribirle a él/ella)` : ''}`;
+        break;
+      }
+
       default:
         throw new Error(`Unknown request type: ${type}`);
     }
@@ -413,6 +444,63 @@ Genera el contenido estructurado para el brochure.`;
       aiBody.tool_choice = { type: "function", function: { name: "generate_brochure_content" } };
     }
 
+    // Use tool calling for social copy so each platform always comes back
+    // as its own field instead of one undifferentiated text blob to parse.
+    if (type === "generate-social-copy") {
+      aiBody.stream = false;
+      aiBody.tools = [
+        {
+          type: "function",
+          function: {
+            name: "generate_social_copy",
+            description: "Generate platform-specific social media copy to promote a rural land/subdivision project listing",
+            parameters: {
+              type: "object",
+              properties: {
+                instagram: {
+                  type: "object",
+                  properties: {
+                    caption: {
+                      type: "string",
+                      description: "Caption para Instagram, máximo 150 palabras, con emojis moderados y un cierre con llamada a la acción para escribir por mensaje."
+                    },
+                    hashtags: {
+                      type: "array",
+                      items: { type: "string" },
+                      description: "Entre 6 y 10 hashtags relevantes en español, cada uno empieza con #, sin espacios internos."
+                    }
+                  },
+                  required: ["caption", "hashtags"]
+                },
+                whatsapp: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      description: "Mensaje breve para reenviar por WhatsApp, máximo 60 palabras, directo y sin hashtags."
+                    }
+                  },
+                  required: ["message"]
+                },
+                facebook: {
+                  type: "object",
+                  properties: {
+                    post: {
+                      type: "string",
+                      description: "Publicación para Facebook, tono cercano, hasta 200 palabras, pocos emojis."
+                    }
+                  },
+                  required: ["post"]
+                }
+              },
+              required: ["instagram", "whatsapp", "facebook"]
+            }
+          }
+        }
+      ];
+      aiBody.tool_choice = { type: "function", function: { name: "generate_social_copy" } };
+    }
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -448,8 +536,8 @@ Genera el contenido estructurado para el brochure.`;
 
     const data = await response.json();
 
-    // Handle tool calling response for brochure
-    if (type === "generate-brochure") {
+    // Handle tool calling response for brochure and social copy
+    if (type === "generate-brochure" || type === "generate-social-copy") {
       const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
       if (toolCall?.function?.arguments) {
         try {
