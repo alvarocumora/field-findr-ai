@@ -32,6 +32,26 @@ const Denied = ({ title, cta, to }: { title: string; cta: string; to: string }) 
   </div>
 );
 
+// Un fallo al verificar roles no es lo mismo que no tener el rol: no debe
+// mostrarse como denegación permanente ni dejar pasar a la sección protegida.
+const VerificationError = ({ onRetry }: { onRetry: () => void }) => (
+  <div className="min-h-screen flex items-center justify-center bg-background" role="alert">
+    <div className="text-center p-8 max-w-md">
+      <h1 className="text-2xl font-bold text-foreground mb-4">No pudimos verificar tus permisos</h1>
+      <p className="text-muted-foreground mb-6">
+        Es un problema de conexión, no una denegación de acceso. Vuelve a intentarlo.
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="min-h-11 inline-flex items-center rounded-xl border border-primary bg-primary px-4 py-2 text-sm font-medium text-primary-foreground focus-ring"
+      >
+        Reintentar
+      </button>
+    </div>
+  </div>
+);
+
 /**
  * Guard único de la plataforma: resuelve sesión, rol y layout en un solo
  * lugar. Se aplica como ruta padre por área, nunca por página.
@@ -39,7 +59,7 @@ const Denied = ({ title, cta, to }: { title: string; cta: string; to: string }) 
 const RouteGuard = ({ access, layout }: RouteGuardProps) => {
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
-  const { isAdmin, isAgent, isLoading: rolesLoading } = useSmartRedirect();
+  const { isAdmin, isAgent, isLoading: rolesLoading, isError: rolesError, refetchRoles } = useSmartRedirect();
 
   const needsRoles = access === "agent" || access === "admin";
 
@@ -50,6 +70,10 @@ const RouteGuard = ({ access, layout }: RouteGuardProps) => {
       return (
         <Navigate to={buildAuthRedirect(location.pathname, location.search, location.hash)} replace />
       );
+    }
+
+    if (needsRoles && rolesError) {
+      return <VerificationError onRetry={() => void refetchRoles()} />;
     }
 
     if (access === "admin" && !isAdmin) {

@@ -37,11 +37,11 @@ const readStoredContext = (): AppContext | null => {
  * - context answers what workspace the user is using right now.
  */
 export const usePanelContext = () => {
-  const { isAdmin, isAgent, isBuyer, isLoading: rolesLoading } = useSmartRedirect();
+  const { isAdmin, isAgent, isBuyer, isLoading: rolesLoading, isError: rolesError, refetchRoles } = useSmartRedirect();
   const planState = useCurrentPlan();
-  const { plan, planDetails, isLoading: planLoading } = planState;
-  const { data: team, isLoading: organizationLoading } = useMyOrganization();
-  const { data: brokerProfile, isLoading: brokerLoading } = useMyBrokerProfile();
+  const { plan, planDetails, isLoading: planLoading, isError: planError, refetch: refetchPlan } = planState;
+  const { data: team, isLoading: organizationLoading, isError: organizationError, refetch: refetchOrganization } = useMyOrganization();
+  const { data: brokerProfile, isLoading: brokerLoading, isError: brokerError, refetch: refetchBroker } = useMyBrokerProfile();
   const { pathname } = useLocation();
 
   const planIsAgency =
@@ -108,5 +108,16 @@ export const usePanelContext = () => {
     organization: team?.organization ?? null,
     brokerProfile: brokerProfile ?? null,
     isLoading: rolesLoading || planLoading || organizationLoading || brokerLoading,
+    // Un rol/organización ausente por fallo de consulta no es lo mismo que una
+    // cuenta sin organización: lo primero debe bloquear decisiones de acceso
+    // (useAccess), no degradarlas en silencio a "sin organización".
+    isError: rolesError || planError || organizationError || brokerError,
+    organizationError,
+    retry: () => {
+      if (rolesError) void refetchRoles();
+      if (planError) void refetchPlan();
+      if (organizationError) void refetchOrganization();
+      if (brokerError) void refetchBroker();
+    },
   };
 };

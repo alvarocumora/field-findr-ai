@@ -56,10 +56,14 @@ export const useAccess = () => {
       return hasOrganizationCapability(panel.organizationRole, capability);
     }
 
+    // A failed organization lookup is not the same as confirmed solo ownership;
+    // granting owner capabilities here would widen access on a transient error.
+    if (panel.organizationError) return false;
+
     // A solo SaaS agent owns their own workspace/projects even before creating
     // an organization record. Backend RLS still validates row ownership.
     return identity.isAgent && hasOrganizationCapability('owner', capability);
-  }, [identity.isAdmin, identity.isAgent, panel.context, panel.organizationRole]);
+  }, [identity.isAdmin, identity.isAgent, panel.context, panel.organizationRole, panel.organizationError]);
 
   const hasFeature = useCallback((feature: PlanFeature) => {
     if (panel.context === 'plataforma') return identity.isAdmin;
@@ -94,5 +98,7 @@ export const useAccess = () => {
     setContext: panel.setContext,
     planIsAgency: panel.planIsAgency,
     isLoading: panel.isLoading || identity.isLoading,
+    isError: panel.isError || identity.isError,
+    retry: panel.retry,
   };
 };
