@@ -474,13 +474,15 @@ export const useCreateCheckout = () => {
 };
 
 export const useCurrentPlan = () => {
-  const { data: subscription, isLoading } = useSubscription();
+  const { data: subscription, isLoading, isError, refetch } = useSubscription();
 
   const planType = normalizePlanId(subscription?.plan_type);
 
   return {
     plan: planType,
     isLoading,
+    isError,
+    refetch,
     isPremium: planType !== 'free',
     isEnterprise: planType === 'enterprise',
     isScale: planType === 'grupo' || planType === 'enterprise' || planType === 'scale',
