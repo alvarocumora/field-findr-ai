@@ -12,7 +12,7 @@ test('portada lleva al catálogo de proyectos en venta', async ({ page }) => {
 
 test('portada → explorador mantiene tipo y presupuesto', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Tu próxima parcela está aquí.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Menos ciudad\.\s*Más posibilidades\./ })).toBeVisible();
   await page.getByLabel('Tipo de terreno', { exact: true }).selectOption('parcela_rural');
   await page.getByLabel('Presupuesto CLP', { exact: true }).selectOption('40000000');
   await page.getByRole('button', { name: 'Buscar parcelas y terrenos', exact: true }).click();
@@ -200,4 +200,51 @@ test('enlace comercial espera inventario y abre solo el formulario de la parcela
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Mapa de lotes', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('captación conserva preferencias tras error y confirma solo el envío aceptado', async ({ page }) => {
+  let attempts = 0;
+  const payloads = [];
+  // All writes in this test are intercepted; no real lead is created.
+  await page.route('**/rest/v1/meetings*', async route => {
+    if (route.request().method() !== 'POST') return route.abort();
+    attempts += 1;
+    payloads.push(route.request().postDataJSON());
+    return route.fulfill({ status: attempts === 1 ? 503 : 201, contentType: 'application/json', body: attempts === 1 ? JSON.stringify({ message: 'QA outage' }) : '' });
+  });
+  await page.goto('/');
+  const form = page.getByRole('form', { name: 'Solicitar orientación para comprar' });
+  await form.getByLabel('Tu nombre *', { exact: true }).fill('Contacto QA');
+  await form.getByLabel('Teléfono / WhatsApp *', { exact: true }).fill('+56 9 1111 2222');
+  await form.getByLabel('Zona que te interesa').fill('Maule');
+  await form.getByLabel('Tu presupuesto', { exact: true }).selectOption('$20 a $40 millones CLP');
+  await form.getByRole('button', { name: 'Quiero que me contacten' }).click();
+  expect(attempts).toBe(0); // Explicit consent is required by native validation.
+  await form.getByRole('checkbox').check();
+  await form.getByRole('button', { name: 'Quiero que me contacten' }).click();
+  await expect(form.getByRole('alert')).toContainText('No pudimos enviar');
+  await expect(form.getByLabel('Tu nombre *', { exact: true })).toHaveValue('Contacto QA');
+  await expect(page.getByText('Solicitud recibida', { exact: true })).toHaveCount(0);
+  await form.getByRole('button', { name: 'Quiero que me contacten' }).click();
+  await expect(page.getByText('Solicitud recibida', { exact: true })).toBeVisible();
+  expect(attempts).toBe(2);
+  expect(payloads[1]).toMatchObject({ requester_name: 'Contacto QA', requester_phone: '+56 9 1111 2222', source: 'portada_asesoria', meeting_type: 'reunion_comercial' });
+  expect(payloads[1].context).toContain('Maule');
+  expect(payloads[1].context).toContain('$20 a $40 millones CLP');
+});
+
+test('simulador bajo demanda mantiene enlaces existentes y contexto al cerrar', async ({ page }) => {
+  const lotId = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
+  await page.goto(`/?creditPrice=35000000&creditLot=${lotId}&utm_source=qa#simula-tu-cuota`);
+  const dialog = page.getByRole('dialog', { name: 'Explora tus opciones de pago' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel('Valor de la propiedad (CLP)')).toHaveValue('35000000');
+  await expect(dialog.getByRole('link', { name: 'Consultar financiamiento' })).toHaveAttribute('href', new RegExp(`lote=${lotId}`));
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  expect(new URL(page.url()).searchParams.get('utm_source')).toBe('qa');
+  expect(new URL(page.url()).searchParams.get('creditLot')).toBe(lotId);
+  await expect(page.locator('#simula-tu-cuota')).toHaveCount(0);
+  await page.getByRole('link', { name: 'Simular cuota', exact: true }).click();
+  await expect(dialog).toBeVisible();
 });

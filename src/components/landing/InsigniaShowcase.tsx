@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, MapPin, Map as MapIcon } from 'lucide-react';
-import { useShowcaseProjects } from './CinematicShowcaseHero';
+import { useShowcaseProjects } from './useShowcaseProjects';
 
 const clp = (v?: number) => (v ? `${v.toLocaleString('es-CL')} CLP` : 'Precio a consultar');
 

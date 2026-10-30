@@ -26,7 +26,7 @@ describe('landing hero', () => {
     mount();
     expect(screen.getAllByRole('heading', { name: 'Proyecto 1' })).toHaveLength(1);
     expect(screen.getAllByRole('heading', { name: 'Proyecto 2' })).toHaveLength(1);
-    expect(screen.getAllByRole('link', { name: /Ver parcelas/ }).map(link => link.getAttribute('href'))).toEqual(['/proyecto/1?tab=lots', '/proyecto/2?tab=lots']);
+    expect(screen.getAllByRole('link', { name: /Ver parcelas de/ }).map(link => link.getAttribute('href'))).toEqual(['/proyecto/1?tab=lots', '/proyecto/2?tab=lots']);
     expect(screen.getAllByText('Desde $19.990.000 CLP')).toHaveLength(2);
     expect(screen.getAllByText('2 parcelas disponibles')).toHaveLength(2);
     expect(screen.getByRole('link', { name: 'Tour 360' }).getAttribute('href')).toBe('/proyecto/2?tab=tour360');

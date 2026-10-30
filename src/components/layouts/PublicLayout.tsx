@@ -7,9 +7,10 @@ interface PublicLayoutProps {
   children: React.ReactNode;
   showFooter?: boolean;
   showAssistant?: boolean;
+  footer?: React.ReactNode;
 }
 
-const PublicLayout = ({ children, showFooter = true, showAssistant = true }: PublicLayoutProps) => {
+const PublicLayout = ({ children, showFooter = true, showAssistant = true, footer }: PublicLayoutProps) => {
   const { pathname } = useLocation();
   const isProjectSurface = pathname.startsWith('/proyecto/');
   const shouldShowAssistant = showAssistant && !isProjectSurface;
@@ -19,7 +20,7 @@ const PublicLayout = ({ children, showFooter = true, showAssistant = true }: Pub
       <div className="noise-overlay" />
       <StickyHeader />
       <main id="contenido-principal" className="flex-1 pt-16">{children}</main>
-      {showFooter && <FooterSection />}
+      {showFooter && (footer ?? <FooterSection />)}
       {shouldShowAssistant && <AIFloatingButton />}
     </div>
   );
