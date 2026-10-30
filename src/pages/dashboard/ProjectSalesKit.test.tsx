@@ -152,6 +152,11 @@ describe("commercial material and inventory", () => {
     expect(screen.getByText('Necesitas una asignación aprobada')).toBeTruthy();
     expect(state.enabled.at(-1)).toBe(false);
   });
+  it("offers a social copy generator fed by the real project and broker data", () => {
+    mount();
+    expect(screen.getByText("Copy para redes sociales")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Generar copy con IA" })).toBeTruthy();
+  });
   it("does not present failed inventory as available or empty", () => {
     state.stockError = new Error("offline");
     mount();

@@ -11,7 +11,9 @@ import {
   formatPublicLotPrice,
 } from "@/lib/lots/publicLotCommercial";
 import { salesMaterialUrl, reservationFormUrl } from "@/lib/projects/salesKit";
+import { summarize } from "@/lib/pdf/projectKit";
 import { withProjectScope } from "@/hooks/useWorkspaceScope";
+import { ProjectSocialCopyGenerator } from "@/components/projects/ProjectSocialCopyGenerator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +35,7 @@ export default function ProjectSalesKit() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id,name,slug,user_id,status,organization_id")
+        .select("id,name,slug,user_id,status,organization_id,location,region")
         .eq("id", projectId!)
         .maybeSingle();
       if (error) throw error;
@@ -133,6 +135,7 @@ export default function ProjectSalesKit() {
       </Card>
     );
   const lots = stock.data ?? [];
+  const stockSummary = summarize(lots);
   const filtered = lots.filter(
     (lot) =>
       (status === "all" || lot.status === status) &&
@@ -253,6 +256,17 @@ export default function ProjectSalesKit() {
           );
         })}
       </section>
+      <ProjectSocialCopyGenerator
+        input={{
+          projectName: project.name,
+          location: project.location,
+          region: project.region,
+          priceFrom: stockSummary.priceMin,
+          availableLots: stockSummary.available,
+          brokerName: broker.data?.display_name,
+        }}
+        link={salesMaterialUrl(project, "info", ref)}
+      />
       <section aria-label="Inventario para ventas" className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xl font-semibold">Inventario de parcelas</h2>

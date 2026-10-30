@@ -241,6 +241,50 @@ interface GeneratedListing {
   suggested_tags: string[];
 }
 
+export interface SocialCopyInput {
+  projectName: string;
+  location?: string | null;
+  region?: string | null;
+  priceFrom?: number | null;
+  availableLots?: number | null;
+  highlights?: string[];
+  brokerName?: string | null;
+}
+
+export interface SocialCopy {
+  instagram: { caption: string; hashtags: string[] };
+  whatsapp: { message: string };
+  facebook: { post: string };
+}
+
+export const useSocialCopyGenerator = () => {
+  const [copy, setCopy] = useState<SocialCopy | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const generateSocialCopy = useCallback(async (socialCopyData: SocialCopyInput): Promise<SocialCopy | null> => {
+    setIsLoading(true);
+    setCopy(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-assistant', {
+        body: { type: 'generate-social-copy', socialCopyData },
+      });
+
+      if (error) throw error;
+      setCopy(data as SocialCopy);
+      return data as SocialCopy;
+    } catch (error) {
+      console.error('Social copy generation error:', error);
+      toast.error('Error al generar el copy para redes sociales');
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return { copy, isLoading, generateSocialCopy };
+};
+
 export const useListingGenerator = () => {
   const [isLoading, setIsLoading] = useState(false);
 
