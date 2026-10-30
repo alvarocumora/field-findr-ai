@@ -63,7 +63,7 @@ test('navegación móvil abre y cierra al cambiar de ruta', async ({ page }) => 
   await page.getByRole('button', { name: 'Abrir menú de navegación' }).click();
   const menu = page.getByRole('dialog', { name: 'Menú de navegación' });
   await expect(menu).toBeVisible();
-  await menu.getByRole('link', { name: 'Explorar', exact: true }).click();
+  await menu.getByRole('link', { name: 'Comprar terreno', exact: true }).click();
   await expect(page).toHaveURL(/\/explorar$/);
   await expect(menu).toBeHidden();
 });
@@ -84,7 +84,7 @@ test('sin WebGL, el explorador conserva una superficie de contenido', async ({ p
 test('landings premium mantienen identidad y navegación del proyecto', async ({ page }) => {
   await page.goto('/valle-hualane');
   await expect(page.getByRole('heading', { name: 'Valle de Hualañé' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Visitas y consultas' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Agendar visita o consultar' })).toBeVisible();
 
   await page.goto('/p/valle-escondido-licanten');
   await expect(page.getByRole('heading', { level: 1, name: /Valle Escondido/i })).toBeVisible();
