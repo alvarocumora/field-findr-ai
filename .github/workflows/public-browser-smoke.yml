@@ -28,7 +28,11 @@ concurrency:
 jobs:
   chromium:
     name: Chromium public navigation (320 / 390 / 1440)
-    runs-on: ubuntu-latest
+    # Pinned: `ubuntu-latest` rolled to 26.04 on 2026-10-19 and the pinned
+    # Playwright test runner below cannot install Chromium deps on it yet
+    # ("Playwright does not support chromium on ubuntu26.04-x64"), which was
+    # failing every PR in this workflow regardless of app changes.
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
       - name: Checkout
