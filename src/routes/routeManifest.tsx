@@ -119,6 +119,7 @@ const Comunidad = lazy(() => import("@/pages/Comunidad"));
 const Comenzar = lazy(() => import("@/pages/Comenzar"));
 const Panel = lazy(() => import("@/pages/Panel"));
 const Agendar = lazy(() => import("@/pages/Agendar"));
+const ReservarParcela = lazy(() => import("@/pages/ReservarParcela"));
 const QuoteView = lazy(() => import("@/pages/QuoteView"));
 
 // Landings de proyecto (SEO vivo: URLs congeladas)
@@ -392,6 +393,13 @@ export const publicRouteEntries: RouteEntry[] = [
     seo: {
       title: "Agendar reunión | Oferta Terrenos",
       description: "Solicita una reunión comercial, visita a terreno o conversación sobre tu campo con Oferta Terrenos.",
+    },
+  }),
+  pub("reservar-parcela", "/reservar", <ReservarParcela />, {
+    indexable: false,
+    seo: {
+      title: "Formulario de reserva de parcela | Oferta Terrenos",
+      description: "Reserva una parcela disponible en línea: datos de compra, transferencia de la reserva y condiciones.",
     },
   }),
   pub("reset-password", "/reset-password", <ResetPassword />, { indexable: false }),

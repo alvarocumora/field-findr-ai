@@ -2238,6 +2238,7 @@ export type Database = {
       }
       reservations: {
         Row: {
+          buyer_details: Json | null
           buyer_email: string
           buyer_name: string
           buyer_phone: string | null
@@ -2260,10 +2261,13 @@ export type Database = {
           reservation_amount: number
           source_quote_id: string | null
           status: Database["public"]["Enums"]["reservation_status"]
+          terms_accepted_at: string | null
+          terms_version: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          buyer_details?: Json | null
           buyer_email: string
           buyer_name: string
           buyer_phone?: string | null
@@ -2286,10 +2290,13 @@ export type Database = {
           reservation_amount?: number
           source_quote_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          buyer_details?: Json | null
           buyer_email?: string
           buyer_name?: string
           buyer_phone?: string | null
@@ -2312,6 +2319,8 @@ export type Database = {
           reservation_amount?: number
           source_quote_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -3459,6 +3468,23 @@ export type Database = {
         }
         Returns: string
       }
+      create_public_reservation_form: {
+        Args: {
+          p_buyer_details: Json
+          p_buyer_email: string
+          p_buyer_name: string
+          p_buyer_phone: string
+          p_buyer_rut: string
+          p_lot_id: string
+          p_notes?: string
+          p_terms_version: string
+        }
+        Returns: {
+          expires_at: string
+          reservation_amount: number
+          reservation_id: string
+        }[]
+      }
       create_public_visit_request: {
         Args: {
           p_email?: string
@@ -3678,6 +3704,18 @@ export type Database = {
           quoted_price: number
           status: string
           valid_until: string
+        }[]
+      }
+      get_reservable_lots: {
+        Args: { p_project_id: string }
+        Returns: {
+          area: number
+          id: string
+          lot_number: string
+          name: string
+          price: number
+          project_id: string
+          reservation_amount: number
         }[]
       }
       get_shared_design: {
