@@ -109,3 +109,9 @@ $fn$;
 
 COMMENT ON COLUMN public.commission_rules.fixed_sale_amount IS
   'Exact CLP payable to the closing salesperson for new eligible sales. NULL = legacy percentage/floor.';
+
+-- Legacy agent-facing payment RPCs are incompatible with the auditable admin ledger:
+-- until proof-of-payment workflow is approved, prevent authenticated users
+-- from self-marking sale or captation commissions as PAID.
+REVOKE ALL ON FUNCTION public.mark_commission_paid(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mark_referral_paid(uuid) FROM PUBLIC, anon, authenticated;
