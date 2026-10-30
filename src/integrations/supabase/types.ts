@@ -657,6 +657,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          fixed_sale_amount: number | null
           min_commission_amount: number | null
           notes: string | null
           plan_type: string | null
@@ -671,6 +672,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          fixed_sale_amount?: number | null
           min_commission_amount?: number | null
           notes?: string | null
           plan_type?: string | null
@@ -685,6 +687,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          fixed_sale_amount?: number | null
           min_commission_amount?: number | null
           notes?: string | null
           plan_type?: string | null
