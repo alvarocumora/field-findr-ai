@@ -1,0 +1,239 @@
+{
+  "scope": "Anonymous local Chromium; external APIs blocked; no credential entry or business writes",
+  "runs": [
+    {
+      "name": "login",
+      "viewport": [
+        320,
+        740
+      ],
+      "requested": "/auth",
+      "final": "/auth?",
+      "overflow": false
+    },
+    {
+      "name": "signup",
+      "viewport": [
+        320,
+        740
+      ],
+      "requested": "/auth?role=agent",
+      "final": "/auth?role=agent",
+      "overflow": false
+    },
+    {
+      "name": "forgot",
+      "viewport": [
+        320,
+        740
+      ],
+      "requested": "/auth",
+      "final": "/auth?",
+      "overflow": false
+    },
+    {
+      "name": "reset-invalid",
+      "viewport": [
+        320,
+        740
+      ],
+      "requested": "/reset-password",
+      "final": "/reset-password?",
+      "overflow": false
+    },
+    {
+      "name": "buyer",
+      "viewport": [
+        320,
+        740
+      ],
+      "requested": "/comprador/inicio",
+      "final": "/auth?redirect=%2Fcomprador%2Finicio",
+      "overflow": false,
+      "returnPreserved": true
+    },
+    {
+      "name": "broker",
+      "viewport": [
+        320,
+        740
+      ],
+      "requested": "/asesor/mi-negocio",
+      "final": "/auth?redirect=%2Fasesor%2Fmi-negocio",
+      "overflow": false,
+      "returnPreserved": true
+    },
+    {
+      "name": "captador",
+      "viewport": [
+        320,
+        740
+      ],
+      "requested": "/asesor/captaciones",
+      "final": "/auth?redirect=%2Fasesor%2Fcaptaciones",
+      "overflow": false,
+      "returnPreserved": true
+    },
+    {
+      "name": "finance",
+      "viewport": [
+        320,
+        740
+      ],
+      "requested": "/asesor/payments?project=qa#resumen",
+      "final": "/auth?redirect=%2Fasesor%2Fpayments%3Fproject%3Dqa%23resumen",
+      "overflow": false,
+      "returnPreserved": true
+    },
+    {
+      "name": "admin",
+      "viewport": [
+        320,
+        740
+      ],
+      "requested": "/admin/users",
+      "final": "/auth?redirect=%2Fadmin%2Fusers",
+      "overflow": false,
+      "returnPreserved": true
+    },
+    {
+      "name": "panel",
+      "viewport": [
+        320,
+        740
+      ],
+      "requested": "/panel",
+      "final": "/auth?redirect=%2Fpanel",
+      "overflow": false,
+      "returnPreserved": true
+    },
+    {
+      "name": "profile",
+      "viewport": [
+        320,
+        740
+      ],
+      "requested": "/perfil",
+      "final": "/auth?redirect=%2Fperfil",
+      "overflow": false,
+      "returnPreserved": true
+    },
+    {
+      "name": "login",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "requested": "/auth",
+      "final": "/auth?",
+      "overflow": false
+    },
+    {
+      "name": "signup",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "requested": "/auth?role=agent",
+      "final": "/auth?role=agent",
+      "overflow": false
+    },
+    {
+      "name": "forgot",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "requested": "/auth",
+      "final": "/auth?",
+      "overflow": false
+    },
+    {
+      "name": "reset-invalid",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "requested": "/reset-password",
+      "final": "/reset-password?",
+      "overflow": false
+    },
+    {
+      "name": "buyer",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "requested": "/comprador/inicio",
+      "final": "/auth?redirect=%2Fcomprador%2Finicio",
+      "overflow": false,
+      "returnPreserved": true
+    },
+    {
+      "name": "broker",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "requested": "/asesor/mi-negocio",
+      "final": "/auth?redirect=%2Fasesor%2Fmi-negocio",
+      "overflow": false,
+      "returnPreserved": true
+    },
+    {
+      "name": "captador",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "requested": "/asesor/captaciones",
+      "final": "/auth?redirect=%2Fasesor%2Fcaptaciones",
+      "overflow": false,
+      "returnPreserved": true
+    },
+    {
+      "name": "finance",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "requested": "/asesor/payments?project=qa#resumen",
+      "final": "/auth?redirect=%2Fasesor%2Fpayments%3Fproject%3Dqa%23resumen",
+      "overflow": false,
+      "returnPreserved": true
+    },
+    {
+      "name": "admin",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "requested": "/admin/users",
+      "final": "/auth?redirect=%2Fadmin%2Fusers",
+      "overflow": false,
+      "returnPreserved": true
+    },
+    {
+      "name": "panel",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "requested": "/panel",
+      "final": "/auth?redirect=%2Fpanel",
+      "overflow": false,
+      "returnPreserved": true
+    },
+    {
+      "name": "profile",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "requested": "/perfil",
+      "final": "/auth?redirect=%2Fperfil",
+      "overflow": false,
+      "returnPreserved": true
+    }
+  ]
+}

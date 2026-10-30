@@ -269,7 +269,7 @@ const StickyHeader = () => {
                         <Button
                           variant="ghost"
                           className="justify-start h-12 text-destructive touch-target"
-                          onClick={() => { signOut(); setIsMobileMenuOpen(false); }}
+                          onClick={async () => { const { error } = await signOut(); if (!error) setIsMobileMenuOpen(false); }}
                         >
                           Cerrar Sesión
                         </Button>

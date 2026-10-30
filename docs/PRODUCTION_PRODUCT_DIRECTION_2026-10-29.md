@@ -20,7 +20,7 @@ La diferencia de producto debe ser la continuidad de esa operación: el contexto
 
 | Bloque | Resultado verificable | Estado al iniciar esta ejecución |
 | --- | --- | --- |
-| 1. Identidad y seguridad | Registro público sin privilegios globales autoconcedidos; sesión aislada; permisos con carga/error explícitos | Migración de allowlist y regresión real PostgreSQL preparadas en esta entrega. Sesión y bootstrap, siguientes PR |
+| 1. Identidad y seguridad | Registro público sin privilegios globales autoconcedidos; sesión aislada; permisos con carga/error explícitos | Allowlist y regresión real PostgreSQL integradas en repositorio. Caché por identidad, eventos de sesión y logout entregados en el siguiente PR de esta ejecución; bootstrap de permisos pendiente |
 | 2. Entornos y releases | Staging repetible, CI ejecutable, migraciones verificadas y comprobación del build publicado | Bloqueo previo de facturación Actions; no se certifica producción ni correo/OAuth sin pruebas del entorno |
 | 3. Recorrido comercial | Ubicación/tipo/presupuesto → proyecto → parcela → consulta/visita → reserva/pago, con contexto conservado | Hero, búsqueda y kit conectados; falta certificar recorridos autenticados completos |
 | 4. Operación diaria por perfil | Pendientes priorizados y siguiente acción para comprador, broker, comercial, operaciones, finanzas y admin | Menú y centro admin ordenados; faltan bootstrap fiable y composición por tareas en todos los perfiles |
