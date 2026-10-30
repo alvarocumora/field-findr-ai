@@ -31,6 +31,8 @@ export interface CommissionRule {
   project_id: string | null;
   commission_rate: number;
   referral_override_rate: number;
+  fixed_sale_amount: number | null;
+  referral_fixed_amount: number | null;
   is_active: boolean;
   notes: string | null;
 }
@@ -158,6 +160,8 @@ export const useUpsertCommissionRule = () => {
           project_id: rule.project_id ?? null,
           commission_rate: rule.commission_rate ?? 3,
           referral_override_rate: rule.referral_override_rate ?? 0,
+          fixed_sale_amount: rule.fixed_sale_amount ?? null,
+          referral_fixed_amount: rule.referral_fixed_amount ?? null,
           notes: rule.notes ?? null,
         });
         if (error) throw error;
