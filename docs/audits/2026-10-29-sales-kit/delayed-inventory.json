@@ -1,0 +1,34 @@
+{
+  "method": "Local Chromium, delayed synthetic project and inventory responses, other external requests blocked; no writes",
+  "runs": [
+    {
+      "width": 320,
+      "status": "available",
+      "formVerified": true,
+      "bounds": {
+        "x": 0,
+        "y": 42.203125,
+        "width": 320,
+        "height": 759.59375
+      },
+      "contextPreserved": true
+    },
+    {
+      "width": 390,
+      "status": "available",
+      "formVerified": true,
+      "bounds": {
+        "x": 0,
+        "y": 42.203125,
+        "width": 390,
+        "height": 759.59375
+      },
+      "contextPreserved": true
+    },
+    {
+      "width": 390,
+      "status": "sold",
+      "formBlocked": true
+    }
+  ]
+}

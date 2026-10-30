@@ -1,0 +1,15 @@
+{
+  "name": "project-form",
+  "viewport": [
+    390,
+    844
+  ],
+  "overflow": false,
+  "reservationFormOpened": true,
+  "intentConsumed": true,
+  "lotContextPreserved": true,
+  "dialogCount": 1,
+  "staysClosedAfterModeChange": true,
+  "headingVerified": "Reservar con Depósito",
+  "method": "Local Chromium with public read-only inventory; writes blocked, WebGL disabled, hosted assets proxied to canonical domain. No form submission or payment."
+}

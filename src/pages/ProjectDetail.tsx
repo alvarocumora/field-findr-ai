@@ -1,3 +1,5 @@
+import { toast } from 'sonner';
+import { consumeReservationFormIntent } from '@/lib/projects/salesKit';
 import type { PublicLot } from '@/lib/lots/publicLotTypes';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -235,6 +237,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
   // Las landings específicas pueden abrir directamente el formulario de consulta.
   // El ID del lote se resuelve contra el inventario público antes de enviarlo al CRM.
   useEffect(() => {
+    if (searchParamsTab.get('reserva') === '1') return;
     const next = consumeProjectInquiry(searchParamsTab);
     if (!next) return;
     setLeadOpen(true);
@@ -274,7 +277,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
     if (tourScenes.length === 0 && !ownsProject) setActiveTab('map');
   }, [tabParam, tourScenesLoading, tourScenes.length, project?.user_id, user]);
 
-  const { data: lots = [], isLoading: lotsLoading, error: lotsError } = useQuery({
+  const { data: lots = [], isLoading: lotsLoading, isSuccess: lotsReady, error: lotsError } = useQuery({
     queryKey: ['project-lots', id],
     queryFn: async () => {
       // ProjectDetail is a public commercial surface. Use the same PII-free RPC
@@ -303,16 +306,31 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
     enabled: !!project?.user_id,
   });
 
+  // Consume the one-shot form intent only after inventory has resolved.
+  useEffect(() => {
+    if (!lotsReady || lotsError) return;
+    const intent = consumeReservationFormIntent(lots, searchParamsTab);
+    if (!intent) return;
+    setSearchParamsTab(intent.next, { replace: true });
+    if (intent.lot) {
+      setDetailLot(null);
+      setReservationLot(intent.lot);
+    } else {
+      toast.error('Esta parcela no está disponible para reservar. Revisa el inventario actualizado.');
+    }
+  }, [lotsReady, lotsError, lots, searchParamsTab, setSearchParamsTab]);
+
   // Deep link ?lote=<id|número> abre directamente la ficha del lote.
   const sharedLot = searchParamsTab.get('lote');
   const openedSharedLot = useRef<string | null>(null);
+  useEffect(() => { if (reservationLot && sharedLot) openedSharedLot.current = sharedLot; }, [reservationLot, sharedLot]);
   useEffect(() => {
-    if (!sharedLot || openedSharedLot.current === sharedLot || lots.length === 0) return;
+    if (!sharedLot || openedSharedLot.current === sharedLot || lots.length === 0 || searchParamsTab.get('reserva') === '1' || reservationLot) return;
     const match = lots.find((l) => l.id === sharedLot || String(l.lot_number) === sharedLot);
     if (!match) return;
     openedSharedLot.current = sharedLot;
     setDetailLot(match);
-  }, [sharedLot, lots]);
+  }, [sharedLot, lots, searchParamsTab, reservationLot]);
 
   const sortedLots = useMemo(() => {
     return [...lots].sort((a, b) => {

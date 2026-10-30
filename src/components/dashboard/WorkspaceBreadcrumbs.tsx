@@ -11,7 +11,7 @@ export default function WorkspaceBreadcrumbs() {
   if (!context || context === 'buyer') return null;
   const home = APP_CONTEXTS[context];
   const route = routeManifest.find((entry) => matchPath({ path: entry.path, end: true }, pathname));
-  const label = route?.nav?.label ?? (pathname.startsWith('/asesor/project/') ? 'Detalle del proyecto' : 'Detalle');
+  const label = route?.nav?.label ?? (pathname.startsWith('/asesor/project/') ? 'Detalle del proyecto' : pathname.startsWith('/asesor/kit-venta/') ? 'Kit de venta' : 'Detalle');
   return (
     <nav aria-label="Ubicación actual" className="mb-4 flex min-w-0 flex-wrap items-center gap-2 text-sm text-muted-foreground">
       <span>{home.shortLabel}</span><ChevronRight className="h-3 w-3" aria-hidden="true" />

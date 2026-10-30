@@ -272,8 +272,16 @@ export default function BrokerMarketplace() {
                           )}
                           <div className="flex flex-wrap gap-2">
                             <Button asChild variant="outline">
-                              <Link to={projectPath(project)}>
-                                Ver ficha y material
+                              <Link
+                                to={
+                                  assignment?.status === "approved"
+                                    ? `/asesor/kit-venta/${encodeURIComponent(project.id)}`
+                                    : projectPath(project)
+                                }
+                              >
+                                {assignment?.status === "approved"
+                                  ? "Abrir kit de venta"
+                                  : "Ver ficha del proyecto"}
                               </Link>
                             </Button>
                             {(!assignment ||
@@ -377,8 +385,16 @@ export default function BrokerMarketplace() {
                       {project && (
                         <div className="flex flex-wrap gap-2">
                           <Button asChild variant="outline">
-                            <Link to={projectPath(project)}>
-                              Ver ficha y material
+                            <Link
+                              to={
+                                assignment.status === "approved"
+                                  ? `/asesor/kit-venta/${encodeURIComponent(project.id)}`
+                                  : projectPath(project)
+                              }
+                            >
+                              {assignment.status === "approved"
+                                ? "Abrir kit de venta"
+                                : "Ver ficha del proyecto"}
                             </Link>
                           </Button>
                           {assignment.status === "approved" && (

@@ -133,6 +133,7 @@ const ProjectWorkspace = () => {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline"><Link to={`/asesor/kit-venta/${encodeURIComponent(project.id)}`}>Kit de venta</Link></Button>
           <Button asChild variant="outline">
             <Link to={publicPath} target="_blank"><ExternalLink className="mr-2 h-4 w-4" />Sitio público</Link>
           </Button>
