@@ -198,7 +198,7 @@ export const LotReservationDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="theme-rural max-h-[90dvh] overflow-y-auto bg-background text-foreground sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Badge className="bg-primary text-primary-foreground">

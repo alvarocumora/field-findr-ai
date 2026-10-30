@@ -170,3 +170,34 @@ test('buscador y CTA de portada quedan dentro del primer viewport', async ({ pag
     expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
   }
 });
+
+test('enlace comercial espera inventario y abre solo el formulario de la parcela elegida', async ({ page }) => {
+  const projectId = '11111111-2222-4333-8444-555555555555';
+  const lotId = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
+  await page.route('**/rest/v1/projects?*', async route => {
+    await new Promise(resolve => setTimeout(resolve, 350));
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+      id: projectId, user_id: null, name: 'Proyecto QA Reserva', slug: 'qa-reserva', status: 'active',
+      city: 'Licantén', region: 'Maule', location: 'Licantén', legal_documents: [], images: [], plan_images: [], reservation_deposit: 500000,
+    }) });
+  });
+  await page.route('**/rest/v1/rpc/get_public_lots*', async route => {
+    await new Promise(resolve => setTimeout(resolve, 350));
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([
+      { id: lotId, project_id: projectId, lot_number: '12', name: 'Parcela QA', status: 'available', area: 5000, price: 19990000 },
+    ]) });
+  });
+  await page.goto(`/proyecto/${projectId}?tab=lots&reserva=1&lote=${lotId}&ref=qa-broker`);
+  const form = page.getByRole('dialog');
+  await expect(form.getByRole('heading', { name: /Reservar con Depósito/ })).toBeVisible();
+  await expect(form.getByLabel('Nombre', { exact: true })).toBeVisible();
+  await expect(page).not.toHaveURL(/reserva=1/);
+  await expect(page).toHaveURL(new RegExp(`lote=${lotId}`));
+  await expect(page).toHaveURL(/ref=qa-broker/);
+  const box = await form.boundingBox();
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize().height);
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Mapa de lotes', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});

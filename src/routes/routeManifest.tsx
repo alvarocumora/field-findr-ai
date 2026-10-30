@@ -180,6 +180,7 @@ const ProjectWorkspace = lazy(() => import("@/pages/dashboard/ProjectWorkspace")
 const Commissions = lazy(() => import("@/pages/dashboard/Commissions"));
 const TeamManagement = lazy(() => import("@/pages/dashboard/TeamManagement"));
 const MyCaptaciones = lazy(() => import("@/pages/dashboard/MyCaptaciones"));
+const ProjectSalesKit = lazy(() => import("@/pages/dashboard/ProjectSalesKit"));
 const BrokerMarketplace = lazy(() => import("@/pages/dashboard/BrokerMarketplace"));
 const MyBrokerBusiness = lazy(() => import("@/pages/dashboard/MyBrokerBusiness"));
 const BrokerNetwork = lazy(() => import("@/pages/dashboard/BrokerNetwork"));
@@ -464,6 +465,7 @@ export const agentRouteEntries: RouteEntry[] = [
   agent("asesor-opportunity", "/asesor/opportunity/:id", <OpportunityDetail />),
   agent("asesor-captaciones", "/asesor/captaciones", <MyCaptaciones />, { label: "Mis captaciones", group: "propiedades", icon: "handshake" }),
   agent("asesor-broker-marketplace", "/asesor/proyectos-en-venta", <BrokerMarketplace />, { label: "Proyectos en venta", group: "propiedades", icon: "store", contexts: ["broker", "empresa"] }),
+  agent("asesor-sales-kit", "/asesor/kit-venta/:projectId", <ProjectSalesKit />),
 
   // Inventario
   agent("panel-inventario", "/panel/inventario", <InventoryMap />, { label: "Mapa de inventario", group: "propiedades", icon: "map" }),

@@ -107,9 +107,9 @@ describe("broker sales journey", () => {
     expect(screen.getByText("Aprobado para vender")).toBeTruthy();
     expect(
       screen
-        .getByRole("link", { name: "Ver ficha y material" })
+        .getByRole("link", { name: "Abrir kit de venta" })
         .getAttribute("href"),
-    ).toBe("/p/proyecto-venta");
+    ).toBe("/asesor/kit-venta/project-1");
     expect(
       screen.getByRole("button", { name: "Compartir enlace de venta" }),
     ).toBeTruthy();
