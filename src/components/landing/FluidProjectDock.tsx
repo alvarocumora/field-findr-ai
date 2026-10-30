@@ -24,11 +24,11 @@ const priceLabel = (v?: number) => (v ? `Desde $${v.toLocaleString('es-CL')} CLP
  * del proyecto (/proyecto/:id) directamente en el modo elegido (?tab=).
  */
 const FluidProjectDock = () => {
-  const { data: projects = [], isLoading, isError } = useShowcaseProjects();
+  const { data: projects = [], isLoading, isError, refetch, isFetching } = useShowcaseProjects();
   const { data: tours } = useProjectsWithTour(projects.map((p) => p.id));
 
   if (isLoading) return <section id="proyectos-en-venta" className="container scroll-mt-20 px-4 py-16"><div className="h-[420px] animate-pulse rounded-3xl bg-muted" /></section>;
-  if (isError || !projects.length) return <section id="proyectos-en-venta" className="container scroll-mt-20 px-4 py-12"><h2 className="font-editorial text-3xl">Encuentra tu terreno</h2><p className="mt-3 text-muted-foreground">{isError ? 'No pudimos cargar los proyectos en este momento.' : 'Explora las publicaciones y consulta sus opciones de compra.'}</p><Link to="/explorar" className="mt-4 inline-flex min-h-11 items-center text-primary underline focus-ring">Ver terrenos en venta</Link></section>;
+  if (isError || !projects.length) return <section id="proyectos-en-venta" className="container scroll-mt-20 px-4 py-12"><h2 className="font-editorial text-3xl">Encuentra tu terreno</h2><p className="mt-3 text-muted-foreground">{isError ? 'No pudimos cargar los proyectos en este momento.' : 'Explora las publicaciones y consulta sus opciones de compra.'}</p>{isError && <button type="button" disabled={isFetching} onClick={() => void refetch()} className="mt-4 mr-4 inline-flex min-h-11 items-center text-primary underline focus-ring">Reintentar proyectos</button>}<Link to="/explorar" className="mt-4 inline-flex min-h-11 items-center text-primary underline focus-ring">Ver terrenos en venta</Link></section>;
 
   return (
     <section id="proyectos-en-venta" className="scroll-mt-20 py-16 md:py-24" aria-labelledby="dock-title">
