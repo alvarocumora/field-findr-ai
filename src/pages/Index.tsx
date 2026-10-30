@@ -1,10 +1,8 @@
 import PublicLayout from '@/components/layouts/PublicLayout';
 import CinematicShowcaseHero from '@/components/landing/CinematicShowcaseHero';
 import FluidProjectDock from '@/components/landing/FluidProjectDock';
-import AtlasTerritorySection from '@/components/landing/AtlasTerritorySection';
 import { EcosystemStandard, HybridCTA } from '@/components/landing/StandardAndPartner';
 import { useSEO } from '@/hooks/useSEO';
-import LicantenOfferHero from '@/components/landing/LicantenOfferHero';
 import { EasyCreditSimulator } from '@/components/fintech/EasyCreditSimulator';
 import { LICANTEN_PROMO_PRICE } from '@/lib/easyCredit';
 import { useSearchParams } from 'react-router-dom';
@@ -26,9 +24,7 @@ const Index = () => {
       <PublicLayout showFooter={true} showAssistant={false}>
         <CinematicShowcaseHero />
         <FluidProjectDock />
-        <LicantenOfferHero />
         <EasyCreditSimulator key={creditPrice} defaultPrice={creditPrice} lotId={searchParams.get('creditLot')} />
-        <AtlasTerritorySection />
         <EcosystemStandard />
         <HybridCTA />
       </PublicLayout>

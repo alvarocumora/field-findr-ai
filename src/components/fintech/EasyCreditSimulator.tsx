@@ -59,8 +59,9 @@ export function EasyCreditSimulator({ defaultPrice = LICANTEN_PROMO_PRICE, lotId
       <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 md:py-16">
         <div className="mb-8 flex items-center gap-3">
           <Calculator className="h-7 w-7 shrink-0 text-primary" aria-hidden="true" />
-          <h2 id={`${id}-title`} className="font-editorial text-3xl text-foreground sm:text-4xl">Simula tu cuota</h2>
+          <h2 id={`${id}-title`} className="font-editorial text-3xl text-foreground sm:text-4xl">Tu parcela, a tu ritmo</h2>
         </div>
+        <p className="mb-8 max-w-2xl text-muted-foreground">Explora cuánto podrías pagar al mes. Ajusta el valor, el pie y el plazo; descarga tu simulación y conversa con el equipo de Valle Escondido sobre sus opciones de financiamiento.</p>
         <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
           <div className="min-w-0 space-y-6">
             <div className="space-y-2">

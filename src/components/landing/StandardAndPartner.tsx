@@ -3,16 +3,16 @@ import { ArrowRight, CalendarDays, FileCheck2, MapPinned, Orbit, Building2 } fro
 import { Button } from '@/components/ui/button';
 
 const PILLARS = [
-  { icon: Orbit, title: 'Recorridos según disponibilidad', text: 'Explora las panorámicas 360 de los proyectos que cuentan con escenas publicadas.' },
-  { icon: MapPinned, title: 'Contexto cartográfico', text: 'Consulta mapas, superficies y límites cuando el proyecto dispone de estos antecedentes.' },
-  { icon: FileCheck2, title: 'Información y consulta', text: 'Revisa antecedentes publicados y consulta por el lote antes de iniciar una reserva.' },
+  { icon: Orbit, title: 'Explora antes de viajar', text: 'Acércate al entorno desde tu teléfono: abre el tour 360 desde las fichas que lo incorporan y prepara tu visita.' },
+  { icon: MapPinned, title: 'Elige tu lugar en el mapa', text: 'Conecta ubicación, superficie y precio. Compara las parcelas del proyecto y consulta por la que más te interesa.' },
+  { icon: FileCheck2, title: 'Avanza con un equipo', text: 'Pide los antecedentes legales y las condiciones de compra al vendedor. Coordina tu visita y prepara tu reserva desde la ficha.' },
 ];
 
 export const EcosystemStandard = () => (
   <section className="relative border-y border-border/50 bg-muted/10 py-16 md:py-24" aria-labelledby="standard-title">
     <div className="container px-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Explora con información</p>
-      <h2 id="standard-title" className="mt-3 max-w-3xl font-editorial text-3xl font-medium md:text-5xl">Más contexto para elegir tu terreno.</h2>
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">De la pantalla al terreno</p>
+      <h2 id="standard-title" className="mt-3 max-w-3xl font-editorial text-3xl font-medium md:text-5xl">Descubre. Compara. Hazlo realidad.</h2>
       <div className="mt-10 grid gap-4 md:grid-cols-3">
         {PILLARS.map((p, i) => (
           <article key={p.title} className="brand-border relative overflow-hidden rounded-3xl bg-card p-7">
@@ -43,12 +43,12 @@ export const HybridCTA = () => (
         </Button>
       </div>
 
-      <Link to="/planes-loteos" className="brand-border group mx-auto mt-14 flex max-w-2xl items-center justify-between gap-4 rounded-2xl bg-card/70 p-5 text-left backdrop-blur">
+      <Link to="/brokers" className="brand-border group mx-auto mt-14 flex max-w-2xl items-center justify-between gap-4 rounded-2xl bg-card/70 p-5 text-left backdrop-blur">
         <span className="flex items-center gap-3">
           <Building2 className="h-5 w-5 shrink-0 text-primary" />
           <span>
-            <span className="block text-sm font-semibold text-foreground">¿Inmobiliaria o loteador?</span>
-            <span className="block text-xs text-muted-foreground">Publica terrenos y administra inventario, consultas y ventas desde un mismo espacio.</span>
+            <span className="block text-sm font-semibold text-foreground">¿Vendes o recomiendas parcelas?</span>
+            <span className="block text-xs text-muted-foreground">Únete a la red de vendedores. Descubre proyectos, material comercial y condiciones de comisión.</span>
           </span>
         </span>
         <ArrowRight className="h-4 w-4 shrink-0 text-primary transition-transform group-hover:translate-x-1" />
