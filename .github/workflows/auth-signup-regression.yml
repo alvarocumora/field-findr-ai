@@ -1,0 +1,25 @@
+name: Auth signup SQL regression
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/tests/auth_signup_roles.test.sql'
+      - 'scripts/test-auth-signup.sh'
+      - '.github/workflows/auth-signup-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/tests/auth_signup_roles.test.sql'
+      - 'scripts/test-auth-signup.sh'
+      - '.github/workflows/auth-signup-regression.yml'
+permissions:
+  contents: read
+jobs:
+  signup-roles:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test actual signup trigger migrations in disposable PostgreSQL
+        run: bash scripts/test-auth-signup.sh
