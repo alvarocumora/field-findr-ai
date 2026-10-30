@@ -133,11 +133,13 @@ BEGIN
 
   -- Una reserva pendiente ya vencida pero aún no barrida ocuparía el índice
   -- único de "una activa por lote"; se marca vencida antes de insertar.
-  UPDATE public.reservations
+  -- Columnas calificadas: reservation_amount y expires_at también son
+  -- variables de salida de RETURNS TABLE y PL/pgSQL las daría por ambiguas.
+  UPDATE public.reservations stale
      SET status = 'expired'::public.reservation_status
-   WHERE lot_id = p_lot_id
-     AND status = 'pending_payment'::public.reservation_status
-     AND expires_at <= now();
+   WHERE stale.lot_id = p_lot_id
+     AND stale.status = 'pending_payment'::public.reservation_status
+     AND stale.expires_at <= now();
 
   BEGIN
     INSERT INTO public.reservations (
