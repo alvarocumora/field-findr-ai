@@ -271,6 +271,7 @@ export const useExtendReservation = () => {
 export interface RegisterSaleData {
   reservationId: string;
   saleAmount: number;
+  /** null = comisión según la regla del proyecto; 0 = sin comisión. */
   commissionRate?: number | null;
   notes?: string | null;
   /** Optional: link the sale to a specific lead so referral splits are inherited. */
@@ -284,7 +285,8 @@ export interface RegisterSaleData {
 /**
  * Atomic reservation → sale conversion: marks the reservation converted (the
  * DB trigger sets the lot sold + sale_date), records the final negotiated
- * price on the lot, and creates the agent commission when a rate is given.
+ * price on the lot, and creates the agent commission from the project rule
+ * (fixed CLP amounts) unless commissionRate is 0.
  * If a leadId with a referring_agent is provided, a referral split is added.
  */
 export const useRegisterSale = () => {
@@ -308,12 +310,12 @@ export const useRegisterSale = () => {
       return data as string | null; // commission id (null when no commission)
     },
 
-    onSuccess: (_commissionId, { commissionRate }) => {
+    onSuccess: (commissionId) => {
       queryClient.invalidateQueries({ queryKey: ['reservations'] });
       queryClient.invalidateQueries({ queryKey: ['lots'] });
       queryClient.invalidateQueries({ queryKey: ['agent-commissions'] });
       toast.success('Venta registrada', {
-        description: commissionRate
+        description: commissionId
           ? 'Lote vendido y comisión generada'
           : 'Lote marcado como vendido',
       });
