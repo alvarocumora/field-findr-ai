@@ -6,7 +6,7 @@
 
 - Cierre de reserva pagada mediante `register_project_broker_sale`; exige vendedor activo y aprobado para el proyecto, mantiene la atribución del cliente validada en la reserva y genera los dos importes CLP independientes cuando corresponde.
 - La función de cierre NO asigna por defecto la comisión al propietario, no acepta un referidor arbitrario y no registra un pago real.
-- Cierre heredado por porcentaje (`register_sale`, ambos overloads) y registro manual (`admin_register_manual_sale`) bloqueados exclusivamente para estos dos proyectos, hasta incorporar un flujo de venta manual con la misma validación de atribuciones.
+- Las rutas heredadas de cierre con porcentajes (`register_sale`, ambos overloads) y venta manual (`admin_register_manual_sale`) quedan bloqueadas para estos dos proyectos mediante **triggers específicos**, sin reemplazar ni alterar los cuerpos de esas funciones para otros proyectos. El cierre válido establece una marca transaccional tras verificar vendedor/captador.
 - El cierre se bloquea si vendedor y captador son la misma persona hasta definir la condición comercial para ese caso. Se conserva un único registro de comisión por reserva activa.
 - Landing de brokers y dashboard sin promesas de mínimos universales ni porcentajes falsos para las comisiones fijas.
 
@@ -19,7 +19,7 @@
 5. `20261030181000_public_reservation_broker_attribution.sql` — captación validada.
 6. `20261030223000_hualane_sale_commission_750k.sql` — Hualañé $750.000 por venta.
 7. `20261030234000_broker_sale_attribution_hardening.sql` — RPC de cierre explícito y guardas porcentuales.
-8. `20261030234500_block_manual_fixed_commission_sales.sql` — guarda registro manual.
+8. El guard contra registro manual ya forma parte de `20261030234000_broker_sale_attribution_hardening.sql`; **no hay migración 20261030234500**.
 
 **No ejecutar solo las últimas migraciones contra una base sin los prerrequisitos.** Inspeccionar primero las migraciones ya registradas en el despliegue y respaldar la base. No activar en producción antes de la revisión en staging.
 
