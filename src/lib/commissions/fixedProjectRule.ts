@@ -29,3 +29,12 @@ export function fixedProjectRule<T extends FixedCommissionRule>(
 
 export const formatCLPCommission = (amount: number) =>
   "$" + amount.toLocaleString("es-CL") + " CLP";
+
+/** Only these verified projects have agreed exact per-sale CLP terms. */
+export const FIXED_BROKER_PROJECTS = {
+  hualane: "761e73ed-cc0d-5605-a06a-4a4348523b4b",
+  licanten: "b4363fda-e99f-400d-ae95-2cbc8244b770",
+} as const;
+
+export const isFixedBrokerProject = (projectId: string | null | undefined) =>
+  projectId === FIXED_BROKER_PROJECTS.hualane || projectId === FIXED_BROKER_PROJECTS.licanten;
