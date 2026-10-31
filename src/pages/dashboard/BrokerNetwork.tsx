@@ -186,7 +186,9 @@ const BrokerNetwork = () => {
                             {a.assignment_status ?? 'sin asignación'}
                           </Badge>
                           {a.commission_rate > 0 && (
-                            <span className="ml-2 text-xs text-muted-foreground">{a.commission_rate}%</span>
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              {a.commission_rate}% (asignación legacy; verificar condiciones por proyecto)
+                            </span>
                           )}
                         </TableCell>
                         <TableCell className="text-right">
