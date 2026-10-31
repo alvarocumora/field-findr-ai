@@ -1,7 +1,7 @@
 -- Fase 2 / Broker flow: explicit seller on fixed-project sales
 -- Apply ONLY after canonical sales ledger, fixed commission rules, Hualañé 750k
 -- and public broker attribution migrations. No historical commission edits.
--- This is a new, purpose-built RPC; legacy percentage sale calls are guarded.
+-- This is a new, purpose-built RPC; legacy percentage sale paths are guarded by triggers.
 
 CREATE OR REPLACE FUNCTION public.list_project_closing_brokers(p_project_id uuid)
 RETURNS TABLE(user_id uuid, display_name text)
@@ -128,6 +128,10 @@ BEGIN
     RAISE EXCEPTION 'Esta reserva ya tiene una comisión asociada';
   END IF;
 
+  -- Transaction-local proof set by this validated RPC only.
+  -- Legacy register_sale/admin_register_manual_sale cannot supply it via PostgREST.
+  PERFORM set_config('app.verified_broker_sale','ok',true);
+
   UPDATE public.reservations
   SET status='converted',converted_at=now(),notes=coalesce(p_notes,notes)
   WHERE id=p_reservation_id;
@@ -177,169 +181,59 @@ GRANT EXECUTE ON FUNCTION public.register_project_broker_sale(uuid,numeric,uuid,
 TO authenticated;
 
 
--- Preserve the existing legacy API for other projects; fail closed for fixed projects.
-CREATE OR REPLACE FUNCTION public.register_sale(p_reservation_id uuid, p_sale_amount numeric, p_commission_rate numeric DEFAULT NULL::numeric, p_notes text DEFAULT NULL::text)
- RETURNS uuid
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-DECLARE
-  v_res record;
-  v_commission_id uuid;
+-- Refuse fixed-project conversion via ANY legacy path, without replacing
+-- the bodies of existing register_sale overloads or other legacy functions.
+CREATE OR REPLACE FUNCTION public.guard_fixed_project_sale_conversion()
+RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public
+AS $fn$
 BEGIN
-  IF p_sale_amount IS NULL OR p_sale_amount <= 0 THEN
-    RAISE EXCEPTION 'Sale amount must be positive';
+  IF TG_OP='UPDATE'
+     AND NEW.status='converted' AND OLD.status IS DISTINCT FROM 'converted'
+     AND EXISTS (
+       SELECT 1 FROM public.lots l
+       WHERE l.id=NEW.lot_id AND l.project_id IN (
+         '761e73ed-cc0d-5605-a06a-4a4348523b4b'::uuid,
+         'b4363fda-e99f-400d-ae95-2cbc8244b770'::uuid
+       )
+     )
+     AND current_setting('app.verified_broker_sale',true) IS DISTINCT FROM 'ok'
+  THEN
+    RAISE EXCEPTION 'Esta venta requiere vendedor autorizado y cierre de comisión fija';
   END IF;
-  IF p_commission_rate IS NOT NULL AND (p_commission_rate < 0 OR p_commission_rate > 50) THEN
-    RAISE EXCEPTION 'Commission rate out of range (0-50)';
-  END IF;
-
-  SELECT r.*, l.user_id AS lot_owner, l.area AS lot_area, l.project_id AS lot_project_id
-  INTO v_res
-  FROM public.reservations r
-  JOIN public.lots l ON l.id = r.lot_id
-  WHERE r.id = p_reservation_id
-  FOR UPDATE OF r;
-
-  IF v_res IS NULL OR v_res.lot_owner <> auth.uid() THEN
-    RAISE EXCEPTION 'Reservation not found or not owned by caller';
-  END IF;
-  IF v_res.status <> 'paid' THEN
-    RAISE EXCEPTION 'Only paid reservations can be converted to a sale';
-  END IF;
-
-  -- Fixed-project sales need verified seller attribution; legacy percent-based
-  -- register_sale cannot assign a closing broker and must never run for them.
-  IF v_res.lot_project_id IN ('761e73ed-cc0d-5605-a06a-4a4348523b4b'::uuid,'b4363fda-e99f-400d-ae95-2cbc8244b770'::uuid) THEN
-    RAISE EXCEPTION 'Este proyecto requiere registrar venta con vendedor aprobado y comisión fija.';
-  END IF;
-
-  UPDATE public.reservations
-  SET status = 'converted',
-      converted_at = now(),
-      notes = COALESCE(p_notes, notes)
-  WHERE id = p_reservation_id;
-
-  UPDATE public.lots
-  SET price = p_sale_amount,
-      price_per_sqm = CASE WHEN area > 0 THEN round(p_sale_amount / area) ELSE price_per_sqm END
-  WHERE id = v_res.lot_id;
-
-  IF p_commission_rate IS NOT NULL AND p_commission_rate > 0 THEN
-    INSERT INTO public.agent_commissions
-      (agent_id, reservation_id, lot_id, project_id, sale_amount, commission_rate, commission_amount, status, notes)
-    VALUES
-      (auth.uid(), p_reservation_id, v_res.lot_id, v_res.lot_project_id,
-       p_sale_amount, p_commission_rate, round(p_sale_amount * p_commission_rate / 100), 'pending', p_notes)
-    RETURNING id INTO v_commission_id;
-  END IF;
-
-  RETURN v_commission_id;
+  RETURN NEW;
 END;
-$function$
-;
+$fn$;
+REVOKE ALL ON FUNCTION public.guard_fixed_project_sale_conversion()
+  FROM PUBLIC,anon,authenticated;
+DROP TRIGGER IF EXISTS trg_guard_fixed_project_sale_conversion ON public.reservations;
+CREATE TRIGGER trg_guard_fixed_project_sale_conversion
+BEFORE UPDATE OF status ON public.reservations
+FOR EACH ROW EXECUTE FUNCTION public.guard_fixed_project_sale_conversion();
 
--- Preserve the existing legacy API for other projects; fail closed for fixed projects.
-CREATE OR REPLACE FUNCTION public.register_sale(p_reservation_id uuid, p_sale_amount numeric, p_commission_rate numeric DEFAULT NULL::numeric, p_notes text DEFAULT NULL::text, p_referring_agent_id uuid DEFAULT NULL::uuid, p_referral_rate numeric DEFAULT NULL::numeric, p_lead_id uuid DEFAULT NULL::uuid)
- RETURNS uuid
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-DECLARE
-  v_res record;
-  v_commission_id uuid;
-  v_referring uuid := p_referring_agent_id;
-  v_ref_rate numeric := COALESCE(p_referral_rate, 0);
-  v_ref_amount numeric := 0;
-  v_ref_status text := 'none';
-  v_listing_id uuid;
+-- A manual/admin insert also cannot create an unverified fixed-project commission.
+-- This protects alternative call paths that insert commission rows without a reservation.
+CREATE OR REPLACE FUNCTION public.guard_fixed_project_commission_insert()
+RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public
+AS $fn$
 BEGIN
-  IF p_sale_amount IS NULL OR p_sale_amount <= 0 THEN
-    RAISE EXCEPTION 'Sale amount must be positive';
+  IF NEW.project_id IN (
+    '761e73ed-cc0d-5605-a06a-4a4348523b4b'::uuid,
+    'b4363fda-e99f-400d-ae95-2cbc8244b770'::uuid
+  ) AND current_setting('app.verified_broker_sale',true) IS DISTINCT FROM 'ok'
+  THEN
+    RAISE EXCEPTION 'Comisión fija requiere cierre validado de reserva y vendedor';
   END IF;
-  IF p_commission_rate IS NOT NULL AND (p_commission_rate < 0 OR p_commission_rate > 50) THEN
-    RAISE EXCEPTION 'Commission rate out of range (0-50)';
-  END IF;
-  IF v_ref_rate < 0 OR v_ref_rate > 100 THEN
-    RAISE EXCEPTION 'Referral rate out of range (0-100)';
-  END IF;
-
-  SELECT r.*, l.user_id AS lot_owner, l.area AS lot_area, l.project_id AS lot_project_id
-  INTO v_res
-  FROM public.reservations r
-  JOIN public.lots l ON l.id = r.lot_id
-  WHERE r.id = p_reservation_id
-  FOR UPDATE OF r;
-
-  IF v_res IS NULL OR v_res.lot_owner <> auth.uid() THEN
-    RAISE EXCEPTION 'Reservation not found or not owned by caller';
-  END IF;
-  IF v_res.status <> 'paid' THEN
-    RAISE EXCEPTION 'Only paid reservations can be converted to a sale';
-  END IF;
-
-  IF p_lead_id IS NOT NULL THEN
-    SELECT referring_agent_id, listing_id
-    INTO v_referring, v_listing_id
-    FROM public.leads WHERE id = p_lead_id;
-  END IF;
-
-  -- Fixed-project sales need verified seller attribution; legacy percent-based
-  -- register_sale cannot assign a closing broker and must never run for them.
-  IF v_res.lot_project_id IN ('761e73ed-cc0d-5605-a06a-4a4348523b4b'::uuid,'b4363fda-e99f-400d-ae95-2cbc8244b770'::uuid) THEN
-    RAISE EXCEPTION 'Este proyecto requiere registrar venta con vendedor aprobado y comisión fija.';
-  END IF;
-
-  UPDATE public.reservations
-  SET status = 'converted', converted_at = now(),
-      notes = COALESCE(p_notes, notes),
-      lead_id = COALESCE(p_lead_id, lead_id)
-  WHERE id = p_reservation_id;
-
-  UPDATE public.lots
-  SET price = p_sale_amount,
-      price_per_sqm = CASE WHEN area > 0 THEN round(p_sale_amount / area) ELSE price_per_sqm END
-  WHERE id = v_res.lot_id;
-
-  IF p_commission_rate IS NOT NULL AND p_commission_rate > 0 THEN
-    IF v_referring IS NOT NULL AND v_ref_rate > 0 THEN
-      v_ref_amount := round(p_sale_amount * p_commission_rate / 100 * v_ref_rate / 100);
-      v_ref_status := 'pending';
-    END IF;
-
-    INSERT INTO public.agent_commissions
-      (agent_id, reservation_id, lot_id, project_id, listing_id, lead_id,
-       sale_amount, commission_rate, commission_amount, status, notes,
-       referring_agent_id, referral_rate, referral_amount, referral_status)
-    VALUES
-      (auth.uid(), p_reservation_id, v_res.lot_id, v_res.lot_project_id, v_listing_id, p_lead_id,
-       p_sale_amount, p_commission_rate, round(p_sale_amount * p_commission_rate / 100),
-       'pending', p_notes,
-       v_referring, v_ref_rate, v_ref_amount, v_ref_status)
-    RETURNING id INTO v_commission_id;
-
-    IF v_referring IS NOT NULL AND v_ref_amount > 0 THEN
-      INSERT INTO public.notifications (user_id, type, title, message, link, metadata)
-      VALUES (
-        v_referring, 'payment', 'Comisión por referido generada',
-        'Se generó una comisión de referido por $' || v_ref_amount || ' pendiente de pago.',
-        '/asesor/comisiones',
-        jsonb_build_object('commission_id', v_commission_id, 'amount', v_ref_amount)
-      );
-    END IF;
-  END IF;
-
-  IF p_lead_id IS NOT NULL THEN
-    UPDATE public.leads SET status = 'converted' WHERE id = p_lead_id;
-  END IF;
-
-  RETURN v_commission_id;
+  RETURN NEW;
 END;
-$function$
-;
-
+$fn$;
+REVOKE ALL ON FUNCTION public.guard_fixed_project_commission_insert()
+  FROM PUBLIC,anon,authenticated;
+DROP TRIGGER IF EXISTS trg_guard_fixed_project_commission_insert ON public.agent_commissions;
+CREATE TRIGGER trg_guard_fixed_project_commission_insert
+BEFORE INSERT ON public.agent_commissions
+FOR EACH ROW EXECUTE FUNCTION public.guard_fixed_project_commission_insert();
 
 -- Critical: no self-service "paid" confirmation.
 REVOKE ALL ON FUNCTION public.mark_commission_paid(uuid)
