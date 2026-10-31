@@ -78,12 +78,16 @@ BEGIN
     RAISE EXCEPTION 'Utiliza el cierre convencional para este proyecto';
   END IF;
 
+  IF (SELECT count(*) FROM public.commission_rules
+      WHERE scope='project' AND project_id=v_res.lot_project_id AND is_active=true) <> 1 THEN
+    RAISE EXCEPTION 'Debe existir exactamente una regla activa de comisión fija';
+  END IF;
   SELECT fixed_sale_amount, referral_fixed_amount
     INTO v_fixed,v_capture_amount
   FROM public.commission_rules
   WHERE scope='project' AND project_id=v_res.lot_project_id
-    AND is_active=true AND fixed_sale_amount IS NOT NULL;
-  IF NOT FOUND OR v_fixed<=0 THEN
+    AND is_active=true;
+  IF v_fixed IS NULL OR v_fixed<=0 THEN
     RAISE EXCEPTION 'Falta configurar la comisión fija del proyecto';
   END IF;
 
@@ -109,6 +113,10 @@ BEGIN
     WHERE bp.user_id=v_res.referring_agent_id
       AND bp.invite_code=v_res.referral_code
       AND bp.is_active=true;
+  END IF;
+
+  IF v_referring IS NOT NULL AND (v_capture_amount IS NULL OR v_capture_amount<=0) THEN
+    RAISE EXCEPTION 'Captación sin regla válida en CLP; revisar configuración';
   END IF;
 
   IF v_referring IS NOT NULL AND v_referring=p_closing_agent_id THEN
