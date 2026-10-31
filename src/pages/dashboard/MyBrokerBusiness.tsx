@@ -21,7 +21,7 @@ import {
   useMyBrokerProfile, useUpdateMyBrokerProfile, useProjectAssignments, useBrokerRanking,
 } from '@/hooks/useBrokers';
 import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
-import { BROKER_GUIDE_URL } from '@/lib/brokerProgram';
+import { BROKER_GUIDE_URL, brokerCommissionSummary } from '@/lib/brokerProgram';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })
@@ -291,7 +291,7 @@ const MyBrokerBusiness = () => {
             <div>
               <h3 className="font-medium text-sm">Guía oficial de la red de vendedores (PDF)</h3>
               <p className="text-xs text-muted-foreground">
-                Mínimo $500.000 por lote vendido · $200.000 por cada lote que venda un vendedor que invitaste.
+                Comisión fija por proyecto. {brokerCommissionSummary()}.
               </p>
             </div>
             <Button size="sm" asChild>

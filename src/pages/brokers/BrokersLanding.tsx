@@ -7,6 +7,7 @@ import { useSEO } from '@/hooks/useSEO';
 import {
   Handshake, MapPinned, TrendingUp, ShieldCheck, Users, FileText, ArrowRight,
 } from 'lucide-react';
+import { BROKER_MIN_SALE_COMMISSION_CLP, brokerCommissionSummary, clpAmount } from '@/lib/brokerProgram';
 
 const benefits = [
   {
@@ -16,8 +17,8 @@ const benefits = [
   },
   {
     icon: TrendingUp,
-    title: 'Mínimo $500.000 por lote vendido',
-    text: 'Ganas al menos $500.000 por lote, sin importar su precio, y $200.000 por cada lote que venda un vendedor que invitaste.',
+    title: `Comisión fija desde ${clpAmount(BROKER_MIN_SALE_COMMISSION_CLP)} por lote vendido`,
+    text: `Cada proyecto fija su monto, sin importar el precio del lote. ${brokerCommissionSummary('. ')}.`,
   },
   {
     icon: FileText,
