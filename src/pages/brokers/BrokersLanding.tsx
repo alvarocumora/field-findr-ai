@@ -16,8 +16,8 @@ const benefits = [
   },
   {
     icon: TrendingUp,
-    title: 'Mínimo $500.000 por lote vendido',
-    text: 'Ganas al menos $500.000 por lote, sin importar su precio, y $200.000 por cada lote que venda un vendedor que invitaste.',
+    title: 'Comisiones según proyecto y función',
+    text: 'Valle de Hualañé: venta $750.000, captación $200.000. Valle Escondido Licantén: venta $1.000.000, captación $350.000. Cada operación requiere validación.'
   },
   {
     icon: FileText,
@@ -27,7 +27,7 @@ const benefits = [
   {
     icon: Users,
     title: 'Tu red suma',
-    text: 'Invita a otros brokers con tu link y participa del override de tu red.',
+    text: 'Invita brokers con tu link. Las eventuales comisiones de red se rigen por condiciones separadas de la captación de compradores.'
   },
   {
     icon: ShieldCheck,
@@ -45,7 +45,7 @@ const steps = [
   { n: '01', t: 'Postulas', d: 'Completas el formulario con tu experiencia y zona de trabajo.' },
   { n: '02', t: 'Te validamos', d: 'Revisamos tu perfil y activamos tu cuenta de broker.' },
   { n: '03', t: 'Eliges proyectos', d: 'Solicitas los loteos que quieres vender y ves tu comisión.' },
-  { n: '04', t: 'Vendes y cobras', d: 'Compartes tu link, recibes leads atribuidos y cobras tu comisión.' },
+  { n: '04', t: 'Vendes y haces seguimiento', d: 'Comparte tu link y sigue clientes, reservas, cierres y comisiones sujetas a validación.' }
 ];
 
 const BrokersLanding = () => {
@@ -121,7 +121,7 @@ const BrokersLanding = () => {
             La red de venta de loteos más grande de LATAM se construye ahora
           </h2>
           <p className="text-muted-foreground mb-8">
-            Postula hoy. Revisamos las solicitudes en menos de 48 horas hábiles.
+            Postula hoy. El equipo comercial revisará tu solicitud y confirmará los próximos pasos.
           </p>
           <Button size="lg" asChild>
             <Link to="/brokers/inscripcion">Quiero inscribirme</Link>
