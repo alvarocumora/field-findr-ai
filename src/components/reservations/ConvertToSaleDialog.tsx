@@ -34,6 +34,8 @@ interface ConvertToSaleDialogProps {
   } | null;
 }
 
+const MIN_FIXED_SALE_CLP = 1_000_000;
+
 const formatCLP = (n: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
 
@@ -66,7 +68,10 @@ const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleD
   const deposit = reservation?.reservation_amount ?? 0;
   const balance = Math.max(0, amount - deposit);
 
-  const valid = amount > 0;
+  // La comisión fija se aplica a precios en pesos; bajo $1.000.000 el trigger
+  // de la base no la aplicaría (umbral CLP/UF) y quedaría en cero.
+  const belowFixedMinimum = withCommission && fixed !== null && amount > 0 && amount < MIN_FIXED_SALE_CLP;
+  const valid = amount > 0 && !belowFixedMinimum;
 
   const handleConfirm = () => {
     if (!reservation || !valid) return;
@@ -107,6 +112,11 @@ const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleD
               value={saleAmount}
               onChange={(e) => setSaleAmount(e.target.value)}
             />
+            {belowFixedMinimum && (
+              <p className="text-xs text-destructive">
+                Con comisión fija el precio debe estar en pesos (desde {formatCLP(MIN_FIXED_SALE_CLP)}).
+              </p>
+            )}
             {listPrice !== null && amount > 0 && amount !== listPrice && (
               <p className="text-xs text-muted-foreground">
                 Precio de lista: {formatCLP(listPrice)} ·{' '}

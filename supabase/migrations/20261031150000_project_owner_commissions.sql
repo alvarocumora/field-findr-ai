@@ -229,6 +229,12 @@ BEGIN
 
     v_rate := COALESCE(v_rule_rate, 0);
     v_generate := v_rule_fixed IS NOT NULL OR v_rate > 0;
+
+    -- normalize_commission_ledger() aplica montos fijos solo desde CLP 1.000.000
+    -- (bajo eso suele ser un precio en UF). No registrar una comisión en cero.
+    IF v_rule_fixed IS NOT NULL AND p_sale_amount < 1000000 THEN
+      RAISE EXCEPTION 'Con comisión fija el precio de venta debe estar en pesos (desde $1.000.000)';
+    END IF;
   ELSE
     v_generate := p_commission_rate > 0;
   END IF;

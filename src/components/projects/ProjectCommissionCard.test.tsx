@@ -17,6 +17,13 @@ describe('parseClpInput', () => {
     expect(parseClpInput('500000')).toBe(500_000);
     expect(parseClpInput('')).toBeNull();
   });
+
+  it('rechaza negativos, decimales y separadores mal agrupados', () => {
+    expect(parseClpInput('-500.000')).toBeNull();
+    expect(parseClpInput('500.000,00')).toBeNull();
+    expect(parseClpInput('1.20.000')).toBeNull();
+    expect(parseClpInput('12,5')).toBeNull();
+  });
 });
 
 describe('ProjectCommissionCard', () => {

@@ -41,8 +41,9 @@ const ProjectCommissionCard = ({ projectId, canEdit }: ProjectCommissionCardProp
   }, [currentSale, currentCapture]);
 
   const saleAmount = parseClpInput(sale);
-  const captureAmount = parseClpInput(capture) ?? 0;
-  const valid = saleAmount !== null && saleAmount <= MAX_CLP && captureAmount <= MAX_CLP;
+  const captureParsed = capture.trim() === '' ? 0 : parseClpInput(capture);
+  const captureAmount = captureParsed ?? 0;
+  const valid = saleAmount !== null && captureParsed !== null && saleAmount <= MAX_CLP && captureAmount <= MAX_CLP;
   const changed = currentSale === null || saleAmount !== currentSale || captureAmount !== (currentCapture ?? 0);
 
   return (
@@ -94,9 +95,12 @@ const ProjectCommissionCard = ({ projectId, canEdit }: ProjectCommissionCardProp
               {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Guardar
             </Button>
-            {saleAmount !== null && saleAmount > MAX_CLP && (
-              <p className="text-xs text-destructive sm:col-span-3">El máximo es {formatCLP(MAX_CLP)}.</p>
+            {((sale.trim() !== '' && saleAmount === null) || captureParsed === null) && (
+              <p className="text-xs text-destructive sm:col-span-3">Escribe montos en pesos sin decimales, por ejemplo 1.200.000.</p>
             )}
+            {(saleAmount ?? 0) > MAX_CLP || captureAmount > MAX_CLP ? (
+              <p className="text-xs text-destructive sm:col-span-3">El máximo es {formatCLP(MAX_CLP)}.</p>
+            ) : null}
           </form>
         ) : current ? (
           <div className="grid gap-2 text-sm sm:grid-cols-2">

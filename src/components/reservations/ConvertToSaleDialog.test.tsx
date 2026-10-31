@@ -75,6 +75,18 @@ describe('ConvertToSaleDialog', () => {
     expect(screen.getByText(/no tiene comisión fija/i)).toBeInTheDocument();
   });
 
+  it('blocks a fixed-commission sale priced below CLP 1.000.000', () => {
+    render(<ConvertToSaleDialog open onOpenChange={() => {}} reservation={reservation} />);
+
+    fireEvent.change(screen.getByLabelText(/Precio final de venta/i), { target: { value: '850' } });
+    expect(screen.getByText(/precio debe estar en pesos/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Confirmar venta/i })).toBeDisabled();
+
+    // Sin comisión, el monto bajo el umbral se puede registrar.
+    fireEvent.click(screen.getByRole('switch'));
+    expect(screen.getByRole('button', { name: /Confirmar venta/i })).not.toBeDisabled();
+  });
+
   it('blocks confirmation when the sale amount is invalid', () => {
     render(<ConvertToSaleDialog open onOpenChange={() => {}} reservation={reservation} />);
 
