@@ -149,7 +149,7 @@ const MyBrokerBusiness = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Comisiones cobradas', value: fmt(totals.paid), icon: DollarSign },
-          { label: 'Comisiones devengadas/aprobadas, sin pago', value: fmt(totals.pending), icon: DollarSign }
+          { label: 'Comisiones devengadas/aprobadas, sin pago', value: fmt(totals.pending), icon: DollarSign },
           { label: 'Comisiones ganadas o pagadas', value: String(totals.sales), icon: Trophy },
           { label: 'Proyectos asignados', value: String(approvedProjects), icon: Briefcase },
         ].map((s) => (
