@@ -14,6 +14,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { ArrowUpRight, Loader2 } from 'lucide-react';
 import { useRegisterSale } from '@/hooks/useReservations';
+import { useCommissionRules } from '@/hooks/useAdminCommissions';
+import { fixedProjectRule } from '@/lib/commissions/fixedProjectRule';
 
 interface ConvertToSaleDialogProps {
   open: boolean;
@@ -27,6 +29,7 @@ interface ConvertToSaleDialogProps {
       name?: string | null;
       price?: number | null;
       area?: number | null;
+      project_id?: string | null;
     } | null;
   } | null;
 }
@@ -35,18 +38,20 @@ const formatCLP = (n: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
 
 /**
- * Closes a sale from a paid reservation: captures the final negotiated price,
- * optionally generates the agent commission, and converts atomically via the
- * register_sale RPC (lot → sold, final price recorded, commission created).
+ * Closes a sale from a paid reservation: captures the final negotiated price
+ * and converts atomically via the register_sale RPC (lot → sold, final price
+ * recorded). The commission comes from the project rule (fixed CLP amounts set
+ * by the project owner), never from a rate typed here.
  */
 const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleDialogProps) => {
   const registerSale = useRegisterSale();
   const [saleAmount, setSaleAmount] = useState('');
   const [withCommission, setWithCommission] = useState(true);
-  const [commissionRate, setCommissionRate] = useState('3');
   const [notes, setNotes] = useState('');
+  const rules = useCommissionRules();
 
   const lot = reservation?.lots;
+  const fixed = lot?.project_id ? fixedProjectRule(rules.data ?? [], lot.project_id) : null;
   const listPrice = lot?.price ?? null;
 
   // Prefill the sale amount with the lot's list price each time it opens.
@@ -58,12 +63,10 @@ const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleD
   }, [open, listPrice]);
 
   const amount = Number(saleAmount) || 0;
-  const rate = Number(commissionRate) || 0;
-  const commissionAmount = withCommission && rate > 0 ? Math.round((amount * rate) / 100) : 0;
   const deposit = reservation?.reservation_amount ?? 0;
   const balance = Math.max(0, amount - deposit);
 
-  const valid = amount > 0 && (!withCommission || (rate >= 0 && rate <= 50));
+  const valid = amount > 0;
 
   const handleConfirm = () => {
     if (!reservation || !valid) return;
@@ -71,7 +74,8 @@ const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleD
       {
         reservationId: reservation.id,
         saleAmount: amount,
-        commissionRate: withCommission && rate > 0 ? rate : null,
+        // null = la base aplica la regla del proyecto; 0 = sin comisión.
+        commissionRate: withCommission ? null : 0,
         notes: notes.trim() || null,
       },
       { onSuccess: () => onOpenChange(false) },
@@ -128,26 +132,31 @@ const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleD
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="with-commission" className="text-sm">Generar comisión</Label>
-              <p className="text-xs text-muted-foreground">Registra tu comisión de venta</p>
+              <p className="text-xs text-muted-foreground">Según la comisión fijada en el proyecto</p>
             </div>
             <Switch id="with-commission" checked={withCommission} onCheckedChange={setWithCommission} />
           </div>
 
           {withCommission && (
-            <div className="space-y-1.5">
-              <Label htmlFor="commission-rate">Tasa de comisión (%)</Label>
-              <Input
-                id="commission-rate"
-                type="number"
-                min={0}
-                max={50}
-                step={0.5}
-                value={commissionRate}
-                onChange={(e) => setCommissionRate(e.target.value)}
-              />
-              {commissionAmount > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Comisión: <span className="font-semibold text-foreground">{formatCLP(commissionAmount)}</span>
+            <div className="rounded-lg border p-3 text-xs space-y-1" aria-live="polite">
+              {fixed ? (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Comisión por venta</span>
+                    <span className="font-semibold tabular-nums">{formatCLP(fixed.seller)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Captación (si hay broker referido)</span>
+                    <span className="font-medium tabular-nums">
+                      {fixed.captador === null ? 'Sin monto fijo' : formatCLP(fixed.captador)}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-muted-foreground">
+                  {rules.isLoading
+                    ? 'Cargando la comisión del proyecto…'
+                    : 'El proyecto no tiene comisión fija: se aplica la regla general de la plataforma.'}
                 </p>
               )}
             </div>

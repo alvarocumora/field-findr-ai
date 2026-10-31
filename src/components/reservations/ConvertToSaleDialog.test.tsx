@@ -7,15 +7,26 @@ vi.mock('@/hooks/useReservations', () => ({
   useRegisterSale: () => ({ mutate: mutateMock, isPending: false }),
 }));
 
+const rulesState: { data: unknown[]; isLoading: boolean } = { data: [], isLoading: false };
+vi.mock('@/hooks/useAdminCommissions', () => ({
+  useCommissionRules: () => rulesState,
+}));
+
 const reservation = {
   id: 'res-1',
   buyer_name: 'Jorge Fuentes',
   reservation_amount: 500_000,
-  lots: { lot_number: '9', name: null, price: 68_000_000, area: 6100 },
+  lots: { lot_number: '9', name: null, price: 68_000_000, area: 6100, project_id: 'proj-1' },
 };
 
 describe('ConvertToSaleDialog', () => {
-  beforeEach(() => mutateMock.mockClear());
+  beforeEach(() => {
+    mutateMock.mockClear();
+    rulesState.data = [
+      { scope: 'project', project_id: 'proj-1', is_active: true, fixed_sale_amount: 1_200_000, referral_fixed_amount: 500_000 },
+    ];
+    rulesState.isLoading = false;
+  });
 
   it('prefills the sale amount with the lot list price and shows the balance after the deposit', () => {
     render(<ConvertToSaleDialog open onOpenChange={() => {}} reservation={reservation} />);
@@ -27,27 +38,41 @@ describe('ConvertToSaleDialog', () => {
     expect(screen.getByText(/Saldo por cobrar/i).parentElement?.textContent).toContain('67.500.000');
   });
 
-  it('computes the commission from the rate and passes it to register_sale', () => {
+  it('shows the project fixed commission and has no rate field', () => {
     render(<ConvertToSaleDialog open onOpenChange={() => {}} reservation={reservation} />);
 
-    // Default 3% de 68M = 2.040.000
-    expect(screen.getByText(/2\.040\.000/)).toBeInTheDocument();
+    expect(screen.getByText(/Comisión por venta/i).parentElement?.textContent).toContain('1.200.000');
+    expect(screen.getByText(/Captación/i).parentElement?.textContent).toContain('500.000');
+    expect(screen.queryByLabelText(/Tasa de comisión/i)).toBeNull();
+    expect(screen.queryByText(/%/)).toBeNull();
+  });
+
+  it('lets the database apply the project rule (null rate) when the commission switch is on', () => {
+    render(<ConvertToSaleDialog open onOpenChange={() => {}} reservation={reservation} />);
 
     fireEvent.click(screen.getByRole('button', { name: /Confirmar venta/i }));
     expect(mutateMock).toHaveBeenCalledTimes(1);
     expect(mutateMock.mock.calls[0][0]).toMatchObject({
       reservationId: 'res-1',
       saleAmount: 68_000_000,
-      commissionRate: 3,
+      commissionRate: null,
     });
   });
 
-  it('sends a null commission rate when the commission switch is off', () => {
+  it('sends a zero rate (no commission) when the commission switch is off', () => {
     render(<ConvertToSaleDialog open onOpenChange={() => {}} reservation={reservation} />);
 
     fireEvent.click(screen.getByRole('switch'));
+    expect(screen.queryByText(/Comisión por venta/i)).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Confirmar venta/i }));
-    expect(mutateMock.mock.calls[0][0]).toMatchObject({ commissionRate: null });
+    expect(mutateMock.mock.calls[0][0]).toMatchObject({ commissionRate: 0 });
+  });
+
+  it('explains the fallback when the project has no fixed commission', () => {
+    rulesState.data = [];
+    render(<ConvertToSaleDialog open onOpenChange={() => {}} reservation={reservation} />);
+
+    expect(screen.getByText(/no tiene comisión fija/i)).toBeInTheDocument();
   });
 
   it('blocks confirmation when the sale amount is invalid', () => {

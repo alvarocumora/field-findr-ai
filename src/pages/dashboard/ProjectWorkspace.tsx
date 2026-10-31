@@ -23,6 +23,9 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProjectWorkspace } from '@/hooks/useProjectWorkspace';
+import { useAuth } from '@/hooks/useAuth';
+import { useAccess } from '@/hooks/useAccess';
+import ProjectCommissionCard from '@/components/projects/ProjectCommissionCard';
 import { withProjectScope } from '@/hooks/useWorkspaceScope';
 import {
   PROJECT_WORKSPACE_TABS,
@@ -83,6 +86,8 @@ const ProjectWorkspace = () => {
     isLoading,
     reservationsLoading,
   } = useProjectWorkspace(projectId);
+  const { user } = useAuth();
+  const access = useAccess();
 
   if (isLoading) {
     return (
@@ -444,6 +449,10 @@ const ProjectWorkspace = () => {
                 <div className="flex justify-between gap-4"><span className="text-muted-foreground">Ubicación</span><span className="font-medium text-right">{project.location || 'Pendiente'}</span></div>
               </CardContent>
             </Card>
+            <ProjectCommissionCard
+              projectId={project.id}
+              canEdit={access.isAdmin || project.user_id === user?.id || access.can('commissions.write')}
+            />
           </div>
         </TabsContent>
       </Tabs>
