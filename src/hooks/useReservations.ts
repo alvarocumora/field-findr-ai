@@ -324,6 +324,52 @@ export const useRegisterSale = () => {
   });
 };
 
+
+/** Only the project owner/admin can list approved active closing brokers. */
+export const useProjectClosingBrokers = (projectId: string | null | undefined, enabled: boolean) =>
+  useQuery({
+    queryKey: ['project-closing-brokers', projectId],
+    enabled: enabled && !!projectId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as CallableFunction)(
+        'list_project_closing_brokers',
+        { p_project_id: projectId },
+      );
+      if (error) throw error;
+      return (data ?? []) as Array<{ user_id: string; display_name: string }>;
+    },
+  });
+
+/** Verified fixed sale: server validates buyer status, closing broker and captured lead. */
+export const useRegisterBrokerProjectSale = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: {
+      reservationId: string; saleAmount: number; closingAgentId: string; notes?: string | null;
+    }) => {
+      const { data, error } = await (supabase.rpc as CallableFunction)(
+        'register_project_broker_sale',
+        {
+          p_reservation_id: values.reservationId,
+          p_sale_amount: values.saleAmount,
+          p_closing_agent_id: values.closingAgentId,
+          p_notes: values.notes ?? null,
+        },
+      );
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      void queryClient.invalidateQueries({ queryKey: ['lots'] });
+      void queryClient.invalidateQueries({ queryKey: ['agent-commissions'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-commissions'] });
+      toast.success('Venta registrada con vendedor y comisiones validadas');
+    },
+    onError: (error: Error) => toast.error('No se pudo registrar la venta', { description: error.message }),
+  });
+};
+
 export const useReservationStats = (projectId?: string) => {
   return useQuery({
     queryKey: ['reservation-stats', projectId],

@@ -15,6 +15,7 @@ import { Plus, Receipt } from 'lucide-react';
 import { useAllCommissions, useAdminRegisterManualSale } from '@/hooks/useAdminCommissions';
 import { useAllBrokerProfiles } from '@/hooks/useBrokers';
 import { useProjects } from '@/hooks/useProjects';
+import { isFixedBrokerProject } from '@/lib/commissions/fixedProjectRule';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })
@@ -49,6 +50,8 @@ const SalesAdmin = () => {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // For exact CLP projects, close from the paid reservation with a verified salesperson.
+    if (isFixedBrokerProject(form.projectId)) return;
     await register.mutateAsync({
       agentId: form.agentId,
       saleAmount: Number(form.saleAmount),
@@ -153,8 +156,15 @@ const SalesAdmin = () => {
               <Textarea id="notes" rows={2} value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </div>
+            {isFixedBrokerProject(form.projectId) && (
+              <p className="md:col-span-3 text-sm text-amber-700">
+                Este proyecto tiene comisión fija por venta. Usa Reservas → Registrar venta
+                para elegir un vendedor aprobado y verificar al captador. El registro manual
+                con porcentajes está bloqueado para evitar comisiones incorrectas.
+              </p>
+            )}
             <div className="md:col-span-3">
-              <Button type="submit" disabled={!form.agentId || !form.saleAmount || register.isPending}>
+              <Button type="submit" disabled={!form.agentId || !form.saleAmount || register.isPending || isFixedBrokerProject(form.projectId)}>
                 Registrar venta
               </Button>
             </div>
@@ -184,7 +194,7 @@ const SalesAdmin = () => {
                 <TableRow key={r.id}>
                   <TableCell>{new Date(r.created_at).toLocaleDateString('es-CL')}</TableCell>
                   <TableCell className="font-medium">{fmt(r.sale_amount)}</TableCell>
-                  <TableCell>{fmt(r.commission_amount)} · {r.commission_rate}%</TableCell>
+                  <TableCell>{fmt(r.commission_amount)} {r.commission_rate > 0 ? `· ${r.commission_rate}%` : '· monto fijo'}</TableCell>
                   <TableCell><Badge variant="secondary">{r.status}</Badge></TableCell>
                   <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
                     {r.notes ?? '—'}

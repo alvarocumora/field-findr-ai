@@ -141,7 +141,7 @@ const CommissionsPage = () => {
                   <TableRow>
                     <TableHead>Fecha</TableHead>
                     <TableHead>Venta</TableHead>
-                    <TableHead>% referido</TableHead>
+                    <TableHead>Modalidad</TableHead>
                     <TableHead>Tu comisión</TableHead>
                     <TableHead>Estado</TableHead>
                   </TableRow>
@@ -154,7 +154,7 @@ const CommissionsPage = () => {
                     <TableRow key={c.id}>
                       <TableCell>{new Date(c.created_at).toLocaleDateString('es-CL')}</TableCell>
                       <TableCell>{fmt(c.sale_amount)}</TableCell>
-                      <TableCell>{c.referral_rate}%</TableCell>
+                      <TableCell>{c.referral_rate > 0 ? `${c.referral_rate}% (legado)` : 'Monto registrado en CLP'}</TableCell>
                       <TableCell className="font-medium">{fmt(c.referral_amount)}</TableCell>
                       <TableCell><StatusBadge status={c.referral_status} /></TableCell>
                     </TableRow>
@@ -174,7 +174,7 @@ const CommissionsPage = () => {
                   <TableRow>
                     <TableHead>Fecha</TableHead>
                     <TableHead>Venta</TableHead>
-                    <TableHead>% referido</TableHead>
+                    <TableHead>Modalidad</TableHead>
                     <TableHead>A pagar</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acción</TableHead>
@@ -188,7 +188,7 @@ const CommissionsPage = () => {
                     <TableRow key={c.id}>
                       <TableCell>{new Date(c.created_at).toLocaleDateString('es-CL')}</TableCell>
                       <TableCell>{fmt(c.sale_amount)}</TableCell>
-                      <TableCell>{c.referral_rate}%</TableCell>
+                      <TableCell>{c.referral_rate > 0 ? `${c.referral_rate}% (legado)` : 'Monto registrado en CLP'}</TableCell>
                       <TableCell className="font-medium">{fmt(c.referral_amount)}</TableCell>
                       <TableCell><StatusBadge status={c.referral_status} /></TableCell>
                       <TableCell className="text-right">

@@ -41,7 +41,7 @@ const RESOURCES = [
   {
     icon: Users,
     title: 'Cómo construir tu red',
-    text: 'Invita brokers con tu link y participa del override configurado por la plataforma.',
+    text: 'La invitación de brokers a tu red y la captación de compradores tienen reglas distintas.'
   },
 ];
 
@@ -67,7 +67,7 @@ const MyBrokerBusiness = () => {
     return {
       paid: active.filter((c) => c.status === 'paid')
         .reduce((s, c) => s + (c.commission_amount || 0), 0),
-      pending: active.filter((c) => c.status !== 'paid')
+      pending: active.filter((c) => ['earned', 'approved'].includes(c.status))
         .reduce((s, c) => s + (c.commission_amount || 0), 0),
       sales: active.filter((c) => ['earned', 'approved', 'paid'].includes(c.status)).length,
       network: earned.reduce((s, c) => s + (c.referral_amount || 0), 0),
@@ -136,7 +136,7 @@ const MyBrokerBusiness = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Mi negocio</h1>
           <p className="text-muted-foreground">
-            {profile.display_name} · nivel {profile.level} · comisión base {profile.base_commission_rate}%
+            {profile.display_name} · nivel {profile.level} · condiciones de comisión según proyecto
           </p>
         </div>
         <Badge variant={profile.is_active ? 'default' : 'outline'}>
@@ -149,7 +149,7 @@ const MyBrokerBusiness = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Comisiones cobradas', value: fmt(totals.paid), icon: DollarSign },
-          { label: 'Comisiones no pagadas (incluye potenciales)', value: fmt(totals.pending), icon: DollarSign },
+          { label: 'Comisiones devengadas/aprobadas, sin pago', value: fmt(totals.pending), icon: DollarSign },
           { label: 'Comisiones ganadas o pagadas', value: String(totals.sales), icon: Trophy },
           { label: 'Proyectos asignados', value: String(approvedProjects), icon: Briefcase },
         ].map((s) => (
@@ -202,7 +202,7 @@ const MyBrokerBusiness = () => {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Override de red: {profile.network_override_rate}% · ganado {fmt(totals.network)}
+                Red de brokers (condiciones separadas) · referidos registrados {fmt(totals.network)}
               </p>
               <Button variant="link" className="px-0" asChild>
                 <Link to="/asesor/red">Ver árbol de referidos y atribución →</Link>
