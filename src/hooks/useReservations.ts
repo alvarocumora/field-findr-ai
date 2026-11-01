@@ -276,6 +276,12 @@ export interface RegisterSaleData {
   notes?: string | null;
   /** Optional: link the sale to a specific lead so referral splits are inherited. */
   leadId?: string | null;
+  /**
+   * Quién cerró una venta que llegó con el link de un broker. true/null = el
+   * broker (recibe la comisión de venta); false = el equipo del proyecto (el
+   * broker recibe solo la captación).
+   */
+  brokerCloses?: boolean | null;
   /** Optional: referring broker who brought the client, if not resolved via leadId. */
   referringAgentId?: string | null;
   /** Referral split (% of the total commission) paid to the referring broker. */
@@ -295,7 +301,7 @@ export const useRegisterSale = () => {
   return useMutation({
     mutationFn: async ({
       reservationId, saleAmount, commissionRate, notes,
-      leadId, referringAgentId, referralRate,
+      leadId, referringAgentId, referralRate, brokerCloses,
     }: RegisterSaleData) => {
       const { data, error } = await supabase.rpc('register_sale', {
         p_reservation_id: reservationId,
@@ -305,6 +311,7 @@ export const useRegisterSale = () => {
         p_referring_agent_id: referringAgentId ?? null,
         p_referral_rate: referralRate ?? null,
         p_lead_id: leadId ?? null,
+        p_broker_closes: brokerCloses ?? null,
       });
       if (error) throw error;
       return data as string | null; // commission id (null when no commission)

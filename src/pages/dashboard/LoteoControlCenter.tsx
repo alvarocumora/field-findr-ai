@@ -102,7 +102,7 @@ const LoteoControlCenter = () => {
 
   const { lots, isLoading: lotsLoading } = useLots(activeProjectId || undefined);
   const { data: reservations = [], isLoading: resLoading } = useReservations(activeProjectId || undefined);
-  const { data: commissions = [], isLoading: comLoading } = useAgentCommissions(activeProjectId || undefined);
+  const { data: commissions = [], isLoading: comLoading } = useAgentCommissions(activeProjectId || undefined, 'project');
 
   const extendReservation = useExtendReservation();
   const expireStale = useExpireStaleReservations();
