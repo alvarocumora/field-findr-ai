@@ -16,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ArrowUpRight, Loader2 } from 'lucide-react';
 import { useRegisterSale } from '@/hooks/useReservations';
 import { useCommissionRules } from '@/hooks/useAdminCommissions';
-import { fixedProjectRule } from '@/lib/commissions/fixedProjectRule';
+import { closerShare, fixedProjectRule } from '@/lib/commissions/fixedProjectRule';
 
 interface ConvertToSaleDialogProps {
   open: boolean;
@@ -167,14 +167,15 @@ const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleD
                   <RadioGroupItem id="closer-broker" value="broker" className="mt-0.5" />
                   <span>
                     <span className="block font-medium text-sm">El broker</span>
-                    Recibe la comisión de venta{fixed ? ` (${formatCLP(fixed.seller)})` : ''}.
+                    Captó y cerró: recibe la comisión completa{fixed ? ` (${formatCLP(fixed.seller)})` : ''}.
                   </span>
                 </label>
                 <label htmlFor="closer-team" className="flex items-start gap-2 rounded-lg border p-2.5 text-xs cursor-pointer">
                   <RadioGroupItem id="closer-team" value="team" className="mt-0.5" />
                   <span>
                     <span className="block font-medium text-sm">El equipo del proyecto</span>
-                    El broker recibe solo la captación{fixed && fixed.captador !== null ? ` (${formatCLP(fixed.captador)})` : ''}.
+                    Se reparte: captación al broker{fixed && fixed.captador !== null ? ` (${formatCLP(fixed.captador)})` : ''} y
+                    cierre al equipo{fixed ? ` (${formatCLP(closerShare(fixed))})` : ''}.
                   </span>
                 </label>
               </RadioGroup>
@@ -186,14 +187,14 @@ const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleD
               {fixed && hasBroker ? (
                 closer === 'broker' ? (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Comisión por venta (broker)</span>
+                    <span className="text-muted-foreground">Comisión completa (broker)</span>
                     <span className="font-semibold tabular-nums">{formatCLP(fixed.seller)}</span>
                   </div>
                 ) : (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Comisión por venta (equipo)</span>
-                      <span className="font-semibold tabular-nums">{formatCLP(fixed.seller)}</span>
+                      <span className="text-muted-foreground">Cierre (equipo)</span>
+                      <span className="font-semibold tabular-nums">{formatCLP(closerShare(fixed))}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Captación (broker)</span>
@@ -206,15 +207,14 @@ const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleD
               ) : fixed ? (
                 <>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Comisión por venta</span>
+                    <span className="text-muted-foreground">Comisión total por venta</span>
                     <span className="font-semibold tabular-nums">{formatCLP(fixed.seller)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Captación (si hay broker referido)</span>
-                    <span className="font-medium tabular-nums">
-                      {fixed.captador === null ? 'Sin monto fijo' : formatCLP(fixed.captador)}
-                    </span>
-                  </div>
+                  <p className="text-muted-foreground">
+                    Si otro vendedor captó al cliente, el total se reparte: captación{' '}
+                    {fixed.captador === null ? 'sin monto fijo' : formatCLP(fixed.captador)} y cierre{' '}
+                    {formatCLP(closerShare(fixed))}.
+                  </p>
                 </>
               ) : (
                 <p className="text-muted-foreground">

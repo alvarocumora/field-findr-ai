@@ -32,8 +32,8 @@ describe('programa vendedores', () => {
   it('formatea montos en pesos chilenos', () => {
     expect(clpAmount(1_200_000)).toBe('$1.200.000');
     expect(brokerCommissionSummary()).toBe(
-      'Valle Escondido Licantén: $1.200.000 por venta y $500.000 por captación · ' +
-        'Valle de Hualañé: $750.000 por venta y $350.000 por captación',
+      'Valle Escondido Licantén: $1.200.000 por venta ($500.000 captación + $700.000 cierre) · ' +
+        'Valle de Hualañé: $750.000 por venta ($350.000 captación + $400.000 cierre)',
     );
   });
 });

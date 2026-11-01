@@ -41,8 +41,9 @@ describe('ConvertToSaleDialog', () => {
   it('shows the project fixed commission and has no rate field', () => {
     render(<ConvertToSaleDialog open onOpenChange={() => {}} reservation={reservation} />);
 
-    expect(screen.getByText(/Comisión por venta/i).parentElement?.textContent).toContain('1.200.000');
-    expect(screen.getByText(/Captación/i).parentElement?.textContent).toContain('500.000');
+    expect(screen.getByText(/Comisión total por venta/i).parentElement?.textContent).toContain('1.200.000');
+    expect(screen.getByText(/se reparte/i).textContent).toContain('500.000');
+    expect(screen.getByText(/se reparte/i).textContent).toContain('700.000');
     expect(screen.queryByLabelText(/Tasa de comisión/i)).toBeNull();
     expect(screen.queryByText(/%/)).toBeNull();
   });
@@ -63,7 +64,7 @@ describe('ConvertToSaleDialog', () => {
     render(<ConvertToSaleDialog open onOpenChange={() => {}} reservation={reservation} />);
 
     fireEvent.click(screen.getByRole('switch'));
-    expect(screen.queryByText(/Comisión por venta/i)).toBeNull();
+    expect(screen.queryByText(/Comisión total por venta/i)).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Confirmar venta/i }));
     expect(mutateMock.mock.calls[0][0]).toMatchObject({ commissionRate: 0 });
   });
@@ -98,7 +99,7 @@ describe('ConvertToSaleDialog', () => {
 
     expect(screen.getByText(/Quién cerró la venta/i)).toBeInTheDocument();
     expect(screen.getByText(/BK-ABC123/)).toBeInTheDocument();
-    expect(screen.getByText(/Comisión por venta \(broker\)/i).parentElement?.textContent).toContain('1.200.000');
+    expect(screen.getByText(/Comisión completa \(broker\)/i).parentElement?.textContent).toContain('1.200.000');
     fireEvent.click(screen.getByRole('button', { name: /Confirmar venta/i }));
     expect(mutateMock.mock.calls[0][0]).toMatchObject({ commissionRate: null, brokerCloses: true });
   });
@@ -114,6 +115,7 @@ describe('ConvertToSaleDialog', () => {
 
     fireEvent.click(screen.getByLabelText(/El equipo del proyecto/i));
     expect(screen.getByText(/Captación \(broker\)/i).parentElement?.textContent).toContain('500.000');
+    expect(screen.getByText(/Cierre \(equipo\)/i).parentElement?.textContent).toContain('700.000');
     fireEvent.click(screen.getByRole('button', { name: /Confirmar venta/i }));
     expect(mutateMock.mock.calls[0][0]).toMatchObject({ brokerCloses: false });
   });

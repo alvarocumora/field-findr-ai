@@ -14,6 +14,12 @@
 --    de la postulación (auth.users). Avisa al broker que su cuenta está activa.
 -- 5) Solicitudes de proyecto: el aviso al dueño lleva a la bandeja de aprobación
 --    y el broker recibe aviso cuando su solicitud se aprueba o rechaza.
+-- 6) Regla de reparto: la comisión fija del proyecto es el TOTAL por venta. Si
+--    otro vendedor captó al cliente, el captador recibe su parte
+--    (referral_fixed_amount) y quien cierra el resto (total − captación).
+--    Si quien cierra también captó, recibe el total. Ej. Hualañé: total
+--    $750.000 = $350.000 captación + $400.000 cierre.
+-- 7) set_project_commission(): la captación no puede superar el total.
 -- Requiere 20261031150000_project_owner_commissions.sql.
 
 -- 1) register_sale ------------------------------------------------------------
@@ -564,3 +570,165 @@ DROP TRIGGER IF EXISTS trg_notify_broker_assignment_decision ON public.project_b
 CREATE TRIGGER trg_notify_broker_assignment_decision
 AFTER UPDATE OF status ON public.project_broker_assignments
 FOR EACH ROW EXECUTE FUNCTION public.notify_broker_assignment_decision();
+
+-- 6) Reparto de la comisión total entre captador y quien cierra ----------------
+CREATE OR REPLACE FUNCTION public.normalize_commission_ledger()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+DECLARE
+  v_fixed numeric;
+  v_min numeric;
+  v_ref numeric;
+  v_project_rule boolean := false;
+  v_split boolean := false;
+BEGIN
+  IF NEW.status = 'pending' THEN NEW.status := 'earned'; END IF;
+  NEW.originator_agent_id := COALESCE(NEW.originator_agent_id, NEW.referring_agent_id, NEW.agent_id);
+  NEW.closing_agent_id := COALESCE(NEW.closing_agent_id, NEW.agent_id);
+
+  IF TG_OP = 'INSERT' AND COALESCE(NEW.sale_amount, 0) >= 1000000 THEN
+    SELECT cr.fixed_sale_amount, cr.referral_fixed_amount, cr.min_commission_amount
+      INTO v_fixed, v_ref, v_min
+    FROM public.commission_rules cr
+    WHERE cr.is_active AND cr.scope = 'project' AND cr.project_id = NEW.project_id
+    ORDER BY cr.updated_at DESC
+    LIMIT 1;
+    v_project_rule := FOUND;
+
+    -- Hay reparto cuando captó un vendedor distinto del que cierra.
+    v_split := NEW.referring_agent_id IS NOT NULL
+               AND NEW.referring_agent_id IS DISTINCT FROM NEW.agent_id;
+
+    IF v_project_rule AND v_fixed IS NOT NULL THEN
+      -- Monto fijo = TOTAL por venta. Con captador, quien cierra recibe el resto.
+      IF v_split AND v_ref IS NOT NULL THEN
+        v_ref := LEAST(v_ref, v_fixed);
+        NEW.commission_amount := v_fixed - v_ref;
+      ELSE
+        NEW.commission_amount := v_fixed;
+      END IF;
+    ELSE
+      IF NOT v_project_rule THEN
+        SELECT cr.min_commission_amount, cr.referral_fixed_amount INTO v_min, v_ref
+        FROM public.commission_rules cr
+        WHERE cr.is_active AND cr.scope = 'default'
+        ORDER BY cr.updated_at DESC LIMIT 1;
+      END IF;
+      IF v_min IS NOT NULL THEN
+        NEW.commission_amount := GREATEST(COALESCE(NEW.commission_amount, 0), v_min);
+      END IF;
+    END IF;
+
+    IF v_split AND v_ref IS NOT NULL THEN
+      NEW.referral_amount := v_ref;
+      IF v_ref > 0 AND COALESCE(NEW.referral_status, 'none') = 'none' THEN
+        NEW.referral_status := 'pending';
+      END IF;
+    ELSIF NOT v_split THEN
+      -- Mismo vendedor capta y cierra: no hay pago aparte de captación.
+      NEW.referral_amount := 0;
+      NEW.referral_status := 'none';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$fn$;
+
+COMMENT ON COLUMN public.commission_rules.fixed_sale_amount IS
+  'TOTAL CLP de comisión por venta. Si otro vendedor captó al cliente, quien cierra recibe este total menos referral_fixed_amount.';
+COMMENT ON COLUMN public.commission_rules.referral_fixed_amount IS
+  'Parte del total (CLP) para quien captó al cliente cuando la venta la cierra otro vendedor.';
+
+-- Corrige comisiones aún no pagadas que sumaron la captación encima del total.
+UPDATE public.agent_commissions ac
+SET commission_amount = cr.fixed_sale_amount - LEAST(ac.referral_amount, cr.fixed_sale_amount),
+    updated_at = now()
+FROM public.commission_rules cr
+WHERE cr.is_active AND cr.scope = 'project' AND cr.project_id = ac.project_id
+  AND cr.fixed_sale_amount IS NOT NULL
+  AND ac.referring_agent_id IS NOT NULL
+  AND ac.referring_agent_id IS DISTINCT FROM ac.agent_id
+  AND COALESCE(ac.referral_amount, 0) > 0
+  AND ac.commission_amount = cr.fixed_sale_amount
+  AND ac.status NOT IN ('paid', 'cancelled');
+
+-- 7) set_project_commission: total y parte del captador -----------------------
+CREATE OR REPLACE FUNCTION public.set_project_commission(
+  p_project_id uuid,
+  p_sale_amount numeric,
+  p_capture_amount numeric
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+DECLARE
+  v_count int;
+  v_rule_id uuid;
+  v_notes text;
+BEGIN
+  IF p_project_id IS NULL OR NOT EXISTS (SELECT 1 FROM public.projects WHERE id = p_project_id) THEN
+    RAISE EXCEPTION 'Proyecto no encontrado';
+  END IF;
+  IF NOT (public.can_access_project(p_project_id, 'commissions.write') OR public.is_platform_admin()) THEN
+    RAISE EXCEPTION 'No tienes permiso para fijar comisiones en este proyecto';
+  END IF;
+  IF p_sale_amount IS NULL OR p_sale_amount < 0 OR p_sale_amount > 100000000 THEN
+    RAISE EXCEPTION 'Comisión total fuera de rango (0 a 100.000.000 CLP)';
+  END IF;
+  IF p_capture_amount IS NULL OR p_capture_amount < 0 OR p_capture_amount > 100000000 THEN
+    RAISE EXCEPTION 'Parte del captador fuera de rango (0 a 100.000.000 CLP)';
+  END IF;
+  IF p_capture_amount > p_sale_amount THEN
+    RAISE EXCEPTION 'La parte del captador no puede ser mayor que la comisión total';
+  END IF;
+
+  v_notes := 'Comisión total CLP $' || replace(to_char(round(p_sale_amount), 'FM999,999,999'), ',', '.')
+          || ' por venta: $' || replace(to_char(round(p_capture_amount), 'FM999,999,999'), ',', '.')
+          || ' al captador y $' || replace(to_char(round(p_sale_amount - p_capture_amount), 'FM999,999,999'), ',', '.')
+          || ' a quien cierra (si capta y cierra el mismo, recibe el total); pago sujeto a validación';
+
+  -- Serializa cambios simultáneos sobre el mismo proyecto.
+  PERFORM pg_advisory_xact_lock(hashtext('commission_rules:' || p_project_id::text));
+
+  SELECT count(*) INTO v_count
+  FROM public.commission_rules
+  WHERE scope = 'project' AND project_id = p_project_id AND is_active;
+  IF v_count > 1 THEN
+    RAISE EXCEPTION 'El proyecto tiene % reglas de comisión activas; pide a un administrador que deje una', v_count;
+  END IF;
+
+  IF v_count = 1 THEN
+    UPDATE public.commission_rules
+       SET commission_rate = 0,
+           referral_override_rate = 0,
+           min_commission_amount = NULL,
+           fixed_sale_amount = round(p_sale_amount),
+           referral_fixed_amount = round(p_capture_amount),
+           notes = v_notes,
+           updated_at = now()
+     WHERE scope = 'project' AND project_id = p_project_id AND is_active
+     RETURNING id INTO v_rule_id;
+  ELSE
+    INSERT INTO public.commission_rules
+      (scope, project_id, commission_rate, referral_override_rate,
+       min_commission_amount, fixed_sale_amount, referral_fixed_amount, is_active, notes)
+    VALUES
+      ('project', p_project_id, 0, 0, NULL, round(p_sale_amount), round(p_capture_amount), true, v_notes)
+    RETURNING id INTO v_rule_id;
+  END IF;
+
+  RETURN v_rule_id;
+END;
+$fn$;
+
+REVOKE ALL ON FUNCTION public.set_project_commission(uuid, numeric, numeric) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.set_project_commission(uuid, numeric, numeric) TO authenticated;
+
+COMMENT ON FUNCTION public.set_project_commission(uuid, numeric, numeric) IS
+  'Fija la comisión TOTAL por venta y la parte del captador de un proyecto (dueño, commissions.write o admin). Solo afecta comisiones nuevas.';

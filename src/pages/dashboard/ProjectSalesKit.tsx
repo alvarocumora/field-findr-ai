@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAccess } from "@/hooks/useAccess";
 import { useMyBrokerProfile, useProjectAssignments } from "@/hooks/useBrokers";
 import { useCommissionRules } from "@/hooks/useAdminCommissions";
-import { fixedProjectRule, formatCLPCommission } from "@/lib/commissions/fixedProjectRule";
+import { commissionSplitLabel, fixedProjectRule } from "@/lib/commissions/fixedProjectRule";
 import type { PublicLot } from "@/lib/lots/publicLotTypes";
 import {
   canReservePublicLot,
@@ -217,7 +217,7 @@ export default function ProjectSalesKit() {
           {(() => {
             const fixed = fixedProjectRule(commissionRules.data ?? [], project.id);
             return fixed
-              ? `Comisión vendedor: ${formatCLPCommission(fixed.seller)}; captador: ${fixed.captador === null ? 'por acordar' : formatCLPCommission(fixed.captador)}.`
+              ? `Comisión: ${commissionSplitLabel(fixed)}. Si captas y cierras tú, recibes el total.`
               : `Comisión acordada: ${assignment.commission_rate}%.`;
           })()} El cobro depende del cierre acreditado y su validación;
           compartir una ficha no acredita una comisión ganada.

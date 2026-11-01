@@ -8,9 +8,9 @@
 export interface BrokerProjectCommission {
   projectId: string;
   name: string;
-  /** CLP para quien cierra la venta. */
+  /** Comisión TOTAL en CLP por lote vendido (si capta y cierra el mismo, la recibe completa). */
   sale: number;
-  /** CLP adicionales para quien captó al cliente. */
+  /** Parte del total para quien captó al cliente cuando cierra otro vendedor. */
   capture: number;
 }
 
@@ -38,10 +38,16 @@ export const BROKER_GUIDE_URL = '/downloads/guia-red-vendedores.pdf';
 
 export const clpAmount = (amount: number) => '$' + amount.toLocaleString('es-CL');
 
-/** "Valle Escondido Licantén: $1.200.000 por venta y $500.000 por captación · …" */
+/** Parte de quien cierra cuando otro vendedor captó al cliente. */
+export const brokerCloserShare = (p: BrokerProjectCommission) => Math.max(0, p.sale - p.capture);
+
+/**
+ * "Valle Escondido Licantén: $1.200.000 por venta ($500.000 captación + $700.000 cierre) · …"
+ * El total se reparte entre quien capta y quien cierra; si es la misma persona, lo recibe completo.
+ */
 export const brokerCommissionSummary = (separator = ' · ') =>
   BROKER_PROJECT_COMMISSIONS.map(
-    (p) => `${p.name}: ${clpAmount(p.sale)} por venta y ${clpAmount(p.capture)} por captación`,
+    (p) => `${p.name}: ${clpAmount(p.sale)} por venta (${clpAmount(p.capture)} captación + ${clpAmount(brokerCloserShare(p))} cierre)`,
   ).join(separator);
 
 export const whatsappShareUrl = (text: string, url: string) =>

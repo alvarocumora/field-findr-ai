@@ -37,8 +37,8 @@ describe('ProjectCommissionCard', () => {
   it('el dueño ve los montos vigentes y guarda los nuevos', () => {
     render(<ProjectCommissionCard projectId="p1" canEdit />);
 
-    const sale = screen.getByLabelText(/Por venta/i) as HTMLInputElement;
-    const capture = screen.getByLabelText(/Por captación/i) as HTMLInputElement;
+    const sale = screen.getByLabelText(/Total por venta/i) as HTMLInputElement;
+    const capture = screen.getByLabelText(/Parte del captador/i) as HTMLInputElement;
     expect(sale.value).toBe('750000');
     expect(capture.value).toBe('350000');
 
@@ -54,7 +54,7 @@ describe('ProjectCommissionCard', () => {
   it('un proyecto sin regla se puede configurar por primera vez', () => {
     render(<ProjectCommissionCard projectId="p2" canEdit />);
 
-    fireEvent.change(screen.getByLabelText(/Por venta/i), { target: { value: '600000' } });
+    fireEvent.change(screen.getByLabelText(/Total por venta/i), { target: { value: '600000' } });
     fireEvent.click(screen.getByRole('button', { name: /Guardar/i }));
     expect(mutateMock).toHaveBeenCalledWith({ projectId: 'p2', saleAmount: 600_000, captureAmount: 0 });
   });
@@ -63,7 +63,16 @@ describe('ProjectCommissionCard', () => {
     render(<ProjectCommissionCard projectId="p1" canEdit={false} />);
 
     expect(screen.queryByRole('button', { name: /Guardar/i })).toBeNull();
-    expect(screen.getByText(/Por venta/i).parentElement?.textContent).toContain('750.000');
-    expect(screen.getByText(/Por captación/i).parentElement?.textContent).toContain('350.000');
+    expect(screen.getByText(/^Total por venta$/i).parentElement?.textContent).toContain('750.000');
+    expect(screen.getByText(/^Parte del captador$/i).parentElement?.textContent).toContain('350.000');
+    expect(screen.getByText(/^Quien cierra \(si otro captó\)$/i).parentElement?.textContent).toContain('400.000');
+  });
+
+  it('no deja guardar una captación mayor que el total', () => {
+    render(<ProjectCommissionCard projectId="p1" canEdit />);
+
+    fireEvent.change(screen.getByLabelText(/Total por venta/i), { target: { value: '300000' } });
+    expect(screen.getByText(/no puede ser mayor que el total/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Guardar/i })).toBeDisabled();
   });
 });

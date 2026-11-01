@@ -24,7 +24,7 @@ import {
   type MarketProject,
 } from "@/hooks/useBrokerMarketProjects";
 import { useCommissionRules } from "@/hooks/useAdminCommissions";
-import { fixedProjectRule, formatCLPCommission } from "@/lib/commissions/fixedProjectRule";
+import { commissionSplitLabel, fixedProjectRule } from "@/lib/commissions/fixedProjectRule";
 import { getShareUrl } from "@/lib/publicUrls";
 import { WorkspaceLoadError } from "@/components/dashboard/WorkspaceLoadError";
 
@@ -112,7 +112,7 @@ export default function BrokerMarketplace() {
   const rateLabel = (projectId: string) => {
     const fixed = fixedProjectRule(rules, projectId);
     if (fixed) {
-      return `Venta: ${formatCLPCommission(fixed.seller)} · Captación: ${fixed.captador === null ? "por acordar" : formatCLPCommission(fixed.captador)}`;
+      return commissionSplitLabel(fixed);
     }
     const assignment = approved.find((item) => item.project_id === projectId);
     const rate = assignment?.commission_rate ??

@@ -43,7 +43,8 @@ const ProjectCommissionCard = ({ projectId, canEdit }: ProjectCommissionCardProp
   const saleAmount = parseClpInput(sale);
   const captureParsed = capture.trim() === '' ? 0 : parseClpInput(capture);
   const captureAmount = captureParsed ?? 0;
-  const valid = saleAmount !== null && captureParsed !== null && saleAmount <= MAX_CLP && captureAmount <= MAX_CLP;
+  const captureTooHigh = saleAmount !== null && captureAmount > saleAmount;
+  const valid = saleAmount !== null && captureParsed !== null && saleAmount <= MAX_CLP && captureAmount <= MAX_CLP && !captureTooHigh;
   const changed = currentSale === null || saleAmount !== currentSale || captureAmount !== (currentCapture ?? 0);
 
   return (
@@ -54,7 +55,9 @@ const ProjectCommissionCard = ({ projectId, canEdit }: ProjectCommissionCardProp
           Comisiones
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Montos fijos en pesos por lote vendido. Se aplican a las ventas que se registren desde que los guardas.
+          Comisión total en pesos por lote vendido. Si otro vendedor captó al cliente, el captador recibe su parte y
+          quien cierra el resto; si capta y cierra el mismo, recibe el total. Se aplica a las ventas que se registren
+          desde que la guardas.
         </p>
       </CardHeader>
       <CardContent>
@@ -70,7 +73,7 @@ const ProjectCommissionCard = ({ projectId, canEdit }: ProjectCommissionCardProp
             }}
           >
             <div className="space-y-1.5">
-              <Label htmlFor="commission-sale">Por venta (CLP)</Label>
+              <Label htmlFor="commission-sale">Total por venta (CLP)</Label>
               <Input
                 id="commission-sale"
                 inputMode="numeric"
@@ -78,10 +81,10 @@ const ProjectCommissionCard = ({ projectId, canEdit }: ProjectCommissionCardProp
                 value={sale}
                 onChange={(e) => setSale(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">Para quien cierra la venta.</p>
+              <p className="text-xs text-muted-foreground">Lo que se paga en total por lote vendido.</p>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="commission-capture">Por captación (CLP)</Label>
+              <Label htmlFor="commission-capture">Parte del captador (CLP)</Label>
               <Input
                 id="commission-capture"
                 inputMode="numeric"
@@ -89,7 +92,9 @@ const ProjectCommissionCard = ({ projectId, canEdit }: ProjectCommissionCardProp
                 value={capture}
                 onChange={(e) => setCapture(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">Adicional para quien captó al cliente.</p>
+              <p className="text-xs text-muted-foreground">
+                Sale del total. Quien cierra recibe {saleAmount !== null && !captureTooHigh ? formatCLP(saleAmount - captureAmount) : 'el resto'}.
+              </p>
             </div>
             <Button type="submit" disabled={!valid || !changed || save.isPending} className="gap-1.5">
               {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -98,14 +103,18 @@ const ProjectCommissionCard = ({ projectId, canEdit }: ProjectCommissionCardProp
             {((sale.trim() !== '' && saleAmount === null) || captureParsed === null) && (
               <p className="text-xs text-destructive sm:col-span-3">Escribe montos en pesos sin decimales, por ejemplo 1.200.000.</p>
             )}
+            {captureTooHigh && (
+              <p className="text-xs text-destructive sm:col-span-3">La parte del captador no puede ser mayor que el total.</p>
+            )}
             {(saleAmount ?? 0) > MAX_CLP || captureAmount > MAX_CLP ? (
               <p className="text-xs text-destructive sm:col-span-3">El máximo es {formatCLP(MAX_CLP)}.</p>
             ) : null}
           </form>
         ) : current ? (
           <div className="grid gap-2 text-sm sm:grid-cols-2">
-            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Por venta</span><span className="font-medium tabular-nums">{formatCLP(current.seller)}</span></div>
-            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Por captación</span><span className="font-medium tabular-nums">{current.captador === null ? 'Sin monto fijo' : formatCLP(current.captador)}</span></div>
+            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Total por venta</span><span className="font-medium tabular-nums">{formatCLP(current.seller)}</span></div>
+            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Parte del captador</span><span className="font-medium tabular-nums">{current.captador === null ? 'Sin monto fijo' : formatCLP(current.captador)}</span></div>
+            <div className="flex justify-between gap-4 sm:col-span-2"><span className="text-muted-foreground">Quien cierra (si otro captó)</span><span className="font-medium tabular-nums">{formatCLP(Math.max(0, current.seller - (current.captador ?? 0)))}</span></div>
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">Este proyecto aún no tiene comisión fija. Solo el dueño del proyecto puede fijarla.</p>
