@@ -87,6 +87,45 @@ describe('ConvertToSaleDialog', () => {
     expect(screen.getByRole('button', { name: /Confirmar venta/i })).not.toBeDisabled();
   });
 
+  it('gives the sale commission to the broker who brought the client by default', () => {
+    render(
+      <ConvertToSaleDialog
+        open
+        onOpenChange={() => {}}
+        reservation={{ ...reservation, referring_agent_id: 'broker-1', referral_code: 'BK-ABC123' }}
+      />,
+    );
+
+    expect(screen.getByText(/Quién cerró la venta/i)).toBeInTheDocument();
+    expect(screen.getByText(/BK-ABC123/)).toBeInTheDocument();
+    expect(screen.getByText(/Comisión por venta \(broker\)/i).parentElement?.textContent).toContain('1.200.000');
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar venta/i }));
+    expect(mutateMock.mock.calls[0][0]).toMatchObject({ commissionRate: null, brokerCloses: true });
+  });
+
+  it('leaves only the captación to the broker when the project team closed the sale', () => {
+    render(
+      <ConvertToSaleDialog
+        open
+        onOpenChange={() => {}}
+        reservation={{ ...reservation, referring_agent_id: 'broker-1', referral_code: 'BK-ABC123' }}
+      />,
+    );
+
+    fireEvent.click(screen.getByLabelText(/El equipo del proyecto/i));
+    expect(screen.getByText(/Captación \(broker\)/i).parentElement?.textContent).toContain('500.000');
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar venta/i }));
+    expect(mutateMock.mock.calls[0][0]).toMatchObject({ brokerCloses: false });
+  });
+
+  it('does not ask who closed the sale when no broker brought the client', () => {
+    render(<ConvertToSaleDialog open onOpenChange={() => {}} reservation={reservation} />);
+
+    expect(screen.queryByText(/Quién cerró la venta/i)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar venta/i }));
+    expect(mutateMock.mock.calls[0][0]).toMatchObject({ brokerCloses: null });
+  });
+
   it('blocks confirmation when the sale amount is invalid', () => {
     render(<ConvertToSaleDialog open onOpenChange={() => {}} reservation={reservation} />);
 

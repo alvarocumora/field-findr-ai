@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import { useAgentCommissions } from '@/hooks/useAgentCommissions';
 import { useReferralCommissionsEarned } from '@/hooks/useReferrals.commissions';
 import {
-  useMyBrokerProfile, useUpdateMyBrokerProfile, useProjectAssignments, useBrokerRanking,
+  useMyBrokerProfile, useUpdateMyBrokerProfile, useMarkBrokerLinkShared, useProjectAssignments, useBrokerRanking,
 } from '@/hooks/useBrokers';
 import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 import { BROKER_GUIDE_URL, brokerCommissionSummary } from '@/lib/brokerProgram';
@@ -49,6 +49,7 @@ const MyBrokerBusiness = () => {
   const profileQuery = useMyBrokerProfile();
   const { data: profile } = profileQuery;
   const updateProfile = useUpdateMyBrokerProfile();
+  const markLinkShared = useMarkBrokerLinkShared();
   const commissionsQuery = useAgentCommissions();
   const { data: commissions = [] } = commissionsQuery;
   const earnedQuery = useReferralCommissionsEarned();
@@ -95,6 +96,7 @@ const MyBrokerBusiness = () => {
     try {
       await navigator.clipboard.writeText(text);
       toast.success('Link copiado');
+      if ((profile?.onboarding_step ?? 0) < 4) markLinkShared.mutate();
     } catch {
       toast.error('No se pudo copiar. Selecciona el enlace y cópialo manualmente.');
     }

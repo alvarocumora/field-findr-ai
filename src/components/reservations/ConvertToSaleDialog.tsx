@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ArrowUpRight, Loader2 } from 'lucide-react';
 import { useRegisterSale } from '@/hooks/useReservations';
 import { useCommissionRules } from '@/hooks/useAdminCommissions';
@@ -24,6 +25,9 @@ interface ConvertToSaleDialogProps {
     id: string;
     buyer_name: string;
     reservation_amount: number | null;
+    /** Broker que trajo al cliente con su link (si la reserva llegó así). */
+    referring_agent_id?: string | null;
+    referral_code?: string | null;
     lots?: {
       lot_number?: string | null;
       name?: string | null;
@@ -50,7 +54,9 @@ const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleD
   const [saleAmount, setSaleAmount] = useState('');
   const [withCommission, setWithCommission] = useState(true);
   const [notes, setNotes] = useState('');
+  const [closer, setCloser] = useState<'broker' | 'team'>('broker');
   const rules = useCommissionRules();
+  const hasBroker = !!reservation?.referring_agent_id;
 
   const lot = reservation?.lots;
   const fixed = lot?.project_id ? fixedProjectRule(rules.data ?? [], lot.project_id) : null;
@@ -61,6 +67,7 @@ const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleD
     if (open) {
       setSaleAmount(listPrice ? String(listPrice) : '');
       setNotes('');
+      setCloser('broker');
     }
   }, [open, listPrice]);
 
@@ -81,6 +88,8 @@ const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleD
         saleAmount: amount,
         // null = la base aplica la regla del proyecto; 0 = sin comisión.
         commissionRate: withCommission ? null : 0,
+        // Venta con link de broker: por defecto la cierra el broker (comisión de venta).
+        brokerCloses: hasBroker ? closer === 'broker' : null,
         notes: notes.trim() || null,
       },
       { onSuccess: () => onOpenChange(false) },
@@ -147,9 +156,54 @@ const ConvertToSaleDialog = ({ open, onOpenChange, reservation }: ConvertToSaleD
             <Switch id="with-commission" checked={withCommission} onCheckedChange={setWithCommission} />
           </div>
 
+          {withCommission && hasBroker && (
+            <div className="space-y-2">
+              <Label className="text-sm">¿Quién cerró la venta?</Label>
+              <p className="text-xs text-muted-foreground">
+                El cliente llegó con el link de un broker{reservation.referral_code ? ` (${reservation.referral_code})` : ''}.
+              </p>
+              <RadioGroup value={closer} onValueChange={(v) => setCloser(v as 'broker' | 'team')} className="gap-2">
+                <label htmlFor="closer-broker" className="flex items-start gap-2 rounded-lg border p-2.5 text-xs cursor-pointer">
+                  <RadioGroupItem id="closer-broker" value="broker" className="mt-0.5" />
+                  <span>
+                    <span className="block font-medium text-sm">El broker</span>
+                    Recibe la comisión de venta{fixed ? ` (${formatCLP(fixed.seller)})` : ''}.
+                  </span>
+                </label>
+                <label htmlFor="closer-team" className="flex items-start gap-2 rounded-lg border p-2.5 text-xs cursor-pointer">
+                  <RadioGroupItem id="closer-team" value="team" className="mt-0.5" />
+                  <span>
+                    <span className="block font-medium text-sm">El equipo del proyecto</span>
+                    El broker recibe solo la captación{fixed && fixed.captador !== null ? ` (${formatCLP(fixed.captador)})` : ''}.
+                  </span>
+                </label>
+              </RadioGroup>
+            </div>
+          )}
+
           {withCommission && (
             <div className="rounded-lg border p-3 text-xs space-y-1" aria-live="polite">
-              {fixed ? (
+              {fixed && hasBroker ? (
+                closer === 'broker' ? (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Comisión por venta (broker)</span>
+                    <span className="font-semibold tabular-nums">{formatCLP(fixed.seller)}</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Comisión por venta (equipo)</span>
+                      <span className="font-semibold tabular-nums">{formatCLP(fixed.seller)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Captación (broker)</span>
+                      <span className="font-medium tabular-nums">
+                        {fixed.captador === null ? 'Sin monto fijo' : formatCLP(fixed.captador)}
+                      </span>
+                    </div>
+                  </>
+                )
+              ) : fixed ? (
                 <>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Comisión por venta</span>

@@ -3855,6 +3855,7 @@ export type Database = {
           }
         | {
             Args: {
+              p_broker_closes?: boolean
               p_commission_rate?: number
               p_lead_id?: string
               p_notes?: string
