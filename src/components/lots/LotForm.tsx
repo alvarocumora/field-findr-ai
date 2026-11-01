@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Sparkles, Loader2 } from 'lucide-react';
+import type { Json } from '@/integrations/supabase/types';
 
 const lotSchema = z.object({
   lot_number: z.string().min(1, 'El número de lote es requerido').max(50),
@@ -98,6 +99,11 @@ export const LotForm = ({ projects, initialData, onSubmit, onCancel, isLoading }
       latitude: data.latitude || null,
       longitude: data.longitude || null,
       features: {
+        // Conserva claves que este formulario no edita (p. ej. rolSii y
+        // rolCertificate del certificado SII) para que guardar no las borre.
+        ...(initialData?.features && typeof initialData.features === 'object' && !Array.isArray(initialData.features)
+          ? (initialData.features as Record<string, Json>)
+          : {}),
         hasWater: data.hasWater,
         hasElectricity: data.hasElectricity,
         hasRoad: data.hasRoad,

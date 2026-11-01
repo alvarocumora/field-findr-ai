@@ -25,7 +25,13 @@ export interface LotFeatures {
   hasElectricity?: boolean;
   hasRoad?: boolean;
   additionalFeatures?: string[];
+  /** Rol de avalúo SII propio del lote (ej. "08022-00001"). */
+  rolSii?: string;
+  /** Certificado SII de asignación de roles (ej. "934308"). */
+  rolCertificate?: string;
 }
+
+const ROL_SII = /^\d{3,5}-\d{1,5}$/;
 
 export const parseLotFeatures = (features: Json | null): LotFeatures => {
   if (!features || typeof features !== 'object' || Array.isArray(features)) {
@@ -38,6 +44,10 @@ export const parseLotFeatures = (features: Json | null): LotFeatures => {
     hasElectricity: Boolean(f.hasElectricity),
     hasRoad: Boolean(f.hasRoad),
     additionalFeatures: Array.isArray(f.additionalFeatures) ? f.additionalFeatures.map(String) : [],
+    rolSii: typeof f.rolSii === 'string' && ROL_SII.test(f.rolSii.trim()) ? f.rolSii.trim() : undefined,
+    rolCertificate: typeof f.rolCertificate === 'string' && /^\d{3,12}$/.test(f.rolCertificate.trim())
+      ? f.rolCertificate.trim()
+      : undefined,
   };
 };
 
