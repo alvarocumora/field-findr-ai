@@ -258,18 +258,28 @@ BEGIN
         )
       );
 
+    END IF;
+
+    -- Override de red (un nivel) para quien invitó al broker que originó la
+    -- venta: aplica tanto si ese broker solo captó como si captó y cerró.
+    v_network_source := CASE
+      WHEN v_broker_closes THEN v_closer
+      WHEN v_referring IS NOT NULL AND v_ref_amount > 0 THEN v_referring
+    END;
+
+    IF v_network_source IS NOT NULL THEN
       -- One-level upline override. The parent relationship is stored as a UUID
       -- in broker_profiles.referred_by. Only active parents with a positive
       -- configured network_override_rate accrue an override.
       SELECT bp.referred_by
         INTO v_parent_broker
       FROM public.broker_profiles bp
-      WHERE bp.user_id = v_referring
+      WHERE bp.user_id = v_network_source
         AND bp.is_active
       LIMIT 1;
 
       IF v_parent_broker IS NOT NULL
-         AND v_parent_broker <> v_referring
+         AND v_parent_broker <> v_network_source
          AND v_parent_broker <> auth.uid() THEN
         SELECT bp.network_override_rate
           INTO v_parent_override_rate
@@ -301,7 +311,7 @@ BEGIN
               v_commission_id,
               v_res.lot_project_id,
               p_reservation_id,
-              v_referring,
+              v_network_source,
               v_parent_broker,
               1,
               v_parent_override_rate,
@@ -322,7 +332,7 @@ BEGIN
               '/asesor/red',
               jsonb_build_object(
                 'commission_id', v_commission_id,
-                'source_broker_id', v_referring,
+                'source_broker_id', v_network_source,
                 'amount', v_parent_override_amount,
                 'rate', v_parent_override_rate,
                 'depth', 1
@@ -332,6 +342,19 @@ BEGIN
         END IF;
       END IF;
     END IF;
+  END IF;
+
+  -- La venta canónica (public.sales) se crea al actualizar el precio del lote,
+  -- antes de existir la comisión, con quien registra como cierre. Si cerró el
+  -- broker, se corrige para que venta y comisión nombren al mismo vendedor.
+  IF v_broker_closes AND to_regclass('public.sales') IS NOT NULL THEN
+    EXECUTE 'UPDATE public.sales
+                SET closing_agent_id = $1,
+                    originator_agent_id = COALESCE(originator_agent_id, $1)
+              WHERE reservation_id = $2
+                AND status = ''closed''
+                AND closing_agent_id IS DISTINCT FROM $1'
+      USING v_closer, p_reservation_id;
   END IF;
 
   IF p_lead_id IS NOT NULL THEN
