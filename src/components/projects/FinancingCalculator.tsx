@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/collapsible';
 import { generateQuotePDF, QuotePDFData } from '@/lib/pdfGenerator';
 import { toast } from 'sonner';
+import { FIXED_CREDIT_ANNUAL_RATE_PCT } from '@/lib/easyCredit';
 
 interface FinancingCalculatorProps {
   lotPrice: number;
@@ -39,7 +40,6 @@ interface FinancingCalculatorProps {
 }
 
 const TERM_OPTIONS = [12, 24, 36, 48, 60];
-const DEFAULT_INTEREST_RATE = 0.9; // 0.9% mensual (referencia Chile)
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('es-CL', {
@@ -79,7 +79,7 @@ export const FinancingCalculator = ({
   // Simulator state
   const [downPaymentPercent, setDownPaymentPercent] = useState(20);
   const [termMonths, setTermMonths] = useState(36);
-  const [interestRate, setInterestRate] = useState(DEFAULT_INTEREST_RATE);
+  const interestRate = FIXED_CREDIT_ANNUAL_RATE_PCT / 12; // Percent per month, used by PDF as well.
   
   // Capacity calculator state
   const [monthlyIncome, setMonthlyIncome] = useState(1500000);
@@ -244,24 +244,15 @@ export const FinancingCalculator = ({
               </div>
             </div>
 
-            {/* Interest Rate */}
-            <div className="space-y-2">
-              <Label className="text-sm flex items-center gap-2">
+            {/* Fixed nominal annual credit rate; equivalent 0.75% monthly. */}
+            <div className="space-y-1 text-sm">
+              <p className="flex items-center gap-2 font-medium">
                 <Percent className="h-4 w-4 text-muted-foreground" />
-                Tasa mensual
-              </Label>
-              <div className="flex gap-2 items-center">
-                <Input
-                  type="number"
-                  value={interestRate}
-                  onChange={(e) => setInterestRate(parseFloat(e.target.value) || 0)}
-                  step={0.1}
-                  min={0}
-                  max={5}
-                  className="w-24 text-center"
-                />
-                <span className="text-sm text-muted-foreground">% mensual</span>
-              </div>
+                Tasa nominal anual fija: {FIXED_CREDIT_ANNUAL_RATE_PCT}%
+              </p>
+              <p className="text-xs text-muted-foreground">
+                0,75% mensual nominal · simulación referencial, no oferta de crédito.
+              </p>
             </div>
 
             {/* Results */}
