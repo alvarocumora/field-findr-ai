@@ -53,6 +53,10 @@ jobs:
 
       - name: Production build
         run: npm run build
+        env:
+          # CI validates app code and static routes without depending on live API uptime.
+          # Deployment does NOT set this flag and still generates real project previews.
+          SKIP_REMOTE_PROJECT_PREVIEWS: 'true'
 
       - name: Verify DreamHost SPA rules are packaged
         run: test -f dist/.htaccess

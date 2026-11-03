@@ -62,6 +62,10 @@ jobs:
 
       - name: Build production bundle
         run: npm run build
+        env:
+          # Browser QA uses mocked/SPA routes; only real deployments fetch
+          # live public project previews during Vite closeBundle.
+          SKIP_REMOTE_PROJECT_PREVIEWS: 'true'
 
       - name: Test real browser navigation and graceful fallbacks
         run: npx playwright test --config=e2e/playwright.config.mjs

@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { InterestFormDialog } from './InterestFormDialog';
@@ -28,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { generateQuotePDF, QuotePDFData } from '@/lib/pdfGenerator';
 import { toast } from 'sonner';
 import { getShareUrl } from '@/lib/publicUrls';
+import { FIXED_CREDIT_ANNUAL_RATE_PCT } from '@/lib/easyCredit';
 
 interface Lot {
   id: string;
@@ -80,7 +80,7 @@ export const PublicLotQuoter = ({
   const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
   const [downPaymentPercent, setDownPaymentPercent] = useState(20);
   const [termMonths, setTermMonths] = useState(36);
-  const [interestRate, setInterestRate] = useState(0.9);
+  const interestRate = FIXED_CREDIT_ANNUAL_RATE_PCT / 12; // Monthly percent for calculation/PDF.
   const [showInterestForm, setShowInterestForm] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
@@ -112,7 +112,7 @@ export const PublicLotQuoter = ({
   }, [lotPrice, downPaymentPercent, termMonths, interestRate]);
 
   const simulationSummary = calculations
-    ? `Pie ${downPaymentPercent}% (${formatCurrency(calculations.downPayment)}) + ${termMonths} cuotas de ${formatCurrency(calculations.monthlyPayment)}`
+    ? `Pie ${downPaymentPercent}% (${formatCurrency(calculations.downPayment)}) + ${termMonths} cuotas de ${formatCurrency(calculations.monthlyPayment)} a tasa fija nominal anual ${FIXED_CREDIT_ANNUAL_RATE_PCT}%`
     : undefined;
 
   const handleGeneratePDF = async () => {
@@ -317,24 +317,15 @@ export const PublicLotQuoter = ({
                   </div>
                 </div>
 
-                {/* Interest Rate */}
-                <div className="space-y-2">
-                  <Label className="text-sm flex items-center gap-2">
+                {/* Fixed nominal annual rate, matching the public buyer simulators. */}
+                <div className="space-y-1 text-sm">
+                  <p className="flex items-center gap-2 font-medium">
                     <Percent className="h-4 w-4 text-muted-foreground" />
-                    Tasa mensual
-                  </Label>
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      type="number"
-                      value={interestRate}
-                      onChange={(e) => setInterestRate(parseFloat(e.target.value) || 0)}
-                      step={0.1}
-                      min={0}
-                      max={5}
-                      className="w-24 text-center"
-                    />
-                    <span className="text-sm text-muted-foreground">% mensual</span>
-                  </div>
+                    Tasa nominal anual fija: {FIXED_CREDIT_ANNUAL_RATE_PCT}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    0,75% mensual nominal · simulación referencial, no oferta de crédito.
+                  </p>
                 </div>
 
                 <Separator />

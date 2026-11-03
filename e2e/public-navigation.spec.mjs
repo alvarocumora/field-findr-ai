@@ -81,13 +81,40 @@ test('sin WebGL, el explorador conserva una superficie de contenido', async ({ p
   await expect(page.locator('body')).not.toContainText('Oops! Page not found');
 });
 
-test('landings premium mantienen identidad y navegación del proyecto', async ({ page }) => {
+test('landings premium resuelven el proyecto en la ficha pública unificada', async ({ page }) => {
+  // Offline-stable fixture: historical project aliases now resolve through
+  // ProjectLanding -> ProjectDetail, not the retired bespoke landing buttons.
+  const projects = [
+    { id: '761e73ed-cc0d-5605-a06a-4a4348523b4b', slug: 'parcelas-caone-hualane', name: 'Valle de Hualañé', city: 'Hualañé' },
+    { id: 'b4363fda-e99f-400d-ae95-2cbc8244b770', slug: 'valle-escondido-licanten', name: 'Valle Escondido Licantén', city: 'Licantén' },
+  ].map(project => ({
+    ...project, status: 'active', user_id: null, region: 'Maule',
+    country: 'Chile', description: 'Proyecto rural de prueba',
+    images: [], legal_documents: [], permits: [], plan_images: [],
+    total_lots: 0, available_lots: 0, latitude: null, longitude: null,
+  }));
+  await page.route('**/rest/v1/projects?*', async route => {
+    const url = new URL(route.request().url());
+    const value = url.searchParams.get('slug') || url.searchParams.get('id') || '';
+    const project = projects.find(p => value.includes(p.slug) || value.includes(p.id));
+    if (!project) return route.continue();
+    const onlyId = url.searchParams.get('select') === 'id';
+    await route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify(onlyId ? { id: project.id } : project),
+    });
+  });
+  await page.route('**/rest/v1/rpc/get_public_lots*', route =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+  await page.route('**/rest/v1/tour_scenes?*', route =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+
   await page.goto('/valle-hualane');
-  await expect(page.getByRole('heading', { name: 'Valle de Hualañé' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Agendar visita o consultar' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Valle de Hualañé' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Volver', exact: true })).toBeVisible();
 
   await page.goto('/p/valle-escondido-licanten');
-  await expect(page.getByRole('heading', { level: 1, name: /Valle Escondido/i })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Valle Escondido Licantén' })).toBeVisible();
 });
 
 test('portada, contacto y agendamiento no desbordan horizontalmente', async ({ page }) => {

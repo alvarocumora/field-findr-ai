@@ -27,11 +27,18 @@ export function projectSocialPlugin(apiUrl: string, publishableKey: string): Plu
       };
       // Complete pagination; a project disappearing from the public API is not exported.
       const projects: PublishedProject[] = [];
-      for (let offset = 0; ; offset += 100) {
-        const page = await request(`projects?select=id,slug,name,city,location,region,images,landing_config,status&status=eq.active&order=id&limit=100&offset=${offset}`);
-        if (!Array.isArray(page)) throw new Error('Invalid public projects response');
-        projects.push(...page);
-        if (page.length < 100) break;
+      // PR validation must not depend on a live Supabase response. Only CI
+      // workflows set this opt-in flag; real deployments still generate
+      // all public project previews and fail visibly on API errors.
+      if (process.env.SKIP_REMOTE_PROJECT_PREVIEWS !== 'true') {
+        for (let offset = 0; ; offset += 100) {
+          const page = await request(`projects?select=id,slug,name,city,location,region,images,landing_config,status&status=eq.active&order=id&limit=100&offset=${offset}`);
+          if (!Array.isArray(page)) throw new Error('Invalid public projects response');
+          projects.push(...page);
+          if (page.length < 100) break;
+        }
+      } else {
+        console.log('Skipping remote project previews in CI; static campaign routes are still generated.');
       }
       const template = await readFile(resolve(outDir, 'index.html'), 'utf8');
       const paths = new Set<string>();
