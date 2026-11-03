@@ -3,18 +3,24 @@ import { afterEach, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { EasyCreditSimulator } from './EasyCreditSimulator';
+import { FIXED_CREDIT_ANNUAL_RATE_PCT } from '@/lib/easyCredit';
 
 afterEach(cleanup);
 
-it('starts at 12% nominal annual with the promotional 20% down and 36-month payment', () => {
+it('shows fixed 9% nominal annual interest and the corresponding monthly amount', () => {
   render(<MemoryRouter><EasyCreditSimulator /></MemoryRouter>);
-  const rate = screen.getByRole('spinbutton', { name: /Tasa nominal anual/ }) as HTMLInputElement;
-  expect(rate.value).toBe('12');
-  expect(screen.getByRole('status').textContent).toContain('$531.163');
+  expect(FIXED_CREDIT_ANNUAL_RATE_PCT).toBe(9);
+  expect(screen.getByText(/Tasa nominal anual fija/)).toBeTruthy();
+  expect(screen.getByText('9% anual')).toBeTruthy();
+  expect(screen.queryByRole('spinbutton', { name: /Tasa nominal anual/i })).toBeNull();
+  const monthlyRate = FIXED_CREDIT_ANNUAL_RATE_PCT / 100 / 12;
+  const expected = Math.round(15_992_000 * monthlyRate / (1 - Math.pow(1 + monthlyRate, -36)));
+  expect(screen.getByRole('status').textContent).toContain('$' + expected.toLocaleString('es-CL'));
 });
 
-it('allows manual 0% as a mathematical scenario', () => {
+it('keeps 9% fixed when changing the term', () => {
   render(<MemoryRouter><EasyCreditSimulator /></MemoryRouter>);
-  fireEvent.change(screen.getByRole('spinbutton', { name: /Tasa nominal anual/ }), { target: { value: '0' } });
-  expect(screen.getByRole('status').textContent).toContain('$444.222');
+  fireEvent.click(screen.getByRole('button', { name: '60 meses' }));
+  expect(screen.getByText('9% anual')).toBeTruthy();
+  expect(screen.getByText(/60 cuotas · tasa nominal anual fija de 9%/)).toBeTruthy();
 });
