@@ -37,7 +37,7 @@ export default function ProjectsRail() {
     queryKey: ['explorer-projects-rail'],
     queryFn: async () => {
       const base = 'id,name,city,region,images,total_lots,available_lots';
-      let { data, error } = await supabase
+      const primary = await supabase
         .from('projects')
         .select(`${base},total_area`)
         .eq('status', 'active')
@@ -46,15 +46,16 @@ export default function ProjectsRail() {
         .limit(12);
       // Older deployments may not contain optional merchandising/area columns.
       // Keep the public-active security boundary while recovering the catalog.
-      if (error) {
-        ({ data, error } = await supabase
-          .from('projects')
-          .select(base)
-          .eq('status', 'active')
-          .limit(12));
-      }
+      const fallback = primary.error
+        ? await supabase
+            .from('projects')
+            .select(base)
+            .eq('status', 'active')
+            .limit(12)
+        : null;
+      const error = fallback ? fallback.error : primary.error;
       if (error) throw error;
-      return (data ?? []) as ProjectRow[];
+      return ((fallback ? fallback.data : primary.data) ?? []) as ProjectRow[];
     },
     staleTime: 60_000,
   });
