@@ -33,21 +33,23 @@ export const useShowcaseProjects = () =>
       // has not yet reached the connected Supabase instance.
       const baseFields =
         "id, slug, name, city, region, images, latitude, longitude, total_lots, available_lots";
-      let { data, error } = await supabase
+      const primary = await supabase
         .from("projects")
         .select(`${baseFields}, featured, created_at`)
         .eq("status", "active")
         .order("featured", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(12);
-      if (error) {
-        ({ data, error } = await supabase
-          .from("projects")
-          .select(baseFields)
-          .eq("status", "active")
-          .limit(12));
-      }
+      const fallback = primary.error
+        ? await supabase
+            .from("projects")
+            .select(baseFields)
+            .eq("status", "active")
+            .limit(12)
+        : null;
+      const error = fallback ? fallback.error : primary.error;
       if (error) throw error;
+      const data = fallback ? fallback.data : primary.data;
       return Promise.all(
         (data ?? []).map(async (p) => {
           const { data: lots, error: lotsError } = await supabase.rpc(
