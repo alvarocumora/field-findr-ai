@@ -45,9 +45,22 @@ describe('static social preview build', () => {
     expect(report.routes).toContain('/valle-hualane/tour');
     expect(report.routes).toContain('/valle-hualane/plano');
   });
-  it('fails the build on API errors instead of publishing misleading generic cards', async () => {
+  it.each(['network', 'timeout', 'http', 'inventory'])('keeps the application build working during a %s failure without inventing project previews', async (failure) => {
     const run = await setup();
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('unavailable', { status: 503 })));
-    await expect(run()).rejects.toThrow('503');
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (failure === 'network') throw new TypeError('fetch failed');
+      if (failure === 'timeout') throw new DOMException('Timed out', 'TimeoutError');
+      if (failure === 'http' || url.includes('/rpc/')) return new Response('unavailable', { status: 503 });
+      return new Response(JSON.stringify([project]));
+    }));
+    await expect(run()).resolves.toBeUndefined();
+    if (!temp) throw new Error('Test directory was not created');
+    const report = JSON.parse(await readFile(join(temp, 'dist/project-previews.json'), 'utf8'));
+    expect(report.remoteStatus).toBe('unavailable');
+    expect(report.projects).toBe(0);
+    expect(report.routes).not.toContain('/p/test-project');
+    expect(report.routes).toContain('/valle-hualane');
+    await expect(readFile(join(temp, 'dist/p/test-project/index.html'), 'utf8')).rejects.toThrow();
+    expect(await readFile(join(temp, 'dist/index.html'), 'utf8')).toContain('/assets/app.js');
   });
 });
