@@ -28,15 +28,25 @@ export const useShowcaseProjects = () =>
   useQuery({
     queryKey: ["landing-showcase-projects"],
     queryFn: async (): Promise<ShowcaseProject[]> => {
-      const { data, error } = await supabase
+      // Use the same public "active" inventory as the explorer. Optional
+      // merchandising columns must not hide all projects if a migration
+      // has not yet reached the connected Supabase instance.
+      const baseFields =
+        "id, slug, name, city, region, images, latitude, longitude, total_lots, available_lots";
+      let { data, error } = await supabase
         .from("projects")
-        .select(
-          "id, slug, name, city, region, images, latitude, longitude, total_lots, available_lots, featured, created_at",
-        )
+        .select(`${baseFields}, featured, created_at`)
         .eq("status", "active")
         .order("featured", { ascending: false })
         .order("created_at", { ascending: false })
-        .limit(6);
+        .limit(12);
+      if (error) {
+        ({ data, error } = await supabase
+          .from("projects")
+          .select(baseFields)
+          .eq("status", "active")
+          .limit(12));
+      }
       if (error) throw error;
       return Promise.all(
         (data ?? []).map(async (p) => {
@@ -59,7 +69,7 @@ export const useShowcaseProjects = () =>
             name: p.name,
             city: p.city,
             region: p.region,
-            image: projectImages(p)[0],
+            image: projectImages({ ...p, images: Array.isArray(p.images) ? p.images : [] })[0],
             lat: p.latitude ?? null,
             lng: p.longitude ?? null,
             inventoryReady: !lotsError,
