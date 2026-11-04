@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   consumeReservationFormIntent,
   reservationFormUrl,
+  transferReservationFormUrl,
   salesMaterialUrl,
 } from "./salesKit";
 const project = { id: "project-1", slug: "valle-prueba" };
@@ -17,6 +18,14 @@ describe("sales kit and reservation links", () => {
     expect(url.pathname).toBe("/p/valle-prueba");
     expect(url.searchParams.get("tab")).toBe("brochure");
     expect(url.searchParams.get("ref")).toBe("broker-code");
+  });
+  it("shares the existing transfer form with exact project, lot and broker context", () => {
+    const url = new URL(transferReservationFormUrl('project-1', 'live-lot', 'broker-code'));
+    expect(url.hostname).toBe('ofertaterrenos.com');
+    expect(url.pathname).toBe('/reservar');
+    expect(url.searchParams.get('proyecto')).toBe('project-1');
+    expect(url.searchParams.get('lote')).toBe('live-lot');
+    expect(url.searchParams.get('ref')).toBe('broker-code');
   });
   it("opens only a known available lot form and consumes the action once", () => {
     const url = new URL(reservationFormUrl(project, "live-lot", "broker-code"));

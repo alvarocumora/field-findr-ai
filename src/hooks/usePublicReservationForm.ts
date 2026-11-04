@@ -1,3 +1,4 @@
+import { invalidateReservationInventory } from '@/lib/reservations/invalidateInventory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
@@ -107,9 +108,8 @@ export const useSubmitReservationForm = () => {
         termsVersion: RESERVATION_TERMS_VERSION,
       };
     },
-    onSettled: (_data, _error, values) => {
-      void queryClient.invalidateQueries({ queryKey: reservableLotsKey(values.projectId) });
-      void queryClient.invalidateQueries({ queryKey: ['reservations'] });
+    onSettled: () => {
+      void invalidateReservationInventory(queryClient);
     },
   });
 };

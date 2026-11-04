@@ -1,3 +1,4 @@
+import { invalidateReservationInventory } from '@/lib/reservations/invalidateInventory';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -52,10 +53,7 @@ export const LotReserveDialog = ({ lot, open, onOpenChange, projectName }: LotRe
         p_notes: [`Reserva desde landing ${projectName}`, notes.trim() || null].filter(Boolean).join(' · '),
       });
       if (error) throw error;
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['vel-public-lots'] }),
-        queryClient.invalidateQueries({ queryKey: ['reservations'] }),
-      ]);
+      await invalidateReservationInventory(queryClient);
       setDone(true);
       toast.success('Reserva registrada. El inventario se actualizará automáticamente.');
     } catch (err) {

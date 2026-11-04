@@ -28,6 +28,11 @@ export function reservationFormUrl(
   return url.toString();
 }
 
+/** Preselects the existing transfer form without creating a hold on navigation. */
+export function transferReservationFormUrl(projectId: string, lotId: string, ref?: string | null) {
+  return getShareUrl('/reservar', { proyecto: projectId, lote: lotId, ref });
+}
+
 export function consumeReservationFormIntent<
   T extends ProjectInquiryLot & {
     status?: string | null;

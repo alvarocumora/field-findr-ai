@@ -1,3 +1,4 @@
+import { invalidateReservationInventory } from '@/lib/reservations/invalidateInventory';
 import type { Json } from '@/integrations/supabase/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -173,8 +174,7 @@ export const useCreateReservation = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['reservations'] });
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
+      void invalidateReservationInventory(queryClient);
       
       if (data.payment_url) {
         toast.success('Reserva creada', {
@@ -187,6 +187,7 @@ export const useCreateReservation = () => {
       }
     },
     onError: (error: Error) => {
+      void invalidateReservationInventory(queryClient);
       toast.error('Error al crear reserva', {
         description: error.message,
       });
@@ -207,8 +208,7 @@ export const useCancelReservation = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reservations'] });
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
+      void invalidateReservationInventory(queryClient);
       toast.success('Reserva cancelada');
     },
     onError: (error: Error) => {
@@ -235,8 +235,7 @@ export const useExpireStaleReservations = () => {
     },
     onSuccess: (expiredCount) => {
       if (expiredCount > 0) {
-        queryClient.invalidateQueries({ queryKey: ['reservations'] });
-        queryClient.invalidateQueries({ queryKey: ['lots'] });
+        void invalidateReservationInventory(queryClient);
         toast.info(`${expiredCount} reserva${expiredCount === 1 ? '' : 's'} vencida${expiredCount === 1 ? '' : 's'} liberada${expiredCount === 1 ? '' : 's'}`);
       }
     },
@@ -257,7 +256,7 @@ export const useExtendReservation = () => {
       return data as string;
     },
     onSuccess: (newExpiry) => {
-      queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      void invalidateReservationInventory(queryClient);
       toast.success('Reserva extendida', {
         description: `Nuevo vencimiento: ${new Date(newExpiry).toLocaleString('es-CL')}`,
       });
@@ -318,8 +317,7 @@ export const useRegisterSale = () => {
     },
 
     onSuccess: (commissionId) => {
-      queryClient.invalidateQueries({ queryKey: ['reservations'] });
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
+      void invalidateReservationInventory(queryClient);
       queryClient.invalidateQueries({ queryKey: ['agent-commissions'] });
       toast.success('Venta registrada', {
         description: commissionId
