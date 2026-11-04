@@ -1,3 +1,4 @@
+import { invalidateReservationInventory } from '@/lib/reservations/invalidateInventory';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert, TablesUpdate, Json } from '@/integrations/supabase/types';
@@ -109,8 +110,7 @@ export const useLots = (projectId?: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      void invalidateReservationInventory(queryClient);
       toast.success('Lote creado exitosamente');
     },
     onError: (error) => {
@@ -131,8 +131,7 @@ export const useLots = (projectId?: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      void invalidateReservationInventory(queryClient);
       toast.success('Lote actualizado');
     },
     onError: (error) => {
@@ -150,8 +149,7 @@ export const useLots = (projectId?: string) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      void invalidateReservationInventory(queryClient);
       toast.success('Lote eliminado');
     },
     onError: (error) => {
@@ -210,8 +208,7 @@ export const useAdjustLotPrices = () => {
       return data as number;
     },
     onSuccess: (count) => {
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      void invalidateReservationInventory(queryClient);
       toast.success(`Precios actualizados en ${count} lote${count === 1 ? '' : 's'}`);
     },
     onError: (error: Error) => {

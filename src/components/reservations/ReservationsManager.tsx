@@ -1,3 +1,5 @@
+import { isReservationPayable } from '@/lib/reservations/paymentWindow';
+import { invalidateReservationInventory } from '@/lib/reservations/invalidateInventory';
 import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
 import type { ReservationWithLot } from '@/hooks/useReservations';
 import { useState, useEffect, useRef } from 'react';
@@ -64,7 +66,7 @@ const ReservationsManager = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const { data: reservations = [], isLoading, error, refetch } = useQuery({
+  const { data: reservations = [], isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ['admin-reservations', user?.id, projectId ?? 'all'],
     queryFn: async () => {
       if (!user) return [];
@@ -88,6 +90,8 @@ const ReservationsManager = () => {
       return data || [];
     },
     enabled: !!user,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 
   const cancelMutation = useMutation({
@@ -96,8 +100,7 @@ const ReservationsManager = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-reservations'] });
-      queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      void invalidateReservationInventory(queryClient);
       toast.success('Reserva cancelada exitosamente');
     },
     onError: () => toast.error('Error al cancelar la reserva'),
@@ -108,15 +111,18 @@ const ReservationsManager = () => {
       const { error } = await supabase
         .from('reservations')
         .update({ status: 'paid' as ReservationStatus, paid_at: new Date().toISOString() })
-        .eq('id', reservationId);
+        .eq('id', reservationId)
+        .eq('status', 'pending_payment')
+        .gt('expires_at', new Date().toISOString())
+        .select('id')
+        .single();
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-reservations'] });
-      queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      void invalidateReservationInventory(queryClient);
       toast.success('Pago confirmado manualmente');
     },
-    onError: () => toast.error('Error al confirmar el pago'),
+    onError: () => { void invalidateReservationInventory(queryClient); toast.error('No pudimos confirmar el pago. Revisa el estado y vencimiento actualizados.'); },
   });
 
   const stampShared = async (reservationId: string) => {
@@ -128,13 +134,19 @@ const ReservationsManager = () => {
 
   const copyPaymentLink = async (reservation: ReservationWithLot) => {
     if (!reservation.payment_url) return;
-    await navigator.clipboard.writeText(reservation.payment_url);
-    void stampShared(reservation.id);
-    toast.success('Link de pago copiado');
+    if (!isReservationPayable(reservation)) { toast.error('El plazo de pago venció. Actualiza la reserva antes de cobrar.'); return; }
+    try {
+      await navigator.clipboard.writeText(reservation.payment_url);
+      void stampShared(reservation.id);
+      toast.success('Link de pago copiado');
+    } catch {
+      toast.error('No pudimos copiar el enlace de pago.');
+    }
   };
 
   const sharePaymentWhatsApp = (reservation: ReservationWithLot) => {
     if (!reservation.payment_url) return;
+    if (!isReservationPayable(reservation)) { toast.error('El plazo de pago venció. Actualiza la reserva antes de cobrar.'); return; }
     const phone = String(reservation.buyer_phone || '').replace(/\D/g, '');
     const lot = reservation.lots;
     const project = lot?.projects;
@@ -153,8 +165,8 @@ const ReservationsManager = () => {
   };
 
   const filtered = reservations.filter((r) => {
-    const needle = searchQuery.toLowerCase();
-    const matchesSearch = !needle || r.buyer_name?.toLowerCase().includes(needle) || r.buyer_email?.toLowerCase().includes(needle);
+    const needle = searchQuery.trim().toLocaleLowerCase();
+    const matchesSearch = !needle || [r.buyer_name, r.buyer_email, r.buyer_phone, r.lots?.lot_number, r.lots?.name, r.lots?.projects?.name].some(value => String(value ?? '').toLocaleLowerCase().includes(needle));
     const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -177,7 +189,7 @@ const ReservationsManager = () => {
           { label: 'Total Reservas', value: stats.total, icon: Calendar, color: 'text-primary' },
           { label: 'Pendientes', value: stats.pending, icon: Clock, color: 'text-amber-500' },
           { label: 'Pagadas', value: stats.paid, icon: CheckCircle2, color: 'text-green-500' },
-          { label: 'Ingresos Señas', value: `$${(stats.totalAmount / 1000000).toFixed(1)}M`, icon: DollarSign, color: 'text-primary' },
+          { label: 'Señas pagadas', value: `$${(stats.totalAmount / 1000000).toFixed(1)}M`, icon: DollarSign, color: 'text-primary' },
         ].map((stat) => (
           <Card key={stat.label} className="border-border/40">
             <CardContent className="p-4 flex items-center gap-3">
@@ -191,8 +203,9 @@ const ReservationsManager = () => {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nombre o email..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 rounded-xl" />
+          <Input aria-label="Buscar reservas por comprador, teléfono, parcela o proyecto" placeholder="Comprador, teléfono, parcela o proyecto" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 rounded-xl" />
         </div>
+        <Button variant="outline" disabled={isFetching} onClick={() => void refetch()}><RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />Actualizar reservas</Button>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-[180px] rounded-xl"><Filter className="h-4 w-4 mr-2" /><SelectValue placeholder="Estado" /></SelectTrigger>
           <SelectContent>
@@ -210,8 +223,8 @@ const ReservationsManager = () => {
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No tienes reservas aún</h3>
-              <p className="text-sm text-muted-foreground max-w-sm">Las reservas aparecen aquí para gestionar pago, vencimiento y cierre.</p>
+              <h3 className="text-lg font-semibold mb-2">{reservations.length ? 'No hay reservas con estos filtros' : 'No tienes reservas aún'}</h3>
+              <p className="text-sm text-muted-foreground max-w-sm">{reservations.length ? 'Prueba otro comprador, parcela o estado.' : 'Las reservas aparecen aquí para gestionar pago, vencimiento y cierre.'}</p>
               <Button variant="outline" className="mt-4 gap-2" asChild><a href="/asesor/projects"><Building2 className="h-4 w-4" />Ir a Proyectos</a></Button>
             </div>
           ) : (
@@ -221,7 +234,7 @@ const ReservationsManager = () => {
                 const StatusIcon = config.icon;
                 const lot = reservation.lots;
                 const project = lot?.projects;
-                const isExpired = new Date(reservation.expires_at) < new Date() && reservation.status === 'pending_payment';
+                const isExpired = reservation.status === 'pending_payment' && !isReservationPayable(reservation);
                 const minutesLeft = reservation.status === 'pending_payment'
                   ? differenceInMinutes(new Date(reservation.expires_at), new Date())
                   : null;
@@ -238,7 +251,7 @@ const ReservationsManager = () => {
                           <div className="flex items-center gap-2 flex-wrap">
                             <button type="button" onClick={() => setJourneyReservationId(reservation.id)} className="font-semibold hover:text-primary hover:underline underline-offset-2 text-left">{reservation.buyer_name}</button>
                             <Badge variant="outline" className={config.className}>{config.label}</Badge>
-                            {isExpired && <Badge variant="destructive" className="text-xs">Expirada</Badge>}
+                            {isExpired && <Badge variant="destructive" className="text-xs">Plazo vencido · pendiente de conciliación</Badge>}
                             {urgency && <Badge variant="outline" className={minutesLeft! < 360 ? 'border-amber-500 text-amber-600' : ''}>{urgency}</Badge>}
                           </div>
                           <p className="text-sm text-muted-foreground truncate">{reservation.buyer_email}{reservation.buyer_phone && ` • ${reservation.buyer_phone}`}</p>
@@ -249,7 +262,7 @@ const ReservationsManager = () => {
                             <span>{formatDistanceToNow(new Date(reservation.created_at), { addSuffix: true, locale: es })}</span>
                           </div>
                           {reservation.status === 'pending_payment' && <p className="text-xs text-amber-600 mt-1">Expira: {format(new Date(reservation.expires_at), 'dd/MM/yyyy HH:mm', { locale: es })}</p>}
-                          {reservation.payment_link_shared_at && <p className="text-[11px] text-muted-foreground mt-1">Link enviado: {formatDistanceToNow(new Date(reservation.payment_link_shared_at), { addSuffix: true, locale: es })}</p>}
+                          {reservation.payment_link_shared_at && <p className="text-[11px] text-muted-foreground mt-1">Link preparado: {formatDistanceToNow(new Date(reservation.payment_link_shared_at), { addSuffix: true, locale: es })}</p>}
                         </div>
                       </div>
 
@@ -285,7 +298,7 @@ const ReservationsManager = () => {
                             }
                           }}><FileText className="h-4 w-4 mr-1" />Formulario</Button>
                         )}
-                        {reservation.status === 'pending_payment' && reservation.payment_url && (
+                        {reservation.status === 'pending_payment' && !isExpired && reservation.payment_url && (
                           <>
                             <Button size="sm" onClick={() => sharePaymentWhatsApp(reservation)}><MessageCircle className="h-4 w-4 mr-1" />Cobrar por WhatsApp</Button>
                             <Button size="sm" variant="outline" onClick={() => copyPaymentLink(reservation)}><Copy className="h-4 w-4 mr-1" />Copiar pago</Button>
@@ -293,7 +306,7 @@ const ReservationsManager = () => {
                         )}
                         {reservation.status === 'pending_payment' && (
                           <>
-                            <Button size="sm" variant="outline" className="text-green-600 border-green-500/30 hover:bg-green-500/10" onClick={() => confirmMutation.mutate(reservation.id)} disabled={confirmMutation.isPending}><CheckCircle2 className="h-4 w-4 mr-1" />Confirmar Pago</Button>
+                            <Button size="sm" variant="outline" className="text-green-600 border-green-500/30 hover:bg-green-500/10" onClick={() => confirmMutation.mutate(reservation.id)} disabled={confirmMutation.isPending || isExpired}><CheckCircle2 className="h-4 w-4 mr-1" />Confirmar Pago</Button>
                             <Button size="sm" variant="outline" onClick={() => extendReservation.mutate({ reservationId: reservation.id, hours: 48 }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-reservations'] }) })} disabled={extendReservation.isPending} title="Extender vencimiento 48 horas"><RefreshCw className="h-4 w-4 mr-1" />+48h</Button>
                           </>
                         )}

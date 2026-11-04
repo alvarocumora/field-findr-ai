@@ -12,7 +12,7 @@ import {
   canReservePublicLot,
   formatPublicLotPrice,
 } from "@/lib/lots/publicLotCommercial";
-import { salesMaterialUrl, reservationFormUrl } from "@/lib/projects/salesKit";
+import { salesMaterialUrl, reservationFormUrl, transferReservationFormUrl } from "@/lib/projects/salesKit";
 import { summarize } from "@/lib/pdf/projectKit";
 import { withProjectScope } from "@/hooks/useWorkspaceScope";
 import { ProjectSocialCopyGenerator } from "@/components/projects/ProjectSocialCopyGenerator";
@@ -31,7 +31,7 @@ export default function ProjectSalesKit() {
   const broker = useMyBrokerProfile();
   const commissionRules = useCommissionRules();
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState("available");
   const projectQuery = useQuery({
     queryKey: ["sales-kit-project", user?.id, projectId],
     enabled: !!user && !!projectId,
@@ -138,10 +138,10 @@ export default function ProjectSalesKit() {
       </Card>
     );
   const lots = stock.data ?? [];
-  const stockSummary = summarize(lots);
+  const stockSummary = stock.error || !stock.data ? undefined : summarize(lots);
   const filtered = lots.filter(
     (lot) =>
-      (status === "all" || lot.status === status) &&
+      (status === "all" || (status === "ready" ? canReservePublicLot(lot) : lot.status === status)) &&
       (!search.trim() ||
         `${lot.lot_number} ${lot.name || ""}`
           .toLocaleLowerCase()
@@ -268,8 +268,8 @@ export default function ProjectSalesKit() {
           projectName: project.name,
           location: project.location,
           region: project.region,
-          priceFrom: stockSummary.priceMin,
-          availableLots: stockSummary.available,
+          priceFrom: stockSummary?.priceMin,
+          availableLots: stockSummary?.available,
           brokerName: broker.data?.display_name,
         }}
         link={salesMaterialUrl(project, "info", ref)}
@@ -299,6 +299,10 @@ export default function ProjectSalesKit() {
           <Skeleton className="h-40 w-full" />
         ) : (
           <>
+            <p className="text-sm" aria-label="Resumen del inventario">
+              {lots.filter(lot => lot.status === "available").length} disponibles · {lots.filter(lot => lot.status === "reserved").length} reservadas · {lots.filter(lot => lot.status === "sold").length} vendidas
+              {stock.dataUpdatedAt ? <span className="block text-muted-foreground">Última consulta: {new Date(stock.dataUpdatedAt).toLocaleTimeString("es-CL")}</span> : null}
+            </p>
             <div className="flex flex-wrap gap-3">
               <Input
                 aria-label="Buscar parcela por número o nombre"
@@ -315,6 +319,7 @@ export default function ProjectSalesKit() {
               >
                 <option value="all">Todos los estados</option>
                 <option value="available">Disponibles</option>
+                <option value="ready">Con precio para reservar</option>
                 <option value="reserved">Reservados</option>
                 <option value="sold">Vendidos</option>
               </select>
@@ -353,6 +358,7 @@ export default function ProjectSalesKit() {
                         Ver ficha de parcela
                       </a>
                     </Button>
+                    {lot.status === "available" && !canReservePublicLot(lot) && <p className="text-sm text-muted-foreground">Confirma el precio con el responsable antes de reservar.</p>}
                     {canReservePublicLot(lot) && (
                       <>
                         <Button asChild>
@@ -368,6 +374,10 @@ export default function ProjectSalesKit() {
                         >
                           Copiar formulario
                         </Button>
+                        <Button asChild variant="outline">
+                          <a href={transferReservationFormUrl(project.id, lot.id, ref)}>Ficha para transferencia</a>
+                        </Button>
+                        <Button variant="outline" onClick={() => void copy(transferReservationFormUrl(project.id, lot.id, ref))}>Copiar ficha de transferencia</Button>
                       </>
                     )}
                   </CardContent>
