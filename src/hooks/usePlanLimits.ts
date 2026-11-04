@@ -18,6 +18,8 @@ export interface PlanLimitsResult {
   plan: PlanType;
   planDetails: Plan;
   isLoading: boolean;
+  isError: boolean;
+  refetch: () => Promise<unknown>;
   listings: PlanLimitUsage;
   projects: PlanLimitUsage;
   featured: PlanLimitUsage;
@@ -60,11 +62,11 @@ const monthStartISO = () => {
 
 export const usePlanLimits = (): PlanLimitsResult => {
   const { user } = useAuth();
-  const { plan, planDetails } = useCurrentPlan();
+  const { plan, planDetails, isLoading: planLoading, isError: planError, refetch: refetchPlan } = useCurrentPlan();
   const queryClient = useQueryClient();
   const details = planDetails ?? PLAN_DETAILS.free;
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError: usageError, refetch: refetchUsage } = useQuery({
     queryKey: ['plan-usage', user?.id],
     enabled: !!user,
     staleTime: 15_000,
@@ -94,6 +96,10 @@ export const usePlanLimits = (): PlanLimitsResult => {
         Promise.resolve({ count: 0 }),
       ]);
 
+      for (const result of [listingsRes, projectsRes, featuredRes]) {
+        if (result.error) throw result.error;
+        if (result.count === null || result.count === undefined) throw new Error('No pudimos verificar el uso de tu plan.');
+      }
       return {
         listings: listingsRes.count ?? 0,
         projects: projectsRes.count ?? 0,
@@ -135,17 +141,21 @@ export const usePlanLimits = (): PlanLimitsResult => {
   const featured = buildUsage(usedFeatured, details.includedFeatured);
   const superFeatured = buildUsage(usedSuper, details.includedSuperFeatured);
 
+  const verified = !!user && !!data && !planLoading && !isLoading && !planError && !usageError;
+
   return {
     plan,
     planDetails: details,
-    isLoading,
+    isLoading: planLoading || isLoading,
+    isError: !!planError || usageError,
+    refetch: () => Promise.all([refetchPlan(), refetchUsage()]),
     listings,
     projects,
     featured,
     superFeatured,
-    canCreateListing: listings.isUnlimited || !listings.isAtLimit,
-    canCreateProject: projects.isUnlimited || !projects.isAtLimit,
-    canUseFeatured: featured.isUnlimited || !featured.isAtLimit,
-    canUseSuperFeatured: superFeatured.isUnlimited || !superFeatured.isAtLimit,
+    canCreateListing: verified && (listings.isUnlimited || !listings.isAtLimit),
+    canCreateProject: verified && (projects.isUnlimited || !projects.isAtLimit),
+    canUseFeatured: verified && (featured.isUnlimited || !featured.isAtLimit),
+    canUseSuperFeatured: verified && (superFeatured.isUnlimited || !superFeatured.isAtLimit),
   };
 };

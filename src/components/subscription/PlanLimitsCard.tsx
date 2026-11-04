@@ -69,12 +69,14 @@ const UsageRow = ({
 };
 
 export const PlanLimitsCard = ({ compact = false }: { compact?: boolean }) => {
-  const { plan, planDetails, isLoading, listings, projects, featured, superFeatured } = usePlanLimits();
+  const { plan, planDetails, isLoading, isError, refetch, listings, projects, featured, superFeatured } = usePlanLimits();
 
   const nextPlan = nextPlanFor(plan);
   const nextPlanDetails = nextPlan ? PLAN_DETAILS[nextPlan] : null;
   const anyAtLimit = listings.isAtLimit || projects.isAtLimit || featured.isAtLimit;
   const anyNear = listings.isNearLimit || projects.isNearLimit || featured.isNearLimit;
+
+  if (isError) return <Card role="alert"><CardContent className="space-y-3 p-5"><p className="font-medium">No pudimos verificar tu plan y sus cupos</p><p className="text-sm text-muted-foreground">Actualiza la consulta antes de publicar. Este error no significa que hayas alcanzado el límite.</p><Button variant="outline" onClick={() => void refetch()}>Reintentar consulta del plan</Button></CardContent></Card>;
 
   return (
     <Card className={cn('border-border', anyAtLimit && 'border-destructive/50')}>
@@ -93,7 +95,7 @@ export const PlanLimitsCard = ({ compact = false }: { compact?: boolean }) => {
             variant={anyAtLimit ? 'destructive' : anyNear ? 'secondary' : 'outline'}
             className="text-xs shrink-0"
           >
-            {anyAtLimit ? 'Límite alcanzado' : anyNear ? 'Uso alto' : 'Activo'}
+            {isLoading ? 'Verificando' : anyAtLimit ? 'Límite alcanzado' : anyNear ? 'Uso alto' : 'Uso verificado'}
           </Badge>
         </div>
       </CardHeader>
@@ -111,7 +113,7 @@ export const PlanLimitsCard = ({ compact = false }: { compact?: boolean }) => {
           </div>
         )}
 
-        {(anyAtLimit || anyNear) && nextPlanDetails && (
+        {!isLoading && (anyAtLimit || anyNear) && nextPlanDetails && (
           <div className="rounded-lg border bg-muted/40 p-3 space-y-2">
             <p className="text-xs text-foreground">
               {anyAtLimit ? 'Alcanzaste el límite de tu plan.' : 'Estás cerca del tope de tu plan.'}
@@ -128,7 +130,7 @@ export const PlanLimitsCard = ({ compact = false }: { compact?: boolean }) => {
           </div>
         )}
 
-        {!anyAtLimit && !anyNear && plan === 'free' && (
+        {!isLoading && !anyAtLimit && !anyNear && plan === 'free' && (
           <Button asChild variant="outline" size="sm" className="w-full gap-1">
             <Link to="/pricing">
               Ver planes de pago
