@@ -82,7 +82,7 @@ export function ListingFormDialog({ trigger, onSuccess }: ListingFormDialogProps
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { canCreateListing, listings, planDetails } = usePlanLimits();
+  const { canCreateListing, listings, planDetails, isLoading: limitsLoading, isError: limitsError, refetch: retryLimits } = usePlanLimits();
 
   const form = useForm<ListingFormData>({
     resolver: zodResolver(listingSchema),
@@ -121,6 +121,7 @@ export function ListingFormDialog({ trigger, onSuccess }: ListingFormDialogProps
 
   const onSubmit = async (data: ListingFormData) => {
     if (!user) { toast.error('Debes iniciar sesión'); return; }
+    if (limitsLoading || limitsError) { toast.error('No pudimos verificar tu cupo. Actualiza la consulta del plan antes de publicar.'); return; }
     if (!canCreateListing) {
       toast.error(
         `Alcanzaste el límite de ${listings.limit} publicaciones del plan ${planDetails.name}. Mejora tu plan para publicar más.`,
@@ -175,6 +176,7 @@ export function ListingFormDialog({ trigger, onSuccess }: ListingFormDialogProps
     <Dialog
       open={open}
       onOpenChange={(v) => {
+        if (v && (limitsLoading || limitsError)) { toast.error('Cupo del plan sin verificar.', { action: { label: 'Reintentar', onClick: () => void retryLimits() } }); return; }
         if (v && !canCreateListing) {
           toast.error(
             `Alcanzaste el límite de ${listings.limit} publicaciones del plan ${planDetails.name}.`,
@@ -188,7 +190,7 @@ export function ListingFormDialog({ trigger, onSuccess }: ListingFormDialogProps
     >
       <DialogTrigger asChild>
         {trigger || (
-          <Button className="rounded-xl gap-2" disabled={!canCreateListing} title={!canCreateListing ? 'Límite del plan alcanzado' : undefined}>
+          <Button className="rounded-xl gap-2" disabled={!canCreateListing} title={limitsLoading || limitsError ? 'Cupo del plan sin verificar' : !canCreateListing ? 'Límite del plan alcanzado' : undefined}>
             <Building2 className="h-4 w-4" />
             Nueva Propiedad
           </Button>

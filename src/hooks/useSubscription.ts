@@ -379,10 +379,11 @@ export const orgBillingIdFor = (team: { organization?: { id: string } | null; or
 
 export const useSubscription = () => {
   const { user } = useAuth();
-  const { data: team, isLoading: organizationLoading } = useMyOrganization();
+  const scope = useMyOrganization();
+  const { data: team, isLoading: organizationLoading, isError: organizationError } = scope;
   const organizationId = orgBillingIdFor(team);
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['subscription', user?.id, organizationId],
     queryFn: async () => {
       if (!user) return null;
@@ -412,8 +413,14 @@ export const useSubscription = () => {
       if (error) throw error;
       return data as Subscription | null;
     },
-    enabled: !!user && !organizationLoading,
+    enabled: !!user && !organizationLoading && !organizationError,
   });
+  return {
+    ...query,
+    isLoading: organizationLoading || query.isLoading,
+    isError: organizationError || query.isError,
+    refetch: () => organizationError ? scope.refetch() : query.refetch(),
+  };
 };
 
 export type BillingCycle = 'monthly' | 'annual';

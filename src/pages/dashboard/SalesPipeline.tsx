@@ -1,3 +1,4 @@
+import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
 import { useState, useMemo, DragEvent } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +27,7 @@ const PIPELINE_COLUMNS = [
 
 const SalesPipeline = () => {
   const { projectId } = useWorkspaceScope();
-  const { leads, isLoading, updateLead } = useLeads(projectId);
+  const { leads, isLoading, error, refetch, updateLead } = useLeads(projectId);
   const [searchQuery, setSearchQuery] = useState('');
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
@@ -35,11 +36,12 @@ const SalesPipeline = () => {
 
   const filteredLeads = useMemo(() => {
     if (!searchQuery) return leads;
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.trim().toLocaleLowerCase();
     return leads.filter(l =>
       l.first_name.toLowerCase().includes(q) ||
       (l.last_name || '').toLowerCase().includes(q) ||
-      (l.email || '').toLowerCase().includes(q)
+      (l.email || '').toLowerCase().includes(q) ||
+      (l.phone || '').toLowerCase().includes(q)
     );
   }, [leads, searchQuery]);
 
@@ -92,6 +94,8 @@ const SalesPipeline = () => {
     setDraggedLeadId(null);
     setDragOverColumn(null);
   };
+
+  if (error) return <WorkspaceLoadError title="No pudimos cargar el pipeline de ventas" onRetry={refetch} />;
 
   if (isLoading) {
     return (
