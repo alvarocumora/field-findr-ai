@@ -12,8 +12,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "predev": "bunx tsx scripts/generate-sitemap.ts && bunx tsx scripts/generate-project-social-assets.ts",
-    "prebuild": "bunx tsx scripts/generate-sitemap.ts && bunx tsx scripts/generate-project-social-assets.ts"
+    "predev": "bunx tsx scripts/generate-sitemap.ts",
+    "prebuild": "bunx tsx scripts/generate-sitemap.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
