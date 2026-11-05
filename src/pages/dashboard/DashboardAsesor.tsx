@@ -213,11 +213,11 @@ const DashboardAsesor = () => {
                 <Button
                   className="rounded-xl gap-2"
                   disabled={!planLimits.canCreateListing}
-                  title={!planLimits.canCreateListing ? 'Límite del plan alcanzado' : undefined}
+                  title={planLimits.isLoading || planLimits.isError ? 'Cupo del plan sin verificar' : !planLimits.canCreateListing ? 'Límite del plan alcanzado' : undefined}
                 >
                   <Building2 className="h-4 w-4" />
                   Nueva Propiedad
-                  {!planLimits.listings.isUnlimited && (
+                  {!planLimits.isLoading && !planLimits.isError && !planLimits.listings.isUnlimited && (
                     <span className="text-xs opacity-80">
                       · {planLimits.listings.used}/{planLimits.listings.limit}
                     </span>

@@ -18,10 +18,10 @@ import { toast } from 'sonner';
 import { useAgentCommissions } from '@/hooks/useAgentCommissions';
 import { useReferralCommissionsEarned } from '@/hooks/useReferrals.commissions';
 import {
-  useMyBrokerProfile, useUpdateMyBrokerProfile, useProjectAssignments, useBrokerRanking,
+  useMyBrokerProfile, useUpdateMyBrokerProfile, useMarkBrokerLinkShared, useProjectAssignments, useBrokerRanking,
 } from '@/hooks/useBrokers';
 import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
-import { BROKER_GUIDE_URL } from '@/lib/brokerProgram';
+import { BROKER_GUIDE_URL, brokerCommissionSummary } from '@/lib/brokerProgram';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })
@@ -49,6 +49,7 @@ const MyBrokerBusiness = () => {
   const profileQuery = useMyBrokerProfile();
   const { data: profile } = profileQuery;
   const updateProfile = useUpdateMyBrokerProfile();
+  const markLinkShared = useMarkBrokerLinkShared();
   const commissionsQuery = useAgentCommissions();
   const { data: commissions = [] } = commissionsQuery;
   const earnedQuery = useReferralCommissionsEarned();
@@ -95,6 +96,7 @@ const MyBrokerBusiness = () => {
     try {
       await navigator.clipboard.writeText(text);
       toast.success('Link copiado');
+      if ((profile?.onboarding_step ?? 0) < 4) markLinkShared.mutate();
     } catch {
       toast.error('No se pudo copiar. Selecciona el enlace y cópialo manualmente.');
     }
@@ -291,7 +293,7 @@ const MyBrokerBusiness = () => {
             <div>
               <h3 className="font-medium text-sm">Guía oficial de la red de vendedores (PDF)</h3>
               <p className="text-xs text-muted-foreground">
-                Mínimo $500.000 por lote vendido · $200.000 por cada lote que venda un vendedor que invitaste.
+                Comisión fija por proyecto. {brokerCommissionSummary()}.
               </p>
             </div>
             <Button size="sm" asChild>

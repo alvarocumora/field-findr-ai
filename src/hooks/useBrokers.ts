@@ -139,13 +139,15 @@ export const useApproveBrokerApplication = () => {
   return useMutation({
     mutationFn: async (v: {
       applicationId: string;
-      userId: string;
+      /** Vacío = la base busca la cuenta por el email de la postulación. */
+      userId: string | null;
       level?: string;
       baseCommissionRate?: number;
     }) => {
       const { data, error } = await supabase.rpc('approve_broker_application', {
         p_application_id: v.applicationId,
-        p_user_id: v.userId,
+        // La función acepta NULL y vincula la cuenta por email (auth.users).
+        p_user_id: (v.userId || null) as string,
         p_level: v.level ?? 'starter',
         p_base_commission_rate: v.baseCommissionRate ?? 3,
       });
@@ -215,6 +217,27 @@ export const useUpdateMyBrokerProfile = () => {
       toast.success('Perfil actualizado');
     },
     onError: (e: Error) => toast.error('No se pudo guardar', { description: e.message }),
+  });
+};
+
+/**
+ * Marca el paso "Comparte tu link personal" del onboarding (onboarding_step 4)
+ * la primera vez que el broker copia uno de sus links. Silencioso: sin toast.
+ */
+export const useMarkBrokerLinkShared = () => {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async () => {
+      if (!user) return;
+      const { error } = await supabase
+        .from('broker_profiles')
+        .update({ onboarding_step: 4 })
+        .eq('user_id', user.id)
+        .lt('onboarding_step', 4);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['broker-profile'] }),
   });
 };
 

@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Calculator, TrendingUp, Wallet } from 'lucide-react';
 import { computeFinancing, computeInvestment } from '@/lib/buyerTools';
+import { FIXED_CREDIT_ANNUAL_RATE_PCT } from '@/lib/easyCredit';
 
 interface BuyerToolsPanelProps {
   price: number;
@@ -26,14 +27,13 @@ export const BuyerToolsPanel = ({ price, areaM2 }: BuyerToolsPanelProps) => {
   // Financing state
   const [downPct, setDownPct] = useState(20);
   const [months, setMonths] = useState(24);
-  const [rate, setRate] = useState(12);
   // Investment state
   const [appr, setAppr] = useState(8);
   const [years, setYears] = useState(5);
 
   const fin = useMemo(
-    () => computeFinancing({ price, downPct, months, annualRatePct: rate }),
-    [price, downPct, months, rate],
+    () => computeFinancing({ price, downPct, months, annualRatePct: FIXED_CREDIT_ANNUAL_RATE_PCT }),
+    [price, downPct, months],
   );
   const inv = useMemo(
     () => computeInvestment({ price, appreciationPct: appr, years, areaM2: areaM2 ?? undefined, minLotM2: 5000 }),
@@ -71,11 +71,9 @@ export const BuyerToolsPanel = ({ price, areaM2 }: BuyerToolsPanelProps) => {
                 </div>
                 <Slider value={[months]} min={6} max={120} step={6} onValueChange={([v]) => setMonths(v)} />
               </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <Label>Tasa anual</Label><span className="text-muted-foreground">{rate}%</span>
-                </div>
-                <Slider value={[rate]} min={0} max={30} step={0.5} onValueChange={([v]) => setRate(v)} />
+              <div className="flex justify-between gap-3 text-xs">
+                <Label>Tasa nominal anual fija (referencial)</Label>
+                <span className="font-semibold text-primary">{FIXED_CREDIT_ANNUAL_RATE_PCT}% anual</span>
               </div>
             </div>
             <div className="rounded-lg bg-muted/40 p-3">

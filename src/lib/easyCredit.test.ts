@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeEasyCredit, financingInquiryUrl, LICANTEN_PROMO_PRICE } from './easyCredit';
+import { computeEasyCredit, financingInquiryUrl, FIXED_CREDIT_ANNUAL_RATE_PCT, LICANTEN_PROMO_PRICE } from './easyCredit';
 
 describe('easy credit', () => {
   it('uses the communicated promotional starting price without changing inventory', () => {
@@ -12,6 +12,16 @@ describe('easy credit', () => {
     expect(result.monthlyPayment).toBe(444_222);
     expect(result.totalInterest).toBe(0);
     expect(result.totalPaid).toBe(19_990_000);
+  });
+  it('calculates fixed 9% annual as 0.75% nominal monthly for the public simulation', () => {
+    expect(FIXED_CREDIT_ANNUAL_RATE_PCT).toBe(9);
+    const result = computeEasyCredit({
+      price: 19_990_000, downPct: 20, months: 36,
+      annualRatePct: FIXED_CREDIT_ANNUAL_RATE_PCT,
+    });
+    const r = 0.09 / 12;
+    expect(result.monthlyPayment).toBe(Math.round(15_992_000 * r / (1 - Math.pow(1 + r, -36))));
+    expect(result.totalInterest).toBe(result.monthlyPayment * 36 - 15_992_000);
   });
   it('applies a nominal annual 12% rate as 1% monthly for 36 months', () => {
     const result = computeEasyCredit({ price: 19_990_000, downPct: 20, months: 36, annualRatePct: 12 });

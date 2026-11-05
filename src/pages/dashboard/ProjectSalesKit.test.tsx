@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ProjectSalesKit from "./ProjectSalesKit";
@@ -23,6 +23,9 @@ vi.mock("@/hooks/useAccess", () => ({
 }));
 vi.mock("@/hooks/useWorkspaceScope", () => ({
   withProjectScope: (path: string, id: string) => `${path}?project=${id}`,
+}));
+vi.mock("@/hooks/useAdminCommissions", () => ({
+  useCommissionRules: () => ({ data: [], error: null, isLoading: false }),
 }));
 vi.mock("@/hooks/useBrokers", () => ({
   useProjectAssignments: () => ({
@@ -119,9 +122,25 @@ describe("commercial material and inventory", () => {
     const form = new URL(links[0].getAttribute("href")!);
     expect(form.searchParams.get("lote")).toBe("available");
     expect(form.searchParams.get("reserva")).toBe("1");
+    const transfer = new URL(screen.getByRole('link', { name: 'Ficha para transferencia' }).getAttribute('href')!);
+    expect(transfer.pathname).toBe('/reservar');
+    expect(transfer.searchParams.get('proyecto')).toBe('project-1');
+    expect(transfer.searchParams.get('lote')).toBe('available');
+    expect(transfer.searchParams.get('ref')).toBe('broker-code');
     expect(
       screen.queryByRole("link", { name: "Administrar inventario" }),
     ).toBeNull();
+  });
+  it("starts with available lots and can narrow to stock ready for reservation", () => {
+    mount();
+    expect(screen.queryByText("Parcela 2")).toBeNull();
+    expect(screen.getByText("Parcela 3")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Estado de la parcela"), { target: { value: "ready" } });
+    expect(screen.queryByText("Parcela 3")).toBeNull();
+    expect(screen.getAllByRole("link", { name: "Abrir formulario de reserva" })).toHaveLength(1);
+    fireEvent.change(screen.getByLabelText("Estado de la parcela"), { target: { value: "reserved" } });
+    expect(screen.getByText("Parcela 2")).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Abrir formulario de reserva" })).toBeNull();
   });
   it("does not enable the inventory query for a pending assignment", () => {
     state.approved = false;

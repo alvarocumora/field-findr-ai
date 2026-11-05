@@ -2,6 +2,8 @@ import { computeFinancing } from '@/lib/buyerTools';
 
 /** Campaign values are display defaults only, never inventory updates. */
 export const LICANTEN_PROMO_PRICE = 19_990_000;
+/** Fixed nominal annual reference rate for public land-credit simulations. */
+export const FIXED_CREDIT_ANNUAL_RATE_PCT = 9;
 export const LICANTEN_PATH = '/p/valle-escondido-licanten';
 export const EASY_CREDIT_TERMS = [12, 24, 36, 48, 60] as const;
 

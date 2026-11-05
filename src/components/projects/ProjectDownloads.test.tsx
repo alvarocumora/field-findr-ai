@@ -58,3 +58,31 @@ describe("broker-attributed material via ?ref=", () => {
     });
   });
 });
+
+describe("ficha interactiva publicada", () => {
+  it("no muestra la tarjeta si el proyecto no tiene ficha", () => {
+    renderDownloads("/p/proyecto-demo");
+    expect(screen.queryByText(/Ficha interactiva · PDF/)).toBeNull();
+  });
+
+  it("muestra la ficha con su fecha de corte y la descarga", () => {
+    const clicked: string[] = [];
+    const spy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+      clicked.push(this.getAttribute("href") ?? "");
+    });
+    render(
+      <MemoryRouter initialEntries={["/p/proyecto-demo"]}>
+        <ProjectDownloads
+          project={project}
+          lots={[{ status: "available", price: 1, area: 1 }]}
+          fichaPdf={{ url: "/downloads/fichas/proyecto-demo.pdf", label: "Ficha Proyecto Demo", updatedAt: "2026-11-01" }}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText("Ficha Proyecto Demo")).toBeInTheDocument();
+    expect(screen.getByText(/Precios al 01-11-2026/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Descargar ficha/ }));
+    expect(clicked).toEqual(["/downloads/fichas/proyecto-demo.pdf"]);
+    spy.mockRestore();
+  });
+});

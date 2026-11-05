@@ -124,7 +124,7 @@ const CommissionsAdmin = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Volumen de ventas', value: fmt(totals.volume) },
-          { label: 'Comisiones por pagar', value: fmt(totals.pending) },
+          { label: 'No pagadas (incluye proyecciones)', value: fmt(totals.pending) },
           { label: 'Comisiones pagadas', value: fmt(totals.paid) },
           { label: 'Operaciones', value: String(totals.count) },
         ].map((s) => (
@@ -230,7 +230,9 @@ const CommissionsAdmin = () => {
                   <TableRow>
                     <TableHead>Alcance</TableHead>
                     <TableHead>Plan / Proyecto</TableHead>
-                    <TableHead>Comisión %</TableHead>
+                    <TableHead>Venta fija CLP</TableHead>
+                    <TableHead>Captación fija CLP</TableHead>
+                    <TableHead>Comisión % (legado)</TableHead>
                     <TableHead>Override red %</TableHead>
                     <TableHead>Activa</TableHead>
                   </TableRow>
@@ -240,7 +242,35 @@ const CommissionsAdmin = () => {
                     <TableRow key={rule.id}>
                       <TableCell className="font-medium">{rule.scope}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {rule.plan_type ?? rule.project_id ?? '—'}
+                        {rule.project_id === '761e73ed-cc0d-5605-a06a-4a4348523b4b'
+                          ? 'Valle de Hualañé'
+                          : rule.project_id === 'b4363fda-e99f-400d-ae95-2cbc8244b770'
+                            ? 'Valle Escondido Licantén'
+                            : rule.plan_type ?? rule.project_id ?? '—'}
+                      </TableCell>
+                      <TableCell>
+                        {rule.scope === 'project' ? (
+                          <Input aria-label="Comisión fija de venta CLP" type="number" min={0} step={1} className="w-36"
+                            defaultValue={rule.fixed_sale_amount ?? ''}
+                            onBlur={(e) => {
+                              if (e.target.value.trim() === '') return;
+                              const amount = Number(e.target.value);
+                              if (Number.isFinite(amount) && amount >= 0 && amount !== rule.fixed_sale_amount)
+                                upsertRule.mutate({ id: rule.id, fixed_sale_amount: amount });
+                            }} />
+                        ) : '—'}
+                      </TableCell>
+                      <TableCell>
+                        {rule.scope === 'project' ? (
+                          <Input aria-label="Comisión fija de captación CLP" type="number" min={0} step={1} className="w-36"
+                            defaultValue={rule.referral_fixed_amount ?? ''}
+                            onBlur={(e) => {
+                              if (e.target.value.trim() === '') return;
+                              const amount = Number(e.target.value);
+                              if (Number.isFinite(amount) && amount >= 0 && amount !== rule.referral_fixed_amount)
+                                upsertRule.mutate({ id: rule.id, referral_fixed_amount: amount });
+                            }} />
+                        ) : '—'}
                       </TableCell>
                       <TableCell>
                         <Input type="number" step="0.1" className="w-24"

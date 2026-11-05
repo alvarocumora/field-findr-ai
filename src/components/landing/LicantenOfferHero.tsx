@@ -15,7 +15,7 @@ export default function LicantenOfferHero() {
         <p className="mt-6 text-2xl font-semibold sm:text-3xl">Parcelas desde $19.990.000 <span className="text-sm font-normal">CLP</span></p>
         <div className="my-6 flex max-w-xl gap-3 border-y border-primary-foreground/35 py-5">
           <House className="mt-1 h-6 w-6 shrink-0" aria-hidden="true" />
-          <div><p className="text-lg leading-snug">Incluye kit básico de casa prefabricada mediterránea sin costo adicional</p><p className="mt-2 text-xs">Kit básico; no corresponde a una vivienda terminada.</p></div>
+          <div><p className="text-lg leading-snug">Incluye kit de casa Modular Box de 36 m² sin costo adicional</p><p className="mt-2 text-xs">Kit básico de materiales, no vivienda terminada. Entrega 45–60 días después de escriturar.</p></div>
         </div>
         <p className="max-w-lg text-base">Entre bosques y cerca de las playas de Iloca y Duao</p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">

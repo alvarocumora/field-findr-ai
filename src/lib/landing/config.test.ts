@@ -55,3 +55,23 @@ describe('summarizeLots', () => {
     expect(summarizeLots([])).toEqual({ total: 0, available: 0, areaMin: null, areaMax: null, priceFrom: null });
   });
 });
+
+describe('parseLandingConfig · ficha_pdf', () => {
+  it('acepta archivos del sitio y URLs https, con fecha de corte', () => {
+    const cfg = parseLandingConfig({
+      ficha_pdf: { url: '/downloads/fichas/valle-escondido-licanten.pdf', label: 'Ficha Licantén', updated_at: '2026-11-01' },
+    });
+    expect(cfg.fichaPdf).toEqual({ url: '/downloads/fichas/valle-escondido-licanten.pdf', label: 'Ficha Licantén', updatedAt: '2026-11-01' });
+    expect(parseLandingConfig({ ficha_pdf: { url: 'https://cdn.example.com/f.pdf' } }).fichaPdf?.label)
+      .toBe('Ficha interactiva del proyecto');
+  });
+
+  it('descarta URLs peligrosas o ajenas al formato y fechas inválidas', () => {
+    expect(parseLandingConfig({ ficha_pdf: { url: 'javascript:alert(1)' } }).fichaPdf).toBeNull();
+    expect(parseLandingConfig({ ficha_pdf: { url: '//evil.example/f.pdf' } }).fichaPdf).toBeNull();
+    expect(parseLandingConfig({ ficha_pdf: { url: 'http://insecure.example/f.pdf' } }).fichaPdf).toBeNull();
+    expect(parseLandingConfig({ ficha_pdf: 'x' }).fichaPdf).toBeNull();
+    expect(parseLandingConfig({}).fichaPdf).toBeNull();
+    expect(parseLandingConfig({ ficha_pdf: { url: '/f.pdf', updated_at: 'ayer' } }).fichaPdf?.updatedAt).toBeUndefined();
+  });
+});

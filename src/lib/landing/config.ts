@@ -12,6 +12,14 @@ export interface LandingAmenity {
   text?: string;
 }
 
+/** PDF de ficha comercial publicado por el equipo (archivo estático o URL https). */
+export interface LandingFichaPdf {
+  url: string;
+  label: string;
+  /** Fecha de corte de precios y disponibilidad (YYYY-MM-DD). */
+  updatedAt?: string;
+}
+
 export interface LandingConfig {
   hero: {
     title?: string;
@@ -22,6 +30,7 @@ export interface LandingConfig {
   gallery: string[];
   amenities: LandingAmenity[];
   highlights: string[];
+  fichaPdf: LandingFichaPdf | null;
   contact: {
     whatsapp?: string;
     phone?: string;
@@ -40,6 +49,20 @@ const str = (v: unknown): string | undefined =>
 
 const strArray = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && x.trim() !== '') : [];
+
+/** Solo rutas del propio sitio ("/…") o https; nunca javascript:, data:, etc. */
+function fichaPdf(v: unknown): LandingFichaPdf | null {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
+  const raw = v as Record<string, unknown>;
+  const url = str(raw.url)?.trim();
+  if (!url || !(/^\/(?!\/)/.test(url) || /^https:\/\//i.test(url))) return null;
+  const updatedAt = str(raw.updated_at);
+  return {
+    url,
+    label: str(raw.label) ?? 'Ficha interactiva del proyecto',
+    updatedAt: updatedAt && /^\d{4}-\d{2}-\d{2}$/.test(updatedAt) ? updatedAt : undefined,
+  };
+}
 
 function amenities(v: unknown): LandingAmenity[] {
   if (!Array.isArray(v)) return [];
@@ -71,6 +94,7 @@ export function parseLandingConfig(raw: unknown): LandingConfig {
     gallery: strArray(cfg.gallery),
     amenities: amenities(cfg.amenities),
     highlights: strArray(cfg.highlights),
+    fichaPdf: fichaPdf(cfg.ficha_pdf),
     contact: {
       whatsapp: str(contact.whatsapp),
       phone: str(contact.phone),

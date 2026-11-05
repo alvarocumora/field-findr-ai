@@ -6,6 +6,7 @@ const state = vi.hoisted(() => ({ loading: false, error: null as Error | null, r
 vi.mock('@/hooks/useBrokers', () => ({
   useMyBrokerProfile: () => ({ data: null, isLoading: state.loading, error: state.error, refetch: state.retry }),
   useUpdateMyBrokerProfile: () => ({}),
+  useMarkBrokerLinkShared: () => ({ mutate: vi.fn() }),
   useProjectAssignments: () => ({ data: [], refetch: state.retry }),
   useBrokerRanking: () => ({ data: [], refetch: state.retry }),
 }));

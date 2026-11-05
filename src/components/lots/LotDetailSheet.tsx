@@ -319,6 +319,18 @@ export const LotDetailSheet = ({
             </div>
           </section>
 
+          {features.rolSii && (
+            <section className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/60 p-4">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Rol SII propio</p>
+                <p className="mt-1 font-mono text-lg font-semibold">{features.rolSii}</p>
+              </div>
+              {features.rolCertificate && (
+                <p className="text-right text-xs text-muted-foreground">Certificado SII<br />N° {features.rolCertificate}</p>
+              )}
+            </section>
+          )}
+
           {(lot.elevation_avg || slopeLabel || features.hasWater || features.hasElectricity || features.hasRoad) && (
             <section>
               <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Condiciones del lote</p>

@@ -70,10 +70,10 @@ const BrokersAdmin = () => {
   };
 
   const onApprove = async () => {
-    if (!selected || !userId.trim()) return;
+    if (!selected) return;
     await approve.mutateAsync({
       applicationId: selected.id,
-      userId: userId.trim(),
+      userId: userId.trim() || null,
       level,
       baseCommissionRate: Number(rate) || 3,
     });
@@ -262,11 +262,11 @@ const BrokersAdmin = () => {
             {lookup === 'found' && <p className="text-sm text-primary">Cuenta encontrada con este correo. Lista para aprobar.</p>}
             {lookup === 'missing' && (
               <div className="space-y-2">
-                <p className="text-sm text-destructive">
-                  Aún no existe una cuenta con {selected?.email}. Pídele que se registre con ese correo y vuelve a aprobar,
-                  o pega el ID de su cuenta (está en Usuarios → Info).
+                <p className="text-sm text-muted-foreground">
+                  No encontramos un perfil con {selected?.email}. Puedes aprobar igual: si ya creó su cuenta con ese
+                  correo, se vincula sola. Si aún no la crea, te avisaremos para que le pidas registrarse con ese correo.
                 </p>
-                <Label htmlFor="userId">ID de usuario</Label>
+                <Label htmlFor="userId">ID de usuario (opcional)</Label>
                 <Input id="userId" value={userId} placeholder="ID de la cuenta"
                   onChange={(e) => setUserId(e.target.value)} />
               </div>
@@ -292,7 +292,7 @@ const BrokersAdmin = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelected(null)}>Cancelar</Button>
-            <Button onClick={onApprove} disabled={!userId.trim() || approve.isPending}>
+            <Button onClick={onApprove} disabled={lookup === 'searching' || approve.isPending}>
               Aprobar y activar
             </Button>
           </DialogFooter>

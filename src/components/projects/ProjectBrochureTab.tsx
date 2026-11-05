@@ -107,6 +107,7 @@ export const ProjectBrochureTab = ({ project, lots }: Props) => {
           spatial,
         }}
         lots={lots}
+        fichaPdf={cfg.fichaPdf}
         requireLead={false}
         showLotSheets
         title="Material descargable"

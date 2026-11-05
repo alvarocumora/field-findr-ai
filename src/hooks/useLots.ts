@@ -1,3 +1,4 @@
+import { invalidateReservationInventory } from '@/lib/reservations/invalidateInventory';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert, TablesUpdate, Json } from '@/integrations/supabase/types';
@@ -25,7 +26,13 @@ export interface LotFeatures {
   hasElectricity?: boolean;
   hasRoad?: boolean;
   additionalFeatures?: string[];
+  /** Rol de avalúo SII propio del lote (ej. "08022-00001"). */
+  rolSii?: string;
+  /** Certificado SII de asignación de roles (ej. "934308"). */
+  rolCertificate?: string;
 }
+
+const ROL_SII = /^\d{3,5}-\d{1,5}$/;
 
 export const parseLotFeatures = (features: Json | null): LotFeatures => {
   if (!features || typeof features !== 'object' || Array.isArray(features)) {
@@ -38,6 +45,10 @@ export const parseLotFeatures = (features: Json | null): LotFeatures => {
     hasElectricity: Boolean(f.hasElectricity),
     hasRoad: Boolean(f.hasRoad),
     additionalFeatures: Array.isArray(f.additionalFeatures) ? f.additionalFeatures.map(String) : [],
+    rolSii: typeof f.rolSii === 'string' && ROL_SII.test(f.rolSii.trim()) ? f.rolSii.trim() : undefined,
+    rolCertificate: typeof f.rolCertificate === 'string' && /^\d{3,12}$/.test(f.rolCertificate.trim())
+      ? f.rolCertificate.trim()
+      : undefined,
   };
 };
 
@@ -99,8 +110,7 @@ export const useLots = (projectId?: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      void invalidateReservationInventory(queryClient);
       toast.success('Lote creado exitosamente');
     },
     onError: (error) => {
@@ -121,8 +131,7 @@ export const useLots = (projectId?: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      void invalidateReservationInventory(queryClient);
       toast.success('Lote actualizado');
     },
     onError: (error) => {
@@ -140,8 +149,7 @@ export const useLots = (projectId?: string) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      void invalidateReservationInventory(queryClient);
       toast.success('Lote eliminado');
     },
     onError: (error) => {
@@ -200,8 +208,7 @@ export const useAdjustLotPrices = () => {
       return data as number;
     },
     onSuccess: (count) => {
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      void invalidateReservationInventory(queryClient);
       toast.success(`Precios actualizados en ${count} lote${count === 1 ? '' : 's'}`);
     },
     onError: (error: Error) => {

@@ -10,6 +10,7 @@ import { Calculator, TrendingUp, PiggyBank, DollarSign, BarChart3, Database, Bui
 import { useProjects } from '@/hooks/useProjects';
 import { useLots } from '@/hooks/useLots';
 import { MortgageSimulator } from '@/components/fintech/MortgageSimulator';
+import { FIXED_CREDIT_ANNUAL_RATE_PCT } from '@/lib/easyCredit';
 
 export const FinancialCalculators = () => {
   const { projects } = useProjects();
@@ -34,7 +35,6 @@ export const FinancialCalculators = () => {
   // Mortgage Calculator State
   const [mortgageData, setMortgageData] = useState({
     loanAmount: 80000000,
-    interestRate: 4.5,
     loanTerm: 20,
   });
 
@@ -85,8 +85,8 @@ export const FinancialCalculators = () => {
 
   // Mortgage Calculations
   const calculateMortgage = () => {
-    const { loanAmount, interestRate, loanTerm } = mortgageData;
-    const monthlyRate = interestRate / 100 / 12;
+    const { loanAmount, loanTerm } = mortgageData;
+    const monthlyRate = FIXED_CREDIT_ANNUAL_RATE_PCT / 100 / 12;
     const numberOfPayments = loanTerm * 12;
     const monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
     const totalPayment = monthlyPayment * numberOfPayments;
@@ -242,8 +242,8 @@ export const FinancialCalculators = () => {
                   <Input type="number" value={mortgageData.loanAmount} onChange={(e) => setMortgageData({ ...mortgageData, loanAmount: Number(e.target.value) })} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Tasa de Interés ({mortgageData.interestRate}%)</Label>
-                  <Slider value={[mortgageData.interestRate]} onValueChange={([v]) => setMortgageData({ ...mortgageData, interestRate: v })} min={1} max={15} step={0.1} />
+                  <Label>Tasa nominal anual fija: {FIXED_CREDIT_ANNUAL_RATE_PCT}%</Label>
+                   <p className="text-xs text-muted-foreground">Equivalente a 0,75% mensual nominal. Simulación referencial, no una oferta de crédito.</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Plazo ({mortgageData.loanTerm} años)</Label>

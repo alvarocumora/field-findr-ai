@@ -33,18 +33,29 @@ export default function ProjectsRail() {
   const navigate = useNavigate();
   const { include, setInclude } = useIncludeLoteoLots();
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [], isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['explorer-projects-rail'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const base = 'id,name,city,region,images,total_lots,available_lots';
+      const primary = await supabase
         .from('projects')
-        .select('id,name,city,region,images,total_lots,available_lots,total_area')
+        .select(`${base},total_area`)
         .eq('status', 'active')
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(12);
+      // Older deployments may not contain optional merchandising/area columns.
+      // Keep the public-active security boundary while recovering the catalog.
+      const fallback = primary.error
+        ? await supabase
+            .from('projects')
+            .select(base)
+            .eq('status', 'active')
+            .limit(12)
+        : null;
+      const error = fallback ? fallback.error : primary.error;
       if (error) throw error;
-      return (data ?? []) as ProjectRow[];
+      return ((fallback ? fallback.data : primary.data) ?? []) as ProjectRow[];
     },
     staleTime: 60_000,
   });
@@ -75,6 +86,19 @@ export default function ProjectsRail() {
     staleTime: 60_000,
   });
 
+  if (isLoading) {
+    return <div className="border-b border-border/30 px-3 py-3 text-xs text-muted-foreground" role="status">Cargando proyectos…</div>;
+  }
+  if (isError) {
+    return (
+      <div className="border-b border-border/30 px-3 py-3 text-sm" role="alert">
+        No pudimos cargar los proyectos.
+        <button type="button" className="ml-2 text-primary underline" disabled={isFetching} onClick={() => void refetch()}>
+          Reintentar
+        </button>
+      </div>
+    );
+  }
   if (projects.length === 0) return null;
 
   return (

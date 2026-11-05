@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { computeEasyCredit, EASY_CREDIT_TERMS, financingInquiryUrl, LICANTEN_PATH, LICANTEN_PROMO_PRICE } from '@/lib/easyCredit';
+import { computeEasyCredit, EASY_CREDIT_TERMS, FIXED_CREDIT_ANNUAL_RATE_PCT, financingInquiryUrl, LICANTEN_PATH, LICANTEN_PROMO_PRICE } from '@/lib/easyCredit';
 import { getShareUrl } from '@/lib/publicUrls';
 
 const clp = (value: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(value);
@@ -15,9 +15,8 @@ export function EasyCreditSimulator({ defaultPrice = LICANTEN_PROMO_PRICE, lotId
   const [price, setPrice] = useState(defaultPrice);
   const [downPct, setDownPct] = useState(20);
   const [months, setMonths] = useState(36);
-  const [annualRatePct, setAnnualRatePct] = useState(12);
   const [pdfBusy, setPdfBusy] = useState(false);
-  const result = computeEasyCredit({ price, downPct, months, annualRatePct });
+  const result = computeEasyCredit({ price, downPct, months, annualRatePct: FIXED_CREDIT_ANNUAL_RATE_PCT });
   const updateNumber = (value: string, max: number) => Math.min(max, Math.max(0, Number(value) || 0));
 
   const downloadPdf = async () => {
@@ -38,7 +37,7 @@ export function EasyCreditSimulator({ defaultPrice = LICANTEN_PROMO_PRICE, lotId
         downPayment: result.downPayment,
         financedAmount: result.principal,
         termMonths: months,
-        interestRate: annualRatePct / 12,
+        interestRate: FIXED_CREDIT_ANNUAL_RATE_PCT / 12,
         monthlyPayment: result.monthlyPayment,
         totalInterest: result.totalInterest,
         totalCost: result.totalPaid,
@@ -82,15 +81,15 @@ export function EasyCreditSimulator({ defaultPrice = LICANTEN_PROMO_PRICE, lotId
               </div>
             </fieldset>
             <div className="space-y-2">
-              <Label htmlFor={`${id}-rate`}>Tasa nominal anual referencial (%)</Label>
-              <Input id={`${id}-rate`} type="number" inputMode="decimal" min={0} max={60} step={0.1} value={annualRatePct} onChange={e => setAnnualRatePct(updateNumber(e.target.value, 60))} aria-describedby={`${id}-rate-note`} className="h-12" />
-              <p id={`${id}-rate-note`} className="text-xs text-muted-foreground">12% es un supuesto ilustrativo editable, no una tasa ofrecida por una institución financiera ni una condición disponible para terrenos rurales</p>
+              <p className="text-sm font-medium">Tasa nominal anual fija (referencial)</p>
+              <p className="rural-data text-2xl font-semibold text-primary">9% anual</p>
+              <p className="text-xs text-muted-foreground">Equivale a 0,75% mensual nominal. Es un supuesto de simulación, no una oferta de financiamiento ni una tasa comprometida por una entidad crediticia.</p>
             </div>
           </div>
           <div className="min-w-0 border-t border-border pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
             <p className="text-sm text-muted-foreground">Cuota mensual referencial</p>
             <output aria-live="polite" aria-atomic="true" className="mt-2 block font-editorial text-4xl text-primary sm:text-5xl">{clp(result.monthlyPayment)} <span className="font-sans text-sm">CLP</span></output>
-            <p className="mt-2 text-sm text-muted-foreground">{months} cuotas · tasa anual {annualRatePct.toLocaleString('es-CL')}%</p>
+            <p className="mt-2 text-sm text-muted-foreground">{months} cuotas · tasa nominal anual fija de {FIXED_CREDIT_ANNUAL_RATE_PCT}%</p>
             <dl className="my-6 divide-y divide-border text-sm">
               {[
                 ['Pie inicial', result.downPayment], ['Monto financiado', result.principal],

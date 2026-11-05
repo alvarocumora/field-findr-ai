@@ -60,6 +60,7 @@ export const ProjectDownloadsBySlug = ({ slug, className, title, description, fa
 
   return (
     <ProjectDownloads
+      fichaPdf={cfg.fichaPdf}
       className={className}
       title={title}
       description={description}

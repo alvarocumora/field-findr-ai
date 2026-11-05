@@ -9,6 +9,7 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { BROKER_MIN_SALE_COMMISSION_CLP, clpAmount } from '@/lib/brokerProgram';
 import { supabase } from '@/integrations/supabase/client';
 
 const EXPERIENCES = [
@@ -159,7 +160,7 @@ const OpportunityHubSection = () => {
               </div>
               <div className="border border-background/15 p-4">
                 <p className="font-swiss text-[10px] text-background/50">Consultor · por venta</p>
-                <p className="mt-1 font-editorial text-3xl font-medium text-background">Desde $500.000</p>
+                <p className="mt-1 font-editorial text-3xl font-medium text-background">Desde {clpAmount(BROKER_MIN_SALE_COMMISSION_CLP)}</p>
               </div>
             </div>
           </div>

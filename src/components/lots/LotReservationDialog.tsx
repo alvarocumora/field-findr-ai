@@ -27,7 +27,8 @@ import { lovable } from '@/integrations/lovable/index';
 import { saveReservationDraft, readReservationDraft, clearReservationDraft } from '@/lib/reservationDraft';
 import { toast } from 'sonner';
 import { canReservePublicLot, formatPublicLotPrice } from '@/lib/lots/publicLotCommercial';
-import { Maximize2, DollarSign, Clock, Send, Loader2, CreditCard, AlertCircle } from 'lucide-react';
+import { Maximize2, DollarSign, Clock, Send, Loader2, CreditCard, AlertCircle, Landmark } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const reservationSchema = z.object({
@@ -373,6 +374,15 @@ export const LotReservationDialog = ({
               <p className="text-xs text-center text-muted-foreground">
                 Serás redirigido a MercadoPago para completar el pago de forma segura
               </p>
+              <Button asChild variant="outline" className="w-full">
+                <Link
+                  to={`/reservar?proyecto=${encodeURIComponent(lot.project_id)}&lote=${encodeURIComponent(lot.id)}`}
+                  onClick={() => onOpenChange(false)}
+                >
+                  <Landmark className="h-4 w-4" />
+                  Prefiero transferencia: formulario de reserva
+                </Link>
+              </Button>
             </div>
           </form>
         </Form>

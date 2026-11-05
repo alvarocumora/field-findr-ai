@@ -6,8 +6,14 @@ container_name="fieldfindr-auth-test-${RANDOM}-$$"
 container_id=$(docker run --rm -d --network none --name "$container_name" -e POSTGRES_HOST_AUTH_METHOD=trust postgres:16-alpine)
 trap 'docker rm -f "$container_id" >/dev/null 2>&1 || true' EXIT
 ready=false
-for attempt in {1..30}; do
-  if docker exec "$container_id" pg_isready -U postgres >/dev/null 2>&1; then ready=true; break; fi
+# The image runs a temporary socket-only server during initdb and then restarts
+# it: pg_isready can succeed against that temporary server and psql then fails
+# mid-restart. Wait for the init-complete marker, then for a real query.
+for attempt in {1..60}; do
+  if docker logs "$container_id" 2>&1 | grep -q 'PostgreSQL init process complete' \
+     && docker exec "$container_id" psql -X -U postgres -tAc 'select 1' >/dev/null 2>&1; then
+    ready=true; break
+  fi
   sleep 1
 done
 if [[ "$ready" != true ]]; then docker logs "$container_id"; exit 1; fi

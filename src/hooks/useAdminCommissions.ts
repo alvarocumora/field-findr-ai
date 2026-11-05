@@ -31,6 +31,8 @@ export interface CommissionRule {
   project_id: string | null;
   commission_rate: number;
   referral_override_rate: number;
+  fixed_sale_amount: number | null;
+  referral_fixed_amount: number | null;
   is_active: boolean;
   notes: string | null;
 }
@@ -143,6 +145,36 @@ export const useCommissionRules = () =>
     },
   });
 
+/**
+ * Fija la comisión fija por venta y por captación de un proyecto. La base
+ * valida el permiso (dueño, commissions.write en el proyecto o admin) y
+ * mantiene una sola regla activa por proyecto.
+ */
+export const useSetProjectCommission = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ projectId, saleAmount, captureAmount }: {
+      projectId: string;
+      saleAmount: number;
+      captureAmount: number;
+    }) => {
+      const { error } = await (supabase.rpc as CallableFunction)('set_project_commission', {
+        p_project_id: projectId,
+        p_sale_amount: saleAmount,
+        p_capture_amount: captureAmount,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['commission-rules'] });
+      toast.success('Comisión del proyecto guardada', {
+        description: 'Aplica a las ventas que se registren desde ahora.',
+      });
+    },
+    onError: (e: Error) => toast.error('No se pudo guardar la comisión', { description: e.message }),
+  });
+};
+
 export const useUpsertCommissionRule = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -158,6 +190,8 @@ export const useUpsertCommissionRule = () => {
           project_id: rule.project_id ?? null,
           commission_rate: rule.commission_rate ?? 3,
           referral_override_rate: rule.referral_override_rate ?? 0,
+          fixed_sale_amount: rule.fixed_sale_amount ?? null,
+          referral_fixed_amount: rule.referral_fixed_amount ?? null,
           notes: rule.notes ?? null,
         });
         if (error) throw error;

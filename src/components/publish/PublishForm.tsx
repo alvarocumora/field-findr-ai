@@ -200,6 +200,10 @@ const PublishForm = () => {
       return;
     }
 
+    if (planLimits.isLoading || planLimits.isError) {
+      toast({ title: 'Cupo sin verificar', description: 'Actualiza la consulta de tu plan antes de publicar.', variant: 'destructive' });
+      return;
+    }
     if (!planLimits.canCreateListing) {
       toast({
         title: "Límite de plan alcanzado",
@@ -789,11 +793,13 @@ const PublishForm = () => {
                 onClick={handlePublish}
                 disabled={createListing.isPending || !planLimits.canCreateListing}
                 className="btn-glow"
-                title={!planLimits.canCreateListing ? 'Has alcanzado el límite de publicaciones de tu plan' : undefined}
+                title={planLimits.isLoading || planLimits.isError ? 'Cupo del plan sin verificar' : !planLimits.canCreateListing ? 'Has alcanzado el límite de publicaciones de tu plan' : undefined}
               >
                 {createListing.isPending
                   ? "Publicando..."
-                  : !planLimits.canCreateListing
+                  : planLimits.isLoading || planLimits.isError
+                    ? "Cupo del plan sin verificar"
+                    : !planLimits.canCreateListing
                     ? "Límite alcanzado — mejora tu plan"
                     : "Publicar propiedad"}
               </Button>

@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { useSEO } from '@/hooks/useSEO';
 import { useSubmitBrokerApplication } from '@/hooks/useBrokers';
+import { useAuth } from '@/hooks/useAuth';
 
 const schema = z.object({
   fullName: z.string().trim().min(2, 'Ingresa tu nombre completo').max(120),
@@ -53,6 +54,8 @@ const BrokerSignup = () => {
   const [params] = useSearchParams();
   const submit = useSubmitBrokerApplication();
   const [done, setDone] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
+  const { user } = useAuth();
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -112,6 +115,7 @@ const BrokerSignup = () => {
       source: params.get('source') ?? 'brokers-landing',
       invitedByCode: params.get('ref') ?? undefined,
     });
+    setSubmittedEmail(d.email);
     setDone(true);
   };
 
@@ -121,11 +125,28 @@ const BrokerSignup = () => {
         <div className="container px-4 py-24 max-w-lg text-center">
           <CheckCircle2 className="h-14 w-14 mx-auto mb-4 text-primary" aria-hidden="true" />
           <h1 className="text-2xl font-bold mb-2">Postulación recibida</h1>
-          <p className="text-muted-foreground mb-8">
+          <p className="text-muted-foreground mb-6">
             Revisamos tu perfil y te contactamos en menos de 48 horas hábiles con el acceso
             a la plataforma y al catálogo de proyectos.
           </p>
-          <Button asChild><Link to="/brokers/ranking">Conocer la comunidad</Link></Button>
+          {user ? (
+            <p className="mb-8 rounded-lg border bg-muted/40 p-4 text-sm">
+              Tu postulación quedó ligada a tu cuenta. Cuando la aprobemos verás tu panel en
+              <strong> Mi negocio broker</strong> y te llegará un aviso.
+            </p>
+          ) : (
+            <div className="mb-8 rounded-lg border bg-muted/40 p-4 text-left text-sm space-y-3">
+              <p>
+                <strong>Siguiente paso:</strong> crea tu cuenta con el mismo correo
+                {submittedEmail ? <> (<strong>{submittedEmail}</strong>)</> : null}, o entra con Google usando ese
+                correo. Así activamos tu acceso apenas aprobemos tu postulación.
+              </p>
+              <Button asChild className="w-full">
+                <Link to={`/auth?redirect=${encodeURIComponent('/asesor/mi-negocio')}`}>Crear mi cuenta</Link>
+              </Button>
+            </div>
+          )}
+          <Button asChild variant="outline"><Link to="/brokers/ranking">Conocer la comunidad</Link></Button>
         </div>
       </PublicLayout>
     );

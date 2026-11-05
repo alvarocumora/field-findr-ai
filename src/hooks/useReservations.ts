@@ -1,3 +1,4 @@
+import { invalidateReservationInventory } from '@/lib/reservations/invalidateInventory';
 import type { Json } from '@/integrations/supabase/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -173,8 +174,7 @@ export const useCreateReservation = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['reservations'] });
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
+      void invalidateReservationInventory(queryClient);
       
       if (data.payment_url) {
         toast.success('Reserva creada', {
@@ -187,6 +187,7 @@ export const useCreateReservation = () => {
       }
     },
     onError: (error: Error) => {
+      void invalidateReservationInventory(queryClient);
       toast.error('Error al crear reserva', {
         description: error.message,
       });
@@ -207,8 +208,7 @@ export const useCancelReservation = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reservations'] });
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
+      void invalidateReservationInventory(queryClient);
       toast.success('Reserva cancelada');
     },
     onError: (error: Error) => {
@@ -235,8 +235,7 @@ export const useExpireStaleReservations = () => {
     },
     onSuccess: (expiredCount) => {
       if (expiredCount > 0) {
-        queryClient.invalidateQueries({ queryKey: ['reservations'] });
-        queryClient.invalidateQueries({ queryKey: ['lots'] });
+        void invalidateReservationInventory(queryClient);
         toast.info(`${expiredCount} reserva${expiredCount === 1 ? '' : 's'} vencida${expiredCount === 1 ? '' : 's'} liberada${expiredCount === 1 ? '' : 's'}`);
       }
     },
@@ -257,7 +256,7 @@ export const useExtendReservation = () => {
       return data as string;
     },
     onSuccess: (newExpiry) => {
-      queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      void invalidateReservationInventory(queryClient);
       toast.success('Reserva extendida', {
         description: `Nuevo vencimiento: ${new Date(newExpiry).toLocaleString('es-CL')}`,
       });
@@ -271,10 +270,17 @@ export const useExtendReservation = () => {
 export interface RegisterSaleData {
   reservationId: string;
   saleAmount: number;
+  /** null = comisión según la regla del proyecto; 0 = sin comisión. */
   commissionRate?: number | null;
   notes?: string | null;
   /** Optional: link the sale to a specific lead so referral splits are inherited. */
   leadId?: string | null;
+  /**
+   * Quién cerró una venta que llegó con el link de un broker. true/null = el
+   * broker (recibe la comisión de venta); false = el equipo del proyecto (el
+   * broker recibe solo la captación).
+   */
+  brokerCloses?: boolean | null;
   /** Optional: referring broker who brought the client, if not resolved via leadId. */
   referringAgentId?: string | null;
   /** Referral split (% of the total commission) paid to the referring broker. */
@@ -284,7 +290,8 @@ export interface RegisterSaleData {
 /**
  * Atomic reservation → sale conversion: marks the reservation converted (the
  * DB trigger sets the lot sold + sale_date), records the final negotiated
- * price on the lot, and creates the agent commission when a rate is given.
+ * price on the lot, and creates the agent commission from the project rule
+ * (fixed CLP amounts) unless commissionRate is 0.
  * If a leadId with a referring_agent is provided, a referral split is added.
  */
 export const useRegisterSale = () => {
@@ -293,7 +300,7 @@ export const useRegisterSale = () => {
   return useMutation({
     mutationFn: async ({
       reservationId, saleAmount, commissionRate, notes,
-      leadId, referringAgentId, referralRate,
+      leadId, referringAgentId, referralRate, brokerCloses,
     }: RegisterSaleData) => {
       const { data, error } = await supabase.rpc('register_sale', {
         p_reservation_id: reservationId,
@@ -303,17 +310,17 @@ export const useRegisterSale = () => {
         p_referring_agent_id: referringAgentId ?? null,
         p_referral_rate: referralRate ?? null,
         p_lead_id: leadId ?? null,
+        p_broker_closes: brokerCloses ?? null,
       });
       if (error) throw error;
       return data as string | null; // commission id (null when no commission)
     },
 
-    onSuccess: (_commissionId, { commissionRate }) => {
-      queryClient.invalidateQueries({ queryKey: ['reservations'] });
-      queryClient.invalidateQueries({ queryKey: ['lots'] });
+    onSuccess: (commissionId) => {
+      void invalidateReservationInventory(queryClient);
       queryClient.invalidateQueries({ queryKey: ['agent-commissions'] });
       toast.success('Venta registrada', {
-        description: commissionRate
+        description: commissionId
           ? 'Lote vendido y comisión generada'
           : 'Lote marcado como vendido',
       });

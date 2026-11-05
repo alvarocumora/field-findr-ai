@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Download, FileText, Map as MapIcon, Table2, Loader2, Eye, FileSpreadsheet, Files } from 'lucide-react';
+import { Download, FileText, Map as MapIcon, Table2, Loader2, Eye, FileSpreadsheet, Files, MousePointerClick } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
@@ -19,8 +19,9 @@ import {
   type KitLot,
   type KitProject,
 } from '@/lib/pdf/projectKit';
+import type { LandingFichaPdf } from '@/lib/landing/config';
 
-type KitId = 'dossier' | 'precios' | 'plano' | 'csv' | 'fichas' | 'preview';
+type KitId = 'dossier' | 'precios' | 'plano' | 'csv' | 'fichas' | 'preview' | 'ficha';
 
 interface Props {
   project: KitProject;
@@ -34,6 +35,8 @@ interface Props {
   className?: string;
   title?: string;
   description?: string;
+  /** Ficha interactiva publicada por el equipo (landing_config.ficha_pdf). */
+  fichaPdf?: LandingFichaPdf | null;
 }
 
 const LEAD_KEY = (projectId: string) => `ot_material_lead_${projectId}`;
@@ -52,6 +55,7 @@ export const ProjectDownloads = ({
   className,
   title = 'Material del proyecto',
   description = 'Descarga el dossier, la lista de precios y el plano para revisarlos o compartirlos.',
+  fichaPdf = null,
 }: Props) => {
   const token = useStaticMapToken();
   const sentinelQuery = useSentinelImagery({
@@ -85,6 +89,19 @@ export const ProjectDownloads = ({
 
   const run = async (id: KitId) => {
     if (busy) return;
+    if (id === 'ficha') {
+      if (!fichaPdf) return;
+      const a = document.createElement('a');
+      a.href = fichaPdf.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.download = `Ficha-${project.slug || project.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      track('project_material_download', { project_id: project.id, material: 'ficha_pdf' });
+      return;
+    }
     setBusy(id);
     try {
       const needsSatellite = id === 'preview' || id === 'dossier' || id === 'plano' || id === 'fichas';
@@ -142,6 +159,26 @@ export const ProjectDownloads = ({
       <h2 className="text-2xl font-bold text-foreground">{title}</h2>
       <p className="text-muted-foreground text-sm mt-1 mb-4">{description}</p>
       <div className="space-y-3">
+        {fichaPdf && (
+          <div className="rounded-2xl border border-primary/40 bg-primary/10 p-5 flex flex-col md:flex-row md:items-center gap-4">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                <MousePointerClick className="h-5 w-5" aria-hidden />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Ficha interactiva · PDF</p>
+                <h3 className="text-lg font-bold leading-tight text-foreground">{fichaPdf.label}</h3>
+                <p className="text-sm text-muted-foreground">
+                  Plano con enlaces a cada lote, precios, fotos, kit de casa y botones para reservar o escribir por WhatsApp.
+                  {fichaPdf.updatedAt ? ` Precios al ${fichaPdf.updatedAt.split('-').reverse().join('-')}.` : ''}
+                </p>
+              </div>
+            </div>
+            <Button className="min-h-11 md:w-48 shrink-0" disabled={busy !== null} onClick={() => request('ficha')}>
+              <Download className="h-4 w-4 mr-2" />Descargar ficha
+            </Button>
+          </div>
+        )}
         {/* Dossier: la pieza principal para enviar a un cliente */}
         <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card p-5 flex flex-col md:flex-row md:items-center gap-5">
           <div className="min-w-0 flex-1">

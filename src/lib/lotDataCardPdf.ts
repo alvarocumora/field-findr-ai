@@ -102,6 +102,9 @@ export const generateLotDataCardPdf = async (
   f.section('Datos tecnicos');
   f.kv('Superficie', `${Number(lot.area).toLocaleString('es-CL')} m²`);
   f.kv('Numero de lote', lot.lot_number);
+  if (features.rolSii) {
+    f.kv('Rol SII', features.rolCertificate ? `${features.rolSii} (certificado SII N° ${features.rolCertificate})` : features.rolSii);
+  }
   f.kv('Proyecto', projectName);
   if (lot.latitude && lot.longitude) {
     f.kv('Coordenadas', `${Number(lot.latitude).toFixed(5)}, ${Number(lot.longitude).toFixed(5)}`);

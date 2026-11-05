@@ -29,11 +29,34 @@ export function projectSocialPlugin(apiUrl: string, publishableKey: string): Plu
       };
       // Complete pagination; a project disappearing from the public API is not exported.
       const projects: PublishedProject[] = [];
-      for (let offset = 0; ; offset += 100) {
-        const page = await request(`projects?select=id,slug,name,city,location,region,images,landing_config,status&status=eq.active&order=id&limit=100&offset=${offset}`);
-        if (!Array.isArray(page)) throw new Error('Invalid public projects response');
-        projects.push(...page);
-        if (page.length < 100) break;
+      const inventories = new Map<string, SocialLot[]>();
+      let remoteStatus: 'complete' | 'skipped' | 'unavailable' = 'complete';
+      // Social metadata is supplemental: a public API outage must not block
+      // the application build. Fetch everything before writing any previews,
+      // so a failed request cannot export partially fetched inventory.
+      if (process.env.SKIP_REMOTE_PROJECT_PREVIEWS !== 'true') {
+        try {
+          for (let offset = 0; ; offset += 100) {
+            const page = await request(`projects?select=id,slug,name,city,location,region,images,landing_config,status&status=eq.active&order=id&limit=100&offset=${offset}`);
+            if (!Array.isArray(page)) throw new Error('Invalid public projects response');
+            projects.push(...page);
+            if (page.length < 100) break;
+          }
+          for (const project of projects) {
+            if (project.status !== 'active' || !uuid.test(project.id)) continue;
+            const lots = await request('rpc/get_public_lots', { p_project_id: project.id });
+            if (!Array.isArray(lots)) throw new Error('Invalid public inventory response');
+            inventories.set(project.id, lots);
+          }
+        } catch {
+          projects.length = 0;
+          inventories.clear();
+          remoteStatus = 'unavailable';
+          console.warn('Project social HTML: public API unavailable; remote previews omitted. Application and static campaign routes will still build.');
+        }
+      } else {
+        remoteStatus = 'skipped';
+        console.log('Skipping remote project previews in CI; static campaign routes are still generated.');
       }
       const template = await readFile(resolve(outDir, 'index.html'), 'utf8');
       const paths = new Set<string>();
@@ -41,8 +64,8 @@ export function projectSocialPlugin(apiUrl: string, publishableKey: string): Plu
       for (const project of projects) {
         if (project.status !== 'active' || !uuid.test(project.id)) continue;
         exportedProjects++;
-        const lots = await request('rpc/get_public_lots', { p_project_id: project.id }) as SocialLot[];
-        if (!Array.isArray(lots)) throw new Error('Invalid public inventory response');
+        const lots = inventories.get(project.id);
+        if (!lots) throw new Error('Missing fetched public inventory');
         const social = projectSocial(project, lots);
         // A real curated card, hero image or gallery photo always wins; only
         // a project that would otherwise fall through to the generic,
@@ -133,7 +156,7 @@ export function projectSocialPlugin(apiUrl: string, publishableKey: string): Plu
       }
 
       await writeFile(resolve(outDir, 'project-previews.json'), JSON.stringify({
-        generatedAt: new Date().toISOString(), projects: exportedProjects, routes: [...paths],
+        generatedAt: new Date().toISOString(), projects: exportedProjects, routes: [...paths], remoteStatus,
       }, null, 2));
       console.log(`Project social HTML: ${exportedProjects} public projects, ${paths.size} routes`);
     },
