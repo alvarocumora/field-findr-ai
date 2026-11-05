@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          activity_type: string
+          actor_id: string
+          body: string | null
+          channel: string | null
+          contact_id: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          occurred_at: string
+          opportunity_id: string | null
+          organization_id: string | null
+          project_id: string | null
+          title: string | null
+        }
+        Insert: {
+          activity_type: string
+          actor_id?: string
+          body?: string | null
+          channel?: string | null
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          opportunity_id?: string | null
+          organization_id?: string | null
+          project_id?: string | null
+          title?: string | null
+        }
+        Update: {
+          activity_type?: string
+          actor_id?: string
+          body?: string | null
+          channel?: string | null
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          opportunity_id?: string | null
+          organization_id?: string | null
+          project_id?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_commissions: {
         Row: {
           agent_id: string
@@ -35,6 +112,7 @@ export type Database = {
           referring_agent_id: string | null
           reservation_id: string | null
           sale_amount: number
+          sale_id: string | null
           status: string
           updated_at: string
         }
@@ -58,6 +136,7 @@ export type Database = {
           referring_agent_id?: string | null
           reservation_id?: string | null
           sale_amount?: number
+          sale_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -81,6 +160,7 @@ export type Database = {
           referring_agent_id?: string | null
           reservation_id?: string | null
           sale_amount?: number
+          sale_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -118,6 +198,13 @@ export type Database = {
             columns: ["reservation_id"]
             isOneToOne: false
             referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_commissions_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
             referencedColumns: ["id"]
           },
         ]
@@ -325,6 +412,76 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      broker_network_overrides: {
+        Row: {
+          beneficiary_broker_id: string
+          commission_id: string
+          created_at: string
+          depth: number
+          id: string
+          override_amount: number
+          override_rate: number
+          paid_at: string | null
+          project_id: string | null
+          reservation_id: string | null
+          source_broker_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          beneficiary_broker_id: string
+          commission_id: string
+          created_at?: string
+          depth?: number
+          id?: string
+          override_amount: number
+          override_rate: number
+          paid_at?: string | null
+          project_id?: string | null
+          reservation_id?: string | null
+          source_broker_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          beneficiary_broker_id?: string
+          commission_id?: string
+          created_at?: string
+          depth?: number
+          id?: string
+          override_amount?: number
+          override_rate?: number
+          paid_at?: string | null
+          project_id?: string | null
+          reservation_id?: string | null
+          source_broker_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broker_network_overrides_commission_id_fkey"
+            columns: ["commission_id"]
+            isOneToOne: false
+            referencedRelation: "agent_commissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broker_network_overrides_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broker_network_overrides_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       broker_profiles: {
         Row: {
@@ -655,9 +812,9 @@ export type Database = {
         Row: {
           commission_rate: number
           created_at: string
+          fixed_sale_amount: number | null
           id: string
           is_active: boolean
-          fixed_sale_amount: number | null
           min_commission_amount: number | null
           notes: string | null
           plan_type: string | null
@@ -670,9 +827,9 @@ export type Database = {
         Insert: {
           commission_rate?: number
           created_at?: string
+          fixed_sale_amount?: number | null
           id?: string
           is_active?: boolean
-          fixed_sale_amount?: number | null
           min_commission_amount?: number | null
           notes?: string | null
           plan_type?: string | null
@@ -685,9 +842,9 @@ export type Database = {
         Update: {
           commission_rate?: number
           created_at?: string
+          fixed_sale_amount?: number | null
           id?: string
           is_active?: boolean
-          fixed_sale_amount?: number | null
           min_commission_amount?: number | null
           notes?: string | null
           plan_type?: string | null
@@ -703,6 +860,65 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contacts: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          created_by: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string | null
+          metadata: Json
+          national_id: string | null
+          notes: string | null
+          organization_id: string | null
+          phone: string | null
+          source: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name?: string | null
+          metadata?: Json
+          national_id?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          phone?: string | null
+          source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string | null
+          metadata?: Json
+          national_id?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          phone?: string | null
+          source?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -1557,6 +1773,84 @@ export type Database = {
           },
         ]
       }
+      meetings: {
+        Row: {
+          assigned_to: string | null
+          context: string | null
+          created_at: string
+          id: string
+          internal_notes: string | null
+          lot_id: string | null
+          meeting_type: string
+          meeting_url: string | null
+          preferred_block: string | null
+          preferred_date: string | null
+          project_id: string | null
+          requester_email: string | null
+          requester_name: string
+          requester_phone: string
+          scheduled_at: string | null
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          context?: string | null
+          created_at?: string
+          id?: string
+          internal_notes?: string | null
+          lot_id?: string | null
+          meeting_type?: string
+          meeting_url?: string | null
+          preferred_block?: string | null
+          preferred_date?: string | null
+          project_id?: string | null
+          requester_email?: string | null
+          requester_name: string
+          requester_phone: string
+          scheduled_at?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          context?: string | null
+          created_at?: string
+          id?: string
+          internal_notes?: string | null
+          lot_id?: string | null
+          meeting_type?: string
+          meeting_url?: string | null
+          preferred_block?: string | null
+          preferred_date?: string | null
+          project_id?: string | null
+          requester_email?: string | null
+          requester_name?: string
+          requester_phone?: string
+          scheduled_at?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -1672,6 +1966,108 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      opportunities: {
+        Row: {
+          assigned_to: string | null
+          budget_max: number | null
+          budget_min: number | null
+          contact_id: string
+          created_at: string
+          created_by: string
+          id: string
+          legacy_lead_id: string | null
+          lost_reason: string | null
+          lot_id: string | null
+          metadata: Json
+          next_follow_up: string | null
+          notes: string | null
+          organization_id: string | null
+          project_id: string | null
+          source: string | null
+          stage_changed_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          contact_id: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          legacy_lead_id?: string | null
+          lost_reason?: string | null
+          lot_id?: string | null
+          metadata?: Json
+          next_follow_up?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          project_id?: string | null
+          source?: string | null
+          stage_changed_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          contact_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          legacy_lead_id?: string | null
+          lost_reason?: string | null
+          lot_id?: string | null
+          metadata?: Json
+          next_follow_up?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          project_id?: string | null
+          source?: string | null
+          stage_changed_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_legacy_lead_id_fkey"
+            columns: ["legacy_lead_id"]
+            isOneToOne: true
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       organization_members: {
         Row: {
@@ -2258,6 +2654,9 @@ export type Database = {
           parcel_design: Json | null
           payment_link_shared_at: string | null
           payment_url: string | null
+          referral_code: string | null
+          referral_landing_path: string | null
+          referring_agent_id: string | null
           reservation_amount: number
           source_quote_id: string | null
           status: Database["public"]["Enums"]["reservation_status"]
@@ -2287,6 +2686,9 @@ export type Database = {
           parcel_design?: Json | null
           payment_link_shared_at?: string | null
           payment_url?: string | null
+          referral_code?: string | null
+          referral_landing_path?: string | null
+          referring_agent_id?: string | null
           reservation_amount?: number
           source_quote_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
@@ -2316,6 +2718,9 @@ export type Database = {
           parcel_design?: Json | null
           payment_link_shared_at?: string | null
           payment_url?: string | null
+          referral_code?: string | null
+          referral_landing_path?: string | null
+          referring_agent_id?: string | null
           reservation_amount?: number
           source_quote_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
@@ -2399,6 +2804,201 @@ export type Database = {
           },
         ]
       }
+      sale_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          details: Json
+          event_type: string
+          from_status: string | null
+          id: string
+          sale_id: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          event_type: string
+          from_status?: string | null
+          id?: string
+          sale_id: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          sale_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_events_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          buyer_email: string | null
+          buyer_name: string | null
+          buyer_national_id: string | null
+          buyer_phone: string | null
+          closed_at: string
+          closing_agent_id: string | null
+          contact_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          lead_id: string | null
+          listing_id: string | null
+          lot_id: string
+          notes: string | null
+          opportunity_id: string | null
+          organization_id: string | null
+          originator_agent_id: string | null
+          project_id: string
+          referring_agent_id: string | null
+          reservation_id: string | null
+          sale_amount: number
+          source: string
+          source_quote_id: string | null
+          status: string
+          updated_at: string
+          void_reason: string | null
+          voided_at: string | null
+        }
+        Insert: {
+          buyer_email?: string | null
+          buyer_name?: string | null
+          buyer_national_id?: string | null
+          buyer_phone?: string | null
+          closed_at?: string
+          closing_agent_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          lot_id: string
+          notes?: string | null
+          opportunity_id?: string | null
+          organization_id?: string | null
+          originator_agent_id?: string | null
+          project_id: string
+          referring_agent_id?: string | null
+          reservation_id?: string | null
+          sale_amount: number
+          source?: string
+          source_quote_id?: string | null
+          status?: string
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Update: {
+          buyer_email?: string | null
+          buyer_name?: string | null
+          buyer_national_id?: string | null
+          buyer_phone?: string | null
+          closed_at?: string
+          closing_agent_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          lot_id?: string
+          notes?: string | null
+          opportunity_id?: string | null
+          organization_id?: string | null
+          originator_agent_id?: string | null
+          project_id?: string
+          referring_agent_id?: string | null
+          reservation_id?: string | null
+          sale_amount?: number
+          source?: string
+          source_quote_id?: string | null
+          status?: string
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: true
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_source_quote_id_fkey"
+            columns: ["source_quote_id"]
+            isOneToOne: false
+            referencedRelation: "sales_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_closings: {
         Row: {
           buyer_email: string | null
@@ -2423,6 +3023,7 @@ export type Database = {
           referring_agent_id: string | null
           reservation_id: string | null
           sale_amount: number
+          sale_id: string | null
           status: string
           updated_at: string
           user_id: string
@@ -2450,6 +3051,7 @@ export type Database = {
           referring_agent_id?: string | null
           reservation_id?: string | null
           sale_amount: number
+          sale_id?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -2477,6 +3079,7 @@ export type Database = {
           referring_agent_id?: string | null
           reservation_id?: string | null
           sale_amount?: number
+          sale_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -2515,6 +3118,13 @@ export type Database = {
             columns: ["reservation_id"]
             isOneToOne: false
             referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_closings_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
             referencedColumns: ["id"]
           },
         ]
@@ -3280,6 +3890,104 @@ export type Database = {
           },
         ]
       }
+      visual_scenarios: {
+        Row: {
+          assumptions: Json | null
+          base_image_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          estimated_capex: number | null
+          estimated_revenue: number | null
+          id: string
+          map_bearing: number | null
+          map_center_lat: number | null
+          map_center_lng: number | null
+          map_pitch: number | null
+          map_zoom: number | null
+          metrics: Json | null
+          model_registry_keys: string[] | null
+          overlay_image_url: string | null
+          property_geojson: Json | null
+          property_id: string
+          risks: Json | null
+          scenario_geojson: Json | null
+          scenario_type: string
+          status: string
+          subtitle: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assumptions?: Json | null
+          base_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimated_capex?: number | null
+          estimated_revenue?: number | null
+          id?: string
+          map_bearing?: number | null
+          map_center_lat?: number | null
+          map_center_lng?: number | null
+          map_pitch?: number | null
+          map_zoom?: number | null
+          metrics?: Json | null
+          model_registry_keys?: string[] | null
+          overlay_image_url?: string | null
+          property_geojson?: Json | null
+          property_id: string
+          risks?: Json | null
+          scenario_geojson?: Json | null
+          scenario_type: string
+          status?: string
+          subtitle?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assumptions?: Json | null
+          base_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimated_capex?: number | null
+          estimated_revenue?: number | null
+          id?: string
+          map_bearing?: number | null
+          map_center_lat?: number | null
+          map_center_lng?: number | null
+          map_pitch?: number | null
+          map_zoom?: number | null
+          metrics?: Json | null
+          model_registry_keys?: string[] | null
+          overlay_image_url?: string | null
+          property_geojson?: Json | null
+          property_id?: string
+          risks?: Json | null
+          scenario_geojson?: Json | null
+          scenario_type?: string
+          status?: string
+          subtitle?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visual_scenarios_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webhook_deliveries: {
         Row: {
           delivered_at: string
@@ -3510,6 +4218,14 @@ export type Database = {
           p_phone?: string
         }
         Returns: string
+      }
+      crm_can_write_contact: {
+        Args: { _contact_id: string; _user_id?: string }
+        Returns: boolean
+      }
+      crm_can_write_opportunity: {
+        Args: { _opportunity_id: string; _user_id?: string }
+        Returns: boolean
       }
       expire_featured_projects: { Args: never; Returns: number }
       expire_stale_reservations: { Args: never; Returns: number }
@@ -3871,6 +4587,14 @@ export type Database = {
         Returns: string
       }
       same_organization: { Args: { _other: string }; Returns: boolean }
+      set_project_commission: {
+        Args: {
+          p_capture_amount: number
+          p_project_id: string
+          p_sale_amount: number
+        }
+        Returns: string
+      }
       submit_broker_application: {
         Args: {
           p_city?: string
