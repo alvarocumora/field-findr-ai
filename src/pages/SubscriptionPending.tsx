@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Clock, ArrowLeft, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,37 +7,47 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import PublicLayout from '@/components/layouts/PublicLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useMyOrganization } from '@/hooks/useMyOrganization';
 
 /**
  * MercadoPago back_url for payments that stay in_process/pending (bank
- * transfer, cash points). Polls the subscription until the webhook activates
- * it, then moves the user to the success page.
+ * transfer, cash points). Polls for the subscription the webhook stamps with
+ * THIS exact checkout_id, then moves the user to the success page — never
+ * trusting a pre-existing active subscription unrelated to this payment.
  */
 const SubscriptionPending = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { data: team } = useMyOrganization();
+  const checkoutId = searchParams.get('checkout_id');
 
   const { data: subscription } = useQuery({
-    queryKey: ['subscription-status', user?.id],
+    queryKey: ['subscription-checkout', checkoutId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('subscriptions')
-        .select('status, plan_type')
-        .eq('user_id', user!.id)
+        .select('status, plan_type, user_id, organization_id')
+        .eq('last_checkout_id', checkoutId!)
         .maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: !!user && !!checkoutId,
     refetchInterval: (query) =>
       query.state.data?.status === 'active' ? false : 5000,
   });
 
+  const belongsToViewer = !!subscription && (
+    subscription.user_id === user?.id
+    || (!!subscription.organization_id && !!team?.organizations.some((org) => org.id === subscription.organization_id))
+  );
+
   useEffect(() => {
-    if (subscription?.status === 'active') {
-      navigate('/subscription/success', { replace: true });
+    if (belongsToViewer && subscription?.status === 'active' && checkoutId) {
+      navigate(`/subscription/success?checkout_id=${encodeURIComponent(checkoutId)}`, { replace: true });
     }
-  }, [subscription?.status, navigate]);
+  }, [belongsToViewer, subscription?.status, checkoutId, navigate]);
 
   return (
     <PublicLayout>

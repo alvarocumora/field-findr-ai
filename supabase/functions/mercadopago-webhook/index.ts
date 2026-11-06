@@ -172,6 +172,7 @@ serve(async (req) => {
       // Parse external reference
       let externalRef: {
         type?: string;
+        checkout_id?: string;
         user_id?: string;
         organization_id?: string;
         plan_type?: string;
@@ -465,6 +466,9 @@ serve(async (req) => {
             current_period_start: now.toISOString(),
             current_period_end: periodEnd.toISOString(),
             cancel_at_period_end: false,
+            // Lets the return page confirm THIS exact checkout activated the
+            // plan, instead of trusting the URL or a pre-existing active row.
+            last_checkout_id: externalRef.checkout_id ?? null,
           };
 
           const { error } = existingSub
