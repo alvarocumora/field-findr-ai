@@ -30,6 +30,7 @@ export interface Subscription {
   plan_type: string;
   status: string;
   mercadopago_subscription_id: string | null;
+  last_checkout_id: string | null;
   current_period_start: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;

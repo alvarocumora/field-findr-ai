@@ -64,6 +64,15 @@ const resolvePlan = (planType: string): { key: keyof typeof PLANS; cfg: PlanConf
   return cfg ? { key, cfg } : null;
 };
 
+// Binds every back_url to the exact checkout being created, so the return
+// page can verify THIS checkout activated instead of trusting the URL or an
+// unrelated pre-existing active subscription (owner's, another org's, etc).
+const withCheckoutId = (url: string, checkoutId: string): string => {
+  const withParam = new URL(url);
+  withParam.searchParams.set("checkout_id", checkoutId);
+  return withParam.toString();
+};
+
 const priceFor = (cfg: PlanConfig, cycle: BillingCycle, firstMonthDiscount: boolean) => {
   if (cycle === "annual") {
     // 2 meses gratis: 10 * mensual
@@ -184,6 +193,7 @@ serve(async (req) => {
       const cycleLabel = cycle === "annual" ? "Suscripción anual (2 meses gratis)" : "Suscripción mensual";
       const promoLabel =
         cycle === "monthly" && first_month_discount ? " · 50% off primer mes" : "";
+      const checkoutId = crypto.randomUUID();
 
       const preferenceData = {
         items: [
@@ -197,22 +207,22 @@ serve(async (req) => {
         ],
         payer: user_email ? { email: user_email } : undefined,
         back_urls: {
-          success: success_url || `${req.headers.get("origin")}/subscription/success`,
-          failure: failure_url || `${req.headers.get("origin")}/subscription/failure`,
-          pending: `${req.headers.get("origin")}/subscription/pending`,
+          success: withCheckoutId(success_url || `${req.headers.get("origin")}/subscription/success`, checkoutId),
+          failure: withCheckoutId(failure_url || `${req.headers.get("origin")}/subscription/failure`, checkoutId),
+          pending: withCheckoutId(`${req.headers.get("origin")}/subscription/pending`, checkoutId),
         },
         auto_return: "approved",
         external_reference: JSON.stringify({
+          checkout_id: checkoutId,
           user_id,
           organization_id,
           plan_type: key,
-          organization_id,
           billing_cycle: cycle,
           first_month_discount: cycle === "monthly" && first_month_discount,
         }),
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`,
         statement_descriptor: "OFERTATERRENOS",
-        metadata: { plan_type: key, billing_cycle: cycle, organization_id },
+        metadata: { plan_type: key, billing_cycle: cycle, organization_id, checkout_id: checkoutId },
       };
 
       const response = await fetch(`${MERCADOPAGO_API_URL}/checkout/preferences`, {
@@ -236,6 +246,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           preference_id: data.id,
+          checkout_id: checkoutId,
           init_point: data.init_point,
           sandbox_init_point: data.sandbox_init_point,
           plan_type: key,
