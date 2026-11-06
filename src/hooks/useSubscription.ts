@@ -381,7 +381,10 @@ export const useSubscription = () => {
   const { user } = useAuth();
   const scope = useMyOrganization();
   const { data: team, isLoading: organizationLoading, isError: organizationError } = scope;
-  const organizationId = orgBillingIdFor(team);
+  // Any team member shares the org's plan/quota, not only the roles that can
+  // manage billing (orgBillingIdFor) — an agent must be bound by the same
+  // tenant plan as the owner, not silently fall back to a personal free plan.
+  const organizationId = team?.organization?.id ?? null;
 
   const query = useQuery({
     queryKey: ['subscription', user?.id, organizationId],

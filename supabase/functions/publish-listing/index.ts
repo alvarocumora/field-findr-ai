@@ -94,25 +94,71 @@ Deno.serve(async (req) => {
     auth: { persistSession: false },
   });
 
-  // Resolve plan (most recent active subscription).
-  const { data: subs } = await admin
-    .from("subscriptions")
-    .select("plan_type, status, current_period_end")
-    .eq("user_id", userId)
-    .order("current_period_end", { ascending: false, nullsFirst: false })
-    .limit(5);
+  // Resolve the org (if any) this user belongs to, by ownership or membership.
+  // A team shares one plan/quota: derived only from DB relationships the
+  // caller cannot fake, never from client-supplied input.
+  const [{ data: ownedOrgs }, { data: memberships }] = await Promise.all([
+    admin.from("organizations").select("id").eq("owner_id", userId),
+    admin.from("organization_members").select("organization_id").eq("user_id", userId),
+  ]);
+  const orgIds = [...new Set([
+    ...(ownedOrgs ?? []).map((o) => o.id as string),
+    ...(memberships ?? []).map((m) => m.organization_id as string),
+  ])];
 
-  const activeSub = (subs ?? []).find((s) =>
-    ACTIVE_STATUSES.has(String(s.status))
-  );
+  let organizationId: string | null = null;
+  let activeSub: { plan_type: string; status: string } | undefined;
+
+  if (orgIds.length > 0) {
+    const { data: orgSubs } = await admin
+      .from("subscriptions")
+      .select("organization_id, plan_type, status, current_period_end")
+      .in("organization_id", orgIds)
+      .order("current_period_end", { ascending: false, nullsFirst: false })
+      .limit(10);
+    const activeOrgSub = (orgSubs ?? []).find((s) => ACTIVE_STATUSES.has(String(s.status)));
+    if (activeOrgSub) {
+      activeSub = activeOrgSub;
+      organizationId = activeOrgSub.organization_id as string;
+    }
+  }
+
+  if (!activeSub) {
+    // No org plan governs this user: fall back to their personal subscription.
+    const { data: subs } = await admin
+      .from("subscriptions")
+      .select("plan_type, status, current_period_end")
+      .eq("user_id", userId)
+      .order("current_period_end", { ascending: false, nullsFirst: false })
+      .limit(5);
+    activeSub = (subs ?? []).find((s) => ACTIVE_STATUSES.has(String(s.status)));
+  }
+
   const planKey = String(activeSub?.plan_type ?? "free").toLowerCase();
   const limit = PLAN_LIMITS[planKey] ?? PLAN_LIMITS.free;
+
+  // Quota is counted across the whole team sharing the governing plan
+  // (owner + members), never just the caller, so it cannot be diluted by
+  // spreading listings across teammates.
+  let teamIds = [userId];
+  if (organizationId) {
+    const [{ data: org }, { data: members }] = await Promise.all([
+      admin.from("organizations").select("owner_id").eq("id", organizationId).maybeSingle(),
+      admin.from("organization_members").select("user_id").eq("organization_id", organizationId),
+    ]);
+    const ids = new Set<string>();
+    if (org?.owner_id) ids.add(org.owner_id as string);
+    for (const m of members ?? []) {
+      if (m.user_id) ids.add(m.user_id as string);
+    }
+    if (ids.size > 0) teamIds = [...ids];
+  }
 
   // Count listings against quota.
   const { count, error: countErr } = await admin
     .from("listings")
     .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
+    .in("user_id", teamIds)
     .in("status", COUNTED_LISTING_STATUSES);
 
   if (countErr) {
