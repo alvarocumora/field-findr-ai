@@ -1,13 +1,12 @@
 import { isReservationPayable } from '@/lib/reservations/paymentWindow';
-import { invalidateReservationInventory } from '@/lib/reservations/invalidateInventory';
 import { WorkspaceLoadError } from '@/components/dashboard/WorkspaceLoadError';
 import type { ReservationWithLot } from '@/hooks/useReservations';
 import { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useWorkspaceScope } from '@/hooks/useWorkspaceScope';
-import { useExpireStaleReservations, useExtendReservation } from '@/hooks/useReservations';
+import { useExpireStaleReservations, useExtendReservation, useConfirmReservation, useCancelReservation } from '@/hooks/useReservations';
 import ConvertToSaleDialog from './ConvertToSaleDialog';
 import BuyerJourneySheet from './BuyerJourneySheet';
 import { Card, CardContent } from '@/components/ui/card';
@@ -52,6 +51,8 @@ const ReservationsManager = () => {
   const [journeyReservationId, setJourneyReservationId] = useState<string | null>(null);
   const expireStale = useExpireStaleReservations();
   const extendReservation = useExtendReservation();
+  const confirmMutation = useConfirmReservation();
+  const cancelMutation = useCancelReservation();
 
   const sweptRef = useRef(false);
   useEffect(() => {
@@ -92,37 +93,6 @@ const ReservationsManager = () => {
     enabled: !!user,
     refetchInterval: 30_000,
     refetchOnWindowFocus: true,
-  });
-
-  const cancelMutation = useMutation({
-    mutationFn: async (reservationId: string) => {
-      const { error } = await supabase.from('reservations').update({ status: 'cancelled' as ReservationStatus }).eq('id', reservationId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      void invalidateReservationInventory(queryClient);
-      toast.success('Reserva cancelada exitosamente');
-    },
-    onError: () => toast.error('Error al cancelar la reserva'),
-  });
-
-  const confirmMutation = useMutation({
-    mutationFn: async (reservationId: string) => {
-      const { error } = await supabase
-        .from('reservations')
-        .update({ status: 'paid' as ReservationStatus, paid_at: new Date().toISOString() })
-        .eq('id', reservationId)
-        .eq('status', 'pending_payment')
-        .gt('expires_at', new Date().toISOString())
-        .select('id')
-        .single();
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      void invalidateReservationInventory(queryClient);
-      toast.success('Pago confirmado manualmente');
-    },
-    onError: () => { void invalidateReservationInventory(queryClient); toast.error('No pudimos confirmar el pago. Revisa el estado y vencimiento actualizados.'); },
   });
 
   const stampShared = async (reservationId: string) => {

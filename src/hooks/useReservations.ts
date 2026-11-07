@@ -195,16 +195,21 @@ export const useCreateReservation = () => {
   });
 };
 
+/**
+ * Cancel a reservation via the server permission matrix (assigned broker /
+ * project owner / org capability / platform admin) instead of a raw
+ * `.update()` gated only by the legacy owner-only RLS policy.
+ */
 export const useCancelReservation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (reservationId: string) => {
-      const { error } = await supabase
-        .from('reservations')
-        .update({ status: 'cancelled' })
-        .eq('id', reservationId);
-
+    mutationFn: async (params: string | { reservationId: string; reason?: string }) => {
+      const { reservationId, reason } = typeof params === 'string' ? { reservationId: params, reason: undefined } : params;
+      const { error } = await supabase.rpc('cancel_reservation', {
+        p_reservation_id: reservationId,
+        p_reason: reason ?? null,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -215,6 +220,32 @@ export const useCancelReservation = () => {
       toast.error('Error al cancelar', {
         description: error.message,
       });
+    },
+  });
+};
+
+/**
+ * Confirm a pending reservation's payment via the server permission matrix.
+ * The server clock decides whether the reservation is still within its
+ * payment window — the client never gets to assert that itself.
+ */
+export const useConfirmReservation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (reservationId: string) => {
+      const { error } = await supabase.rpc('confirm_reservation', {
+        p_reservation_id: reservationId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void invalidateReservationInventory(queryClient);
+      toast.success('Pago confirmado manualmente');
+    },
+    onError: (error: Error) => {
+      void invalidateReservationInventory(queryClient);
+      toast.error('No pudimos confirmar el pago', { description: error.message });
     },
   });
 };
