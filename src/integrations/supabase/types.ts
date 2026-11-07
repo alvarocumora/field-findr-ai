@@ -4139,9 +4139,17 @@ export type Database = {
         Args: { _capability?: string; _project_id: string; _user_id?: string }
         Returns: boolean
       }
+      cancel_reservation: {
+        Args: { p_reason?: string; p_reservation_id: string }
+        Returns: Database["public"]["Tables"]["reservations"]["Row"]
+      }
       checkin_event_attendee: { Args: { p_code: string }; Returns: string }
       choose_account_type: { Args: { _type: string }; Returns: string }
       claim_user_referral: { Args: { p_code: string }; Returns: boolean }
+      confirm_reservation: {
+        Args: { p_reservation_id: string }
+        Returns: Database["public"]["Tables"]["reservations"]["Row"]
+      }
       convert_event_registration_to_lead: {
         Args: { p_registration_id: string }
         Returns: string
