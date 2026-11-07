@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCurrentPlan, PLAN_DETAILS, type Plan, type PlanType } from '@/hooks/useSubscription';
+import { useMyOrganization } from '@/hooks/useMyOrganization';
 
 export interface PlanLimitUsage {
   used: number;
@@ -63,15 +64,24 @@ const monthStartISO = () => {
 export const usePlanLimits = (): PlanLimitsResult => {
   const { user } = useAuth();
   const { plan, planDetails, isLoading: planLoading, isError: planError, refetch: refetchPlan } = useCurrentPlan();
+  const { data: team, isLoading: teamLoading, isError: teamError, refetch: refetchTeam } = useMyOrganization();
   const queryClient = useQueryClient();
   const details = planDetails ?? PLAN_DETAILS.free;
+  // A shared org plan is consumed by the whole team (owner + members), not
+  // just the viewing user; resolveTeamUserIds falls back to [user.id] when
+  // there is no organization, so a solo account counts only its own usage.
+  const teamUserIds = useMemo(
+    () => (team?.teamUserIds?.length ? team.teamUserIds : user ? [user.id] : []),
+    [team?.teamUserIds, user],
+  );
+  const teamKey = useMemo(() => [...teamUserIds].sort().join(','), [teamUserIds]);
 
   const { data, isLoading, isError: usageError, refetch: refetchUsage } = useQuery({
-    queryKey: ['plan-usage', user?.id],
-    enabled: !!user,
+    queryKey: ['plan-usage', teamKey],
+    enabled: !!user && !teamLoading && !teamError,
     staleTime: 15_000,
     queryFn: async () => {
-      if (!user) return { listings: 0, projects: 0, featured: 0, superFeatured: 0 };
+      if (teamUserIds.length === 0) return { listings: 0, projects: 0, featured: 0, superFeatured: 0 };
 
       const monthStart = monthStartISO();
 
@@ -79,17 +89,17 @@ export const usePlanLimits = (): PlanLimitsResult => {
         supabase
           .from('listings')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
+          .in('user_id', teamUserIds)
           .in('status', ['active', 'pending_review', 'reserved']),
         supabase
           .from('projects')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
+          .in('user_id', teamUserIds)
           .neq('status', 'archived'),
         supabase
           .from('listings')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
+          .in('user_id', teamUserIds)
           .eq('featured', true)
           .gte('updated_at', monthStart),
         // super_featured actualmente no está en columna; se cuenta como featured con addon.
@@ -109,27 +119,28 @@ export const usePlanLimits = (): PlanLimitsResult => {
     },
   });
 
-  // Realtime: invalidar contadores cuando cambian listings / projects del usuario
+  // Realtime: invalidar contadores cuando cambian listings / projects de cualquier miembro del equipo.
   useEffect(() => {
-    if (!user) return;
+    if (!user || teamUserIds.length === 0) return;
+    const filter = `user_id=in.(${teamUserIds.join(',')})`;
     const channel = supabase
-      .channel(`plan-usage-${user.id}`)
+      .channel(`plan-usage-${user.id}-${teamKey}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'listings', filter: `user_id=eq.${user.id}` },
-        () => queryClient.invalidateQueries({ queryKey: ['plan-usage', user.id] })
+        { event: '*', schema: 'public', table: 'listings', filter },
+        () => queryClient.invalidateQueries({ queryKey: ['plan-usage', teamKey] })
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'projects', filter: `user_id=eq.${user.id}` },
-        () => queryClient.invalidateQueries({ queryKey: ['plan-usage', user.id] })
+        { event: '*', schema: 'public', table: 'projects', filter },
+        () => queryClient.invalidateQueries({ queryKey: ['plan-usage', teamKey] })
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, queryClient]);
+  }, [user, teamKey, teamUserIds, queryClient]);
 
   const usedListings = data?.listings ?? 0;
   const usedProjects = data?.projects ?? 0;
@@ -141,14 +152,14 @@ export const usePlanLimits = (): PlanLimitsResult => {
   const featured = buildUsage(usedFeatured, details.includedFeatured);
   const superFeatured = buildUsage(usedSuper, details.includedSuperFeatured);
 
-  const verified = !!user && !!data && !planLoading && !isLoading && !planError && !usageError;
+  const verified = !!user && !!data && !planLoading && !isLoading && !teamLoading && !planError && !usageError && !teamError;
 
   return {
     plan,
     planDetails: details,
-    isLoading: planLoading || isLoading,
-    isError: !!planError || usageError,
-    refetch: () => Promise.all([refetchPlan(), refetchUsage()]),
+    isLoading: planLoading || isLoading || teamLoading,
+    isError: !!planError || usageError || !!teamError,
+    refetch: () => Promise.all([refetchPlan(), refetchUsage(), refetchTeam()]),
     listings,
     projects,
     featured,
