@@ -1,3 +1,4 @@
+import { officialLotArea } from '@/lib/lots/lotSurface';
 import { useEffect, useRef } from 'react';
 import { MapPin, Maximize2, Sparkles, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +24,7 @@ const CompactListingCard = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const mapToken = useStaticMapToken();
   const imageUrl = listingCoverUrl(listing.images, listing.lat, listing.lng, mapToken) || '/placeholder.svg';
-  const pricePerM2 = formatPricePerM2(listing.price, listing.area_m2, listing.currency);
+  const pricePerM2 = formatPricePerM2(listing.price, (listing as { project_id?: string | null }).project_id && listing.area_m2 ? officialLotArea(listing.area_m2) : listing.area_m2, listing.currency);
 
   useEffect(() => {
     if (isSelected && cardRef.current) {
@@ -107,7 +108,7 @@ const CompactListingCard = ({
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">
-            {formatArea(listing.area_m2, listing.area_ha)}
+            {(listing as { project_id?: string | null }).project_id && listing.area_m2 ? `${officialLotArea(listing.area_m2).toLocaleString('es-CL')} m²` : formatArea(listing.area_m2, listing.area_ha)}
           </span>
           <div className="flex items-center gap-1">
             {listing.views_count > 0 && (

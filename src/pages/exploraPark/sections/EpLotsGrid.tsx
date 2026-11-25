@@ -1,3 +1,4 @@
+import { officialLotArea } from '@/lib/lots/lotSurface';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -192,7 +193,7 @@ export default function EpLotsGrid() {
                       <div className="flex items-baseline justify-between text-[11px]">
                         <span className="text-[var(--hue-bone)]/50">Superficie</span>
                         <span className="tabular-nums text-[var(--hue-bone)]">
-                          {l.area_m2.toLocaleString('es-CL')} m²
+                          {officialLotArea(l.area_m2).toLocaleString('es-CL')} m²
                         </span>
                       </div>
                       <div className="flex items-baseline justify-between text-[11px]">

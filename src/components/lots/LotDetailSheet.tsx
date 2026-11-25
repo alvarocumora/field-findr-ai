@@ -45,6 +45,8 @@ import { toast } from 'sonner';
 import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { PublishLotButton } from './PublishLotButton';
+import { LotSurfaceTable } from './LotSurfaceTable';
+import { officialLotArea } from '@/lib/lots/lotSurface';
 import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 import { canReservePublicLot, formatPublicLotPrice, formatPublicLotUnitPrice } from '@/lib/lots/publicLotCommercial';
 import { useSentinelImagery } from '@/hooks/useSentinelImagery';
@@ -95,7 +97,7 @@ const handleShare = (lot: Lot) => {
 
 const handleWhatsApp = (lot: Lot, projectName: string) => {
   const price = lot.price ? formatPrice(lot.price) : 'Consultar';
-  const msg = `Hola, me interesa el Lote ${lot.lot_number} del proyecto ${projectName}.\n\nSuperficie: ${Number(lot.area).toLocaleString('es-CL')} m²\nPrecio: ${price}\n\n${getCanonicalUrl('/')}proyecto/${lot.project_id}?lote=${lot.lot_number}`;
+  const msg = `Hola, me interesa el Lote ${lot.lot_number} del proyecto ${projectName}.\n\nSuperficie: ${officialLotArea(Number(lot.area)).toLocaleString('es-CL')} m²\nPrecio: ${price}\n\n${getCanonicalUrl('/')}proyecto/${lot.project_id}?lote=${lot.lot_number}`;
   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 };
 
@@ -187,7 +189,7 @@ export const LotDetailSheet = ({
   const features = parseLotFeatures(lot.features);
   const status = getStatusConfig(lot.status);
   const polygon = lot.polygon as number[][] | null;
-  const pricePerSqm = formatPublicLotUnitPrice(lot.price, Number(lot.area));
+  const pricePerSqm = formatPublicLotUnitPrice(lot.price, officialLotArea(Number(lot.area)));
   const slopeLabel = getSlopeLabel(lot.slope_category);
   const images = ((lot).images as string[] | null) || [];
 
@@ -230,7 +232,7 @@ export const LotDetailSheet = ({
             </div>
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Superficie</p>
-              <p className="mt-1 text-xl font-semibold">{Number(lot.area).toLocaleString('es-CL')} m²</p>
+              <p className="mt-1 text-xl font-semibold">{officialLotArea(Number(lot.area)).toLocaleString('es-CL')} m²</p>
             </div>
           </div>
         </div>
@@ -311,13 +313,15 @@ export const LotDetailSheet = ({
           <section className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl border border-border bg-muted/60 p-4">
               <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground"><Ruler className="h-3.5 w-3.5" />Superficie</div>
-              <p className="mt-2 text-xl font-semibold">{Number(lot.area).toLocaleString('es-CL')} m²</p>
+              <p className="mt-2 text-xl font-semibold">{officialLotArea(Number(lot.area)).toLocaleString('es-CL')} m²</p>
             </div>
             <div className="rounded-2xl border border-primary/25 bg-primary/10 p-4">
               <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground"><TrendingUp className="h-3.5 w-3.5" />Precio/m²</div>
               <p className="mt-2 text-xl font-semibold text-primary">{pricePerSqm ?? '—'}</p>
             </div>
           </section>
+
+          <LotSurfaceTable area={Number(lot.area)} />
 
           {features.rolSii && (
             <section className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/60 p-4">

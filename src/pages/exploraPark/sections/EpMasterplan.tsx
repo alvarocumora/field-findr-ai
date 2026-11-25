@@ -1,3 +1,4 @@
+import { officialLotArea } from '@/lib/lots/lotSurface';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
@@ -48,7 +49,7 @@ export default function EpMasterplan() {
   const summary = useMemo(() => {
     const visible = lots.filter((l) => activeStatus.has(l.status));
     const total = visible.length;
-    const totalArea = visible.reduce((s, l) => s + l.area_m2, 0);
+    const totalArea = visible.reduce((s, l) => s + officialLotArea(l.area_m2), 0);
     const totalPrice = visible.reduce((s, l) => s + l.price_clp, 0);
     return {
       total,
