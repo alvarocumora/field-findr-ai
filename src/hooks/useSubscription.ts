@@ -133,8 +133,8 @@ export const PLAN_DETAILS: Record<PlanType, Plan & { id: PlanType }> = {
     id: 'corredora',
     name: 'Corredora',
     target: 'Oficina con 1-3 agentes',
-    price: 2.5,
-    priceUSD: 95,
+    price: 3.5,
+    priceUSD: 132,
     currency: 'UF',
     maxUnits: 60,
     maxProjects: 3,
@@ -166,8 +166,8 @@ export const PLAN_DETAILS: Record<PlanType, Plan & { id: PlanType }> = {
     id: 'inmobiliaria',
     name: 'Inmobiliaria',
     target: 'Desarrollador con 1-3 proyectos activos',
-    price: 5.0,
-    priceUSD: 189,
+    price: 8.0,
+    priceUSD: 301,
     currency: 'UF',
     maxUnits: 200,
     maxProjects: 10,
@@ -200,8 +200,8 @@ export const PLAN_DETAILS: Record<PlanType, Plan & { id: PlanType }> = {
     id: 'grupo',
     name: 'Grupo',
     target: 'Multi-proyecto, equipo grande, canje entre oficinas',
-    price: 9.0,
-    priceUSD: 339,
+    price: 18.0,
+    priceUSD: 676,
     currency: 'UF',
     maxUnits: 500,
     maxProjects: 50,
@@ -291,12 +291,12 @@ const buildPriceMap = (values: Record<Exclude<PlanType, 'starter'|'growth'|'scal
 });
 
 export const LATAM_PRICES: Record<string, PriceMap> = {
-  UF:  buildPriceMap({ free: 0, corredor: 1.0,   corredora: 2.5,   inmobiliaria: 5.0,   grupo: 9.0,   enterprise: 0 }),
-  CLP: buildPriceMap({ free: 0, corredor: 38000, corredora: 94000, inmobiliaria: 188000, grupo: 338000, enterprise: 0 }),
-  USD: buildPriceMap({ free: 0, corredor: 39,    corredora: 95,    inmobiliaria: 189,    grupo: 339,    enterprise: 0 }),
-  ARS: buildPriceMap({ free: 0, corredor: 35000, corredora: 84000, inmobiliaria: 168000, grupo: 302000, enterprise: 0 }),
-  COP: buildPriceMap({ free: 0, corredor: 155000, corredora: 379000, inmobiliaria: 749000, grupo: 1349000, enterprise: 0 }),
-  MXN: buildPriceMap({ free: 0, corredor: 690,   corredora: 1690,  inmobiliaria: 3390,   grupo: 5990,   enterprise: 0 }),
+  UF:  buildPriceMap({ free: 0, corredor: 1.0,   corredora: 3.5,   inmobiliaria: 8.0,   grupo: 18.0,   enterprise: 0 }),
+  CLP: buildPriceMap({ free: 0, corredor: 38000, corredora: 132000, inmobiliaria: 301000, grupo: 676000, enterprise: 0 }),
+  USD: buildPriceMap({ free: 0, corredor: 39,    corredora: 132,    inmobiliaria: 301,    grupo: 676,    enterprise: 0 }),
+  ARS: buildPriceMap({ free: 0, corredor: 35000, corredora: 125000, inmobiliaria: 286000, grupo: 643000, enterprise: 0 }),
+  COP: buildPriceMap({ free: 0, corredor: 155000, corredora: 559000, inmobiliaria: 1277000, grupo: 2873000, enterprise: 0 }),
+  MXN: buildPriceMap({ free: 0, corredor: 690,   corredora: 2390,  inmobiliaria: 5460,   grupo: 12280,   enterprise: 0 }),
 };
 
 // Anual (por mes equivalente) — 2 meses gratis => 10/12 del mensual

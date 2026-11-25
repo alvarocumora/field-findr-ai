@@ -37,7 +37,7 @@ const InmobiliariasLanding = () => {
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
           Multi-proyecto, multi-agente, financiamiento directo, mapa 3D, tasación IA, API y white-label.
-          Desde <strong className="text-foreground">5 UF/mes</strong>.
+          Desde <strong className="text-foreground">8 UF/mes</strong>.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Button size="lg" onClick={() => navigate('/planes-loteos')}>
@@ -104,7 +104,7 @@ const InmobiliariasLanding = () => {
               <CardTitle>Calcula tu ROI</CardTitle>
             </div>
             <p className="text-sm text-muted-foreground">
-              Estima el retorno del plan Inmobiliaria (5 UF/mes ≈ {CLP(planCost)}) sobre tu operación anual.
+              Estima el retorno del plan Inmobiliaria (8 UF/mes ≈ {CLP(planCost)}) sobre tu operación anual.
             </p>
           </CardHeader>
           <CardContent>

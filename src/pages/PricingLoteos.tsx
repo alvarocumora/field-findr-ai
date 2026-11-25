@@ -128,6 +128,9 @@ const PricingLoteos = () => {
             </Card>
           ))}
         </div>
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          Todos los planes incluyen el fee transaccional de la plataforma: <strong className="text-foreground">1,5% por venta cerrada</strong> gestionada con reservas y pagos online. Plan anual: 2 meses gratis.
+        </p>
       </section>
 
       <section className="border-t border-border/50 bg-muted/30">
