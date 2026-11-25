@@ -105,12 +105,15 @@ export const ReservationFormWizard = ({ initialProject, initialLotId }: Reservat
   }, [initialLotId, lots, getValues, setValue]);
 
   // Si la parcela elegida dejó de estar disponible (otro comprador), se libera.
+  // No aplica cuando la reserva ya se completó: al reservar, la parcela sale de
+  // get_reservable_lots y el aviso aparecería sobre la pantalla de éxito.
   useEffect(() => {
+    if (completed) return;
     if (lotId && lotsQuery.isSuccess && !lots.some((l) => l.id === lotId)) {
       setValue('lotId', '');
       toast.warning('La parcela que elegiste ya no está disponible. Elige otra.');
     }
-  }, [lotId, lots, lotsQuery.isSuccess, setValue]);
+  }, [completed, lotId, lots, lotsQuery.isSuccess, setValue]);
 
   const showIssues = (issues: StepIssue[]) => {
     for (const issue of issues) {

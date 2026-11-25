@@ -63,16 +63,20 @@ const monthStartISO = () => {
 
 export const usePlanLimits = (): PlanLimitsResult => {
   const { user } = useAuth();
-  const { plan, planDetails, isLoading: planLoading, isError: planError, refetch: refetchPlan } = useCurrentPlan();
+  const { plan, planDetails, subscription, isLoading: planLoading, isError: planError, refetch: refetchPlan } = useCurrentPlan();
   const { data: team, isLoading: teamLoading, isError: teamError, refetch: refetchTeam } = useMyOrganization();
   const queryClient = useQueryClient();
   const details = planDetails ?? PLAN_DETAILS.free;
-  // A shared org plan is consumed by the whole team (owner + members), not
-  // just the viewing user; resolveTeamUserIds falls back to [user.id] when
-  // there is no organization, so a solo account counts only its own usage.
+  // A shared org plan is consumed by the whole team (owner + members), but a
+  // personal plan only counts the user's own usage. useSubscription falls back
+  // to the personal subscription when the org has none, and the server
+  // (publish-listing) only widens the count to the team when an org
+  // subscription exists — so the client must scope the same way or a broker
+  // with a personal plan would be blocked by teammates' listings.
+  const isOrgPlan = !!subscription?.organization_id && subscription.organization_id === team?.organization?.id;
   const teamUserIds = useMemo(
-    () => (team?.teamUserIds?.length ? team.teamUserIds : user ? [user.id] : []),
-    [team?.teamUserIds, user],
+    () => (isOrgPlan && team?.teamUserIds?.length ? team.teamUserIds : user ? [user.id] : []),
+    [isOrgPlan, team?.teamUserIds, user],
   );
   const teamKey = useMemo(() => [...teamUserIds].sort().join(','), [teamUserIds]);
 

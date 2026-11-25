@@ -7,14 +7,26 @@ import { usePlanLimits } from './usePlanLimits';
 const state = vi.hoisted(() => ({
   count: 0 as number | null, error: null as Error | null, planLoading: false, planError: false,
   teamUserIds: ['seller'] as string[], teamLoading: false, teamError: false,
+  subscriptionOrgId: null as string | null, organizationId: null as string | null,
 }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'seller' } }) }));
 vi.mock('@/hooks/useSubscription', () => ({
   PLAN_DETAILS: { free: { maxPublications: 3, maxProjects: 1, includedFeatured: 0, includedSuperFeatured: 0 } },
-  useCurrentPlan: () => ({ plan: 'free', planDetails: { maxPublications: 3, maxProjects: 1, includedFeatured: 0, includedSuperFeatured: 0 }, isLoading: state.planLoading, isError: state.planError, refetch: vi.fn() }),
+  useCurrentPlan: () => ({
+    plan: 'free',
+    planDetails: { maxPublications: 3, maxProjects: 1, includedFeatured: 0, includedSuperFeatured: 0 },
+    subscription: state.subscriptionOrgId ? { organization_id: state.subscriptionOrgId } : null,
+    isLoading: state.planLoading, isError: state.planError, refetch: vi.fn(),
+  }),
 }));
 vi.mock('@/hooks/useMyOrganization', () => ({
-  useMyOrganization: () => ({ data: { teamUserIds: state.teamUserIds }, isLoading: state.teamLoading, isError: state.teamError, refetch: vi.fn() }),
+  useMyOrganization: () => ({
+    data: {
+      teamUserIds: state.teamUserIds,
+      organization: state.organizationId ? { id: state.organizationId } : null,
+    },
+    isLoading: state.teamLoading, isError: state.teamError, refetch: vi.fn(),
+  }),
 }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {
   from: () => {
@@ -35,6 +47,7 @@ describe('verified SaaS usage', () => {
   beforeEach(() => {
     state.count = 0; state.error = null; state.planLoading = false; state.planError = false;
     state.teamUserIds = ['seller']; state.teamLoading = false; state.teamError = false;
+    state.subscriptionOrgId = null; state.organizationId = null;
   });
   it('allows a verified zero but does not grant quota while it is loading', async () => {
     const hook = mount();
@@ -65,9 +78,24 @@ describe('verified SaaS usage', () => {
   });
   it('counts usage across the whole team sharing an org plan, not only the viewing user', async () => {
     state.teamUserIds = ['owner', 'agent-1', 'agent-2'];
+    state.organizationId = 'org-1';
+    state.subscriptionOrgId = 'org-1';
     const hook = mount();
     await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
     expect(hook.client.getQueryData(['plan-usage', 'agent-1,agent-2,owner'])).toBeTruthy();
+    hook.unmount(); hook.client.clear();
+  });
+  it('counts only the user own listings when the plan is personal, even inside an organization', async () => {
+    // El servidor (publish-listing) solo amplía el conteo al equipo cuando hay
+    // suscripción de organización activa; con plan personal el cliente debe
+    // contar igual o bloquearía al broker por publicaciones de sus compañeros.
+    state.teamUserIds = ['owner', 'agent-1', 'seller'];
+    state.organizationId = 'org-1';
+    state.subscriptionOrgId = null; // plan personal: la org no tiene suscripción
+    const hook = mount();
+    await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
+    expect(hook.client.getQueryData(['plan-usage', 'seller'])).toBeTruthy();
+    expect(hook.client.getQueryData(['plan-usage', 'agent-1,owner,seller'])).toBeFalsy();
     hook.unmount(); hook.client.clear();
   });
   it('blocks capacity while the organization/team lookup is loading or failing', async () => {
