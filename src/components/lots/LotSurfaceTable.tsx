@@ -1,7 +1,7 @@
 import { getLotSurface, formatM2 } from '@/lib/lots/lotSurface';
 
-export function LotSurfaceTable({ area, className = '' }: { area: number | null | undefined; className?: string }) {
-  const s = getLotSurface(area);
+export function LotSurfaceTable({ area, usefulArea, className = '' }: { area: number | null | undefined; usefulArea?: number | null; className?: string }) {
+  const s = getLotSurface(usefulArea ?? area);
   if (!s) return null;
   return (
     <section className={`rounded-2xl border border-border bg-muted/60 p-4 ${className}`}>

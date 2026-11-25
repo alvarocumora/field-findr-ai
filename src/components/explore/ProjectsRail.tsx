@@ -1,3 +1,4 @@
+import { rpcPublicLots } from '@/lib/lots/publicLotsRpc';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -68,7 +69,7 @@ export default function ProjectsRail() {
       // Use the same public, PII-free inventory contract as ProjectDetail.
       // Direct lots reads are not granted to anonymous visitors.
       const inventories = await Promise.all(ids.map(async (projectId) => {
-        const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: projectId });
+        const { data, error } = await rpcPublicLots({ p_project_id: projectId });
         if (error) throw error;
         return (data ?? []).map(lot => ({ ...lot, project_id: projectId }));
       }));

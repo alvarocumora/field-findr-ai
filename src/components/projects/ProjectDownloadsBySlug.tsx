@@ -1,3 +1,4 @@
+import { rpcPublicLots } from '@/lib/lots/publicLotsRpc';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectDownloads } from '@/components/projects/ProjectDownloads';
@@ -41,7 +42,7 @@ export const ProjectDownloadsBySlug = ({ slug, className, title, description, fa
   const { data: lots = [] } = useQuery({
     queryKey: ['kit-lots', project?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: project!.id });
+      const { data, error } = await rpcPublicLots({ p_project_id: project!.id });
       if (error) throw error;
       return (data ?? []) as unknown as KitLot[];
     },

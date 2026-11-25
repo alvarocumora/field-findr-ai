@@ -1,3 +1,4 @@
+import { rpcPublicLots } from '@/lib/lots/publicLotsRpc';
 import { invalidateReservationInventory } from '@/lib/reservations/invalidateInventory';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -76,7 +77,7 @@ export const useLots = (projectId?: string) => {
       // Visitantes sin sesión: `anon` no tiene SELECT sobre `lots` (permission
       // denied), así que se lee por el RPC público get_public_lots.
       if (projectId && !user?.id) {
-        const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: projectId });
+        const { data, error } = await rpcPublicLots({ p_project_id: projectId });
         if (error) throw error;
         return ((data ?? []) as unknown as Lot[])
           .slice()

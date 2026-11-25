@@ -1,3 +1,4 @@
+import { rpcPublicLots } from '@/lib/lots/publicLotsRpc';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -39,7 +40,7 @@ const FeaturedListings = () => {
         .limit(9);
       if (error) throw error;
       return Promise.all((data ?? []).map(async (project) => {
-        const { data: lots } = await supabase.rpc('get_public_lots', { p_project_id: project.id });
+        const { data: lots } = await rpcPublicLots({ p_project_id: project.id });
         const list = (lots ?? []) as Array<{ price: number | null; status: string | null }>;
         const available = list.filter((l) => l.status === 'available');
         const prices = available.map((l) => Number(l.price)).filter((p) => Number.isFinite(p) && p > 0);

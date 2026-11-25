@@ -1,3 +1,4 @@
+import { rpcPublicLots } from '@/lib/lots/publicLotsRpc';
 import { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,7 +51,7 @@ export const useCaoneLots = () => {
     refetchInterval: 20_000,
     refetchIntervalInBackground: true,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_public_lots', {
+      const { data, error } = await rpcPublicLots({
         p_project_id: CAONE_PROJECT.id,
       });
       if (error) throw error;

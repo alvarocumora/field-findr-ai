@@ -1,3 +1,4 @@
+import { rpcPublicLots } from '@/lib/lots/publicLotsRpc';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,7 +49,7 @@ export const useVelLots = () => {
     refetchInterval: 20_000,
     refetchIntervalInBackground: true,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_public_lots', {
+      const { data, error } = await rpcPublicLots({
         p_project_id: VEL_PROJECT.id,
       });
       if (error) throw error;

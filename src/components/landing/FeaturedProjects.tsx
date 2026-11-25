@@ -36,8 +36,7 @@ const FeaturedProjects = () => {
     queryKey: ['lot-min-prices', projectIds],
     queryFn: async () => {
       if (projectIds.length === 0) return {};
-      const { data } = await supabase
-        .rpc('get_public_lots', { p_project_id: null })
+      const { data } = await supabase.rpc('get_public_lots', { p_project_id: null })
         .in('project_id', projectIds)
         .not('price', 'is', null)
         .order('price', { ascending: true });

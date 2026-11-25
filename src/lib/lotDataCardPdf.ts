@@ -1,3 +1,4 @@
+import { getLotSurface, officialLotArea } from '@/lib/lots/lotSurface';
 import type { LotFeatures } from '@/hooks/useLots';
 import type { PublicLot as Lot } from '@/lib/lots/publicLotTypes';
 import { BRAND, fetchImageAsBase64, publicUrl } from '@/lib/pdf/fichaShell';
@@ -74,7 +75,7 @@ export const generateLotDataCardPdf = async (
   doc.setTextColor(...BRAND.forest);
   doc.text(formatCLP(lot.price), margin + 6, f.y + 13);
 
-  const pricePerSqm = lot.price && lot.area ? lot.price / Number(lot.area) : null;
+  const pricePerSqm = lot.price && lot.area ? lot.price / officialLotArea(Number(lot.area)) : null;
   if (pricePerSqm) {
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
@@ -100,7 +101,14 @@ export const generateLotDataCardPdf = async (
 
   // ── Datos tecnicos ──
   f.section('Datos tecnicos');
-  f.kv('Superficie', `${Number(lot.area).toLocaleString('es-CL')} m²`);
+  {
+    const surf = getLotSurface((lot as { useful_area?: number | null }).useful_area ?? Number(lot.area));
+    f.kv('Superficie total (DL 3.516)', `${(surf?.officialM2 ?? Number(lot.area)).toLocaleString('es-CL')} m²`);
+    if (surf && surf.easementM2 > 0) {
+      f.kv('Servidumbre de tránsito', `${surf.easementM2.toLocaleString('es-CL')} m²`);
+      f.kv('Superficie útil', `${surf.usefulM2.toLocaleString('es-CL')} m²`);
+    }
+  }
   f.kv('Numero de lote', lot.lot_number);
   if (features.rolSii) {
     f.kv('Rol SII', features.rolCertificate ? `${features.rolSii} (certificado SII N° ${features.rolCertificate})` : features.rolSii);

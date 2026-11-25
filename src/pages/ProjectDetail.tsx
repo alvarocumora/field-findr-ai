@@ -1,3 +1,4 @@
+import { rpcPublicLots } from '@/lib/lots/publicLotsRpc';
 import { toast } from 'sonner';
 import { consumeReservationFormIntent } from '@/lib/projects/salesKit';
 import type { PublicLot } from '@/lib/lots/publicLotTypes';
@@ -284,7 +285,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
       // for every session so authenticated owners/admins and anonymous visitors
       // receive the exact same stable lot shape. Direct select('*') can fail on
       // buyer_* column grants and silently leave the cards/designer empty.
-      const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: id });
+      const { data, error } = await rpcPublicLots({ p_project_id: id });
       if (error) throw error;
       return (data || []).sort((a, b) =>
         String(a.lot_number || '').localeCompare(String(b.lot_number || ''), undefined, { numeric: true })

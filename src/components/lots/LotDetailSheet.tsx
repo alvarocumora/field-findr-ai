@@ -321,7 +321,7 @@ export const LotDetailSheet = ({
             </div>
           </section>
 
-          <LotSurfaceTable area={Number(lot.area)} />
+          <LotSurfaceTable area={Number(lot.area)} usefulArea={(lot as { useful_area?: number | null }).useful_area ?? null} />
 
           {features.rolSii && (
             <section className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/60 p-4">

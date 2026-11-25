@@ -1,3 +1,4 @@
+import { withOfficialArea } from '@/lib/lots/lotSurface';
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -64,12 +65,11 @@ export default function ProjectSalesKit() {
     queryFn: async () => {
       const rows: PublicLot[] = [];
       for (let offset = 0; ; offset += 500) {
-        const { data, error } = await supabase
-          .rpc("get_public_lots", { p_project_id: projectId! })
+        const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: projectId! })
           .order("id", { ascending: true })
           .range(offset, offset + 499);
         if (error) throw error;
-        rows.push(...(data ?? []));
+        rows.push(...((data ?? []).map(withOfficialArea)));
         if (!data || data.length < 500) break;
       }
       return rows.sort((a, b) =>

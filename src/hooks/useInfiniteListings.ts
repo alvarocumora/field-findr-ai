@@ -1,3 +1,4 @@
+import { withOfficialListingArea } from '@/lib/lots/lotSurface';
 import { SLOPE_TAGS, VALUATION_TAGS, expandFilterTags } from '@/lib/explore/searchState';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -95,7 +96,7 @@ export const useInfiniteListings = (filters?: ListingFilters) => {
 
       if (error) throw error;
 
-      const listings = data as Listing[];
+      const listings = (data as Listing[]).map(withOfficialListingArea);
       const totalCount = count || 0;
       const hasMore = pageParam + PAGE_SIZE < totalCount;
 

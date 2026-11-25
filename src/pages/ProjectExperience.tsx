@@ -1,3 +1,4 @@
+import { rpcPublicLots } from '@/lib/lots/publicLotsRpc';
 import { parseLegalItems } from '@/lib/projects/legalOverrides';
 import type { PublicLot } from '@/lib/lots/publicLotTypes';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -98,7 +99,7 @@ const ProjectExperience = () => {
   const { data: lots = [], isLoading: lotsLoading, isError: lotsError, refetch: retryLots } = useQuery({
     queryKey: ['terrain-view-lots', id],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: id! });
+      const { data, error } = await rpcPublicLots({ p_project_id: id! });
       if (error) throw error;
       return data || [];
     },

@@ -1,3 +1,4 @@
+import { withOfficialListingArea } from '@/lib/lots/lotSurface';
 import { SLOPE_TAGS, VALUATION_TAGS, expandFilterTags } from '@/lib/explore/searchState';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -130,7 +131,7 @@ export const useListings = (filters?: ListingFilters) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data as Listing[];
+      return (data as Listing[]).map(withOfficialListingArea);
     },
   });
 };
@@ -146,7 +147,7 @@ export const useListing = (id: string) => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as Listing | null;
+      return data ? withOfficialListingArea(data as Listing) : null;
     },
     enabled: !!id,
   });
@@ -166,7 +167,7 @@ export const useFeaturedListings = (limit = 8) => {
         .limit(limit);
 
       if (error) throw error;
-      return data as Listing[];
+      return (data as Listing[]).map(withOfficialListingArea);
     },
   });
 };

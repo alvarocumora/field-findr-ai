@@ -1,3 +1,4 @@
+import { rpcPublicLots } from '@/lib/lots/publicLotsRpc';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
@@ -70,7 +71,7 @@ const InventoryMap = () => {
     queryKey: ['inventory-map-lots', activeProject?.id],
     enabled: !!activeProject?.id,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_public_lots', { p_project_id: activeProject!.id });
+      const { data, error } = await rpcPublicLots({ p_project_id: activeProject!.id });
       if (error) throw error;
       return (data ?? []) as unknown as PublicLot[];
     },

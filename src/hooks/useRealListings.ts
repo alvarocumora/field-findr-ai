@@ -1,3 +1,4 @@
+import { officialLotArea } from '@/lib/lots/lotSurface';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -59,7 +60,7 @@ export function useRealListings(params: UseRealListingsParams = {}) {
 async function fetchOwnListings({ country, limit }: { country: string; limit: number }): Promise<RealListing[]> {
   let query = supabase
     .from('listings')
-    .select('id, title, price, currency, area_m2, location, region, country, type, images, lat, lng')
+    .select('id, title, price, currency, area_m2, location, region, country, type, images, lat, lng, project_id')
     .eq('status', 'active')
     .order('featured', { ascending: false })
     .order('created_at', { ascending: false })
@@ -75,7 +76,7 @@ async function fetchOwnListings({ country, limit }: { country: string; limit: nu
     title: l.title,
     price: Number(l.price) || 0,
     currency: l.currency || 'CLP',
-    area_m2: l.area_m2 != null ? Number(l.area_m2) : null,
+    area_m2: l.area_m2 != null ? (l.project_id ? officialLotArea(Number(l.area_m2)) : Number(l.area_m2)) : null,
     location: l.location,
     region: l.region,
     country: l.country || 'Chile',

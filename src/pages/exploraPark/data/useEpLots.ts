@@ -1,3 +1,4 @@
+import { rpcPublicLots } from '@/lib/lots/publicLotsRpc';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -73,7 +74,7 @@ export const useEpLots = () => {
     queryKey: ['explora-park-public-lots'],
     staleTime: 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_public_lots', {
+      const { data, error } = await rpcPublicLots({
         p_project_id: EXPLORA_PARK_PROJECT.id,
       });
       if (error) throw error;

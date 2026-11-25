@@ -1,3 +1,4 @@
+import { withOfficialListingArea } from '@/lib/lots/lotSurface';
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Listing } from '@/hooks/useListings';
@@ -45,7 +46,7 @@ export const CompareProvider = ({ children }: { children: ReactNode }) => {
     queryFn: async () => {
       const { data, error } = await supabase.from('listings').select('*').in('id', ids).eq('is_demo', false);
       if (error) throw error;
-      return (data || []).map(row => ({ ...row, images: row.images || [], tags: row.tags || [] })) as Listing[];
+      return (data || []).map(row => withOfficialListingArea({ ...row, images: row.images || [], tags: row.tags || [] })) as Listing[];
     },
   });
   const compareList = useMemo(() => {

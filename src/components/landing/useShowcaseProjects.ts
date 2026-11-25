@@ -1,3 +1,4 @@
+import { rpcPublicLots } from '@/lib/lots/publicLotsRpc';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { projectImages } from "@/lib/projectCovers";
@@ -52,9 +53,7 @@ export const useShowcaseProjects = () =>
       const data = fallback ? fallback.data : primary.data;
       return Promise.all(
         (data ?? []).map(async (p) => {
-          const { data: lots, error: lotsError } = await supabase.rpc(
-            "get_public_lots",
-            { p_project_id: p.id },
+          const { data: lots, error: lotsError } = await rpcPublicLots({ p_project_id: p.id },
           );
           // Do not present stale project counters as live inventory after an RPC failure.
           const list = (lots ?? []) as Array<{

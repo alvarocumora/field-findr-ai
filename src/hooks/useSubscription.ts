@@ -402,7 +402,7 @@ export const useSubscription = () => {
           .maybeSingle();
 
         if (organizationError) throw organizationError;
-        if (organizationSubscription) return organizationSubscription as Subscription;
+        if (organizationSubscription) return organizationSubscription as unknown as Subscription;
       }
 
       // Compatibilidad durante la migración de suscripciones personales.
@@ -415,7 +415,7 @@ export const useSubscription = () => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as Subscription | null;
+      return data as unknown as Subscription | null;
     },
     enabled: !!user && !organizationLoading && !organizationError,
   });
