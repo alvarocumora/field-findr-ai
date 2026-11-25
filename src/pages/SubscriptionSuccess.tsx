@@ -24,13 +24,14 @@ const SubscriptionSuccess = () => {
   const { data: subscription } = useQuery({
     queryKey: ['subscription-checkout', checkoutId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // `last_checkout_id` aún no está en los tipos generados.
+      const { data, error } = await (supabase as unknown as { from: (t: string) => any })
         .from('subscriptions')
         .select('status, plan_type, user_id, organization_id')
         .eq('last_checkout_id', checkoutId!)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as { status: string; plan_type: string; user_id: string; organization_id: string | null } | null;
     },
     enabled: !!user && !!checkoutId,
     refetchInterval: (query) =>
