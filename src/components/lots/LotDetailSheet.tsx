@@ -46,6 +46,7 @@ import { generateLotDataCardPdf } from '@/lib/lotDataCardPdf';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { PublishLotButton } from './PublishLotButton';
 import { LotSurfaceTable } from './LotSurfaceTable';
+import { EasyCreditSimulator } from '@/components/fintech/EasyCreditSimulator';
 import { officialLotArea } from '@/lib/lots/lotSurface';
 import { getCanonicalUrl, getShareUrl } from '@/lib/publicUrls';
 import { canReservePublicLot, formatPublicLotPrice, formatPublicLotUnitPrice } from '@/lib/lots/publicLotCommercial';
@@ -322,6 +323,18 @@ export const LotDetailSheet = ({
           </section>
 
           <LotSurfaceTable area={Number(lot.area)} usefulArea={(lot as { useful_area?: number | null }).useful_area ?? null} />
+
+          {lot.status === 'available' && Number(lot.price) >= 1_000_000 && (
+            <details className="group rounded-2xl border border-border bg-card">
+              <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold">
+                <span className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" />Simular crédito directo de este lote</span>
+                <span className="text-xs text-muted-foreground group-open:hidden">Ver cuota</span>
+              </summary>
+              <div className="border-t border-border p-2">
+                <EasyCreditSimulator key={lot.id} defaultPrice={Number(lot.price)} lotId={lot.id} />
+              </div>
+            </details>
+          )}
 
           {features.rolSii && (
             <section className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/60 p-4">
