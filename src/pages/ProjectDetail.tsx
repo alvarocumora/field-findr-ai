@@ -1010,14 +1010,12 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
 
         {/* Sticky Contact Bar - Mobile */}
         {isMobile && (
-          <div className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border p-3 flex gap-2">
-            <Button className="flex-1 gap-2" onClick={handleCall}>
-              <Phone className="h-4 w-4" />
-              Llamar
-            </Button>
-            <Button variant="outline" className="flex-1 gap-2" onClick={handleMessage}>
-              <MessageCircle className="h-4 w-4" />
-              WhatsApp
+          <div className="fixed bottom-0 left-0 right-0 z-40 grid grid-cols-4 gap-1.5 border-t border-border bg-card p-2 pb-safe">
+            <Button variant="outline" size="sm" className="h-11 px-1 text-xs" onClick={() => { changeTab('lots'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Lotes</Button>
+            <Button variant="outline" size="sm" className="h-11 px-1 text-xs" onClick={() => { changeTab('quoter'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Cotizar</Button>
+            <Button size="sm" className="h-11 px-1 text-xs" onClick={() => setLeadOpen(true)}>Agendar</Button>
+            <Button variant="outline" size="sm" className="h-11 gap-1 px-1 text-xs" onClick={handleMessage} aria-label="WhatsApp">
+              <MessageCircle className="h-4 w-4" />WhatsApp
             </Button>
           </div>
         )}
