@@ -462,6 +462,17 @@ export const buyerRouteEntries: RouteEntry[] = [
   buyer("favoritos", "/favoritos", <Favorites />, { label: "Favoritos", group: "comprador", icon: "heart" }),
   buyer("mi-terreno", "/mi-terreno", <MiTerreno />, { label: "Mi Terreno", group: "comprador", icon: "map-pin" }),
   buyer("perfil", "/perfil", <Profile />, { label: "Mi Perfil", group: "comprador", icon: "user" }),
+  {
+    // Generador de ficha abierto a cualquier usuario con sesión: el servidor
+    // (publish-listing) aplica el cupo del plan y deja la ficha en revisión.
+    id: "vender-mi-parcela",
+    path: "/vender-mi-parcela",
+    area: "buyer",
+    access: "auth",
+    layout: "none",
+    element: <PublishProperty />,
+    seo: { title: "Publica tu parcela gratis | Oferta Terrenos", description: "Crea la ficha de tu parcela en minutos con ayuda de IA y publícala en el marketplace de Oferta Terrenos." },
+  },
   buyer("suscripcion", "/suscripcion", <Subscription />, { label: "Suscripción", group: "comprador", icon: "credit-card" }),
 ];
 

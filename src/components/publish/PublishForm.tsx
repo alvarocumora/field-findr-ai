@@ -764,6 +764,29 @@ const PublishForm = () => {
                 userId={user?.id}
                 maxImages={10}
               />
+              <div>
+                <p className="text-sm font-medium text-foreground mb-2">Vista previa de tu ficha</p>
+                <div className="max-w-sm rounded-xl border border-border overflow-hidden bg-card">
+                  <div className="aspect-[4/3] bg-muted">
+                    {formData.images[0] ? (
+                      <img src={formData.images[0]} alt="Portada de la parcela" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">Sube una foto de portada</div>
+                    )}
+                  </div>
+                  <div className="p-4 space-y-1">
+                    <p className="font-semibold text-foreground line-clamp-2">{formData.title || "Título de tu parcela"}</p>
+                    <p className="text-sm text-muted-foreground">{[formData.city, formData.region].filter(Boolean).join(", ") || formData.location || "Ubicación"}</p>
+                    <div className="flex justify-between text-sm pt-1">
+                      <span className="font-mono text-foreground">
+                        {formData.price ? `${formData.currency === "UF" ? "UF " : "$"}${Number(formData.price).toLocaleString("es-CL")}${formData.currency === "UF" || formData.currency === "CLP" ? "" : ` ${formData.currency}`}` : "Precio"}
+                      </span>
+                      <span className="text-muted-foreground">{formData.area_ha ? `${formData.area_ha} ha` : ""}</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">Tu ficha quedará en revisión antes de aparecer en el marketplace.</p>
+              </div>
             </div>
           )}
 

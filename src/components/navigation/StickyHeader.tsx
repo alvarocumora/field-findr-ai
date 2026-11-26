@@ -154,14 +154,12 @@ const StickyHeader = () => {
 
             {user && <NotificationBell />}
 
-            {(isAgent || isAdmin) && (
-              <Button asChild className="btn-glow">
-                <Link to="/publicar">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Publicar
-                </Link>
-              </Button>
-            )}
+            <Button asChild className="btn-glow">
+              <Link to={isAgent || isAdmin ? "/publicar" : "/vender-mi-parcela"}>
+                <Plus className="h-4 w-4 mr-2" />
+                {isAgent || isAdmin ? "Publicar" : "Vender mi parcela"}
+              </Link>
+            </Button>
 
             {user ? (
               <DropdownMenu>
