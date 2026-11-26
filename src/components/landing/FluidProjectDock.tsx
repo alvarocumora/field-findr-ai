@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight, Compass, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useShowcaseProjects } from "./useShowcaseProjects";
+import { ProjectCommercialOffer } from '@/components/projects/ProjectCommercialOffer';
 
 const useProjectsWithTour = (ids: string[]) =>
   useQuery({
@@ -158,6 +159,7 @@ const FluidProjectDock = () => {
                           : "Precio a consultar"}
                       </p>
                     </Link>
+                    <ProjectCommercialOffer slug={project.slug} base={base} />
                     <div className="mt-3 flex min-h-8 flex-wrap items-center gap-3 text-xs text-muted-foreground">
                       {!project.inventoryReady ? (
                         <span>Consulta disponibilidad</span>

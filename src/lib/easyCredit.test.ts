@@ -3,7 +3,7 @@ import { computeEasyCredit, financingInquiryUrl, FIXED_CREDIT_ANNUAL_RATE_PCT, L
 
 describe('easy credit', () => {
   it('uses the communicated promotional starting price without changing inventory', () => {
-    expect(LICANTEN_PROMO_PRICE).toBe(19_990_000);
+    expect(LICANTEN_PROMO_PRICE).toBe(15_990_000);
   });
   it('splits the promotional price at 0% over 36 months without rounding interest', () => {
     const result = computeEasyCredit({ price: 19_990_000, downPct: 20, months: 36, annualRatePct: 0 });

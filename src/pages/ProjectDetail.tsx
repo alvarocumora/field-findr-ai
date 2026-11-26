@@ -73,6 +73,8 @@ import { consumeProjectInquiry, resolveProjectInquiryLot } from '@/lib/projects/
 import { ProjectAerialShowcase } from '@/components/projects/ProjectAerialShowcase';
 import { ProjectNarrative } from '@/components/projects/ProjectNarrative';
 import { LICANTEN_PATH } from '@/lib/easyCredit';
+import { ProjectCommercialOffer } from '@/components/projects/ProjectCommercialOffer';
+import { commercialOfferInquiryMessage } from '@/lib/projects/commercialOffers';
 
 const formatPrice = (price: number | null) => {
   if (!price) return 'Consultar';
@@ -540,6 +542,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
           {`/p/${project.slug}` === LICANTEN_PATH && (
             <Button asChild variant="outline" className="min-h-11 sm:ml-3"><Link to={easyCreditLink}><Calculator aria-hidden="true" />Simula tu cuota</Link></Button>
           )}
+          <ProjectCommercialOffer slug={project.slug} base={`/proyecto/${project.id}`} />
         </div>
 
         {tourScenes.length > 0 && (
@@ -624,7 +627,7 @@ const ProjectDetail = ({ projectId }: { projectId?: string } = {}) => {
           <DialogContent>
             <DialogTitle>{searchParamsTab.get('utm_campaign') === 'consulta_financiamiento' ? 'Consultar financiamiento' : `Consulta por ${project.name}`}</DialogTitle>
             <LandingLeadForm
-              defaultMessage={searchParamsTab.get('utm_campaign') === 'consulta_financiamiento' ? 'Quiero consultar alternativas de financiamiento para una parcela de Valle Escondido Licantén.' : ''}
+              defaultMessage={searchParamsTab.get('utm_campaign') === 'consulta_financiamiento' ? 'Quiero consultar alternativas de financiamiento para una parcela de Valle Escondido Licantén.' : commercialOfferInquiryMessage(searchParamsTab.get('utm_campaign'))}
               projectId={project.id}
               projectOwnerId={project.user_id}
               projectSlug={project.slug || project.id}

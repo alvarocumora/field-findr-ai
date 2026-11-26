@@ -1,5 +1,11 @@
 # Roadmap
 
+## Ofertas comerciales por superficie
+
+- [x] Centralizar precios confirmados de Hualañé, Explora Park y Licantén como ofertas, sin alterar inventario.
+- [x] Mostrar ofertas en portada y ficha; liquidación con consulta y atribución conservada.
+- [x] Validar 34 pruebas, compilación y recorrido público móvil de oferta a consulta con mensaje precargado; simulador inicia en $15.990.000.
+
 ## Avisos de monitoreo: tarjetas y consulta
 
 - [x] Corregir superficie usando `area` y el inventario público existente: cuatro solicitudes correctas, precios y superficies visibles sin sesión
