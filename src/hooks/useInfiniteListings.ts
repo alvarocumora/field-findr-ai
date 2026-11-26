@@ -16,87 +16,100 @@ interface InfiniteListingsResult {
   totalCount: number;
 }
 
+/**
+ * Active, non-demo listings filtered exactly like the explorer feed. Shared by
+ * the paginated feed and the server-side summary so counts, "desde" prices and
+ * the list always describe the same inventory.
+ */
+export const filteredListingsQuery = (
+  filters: ListingFilters | undefined,
+  columns = '*',
+  options?: { count?: 'exact'; head?: boolean },
+) => {
+  let query = supabase
+    .from('listings')
+    .select(columns, options)
+    .eq('status', 'active')
+    .eq('is_demo', false);
+
+  // Hide individual lots of a loteo/project from the general explorer unless
+  // the user opts in. Projects surface as their own cards via ProjectsRail.
+  if (!filters?.includeLoteoLots) {
+    query = query.not('tags', 'cs', '{loteo}');
+  }
+
+  if (filters?.type && filters.type.length > 0) {
+    query = query.in('type', filters.type);
+  }
+
+  if (filters?.region && filters.region.length > 0) {
+    query = query.in('region', filters.region);
+  }
+
+  if (filters?.country && filters.country.length > 0) {
+    query = query.in('country', filters.country);
+  }
+
+  if (filters?.priceMin) {
+    query = query.gte('price', filters.priceMin);
+  }
+
+  if (filters?.priceMax) {
+    query = query.lte('price', filters.priceMax);
+  }
+
+  if (filters?.areaMin) {
+    query = query.gte('area_m2', filters.areaMin);
+  }
+
+  if (filters?.areaMax) {
+    query = query.lte('area_m2', filters.areaMax);
+  }
+
+  if (filters?.bounds) {
+    query = query
+      .gte('lat', filters.bounds.south)
+      .lte('lat', filters.bounds.north)
+      .gte('lng', filters.bounds.west)
+      .lte('lng', filters.bounds.east);
+  }
+
+  if (filters?.tags?.length) query = query.overlaps('tags', filters.tags);
+  if (filters?.slopes?.length) query = query.overlaps('tags', expandFilterTags(filters.slopes, SLOPE_TAGS));
+  if (filters?.valuation?.length) query = query.overlaps('tags', expandFilterTags(filters.valuation, VALUATION_TAGS));
+
+  if (filters?.featured !== undefined) {
+    query = query.eq('featured', filters.featured);
+  }
+
+  if (filters?.currency) {
+    query = query.eq('currency', filters.currency);
+  }
+
+  // Search the whole inventory, not just the pages already loaded.
+  const term = sanitizeSearchTerm(filters?.search);
+  if (term) {
+    const p = `%${term}%`;
+    query = query.or(`title.ilike.${p},location.ilike.${p},city.ilike.${p},region.ilike.${p}`);
+  }
+
+  return query;
+};
+
 export const useInfiniteListings = (filters?: ListingFilters) => {
   return useInfiniteQuery({
     queryKey: ['infinite-listings', filters],
     queryFn: async ({ pageParam = 0 }): Promise<InfiniteListingsResult> => {
-      let query = supabase
-        .from('listings')
-        .select('*', { count: 'exact' })
-        .eq('status', 'active')
-        .eq('is_demo', false);
-
-      // Hide individual lots of a loteo/project from the general explorer unless
-      // the user opts in. Projects surface as their own cards via ProjectsRail.
-      if (!filters?.includeLoteoLots) {
-        query = query.not('tags', 'cs', '{loteo}');
-      }
-
-      query = query
+      const query = filteredListingsQuery(filters, '*', { count: 'exact' })
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
         .range(pageParam, pageParam + PAGE_SIZE - 1);
-
-      if (filters?.type && filters.type.length > 0) {
-        query = query.in('type', filters.type);
-      }
-
-      if (filters?.region && filters.region.length > 0) {
-        query = query.in('region', filters.region);
-      }
-
-      if (filters?.country && filters.country.length > 0) {
-        query = query.in('country', filters.country);
-      }
-
-      if (filters?.priceMin) {
-        query = query.gte('price', filters.priceMin);
-      }
-
-      if (filters?.priceMax) {
-        query = query.lte('price', filters.priceMax);
-      }
-
-      if (filters?.areaMin) {
-        query = query.gte('area_m2', filters.areaMin);
-      }
-
-      if (filters?.areaMax) {
-        query = query.lte('area_m2', filters.areaMax);
-      }
-
-      if (filters?.bounds) {
-        query = query
-          .gte('lat', filters.bounds.south)
-          .lte('lat', filters.bounds.north)
-          .gte('lng', filters.bounds.west)
-          .lte('lng', filters.bounds.east);
-      }
-
-      if (filters?.tags?.length) query = query.overlaps('tags', filters.tags);
-      if (filters?.slopes?.length) query = query.overlaps('tags', expandFilterTags(filters.slopes, SLOPE_TAGS));
-      if (filters?.valuation?.length) query = query.overlaps('tags', expandFilterTags(filters.valuation, VALUATION_TAGS));
-
-      if (filters?.featured !== undefined) {
-        query = query.eq('featured', filters.featured);
-      }
-
-      if (filters?.currency) {
-        query = query.eq('currency', filters.currency);
-      }
-
-      // Search the whole inventory, not just the pages already loaded.
-      const term = sanitizeSearchTerm(filters?.search);
-      if (term) {
-        const p = `%${term}%`;
-        query = query.or(`title.ilike.${p},location.ilike.${p},city.ilike.${p},region.ilike.${p}`);
-      }
 
       const { data, error, count } = await query;
 
       if (error) throw error;
 
-      const listings = (data as Listing[]).map(withOfficialListingArea);
+      const listings = (data as unknown as Listing[]).map(withOfficialListingArea);
       const totalCount = count || 0;
       const hasMore = pageParam + PAGE_SIZE < totalCount;
 

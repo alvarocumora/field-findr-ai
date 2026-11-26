@@ -93,7 +93,7 @@ const CompactMapControls = ({
       <div className="absolute bottom-14 left-3 z-10">
         <div className="bg-black/60 backdrop-blur-xl rounded-lg border border-white/10 px-2.5 py-1.5 shadow-lg shadow-black/20">
           <p className="text-xs font-medium text-white/90">
-            {listingsCount} propiedades
+            {listingsCount} en el mapa
           </p>
           {drawnArea !== null && (
             <p className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
