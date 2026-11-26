@@ -1,5 +1,6 @@
 import { SaveSearchButton } from '@/components/search/SaveSearchButton';
-import { useState, useRef, useCallback, useEffect, useMemo, useDeferredValue } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo, useDeferredValue, type ReactNode } from 'react';
+import type { ListingsSummary } from '@/hooks/useListingsSummary';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Loader2, MapPin, ArrowUpDown, Star, Clock, Bell, TrendingDown, LayoutGrid, List, Wheat, Factory, Truck, Zap, Home, Droplets, Car, ShieldCheck, X, Mountain, TrendingUp, Compass, ChevronDown } from 'lucide-react';
 import SearchAutocomplete from '@/components/search/SearchAutocomplete';
@@ -289,6 +290,10 @@ const VirtualizedListings = ({
 interface ExploreListPanelProps {
   listings: Listing[];
   totalCount?: number;
+  /** Server-side summary of the whole filtered inventory (not only loaded pages). */
+  serverSummary?: ListingsSummary;
+  /** Rendered right below the search card (projects rail, chips, currency). */
+  belowSearch?: ReactNode;
   partialResults?: boolean;
   isLoading?: boolean;
   hasMore?: boolean;
@@ -329,6 +334,8 @@ interface ExploreListPanelProps {
 const ExploreListPanel = ({
   listings,
   totalCount,
+  serverSummary,
+  belowSearch,
   partialResults = false,
   isLoading = false,
   hasMore = false,
@@ -457,12 +464,21 @@ const ExploreListPanel = ({
     selectedSlopes.length +
     selectedValuation.length;
 
-  const featuredCount = listings.filter(l => l.featured).length;
-  const recentCount = listings.filter(l => {
+  // Server figures describe the whole filtered inventory; they are only exact
+  // while no client-side refinement (drawn area, territorial filters) applies.
+  const clientRefined = partialResults || territorialFilter.aptitudes.length > 0 || territorialFilter.hasWater === true
+    || territorialFilter.hasRoad === true || Boolean(territorialFilter.legalStatus);
+  const exactSummary = !clientRefined ? serverSummary : undefined;
+  const localFeaturedCount = listings.filter(l => l.featured).length;
+  const localRecentCount = listings.filter(l => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
     return new Date(l.created_at) > oneWeekAgo;
   }).length;
+  const featuredCount = exactSummary?.featuredCount ?? localFeaturedCount;
+  const recentCount = exactSummary?.recentCount ?? localRecentCount;
+  const allCount = clientRefined ? listings.length : totalCount ?? listings.length;
+  const priceFrom = exactSummary && activeTab === 'all' ? exactSummary.minByCurrency : summary?.byCurrency ?? [];
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -479,7 +495,7 @@ const ExploreListPanel = ({
             <SearchAutocomplete
               initialQuery={searchQuery}
               onSearchChange={onSearchChange}
-              placeholder="Buscar por ciudad, comuna o coordenadas..."
+              placeholder="Comuna, ciudad o región"
             />
             <FilterBar
               selectedTypes={selectedTypes}
@@ -554,15 +570,17 @@ const ExploreListPanel = ({
         </div>
       </div>
 
+      {belowSearch && <div className="flex-shrink-0">{belowSearch}</div>}
+
       {/* Summary + Tabs + Sort */}
       <div className="px-4 py-2 space-y-2 border-b border-border/10">
         {/* Summary */}
         <div className="flex items-center justify-between gap-2">
-          <p className="min-w-0 truncate text-sm text-muted-foreground">
+          <p className="min-w-0 line-clamp-2 text-sm text-muted-foreground">
             <span className="text-base font-bold text-foreground tabular-nums">{displayCount}</span>{' '}
             terreno{displayCount === 1 ? '' : 's'}{partial ? ' en la selección cargada' : ''}
-            {summary?.byCurrency.length ? ` desde ${summary.byCurrency.map(c => formatPriceWithCurrency(c.min, c.currency)).join(' · ')}` : ''}
-            {summary && summary.regionCount > 1 ? ` en ${summary.regionCount} regiones` : ''}
+            {priceFrom.length ? ` desde ${priceFrom.map(c => formatPriceWithCurrency(c.min, c.currency)).join(' · ')}` : ''}
+            {summary && summary.regionCount > 1 && listings.length >= displayCount ? ` en ${summary.regionCount} regiones` : ''}
           </p>
           <div className="flex items-center gap-2 flex-shrink-0">
             <ToggleGroup type="single" value={viewLayout} onValueChange={(v) => v && setViewLayout(v as 'compact' | 'grid')} size="sm">
@@ -588,7 +606,7 @@ const ExploreListPanel = ({
         {/* Tabs */}
         <div className="flex items-center gap-1">
           {[
-            { key: 'all' as TabFilter, label: 'Todos', count: listings.length },
+            { key: 'all' as TabFilter, label: 'Todos', count: allCount },
             { key: 'featured' as TabFilter, label: 'Destacados', count: featuredCount, icon: Star },
             { key: 'recent' as TabFilter, label: 'Nuevos', count: recentCount, icon: Clock },
           ].map(tab => (

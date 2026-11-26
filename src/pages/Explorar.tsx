@@ -14,8 +14,9 @@ import CompareSheet from '@/components/compare/CompareSheet';
 import CinematicTransition from '@/components/map/CinematicTransition';
 import SwipeExplorer from '@/components/explore/SwipeExplorer';
 import { Button } from '@/components/ui/button';
-import { Listing, getPricePerM2, useListing } from '@/hooks/useListings';
+import { Listing, ListingFilters, getPricePerM2, useListing } from '@/hooks/useListings';
 import { useFlattenedListings } from '@/hooks/useInfiniteListings';
+import { useListingsSummary } from '@/hooks/useListingsSummary';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTabletOrBelow } from '@/hooks/use-tablet';
 import { CreditCard } from 'lucide-react';
@@ -148,17 +149,7 @@ const Explorar = () => {
       {currency === 'all' && priceRangeActive && <span className="text-muted-foreground">Rango en CLP: solo publicaciones en CLP.</span>}
     </div>
   );
-  const {
-    listings,
-    totalCount,
-    isLoading,
-    isFetching,
-    isError,
-    refetch,
-    hasMore,
-    loadMore,
-    isLoadingMore,
-  } = useFlattenedListings({
+  const listingFilters = useMemo<ListingFilters>(() => ({
     type: selectedTypes.length > 0 ? selectedTypes : undefined,
     region: selectedRegions.length > 0 ? selectedRegions : undefined,
     country: selectedCountries.length > 0 ? selectedCountries : undefined,
@@ -173,7 +164,24 @@ const Explorar = () => {
     includeLoteoLots,
     currency: effectiveCurrency,
     search: deferredSearch || undefined,
-  });
+  }), [
+    selectedTypes, selectedRegions, selectedCountries, priceRange, priceRangeMax, areaRange, mapBounds,
+    selectedTags, selectedSlopes, selectedValuation, includeLoteoLots, effectiveCurrency, deferredSearch,
+  ]);
+  const {
+    listings,
+    totalCount,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+    hasMore,
+    loadMore,
+    isLoadingMore,
+  } = useFlattenedListings(listingFilters);
+  // Same filters, summarized server-side: "desde" price and tab counts cover the
+  // whole inventory, not only the first page loaded.
+  const { data: listingsSummary } = useListingsSummary(listingFilters);
 
   const errorBanner = isError ? (
     <div role="alert" className="m-3 flex items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-foreground">
@@ -309,6 +317,7 @@ const Explorar = () => {
           onModeChange={setMobileViewMode}
           listings={filteredListings}
           totalCount={totalCount}
+          serverSummary={listingsSummary}
           partialResults={Boolean(drawnPolygon)}
           isLoading={isLoading}
           hasMore={!!hasMore}
@@ -450,17 +459,22 @@ const Explorar = () => {
         {/* Left panel – scrollable list */}
         <div className="w-[420px] min-w-[380px] flex-shrink-0 border-r border-border/30 flex flex-col min-h-0">
           {errorBanner}
-          {currencySwitch}
-          <ProjectsRail />
-          <LifestyleChips
-            selectedTags={selectedTags}
-            onToggleTag={toggleTag}
-            className="border-b border-border/30"
-          />
           <div className="flex-1 min-h-0">
           <ExploreListPanel
             listings={filteredListings}
             totalCount={totalCount}
+            serverSummary={listingsSummary}
+            belowSearch={(
+              <>
+                <ProjectsRail />
+                <LifestyleChips
+                  selectedTags={selectedTags}
+                  onToggleTag={toggleTag}
+                  className="border-b border-border/30"
+                />
+                {currencySwitch}
+              </>
+            )}
             partialResults={Boolean(drawnPolygon)}
             isLoading={isLoading}
             hasMore={!!hasMore}

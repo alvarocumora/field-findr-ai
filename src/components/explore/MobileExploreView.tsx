@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import type { ListingsSummary } from '@/hooks/useListingsSummary';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, Layers, Map as MapIcon, List, ArrowUp } from 'lucide-react';
 import EnhancedMap from '@/components/map/EnhancedMap';
@@ -20,6 +21,7 @@ interface MobileExploreViewProps {
   // Data
   listings: Listing[];
   totalCount?: number;
+  serverSummary?: ListingsSummary;
   partialResults?: boolean;
   isLoading: boolean;
   hasMore?: boolean;
@@ -179,13 +181,12 @@ const MobileExploreView = (props: MobileExploreViewProps) => {
 
         {mode === 'list' && (
           <div className="absolute inset-0 flex flex-col min-h-0">
-            <div className="flex-shrink-0">
-              <ProjectsRail />
-            </div>
             <div className="flex-1 min-h-0">
             <ExploreListPanel
               listings={props.listings}
               totalCount={props.totalCount}
+              serverSummary={props.serverSummary}
+              belowSearch={<ProjectsRail />}
               partialResults={props.partialResults}
               isLoading={props.isLoading}
               hasMore={props.hasMore}
